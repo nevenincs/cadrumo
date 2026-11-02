@@ -24,7 +24,7 @@ from ...domain.invoices.service import INVOICE_MATCH_TOLERANCE
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ..invoices.source_observations import is_rectificativa
+from ..invoices.source_observations import is_rectificativa, rectified_invoice
 from . import renta_income_evidence
 from .renta_imputation import (
     ActivityImputationCriterion,
@@ -262,7 +262,7 @@ def _read_corrections(
             invoice, kind=kind, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
         ):
             continue
-        target = _rectified_invoice(invoice, invoices, bucket_id=bucket_id)
+        target = rectified_invoice(invoice, invoices)
         refusal = _rectificativa_refusal(invoice, target, window_end=window_end)
         if refusal is not None:
             refused.append(f"{refusal.value}: rectificativa {invoice.invoice_number}")
@@ -380,22 +380,6 @@ def received_rectificativa_reading(
             if any(renta_income_evidence.row_settles_invoice(row, link) for link in _rows_of(row, transactions))
         )
     return ReceivedRectificativaReading(fractions, tuple(netted), tuple(refused))
-
-
-def _rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue, *, bucket_id: str) -> Invoice | None:
-    """Return the ordinary invoice of the same kind the correction names, read by counterparty and number."""
-    return next(
-        (
-            invoice
-            for invoice in invoices.values()
-            if invoice.kind is rectificativa.kind
-            and invoice.bucket_id == bucket_id
-            and not is_rectificativa(invoice)
-            and invoice.counterparty_tax_id == rectificativa.counterparty_tax_id
-            and invoice.invoice_number == rectificativa.rectifies_invoice_number
-        ),
-        None,
-    )
 
 
 def _rectificativa_refusal(

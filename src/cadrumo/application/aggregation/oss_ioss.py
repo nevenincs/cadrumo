@@ -9,11 +9,16 @@ is validated against the destination Member State's published IVA rate through
 :class:`~domain.calculations.registry.ledger_oss_bindings.OssIossLedgerObservation`.
 
 Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
-match the destination Member State's published rate for the chosen
-rate tier on the supply date. A persisted IVA amount that disagrees
-with the lookup is a data-quality blocker: the wrapper rejects it
-before the registry resolver sees it, so calculation revisions never
-land on inconsistent ledger facts.
+match a rate the destination Member State applies in the chosen tier on the
+supply date. A tier can hold more than one (France's reduced 5.5 and 10), and the
+cuota says which. A persisted IVA amount no rate explains is a data-quality
+blocker, rejected before the registry resolver sees it. On a date the rate table
+has no edition for, a figure matching the nearest edition is accepted with a
+warning, and a differing one is a coverage gap rather than a mismatch.
+
+A factura rectificativa takes its lines off the row of the invoice it names, at
+that invoice's rate. A correction of another period belongs in DR369 section 4,
+whose cuota field is unsigned in the record design, so it refuses.
 
 The :class:`OssIossLedgerSourceResolver` returns a
 :class:`~.source_mesh.CalculationSourceResolution` with resolved binding values,
@@ -47,6 +52,7 @@ from ...domain.calculations.registry.facts.resolution import MappingFactQuery, R
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_oss_bindings import (
     OssIossLedgerObservation,
+    OssLineEffect,
     resolve_ledger_oss_aggregation_binding_values,
 )
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
@@ -57,18 +63,20 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.currency.errors import ExchangeRateProviderError
 from ...domain.currency.models import EurRateLookupStatus
 from ...domain.currency.service import published_eur_rate_on_day_or_next_publication
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import TransactionKind, require_transaction_kind
-from ...domain.iva.lookup import lookup_published_rate, lookup_rate, tier_rates_within
+from ...domain.iva.lookup import coexisting_tier_rates, lookup_published_rate, lookup_rate, tier_rates_within
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
-from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
+from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind, IvaRateRecord
 from ..exchange_rate_provider import exchange_rate_provider
 from ..invoices.catalogue_reads_ports import (
     BucketBoundCatalogueReader,
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
+from ..invoices.source_observations import is_rectificativa, rectified_invoice
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
@@ -116,6 +124,7 @@ class OssIossLedgerCandidate(BaseModel):
         base_amount: Taxable base in EUR. Must be non-negative.
         iva_amount: IVA amount in EUR persisted on the ledger. Must
             be non-negative.
+        effect: Whether the amounts add a supply or take a correction off one.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -129,36 +138,46 @@ class OssIossLedgerCandidate(BaseModel):
     transaction_kind: TransactionKind
     base_amount: Decimal = Field(ge=Decimal("0"))
     iva_amount: Decimal = Field(ge=Decimal("0"))
+    effect: OssLineEffect = OssLineEffect.SUPPLY
 
 
-def _expected_iva_amount(
-    candidate: OssIossLedgerCandidate,
+def _cuota_at(base: Decimal, rate: IvaRateRecord) -> Decimal:
+    return round_to_cents(base * rate.pct / Decimal("100"))
+
+
+def _applied_rate(
+    member_state: EUMemberState,
+    rate_kind: IvaRateKind,
+    on_date: date,
     *,
+    base: Decimal,
+    iva: Decimal,
     operation: PinnedAuthorityOperation,
-) -> Decimal:
-    """Return the IVA amount derived from the candidate's base and rate.
+) -> IvaRateRecord | None:
+    """Return the rate of the tier that explains the cuota, or ``None`` when none does.
 
-    Looks up the destination Member State's rate for the candidate's
-    rate tier on the supply date, multiplies by ``base_amount``, and
-    rounds to two decimal places — the precision at which ledger
-    amounts are persisted.
-
-    Args:
-        candidate: The substrate-classified ledger line whose base amount
-            and rate kind are used to derive the expected IVA amount.
-        operation: Generation-pinned authority operation used for the rate lookup.
-
-    Returns:
-        The expected IVA amount rounded to two decimal places.
+    A tier's rates are its ordinary one and those coexisting with it, and the cuota tells
+    them apart. The closest reading wins; two rates giving the same cuota leave the row's
+    percentage unknown, so that refuses. A nil line says nothing and reads the ordinary rate.
     """
-    rate = lookup_published_rate(
-        candidate.destination_member_state,
-        candidate.rate_kind,
-        candidate.transaction_date,
-        operation=operation,
-    )
-    derived = candidate.base_amount * rate.pct / Decimal("100")
-    return round_to_cents(derived)
+    ordinary = lookup_rate(member_state, rate_kind, on_date, operation=operation)
+    persisted = round_to_cents(iva)
+    if base == Decimal("0") and persisted == Decimal("0"):
+        return ordinary
+    rates = (ordinary, *coexisting_tier_rates(member_state, rate_kind, on_date, operation=operation))
+    exact = [rate for rate in rates if _cuota_at(base, rate) == persisted]
+    near = exact or [rate for rate in rates if abs(_cuota_at(base, rate) - persisted) <= CENT]
+    if len(near) > 1:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rate_tier_ambiguous"),
+            context={
+                "destination_member_state": member_state.value,
+                "rate_kind": rate_kind.value,
+                "transaction_date": on_date.isoformat(),
+                "rates": ",".join(str(rate.pct) for rate in near),
+            },
+        )
+    return near[0] if near else None
 
 
 def validate_oss_ioss_observation(
@@ -168,11 +187,11 @@ def validate_oss_ioss_observation(
 ) -> OssIossLedgerObservation:
     """Validate ``candidate`` and return the registry-ready observation.
 
-    Looks up the destination Member State's rate at the supply date,
-    derives the expected IVA amount from ``base_amount`` and the
-    looked-up rate, and rejects the candidate if the persisted
-    ``iva_amount`` deviates from the derived value by more than
-    ``CENT``.
+    Looks up the destination Member State's rates at the supply date
+    and rejects the candidate if the persisted ``iva_amount`` deviates by
+    more than ``CENT`` from what every one of them derives from
+    ``base_amount``. On a date with no edition, a figure the nearest edition
+    explains passes and any other raises the coverage gap.
 
     Args:
         candidate: The substrate-classified ledger line to validate.
@@ -188,6 +207,7 @@ def validate_oss_ioss_observation(
         AggregationValidationError: When the persisted IVA amount
             disagrees with the destination MS rate by more than the
             one-cent tolerance.
+        IvaRateNotFoundError: When it differs from a rate the table only projects.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
@@ -210,14 +230,38 @@ def validate_oss_ioss_observation(
         raise AggregationValidationError(
             tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
         )
-    expected = _expected_iva_amount(candidate, operation=operation)
-    persisted = round_to_cents(candidate.iva_amount)
     # Ledger amounts are rounded to two decimal places at persistence time, so a
     # difference of one cent or less is rounding noise rather than a data-quality
     # blocker. Larger gaps fail validation and the line is rejected before the
     # registry resolver aggregates it. The quantum is CENT because it is the same
     # cent the rounding produced, not a threshold this module chose.
-    if abs(persisted - expected) > CENT:
+    if (
+        _applied_rate(
+            candidate.destination_member_state,
+            candidate.rate_kind,
+            candidate.transaction_date,
+            base=candidate.base_amount,
+            iva=candidate.iva_amount,
+            operation=operation,
+        )
+        is None
+    ):
+        ordinary = lookup_rate(
+            candidate.destination_member_state,
+            candidate.rate_kind,
+            candidate.transaction_date,
+            operation=operation,
+        )
+        if not ordinary.published_on_date:
+            # Raises: the table cannot refute a figure on a rate it only projects.
+            lookup_published_rate(
+                candidate.destination_member_state,
+                candidate.rate_kind,
+                candidate.transaction_date,
+                operation=operation,
+            )
+        persisted = round_to_cents(candidate.iva_amount)
+        expected = _cuota_at(candidate.base_amount, ordinary)
         raise AggregationValidationError(
             tr("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"),
             context={
@@ -240,6 +284,7 @@ def validate_oss_ioss_observation(
         transaction_kind=candidate.transaction_kind,
         base_amount=candidate.base_amount,
         iva_amount=candidate.iva_amount,
+        effect=candidate.effect,
     )
 
 
@@ -352,8 +397,9 @@ def _detail_binding_values(
     """
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
-    for record_id, grouped in _group_detail_observations(revision, observations, operation=operation).items():
+    for record_id, all_rows in _group_detail_observations(revision, observations, operation=operation).items():
         slots = _record_row_slots(revision, record_id)
+        grouped = _rows_left_by_corrections(all_rows)
         if len(grouped) > len(slots):
             # The design's continuation page has no slots here: the settlement
             # formulas read these slots alone. Refuse rather than export a prefix.
@@ -394,6 +440,30 @@ Only the first can be projected; the second names a permanent establishment or a
 dispatch state the invoice does not record, and is enumerated solely to close it.
 """
 _PROJECTED_ROW_COLUMNS = len(_ROW_SHAPES[0])
+
+
+def _rows_left_by_corrections(
+    rows: dict[_DetailRowKey, list[OssIossLedgerObservation]],
+) -> dict[_DetailRowKey, list[OssIossLedgerObservation]]:
+    """Drop a row its corrections cancel, and refuse one they take below nothing."""
+    left: dict[_DetailRowKey, list[OssIossLedgerObservation]] = {}
+    for key, observations in rows.items():
+        base = sum((item.signed_base_amount for item in observations), Decimal("0"))
+        cuota = sum((item.signed_iva_amount for item in observations), Decimal("0"))
+        if base < Decimal("0") or cuota < Decimal("0"):
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.rectificativa_above_row"),
+                context={
+                    "destination_member_state": key.member_state.value,
+                    "rate": str(key.rate),
+                    "net_base": str(base),
+                    "net_cuota": str(cuota),
+                },
+            )
+        corrected = any(item.effect is OssLineEffect.CORRECTION for item in observations)
+        if not (corrected and base == Decimal("0") and cuota == Decimal("0")):
+            left[key] = observations
+    return left
 
 
 def _projection_declarations(
@@ -507,13 +577,17 @@ def _detail_row_key(
             tr("aggregation.oss_ioss.errors.detail_country_code_undeclared"),
             context={"member_state": member_state.value},
         )
-    rate = lookup_rate(
+    applied = _applied_rate(
         member_state,
         observation.rate_kind,
         observation.transaction_date,
+        base=observation.base_amount,
+        iva=observation.iva_amount,
         operation=operation,
-    ).pct
-    return _DetailRowKey(member_state, observation.rate_kind, rate, country_code, rate_code)
+    )
+    if applied is None:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"))
+    return _DetailRowKey(member_state, observation.rate_kind, applied.pct, country_code, rate_code)
 
 
 def _group_detail_observations(
@@ -561,8 +635,8 @@ def _assign_detail_row(
     enum_values[country_code] = key.country_code
     enum_values[rate_code] = key.rate_code
     decimal_values[rate] = key.rate
-    decimal_values[base] = sum((item.base_amount for item in rows), Decimal("0"))
-    decimal_values[cuota] = sum((item.iva_amount for item in rows), Decimal("0"))
+    decimal_values[base] = sum((item.signed_base_amount for item in rows), Decimal("0"))
+    decimal_values[cuota] = sum((item.signed_iva_amount for item in rows), Decimal("0"))
 
 
 def _refuse_rate_chosen_by_issue_date(
@@ -822,6 +896,7 @@ def _candidate_for_invoice_line(
     line_index: int,
     devengo_date: date,
     period_last_day: date,
+    effect: OssLineEffect = OssLineEffect.SUPPLY,
 ) -> OssIossLedgerCandidate | None:
     """Project one invoice line into an OSS/IOSS candidate, or ``None`` when not applicable.
 
@@ -864,6 +939,7 @@ def _candidate_for_invoice_line(
         transaction_kind=invoice.oss_transaction_kind,
         base_amount=line.subtotal if rate is None else round_to_cents(line.subtotal * rate),
         iva_amount=line.iva_amount if rate is None else round_to_cents(line.iva_amount * rate),
+        effect=effect,
     )
 
 
@@ -915,12 +991,36 @@ class OssIossInvoiceProjection(BaseModel):
     catalogue_fingerprint: ContentDigest | None = Field(default=None, exclude=True, repr=False)
 
 
-def _project_oss_invoice(invoice: Invoice, projection_period: Period) -> list[OssIossLedgerCandidate]:
-    if invoice.kind is not InvoiceKind.ISSUED:
+def _corrected_invoice_devengo(invoice: Invoice, catalogue: InvoiceCatalogue, projection_period: Period) -> date:
+    """Return the devengo of the invoice a correction takes its lines off, or refuse what it cannot reach."""
+    context = {"invoice_id": invoice.invoice_id, "invoice_number": invoice.invoice_number}
+    target = rectified_invoice(invoice, catalogue)
+    if target is None:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.rectificativa_target_unknown"), context=context)
+    if (
+        target.oss_ioss_regime != invoice.oss_ioss_regime
+        or target.oss_transaction_kind != invoice.oss_transaction_kind
+        or target.counterparty_eu_member_state != invoice.counterparty_eu_member_state
+    ):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.rectificativa_target_differs"), context=context)
+    if not invoice_devengo_in_period(target, period=projection_period):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.rectificativa_outside_period"), context=context)
+    return resolve_invoice_devengo(target).devengo_date
+
+
+def _project_oss_invoice(
+    invoice: Invoice, projection_period: Period, catalogue: InvoiceCatalogue
+) -> list[OssIossLedgerCandidate]:
+    if invoice.kind is not InvoiceKind.ISSUED or invoice.oss_ioss_regime is None:
         return []
     if not invoice_devengo_in_period(invoice, period=projection_period):
         return []
-    devengo_date = resolve_invoice_devengo(invoice).devengo_date
+    corrects = is_rectificativa(invoice)
+    devengo_date = (
+        _corrected_invoice_devengo(invoice, catalogue, projection_period)
+        if corrects
+        else resolve_invoice_devengo(invoice).devengo_date
+    )
     return [
         candidate
         for index, line in enumerate(invoice.lines, start=1)
@@ -931,6 +1031,7 @@ def _project_oss_invoice(invoice: Invoice, projection_period: Period) -> list[Os
                 line_index=index,
                 devengo_date=devengo_date,
                 period_last_day=projection_period.end_date,
+                effect=OssLineEffect.CORRECTION if corrects else OssLineEffect.SUPPLY,
             )
         )
         is not None
@@ -976,7 +1077,7 @@ def project_oss_ioss_invoices_from_repositories(
     contributing: list[Invoice] = []
     catalogue = ports.invoice_reader.load()
     for invoice in catalogue:
-        projected = _project_oss_invoice(invoice, projection_period)
+        projected = _project_oss_invoice(invoice, projection_period, catalogue)
         if projected:
             candidates.extend(projected)
             contributing.append(invoice)
@@ -1049,6 +1150,38 @@ def aggregate_oss_ioss_from_repositories(
         revision,
         oss_ioss_candidates_from_repositories(period=period, ports=ports),
         operation=operation,
+    )
+
+
+def _projected_rate_diagnostics(
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    resolver_id: str,
+    operation: PinnedAuthorityOperation,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Warn of each line whose figure rests on a rate the table only projects to its date."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_oss_aggregation",
+            resolver_id=resolver_id,
+            source_ref="rate_date_projected",
+            message=(
+                f"OSS line {observation.ledger_id!r}: no edition of the {observation.destination_member_state.value} "
+                f"{observation.rate_kind.value} rate covers {observation.transaction_date}; its cuota matches "
+                f"the nearest edition, {record.pct} %, which is a projection and not a published rate for that date."
+            ),
+            remedy="Check the rate that applied on the supply date against the Member State's own publication.",
+        )
+        for observation in observations
+        if not (
+            record := lookup_rate(
+                observation.destination_member_state,
+                observation.rate_kind,
+                observation.transaction_date,
+                operation=operation,
+            )
+        ).published_on_date
     )
 
 
@@ -1186,6 +1319,7 @@ class OssIossLedgerSourceResolver:
                 source_kind="ledger_oss_aggregation",
                 resolver_id=self.resolver_id,
             )
+            + _projected_rate_diagnostics(observations, resolver_id=self.resolver_id, operation=indexed_operation)
             + tuple(
                 CalculationSourceDiagnostic(
                     reason="unrouted_observation",

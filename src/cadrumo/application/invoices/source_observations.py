@@ -512,6 +512,22 @@ def is_rectificativa(invoice: Invoice) -> bool:
     return invoice.invoice_class == invoice_class_rectificativa()
 
 
+def rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue) -> Invoice | None:
+    """Return the ordinary invoice the correction names, read by its kind, bucket, counterparty and number."""
+    return next(
+        (
+            invoice
+            for invoice in invoices.values()
+            if invoice.kind is rectificativa.kind
+            and invoice.bucket_id == rectificativa.bucket_id
+            and not is_rectificativa(invoice)
+            and invoice.counterparty_tax_id == rectificativa.counterparty_tax_id
+            and invoice.invoice_number == rectificativa.rectifies_invoice_number
+        ),
+        None,
+    )
+
+
 def _m347_netted_amount(invoice: Invoice, amount: Decimal) -> Decimal:
     """Give a rectificativa's amount the sign that nets it against the operations it corrects.
 
