@@ -298,6 +298,7 @@ class MemoryProrrataRegisterDoor:
             profile_id=request.profile_id,
             entries=tuple(listed_prorrata_entry(entry) for entry in self.entries),
             sectors=tuple(self.sectors),
+            gross_declarations=(),
             count=len(self.entries),
         )
 

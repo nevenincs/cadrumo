@@ -908,10 +908,12 @@ def prorrata_list(ctx: typer.Context) -> None:
     def render() -> None:
         entries = [_entry_payload(entry) for entry in projection.entries]
         sectors = [_sector_payload(definition) for definition in projection.sectors]
+        gross_declarations = [_gross_declaration_payload(declaration) for declaration in projection.gross_declarations]
         payload = ProrrataListResult(
             bucket_id=str(profile_id),
             entries=entries,
             sectors=sectors,
+            gross_declarations=gross_declarations,
             count=projection.count,
         )
         lines = [f"bucket\t{profile_id}", f"count\t{projection.count}"]
@@ -924,6 +926,12 @@ def prorrata_list(ctx: typer.Context) -> None:
             lines.append(
                 f"sector\t{definition.sector_id}\tletra={definition.letra}\t"
                 f"codes={','.join(definition.member_activity_codes)}",
+            )
+        for declaration in gross_declarations:
+            lines.append(
+                f"gross	{declaration.ejercicio}	{declaration.period}	sector={declaration.sector_id or ''}	"
+                f"gross_cuota={declaration.gross_cuota}	provenance={declaration.provenance}	"
+                f"evidence_reference={declaration.evidence_reference}	declared_at={declaration.declared_at}",
             )
         emit_envelope(
             ctx,
