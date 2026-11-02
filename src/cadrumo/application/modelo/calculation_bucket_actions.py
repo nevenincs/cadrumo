@@ -822,6 +822,11 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
         return "iva_selected_scope_evidence_failure"
     if diagnostic.reason == "iva_compensation_annual_source_evidence_failure":
         return "iva_compensation_annual_source_evidence_failure"
+    return _durable_binding_gate_reason(diagnostic)
+
+
+def _durable_binding_gate_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
+    """Keep explicit literal narrowing for the binding-keyed durable reasons."""
     if diagnostic.reason == "withholding_detail_absent":
         return "withholding_detail_absent"
     if diagnostic.reason == "unresolved_binding":

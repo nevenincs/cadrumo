@@ -151,6 +151,24 @@ def period_state_from_303_envelope(
     )
 
 
+def _filed_period_states(
+    envelopes: tuple[ObservationEnvelopePayload, ...],
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaCompensationPeriodState, ...]:
+    return tuple(
+        period_state_from_303_envelope(envelope, operation=operation)
+        for envelope in envelopes
+        if envelope.observation.modelo == form_for_role("iva.periodic")
+        and envelope.observation.filing_year == filing_year
+    )
+
+
+def _year_applies_compensation(states: tuple[IvaCompensationPeriodState, ...], *, filing_year: int) -> bool:
+    return any(state.filing_year == filing_year and (state.applied_amount or ZERO) > ZERO for state in states)
+
+
 def resolve_iva_compensation_annual_partition_binding_values(
     revision: ModeloRevision,
     envelopes: tuple[ObservationEnvelopePayload, ...],
@@ -174,12 +192,7 @@ def resolve_iva_compensation_annual_partition_binding_values(
     requirement = iva_compensation_annual_partition_requirement(revision)
     if requirement is None:
         return {}
-    states = tuple(
-        period_state_from_303_envelope(envelope, operation=operation)
-        for envelope in envelopes
-        if envelope.observation.modelo == form_for_role("iva.periodic")
-        and envelope.observation.filing_year == filing_year
-    )
+    states = _filed_period_states(envelopes, filing_year=filing_year, operation=operation)
     if not states:
         return {}
     # The credit of earlier ejercicios is the oldest in the FIFO, so it is
@@ -187,9 +200,7 @@ def resolve_iva_compensation_annual_partition_binding_values(
     # four states do not state directly; an unknown opening leaves box 85
     # unresolved rather than read as zero.
     opening_balance = iva_compensation_year_opening_balance(states, filing_year=filing_year)
-    if opening_balance is None and any(
-        state.filing_year == filing_year and (state.applied_amount or ZERO) > ZERO for state in states
-    ):
+    if opening_balance is None and _year_applies_compensation(states, filing_year=filing_year):
         # An unknown opening is charged first by the FIFO, so any application in
         # the year may have consumed it rather than the year's own credit. The
         # year-end remainders (boxes 97 and 662) are then unknown too; without an

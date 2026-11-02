@@ -1188,11 +1188,8 @@ class CalculationRevisionCatalogue(BaseModel):
         caller holding only one of the two need not convert first; any other
         type is simply absent rather than an error.
         """
-        if isinstance(key, CalculationRevision):
-            return key.calculation_revision_id in self.revisions
-        if isinstance(key, str):
-            return key in self.revisions
-        return False
+        revision_id = key.calculation_revision_id if isinstance(key, CalculationRevision) else key
+        return isinstance(revision_id, str) and revision_id in self.revisions
 
 
 class LedgerFilingCoverageError(ModeloError):

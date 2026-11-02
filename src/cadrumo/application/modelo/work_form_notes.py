@@ -11,6 +11,7 @@ from collections.abc import Iterable, Mapping
 from typing import Final
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
+from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, element_names_of
@@ -114,6 +115,18 @@ def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[M
     return any(finding.message_locale_key in causes and finding.casilla_id == casilla_id for finding in findings)
 
 
+def _boxes_by_casilla(fields: Iterable[ModeloFormField]) -> dict[CasillaId, str | None]:
+    """The printed box of each casilla-addressed field."""
+    return {
+        field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
+    }
+
+
+def _message_in_language(worded: tuple[str, OutputLanguage] | None, language: OutputLanguage) -> str | None:
+    """The resolver's message when it is worded in the form's own language, else nothing."""
+    return worded[0] if worded is not None and worded[1] is language else None
+
+
 def project_calculation_notes(
     context: WorkFormContext, sources: tuple[NoteSource, ...], fields: Iterable[ModeloFormField]
 ) -> tuple[ModeloFormCalculationNote, ...]:
@@ -130,12 +143,10 @@ def project_calculation_notes(
     where it accepted an attestation, so the note is left out.
     """
     checked = context.review.verification_outcome is not None
-    boxes = {
-        field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
-    }
+    boxes = _boxes_by_casilla(fields)
     notes: dict[tuple[str, str | None, tuple[str, ...]], ModeloFormCalculationNote] = {}
     for reason, casilla_id, binding_source, fact, outcome, worded in sources:
-        message = worded[0] if worded is not None and worded[1] is context.language else None
+        message = _message_in_language(worded, context.language)
         key = (reason, casilla_id, (message or "",) if fact is None else fact.identity())
         if key in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
@@ -160,9 +171,7 @@ def project_verification_issues(
     review: ModeloWorkReview, fields: Iterable[ModeloFormField]
 ) -> tuple[ModeloFormIssue, ...]:
     """The review's verification findings, blocking first, each with the box it names."""
-    boxes = {
-        field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
-    }
+    boxes = _boxes_by_casilla(fields)
     ordered = sorted(
         review.findings, key=lambda finding: finding.severity is not ModeloVerificationFindingSeverity.BLOCKING
     )
