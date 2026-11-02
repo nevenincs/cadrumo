@@ -398,15 +398,13 @@ export function WithholdingPane({
         ["ingreso_a_cuenta_repercutido", "repercutido"],
         ["pago_a_cuenta", "pago"],
       ] as const
-    ).map(
-      ([field, column]): Column<WithholdingRow> => ({
-        key: column,
-        label: t(`desktop.ledger.withholding.column.${column}`),
-        numeric: true,
-        sort: (found) => rankDecimal(found[field].decimal),
-        cell: (found) => amount(found[field]),
-      }),
-    ),
+    ).map(([field, column]): Column<WithholdingRow> => ({
+      key: column,
+      label: t(`desktop.ledger.withholding.column.${column}`),
+      numeric: true,
+      sort: (found) => rankDecimal(found[field].decimal),
+      cell: (found) => amount(found[field]),
+    })),
     {
       key: "origin",
       label: t("desktop.ledger.withholding.column.origin"),
