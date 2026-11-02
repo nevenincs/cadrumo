@@ -522,6 +522,14 @@
         "path": []
       }
     },
+    "ledger.invoice.duplicate": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.invoice.import": {
       "may_write": true,
       "review": false,
@@ -875,6 +883,14 @@
       }
     },
     "ledger.rule.trial": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.split.check": {
       "may_write": false,
       "review": false,
       "subject": {

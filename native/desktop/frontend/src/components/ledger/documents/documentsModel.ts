@@ -20,6 +20,7 @@ import type {
   FindingResolutionAction,
   InvoiceKind,
   JsonValue,
+  LedgerInvoiceDuplicateRequest,
 } from "../../../shell/ledger";
 import type { EvidenceUpdateField } from "../../../shell/ledgerContract";
 import {
@@ -444,7 +445,8 @@ export type ConfirmHold =
   | "currency"
   | "findings"
   | "corrections"
-  | "duplicate";
+  | "duplicate"
+  | "duplicate_unread";
 
 /**
  * The confirmation for one reading, or what holds it. The kind and the
@@ -462,6 +464,8 @@ export function confirmation(input: {
   country: string;
   corrections: Corrections;
   duplicate: CatalogueInvoice | null;
+  /** Whether the ledger has yet to say if this reading is in the catalogue. */
+  duplicateUnread?: boolean;
   confirmAnyway: boolean;
 }):
   | { kind: "ready"; request: EvidenceConfirmRequest }
@@ -483,6 +487,7 @@ export function confirmation(input: {
   const findings = findingsState(input.blockers, input.answers);
   if (findings.open.length) holds.push("findings");
   if (input.duplicate && !input.confirmAnyway) holds.push("duplicate");
+  if (input.duplicateUnread) holds.push("duplicate_unread");
   if (holds.length || input.kind === null) return { kind: "held", holds };
   return {
     kind: "ready",
@@ -502,53 +507,25 @@ export function confirmation(input: {
   };
 }
 
-const folded = (text: string | null | undefined) =>
-  (text ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "");
-
-/**
- * The catalogue invoice this reading may already be: the same kind and
- * number with no disagreeing tax id, or the same tax id, date and total.
- */
-export function duplicateOf(
+/** What the reading now states, to ask whether the catalogue holds it already.
+ * No kind, no question: the kind is the person's to choose. */
+export function duplicateQuestion(
   draft: EvidenceDraft,
   kind: InvoiceKind | null,
   corrections: Corrections,
-  invoices: readonly CatalogueInvoice[] | null,
-): CatalogueInvoice | null {
-  if (!invoices || kind === null) return null;
+): LedgerInvoiceDuplicateRequest | null {
+  if (kind === null) return null;
   const corrected = correctionValues(draft, kind, corrections);
   const values = corrected.kind === "ok" ? corrected.values : {};
-  const number = folded(
-    values.invoice_number ?? readValue(draft, "invoice_number"),
-  );
-  const taxId = folded(
-    values.counterparty_tax_id ??
+  return {
+    kind,
+    invoice_number: values.invoice_number ?? readValue(draft, "invoice_number"),
+    counterparty_tax_id:
+      values.counterparty_tax_id ??
       readValue(draft, readingFieldOf("counterparty_tax_id", kind)),
-  );
-  const date = values.invoice_date ?? readValue(draft, "invoice_date");
-  const total = readValue(draft, "grand_total");
-  const same = invoices.filter((invoice) => invoice.kind === kind);
-  // The same number first; only where none has it, the same party, day
-  // and total.
-  return (
-    same.find((invoice) => {
-      const theirs = folded(invoice.counterparty_tax_id);
-      return (
-        !!number &&
-        folded(invoice.invoice_number) === number &&
-        (!taxId || !theirs || taxId === theirs)
-      );
-    }) ??
-    same.find(
-      (invoice) =>
-        !!taxId &&
-        taxId === folded(invoice.counterparty_tax_id) &&
-        date === invoice.issued_at &&
-        total !== null &&
-        sameDecimal(total, invoice.grand_total.decimal),
-    ) ??
-    null
-  );
+    invoice_date: values.invoice_date ?? readValue(draft, "invoice_date"),
+    grand_total: readValue(draft, "grand_total"),
+  };
 }
 
 /** Whether two readings say the same: a fresh reading equal to the one

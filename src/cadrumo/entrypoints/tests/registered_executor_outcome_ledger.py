@@ -34,6 +34,10 @@ from ...application.invoices.catalogue_update_operation import (
     InvoiceUpdateRequest,
     InvoiceUpdateResult,
 )
+from ...application.invoices.duplicate_check_operation import (
+    LedgerInvoiceDuplicateRequest,
+    LedgerInvoiceDuplicateResult,
+)
 from ...application.invoices.figures_preview_contracts import InvoiceFiguresPreviewRequest, InvoiceFiguresPreviewResult
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
 from ...application.ledger.bulk_classify_operation import (
@@ -76,6 +80,7 @@ from ...application.ledger.remove_operation import LedgerRemoveOperationResult, 
 from ...application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ...application.ledger.review_operation import LedgerReviewProjection
 from ...application.ledger.rule_trial_operation import LedgerRuleTrialRequest, LedgerRuleTrialResult
+from ...application.ledger.split_check_operation import LedgerSplitCheckRequest, LedgerSplitCheckResult
 from ...application.ledger.split_operation import LedgerSplitOperationResult, LedgerSplitRequest
 from ...application.ledger.staged_check_contracts import LedgerStagedCheckRequest, LedgerStagedCheckResult
 from ...application.ledger.status_operation import LedgerStatusProjection, LedgerStatusRequest
@@ -572,6 +577,28 @@ def assert_ledger_rule_trial_outcome(ctx: ExecutorOutcome) -> None:
     assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
+def assert_ledger_invoice_duplicate_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.invoice.duplicate answer, which compares a document and stores nothing."""
+    assert isinstance(ctx.payload, LedgerInvoiceDuplicateRequest)
+    answer = ctx.resolve(LedgerInvoiceDuplicateResult)
+    assert isinstance(answer, LedgerInvoiceDuplicateResult)
+    assert answer.profile_id == ctx.profile_id
+    assert answer.invoice_id is None
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
+def assert_ledger_split_check_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.split.check answer, which judges unsaved parts and stores nothing."""
+    assert isinstance(ctx.payload, LedgerSplitCheckRequest)
+    answer = ctx.resolve(LedgerSplitCheckResult)
+    assert isinstance(answer, LedgerSplitCheckResult)
+    assert answer.profile_id == ctx.profile_id
+    # No stored movement carries that id.
+    assert answer.problem is not None
+    assert answer.problem.kind == "gone"
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
 def assert_ledger_staged_check_outcome(ctx: ExecutorOutcome) -> None:
     """Check the ledger.staged.check answer, which judges staged work and stores nothing."""
     assert isinstance(ctx.payload, LedgerStagedCheckRequest)
@@ -822,6 +849,8 @@ LEDGER_OUTCOME_ASSERTIONS: dict[str, Callable[[ExecutorOutcome], None]] = {
     "ledger.preflight": assert_ledger_preflight_outcome,
     "ledger.entry-options": assert_ledger_entry_options_outcome,
     "ledger.rule.trial": assert_ledger_rule_trial_outcome,
+    "ledger.invoice.duplicate": assert_ledger_invoice_duplicate_outcome,
+    "ledger.split.check": assert_ledger_split_check_outcome,
     "ledger.staged.check": assert_ledger_staged_check_outcome,
     "ledger.known-values": assert_ledger_known_values_outcome,
     "ledger.list": assert_ledger_list_outcome,

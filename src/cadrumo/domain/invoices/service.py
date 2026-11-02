@@ -48,7 +48,7 @@ _LOGGER = get_logger(__name__)
 #: rounding means. The two agreeing today is a coincidence of scale, and folding
 #: this onto CENT would make a later loosening of link suggestions silently
 #: loosen every rounding check in the codebase.
-_DEFAULT_MATCH_TOLERANCE = Decimal("0.01")
+INVOICE_MATCH_TOLERANCE = Decimal("0.01")
 
 
 class ReconciliationSuggestion(BaseModel):
@@ -157,7 +157,7 @@ def suggest_reconciliations(
     invoices: InvoiceCatalogue,
     transactions: TransactionCatalogue,
     *,
-    amount_tolerance: Decimal = _DEFAULT_MATCH_TOLERANCE,
+    amount_tolerance: Decimal = INVOICE_MATCH_TOLERANCE,
 ) -> tuple[ReconciliationSuggestion, ...]:
     """Return auto-suggested invoice/transaction links sorted by score.
 
@@ -234,7 +234,7 @@ class _ReconciliationAmountIndex:
 
     def candidates(self, invoice: Invoice, *, amount_tolerance: Decimal) -> list[Transaction]:
         """Return the expected-direction transactions whose amount the rule accepts."""
-        bucket = self._by_direction.get(_expected_reconciliation_direction(invoice))
+        bucket = self._by_direction.get(invoice_settling_direction(invoice.kind))
         if bucket is None:
             return []
         amounts, members = bucket
@@ -255,12 +255,12 @@ class _ReconciliationAmountIndex:
         return members[start:stop]
 
 
-def _expected_reconciliation_direction(invoice: Invoice) -> TransactionDirection:
-    """Return the ledger flow expected for an invoice kind."""
+def invoice_settling_direction(kind: InvoiceKind) -> TransactionDirection:
+    """Return the ledger flow an invoice of ``kind`` is settled in."""
     # ``amount`` is a non-negative magnitude; flow is carried by ``direction``.
     # An ISSUED invoice reconciles against an INCOMING transaction, a RECEIVED
     # invoice against an OUTGOING transaction.
-    return TransactionDirection.INCOMING if invoice.kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
+    return TransactionDirection.INCOMING if kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
 
 
 def _reconciliation_amount_matches(
@@ -303,7 +303,7 @@ def _suggestion_for_pair(
     amount_tolerance: Decimal,
 ) -> ReconciliationSuggestion | None:
     """Build one suggestion when a candidate pair satisfies flow and amount."""
-    if transaction.direction is not _expected_reconciliation_direction(invoice):
+    if transaction.direction is not invoice_settling_direction(invoice.kind):
         return None
     amount_match = _reconciliation_amount_matches(
         invoice,

@@ -35,6 +35,7 @@ from ._app_ledger_command_spec_support import (
     _OPTIONAL_PERIOD_OPTION,
     _OPTIONAL_YEAR_OPTION,
     _optional_text_option,
+    _required_text_argument,
 )
 
 _LOW_CONFIDENCE_DEFAULT = 0.5
@@ -423,6 +424,36 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_results", "LedgerEntryOptionsResult", __package__),
             identity="ledger.entry-options",
+        ),
+    ),
+    CommandSpec(
+        "app_ledger_split_check",
+        "app_ledger",
+        "split-check",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.ledger.split_check_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            _required_text_argument("transaction_id", "cli.ledger.split_check_id_help"),
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
+        ),
+        policy=_POLICY_5,
+        handler=LazyBinding.available(DeferredTarget(".split_check_commands", "split_check", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_results", "LedgerSplitCheckEnvelope", __package__),
+            identity="ledger.split-check",
+        ),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "staged",
+                    (MachineSecretFieldSpec("parts"),),
+                    DeferredTarget(".split_check_commands", "SplitCheckSecrets", __package__),
+                ),
+            ),
         ),
     ),
     CommandSpec(

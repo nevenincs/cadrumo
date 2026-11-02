@@ -2127,6 +2127,9 @@ desktop:
       currency_not_read: 'Not on the document: say which'
       derived: Made from a read off this computer
       duplicate: 'Already in the catalogue: {number}'
+      duplicate_check_failed: The ledger did not say whether this reading is already
+        in the catalogue, so it can't be confirmed yet.
+      duplicate_check_retry: Ask again
       entered_by_you: Entered by you
       field:
         counterparty_name: Counterparty
@@ -2166,6 +2169,7 @@ desktop:
         country: Give the country in two letters
         currency: Say the currency
         duplicate: It may already be in the catalogue
+        duplicate_unread: Waiting for the ledger to check the catalogue
         findings: Answer every question first
       in_review: In review
       keep: Keep it
@@ -3065,13 +3069,17 @@ desktop:
         add_part: Add a part
         amount: Part {part} needs an amount above zero.
         category_needed: Choose a category for part {part}.
+        check_failed: The ledger did not answer about these parts, so the split can't
+          be added yet.
+        check_retry: Ask again
         choose_category: Choose a category
         count: A split has 2 to {max} parts.
         description: The parts add up to {amount}. The last part takes what is left.
         description_long: Part {part} takes a description of at most {max} characters.
         description_needed: Part {part} needs a description.
-        duplicate: 'Part {part} is the same as another: change its amount or description.'
+        gone: This movement is no longer in the ledger.
         mixed_hint: Partly used for work? Use Mixed with a share instead.
+        not_active: Only an active movement can be split.
         over: The parts are {amount} over the movement.
         part_amount: Part {part} amount
         part_category: Category of part {part}

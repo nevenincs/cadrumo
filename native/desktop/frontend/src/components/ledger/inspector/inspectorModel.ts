@@ -16,13 +16,10 @@ import {
   takesBusinessShare,
   takesChanges,
 } from "../../../shell/ledgerContract";
-import { textLimit } from "../../../shell/ledgerLimits";
 import type { StagedCheck } from "../../../shell/ledgerStagedCheck";
 import {
-  parseDecimal,
   periodOf,
   samePeriod,
-  AMOUNT_RULE,
   type LedgerPeriod,
 } from "../../../shell/ledgerGrammar";
 import {
@@ -283,103 +280,6 @@ export function completeCohort(
     parts.length === selected.length &&
     parts.every((id) => selected.includes(id))
   );
-}
-
-// ---- Split ---------------------------------------------------------------------
-
-type Cents = bigint;
-function centsOf(text: string): Cents | null {
-  const parsed = parseDecimal(text, AMOUNT_RULE);
-  if (parsed.kind !== "value") return null;
-  const [whole, fraction = ""] = parsed.value.split(".");
-  return BigInt(whole!) * 100n + BigInt(fraction.padEnd(2, "0"));
-}
-function textOfCents(value: Cents): string {
-  const whole = value / 100n;
-  const fraction = value % 100n;
-  if (fraction === 0n) return whole.toString();
-  const digits = fraction.toString().padStart(2, "0").replace(/0$/, "");
-  return `${whole}.${digits}`;
-}
-
-/** The part that makes the parts add up to the movement's amount: what is
- * left once the others are taken, in shortest canonical form, or null when
- * the others are not all amounts or leave nothing. */
-export function splitRemainder(
-  total: string,
-  others: readonly string[],
-): string | null {
-  const whole = centsOf(total);
-  if (whole === null) return null;
-  let left = whole;
-  for (const other of others) {
-    const part = centsOf(other);
-    if (part === null) return null;
-    left -= part;
-  }
-  return left > 0n ? textOfCents(left) : null;
-}
-
-export type SplitProblem =
-  | { kind: "count" }
-  | { kind: "limits_unavailable" }
-  | { kind: "amount"; index: number }
-  | { kind: "description"; index: number }
-  | { kind: "description_long"; index: number; max: number }
-  | { kind: "duplicate"; index: number }
-  | { kind: "sum"; difference: string; over: boolean };
-
-/** Whether the parts make a split the ledger takes: two or more and no
- * more than the ledger serves, each a
- * positive amount with a description, no two alike, adding up to the
- * movement's amount exactly. The amounts come back in shortest form. */
-export function checkSplit(
-  total: string,
-  parts: readonly { amount: string; description: string }[],
-):
-  | { ok: true; children: { amount: string; description: string }[] }
-  | { ok: false; problem: SplitProblem } {
-  const most = textLimit("split_parts");
-  const longest = textLimit("split_part_description");
-  if (most === null || longest === null)
-    return { ok: false, problem: { kind: "limits_unavailable" } };
-  if (parts.length < 2 || parts.length > most)
-    return { ok: false, problem: { kind: "count" } };
-  const whole = centsOf(total);
-  let sum = 0n;
-  const seen = new Set<string>();
-  const children: { amount: string; description: string }[] = [];
-  for (const [index, part] of parts.entries()) {
-    const amount = centsOf(part.amount);
-    if (amount === null)
-      return { ok: false, problem: { kind: "amount", index } };
-    const description = part.description.trim();
-    if (description === "")
-      return { ok: false, problem: { kind: "description", index } };
-    if ([...description].length > longest)
-      return {
-        ok: false,
-        problem: { kind: "description_long", index, max: longest },
-      };
-    const key = `${amount}␟${description}`;
-    if (seen.has(key))
-      return { ok: false, problem: { kind: "duplicate", index } };
-    seen.add(key);
-    sum += amount;
-    children.push({ amount: textOfCents(amount), description });
-  }
-  if (whole === null || sum !== whole) {
-    const difference = whole === null ? 0n : sum - whole;
-    return {
-      ok: false,
-      problem: {
-        kind: "sum",
-        difference: textOfCents(difference < 0n ? -difference : difference),
-        over: difference > 0n,
-      },
-    };
-  }
-  return { ok: true, children };
 }
 
 // ---- The model's suggestion ----------------------------------------------------

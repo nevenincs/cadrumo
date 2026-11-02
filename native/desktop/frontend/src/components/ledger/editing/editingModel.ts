@@ -43,6 +43,7 @@ import {
   type StagedValue,
 } from "../../../shell/ledgerStage";
 import {
+  isIdentityField,
   DECIDED_CLASSIFICATIONS,
   DIRECTIONS,
   DRAFT_REQUIRED_FIELDS,
@@ -110,14 +111,6 @@ export const typedPoints = (said: string): string =>
  * has served none. */
 export const textLimitOf = (field: StageField | DraftField): number | null =>
   textLimit(TEXT_LIMITS[field as StageField] ?? "entry_text");
-
-/** The columns whose change gives a movement a new id. */
-export const IDENTITY_COLUMNS: ReadonlySet<ColumnId> = new Set([
-  "date",
-  "description",
-  "amount",
-  "account",
-]);
 
 /** The choice that binds a movement to no own account: a clear of it. */
 export const NO_ACCOUNT = "none:account";
@@ -693,7 +686,7 @@ export function planPaste(
     if (placed === "blank") blanks += 1;
     if (placed === "staged") {
       changes += 1;
-      if (IDENTITY_COLUMNS.has(column)) touchesIdentity = true;
+      if (field && isIdentityField(field)) touchesIdentity = true;
     }
   }
   const rows = new Set(targets.map((target) => target.key)).size;

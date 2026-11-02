@@ -72,6 +72,7 @@ from ...domain.attachments.service import link_attachment_invoice
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.invoices.duplicates import likely_duplicate_invoice
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceRetentionFigureError, InvoiceValidationError
 from ...domain.invoices.models import Invoice
@@ -158,6 +159,9 @@ class InvoiceConfirmationResult(BaseModel):
         retention_discrepancy: Set when the document reads a withheld figure the
             invoice on record does not hold, which re-confirming an invoice confirmed
             before retention was read reports rather than writes.
+        likely_duplicate_invoice_id: Another stored invoice this one may already
+            be, by the rule ``ledger.invoice.duplicate`` answers. Reported and never
+            refused: the person may have chosen to confirm anyway.
         total_discrepancy: Set when the document's printed total disagrees with
             the derived total now on record -- see
             :class:`PrintedTotalDiscrepancy` for why that is always worth
@@ -196,6 +200,7 @@ class InvoiceConfirmationResult(BaseModel):
     created: bool
     total_discrepancy: PrintedTotalDiscrepancy | None = None
     retention_discrepancy: RetentionReadingDiscrepancy | None = None
+    likely_duplicate_invoice_id: str | None = None
     confirmation_id: Hex16Str | None = None
     confirmed_provenance: tuple[FieldProvenance, ...] = ()
     establishment: ConfirmedEstablishment | None = None
@@ -848,6 +853,16 @@ def _persist_confirmed_invoice(
             prior=already_minted[0],
             attachment_id=preparation.attachment_id,
         )
+    # Asked before the candidate is stored, so a record is never its own duplicate.
+    likely = likely_duplicate_invoice(
+        (invoice for invoice_id, invoice in sorted(catalogue.invoices.items()) if invoice_id != candidate.invoice_id),
+        kind=candidate.kind,
+        invoice_number=candidate.invoice_number,
+        counterparty_tax_id=candidate.counterparty_tax_id,
+        invoice_date=candidate.issued_at,
+        grand_total=candidate.grand_total,
+    )
+    likely_id = likely.invoice_id if likely is not None else None
     existing = catalogue.get(candidate.invoice_id)
     if existing is not None:
         divergent = _fields_a_reconfirm_would_change(candidate, existing)
@@ -897,6 +912,7 @@ def _persist_confirmed_invoice(
             ),
             total_discrepancy=printed_total_discrepancy(draft=preparation.draft, invoice=existing),
             retention_discrepancy=retention_reading_discrepancy(draft=preparation.draft, invoice=existing),
+            likely_duplicate_invoice_id=likely_id,
             establishment=preparation.establishment,
         )
     result = create_catalogue_invoice(invoice=candidate, ports=catalogue_creation_ports)
@@ -931,6 +947,7 @@ def _persist_confirmed_invoice(
         created=True,
         total_discrepancy=printed_total_discrepancy(draft=preparation.draft, invoice=result.invoice),
         retention_discrepancy=retention_reading_discrepancy(draft=preparation.draft, invoice=result.invoice),
+        likely_duplicate_invoice_id=likely_id,
         confirmation_id=confirmation_record.confirmation_id,
         confirmed_provenance=re_stamped_provenance(
             draft=preparation.draft,

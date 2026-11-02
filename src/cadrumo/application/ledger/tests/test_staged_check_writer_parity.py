@@ -208,6 +208,19 @@ def test_a_category_is_settable_on_the_classification_staged_not_the_one_stored(
     assert check_stored_row(_row(), archived).category_settable is False
 
 
+def test_a_row_is_asked_for_a_category_as_it_will_be_saved_and_income_is_asked_but_not_set() -> None:
+    unclassified = _stored()
+    assert check_stored_row(_row(), unclassified).category_askable is False
+    assert check_stored_row(_row(("business_classification", "BUSINESS")), unclassified).category_askable is True
+    business = _stored(classification=BusinessClassification.BUSINESS)
+    assert check_stored_row(_row(("business_classification", "PERSONAL")), business).category_askable is False
+    archived = business.model_copy(update={"lifecycle_state": TransactionLifecycleState.ARCHIVED})
+    assert check_stored_row(_row(), archived).category_askable is False
+    income = _stored(direction=TransactionDirection.INCOMING, classification=BusinessClassification.BUSINESS)
+    answer = check_stored_row(_row(), income)
+    assert (answer.category_askable, answer.category_settable) == (True, False)
+
+
 def test_a_set_for_all_skips_personal_for_what_its_write_drops_and_no_longer_skips_the_unclassified() -> None:
     personal = _stored(classification=BusinessClassification.PERSONAL)
     assert check_stored_row(_row(), personal).tax_set_skip == "personal"
