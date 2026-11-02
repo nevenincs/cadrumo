@@ -1215,12 +1215,13 @@ desktop:
     close: Cerrar panel
     dock: Acoplar panel
     exit_fullscreen: Salir de pantalla completa
-    expand: Ampliar panel
+    expand: Ampliar en el espacio de trabajo
     float: Panel flotante
     fullscreen: Pantalla completa
     left: Dividir a la izquierda
     move: Mover panel flotante
     resize: Redimensionar panel flotante
+    restore: Restaurar tamaño del panel
     right: Dividir a la derecha
     tab: Mover a pestañas
     tabs: Pestañas del espacio de trabajo

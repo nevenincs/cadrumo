@@ -12,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useStrings } from "../../shell/strings";
+import { SessionDot, type SessionPhase } from "../PaneHeader";
+import { DockedPane } from "./PaneChrome";
 import {
   activateDockPane,
   clampDockRect,
@@ -44,6 +46,7 @@ export type DockContent = {
   title: string;
   content: ReactNode;
   className?: string;
+  status?: { phase: SessionPhase; note?: string };
 };
 
 /** Contents have fixed React ancestry. Only geometry and visibility change. */
@@ -51,10 +54,12 @@ export function DockWorkspace({
   layout,
   visible,
   expanded,
+  fullscreen,
   panes,
   onChange,
   onActivate,
   onFocusPane,
+  onMenuClosed,
   onClose,
   onExpand,
   onFullscreen,
@@ -63,10 +68,12 @@ export function DockWorkspace({
   layout: DockLayout;
   visible: DockPane[];
   expanded: DockPane | null;
+  fullscreen: boolean;
   panes: DockContent[];
   onChange: (update: (layout: DockLayout) => DockLayout) => void;
   onActivate: (pane: DockPane) => void;
   onFocusPane: (pane: DockPane) => void;
+  onMenuClosed: () => void;
   onClose: (pane: DockPane) => void;
   onExpand: (pane: DockPane) => void;
   onFullscreen: (pane: DockPane) => void;
@@ -83,6 +90,8 @@ export function DockWorkspace({
   const { groups, dividers } = dockGeometry(layout, visible);
   const title = (pane: DockPane) =>
     panes.find((item) => item.id === pane)?.title ?? pane;
+  const status = (pane: DockPane) =>
+    panes.find((item) => item.id === pane)?.status;
   const gesture = useRef<{
     pane: DockPane;
     x: number;
@@ -129,19 +138,22 @@ export function DockWorkspace({
         </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent
+        data-dock-menu=""
         onCloseAutoFocus={(event) => {
           const held = document.activeElement;
           if (held && held !== document.body) event.preventDefault();
+          requestAnimationFrame(onMenuClosed);
         }}
       >
         <DropdownMenuItem icon="maximize" onSelect={() => onExpand(pane)}>
-          {t(expanded ? "desktop.pane.restore" : "desktop.dock.expand")}
+          {t(expanded ? "desktop.dock.restore" : "desktop.dock.expand")}
         </DropdownMenuItem>
-        <DropdownMenuItem
-          icon="windowMaximize"
-          onSelect={() => onFullscreen(pane)}
-        >
-          {t("desktop.dock.fullscreen")}
+        <DropdownMenuItem icon="fullscreen" onSelect={() => onFullscreen(pane)}>
+          {t(
+            fullscreen
+              ? "desktop.dock.exit_fullscreen"
+              : "desktop.dock.fullscreen",
+          )}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon="external"
@@ -244,7 +256,7 @@ export function DockWorkspace({
                 : undefined
             }
           >
-            {pane.content}
+            <DockedPane>{pane.content}</DockedPane>
           </section>
         );
       })}
@@ -379,7 +391,14 @@ export function DockWorkspace({
                         : `dock-content-${pane}`
                     }
                     draggable
-                    title={title(pane)}
+                    title={[title(pane), status(pane)?.note]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    aria-description={status(pane)?.note}
+                    onDoubleClick={(event) => {
+                      event.stopPropagation();
+                      onExpand(pane);
+                    }}
                     onClick={() => {
                       onChange((current) => activateDockPane(current, pane));
                       onFocusPane(pane);
@@ -408,6 +427,7 @@ export function DockWorkspace({
                       move(source, pane, "tab");
                     }}
                   >
+                    {status(pane) && <SessionDot phase={status(pane)!.phase} />}
                     <span className="truncate">{title(pane)}</span>
                   </TabsTrigger>
                 ))}
@@ -416,7 +436,7 @@ export function DockWorkspace({
             {menus(item.active, item.floating)}
             <IconButton
               label={t(
-                expanded ? "desktop.pane.restore" : "desktop.dock.expand",
+                expanded ? "desktop.dock.restore" : "desktop.dock.expand",
               )}
               onClick={() => onExpand(item.active)}
             >

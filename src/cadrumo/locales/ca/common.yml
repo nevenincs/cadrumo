@@ -1209,12 +1209,13 @@ desktop:
     close: Tanca el panell
     dock: Acobla el panell
     exit_fullscreen: Surt de pantalla completa
-    expand: Amplia el panell
+    expand: Amplia a l’espai de treball
     float: Panell flotant
     fullscreen: Pantalla completa
     left: Divideix a l’esquerra
     move: Mou el panell flotant
     resize: Redimensiona el panell flotant
+    restore: Restaura la mida del panell
     right: Divideix a la dreta
     tab: Mou a les pestanyes
     tabs: Pestanyes de l’espai de treball

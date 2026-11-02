@@ -1188,12 +1188,13 @@ desktop:
     close: Panel bezárása
     dock: Panel dokkolása
     exit_fullscreen: Kilépés a teljes képernyőből
-    expand: Panel kibontása
+    expand: Munkaterület kitöltése
     float: Lebegő panel
     fullscreen: Teljes képernyő
     left: Felosztás balra
     move: Lebegő panel mozgatása
     resize: Lebegő panel átméretezése
+    restore: Panelméret visszaállítása
     right: Felosztás jobbra
     tab: Áthelyezés a lapokhoz
     tabs: Munkaterület lapjai

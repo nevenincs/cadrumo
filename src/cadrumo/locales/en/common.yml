@@ -1173,12 +1173,13 @@ desktop:
     close: Close panel
     dock: Dock panel
     exit_fullscreen: Exit full screen
-    expand: Expand panel
+    expand: Expand in workspace
     float: Float panel
     fullscreen: Full screen
     left: Split left
     move: Move floating panel
     resize: Resize floating panel
+    restore: Restore panel size
     right: Split right
     tab: Move to tabs
     tabs: Workspace tabs

@@ -8,6 +8,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
     {
         "desktop.dock.arrange",
         "desktop.dock.expand",
+        "desktop.dock.restore",
         "desktop.dock.fullscreen",
         "desktop.dock.exit_fullscreen",
         "desktop.dock.dock",

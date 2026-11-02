@@ -1,7 +1,6 @@
-import {
-  notifyInternalFailure,
-  observeInternalFailures,
-} from "./shell/internalFailures";
+import { usePersistedLayout } from "./shell/usePersistedLayout";
+import { useWindowCloseGuard } from "./shell/navigation/useWindowCloseGuard";
+import { observeInternalFailures } from "./shell/internalFailures";
 import { useLanguage } from "./shell/useLanguage";
 import { saveLogs } from "./shell/saveLogs";
 import { facts, labelled } from "./shell/compose";
@@ -139,7 +138,6 @@ import {
   DEFAULT_LAYOUT,
   DEFAULT_PREFS,
   loadState,
-  saveState,
   type Layout,
   type LedgerView,
   type Maximized,
@@ -395,33 +393,7 @@ export function App({ host }: { host: Host }) {
       ),
     [guardNavigation],
   );
-  // A close the system raised (the window's own close, Alt+F4) asks the
-  // page through the host, which holds the window until the page answers.
-  useEffect(() => {
-    const windowPort = host.window;
-    if (!windowPort?.guardClose) return;
-    let release: (() => void) | null = null;
-    let current = true;
-    void windowPort
-      .guardClose(() =>
-        guardNavigation(
-          { kind: "close" },
-          () =>
-            void windowPort.action("close_now").catch(notifyInternalFailure),
-          () =>
-            void windowPort.action("keep_open").catch(notifyInternalFailure),
-        ),
-      )
-      .then((stop) => {
-        if (current) release = stop;
-        else stop();
-      })
-      .catch(() => undefined);
-    return () => {
-      current = false;
-      release?.();
-    };
-  }, [host, guardNavigation]);
+  useWindowCloseGuard(host, guardNavigation);
   // Shows a page through the layout store; only the navigator, past the
   // guards, calls it directly.
   const showPage = useCallback(
@@ -637,22 +609,7 @@ export function App({ host }: { host: Host }) {
     patch({ docsShown: true });
   }, [patch, setPage, setMaximized]);
 
-  const unsaved = useRef({ prefs, layout });
-  useEffect(() => {
-    unsaved.current = { prefs, layout };
-    const timer = window.setTimeout(
-      () => saveState(prefs, layout),
-      SAVE_DELAY_MS,
-    );
-    return () => window.clearTimeout(timer);
-  }, [prefs, layout]);
-  useEffect(() => {
-    // Leaving before the pause has passed still keeps the last change.
-    const flush = () =>
-      saveState(unsaved.current.prefs, unsaved.current.layout);
-    window.addEventListener("pagehide", flush);
-    return () => window.removeEventListener("pagehide", flush);
-  }, []);
+  usePersistedLayout(prefs, layout, SAVE_DELAY_MS);
 
   const gated = account.gated;
   const phase = account.phase;
@@ -730,30 +687,47 @@ export function App({ host }: { host: Host }) {
     docking.floating.some((entry) => entry.pane === "agent") ||
     (agentTab?.group.tabs.length ?? 0) > 1 ||
     (!layout.docsShown && !pageOn && !layout.tuiShown && !layout.panelOpen);
-  const dockOffered: DockPane[] = [
-    ...(signedIn && layout.agentShown && agentHasRoom
-      ? ["agent" as const]
-      : []),
-    ...(layout.docsShown || pageOn ? ["docs" as const] : []),
-    ...(layout.tuiShown ? ["tui" as const] : []),
-    ...(layout.panelOpen ? (["console", "python", "logs"] as const) : []),
-  ].filter((pane) => !docking.closed.includes(pane));
+  const dockOffered = useMemo<DockPane[]>(
+    () =>
+      [
+        ...(signedIn && layout.agentShown && agentHasRoom
+          ? ["agent" as const]
+          : []),
+        ...(layout.docsShown || pageOn ? ["docs" as const] : []),
+        ...(layout.tuiShown ? ["tui" as const] : []),
+        ...(layout.panelOpen ? (["console", "python", "logs"] as const) : []),
+      ].filter((pane) => !docking.closed.includes(pane)),
+    [
+      signedIn,
+      layout.agentShown,
+      agentHasRoom,
+      layout.docsShown,
+      pageOn,
+      layout.tuiShown,
+      layout.panelOpen,
+      docking.closed,
+    ],
+  );
   const requestedExpansion =
     fullscreen.pane ?? (maximized === "panel" ? layout.tab : maximized);
   const expandedPane =
     requestedExpansion && dockOffered.includes(requestedExpansion)
       ? requestedExpansion
       : null;
-  const activePanes = expandedPane
-    ? [expandedPane]
-    : [
-        ...dockGeometry(docking, dockOffered).groups.map(
-          (item) => item.group.active,
-        ),
-        ...docking.floating
-          .filter((item) => dockOffered.includes(item.pane))
-          .map((item) => item.pane),
-      ];
+  const activePanes = useMemo(
+    () =>
+      expandedPane
+        ? [expandedPane]
+        : [
+            ...dockGeometry(docking, dockOffered).groups.map(
+              (item) => item.group.active,
+            ),
+            ...docking.floating
+              .filter((item) => dockOffered.includes(item.pane))
+              .map((item) => item.pane),
+          ],
+    [expandedPane, docking, dockOffered],
+  );
   const unhidden = (area: Area) =>
     area === "panel"
       ? activePanes.some(
@@ -1190,6 +1164,9 @@ export function App({ host }: { host: Host }) {
     // it is given focus, whatever was wished for before it opened. On its
     // way out it holds nothing, and a wish made then is granted at once.
     if (document.querySelector('.sign-in[data-state="open"]')) return;
+    // A closing Radix menu keeps its focus scope until the exit animation
+    // unmounts it. Retain the wish until the menu reports that it has closed.
+    if (document.querySelector("[data-dock-menu]")) return;
     // Withheld, the TUI's pane holds the way in instead of a terminal.
     const wayIn = signInButton.current;
     if (wish.view === "tui" && wayIn && wayIn.offsetParent !== null) {
@@ -3605,7 +3582,9 @@ export function App({ host }: { host: Host }) {
               layout={docking}
               visible={dockOffered}
               expanded={expandedPane}
+              fullscreen={fullscreen.fullscreen}
               onChange={changeDocking}
+              onMenuClosed={grantFocus}
               onFocusPane={(pane) => {
                 if (
                   pane === "console" ||
@@ -3625,7 +3604,14 @@ export function App({ host }: { host: Host }) {
               onClose={(pane) => {
                 if (fullscreen.pane === pane) enterFullscreen();
                 if (pane === "docs") {
-                  closeColumn("docs");
+                  if (browserOn) {
+                    guarded(() => {
+                      setBrowserKeptFor(null);
+                      showPage("docs");
+                    });
+                    setMaximized(null);
+                  } else if (pageOn) closePage();
+                  else closeColumn("docs");
                   return;
                 }
                 if (pane === "agent" || pane === "tui") {
@@ -3645,10 +3631,12 @@ export function App({ host }: { host: Host }) {
                   };
                 });
                 if (maximized === "panel") setMaximized(null);
+                focusRail();
               }}
               onExpand={(pane) => {
                 if (fullscreen.pane) {
-                  enterFullscreen();
+                  revealPane(null);
+                  setMaximized(null);
                   return;
                 }
                 if (
@@ -3689,9 +3677,30 @@ export function App({ host }: { host: Host }) {
                   ),
                   content: docsPane,
                 },
-                { id: "tui", title: t("desktop.pane.tui"), content: tuiPane },
+                {
+                  id: "tui",
+                  title: t("desktop.pane.tui"),
+                  content: tuiPane,
+                  status: account.gated
+                    ? {
+                        phase:
+                          phase === "checking" ||
+                          phase === "starting" ||
+                          account.startingServices
+                            ? "starting"
+                            : "unavailable",
+                        note: t(
+                          accountLabel(phase) ?? "desktop.account.unknown",
+                        ),
+                      }
+                    : { phase: status.tui.phase, note: sessionNote("tui") },
+                },
                 {
                   id: "console",
+                  status: {
+                    phase: status.console.phase,
+                    note: sessionNote("console"),
+                  },
                   className: cn(
                     "[container:panel/size]",
                     layout.tab === "console" && "panel",
@@ -3705,6 +3714,10 @@ export function App({ host }: { host: Host }) {
                 },
                 {
                   id: "python",
+                  status: {
+                    phase: status.python.phase,
+                    note: sessionNote("python"),
+                  },
                   className: cn(
                     "[container:panel/size]",
                     layout.tab === "python" && "panel",

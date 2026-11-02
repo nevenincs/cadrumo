@@ -10,7 +10,7 @@ related:
   - '[[2026-10-09-desktop-titlebar-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:5b0e235983847cfe50169f83d0cc0a7718a875c4abd700a40569eff550e05378'
+body_hash: 'sha256:3598df7833ca69f16e92bceddb504a5ff80ba6f0208402bb3501d6a84bb642a3'
 ---
 
 # `cadrumo-windowmanager` plan
@@ -22,7 +22,7 @@ Approved 2026-11-02. The user requested implementation of dockable, tabbed panel
 ## Steps
 
 - [x] `S01` - Implement validated single-instance docking layout state and migration; `native/desktop/frontend/src/shell/docking.ts (new), shell/layout.ts and focused layout tests`.
-- [ ] `S02` - Integrate tab groups, directional splitting, dragging, swapping and floating presentation; `native/desktop/frontend/src/App.tsx, components/docking (new), Rail.tsx, pane headers, styles and canonical locales`.
+- [x] `S02` - Integrate docking presentation with a single tab strip owning pane titles and layout controls; `native/desktop/frontend/src/App.tsx, components/docking, PaneHeader.tsx, agent/AgentHeader.tsx, Rail.tsx, styles, canonical locales and pane-header regression scenarios`.
 - [ ] `S03` - Add true fullscreen controls with restoration and verify the integrated workspace; `native/desktop/src-tauri/src/shell/window_controls.rs, frontend Host contract and adapters, Titlebar.tsx, scenarios and native window tests`.
 
 ## Parallelization
