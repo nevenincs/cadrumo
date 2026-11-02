@@ -205,7 +205,7 @@ aggregation:
         így a rekord soha nem jutna el egy számításhoz.
       identity_mismatch: A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemtípussal
         vagy igazolással.
-      not_found: Ehhez az ejercicióhoz, jövedelemosztályhoz és kifizetői hivatkozáshoz
+      not_found: Ehhez az adóévhez, jövedelemosztályhoz és kifizetői hivatkozáshoz
         nincs levonási rekord.
       own_tax_id: A kifizető adóazonosítója (NIF) a sajátod; az általad végzett levonás
         nem a javadra szóló előleg.
@@ -4454,7 +4454,7 @@ desktop:
     dismiss: Elrejtés
     edit_field: '{field} szerkesztése'
     ejercicio: Adóév
-    ejercicio_help: "Az év, amelyre ez a válasz szól. A többi év megtartja a sajátját."
+    ejercicio_help: Az év, amelyre ez a válasz szól. A többi év megtartja a sajátját.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
     entries_count: 'Bejegyzések: {count}'

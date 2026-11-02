@@ -44,7 +44,7 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 
 
 def _option(
-    *, name: str, declaration: str, value: ValueContract, default: ParameterDefault, help_key: str
+    *, name: str, declaration: str, value: ValueContract, default: ParameterDefault, help_key: TranslationKey
 ) -> OptionSpec:
     """Build one ordinary non-flag option."""
     return OptionSpec(
@@ -52,7 +52,7 @@ def _option(
         declarations=(declaration,),
         value=value,
         default=default,
-        help_key=TranslationKey(help_key),
+        help_key=help_key,
         metavar=None,
         is_flag=False,
         flag_value=None,
@@ -65,13 +65,13 @@ def _option(
     )
 
 
-def _argument(*, name: str, help_key: str) -> ArgumentSpec:
+def _argument(*, name: str, help_key: TranslationKey) -> ArgumentSpec:
     """Build one required positional text argument."""
     return ArgumentSpec(
         name=name,
         value=TEXT_VALUE,
         default=_REQUIRED,
-        help_key=TranslationKey(help_key),
+        help_key=help_key,
         metavar=None,
         constraint=ParameterConstraint(),
         show_default=True,
@@ -79,30 +79,26 @@ def _argument(*, name: str, help_key: str) -> ArgumentSpec:
     )
 
 
-def _help(key: str) -> str:
-    return f"cli.app.ledger.retencion_soportada.{key}"
-
-
 _EJERCICIO_OPTION: Final[OptionSpec] = _option(
     name="ejercicio",
     declaration="--ejercicio",
     value=WHOLE_NUMBER_VALUE,
     default=_REQUIRED,
-    help_key=_help("ejercicio_help"),
+    help_key=TranslationKey("cli.app.ledger.retencion_soportada.ejercicio_help"),
 )
 _INCOME_CLASS_OPTION: Final[OptionSpec] = _option(
     name="income_class",
     declaration="--income-class",
     value=_CLASS_VALUE,
     default=_REQUIRED,
-    help_key=_help("income_class_help"),
+    help_key=TranslationKey("cli.app.ledger.retencion_soportada.income_class_help"),
 )
 _EXPECTED_REVISION_REQUIRED: Final[OptionSpec] = _option(
     name="expected_revision",
     declaration="--expected-revision",
     value=TEXT_VALUE,
     default=_REQUIRED,
-    help_key=_help("remove_expected_revision_help"),
+    help_key=TranslationKey("cli.app.ledger.retencion_soportada.remove_expected_revision_help"),
 )
 
 
@@ -120,7 +116,7 @@ LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_ledger",
         "retencion-soportada",
         kind=CommandNodeKind.GROUP,
-        help_key=TranslationKey(_help("group_help")),
+        help_key=TranslationKey("cli.app.ledger.retencion_soportada.group_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=True, context_parameter=None),
         parameters=(),
@@ -133,11 +129,13 @@ LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_ledger_retencion_soportada",
         "record",
         kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey(_help("record_help")),
+        help_key=TranslationKey("cli.app.ledger.retencion_soportada.record_help"),
         short_help_key=None,
         invocation=_LEAF_INVOCATION,
         parameters=(
-            _argument(name="payer_tax_id", help_key=_help("payer_tax_id_help")),
+            _argument(
+                name="payer_tax_id", help_key=TranslationKey("cli.app.ledger.retencion_soportada.payer_tax_id_help")
+            ),
             _EJERCICIO_OPTION,
             _INCOME_CLASS_OPTION,
             _option(
@@ -145,63 +143,63 @@ LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declaration="--origin",
                 value=_ORIGIN_VALUE,
                 default=_REQUIRED,
-                help_key=_help("origin_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.origin_help"),
             ),
             _option(
                 name="retencion",
                 declaration="--retencion",
                 value=TEXT_VALUE,
                 default=_ZERO,
-                help_key=_help("retencion_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.retencion_help"),
             ),
             _option(
                 name="ingreso_a_cuenta",
                 declaration="--ingreso-a-cuenta",
                 value=TEXT_VALUE,
                 default=_ZERO,
-                help_key=_help("ingreso_a_cuenta_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.ingreso_a_cuenta_help"),
             ),
             _option(
                 name="ingreso_a_cuenta_repercutido",
                 declaration="--ingreso-a-cuenta-repercutido",
                 value=TEXT_VALUE,
                 default=_ZERO,
-                help_key=_help("ingreso_a_cuenta_repercutido_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.ingreso_a_cuenta_repercutido_help"),
             ),
             _option(
                 name="importe_integro_dinerario",
                 declaration="--importe-integro",
                 value=TEXT_VALUE,
                 default=_ZERO,
-                help_key=_help("importe_integro_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.importe_integro_help"),
             ),
             _option(
                 name="valoracion_especie",
                 declaration="--valoracion-especie",
                 value=TEXT_VALUE,
                 default=_ZERO,
-                help_key=_help("valoracion_especie_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.valoracion_especie_help"),
             ),
             _option(
                 name="payer_name",
                 declaration="--payer-name",
                 value=TEXT_VALUE,
                 default=_OPTIONAL,
-                help_key=_help("payer_name_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.payer_name_help"),
             ),
             _option(
                 name="evidence_sha256",
                 declaration="--evidence-sha256",
                 value=TEXT_VALUE,
                 default=_OPTIONAL,
-                help_key=_help("evidence_sha256_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.evidence_sha256_help"),
             ),
             _option(
                 name="expected_revision",
                 declaration="--expected-revision",
                 value=TEXT_VALUE,
                 default=_OPTIONAL,
-                help_key=_help("record_expected_revision_help"),
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.record_expected_revision_help"),
             ),
         ),
         policy=_POLICY_4,
@@ -213,7 +211,7 @@ LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_ledger_retencion_soportada",
         "list",
         kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey(_help("list_help")),
+        help_key=TranslationKey("cli.app.ledger.retencion_soportada.list_help"),
         short_help_key=None,
         invocation=_LEAF_INVOCATION,
         parameters=(_EJERCICIO_OPTION,),
@@ -226,11 +224,11 @@ LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_ledger_retencion_soportada",
         "remove",
         kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey(_help("remove_help")),
+        help_key=TranslationKey("cli.app.ledger.retencion_soportada.remove_help"),
         short_help_key=None,
         invocation=_LEAF_INVOCATION,
         parameters=(
-            _argument(name="payer_ref", help_key=_help("payer_ref_help")),
+            _argument(name="payer_ref", help_key=TranslationKey("cli.app.ledger.retencion_soportada.payer_ref_help")),
             _EJERCICIO_OPTION,
             _INCOME_CLASS_OPTION,
             _EXPECTED_REVISION_REQUIRED,

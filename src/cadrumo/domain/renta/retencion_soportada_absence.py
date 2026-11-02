@@ -31,8 +31,8 @@ from ...core.time.utc import UtcInstant
 from .errors import RentaValidationError
 
 __all__ = [
+    "ABSENCE_ATTESTATION_NOTE_MAX_LENGTH",
     "RETENCION_SOPORTADA_ABSENCE_KIND",
-    "RETENCION_SOPORTADA_ABSENCE_NOTE_MAX_LENGTH",
     "RetencionSoportadaAbsence",
     "RetencionSoportadaAbsenceIdentity",
     "RetencionSoportadaAbsenceState",
@@ -41,7 +41,7 @@ __all__ = [
 RETENCION_SOPORTADA_ABSENCE_KIND: Final = "absence_attestation"
 """The payload marker that tells an attestation row from a payer record in the shared namespace."""
 
-RETENCION_SOPORTADA_ABSENCE_NOTE_MAX_LENGTH: Final[int] = 500
+ABSENCE_ATTESTATION_NOTE_MAX_LENGTH: Final[int] = 512
 """The longest operator note an attestation keeps."""
 
 type RetencionSoportadaAbsenceIdentity = tuple[int, RetencionSoportadaClase]
@@ -63,7 +63,7 @@ class RetencionSoportadaAbsence(BaseModel):
     kind: Literal["absence_attestation"] = RETENCION_SOPORTADA_ABSENCE_KIND
     ejercicio: FilingYear
     income_class: RetencionSoportadaClase
-    note: Annotated[str, Field(min_length=1, max_length=RETENCION_SOPORTADA_ABSENCE_NOTE_MAX_LENGTH)]
+    note: Annotated[str, Field(min_length=1, max_length=ABSENCE_ATTESTATION_NOTE_MAX_LENGTH)]
     """Why the operator asserts the absence; required, because the assertion must be answerable."""
     attested_at: UtcInstant
     state: RetencionSoportadaAbsenceState = RetencionSoportadaAbsenceState.ACTIVE

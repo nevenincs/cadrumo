@@ -502,6 +502,7 @@ def _resolve_mesh_families(
     from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
     from ..aggregation.renta_imputation import imputation_filing_history
     from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
+    from ..aggregation.source_resolution_operations import source_context_operation
     from ..aggregation.withholding_source import WithholdingSourceResolver
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
     from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
@@ -514,14 +515,16 @@ def _resolve_mesh_families(
             envelope = ports.observation_repository.load_observation(modelo, period)
             return None if envelope is None else envelope.observation
 
-        return imputation_filing_history(
-            bucket_id=context.bucket_id,
-            year=context.filing_year,
-            annual_form=form_for_role("renta.annual"),
-            annual_period_code=StandardPeriodCode.ANNUAL.value,
-            load_observation=load_filed,
-            filing_records=ports.filing_repository.load(),
-        )
+        with source_context_operation(context) as authority:
+            return imputation_filing_history(
+                bucket_id=context.bucket_id,
+                year=context.filing_year,
+                annual_form=form_for_role("renta.annual"),
+                annual_period_code=StandardPeriodCode.ANNUAL.value,
+                load_observation=load_filed,
+                filing_records=ports.filing_repository.load(),
+                authority=authority,
+            )
 
     return (
         resolve_declared(
