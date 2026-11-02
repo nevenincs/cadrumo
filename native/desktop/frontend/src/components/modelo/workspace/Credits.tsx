@@ -10,7 +10,7 @@ import type {
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import { BoxNumber } from "../form/BoxNumber";
-import { Label } from "../form/FieldRow";
+import { BoxLabel } from "./BoxLabel";
 import { ORIGIN_LOOK, TONE_TEXT } from "../form/originLook";
 import { Heading } from "./CheckView";
 import { ATTENTION_ICON, ATTENTION_TONE } from "./Marks";
@@ -32,7 +32,9 @@ function Figure({ field }: { field: PublicModeloFormField }) {
     >
       <Icon name={look.icon} size="xs" />
       {field.value_text ? (
-        <span className="font-mono tabular-nums">{field.value_text}</span>
+        <span data-figure="" className="font-mono tabular-nums">
+          {field.value_text}
+        </span>
       ) : (
         <span>{field.origin_words}</span>
       )}
@@ -84,7 +86,7 @@ function CreditRow({
       <BoxNumber box={field.box} />
       <span className="flex min-w-0 flex-col gap-1">
         <span className="text-base">
-          <Label text={field.label} />
+          <BoxLabel text={field.label} />
         </span>
         {field.editability_words && (
           <span className="text-sm text-muted-foreground">
@@ -169,6 +171,7 @@ export function Credits({
           <Button
             variant="outline"
             className="self-start"
+            data-open-surface="withholding"
             onClick={() => onOpenSurface("withholding")}
           >
             {t("workspace.modelo.surface.open.withholding")}

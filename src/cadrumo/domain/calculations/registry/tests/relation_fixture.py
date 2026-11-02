@@ -9,7 +9,11 @@ from .....core.aggregation import RelationAggregationOp
 from ..bindings import RegistryModeloObservation
 from ..errors import RegistryValidationError
 from ..ids import BindingId
-from ..observation_fold import fold_pagos_fraccionados_ingresados, resolve_observed_requirement_value
+from ..observation_fold import (
+    fold_observed_requirement_values,
+    fold_pagos_fraccionados_ingresados,
+    gather_observed_requirement_values,
+)
 from ..relations import _fold_op, relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloRevision
 
@@ -43,7 +47,9 @@ def resolve_relation_values_from_observations(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
-        value = resolve_observed_requirement_value(requirement, available)
+        value = fold_observed_requirement_values(
+            requirement, gather_observed_requirement_values(requirement, available).values
+        )
         for binding_id in requirement.target_bindings:
             resolved[binding_id] = value
     missing = sorted(

@@ -169,18 +169,6 @@ _DEADLINE_WINDOW_INDEX_LIMIT: Final = 32
 _DEADLINE_WINDOW_INDEX_LOCK: Final = Lock()
 
 
-def indexed_deadline_windows(
-    operation: PinnedAuthorityOperation,
-    year: int,
-) -> tuple[DeadlineWindowProjection, ...]:
-    """Project one filing year's dated windows, authored and rule-projected, from a pinned operation.
-
-    Reused for a generation already projected for this year; see
-    :data:`_DEADLINE_WINDOW_INDEX`.
-    """
-    return indexed_deadline_window_year(operation, year).dated
-
-
 def indexed_deadline_window_year(
     operation: PinnedAuthorityOperation,
     year: int,

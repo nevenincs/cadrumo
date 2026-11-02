@@ -38,7 +38,9 @@ from ..filing_window_projection import (
     FilingWindowOpening,
     ProjectedFilingWindow,
     ProjectedFilingWindowCloseUnavailable,
-    project_filing_window,
+    ProjectedFilingWindowResolution,
+    _project_scheduled_window,
+    _scheduled_coordinate,
 )
 from ..models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, ObligationStatus, TaxpayerProfile
 from ..plazo import resolve_filing_window
@@ -52,6 +54,25 @@ _MODELOS = ("303", "390")
 def operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as pinned:
         yield pinned
+
+
+def project_filing_window(
+    operation: PinnedAuthorityOperation,
+    *,
+    modelo: str,
+    period: Period,
+    calendars: tuple[HolidayCalendar, ...],
+) -> ProjectedFilingWindowResolution | None:
+    """Project one coordinate from the governed rule with holiday calendars supplied ahead of the authority."""
+    if not period.has_date_span():
+        return None
+    scheduled = _scheduled_coordinate(
+        operation, modelo=modelo, filing_year=period.filing_year, token=period.registry_token
+    )
+    if scheduled is None:
+        return None
+    _metadata, schedule = scheduled
+    return _project_scheduled_window(operation, modelo=modelo, period=period, schedule=schedule, calendars=calendars)
 
 
 def _national(year: int, *days: tuple[int, int]) -> HolidayCalendar:

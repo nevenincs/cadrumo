@@ -23,7 +23,8 @@ from ...application.modelo.lifecycle_history_operation import (
     ModeloHistoryOperationProjection,
     ModeloHistoryOperationRequest,
 )
-from ...application.modelo.projection import compare_modelo_years, project_modelo_100_from_m130
+from ...application.modelo.projection import project_modelo_100_from_m130
+from ...application.modelo.projection_compare import compare_modelo_years
 from ...application.modelo.projection_operation import (
     ModeloCompareOperationProjection,
     ModeloCompareOperationRequest,

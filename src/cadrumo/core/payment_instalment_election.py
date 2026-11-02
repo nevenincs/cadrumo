@@ -50,19 +50,37 @@ class PaymentInstalmentElection(StrEnum):
 _CENT: Final = Decimal("0.01")
 
 
+def second_instalment_is_payable(amount: Decimal, *, first_share: Decimal) -> bool:
+    """Whether splitting ``amount`` leaves a second instalment of at least one cent.
+
+    The sources state no smallest amount that may be split, but a second
+    instalment that rounds to nothing is no payment, so such an amount is paid
+    at once. This follows from the cent rounding of :func:`instalment_amounts`,
+    which is Cadrumo's own.
+    """
+    if amount <= 0:
+        return False
+    first = (amount * first_share).quantize(_CENT, rounding=ROUND_HALF_UP)
+    return amount - first >= _CENT
+
+
 def instalment_amounts(amount: Decimal, *, first_share: Decimal) -> tuple[Decimal, Decimal]:
     """Split a positive amount to pay into its first instalment, ``first_share`` of it, and the second.
 
     The share is the one the registry declares for the modelo. The first is
     rounded half up to the cent and the second is the remainder, so the two
     always add up to the amount declared. No official source states that
-    rounding, so the split is advisory wherever it is shown.
+    rounding, so the split is advisory wherever it is shown. An amount whose
+    second instalment would round to nothing is not split.
 
     Raises:
-        ValueError: When ``amount`` is not positive.
+        ValueError: When ``amount`` is not positive, or its second instalment
+            would be less than one cent.
     """
     if amount <= 0:
         raise ValueError("only a positive amount to pay is split into instalments")
+    if not second_instalment_is_payable(amount, first_share=first_share):
+        raise ValueError("an amount whose second instalment would be nothing is paid at once")
     first = (amount * first_share).quantize(_CENT, rounding=ROUND_HALF_UP)
     return first, amount - first
 
@@ -70,4 +88,5 @@ def instalment_amounts(amount: Decimal, *, first_share: Decimal) -> tuple[Decima
 __all__ = [
     "PaymentInstalmentElection",
     "instalment_amounts",
+    "second_instalment_is_payable",
 ]

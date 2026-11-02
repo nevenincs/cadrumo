@@ -14,10 +14,10 @@ from cadrumo.tests.log_records import delivered_records
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._casilla_keys import is_delta_keyed_leaf
 from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
-from .._registry_scanner import scan_form_layout_heading_keys
 from ..cli import app
 from ..desktop_chrome import DESKTOP_CHROME_KEYS, desktop_chrome_strings
 from ..errors import LocaleError
+from ..form_layout_heading_scan import scan_form_layout_heading_keys
 from ..locale_nodes import LocaleNode
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager

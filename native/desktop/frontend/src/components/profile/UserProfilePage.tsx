@@ -72,6 +72,7 @@ import {
 } from "../../shell/userProfile";
 import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AeatAccessEditor } from "./AeatAccessEditor";
+import { Household } from "./Household";
 import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
 import { PROFILE_KEYS } from "./profileKeys";
@@ -1510,6 +1511,18 @@ export const UserProfilePage = memo(function UserProfilePage({
                 profile={profile.loading || profile.error ? null : data}
               />
               {body}
+              {/* The household is not one of the profile's details: it is
+                  the people the declaration lists, read and written as a
+                  whole, so a text search of details does not hide it. */}
+              {host.profileCompanions && host.userProfile && !needle && (
+                <Household
+                  reads={host.profileCompanions}
+                  change={host.userProfile.change}
+                  observe={host.userProfile.observe}
+                  language={language}
+                  writable={writable}
+                />
+              )}
               {nothing && (
                 <p className="py-5 text-muted-foreground">
                   {t("desktop.profile.empty")}

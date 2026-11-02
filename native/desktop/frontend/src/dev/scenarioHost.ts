@@ -24,6 +24,7 @@ import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import { translator } from "../shell/strings";
 import { sedeViewFixture } from "./sedeViewFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
+import { householdFixture, type HouseholdScenario } from "./householdFixture";
 import {
   imputationElectionFixture,
   type ElectionScenario,
@@ -126,6 +127,9 @@ export type ScenarioHostOptions = {
   /** What the made-up profile states for the imputation election; where it
    * is left out, nothing is stated. */
   election?: ElectionScenario | null;
+  /** What the made-up profile states for the household; where it is left
+   * out, nothing is stated. */
+  household?: HouseholdScenario | null;
   /** Offer a made-up window port whose close is guarded as the native
    * host guards it, so a close the system raised can be played. */
   window?: boolean;
@@ -699,14 +703,21 @@ export function scenarioHost(
       ? { "tax_residence.ccaa": "madrid" }
       : undefined,
   );
-  // The election has its own revision witness; every other edit is the
-  // profile fixture's.
+  const household = householdFixture(
+    options.household ?? "unknown",
+    options.language,
+  );
+  // The election and the household have their own revision witnesses; every
+  // other edit is the profile fixture's.
   const userProfile: ProfileFixture = {
     ...profile,
     change: (change) =>
       change.edit.kind === "imputation_election"
         ? election.change(change)
-        : profile.change(change),
+        : change.edit.kind === "descendants" ||
+            change.edit.kind === "ascendants"
+          ? household.change(change)
+          : profile.change(change),
   };
   return {
     language: {
@@ -756,8 +767,7 @@ export function scenarioHost(
     },
     userProfile,
     profileCompanions: {
-      // The household is another element's read, not played here.
-      household: () => Promise.reject({ code: "unavailable" }),
+      household: household.reads.household,
       imputationElection: election.reads.imputationElection,
     },
     censo: censoFixture(userProfile, scenario.censo),

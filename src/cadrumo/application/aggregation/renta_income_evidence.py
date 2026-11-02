@@ -192,14 +192,19 @@ def sales_invoice_evidence_payload(
     :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
     """
     invoice_id = transaction.invoice_id
-    if invoice_id is None:
-        return _SalesInvoiceEvidencePayload(), None
-    invoice = invoices.get(invoice_id)
+    invoice = None if invoice_id is None else invoices.get(invoice_id)
     if invoice is None:
         return _SalesInvoiceEvidencePayload(), None
     refusal = _linkage_refusal(invoice, transaction, bucket_id=bucket_id)
     if refusal is not None:
         return _SalesInvoiceEvidencePayload(), refusal
+    return _linked_invoice_payload(invoice, transaction, allocate_part_payments=allocate_part_payments)
+
+
+def _linked_invoice_payload(
+    invoice: Invoice, transaction: Transaction, *, allocate_part_payments: bool
+) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
+    """Return the figures of an invoice already linked back to the row: its part-payment share, else the whole."""
     base_eur = invoice.base_total_eur
     iva_eur = invoice.iva_total_eur
     share = part_payment_share(invoice, transaction) if allocate_part_payments else None

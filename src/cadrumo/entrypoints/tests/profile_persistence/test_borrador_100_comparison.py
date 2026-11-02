@@ -347,8 +347,15 @@ def test_a_stored_draft_the_rules_refuse_is_capture_refused_not_absent(profile: 
     assert result.capture is None and result.rows == ()
 
 
-def test_each_box_is_compared_under_its_registry_identity_and_keeps_both_grades(profile: _Profile) -> None:
-    """The payer records' credit differs from the draft; the residence the draft supplied agrees, but not independently."""
+@dataclass(frozen=True, slots=True)
+class _ComparedWorld:
+    snapshot_id: str
+    head: CalculationRevision
+    result: Borrador100ComparisonProjection
+
+
+def _compared_credit_and_residence(profile: _Profile) -> _ComparedWorld:
+    """Compare a draft carrying the credit and the residence with a calculation whose payer records hold 1,00."""
     snapshot_id = profile.import_draft({_CREDIT: Decimal("125.50"), _RESIDENCE: "madrid"})
     work_unit_id = profile.create_work()
     seed_payer_certificate(
@@ -360,18 +367,29 @@ def test_each_box_is_compared_under_its_registry_identity_and_keeps_both_grades(
         retencion=Decimal("1.00"),
     )
     head = profile.calculate(work_unit_id, snapshot_id)
+    return _ComparedWorld(snapshot_id=snapshot_id, head=head, result=profile.compare(OutputLanguage.ES))
 
-    result = profile.compare(OutputLanguage.ES)
+
+def test_a_compared_draft_names_its_capture_and_the_calculation_it_was_replayed_into(profile: _Profile) -> None:
+    """The payer records' credit differs from the draft, so the two sides are compared and each keeps its own grade."""
+    world = _compared_credit_and_residence(profile)
+    result = world.result
 
     assert result.status.token == Borrador100ComparisonStatus.COMPARED
     assert result.status.words == _words("status.compared", OutputLanguage.ES)
     assert result.stale_reasons == ()
-    assert result.capture is not None and result.capture.snapshot_id == snapshot_id
+    assert result.capture is not None and result.capture.snapshot_id == world.snapshot_id
     assert result.calculation is not None
-    assert result.calculation.calculation_revision_id == head.calculation_revision_id
-    assert result.calculation.replayed_snapshot_id == snapshot_id
+    assert result.calculation.calculation_revision_id == world.head.calculation_revision_id
+    assert result.calculation.replayed_snapshot_id == world.snapshot_id
     assert result.calculation.evidence.words == _words("evidence.calculation", OutputLanguage.ES)
     assert result.capture.evidence.words != result.calculation.evidence.words
+
+
+def test_the_credit_the_payer_records_hold_differs_from_the_draft_under_its_registry_identity(
+    profile: _Profile,
+) -> None:
+    result = _compared_credit_and_residence(profile).result
 
     credit = _row(result, _box_of(profile.operation, _CREDIT))
     assert credit.borrador_value == PublicDecimal(decimal="125.50")
@@ -384,11 +402,21 @@ def test_each_box_is_compared_under_its_registry_identity_and_keeps_both_grades(
     assert credit.classification.words == _words("classification.differ", OutputLanguage.ES)
     assert credit.label.text
 
+
+def test_the_residence_the_draft_supplied_agrees_without_an_independent_confirmation(profile: _Profile) -> None:
+    result = _compared_credit_and_residence(profile).result
+
     residence = _row(result, _box_of(profile.operation, _RESIDENCE))
     assert residence.borrador_value == "madrid" and residence.calculation_value == "madrid"
     assert residence.classification.token == Borrador100ComparisonClassification.AGREE
     assert residence.reason.token == Borrador100ComparisonReason.TAKEN_FROM_BORRADOR
     assert residence.difference is None
+
+
+def test_every_other_box_of_a_draft_captured_without_printed_results_is_not_comparable(profile: _Profile) -> None:
+    result = _compared_credit_and_residence(profile).result
+    credit = _row(result, _box_of(profile.operation, _CREDIT))
+    residence = _row(result, _box_of(profile.operation, _RESIDENCE))
 
     # This draft was captured without its printed results, so a box the draft import reads is
     # one it kept nothing for, and a box it does not read says nothing either way.
