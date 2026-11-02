@@ -9498,6 +9498,12 @@ sequence_removals = {legal_refs = [0, 1, 2, 3, 4], source_refs = [0, 1]}
 
 [[revisions."2025".family_overrides]]
 family = "extraction_profiles"
+selector = {revision = "2024", id = "modelo-100-borrador-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "extraction_profiles"
 selector = {revision = "2024", id = "modelo-100-declaracion-pdf"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]}
 sequence_removals = {source_refs = [0, 1]}

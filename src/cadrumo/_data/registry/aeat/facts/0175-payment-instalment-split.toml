@@ -1,0 +1,48 @@
+# The modelos whose amount to pay the law lets the taxpayer split in two instalments, without
+# interest or surcharge, and the share of the first instalment.
+#
+# RD 439/2007 art. 62.2, under Ley 35/2006 art. 97.2 ("El ingreso del importe resultante de la
+# autoliquidación sólo se podrá fraccionar en la forma que se determine en el reglamento"):
+# 60 per cent when the return is filed and the remaining 40 per cent later. The Orden approving
+# the 2025 Modelo 100 and the Manual práctico de Renta 2025 restate it for the 2025 campaign, so
+# the variant starts with that ejercicio. None of these sources says how a part that is not a
+# whole number of cents is rounded, so the fact declares no rounding: a split worked to the
+# cent is Cadrumo's own and its consumers serve it as advisory.
+#
+# Entries:
+# - modelos: the modelos whose positive result may be split.
+# - first_instalment_share: the share of the amount paid as the first instalment.
+
+[fact]
+fact_id = "payment-instalment-split"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "payment-instalment-split:irpf-2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-35-2006:art-97", "rd-439-2007:art-62"]
+source_refs = ["boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = [
+  "en dos partes: la primera, del 60 por 100 de su importe, en el momento de presentar la declaración y la segunda, del 40 por 100 restante",
+  "No podrá fraccionarse, según el procedimiento establecido en este artículo, el ingreso de las autoliquidaciones complementarias.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = [
+  "el primero, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "el resto de la deuda tributaria podrá fraccionarse",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelos", value = "100" },
+  { key = "first_instalment_share", value = "0.60" },
+]

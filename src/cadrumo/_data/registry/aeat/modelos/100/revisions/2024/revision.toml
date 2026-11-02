@@ -8257,6 +8257,12 @@ sequence_removals = {source_refs = [0, 1]}
 
 [[revisions."2024".family_overrides]]
 family = "extraction_profiles"
+selector = {revision = "2023", id = "modelo-100-borrador-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-100-2024-dictionary", "boe-modelo-100-2024-form"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "extraction_profiles"
 selector = {revision = "2023", id = "modelo-100-declaracion-pdf"}
 sequence_additions = {source_refs = ["aeat-dr-100-2024-dictionary", "boe-modelo-100-2024-form"], target_casillas = [{casilla_id = "0545", match_strategy = "named_label", value_kind = "amount", label_pattern = "Cuota\\s+[íi]ntegra\\s+estatal\\s*:"}, {casilla_id = "0546", match_strategy = "named_label", value_kind = "amount", label_pattern = "Cuota\\s+[íi]ntegra\\s+auton[oó]mica\\s*:"}, {casilla_id = "0505", match_strategy = "named_label", value_kind = "amount", label_pattern = "Base\\s+liquidable\\s+general\\s+sometida\\s+a\\s+gravamen"}, {casilla_id = "0586", match_strategy = "named_label", value_kind = "amount", label_pattern = "Cuota\\s+l[íi]quida\\s+auton[oó]mica\\s+incrementada"}, {casilla_id = "0604", match_strategy = "named_label", value_kind = "amount", label_pattern = "Pagos\\s+fraccionados\\s+ingresados\\s*\\(actividades\\s+econ[oó]micas\\)"}, {casilla_id = "0610", match_strategy = "named_label", value_kind = "amount", label_pattern = "^Cuota\\s+diferencial\\b(?!\\s+de)"}, {casilla_id = "0670", match_strategy = "named_label", value_kind = "amount", label_pattern = "Resultado\\s+de\\s+la\\s+declaraci[oó]n"}, {casilla_id = "0180", match_strategy = "named_label", value_kind = "amount", label_pattern = "Total\\s+ingresos\\s+computables"}, {casilla_id = "0218", match_strategy = "named_label", value_kind = "amount", label_pattern = "Suma\\s*\\(\\s*\\[0181\\]"}, {casilla_id = "0223", match_strategy = "named_label", value_kind = "amount", label_pattern = "Total\\s+gastos\\s+deducibles\\s*\\(\\s*\\[0218\\]"}, {casilla_id = "0224", match_strategy = "named_label", value_kind = "amount", label_pattern = "^Rendimiento\\s+neto\\s*\\("}, {casilla_id = "0226", match_strategy = "named_label", value_kind = "amount", label_pattern = "Rendimiento\\s+neto\\s+reducido\\s*\\("}, {casilla_id = "0235", match_strategy = "named_label", value_kind = "amount", label_pattern = "Rendimiento\\s+neto\\s+reducido\\s+total\\s+de\\s+las\\s+actividades"}, {casilla_id = "0432", match_strategy = "named_label", value_kind = "amount", label_pattern = "Saldo\\s+neto\\s+de\\s+los\\s+rendimientos\\s+a\\s+integrar"}, {casilla_id = "0500", match_strategy = "named_label", value_kind = "amount", label_pattern = "^Base\\s+liquidable\\s+general\\b(?!\\s+sometida)"}, {casilla_id = "0510", match_strategy = "named_label", value_kind = "amount", label_pattern = "^Base\\s+liquidable\\s+del\\s+ahorro\\b"}]}
 sequence_removals = {source_refs = [0, 1], target_casillas = [0, 1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19]}
@@ -9217,10 +9223,6 @@ family = "parameters"
 selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-clase-admite-intangible"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
-[[revisions."2024".family_removals]]
-family = "extraction_profiles"
-selector = {revision = "2023", id = "modelo-100-borrador-pdf"}
-
 [[revisions."2024".family_positions]]
 family = "formulas"
 id = "renta-cuota-escala-estatal-sobre-base-liquidable-general"

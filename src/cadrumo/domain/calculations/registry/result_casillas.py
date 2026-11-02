@@ -40,6 +40,17 @@ def result_disposition_casilla_ids(modelo: str) -> tuple[CasillaId, ...] | None:
     return tuple(validated_casilla_id(token, surface=_RESULT_CASILLAS_FACT) for token in tokens)
 
 
+def settlement_casilla_role(modelo: str) -> str | None:
+    """Return the ``semantic_role`` of the box ``modelo`` states its amount to pay or refund in.
+
+    ``None`` when the modelo's record states no such box apart from its result,
+    so its result is the amount it settles.
+    """
+    if not has_result_disposition_spec(modelo):
+        return None
+    return resolve_form_codes(_RESULT_CASILLAS_FACT).entries.get(f"settlement_roles.{modelo}")
+
+
 def canonical_result_amount(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> Decimal | None:
     """Return the canonical final-result sum after rejecting unrelated casillas.
 
@@ -108,4 +119,5 @@ __all__ = [
     "canonical_result_amount",
     "derive_result_disposition",
     "result_disposition_casilla_ids",
+    "settlement_casilla_role",
 ]
