@@ -349,6 +349,28 @@ def _repositories(
     )
 
 
+def _calculate_work_unit(
+    work_unit_id: str, *, bucket_id: str, decision: IvaCompensationReconciliationDecision | None = None
+) -> CalculationRevision:
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            actor="operator",
+            binding_values={
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            iva_compensation_decision=decision,
+            clock=_CALCULATED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                Period.from_year_and_code(_YEAR, _PERIOD),
+                reference="test:m303-deductible-evidence-gate",
+                operation=operation,
+            ),
+        ).revision
+
+
 def _calculate_irene_revision(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> tuple[
@@ -388,21 +410,7 @@ def _calculate_irene_revision(
     )
     decision = _wallet_decision()
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
-    with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            actor="operator",
-            binding_values={
-                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-            },
-            iva_compensation_decision=decision,
-            clock=_CALCULATED_AT,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-deductible-evidence-gate", operation=operation
-            ),
-        ).revision
+    revision = _calculate_work_unit(work_unit.work_unit_id, bucket_id=work_unit.bucket_id, decision=decision)
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
 
@@ -712,6 +720,10 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         reloaded = tx_repo.load().get(purchase.transaction_id)
         assert reloaded is not None
         assert reloaded.invoice_id == created.invoice.invoice_id
+
+        # The invoice joined the period after the calculation read its invoices,
+        # so verification refuses the draft until the operator calculates again.
+        revision = _calculate_work_unit(revision.work_unit_id, bucket_id=_BUCKET_ID)
 
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision_with_preconditions(
