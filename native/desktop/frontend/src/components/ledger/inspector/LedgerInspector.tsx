@@ -14,7 +14,6 @@ import { RightPanel, type RightPanelMode } from "./RightPanel";
 import { SelectionInspector } from "./SelectionInspector";
 import { SplitDialog } from "./SplitDialog";
 
-
 /**
  * The panel beside the Movements grid: the To match pair queue, or the
  * inspector of what is selected, one movement or several, with the

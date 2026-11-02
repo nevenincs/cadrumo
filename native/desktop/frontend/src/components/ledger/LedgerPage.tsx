@@ -81,10 +81,7 @@ import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import { HealthSection } from "./setup/HealthSection";
 import { AssetsSection } from "./assets/AssetsSection";
 import { StockPane } from "./assets/StockPane";
-import {
-  RegistersSection,
-  type RegistersArea,
-} from "./setup/RegistersSection";
+import { RegistersSection, type RegistersArea } from "./setup/RegistersSection";
 import { RuleDialog, type RuleDialogTarget } from "./setup/RuleDialog";
 import { RulesSection, type RulesArea } from "./setup/RulesSection";
 import type { SetupProps } from "./setup/setupProps";
