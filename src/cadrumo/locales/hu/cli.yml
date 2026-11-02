@@ -637,8 +637,24 @@ cli:
         list_empty: (nincsenek tárolt szabályok)
         list_header: "prioritás\tosztályozás\tminta\trule_id"
         list_help: Tárolt osztályozási szabályok listázása prioritás szerint.
+        pattern_overrun: A minta nem tudta befejezni a főkönyv leírásainak keresését
+          az időkorláton belül, ezért nem lett mentve. Egyszerűsítsd, például kerüld
+          az ismétlésen belüli ismétlést.
         priority_help: 'Numerikus prioritás; az alacsonyabb érték kerül előbb kiértékelésre
           (alapértelmezett: 100).'
+        remove_created_at_help: A szabály létrehozási ideje a listázás szerint (ISO
+          8601, időeltolással); a szabály csak akkor törlődik, ha még ez az ideje.
+        remove_created_at_invalid: A --created-at értéke időeltolással megadott ISO
+          8601 dátum és idő legyen, ahogy a szabály listázásakor szerepel.
+        remove_help: Töröl egy mentett besorolási szabályt, például olyat, amelynek
+          a mintája nem kereshető.
+        remove_not_found: Nincs mentett szabály a(z) %{rule_id} azonosítóval. Semmi
+          sem változott.
+        remove_rule_id_help: A törlendő szabály teljes azonosítója, ahogy a rule list
+          JSON-kimenete mutatja.
+        remove_stale: 'A(z) %{rule_id} mentett szabályt újra elmentették ekkor: %{created_at},
+          ami nem az általad megadott idő. Semmi sem törlődött; listázd a szabályokat,
+          és ellenőrizd.'
         trial_help: Kipróbál egy nem mentett mintát a szabálymotorral, és megmondja,
           a megadott tételek közül melyeket találja meg, mentés nélkül.
         trial_transaction_id_help: Megismételhető azonosítója annak a tételnek, amelyen

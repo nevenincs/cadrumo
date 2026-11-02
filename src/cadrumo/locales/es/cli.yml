@@ -644,8 +644,24 @@ cli:
         list_empty: (no hay reglas almacenadas)
         list_header: "prioridad\tclasificación\tpatrón\trule_id"
         list_help: Lista las reglas de clasificación almacenadas ordenadas por prioridad.
+        pattern_overrun: El patrón no pudo terminar de buscar en las descripciones
+          de este libro dentro de su límite de tiempo, así que no se ha guardado.
+          Simplifícalo, por ejemplo evitando repeticiones dentro de repeticiones.
         priority_help: Prioridad numérica; un valor menor se evalúa primero (por defecto
           100).
+        remove_created_at_help: Fecha de creación de la regla tal como aparece en
+          el listado (ISO 8601 con desfase); la regla solo se elimina si sigue teniéndola.
+        remove_created_at_invalid: --created-at debe ser una fecha y hora ISO 8601
+          con desfase, tal como figura en el listado de la regla.
+        remove_help: Elimina una regla de clasificación guardada, por ejemplo una
+          cuyo patrón no se puede buscar.
+        remove_not_found: Ninguna regla guardada tiene el id %{rule_id}. No se ha
+          cambiado nada.
+        remove_rule_id_help: Id completo de la regla que quieres eliminar, tal como
+          lo muestra la salida JSON de rule list.
+        remove_stale: La regla guardada %{rule_id} se volvió a guardar el %{created_at},
+          que no es la fecha que indicaste. No se ha eliminado nada; consulta el listado
+          de reglas y compruébala.
         trial_help: Prueba un patrón sin guardar con el motor de reglas e indica qué
           movimientos de los indicados encuentra, sin guardar nada.
         trial_transaction_id_help: Identificador repetible de un movimiento en el

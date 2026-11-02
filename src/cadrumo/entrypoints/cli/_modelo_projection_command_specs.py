@@ -20,7 +20,6 @@ from cadrumo_client.contracts.command_ports import (
     CommandWriteRoute,
 )
 
-
 _CALCULATION_READ = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
 )

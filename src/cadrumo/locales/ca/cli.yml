@@ -642,8 +642,23 @@ cli:
         list_header: "prioritat\tclassificació\tpatró\trule_id"
         list_help: Llista les regles de classificació emmagatzemades ordenades per
           prioritat.
+        pattern_overrun: El patró no ha pogut acabar de cercar a les descripcions
+          d'aquest llibre dins del seu límit de temps, així que no s'ha desat. Simplifica'l,
+          per exemple evitant repeticions dins de repeticions.
         priority_help: Prioritat numèrica; un valor menor s'avalua primer (per defecte
           100).
+        remove_created_at_help: Data de creació de la regla tal com apareix al llistat
+          (ISO 8601 amb desfasament); la regla només s'elimina si encara la té.
+        remove_created_at_invalid: --created-at ha de ser una data i hora ISO 8601
+          amb desfasament, tal com consta al llistat de la regla.
+        remove_help: Elimina una regla de classificació desada, per exemple una el
+          patró de la qual no es pot cercar.
+        remove_not_found: Cap regla desada té l'id %{rule_id}. No s'ha canviat res.
+        remove_rule_id_help: Id complet de la regla que vols eliminar, tal com el
+          mostra la sortida JSON de rule list.
+        remove_stale: La regla desada %{rule_id} es va tornar a desar el %{created_at},
+          que no és la data que has indicat. No s'ha eliminat res; consulta el llistat
+          de regles i comprova-la.
         trial_help: Prova un patró sense desar amb el motor de regles i indica quins
           moviments dels indicats troba, sense desar res.
         trial_transaction_id_help: Identificador repetible d'un moviment on provar
