@@ -20,6 +20,7 @@ from ...domain.contribuyente.renta_codes import (
     RentaMaritalStatus,
     RentaSexCode,
 )
+from .imputation_election import CRITERION_PROFILE_PATH, CRITERION_QUESTION_ID
 from .models import (
     WizardChoice,
     WizardCondition,
@@ -182,6 +183,33 @@ def _build_irpf_choices(
         wizard_irpf_special_regime_choices,
         _impatriado_regime,
     )
+
+
+def _build_imputation_election(
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[WizardChoice, ...], WizardVisibility, WizardCondition]:
+    """Read the criterion choices from the pinned profile schema and derive the questions' gates.
+
+    No registry catalogue owns the two criteria, so the schema field that stores
+    the answer is their source, in the order it declares them.
+    """
+    from ..aggregation.renta_imputation import ActivityImputationCriterion
+
+    tokens = operation.profile_schema().field(CRITERION_PROFILE_PATH).enum_values
+    prefix = "wizard.setup.obligations.irpf-activity-income-imputation-criterion.choices"
+    choices = tuple(
+        _localized_choice(
+            token,
+            f"{prefix}.{token.replace('_', '-')}.label",
+            f"{prefix}.{token.replace('_', '-')}.description",
+        )
+        for token in tokens
+    )
+    answered = WizardVisibility(
+        any_of=tuple(WizardCondition(question_id=CRITERION_QUESTION_ID, equals=token) for token in tokens)
+    )
+    cash = WizardCondition(question_id=CRITERION_QUESTION_ID, equals=ActivityImputationCriterion.COBROS_Y_PAGOS.value)
+    return choices, answered, cash
 
 
 def _build_residence_choices(
@@ -465,6 +493,11 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
         _impatriado_regime,
     ) = _build_irpf_choices(operation)
     (
+        wizard_imputation_criterion_choices,
+        _imputation_criterion_answered,
+        _imputation_cash_criterion,
+    ) = _build_imputation_election(operation)
+    (
         wizard_fiscal_residency_choices,
         _fiscal_residency_default,
         _non_resident_irnr,
@@ -541,6 +574,9 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
         _premio_loteria_declared,
         wizard_irpf_estimation_regime_choices,
         wizard_irpf_special_regime_choices,
+        wizard_imputation_criterion_choices,
+        _imputation_criterion_answered,
+        _imputation_cash_criterion,
     )
 
     _preferencias_section = build_preferences_section()

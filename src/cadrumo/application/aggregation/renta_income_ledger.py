@@ -493,7 +493,7 @@ def rectification_diagnostics(
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE or transaction.invoice_id is None:
             continue
         invoice = invoices.get(transaction.invoice_id)
-        if invoice is None or invoice.bucket_id != bucket_id or not invoice.retention_amount:
+        if invoice is None or invoice.bucket_id != bucket_id or invoice.retention_amount in (None, 0):
             continue
         accrual = linked_accrual_date(invoice, kind=InvoiceKind.ISSUED)
         if accrual is None or criteria.usable(accrual.year) is not ActivityImputationCriterion.DEVENGO:

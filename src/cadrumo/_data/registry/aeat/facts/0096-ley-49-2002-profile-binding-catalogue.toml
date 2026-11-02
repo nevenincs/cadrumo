@@ -37,6 +37,8 @@ entries = [
   { key = "setup.field.colegio_concertado", value = "withholding.colegio_concertado|bool|" },
   { key = "setup.field.incn_prior_12_months", value = "taxpayer_type.incn_prior_12_months|str|" },
   { key = "setup.field.irpf_estimation_regime", value = "irpf.estimation_regime|str|" },
+  { key = "setup.field.irpf_activity_income_imputation_criterion", value = "irpf.activity_income_imputation_criterion|str|" },
+  { key = "setup.field.irpf_codigo_comercio_accounting", value = "irpf.codigo_comercio_accounting|bool|" },
   { key = "setup.field.irpf_activity_kind", value = "irpf.activity_kind|str|" },
   { key = "setup.field.irpf_income_categories", value = "taxpayer_type.irpf_income_categories|str|" },
   { key = "setup.field.irpf_special_regime", value = "irpf.special_regime|str|" },

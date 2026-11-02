@@ -67,9 +67,8 @@ def election_changes(flow: WizardFlow, supplied: Mapping[str, str]) -> tuple[Use
         answer = validate_widget_answer(question, supplied[question_id])
         if question.profile_key is None:
             raise ValueError(f"election question {question_id!r} must be bound to a profile path")
-        changes.append(
-            UserProfileFact.model_validate({"path": question.profile_key, "value": answer or None, **window})
-        )
+        stated_fact = {"path": question.profile_key, "value": answer or None, **window}
+        changes.append(UserProfileFact.model_validate(stated_fact))
     return tuple(changes)
 
 

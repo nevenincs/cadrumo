@@ -26,6 +26,7 @@ from ....domain.user_profile.setup_answers import (
     PROFILE_OUTPUT_LANGUAGE_PATH,
     SetupAnswers,
 )
+from ..imputation_election import YEAR_QUESTION_ID
 from ..models import WizardQuestion
 from ..persistence import project_answers
 from ..widgets import _POSTCODE_QUESTION_IDS
@@ -54,11 +55,22 @@ surface, and until they do, filing the modelo refuses rather than assuming.
 """
 
 
+_ANSWER_ONLY_QUESTION_IDS = frozenset({YEAR_QUESTION_ID})
+"""Questions that scope other answers and are stored nowhere, so the table has no row for them.
+
+The imputation ejercicio dates the criterion and accounting facts it accompanies;
+persisting it as a profile value of its own would let it drift from them.
+"""
+
+
 def test_every_question_has_a_matching_table_row(*, registry_setup_flow: WizardFlow) -> None:
     """Path, type and default must agree field by field."""
     questions = tuple(question for section in registry_setup_flow.sections for question in section.questions)
+    assert {question.id for question in questions if question.profile_key is None} == _ANSWER_ONLY_QUESTION_IDS
     mismatches: list[str] = []
     for question in questions:
+        if question.id in _ANSWER_ONLY_QUESTION_IDS:
+            continue
         field = question.id.replace("-", "_")
         spec = setup_answer_fields().get(field)
         if spec is None:

@@ -35,6 +35,8 @@ wizard:
     invalid_postcode: 'Codi postal no vàlid per a %{prompt_key}: %{raw}. Un codi postal
       espanyol té 5 dígits (codi de província 01-52 seguit de tres dígits).'
     invalid_tax_id: 'NIF/NIE/CIF no vàlid per a %{prompt_key}: %{raw}. %{detail}'
+    invalid_year: 'Exercici no vàlid per a %{prompt_key}: %{raw}. Fes servir quatre
+      xifres (AAAA).'
     select_unknown: 'Valor no reconegut per a %{flag} (%{prompt_key}): %{raw}. Opcions
       vàlides: %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opcions de selecció.
@@ -317,6 +319,18 @@ wizard:
         help: Import net de la xifra de negocis dels darrers 12 mesos, en euros. Per
           sobre de 6.000.000 EUR el Model 202 obliga a la modalitat de l'article 40.3
           LIS; per sota, totes dues modalitats són possibles. Opcional.
+      irpf-activity-income-imputation-criterion:
+        help: 'Criteri de l''art. 7 RIRPF per als ingressos i les despeses d''activitat
+          a l''exercici indicat amb --irpf-activity-income-imputation-year: devengo
+          (el més habitual) o cobros_y_pagos (es manté tres anys; no amb comptabilitat
+          ajustada al Código de Comercio).'
+      irpf-activity-income-imputation-year:
+        help: Exercici de quatre xifres per al qual s'indiquen el criteri d'imputació
+          i la resposta sobre el Código de Comercio. Obligatori amb qualsevol de les
+          dues; les respostes d'altres exercicis es conserven.
+      irpf-codigo-comercio-accounting:
+        help: Indica si portes comptabilitat ajustada al Código de Comercio a l'exercici
+          indicat amb --irpf-activity-income-imputation-year.
       irpf-estimation-regime:
         help: Règim d'estimació IRPF per a la renda d'activitat econòmica
       irpf-income-categories:
@@ -534,6 +548,34 @@ wizard:
         prompt: Realitza operacions intracomunitàries
       has-employees:
         prompt: Té empleats i paga salaris amb retenció
+      irpf-activity-income-imputation-criterion:
+        choices:
+          cobros-y-pagos:
+            description: Només si l'has triat a la declaració i no portes comptabilitat
+              ajustada al Código de Comercio; et vincula almenys tres anys.
+            label: Cobraments i pagaments
+          devengo:
+            description: 'El més habitual: els ingressos i les despeses compten a
+              l''exercici en què es generen, sigui quina sigui la data de cobrament
+              o pagament.'
+            label: Meritació
+        help: 'La meritació és el més habitual: els ingressos i les despeses pertanyen
+          a l''exercici en què es generen, sigui quina sigui la data de cobrament
+          o pagament. Cobraments i pagaments és una opció que només pots fer servir
+          si no portes comptabilitat ajustada al Código de Comercio (art. 7.2 RIRPF);
+          et vincula almenys tres anys i es manifesta a la declaració. Si no n''estàs
+          segur, deixa-ho en blanc: les caselles d''activitat queden sense resoldre
+          fins que ho indiquis.'
+        prompt: Quin criteri fas servir per imputar a cada exercici els ingressos
+          i les despeses de la teva activitat? El més habitual és la meritació.
+      irpf-activity-income-imputation-year:
+        help: L'opció es tria exercici a exercici, de manera que la resposta es desa
+          només per a aquest exercici i les d'altres exercicis no canvien.
+        prompt: Per a quin exercici és aquesta resposta? Escriu quatre xifres.
+      irpf-codigo-comercio-accounting:
+        prompt: Portes comptabilitat ajustada al Código de Comercio (obligatòria o
+          voluntària) en aquest exercici? Si és així, no pots fer servir cobraments
+          i pagaments.
       irpf-estimation-regime:
         choices:
           directa-normal:

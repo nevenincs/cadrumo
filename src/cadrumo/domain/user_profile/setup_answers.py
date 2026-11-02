@@ -356,7 +356,7 @@ class SetupAnswers(BaseModel):
     def _validate_irpf_activity_income_imputation_year(cls, value: str) -> str:
         if value == "":
             return value
-        if len(value) != _EJERCICIO_DIGITS or not (value.isascii() and value.isdigit()):
+        if len(value) != _EJERCICIO_DIGITS or not (value.isascii() and value.isdigit()) or int(value) < 1:
             raise ValueError(
                 f"irpf_activity_income_imputation_year must be a four-digit ejercicio (YYYY), got {value!r}"
             )

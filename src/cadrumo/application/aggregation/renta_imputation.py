@@ -121,8 +121,8 @@ def _dated_values(facts: Iterable[UserProfileFact], path: str, year: int) -> set
 class ImputationFilingHistory:
     """What the taxpayer's annual returns state: the criterion captured from each, and when each was filed."""
 
-    stated: Mapping[int, ActivityImputationCriterion] = field(default_factory=dict)
-    filed_on: Mapping[int, date] = field(default_factory=dict)
+    stated: Mapping[int, ActivityImputationCriterion] = field(default_factory=dict[int, ActivityImputationCriterion])
+    filed_on: Mapping[int, date] = field(default_factory=dict[int, date])
 
 
 @dataclass(frozen=True, slots=True)

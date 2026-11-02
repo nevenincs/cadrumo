@@ -2955,6 +2955,9 @@ application:
       edit_missing_modelo_requirements: 'Los datos de identidad están completos, pero
         este perfil declara IVA y aún le faltan campos obligatorios del Modelo 303.
         Añade estos flags al mismo comando y vuelve a ejecutarlo: %{missing_flags}.'
+      imputation_year_required: 'El criterio de imputación y la respuesta sobre el
+        Código de Comercio se indican cada uno para un ejercicio. Añade este indicador
+        y vuelve a ejecutar el comando: %{missing_flags}.'
       persist_patch_unknown_question_id: El parche del asistente referencia un id
         de pregunta desconocido.
       profile_flag_required: El asistente requiere --profile NAME (sin alternativa
