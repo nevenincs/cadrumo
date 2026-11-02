@@ -75,7 +75,8 @@ def _supported_years_file(legal_probe: Path) -> Path:
 
 
 def _extend_support_envelope(table: Table) -> None:
-    floor, horizon = int(table["floor"]), int(table["horizon"])
+    horizon = int(table["horizon"])
+    floor = int(table["floor"]) if "floor" in table else horizon - int(table["filing_grade_years_before_horizon"])
     hard_ceiling = table.get("hard_ceiling")
     if hard_ceiling is None or horizon < int(hard_ceiling):
         table["horizon"] = horizon + 1
