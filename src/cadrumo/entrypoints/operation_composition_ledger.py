@@ -228,6 +228,18 @@ def compose_ledger_rule_trial_operation(inputs: OperationCompositionInputs) -> O
     return built((definition,), (build_ledger_rule_trial_registration(definition),))
 
 
+def compose_ledger_split_check_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read that answers an unsaved split the way the split writer would take it."""
+    from ..application.ledger.split_check_operation import (
+        build_ledger_split_check_definition,
+        build_ledger_split_check_registration,
+    )
+
+    del inputs
+    definition = build_ledger_split_check_definition()
+    return built((definition,), (build_ledger_split_check_registration(definition),))
+
+
 def compose_ledger_staged_check_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose the read that answers staged ledger work the way the writers would take it."""
     from ..application.ledger.staged_check_operation import (

@@ -3460,6 +3460,11 @@ cli:
         it to the --llm split proposer.
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
+    split_check_help: Answer unsaved split parts the way the split writer would take
+      them, without writing anything.
+    split_check_id_help: Full id of the movement to split.
+    split_check_invalid: Each split part must be a JSON object of the expected shape,
+      for a full movement id.
     staged_check_category_help: Repeatable spending category to judge against a classification.
     staged_check_help: Answer staged ledger work the way the writers would take it,
       without saving anything. The staged rows (rows, a JSON array of objects with

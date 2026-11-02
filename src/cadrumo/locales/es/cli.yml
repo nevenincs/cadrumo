@@ -3719,6 +3719,11 @@ cli:
       read_evidence_help: Lee la factura adjunta de la transacción en local y aliméntala
         al proponente de división --llm.
       yes_help: Confirma la división de la transacción
+    split_check_help: Responde sobre partes de división sin guardar como las aceptaría
+      quien las escribe, sin escribir nada.
+    split_check_id_help: Id completo del movimiento que se divide.
+    split_check_invalid: Cada parte debe ser un objeto JSON con la forma esperada,
+      para un id de movimiento completo.
     staged_check_category_help: Categoría de gasto repetible que se contrasta con
       una clasificación.
     staged_check_help: Responde al trabajo preparado del libro como lo aceptarían

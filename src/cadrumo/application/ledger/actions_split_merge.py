@@ -11,6 +11,7 @@ verify the complete child cohort and return
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -57,6 +58,38 @@ from .models import (
     SplitTransactionResult,
 )
 from .persistence_ports import LedgerPersistenceConflictError
+
+SPLIT_CHILDREN_MIN = 2
+"""The fewest parts a split makes: one part only restates the movement under a new id."""
+
+
+@dataclass(frozen=True)
+class SplitAmountProblem:
+    """What is wrong with split amounts: their sum, or the part at ``index``."""
+
+    child_sum: Decimal
+    index: int | None = None
+    negative: bool = False
+
+
+def split_amount_problem(*, parent_amount: Decimal, amounts: tuple[Decimal, ...]) -> SplitAmountProblem | None:
+    """Return the first thing wrong with these magnitudes as parts of ``parent_amount``.
+
+    Two contracts in order (amounts are non-negative magnitudes; flow is carried by
+    ``direction``, which every child inherits from the parent, so there is no sign to
+    reconcile):
+
+    * ``sum(amounts) == parent_amount`` exactly - no rounding slack; bank ledgers carry
+      exact cents.
+    * Every amount is above zero; a zero-amount child is a modelling error.
+    """
+    child_sum = sum(amounts, start=Decimal("0"))
+    if child_sum != parent_amount:
+        return SplitAmountProblem(child_sum=child_sum)
+    for index, amount in enumerate(amounts):
+        if amount <= Decimal("0"):
+            return SplitAmountProblem(child_sum=child_sum, index=index, negative=amount < Decimal("0"))
+    return None
 
 
 def split_transaction(
@@ -584,7 +617,7 @@ def require_splittable_child_count(
     Raises:
         TransactionValidationError: When fewer than two children are supplied.
     """
-    if len(children) < 2:
+    if len(children) < SPLIT_CHILDREN_MIN:
         raise TransactionValidationError(
             "ledger split requires at least two children",
             context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
@@ -678,38 +711,28 @@ def _validate_split_child_amounts(
     parent_amount: Decimal,
     children: tuple[SplitChildCommand, ...],
 ) -> None:
-    """Verify split-child magnitudes sum to the parent exactly.
-
-    Two contracts enforced in order (amounts are non-negative magnitudes;
-    flow is carried by ``direction``, which every child inherits from the
-    parent in the split builder, so there is no sign to reconcile):
-
-    * ``sum(child.amount) == parent_amount`` exactly - no rounding
-      slack; bank ledgers carry exact cents.
-    * Every child amount is non-zero; a zero-amount child is a
-      modelling error, not a legitimate split.
-    """
-    child_sum = sum((child.amount for child in children), start=Decimal("0"))
-    if child_sum != parent_amount:
+    """Refuse magnitudes :func:`split_amount_problem` finds wrong as parts of the parent."""
+    problem = split_amount_problem(parent_amount=parent_amount, amounts=tuple(child.amount for child in children))
+    if problem is None:
+        return
+    if problem.index is None:
         raise TransactionValidationError(
             "ledger split child amounts must sum to the parent amount exactly",
             context={
                 "parent_amount": str(parent_amount),
-                "child_sum": str(child_sum),
+                "child_sum": str(problem.child_sum),
                 "child_amounts": tuple(str(child.amount) for child in children),
             },
         )
-    for index, child in enumerate(children):
-        if child.amount < Decimal("0"):
-            raise TransactionValidationError(
-                "ledger split child amount must be a non-negative magnitude; children inherit the parent's direction",
-                context={"child_index": index, "child_amount": str(child.amount)},
-            )
-        if child.amount == Decimal("0"):
-            raise TransactionValidationError(
-                "ledger split child amount must not be zero",
-                context={"child_index": index},
-            )
+    if problem.negative:
+        raise TransactionValidationError(
+            "ledger split child amount must be a non-negative magnitude; children inherit the parent's direction",
+            context={"child_index": problem.index, "child_amount": str(children[problem.index].amount)},
+        )
+    raise TransactionValidationError(
+        "ledger split child amount must not be zero",
+        context={"child_index": problem.index},
+    )
 
 
 def _build_split_child_transaction(

@@ -17,14 +17,23 @@ import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
-import type { LedgerRow } from "../../../shell/ledger";
+import type {
+  LedgerPort,
+  LedgerRow,
+  LedgerSplitCheckResult,
+} from "../../../shell/ledger";
 import {
   DECIDED_CLASSIFICATIONS,
   isBusinessBearing,
   splitPartNeedsCategory,
   takesBusinessShare,
 } from "../../../shell/ledgerContract";
-import { parseFractionPercent } from "../../../shell/ledgerGrammar";
+import {
+  AMOUNT_RULE,
+  parseDecimal,
+  parseFractionPercent,
+} from "../../../shell/ledgerGrammar";
+import { useSplitCheck } from "../../../shell/ledgerSplitCheck";
 import type {
   SplitPartClassification,
   StageEvent,
@@ -37,11 +46,6 @@ import {
   classificationLabel,
   vocabularyEmpty,
 } from "../movements/movementWords";
-import {
-  checkSplit,
-  splitRemainder,
-  type SplitProblem,
-} from "./inspectorModel";
 import { categoryOptions } from "./inspectorWords";
 import {
   useFieldSuggestions,
@@ -71,12 +75,14 @@ const blank = (description: string): Part => ({
  * split itself is staged, not saved.
  */
 export function SplitDialog({
+  port,
   row,
   locale,
   onStage,
   onClose,
   say,
 }: {
+  port: LedgerPort;
   row: LedgerRow;
   locale: string;
   onStage: (event: StageEvent) => void;
@@ -110,65 +116,66 @@ export function SplitDialog({
   const [reason, setReason] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const last = parts.length - 1;
-  const remainder = splitRemainder(
-    tx.amount,
-    parts.slice(0, last).map((part) => part.amount),
+  // The last part takes what the backend works out the others leave. An amount
+  // goes as the served grammar reads it, or as typed for the backend to refuse.
+  const asked = useMemo(
+    () =>
+      parts.map((part, at) => {
+        if (at === parts.length - 1)
+          return { amount: null, description: part.description };
+        const parsed = parseDecimal(part.amount, AMOUNT_RULE);
+        return {
+          amount: parsed.kind === "value" ? parsed.value : part.amount,
+          description: part.description,
+        };
+      }),
+    [parts],
   );
-  const amounts = parts.map((part, at) =>
-    at === last ? (remainder ?? "") : part.amount,
-  );
+  const check = useSplitCheck(port, tx.transaction_id, asked);
+  const answer = check.kind === "answer" ? check.result : null;
+  const remainder = answer?.remainder ?? null;
   const update = (at: number, patch: Partial<Part>) => {
     setProblem(null);
     setParts((held) =>
       held.map((part, index) => (index === at ? { ...part, ...patch } : part)),
     );
   };
-  const problemText = (found: SplitProblem): string => {
+  const problemText = (
+    found: NonNullable<LedgerSplitCheckResult["problem"]>,
+  ): string => {
+    const part = (found.index ?? 0) + 1;
     switch (found.kind) {
-      case "limits_unavailable":
-        return refusalText(t, { key: "limits_unavailable", raw: "" });
+      case "gone":
+        return t("desktop.ledger.inspector.split.gone");
+      case "not_active":
+        return t("desktop.ledger.inspector.split.not_active");
       case "count":
         return t("desktop.ledger.inspector.split.count", {
-          max: mostParts ?? "",
+          max: found.max ?? "",
         });
       case "amount":
-        return t("desktop.ledger.inspector.split.amount", {
-          part: found.index + 1,
-        });
+        return t("desktop.ledger.inspector.split.amount", { part });
       case "description":
-        return t("desktop.ledger.inspector.split.description_needed", {
-          part: found.index + 1,
-        });
+        return t("desktop.ledger.inspector.split.description_needed", { part });
       case "description_long":
         return t("desktop.ledger.inspector.split.description_long", {
-          part: found.index + 1,
-          max: found.max,
-        });
-      case "duplicate":
-        return t("desktop.ledger.inspector.split.duplicate", {
-          part: found.index + 1,
+          part,
+          max: found.max ?? "",
         });
       case "sum":
-        return found.over
-          ? t("desktop.ledger.inspector.split.over", {
-              amount: formatAmount(locale, found.difference),
-            })
-          : t("desktop.ledger.inspector.split.under", {
-              amount: formatAmount(locale, found.difference),
-            });
+        return t(
+          found.over
+            ? "desktop.ledger.inspector.split.over"
+            : "desktop.ledger.inspector.split.under",
+          { amount: formatAmount(locale, found.difference ?? "0") },
+        );
     }
   };
 
   const stage = () => {
-    const checked = checkSplit(
-      tx.amount,
-      parts.map((part, at) => ({
-        amount: amounts[at]!,
-        description: part.description,
-      })),
-    );
-    if (!checked.ok) {
-      setProblem(problemText(checked.problem));
+    if (!answer) return;
+    if (answer.problem) {
+      setProblem(problemText(answer.problem));
       return;
     }
     const classes: (SplitPartClassification | undefined)[] = [];
@@ -212,7 +219,7 @@ export function SplitDialog({
         id: `split:${tx.transaction_id}`,
         kind: "split",
         transactionId: tx.transaction_id,
-        children: checked.children.map((child, at) => ({
+        children: answer.children.map((child, at) => ({
           ...child,
           ...(classes[at] ? { classify: classes[at] } : {}),
         })),
@@ -422,6 +429,19 @@ export function SplitDialog({
               onChange={setReason}
             />
           </div>
+          {check.kind === "failed" && (
+            <Alert
+              tone="warning"
+              role="alert"
+              icon={<Icon name="unknown" />}
+              className="ledger-split-check-failed"
+            >
+              <span>{t("desktop.ledger.inspector.split.check_failed")}</span>{" "}
+              <Button type="button" variant="ghost" onClick={check.retry}>
+                {t("desktop.ledger.inspector.split.check_retry")}
+              </Button>
+            </Alert>
+          )}
           {problem && (
             <p role="alert" className="flex items-center gap-1.5 text-sm">
               <Icon name="alert" size="xs" className="text-destructive" />
@@ -432,7 +452,7 @@ export function SplitDialog({
             <Button type="button" variant="ghost" onClick={onClose}>
               {t("desktop.ledger.inspector.cancel")}
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={!answer}>
               {t("desktop.ledger.inspector.split.stage")}
             </Button>
           </DialogFooter>

@@ -67,6 +67,7 @@ _LOCAL_READS: Final = (
     "ledger.evidence.review.summary",
     "ledger.entry-options",
     "ledger.rule.trial",
+    "ledger.split.check",
     "ledger.staged.check",
     "ledger.evidence.review.view",
     "ledger.evidence.view",

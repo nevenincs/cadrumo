@@ -59,6 +59,10 @@ contracts, the classifications from their enum. Ten rules:
 ``text_limit``
     A number given as the limit of ``parseLine``: how long an entry may be is its
     writer's, and a field states a limit it was served.
+``moved_rule``
+    A name of a rule the backend now answers (``checkSplit``), or a staged split
+    whose ``children`` are not read from the backend's ``answer``: whether parts
+    make a split is the split writer's.
 
 Limits. The scan is lexical and per file. It does not follow a value across
 files or through a renamed import, does not see arithmetic on plain numbers
@@ -130,7 +134,10 @@ _RULES: Final = (
     "field_route",
     "direction_rule",
     "text_limit",
+    "moved_rule",
 )
+#: The names of rules the backend now answers, so a copy kept or brought back fails by name.
+_MOVED_RULE_NAMES: Final = frozenset({"checkSplit", "splitRemainder", "centsOf"})
 #: The request and result contracts of an invoice whose decimal fields are the figures a form could compute.
 _INVOICE_CONTRACTS: Final[tuple[type[BaseModel], ...]] = (
     InvoiceAddLine,
@@ -1079,6 +1086,26 @@ def text_limit_hits(tokens: list[Token]) -> list[Hit]:
     ]
 
 
+def moved_rule_hits(tokens: list[Token]) -> list[Hit]:
+    """A moved rule's name, or a staged split's children that are not the backend's answer."""
+    hits = [
+        Hit("moved_rule", token.line, f"{token.text} is answered by the backend")
+        for token in tokens
+        if token.kind != "str" and token.text in _MOVED_RULE_NAMES
+    ]
+    for index, token in enumerate(tokens):
+        if token.kind != "str" or token.text != "split" or tokens[index - 1].text != ":":
+            continue
+        for at in range(index + 1, min(index + 16, len(tokens) - 2)):
+            if (
+                tokens[at].text == "children"
+                and tokens[at + 1].text == ":"
+                and tokens[at + 2].text not in {"answer", "{"}
+            ):
+                hits.append(Hit("moved_rule", tokens[at].line, "a split's children are not the backend's answer"))
+    return hits
+
+
 def scan_source(source: str, facts: Facts) -> list[Hit]:
     """Run every rule over one file's source."""
     tokens = lex(source)
@@ -1093,6 +1120,7 @@ def scan_source(source: str, facts: Facts) -> list[Hit]:
         *field_route_hits(tokens, facts),
         *direction_rule_hits(tokens, facts),
         *text_limit_hits(tokens),
+        *moved_rule_hits(tokens),
     ]
 
 
@@ -1481,6 +1509,19 @@ def test_a_number_as_a_line_limit_fails_the_text_limit_rule(facts: Facts) -> Non
     assert "text_limit" in _fired("const parsed = parseLine(raw, 64);\n", facts)
     assert "text_limit" not in _fired("const parsed = parseLine(raw, LINE_LIMIT);\n", facts)
     assert "text_limit" not in _fired("const parsed = parseLine(raw, field.maxLength);\n", facts)
+
+
+def test_a_moved_rule_brought_back_fails_the_moved_rule_rule(facts: Facts) -> None:
+    assert "moved_rule" in _fired("const remainder = splitRemainder(total, others);\n", facts)
+    assert "moved_rule" in _fired("export function checkSplit(total, parts) { return parts; }\n", facts)
+    assert "moved_rule" not in _fired('const said = "checkSplit";\n', facts)
+
+
+def test_a_split_staged_from_the_windows_own_parts_fails_the_moved_rule_rule(facts: Facts) -> None:
+    held = 'const a = { id: x, kind: "split", transactionId: y, children: parts.map(toChild), reason: r };\n'
+    read = 'const a = { id: x, kind: "split", transactionId: y, children: answer.children.map(toChild), reason: r };\n'
+    assert "moved_rule" in _fired(held, facts)
+    assert "moved_rule" not in _fired(read, facts)
 
 
 # -- clean files and exclusions ----------------------------------------------

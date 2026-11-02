@@ -183,6 +183,31 @@ class LedgerRuleTrialEnvelope(OutputSchema):
     pending: list[str]
 
 
+class LedgerSplitCheckProblemPayload(OutputSchema):
+    """The first thing the split writer would refuse in the parts asked about."""
+
+    kind: str
+    index: int | None
+    max: int | None
+    difference: str | None
+    over: bool | None
+
+
+class LedgerSplitCheckChildPayload(OutputSchema):
+    """One part as the split writer takes it."""
+
+    amount: str
+    description: str
+
+
+class LedgerSplitCheckEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger split-check``."""
+
+    remainder: str | None
+    problem: LedgerSplitCheckProblemPayload | None
+    children: list[LedgerSplitCheckChildPayload]
+
+
 class LedgerStagedCheckEnvelope(OutputSchema):
     """JSON envelope for ``aeat app ledger staged-check``."""
 
@@ -1018,6 +1043,9 @@ __all__ = [
     "LedgerReviewResult",
     "LedgerReviewRowPayload",
     "LedgerRuleTrialEnvelope",
+    "LedgerSplitCheckChildPayload",
+    "LedgerSplitCheckEnvelope",
+    "LedgerSplitCheckProblemPayload",
     "LedgerSplitChildIdPayload",
     "LedgerSplitChildProposalPayload",
     "LedgerSplitResult",

@@ -242,6 +242,7 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_restore",
         "app_ledger_exclude",
         "app_ledger_entry_options",
+        "app_ledger_split_check",
         "app_ledger_staged_check",
         "app_ledger_participation",
         "app_ledger_participation_rebuild",

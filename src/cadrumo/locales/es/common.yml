@@ -3102,6 +3102,9 @@ desktop:
         add_part: Añadir una parte
         amount: La parte {part} necesita un importe mayor que cero.
         category_needed: Elige una categoría para la parte {part}.
+        check_failed: El libro no ha respondido sobre estas partes, así que aún no
+          puedes añadir la división.
+        check_retry: Volver a preguntar
         choose_category: Elige una categoría
         count: Una división tiene de 2 a {max} partes.
         description: Las partes suman {amount}. La última parte se queda con lo que
@@ -3109,8 +3112,9 @@ desktop:
         description_long: La parte {part} admite una descripción de {max} caracteres
           como máximo.
         description_needed: La parte {part} necesita una descripción.
-        duplicate: 'La parte {part} es igual que otra: cambia su importe o descripción.'
+        gone: Este movimiento ya no está en el libro.
         mixed_hint: ¿Lo usas en parte para trabajar? Usa Mixto con una parte.
+        not_active: Solo puedes dividir un movimiento activo.
         over: Las partes superan el movimiento en {amount}.
         part_amount: Importe de la parte {part}
         part_category: Categoría de la parte {part}

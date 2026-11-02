@@ -595,6 +595,39 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         ),
     ),
     _expected_command(
+        "app_ledger_split_check",
+        "app_ledger",
+        "split-check",
+        "leaf",
+        "cli.ledger.split_check_help",
+        "none",
+        "cadrumo.entrypoints.cli.split_check_commands:split_check",
+        _expected_result_schema(
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerSplitCheckEnvelope", "ledger.split-check"
+        ),
+        parameters=(
+            _expected_argument("transaction_id", "cli.ledger.split_check_id_help"),
+            _expected_option(
+                "secrets_stdin",
+                "--secrets-stdin",
+                "cli.config.custody.secrets_stdin_help",
+                annotation="builtins:bool",
+                default=_FALSE_DEFAULT,
+                is_flag=True,
+                flag_value=True,
+                machine_secret_channel=_STDIN_CHANNEL,
+            ),
+            _expected_option(
+                "secrets_fd",
+                "--secrets-fd",
+                "cli.config.custody.secrets_fd_help",
+                annotation="builtins:int",
+                default=_NONE_DEFAULT,
+                machine_secret_channel=_FD_CHANNEL,
+            ),
+        ),
+    ),
+    _expected_command(
         "app_ledger_staged_check",
         "app_ledger",
         "staged-check",

@@ -161,6 +161,7 @@ from ..rule_trial_operation import (
     LedgerRuleTrialRequest,
     resolve_ledger_rule_trial_access,
 )
+from ..split_check_operation import LedgerSplitCheckRequest, resolve_ledger_split_check_access
 from ..split_operation import (
     LedgerSplitRequest,
     resolve_ledger_split_access,
@@ -331,6 +332,9 @@ _RESOLVERS = [
     ),
     pytest.param(
         resolve_ledger_rule_trial_access, "ledger.rule.trial", LedgerRuleTrialRequest, False, id="ledger.rule.trial"
+    ),
+    pytest.param(
+        resolve_ledger_split_check_access, "ledger.split.check", LedgerSplitCheckRequest, False, id="ledger.split.check"
     ),
     pytest.param(
         resolve_ledger_split_access, "ledger.split.manual", LedgerSplitRequest, True, id="ledger.split.manual"

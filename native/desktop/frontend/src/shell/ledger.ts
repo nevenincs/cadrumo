@@ -219,6 +219,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.rule.list",
   "ledger.rule.remove",
   "ledger.rule.trial",
+  "ledger.split.check",
   "ledger.split.manual",
   "ledger.split.review",
   "ledger.staged.check",
@@ -837,6 +838,32 @@ export type LedgerRuleTrialResult = {
     "matched" | "empty_pattern" | "invalid_pattern" | "too_long" | "overrun";
   hits: string[];
   pending: string[];
+};
+/** Unsaved parts of a movement. No amount on the last asks what the others leave. */
+export type LedgerSplitCheckRequest = {
+  transaction_id: string;
+  parts: { amount: string | null; description: string }[];
+};
+/** What is left for the last part, the first thing the split writer would
+ * refuse, and the parts as it takes them. */
+export type LedgerSplitCheckResult = {
+  profile_id: string;
+  remainder: string | null;
+  problem: {
+    kind:
+      | "gone"
+      | "not_active"
+      | "count"
+      | "amount"
+      | "description"
+      | "description_long"
+      | "sum";
+    index: number | null;
+    max: number | null;
+    difference: string | null;
+    over: boolean | null;
+  } | null;
+  children: { amount: string; description: string }[];
 };
 export type LedgerStagedCheckRequest = {
   rows: LedgerStagedRow[];
@@ -2094,6 +2121,7 @@ export interface LedgerRequests {
   "ledger.invoice.add": InvoiceAddRequest;
   "ledger.invoice.preview": InvoicePreviewRequest;
   "ledger.rule.trial": LedgerRuleTrialRequest;
+  "ledger.split.check": LedgerSplitCheckRequest;
   "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
@@ -2206,6 +2234,7 @@ export interface LedgerResults {
   "ledger.invoice.add": InvoiceAddResult;
   "ledger.invoice.preview": InvoicePreviewResult;
   "ledger.rule.trial": LedgerRuleTrialResult;
+  "ledger.split.check": LedgerSplitCheckResult;
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;

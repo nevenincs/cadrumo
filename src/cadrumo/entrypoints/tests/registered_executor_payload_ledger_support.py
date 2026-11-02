@@ -494,6 +494,17 @@ def _ledger_rule_trial(ctx: PayloadContext) -> PayloadResult:
     )
 
 
+def _ledger_split_check(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(
+        ctx.profile_subject,
+        {
+            "profile_id": ctx.profile_id,
+            "transaction_id": "0" * 64,
+            "parts": ({"amount": "1", "description": "first"}, {"description": "second"}),
+        },
+    )
+
+
 def _ledger_staged_check(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
@@ -769,6 +780,7 @@ LEDGER_BUILDERS: dict[str, PayloadBuilder] = {
     "ledger.track": _ledger_track,
     "ledger.entry-options": _ledger_entry_options,
     "ledger.rule.trial": _ledger_rule_trial,
+    "ledger.split.check": _ledger_split_check,
     "ledger.staged.check": _ledger_staged_check,
     "ledger.known-values": _ledger_known_values,
     "ledger.list": _ledger_list,

@@ -748,6 +748,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             ("ledger.rule.trial",),
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.split.check",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.split.check",),
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.staged.check",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,

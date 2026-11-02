@@ -3085,14 +3085,17 @@ desktop:
         add_part: Rész hozzáadása
         amount: A(z) {part}. résznek nullánál nagyobb összeg kell.
         category_needed: Válassz kategóriát a(z) {part}. részhez.
+        check_failed: A főkönyv nem válaszolt ezekről a részekről, ezért a felosztást
+          még nem adhatod hozzá.
+        check_retry: Kérdezd újra
         choose_category: Válassz kategóriát
         count: Egy felosztás 2–{max} részből áll.
         description: A részek összege {amount}. Az utolsó rész kapja a maradékot.
         description_long: A(z) {part}. rész leírása legfeljebb {max} karakter lehet.
         description_needed: A(z) {part}. résznek leírás kell.
-        duplicate: 'A(z) {part}. rész megegyezik egy másikkal: módosítsd az összegét
-          vagy a leírását.'
+        gone: Ez a tétel már nincs a főkönyvben.
         mixed_hint: Részben munkára használod? Inkább Vegyes, arányszámmal.
+        not_active: Csak aktív tételt oszthatsz fel.
         over: A részek {amount} összeggel többek a tételnél.
         part_amount: '{part}. rész összege'
         part_category: '{part}. rész kategóriája'
