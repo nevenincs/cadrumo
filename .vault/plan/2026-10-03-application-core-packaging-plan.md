@@ -14,7 +14,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:a9a3e8c11256343d4ade79665113da40c73c82fe60d042f1072711d798fa8145'
+body_hash: 'sha256:4c0b91e4836dffa2fd6389ada8027b4359320721187c000bab1aa0c4b38715ff'
 ---
 
 # `application-core-packaging` plan
@@ -141,8 +141,8 @@ The user requested implementation of the remaining package integration. The CMak
 - [x] `S06` - Create the independently buildable Rust application library and typed package inventory and capability readiness contracts consuming the existing manifest; shared metadata generation joins at S10; `native/application/ (new)`.
 - [x] `S07` - Expose immutable child-process environment and configuration projections through the platform boundary, preserving canonical Settings and storage ownership; `native/platform/, native/application/ and dev/packaging/native/generate.py`.
 - [x] `S08` - Implement verified component staging and activation with bounded extraction, target-aware selection, cancellation, writer exclusion and interruption recovery; `native/application/ component store and owning tests`.
-- [ ] `S09` - Integrate explicit Chromium provisioning and capability inspection for each target while preserving Python browser ownership and declared user-data containment; `native/application/ browser adapter, native/components.json and existing Python browser/provisioning interfaces`.
-- [ ] `S10` - Integrate the Rust application library, canonical platform projections and generated capability metadata through the common CMake graph and existing package manifest without copying development tooling into delivery; `native/application/CMakeLists.txt (new), native/components.json (new), dev/packaging/native/components.py (new), native/cmake/Packaging.cmake and dev/packaging/native/assemble.py`.
+- [x] `S09` - Integrate explicit Chromium provisioning and capability inspection for each target while preserving Python browser ownership and declared user-data containment; `native/application/ browser adapter, native/components.json and existing Python browser/provisioning interfaces`.
+- [x] `S10` - Integrate the Rust application library, canonical platform projections and generated capability metadata through the common CMake graph and existing package manifest without copying development tooling into delivery; `native/application/CMakeLists.txt (new), native/components.json (new), dev/packaging/native/components.py (new), native/cmake/Packaging.cmake and dev/packaging/native/assemble.py`.
 - [ ] `S11` - Prove build, package, relocation, component lifecycle and cleanup on all four targets and complete integrated review with artifact-bound evidence; `native/tests/, dev/packaging/native/ verification helpers and application-core-packaging audit`.
 
 ## Parallelization

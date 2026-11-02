@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-10-03'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2496a881ceb09e7c1dcde5117e152cf4c6361d8037eeff6800c67fcc54b9e1d1'
+body_hash: 'sha256:1d9822d324e83ff1492b6052773406f10041995beeaee393c3dda5192bcc7d04'
 related:
   - "[[2026-09-26-export-parity-plan]]"
 ---
@@ -315,6 +315,12 @@ related:
 - `S12` `M` `src/cadrumo/locales/hu/cli.yml`
 - `S12` `M` `uv.lock`
 - `S12` `verify:` `agent worktree: veraPDF 27/27 expectations, wheel content boundary 12, uv lock --check` -> `pass`
+- `S05` `verify:` `locator-check: .vault/plan/2026-11-01-export-parity-plan.md` -> `pass`
+- `S05` `by:` `plan-closure`
+- `S06` `verify:` `locator-check: .vault/adr/2026-09-23-assets-core-amortization-method-set-adr.md` -> `pass`
+- `S06` `by:` `plan-closure`
+- `S13` `verify:` `locator-check: -` -> `pass`
+- `S13` `by:` `plan-closure`
 
 ## Notes
 
@@ -329,3 +335,6 @@ related:
 - `S15` Delivered in a55c3c2d; logged and closed after the fact during plan housekeeping.
 - `S10` CLI/TUI parity is split by the import boundary: a CLI test checks the envelope against the operation result, TUI pilots check the visible table against independently measured file facts. The unverified-completeness case uses a hand-built service result (no verified-revision fixture exists for 165/185/189).
 - `S12` Integration fixes: the absent-value label dropped its em dash (operator rule: no em dash on a rendered page) and three PDF statements that name the producing software joined the product-identity inventory. The TUI PDF option is not wired yet; the hook is recorded for the next Step.
+- `S05` Superseded by 2026-11-01-export-parity-plan P03.S17, P03.S06, P04.S19
+- `S06` Obsolete: 2023 DA 18 outside the amortization method set (ADR line 190); assets-core plan complete
+- `S13` Superseded by 2026-09-27 conformance plan; `restating_modelos=0`

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ab53398b0a9d57883cb62ae6de8219658ae0184d085fdfb407da55e2ec6e055'
+body_hash: 'sha256:f83e637aa9ed6bb2302c7f8474ee59d05c5a8aea5244ef48f38b49e456478b4f'
 related:
   - "[[2026-10-13-desktop-agent-host-plan]]"
 ---
@@ -53,6 +53,10 @@ related:
 - `S06` `M` `justfile`
 - `S04` `verify:` `locator-check: native/desktop/src-tauri/src/agent/session.rs:1327` -> `pass`
 - `S04` `by:` `plan-closure`
+- `S01` `verify:` `locator-check: src/cadrumo/application/operations/person_acts.py` -> `pass`
+- `S01` `by:` `plan-closure`
+- `S02` `verify:` `locator-check: .vault/adr/2026-10-13-provider-settings-adr.md` -> `pass`
+- `S02` `by:` `plan-closure`
 
 ## Notes
 
@@ -65,3 +69,5 @@ related:
 - `S04` Conversation-keyed commands, send and history refuse with typed codes: the launcher reports no conversation workspace, and the gateway returns no person turn id and keeps no turn order
 - `S05` rows recorded retroactively on 2026-10-14 from git history; the Step was closed without a ledger row; landed in acd546f3a1 and 9e256e3a41
 - `S06` rows recorded retroactively on 2026-10-14 from git history; the Step was closed without a ledger row; the desktop-agent-live recipe landed in acd546f3a1
+- `S01` Obsolete: service connections are non-person; see `person_acts.py:50`
+- `S02` Superseded by provider-settings ADR line 79

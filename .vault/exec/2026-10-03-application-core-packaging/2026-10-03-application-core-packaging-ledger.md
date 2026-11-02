@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc680f16e8149a4e77cace5cac14d9d1f17f2f5c4e9a9f5a72ce4a95e1f7ee3d'
+body_hash: 'sha256:84c248f1d4ea9238475339e883017154883098ec09a48adbb999af471a40a8a3'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -113,6 +113,10 @@ related:
 - `S07` `by:` `plan-closure`
 - `S08` `verify:` `locator-check: native/application/src/component.rs:402` -> `pass`
 - `S08` `by:` `plan-closure`
+- `S09` `verify:` `locator-check: native/component-pins` -> `pass`
+- `S09` `by:` `plan-closure`
+- `S10` `verify:` `locator-check: native/component-pins` -> `pass`
+- `S10` `by:` `plan-closure`
 
 ## Notes
 
@@ -140,3 +144,5 @@ related:
 - `S10` Removed dispatcher-adapter dependency cycle by moving `verification_destination` to a leaf module and eagerly loading Windows verification with its backend. This removes the observed late-import seam; it is not a general guarantee against edits to a shared checkout.
 - `S10` Both staged hosts report10.0.26200. A diagnostic equality assertion against `platform_version10.0.26100` was overly strict; Python documents that kernel32.dll-derived `platform_version` can differ from the OS build. Production acceptance still requires major>=10 without modifying Python version reporting.
 - `S10` Fresh ZIP SHA256 8a2955ff026da1e565526ded6054a48cf3ca48643ab48e43522ee4db9f986d8d; manifest SHA256 7f56cc65a43a182eb638efc9ddafbc11d5916360adef15f3d0ea60dc2b2a0f57. Reports in build/windows-x64/application-cmake/verification/Release/result.json and verification.json. CPython3.13.11;80 exact distributions; browserMissingDependency. Independent focused review found no concrete defects. Four-target acceptance remains open.
+- `S09` Superseded by the rust-component-provisioning ADR; native/component-pins
+- `S10` Superseded by the rust-component-provisioning ADR; native/component-pins

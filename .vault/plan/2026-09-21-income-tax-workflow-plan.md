@@ -23,9 +23,9 @@ related:
   - '[[2026-07-01-fichero-boe-parity-gate-adr]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
-modified: '2026-09-21'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:34e9e3e03c0778f6bf96251a07b638244ab9b521e544498cee0f8a6cd20ab6a5'
+body_hash: 'sha256:babae8864a3821fbb17b74e2cba80d9fc1b8ee85c48c6658aa7dd813559fc715'
 ---
 
 # `income-tax-workflow` plan
@@ -61,7 +61,7 @@ Define one year-parameterized synthetic taxpayer, invoice and transaction fixtur
 
 Use the shared scenario through installed TUI ledger and declaration actions, complete in-scope bindings under accepted contracts, and prove both sequential continuation directions.
 
-- [ ] `P03.S04` - Complete and verify the canonical tuimodelo plan dependencies that make the installed ledger-to-export journey reachable without creating a second rollout authority; `.vault/plan/2026-09-07-tuimodelo-plan.md and its TUI-owned implementation Steps`.
+- [x] `P03.S04` - Complete and verify the canonical tuimodelo plan dependencies that make the installed ledger-to-export journey reachable without creating a second rollout authority; `.vault/plan/2026-09-07-tuimodelo-plan.md and its TUI-owned implementation Steps`.
 - [ ] `P03.S05` - Exercise TUI-only, CLI-to-TUI, and TUI-to-CLI journeys against isolated secure stores and compare canonical persisted and calculated meaning; `src/cadrumo/entrypoints/tui/** acceptance tests and dev/acceptance/income_tax/** drivers`.
 
 ### Phase `P04` - Validate exports and publish acceptance evidence

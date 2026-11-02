@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d39d89c2a1b84b4d09d4ebfb2b3a37aa8cfd21c202da10f7431bdb08a8b7e69'
+body_hash: 'sha256:0bca1a7d9ef44f462c80f556eeb76bf9a619e8f677ff6220f8e383f38b922fb1'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -551,6 +551,8 @@ related:
 - `S01` `by:` `plan-closure`
 - `S16` `verify:` `locator-check: custody_specs.py:134-136; shell/sign_in/mod.rs; 2026-10-24 desktop-shell ADR amendment` -> `pass`
 - `S16` `by:` `plan-closure`
+- `S12` `verify:` `locator-check: -` -> `pass`
+- `S12` `by:` `plan-closure`
 
 ## Notes
 
@@ -638,3 +640,4 @@ related:
 - `S10` Operator redirected session to define package/runtime integration proof and separate Tauri development. Scope recorded in desktop-shell audit; no application fixes started from this run. Manager launch remains unproven (fixture-owned runtime), positive sign-in/revocation and active host boundary checks remain open. Original full UI/packaging acceptance obligations retained; no narrowing of recorded verdicts.
 - `S10` Operator explicitly moved frontend development to another session and prohibited full application compilation as the development loop. Current work compiles only native test/lint artifacts and reuses existing app-v1 for real PTYs. Fixes canonical credential refusal and throttle metadata. Logs `build/windows-x86-64/e2e-desktop/backend-*.log.` Native capability passes do not close full WebView/sign-in/manager/package acceptance; no plan checkbox closed.
 - `S10` Live authentication remains pending signed-in desktop execution. Operator deleted disposable build outputs; abandoned package-specific runner changes were removed. Canonical just test-runtime-auth uses current development entrypoints, shared environment resolver, pytest storage and standard reporting; no build or preserved package prerequisite. Session0 refusal is not a passing auth test.
+- `S12` Obsolete by rule 04: other clients never start or supervise the runtime
