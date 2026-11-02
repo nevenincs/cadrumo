@@ -1,3 +1,5 @@
 node_modules
 package-lock.json
 test-results/
+# Stored compactly by scripts/modelo-fixtures.mjs: indentation doubles their size.
+src/dev/fixtures/modelo/

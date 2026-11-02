@@ -503,7 +503,7 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
     assert first != second
 
 
-def test_borrador_states_every_value_and_the_overlay_keeps_the_callers_beside_it(
+def test_borrador_states_every_value_it_supplies_and_the_overlay_keeps_the_callers_beside_it(
     snapshot_repository: Borrador100SnapshotRepository,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -533,15 +533,19 @@ def test_borrador_states_every_value_and_the_overlay_keeps_the_callers_beside_it
         )
     )
 
-    assert result.binding_values == {_DECIMAL_BINDING: Decimal("1")}
+    # The withholding credit is held for comparison only, so the borrador never states it in the ladder;
+    # the residence CCAA it does supply, even though the operator also set one.
+    assert result.binding_values == {}
     assert result.enum_binding_values == {_ENUM_BINDING: "madrid"}
     assert overlay.resolution.binding_values == {_DECIMAL_BINDING: Decimal("0")}
     assert overlay.resolution.enum_binding_values == {_ENUM_BINDING: "cataluna"}
-    assert {(divergence.key, divergence.value_channel) for divergence in overlay.divergences} == {
-        (_DECIMAL_BINDING, "decimal"),
-        (_ENUM_BINDING, "enum"),
-    }
-    assert all(divergence.selected_role is SourceDisagreementRole.CALLER for divergence in overlay.divergences)
+    (divergence,) = overlay.divergences
+    assert (divergence.key, divergence.value_channel) == (_ENUM_BINDING, "enum")
+    assert divergence.selected_role is SourceDisagreementRole.CALLER
+    assert [source.role for source in divergence.sources] == [
+        SourceDisagreementRole.BORRADOR,
+        SourceDisagreementRole.CALLER,
+    ]
 
 
 def test_borrador_resolution_rejects_registry_unmarked_binding_values(

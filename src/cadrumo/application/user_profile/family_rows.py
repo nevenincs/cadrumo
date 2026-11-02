@@ -26,7 +26,8 @@ count of zero; ``incomplete`` means the profile states more people than it
 records (three stated, one recorded), so the stored rows are served but the group
 is not complete. ``stated_count`` and ``row_count`` stay visible beside it, and
 ``incomplete_words`` says the two numbers in the output language. None of these
-may be drawn alike.
+may be drawn alike. ``max_rows`` is the most rows the declaration's design holds for the group,
+so a surface offers no more people than the declaration can carry.
 """
 
 from __future__ import annotations
@@ -47,6 +48,7 @@ from ...domain.user_profile.schema import ProfileFieldType
 from ..flows.copy import resolve_copy, resolve_optional_copy
 from ..wizard.descendant_group import build_descendant_group
 from .completeness import profile_value_is_present
+from .household_row_limit import declared_household_row_limit
 from .overview import ProfileFieldChoice, mask_profile_field
 
 if TYPE_CHECKING:
@@ -126,6 +128,8 @@ class ProfileViewFamilyGroupItem(BaseModel):
     row_count: int = Field(ge=0)
     #: "N stated, M recorded" in the output language; served only for an incomplete group.
     incomplete_words: str | None = None
+    #: The most rows the declaration's own design lets the group hold; ``None`` when the design declares none.
+    max_rows: int | None = Field(default=None, ge=1)
     leaves: tuple[ProfileFamilyLeaf, ...] = ()
 
 
@@ -238,6 +242,7 @@ def _group_items(
     field_key: str,
     count_path: str,
     leaves: tuple[ProfileFamilyLeaf, ...],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ProfileFamilyItem, ...]:
     declared = _declared_field(schema, field_key)
     if declared is None:
@@ -266,6 +271,7 @@ def _group_items(
             if incomplete and count is not None
             else None
         ),
+        max_rows=declared_household_row_limit(operation, object_path=f"{_SECTION_KEY}.{field_key}"),
         leaves=leaves,
     )
     order = [leaf.leaf for leaf in leaves]
@@ -305,6 +311,7 @@ def family_row_items(
             field_key=_DESCENDANT_FIELD_KEY,
             count_path=_DESCENDANT_COUNT_PATH,
             leaves=tuple(_leaf(page) for page in build_descendant_group(operation).pages),
+            operation=operation,
         ),
         *_group_items(
             values,
@@ -312,5 +319,6 @@ def family_row_items(
             field_key=_ASCENDANT_FIELD_KEY,
             count_path=_ASCENDANT_COUNT_PATH,
             leaves=_ascendant_leaves(),
+            operation=operation,
         ),
     )

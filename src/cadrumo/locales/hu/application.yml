@@ -1189,7 +1189,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: A megadott értékek kulcsai nem lehetnek üresek.
         decimal_value_invalid: A(z) %{binding_id} numerikus forrás borrador-értékének
           decimális számként értelmezhetőnek kell lennie.
         forbidden_bindings: 'A borrador olyan értékeket tartalmaz, amelyeket a nyomtatványdefiníciók
@@ -2387,6 +2386,9 @@ application:
         objetiva, módulos) %{threshold} határát.'
       oss_evidence_missing: Ez a bevallás egyablakos (OSS) ügyleteket tartalmaz, de
         nincsenek hozzájuk mentett alátámasztó bizonylatok.
+      oss_no_activity_contradicted: Ezt az időszakot tevékenység nélkülinek jelölted,
+        de a rendszerhez tartozó számlák vannak benne. Vond vissza a jelölést, vagy
+        ellenőrizd a számlákat.
       oss_source_unrouted: Egyes egyablakos (OSS) tételek a nyomtatvány egyik rovatában
         sem szerepelnek.
       printed_total_mismatch: A(z) [%{box}] rovat nem egyezik az őt alkotó nyomtatott
@@ -2402,6 +2404,9 @@ application:
         a benyújtáshoz.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
+      scheme_period_contradicted: A(z) {binding_id} mező {entered} értéke ellentmond
+        e munka időszakának, amely {expected}. Javítsd, vagy nyisd meg a megfelelő
+        időszak munkáját.
       selected_option_requires_nonzero: A kiválasztott lehetőséghez ebben a mezőben
         nullától eltérő érték szükséges.
       selected_option_requires_zero: A kiválasztott lehetőséghez ebben a mezőben kifejezetten

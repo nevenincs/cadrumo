@@ -65,6 +65,7 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
 )
+from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
@@ -140,7 +141,7 @@ _UNION = _Scenario(
     b"<T36904>",
     222,
     "iva.union.cuota-total",
-    {"regimen": "MOSS", "categoria": "D", "1-declarante-pais": "ES", "2-ejercicio-y-periodo-tipo-de-periodo": "T"},
+    {"regimen": "MOSS", "categoria": "D", "1-declarante-pais": "ES"},
     "1",
     "modelo-369-union-t36904",
 )
@@ -160,7 +161,6 @@ _IMPORT = _Scenario(
         "1-declarante-numero-de-operador-en-el-regimen-nioss": "IM7240000001",
         "1-actua-a-traves-de-intermediario": "1",
         "1-no-de-identificacion-del-intermediario-niossin": "IN7240000001",
-        "2-ejercicio-y-periodo-tipo-de-periodo": "M",
     },
     "2",
     "modelo-369-importacion-t36910",
@@ -243,6 +243,8 @@ def _calculate(
     scenario: _Scenario,
     invoices: tuple[Invoice, ...],
     operation: PinnedAuthorityOperation,
+    *,
+    extra_rows: dict[str, Decimal] | None = None,
 ) -> tuple[BucketAggregationCalculationResult, WorkUnit]:
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
@@ -270,7 +272,7 @@ def _calculate(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
-            binding_values=_period_rows(scenario),
+            binding_values={**_period_rows(scenario), **(extra_rows or {})},
             enum_binding_values={f"{scenario.fichero}.{key}": value for key, value in scenario.declarant.items()},
             clock=_T1,
         )
@@ -278,12 +280,8 @@ def _calculate(
 
 
 def _period_rows(scenario: _Scenario) -> dict[str, Decimal]:
-    """The numeric header rows; only the Exterior layout derives its exercise and period from the work."""
-    rows = {f"{scenario.fichero}.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0")}
-    if scenario is not _EXTERIOR:
-        rows[f"{scenario.fichero}.2-ejercicio-y-periodo-ejercicio"] = Decimal(_YEAR)
-        rows[f"{scenario.fichero}.2-ejercicio-y-periodo-periodo"] = Decimal(scenario.period_number)
-    return rows
+    """The one header row the operator answers; every regime derives its exercise and period from the work."""
+    return {f"{scenario.fichero}.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0")}
 
 
 def _cuota_bindings(scenario: _Scenario) -> list[str]:
@@ -573,7 +571,7 @@ def test_an_amended_return_refuses_export_because_the_design_cannot_declare_it(
         amended = result.revision.model_copy(
             update={
                 "amendment_identity": CalculationRevisionAmendmentIdentity(
-                    kind=kind, amends_filing_record_id="filing-ficticio", m303_rectificativa_motive=None
+                    kind=kind, amends_filing_record_id="a" * 64, m303_rectificativa_motive=None
                 )
             }
         )
@@ -620,6 +618,134 @@ def test_an_ordinary_single_page_return_leaves_every_page_indicator_blank(
     ]
     assert markers
     assert {field.value for field in markers} == {" "}
+
+
+@pytest.mark.parametrize(
+    ("scenario", "printed"),
+    [(_EXTERIOR, b"2026T01"), (_UNION, b"2026T01"), (_IMPORT, b"2026M02")],
+    ids=_ids,
+)
+def test_the_period_rows_print_the_work_units_period_when_nobody_entered_them(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    scenario: _Scenario,
+    printed: bytes,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """DR369: Ejercicio (4), Tipo de periodo (1), Periodo (2), consecutive on each regime's first page."""
+    result, _ = _calculate(
+        objects, scenario, (_invoice(scenario, "OSS-P", "FR", "general", "100.00", "20.00"),), operation
+    )
+    assert _verify(result).granted_verificado_completo is True
+    wire = _export(objects, tmp_path, scenario, result)
+    assert printed in wire[wire.index(scenario.page_tag) : wire.index(scenario.page_tag) + scenario.first_position]
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_an_entered_period_contradicting_the_work_blocks_verification_by_name(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    result, _ = _calculate(
+        objects,
+        scenario,
+        (_invoice(scenario, "OSS-W", "FR", "general", "100.00", "20.00"),),
+        operation,
+        extra_rows={f"{scenario.fichero}.2-ejercicio-y-periodo-ejercicio": Decimal(_YEAR + 1)},
+    )
+    report = _verify(result)
+    assert report.granted_verificado_completo is False
+    assert "application.modelo.findings.scheme_period_contradicted" in {
+        finding.message_locale_key for finding in report.findings
+    }
+
+
+_NO_ACTIVITY_POSITION = {_EXTERIOR.revision_id: 220, _UNION.revision_id: 221, _IMPORT.revision_id: 252}
+
+
+def _declaring_no_activity(scenario: _Scenario) -> dict[str, Decimal]:
+    return {f"{scenario.fichero}.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("1")}
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_a_declared_nil_period_files_blank_rows_and_a_zero_total(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIVA arts. 163 noniesdecies, duovicies, septvicies and Orden HAC/610/2021 art. 7.4: a nil return is still due."""
+    result, _ = _calculate(objects, scenario, (), operation, extra_rows=_declaring_no_activity(scenario))
+    report = _verify(result)
+    assert report.granted_verificado_completo is True, [f.message_locale_key for f in report.findings]
+    wire = _export(objects, tmp_path, scenario, result)
+    page = wire.index(scenario.page_tag)
+    flag = _NO_ACTIVITY_POSITION[scenario.revision_id]
+    assert wire[page + flag - 1 : page + flag] == b"1"
+    start = page + scenario.first_position - 1
+    assert wire[start : start + 28 * 42] == b" " * (28 * 42)
+    assert Decimal(result.revision.casilla_values[scenario.total_casilla]) == Decimal("0")
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_an_empty_period_nobody_declared_stays_blocked(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """No invoices is not proof of no activity, so the zero stays unproven until the operator says so."""
+    result, _ = _calculate(objects, scenario, (), operation)
+    assert "application.modelo.findings.oss_evidence_missing" in {
+        finding.message_locale_key for finding in _verify(result).findings
+    }
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_declaring_no_activity_beside_an_invoice_is_a_named_contradiction(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    result, _ = _calculate(
+        objects,
+        scenario,
+        (_invoice(scenario, "OSS-N", "FR", "general", "100.00", "20.00"),),
+        operation,
+        extra_rows=_declaring_no_activity(scenario),
+    )
+    report = _verify(result)
+    assert report.granted_verificado_completo is False
+    assert "application.modelo.findings.oss_no_activity_contradicted" in {
+        finding.message_locale_key for finding in report.findings
+    }
+
+
+def test_a_direct_ioss_filer_without_intermediary_number_still_refuses_at_export(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """DR369 T36910 marks NIOSSIn obligatory with no alternative content and never names the filer's own number."""
+    declarant = {
+        key: value
+        for key, value in _IMPORT.declarant.items()
+        if key != "1-no-de-identificacion-del-intermediario-niossin"
+    }
+    scenario = replace(_IMPORT, declarant={**declarant, "1-actua-a-traves-de-intermediario": "0"})
+    result, _ = _calculate(
+        objects, scenario, (_invoice(scenario, "IOSS-D", "FR", "general", "100.00", "20.00"),), operation
+    )
+    with pytest.raises(ModeloExportError) as refused:
+        _export(objects, tmp_path, scenario, result)
+    assert refused.value.translated_message == "application.modelo.errors.export_draft_write_failed"
+    assert not (tmp_path / f"modelo-369-{scenario.revision_id}.txt").exists()
 
 
 def _published_rows(scenario: _Scenario, operation: PinnedAuthorityOperation) -> tuple[Invoice, ...]:

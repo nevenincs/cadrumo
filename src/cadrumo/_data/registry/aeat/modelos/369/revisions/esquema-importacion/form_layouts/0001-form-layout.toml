@@ -7,7 +7,7 @@ revision_id = "esquema-importacion"
 seed_source = "authored"
 review = { state = "generated", notes = "Authored import scheme pages grounded in visually inspected BOE-A-2021-10161 pages 74100-74102 and enrolled AEAT detail bindings. The country result sums section 3 quotas, separates positive and negative section 4 corrections, and never offsets one country refund against another country payment. Explicit unused-row evidence is required; unknown detail rows remain unresolved. EU goods VAT applies in Northern Ireland; services are outside this scheme. Additional-payment form remains unimplemented. Supplementary payment/presentation controls retain their prior separate sections. No operator review, filing-grade promotion or native verification claimed." }
 generator_version = 1
-source_state_digest = "4afadb0a1a8d5498d935aa4a4fe8b604020caee109d27d1a0125d7ff445efaad"
+source_state_digest = "49cd640794b670a7bfa49db87669b6ff79a6dbd1505e7485f183ffd12526540c"
 design_sources = [
     { source_ref = "boe-modelo-369-2021-original-form-pdf", sha256 = "5ec990d839f8505bda2862c3b27b22f120df6b0e02edf345e726f006618eec12" },
     { source_ref = "aeat-dr-369-2021", sha256 = "8bfe61dfb79b5cb2eedb6ec3afc23ddfa48fcf196fb679f6ad359aa9319e0754" },

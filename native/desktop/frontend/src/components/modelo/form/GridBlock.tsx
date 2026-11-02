@@ -17,7 +17,7 @@ import { BoxNumber } from "./BoxNumber";
 import { readOnlyReason } from "./entryField";
 import { FieldFacts } from "./FieldFacts";
 import { calm, Label, useChosenFocus } from "./FieldRow";
-import { useForm } from "./formContext";
+import { openableSurface, useForm } from "./formContext";
 import { editKey, fieldKey } from "./session";
 import { ValueCell } from "./ValueCell";
 
@@ -52,8 +52,9 @@ function GridCell({ cell }: { cell: PublicModeloFormGridCell }) {
 
 function GridBox({ field }: { field: PublicModeloFormField }) {
   const t = useStrings();
-  const { session, editing, setEditing, onDone, onOpenSurface, notes } =
-    useForm();
+  const form = useForm();
+  const { session, editing, setEditing, onDone, onOpenSurface, notes } = form;
+  const surface = openableSurface(form, field);
   const key = fieldKey(field);
   const selected = session.selectedKey === key;
   const open = editing?.key === key ? editing.request : null;
@@ -71,7 +72,7 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
       }
       enter={session.enter}
       onDone={(how) => onDone(field, how)}
-      onOpenSurface={onOpenSurface}
+      onOpenSurface={surface ? onOpenSurface : undefined}
       align="grid"
     />
   );

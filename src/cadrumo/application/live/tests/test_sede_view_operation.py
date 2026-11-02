@@ -93,7 +93,7 @@ class _Sink:
     def offer_image(self, announcement: ViewImage, image: bytes) -> None:
         del announcement, image
 
-    def send(self, document: ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel) -> None:
+    def send(self, document: ViewState | ViewNotice | ViewClipboardSelection | ViewDownload | ViewFileChooser | ViewTransferCancel) -> None:
         del document
 
     def receive(self, *, timeout: float) -> ViewSinkInput | None:

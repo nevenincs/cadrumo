@@ -1226,8 +1226,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Las claves de los valores aportados no pueden estar
-          en blanco.
         decimal_value_invalid: El valor de borrador para el origen numérico %{binding_id}
           debe ser compatible con decimal.
         forbidden_bindings: 'El borrador contiene valores que las definiciones del
@@ -2431,6 +2429,8 @@ application:
         de la estimación objetiva (módulos).'
       oss_evidence_missing: Esta declaración incluye operaciones de ventanilla única
         (OSS), pero no hay justificantes guardados de ellas.
+      oss_no_activity_contradicted: Has declarado este periodo sin actividad, pero
+        hay facturas del régimen en él. Quita la declaración o revisa esas facturas.
       oss_source_unrouted: Algunas operaciones de ventanilla única (OSS) no se cuentan
         en ninguna casilla de este modelo.
       printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas
@@ -2447,6 +2447,9 @@ application:
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.
+      scheme_period_contradicted: El valor {entered} de {binding_id} contradice el
+        periodo de este trabajo, que es {expected}. Corrígelo o abre el trabajo del
+        periodo correcto.
       selected_option_requires_nonzero: La opción seleccionada exige un valor distinto
         de cero en este campo.
       selected_option_requires_zero: La opción seleccionada exige un cero explícito

@@ -16,9 +16,16 @@ legal_refs = [
   "ley-37-1992:art-163-duovicies",
   "ley-37-1992:art-163-septvicies",
 ]
-source_refs = ["aeat-dr-369-2021"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-file-description"]
 review_status = "agent_reviewed"
 ownership = "authored"
+
+# The file description reads the no-activity row: 0 -> false, 1 -> true.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-369-file-description"
+required_text = [
+  "Declaración sin actividad",
+]
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-369-2021"
@@ -79,6 +86,8 @@ entries = [
   { key = "country_code.sk", value = "SK" },
   { key = "country_code.xi", value = "XI" },
   { key = "regime.order", value = "external_scheme,union_scheme,import_scheme" },
+  { key = "no_activity.binding_suffix", value = "2-ejercicio-y-periodo-declaracion-sin-actividad" },
+  { key = "no_activity.declared_value", value = "1" },
   { key = "regime.selector", value = "selector.regime" },
   { key = "regime.common_semantics", value = "Article 163 septiesdecies provides definitions common to all three regimes (declaraciones-liquidaciones periódicas, Estado miembro de consumo, Estado miembro de identificación)." },
   { key = "regime.external_scheme.description", value = "Régimen especial aplicable a los servicios prestados por sujetos pasivos no establecidos en la Comunidad." },

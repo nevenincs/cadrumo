@@ -148,6 +148,10 @@ RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
 RENTA_SALARY_BOXES: tuple[str, str] = ("0003", "0013")
 #: A synthetic payer whose withholding certificate the register holds.
 RENTA_PAYER_TAX_ID = "B12345674"
+#: The quarter whose calculated Modelo 130 a projected filer holds, and the region the projection is asked for: the
+#: one the filers' profiles state as their tax residence.
+RENTA_QUARTER = "1T"
+RENTA_CCAA = "madrid"
 
 
 # -- wire types ---------------------------------------------------------------
@@ -900,6 +904,9 @@ class RentaFiler:
     certified: Decimal | None = None
     #: Activity income booked in the profile's ledger for the year.
     ledger_income: Decimal | None = None
+    #: Whether the profile also holds the year's calculated first-quarter Modelo 130, which the projection of the
+    #: annual return from the quarters reads; the projection is read for the filer only then.
+    quarter_130: bool = False
 
 
 RENTA_FILERS: tuple[RentaFiler, ...] = (
@@ -912,6 +919,24 @@ RENTA_FILERS: tuple[RentaFiler, ...] = (
     RentaFiler("refund", "trabajo", salary=("30000", "1900"), certified=Decimal("6000.00")),
     # Self-employed, with the year's activity income booked in the ledger.
     RentaFiler("activity", "actividad_economica", ledger_income=Decimal("40000.00")),
+    # Salaried and self-employed, the year's first quarter calculated, and no certificate in the register: the
+    # projection from the quarter names the employment credit and the totals that read it as unresolved.
+    RentaFiler(
+        "projected",
+        "trabajo,actividad_economica",
+        salary=("30000", "1900"),
+        ledger_income=Decimal("40000.00"),
+        quarter_130=True,
+    ),
+    # The same filer with a certificate in the register: the projection resolves the credit it states.
+    RentaFiler(
+        "credited",
+        "trabajo,actividad_economica",
+        salary=("30000", "1900"),
+        certified=Decimal("2000.00"),
+        ledger_income=Decimal("40000.00"),
+        quarter_130=True,
+    ),
 )
 
 
@@ -999,8 +1024,74 @@ def _calculate_renta(work: Any, filer: RentaFiler) -> None:
     asyncio.run(executor.execute(request, cast(Any, context)))
 
 
+def _answer_quarter(work: Any) -> None:
+    """Calculate the first-quarter Modelo 130 with the answers to the earlier-filing figures it refuses without."""
+    from cadrumo.application.modelo.edit_models import (
+        ModeloBindingEditIntentV1,
+        ModeloEditBindingAddressV1,
+        ModeloEditBindingIntentKind,
+    )
+
+    applied = work.apply(
+        binding=tuple(
+            ModeloBindingEditIntentV1(
+                address=ModeloEditBindingAddressV1(binding_id=binding_id),
+                kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                value=value,
+            )
+            for binding_id, value in FILED_130_ANSWERS
+        )
+    )
+    if applied.refusal is not None:
+        raise SystemExit(f"the quarter's answers were refused: {applied.refusal!r}")
+    work.recalculate()
+
+
+def _write_projection(directory: Path, work: Any, name: str) -> None:
+    """Read the projection of the filer's annual return from the quarters, as the application words it in each language.
+
+    The application words the projection in the language it is run in, so each is run in its own.
+    """
+    from cadrumo.application.modelo.projection_operation import ModeloProjectOperationRequest
+    from cadrumo.core.config import override_settings
+
+    bucket_id = work.work_unit.bucket_id
+    request = ModeloProjectOperationRequest(profile_id=UUID(bucket_id), year=RENTA_YEAR, ccaa=RENTA_CCAA)
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            projected = _operate(work, "modelo.project", request, subject_ref=_profile_subject(work))
+        _write(directory, f"{name}-{language}.json", projected)
+
+
+def _write_projection_refusal(directory: Path, work: Any, name: str) -> None:
+    """Record why the application refuses to project a profile that holds no quarterly declaration, in each language.
+
+    The refusal is the one the projection's executor raises when it is run for the profile, recorded as a stopped
+    executor's detail is recorded.
+    """
+    from cadrumo.application.modelo.projection_operation import ModeloProjectOperationRequest
+    from cadrumo.application.operations.error_detail import build_operation_error_detail
+    from cadrumo.core.config import override_settings
+
+    request = ModeloProjectOperationRequest(profile_id=UUID(work.work_unit.bucket_id), year=RENTA_YEAR, ccaa=RENTA_CCAA)
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            try:
+                _operate(work, "modelo.project", request, subject_ref=_profile_subject(work))
+            except Exception as refusal:
+                detail = build_operation_error_detail(refusal)
+            else:
+                raise SystemExit("a profile with no quarterly declaration was projected")
+        if detail is None:
+            raise SystemExit("the projection's refusal records no error detail")
+        _write(directory, f"refusal-{name}-{language}.json", detail)
+
+
 def _write_renta(directory: Path) -> None:
-    """Read every filer's 2025 Modelo 100 in every language, and the declarations list of the first filer."""
+    """Read every filer's 2025 Modelo 100 in every language, and the declarations list of the first filer.
+
+    A filer with a calculated first quarter is also read for its projection of the annual return.
+    """
     from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 
     for number, filer in enumerate(RENTA_FILERS):
@@ -1010,11 +1101,16 @@ def _write_renta(directory: Path) -> None:
                 seed_m130_income_transaction(
                     amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta"
                 )
+            if filer.quarter_130:
+                _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
             _calculate_renta(work, filer)
             suffix = f"-{filer.envelope}" if filer.envelope else ""
             _write_form(directory, work, f"modelo-100-{RENTA_PERIOD}{suffix}", with_help=number == 0)
+            if filer.quarter_130:
+                _write_projection(directory, work, f"project-100-{RENTA_PERIOD}{suffix}")
             if number == 0:
                 _write_list(directory, work, "declarations-renta")
+                _write_projection_refusal(directory, work, "project-no-quarters")
 
 
 # -- writes ---------------------------------------------------------------------
@@ -1891,8 +1987,7 @@ def pack_envelopes(directory: Path) -> None:
             if _compact(_patched(whole[base], changes)) != _compact(value):
                 raise SystemExit(f"{name} is not what its patch of {base} makes")
             text = _compact({PATCH_OF: base, PATCH_CHANGES: changes})
-        (directory / f"{name}.json").write_text(text, "utf-8", newline="
-")
+        (directory / f"{name}.json").write_text(text, "utf-8", newline="\n")
 
 
 # -- check --------------------------------------------------------------------
@@ -1915,6 +2010,7 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
         ("declarations-*.json", ModeloDeclarationsListProjectionV1),
         ("preflight-*.json", ModeloEditPreflightProjectionV1),
         ("renew-*.json", ModeloEditRenewalProjectionV1),
+        ("project-*.json", _result_model("modelo.project")),
         *((pattern, _result_model(definition_id)) for pattern, definition_id in _WRITE_ENVELOPES),
     ]
 

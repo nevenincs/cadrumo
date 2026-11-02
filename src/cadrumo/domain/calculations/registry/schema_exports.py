@@ -576,7 +576,7 @@ class ExportFieldDefinition(RegistryModel):
     populated negative answer, so an ordinary return is never a missing value.
     Carried by generated layouts from the design row they derive from.
     """
-    scheme_period_part: Literal["filing_year", "period_type", "quarter_ordinal"] | None = None
+    scheme_period_part: Literal["filing_year", "period_type", "quarter_ordinal", "month_ordinal"] | None = None
     """Which part of a scheme-qualified filing period this design row prints.
 
     The filing period is the one authority for these rows, so an export never asks

@@ -26,7 +26,7 @@ from ...domain.calculations.registry.binding_grade_cap_reach import (
     capped_binding_reach_digest,
     snapshot_reach_date,
 )
-from ...domain.calculations.registry.filing_bound_reach import filing_bound_reach, filing_bound_reach_digest
+from ...domain.calculations.registry.filing_bound_reach import filing_bound_reach_digest, snapshot_filing_bound_reach
 from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, what_locale_key
 
@@ -44,7 +44,9 @@ def _screen_payload(snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOpe
         "binding_grade_caps": capped_binding_reach_digest(
             capped_binding_reach(snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot))
         ),
-        "precedence_tier_filing_bound": filing_bound_reach_digest(filing_bound_reach(snapshot.revision)),
+        "precedence_tier_filing_bound": filing_bound_reach_digest(
+            snapshot_filing_bound_reach(snapshot, operation=operation)
+        ),
     }
 
 
