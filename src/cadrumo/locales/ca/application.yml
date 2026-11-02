@@ -2578,6 +2578,9 @@ application:
           mostra com a zero.
         unresolved_operand: Aquesta casella suma o llegeix una xifra que encara no
           té valor, així que ella tampoc no en té. Mai es mostra com a zero.
+        waived_refund_result_unsupported: Encara no s'admet el resultat quan renuncies
+          a cobrar la devolució, així que aquesta casella no té valor. Mai es mostra
+          com a zero.
     quickfile:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha

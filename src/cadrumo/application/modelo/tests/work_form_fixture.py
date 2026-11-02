@@ -56,6 +56,7 @@ def built_form(
     revision: CalculationRevision | None = None,
     known_truths: Mapping[str, bool] | None = None,
     permitted_surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...] | None = None,
+    calculated: bool = False,
 ) -> ModeloWorkForm:
     """Build a form whose ``held`` boxes carry the calculation's values; ``entered`` ``None`` is an unknown record.
 
@@ -63,6 +64,8 @@ def built_form(
     Whether its screen is outdated is the calculation-note gate's own answer, as the form service asks it.
     ``known_truths`` are the filer's yes-or-no profile facts by boolean binding; ``None`` states none.
     ``permitted_surface`` is the edit admission's surface; ``None`` offers nothing for editing.
+    ``calculated`` says the work unit has a calculation although no revision is shown: a computed box
+    that holds nothing is then one the calculation could not work out.
     """
     snapshot = form_snapshot(operation, modelo, year, code)
     values = held or {}
@@ -74,7 +77,13 @@ def built_form(
         period=Period.from_year_and_code(year, code),
         registry_revision_id=snapshot.revision.id,
         work_unit_id="e" * 64,
-        calculation_revision_id=None if revision is None else revision.calculation_revision_id,
+        calculation_revision_id=(
+            "f" * 64
+            if calculated and revision is None
+            else None
+            if revision is None
+            else revision.calculation_revision_id
+        ),
         lifecycle_state=lifecycle,
         verification_outcome=None,
         progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),

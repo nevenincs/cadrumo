@@ -841,6 +841,7 @@ FormulaOperator = Literal[
     "copy",
     "if_then_else",
     "require_condition",
+    "unresolved_outcome",
     "lookup_parameter",
     "lookup_bracket",
     "lookup_bracket_by_ccaa",

@@ -2574,6 +2574,9 @@ application:
           se muestra como cero.
         unresolved_operand: Esta casilla suma o lee una cifra que todavía no tiene
           valor, así que tampoco lo tiene ella. Nunca se muestra como cero.
+        waived_refund_result_unsupported: Todavía no se admite el resultado cuando
+          renuncias a cobrar la devolución, así que esta casilla no tiene valor. Nunca
+          se muestra como cero.
     quickfile:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó

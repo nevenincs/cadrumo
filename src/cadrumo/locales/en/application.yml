@@ -2432,6 +2432,8 @@ application:
           as zero.
         unresolved_operand: This box adds up or reads a figure that has no value yet,
           so it has none either. It is never shown as zero.
+        waived_refund_result_unsupported: The result when a refund is waived is not
+          supported yet, so this box has no value. It is never shown as zero.
     quickfile:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused

@@ -2531,6 +2531,9 @@ application:
           jelenik meg nullaként.
         unresolved_operand: Ez a rovat olyan értéket ad össze vagy olvas, amelynek
           még nincs értéke, ezért neki sincs. Soha nem jelenik meg nullaként.
+        waived_refund_result_unsupported: A visszatérítésről való lemondás esetén
+          kapott eredményt még nem támogatjuk, ezért ennek a rovatnak nincs értéke.
+          Soha nem jelenik meg nullaként.
     quickfile:
       stage_incomplete: A `quickfile` %{stage} szakasza %{status} állapottal fejeződött
         be.

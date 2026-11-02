@@ -60,6 +60,7 @@ FORMULA_OPERATOR_ARITIES: Final[dict[FormulaOperator, FormulaOperatorArity]] = {
     "record_row_unused": _UNARY,
     "if_then_else": _TERNARY,
     "require_condition": _BINARY,
+    "unresolved_outcome": _UNARY,
     "lookup_parameter": _UNARY,
     "lookup_bracket": _BINARY,
     "lookup_bracket_by_ccaa": _TERNARY,
