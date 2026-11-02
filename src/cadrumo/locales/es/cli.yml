@@ -458,6 +458,16 @@ cli:
           por cada --line. Para la entrada estructurada sustituye a los campos escalares
           --taxable-base y --iva-rate.
         list_help: Lista las facturas del catálogo de conciliación.
+        match_help: Responde qué movimiento salda qué factura y las opciones para
+          vincular a mano, sin vincular nada.
+        match_invalid: Un vínculo preparado debe indicar el id de un movimiento y
+          el de una factura como MOVIMIENTO:FACTURA, ambos completos.
+        match_invoice_help: 'Id completo de una factura: pondera solo esa factura
+          y lista los movimientos abiertos cercanos a su día de emisión.'
+        match_staged_help: Vínculo preparado y sin guardar, repetible, como MOVIMIENTO:FACTURA;
+          ninguno de los dos se ofrece a otra cosa.
+        match_transaction_help: 'Id completo de un movimiento: devuelve solo su sugerencia
+          y lista las facturas a las que puede vincularse.'
         operation_date_help: Fecha en que se realizo la entrega o prestación (AAAA-MM-DD).
           Es la fecha de devengo del art. 75 LIVA que determina en que periodo se
           declara la cuota; sin ella se utiliza la fecha de factura.

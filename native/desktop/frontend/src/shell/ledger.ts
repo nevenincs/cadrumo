@@ -177,6 +177,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.invoice.duplicate",
   "ledger.invoice.import",
   "ledger.invoice.list",
+  "ledger.invoice.match",
   "ledger.invoice.preview",
   "ledger.invoice.remove",
   "ledger.invoice.update",
@@ -724,6 +725,9 @@ export type CatalogueInvoice = {
   /** The issued invoice's leased premises' cadastral reference, as the
    * ledger holds it. */
   referencia_catastral: string | null;
+  /** The cash the invoice settles for: its total less the retención withheld
+   * at source. */
+  settlement_amount: PublicDecimal;
 };
 /** The catalogue filters by kind only. */
 export type InvoiceListRequest = { kind?: InvoiceKind | null };
@@ -855,6 +859,56 @@ export type LedgerInvoiceDuplicateResult = {
   profile_id: string;
   invoice_id: string | null;
   basis: "number" | "party_day_total" | null;
+};
+/** A link the person has staged and not saved. */
+export type LedgerInvoiceMatchStagedLink = {
+  transaction_id: string;
+  invoice_id: string;
+};
+/** What to propose given the staged links. With `invoice_id` only that invoice
+ * is weighed and the open movements near its day come back as choices; with
+ * `transaction_id` the invoices of that movement's flow come back as choices
+ * and only its suggestion is returned. */
+export type LedgerInvoiceMatchRequest = {
+  staged: LedgerInvoiceMatchStagedLink[];
+  invoice_id?: string | null;
+  transaction_id?: string | null;
+};
+/** One movement and one invoice that settle each other, and the evidence the
+ * pair stands on. */
+export type LedgerInvoiceMatchPair = {
+  transaction_id: string;
+  invoice_id: string;
+  /** The description names the invoice's number. */
+  number: boolean;
+  /** Days from the invoice's date to the movement's; negative when paid first. */
+  gap: number;
+  /** The counterparty names overlap. */
+  counterparty: boolean;
+};
+/** A movement's best invoice, with what competes with it. */
+export type LedgerInvoiceMatchSuggestion = LedgerInvoiceMatchPair & {
+  ambiguous: boolean;
+  ties: LedgerInvoiceMatchPair[];
+  others: LedgerInvoiceMatchPair[];
+};
+/** The ledger's proposals, newest movement first, and the by-hand choices the
+ * request asked for. */
+export type LedgerInvoiceMatchResult = {
+  profile_id: string;
+  suggestions: LedgerInvoiceMatchSuggestion[];
+  /** How many days either side of an invoice's issue day the movement
+   * choices reach. */
+  window_days: number;
+  invoice_choices:
+    | {
+        invoice_id: string;
+        settles: boolean;
+        staged_for: string | null;
+        linked: number;
+      }[]
+    | null;
+  movement_choices: { transaction_id: string; settles: boolean }[] | null;
 };
 /** Unsaved parts of a movement. No amount on the last asks what the others leave. */
 export type LedgerSplitCheckRequest = {
@@ -2140,6 +2194,7 @@ export interface LedgerRequests {
   "ledger.invoice.preview": InvoicePreviewRequest;
   "ledger.rule.trial": LedgerRuleTrialRequest;
   "ledger.invoice.duplicate": LedgerInvoiceDuplicateRequest;
+  "ledger.invoice.match": LedgerInvoiceMatchRequest;
   "ledger.split.check": LedgerSplitCheckRequest;
   "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
@@ -2254,6 +2309,7 @@ export interface LedgerResults {
   "ledger.invoice.preview": InvoicePreviewResult;
   "ledger.rule.trial": LedgerRuleTrialResult;
   "ledger.invoice.duplicate": LedgerInvoiceDuplicateResult;
+  "ledger.invoice.match": LedgerInvoiceMatchResult;
   "ledger.split.check": LedgerSplitCheckResult;
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;

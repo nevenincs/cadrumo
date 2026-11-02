@@ -62,7 +62,11 @@ contracts, the classifications from their enum. Ten rules:
 ``moved_rule``
     A name of a rule the backend now answers (``checkSplit``), or a staged split
     whose ``children`` are not read from the backend's ``answer``: whether parts
-    make a split is the split writer's. Also, in a ``filter``, ``find``, ``some``
+    make a split is the split writer's. Likewise the names of the matching rules
+    (``EARLY_DAYS``, ``PICK_WINDOW_DAYS``, ``TOLERANCE_UNITS``) and a call or
+    declaration of ``settlement``, ``partyName``, ``sameParty``, ``reconcile``,
+    ``linkPicker`` or ``movementPicker``: which invoice a payment settles, how
+    candidates rank and which movements are offered are the ledger's. Also, in a ``filter``, ``find``, ``some``
     or ``every``, a ``counterparty_tax_id`` compared, or an ``invoice_number``
     folded through a call and compared: whether two invoices are one is the
     backend's. Finding the exact number just sent, to tell whether a write landed,
@@ -141,7 +145,23 @@ _RULES: Final = (
     "moved_rule",
 )
 #: The names of rules the backend now answers, so a copy kept or brought back fails by name.
-_MOVED_RULE_NAMES: Final = frozenset({"checkSplit", "splitRemainder", "centsOf", "duplicateOf"})
+_MOVED_RULE_NAMES: Final = frozenset(
+    {
+        "checkSplit",
+        "splitRemainder",
+        "centsOf",
+        "duplicateOf",
+        "EARLY_DAYS",
+        "LATE_RANK",
+        "PICK_WINDOW_DAYS",
+        "TOLERANCE_UNITS",
+        "numberInDescription",
+    }
+)
+#: Rules the backend answers that a window might name as ordinary words, so they fail only when called or declared.
+_MOVED_RULE_CALLS: Final = frozenset(
+    {"settlement", "partyName", "sameParty", "reconcile", "linkPicker", "movementPicker"}
+)
 #: Invoice facts a duplicate rests on; the window asks and never compares them.
 _DUPLICATE_FACTS: Final = frozenset({"invoice_number", "counterparty_tax_id"})
 #: The request and result contracts of an invoice whose decimal fields are the figures a form could compute.
@@ -1100,6 +1120,14 @@ def moved_rule_hits(tokens: list[Token]) -> list[Hit]:
         for token in tokens
         if token.kind != "str" and token.text in _MOVED_RULE_NAMES
     ]
+    hits += [
+        Hit("moved_rule", token.line, f"{token.text} is answered by the backend")
+        for index, token in enumerate(tokens)
+        if token.kind != "str"
+        and token.text in _MOVED_RULE_CALLS
+        and index + 1 < len(tokens)
+        and tokens[index + 1].text == "("
+    ]
     for index, token in enumerate(tokens):
         if token.kind != "str" and token.text in _DUPLICATE_FACTS and _inside_predicate(tokens, token):
             window = tokens[max(index - 6, 0) : index + 5]
@@ -1529,6 +1557,28 @@ def test_a_moved_rule_brought_back_fails_the_moved_rule_rule(facts: Facts) -> No
     assert "moved_rule" in _fired("const remainder = splitRemainder(total, others);\n", facts)
     assert "moved_rule" in _fired("export function checkSplit(total, parts) { return parts; }\n", facts)
     assert "moved_rule" not in _fired('const said = "checkSplit";\n', facts)
+
+
+def test_the_matching_rules_brought_back_fail_the_moved_rule_rule(facts: Facts) -> None:
+    assert "moved_rule" in _fired("const owed = settlement(invoice);\n", facts)
+    assert "moved_rule" in _fired("export function settlement(invoice) { return invoice.grand_total; }\n", facts)
+    assert "moved_rule" in _fired("export function partyName(text) { return text.toLowerCase(); }\n", facts)
+    assert "moved_rule" in _fired("const same = sameParty(row.counterparty, invoice.counterparty_name);\n", facts)
+    assert "moved_rule" in _fired("const found = reconcile(rows, invoices, actions);\n", facts)
+    assert "moved_rule" in _fired("const offered = movementPicker(invoice, rows);\n", facts)
+    assert "moved_rule" in _fired("const early = gap >= -EARLY_DAYS;\n", facts)
+    assert "moved_rule" in _fired("export const PICK_WINDOW_DAYS = 10;\n", facts)
+    assert "moved_rule" in _fired("const near = distance <= TOLERANCE_UNITS;\n", facts)
+    assert "moved_rule" in _fired("const named = numberInDescription(row, invoice);\n", facts)
+
+
+def test_the_words_the_matching_rules_share_with_other_names_do_not_fail_the_moved_rule_rule(facts: Facts) -> None:
+    served = "const owed = invoice.settlement_amount.decimal;\n"
+    member = "type Revision = { settlement: ModeloSettlementSnapshot | null };\n"
+    local = 'const partyName = party.typed ?? party.read ?? "";\n'
+    said = 'const call = "settlement(";\n'
+    for source in (served, member, local, said):
+        assert "moved_rule" not in _fired(source, facts), source
 
 
 def test_invoice_identity_compared_in_the_window_fails_the_moved_rule_rule(facts: Facts) -> None:

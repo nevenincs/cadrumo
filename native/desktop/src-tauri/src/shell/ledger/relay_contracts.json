@@ -546,6 +546,14 @@
         "path": []
       }
     },
+    "ledger.invoice.match": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.invoice.preview": {
       "may_write": false,
       "review": false,

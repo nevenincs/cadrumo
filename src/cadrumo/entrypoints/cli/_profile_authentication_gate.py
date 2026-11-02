@@ -190,6 +190,7 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_ratios_eligible",
         "app_ledger_ratios_validate",
         "app_ledger_invoice_duplicate",
+        "app_ledger_invoice_match",
         "app_ledger_invoice_list",
         "app_ledger_invoice_preview",
         "app_ledger_invoice_view",

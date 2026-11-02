@@ -1,4 +1,5 @@
 import type {
+  CatalogueInvoice,
   JsonObject,
   LedgerDecision,
   LedgerDefinitionId,
@@ -67,6 +68,54 @@ export function movement(
     review_status: status,
     group_label: group,
     own_account_id: account,
+  };
+}
+
+/** A synthetic catalogue invoice: received, 36.30 settled, open and unlinked
+ * unless `facts` says otherwise. Every value is invented. */
+export function catalogueInvoice(
+  number: string,
+  facts: Partial<CatalogueInvoice> = {},
+): CatalogueInvoice {
+  return {
+    invoice_id: hexId(`inv-${number}`),
+    bucket_id: null,
+    kind: "received",
+    invoice_number: number,
+    issued_at: "2026-10-01",
+    counterparty_name: "Papelería Trazo SL",
+    counterparty_tax_id: "B12000045",
+    counterparty_country: "ES",
+    base_total: { decimal: "30.00" },
+    iva_total: { decimal: "6.30" },
+    grand_total: { decimal: "36.30" },
+    currency: "EUR",
+    payment_status: "PENDING",
+    linked_transaction_ids: [],
+    source_filename: null,
+    source_sha256: null,
+    source_row_index: null,
+    notes: "",
+    retention_rate: null,
+    retention_amount: null,
+    recargo_amount: null,
+    operation_type: null,
+    lines: [],
+    invoice_class: "ORDINARIA",
+    series: null,
+    operation_date: null,
+    operation_date_role: null,
+    iva_category: null,
+    rectifies_invoice_number: null,
+    fx_rate: null,
+    fx_rate_date: null,
+    fx_rate_source: null,
+    base_total_eur: null,
+    iva_total_eur: null,
+    grand_total_eur: null,
+    referencia_catastral: null,
+    settlement_amount: { decimal: "36.30" },
+    ...facts,
   };
 }
 
