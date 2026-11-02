@@ -395,7 +395,7 @@ def test_recalculating_a_version_one_draft_moves_it_to_the_wider_scope(draft: _D
 
     assert repinned.calculation_revision_id == stored.calculation_revision_id
     assert repinned.invoice_fingerprint is not None
-    assert repinned.invoice_fingerprint.field_set_version == 2
+    assert repinned.invoice_fingerprint.field_set_version == 3
     assert [row.invoice_id for row in repinned.invoice_fingerprint.rows] == [draft.invoice.invoice_id]
     assert not [f for f in _verify(draft, repinned).findings if f.message_locale_key == _NARROWER_KEY]
 
@@ -423,3 +423,90 @@ def test_the_annual_scope_holds_the_year_and_not_the_next(draft: _Draft) -> None
         )
     assert snapshot is not None
     assert {row.invoice_id for row in snapshot.rows} == {draft.invoice.invoice_id, late.invoice_id}
+
+
+def _received_unpaid(number: str = "C-001", *, on: date = _ACCRUED) -> Invoice:
+    """A purchase of 100,00 + 21,00 with no ledger row, which under accrual leaves the expense boxes unresolved."""
+    base = Decimal("100.00")
+    iva = Decimal("21.00")
+    return Invoice(
+        invoice_id=derive_invoice_id(
+            kind=InvoiceKind.RECEIVED,
+            invoice_number=number,
+            issued_at=on,
+            counterparty_tax_id=_CUSTOMER,
+            currency="EUR",
+            grand_total=base + iva,
+        ),
+        bucket_id=_BUCKET,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number=number,
+        issued_at=on,
+        operation_date=on,
+        operation_date_role=operation_performed_role(),
+        counterparty_name="PROVEEDOR SL",
+        counterparty_tax_id=_CUSTOMER,
+        counterparty_country="ES",
+        base_total=base,
+        iva_total=iva,
+        grand_total=base + iva,
+        currency="EUR",
+        lines=(
+            InvoiceLine(
+                description="Suministro",
+                quantity=Decimal("1"),
+                unit_price=base,
+                subtotal=base,
+                iva_rate=IvaRate.from_registry("RATE_21"),
+                iva_amount=iva,
+            ),
+        ),
+        payment_status=PaymentStatus.PENDING,
+    )
+
+
+def test_a_received_invoice_added_after_calculating_blocks_the_draft(draft: _Draft) -> None:
+    revision = _calculate(draft)
+    assert _drift_counts(_verify(draft, revision)) is None
+
+    draft.invoices.save(build_invoice_catalogue((draft.invoice, _received_unpaid())))
+
+    assert _drift_counts(_verify(draft, revision)) == (0, 0, 1)
+
+
+def test_under_cash_an_unpaid_received_invoice_is_out_of_scope(cash_draft: _Draft) -> None:
+    revision = _calculate(cash_draft)
+    cash_draft.invoices.save(build_invoice_catalogue((cash_draft.invoice, _received_unpaid())))
+    assert _drift_counts(_verify(cash_draft, revision)) is None
+
+
+def test_a_draft_captured_before_the_expense_scope_warns_what_it_leaves_out(draft: _Draft) -> None:
+    """A version 2 draft keeps its scope, so it reads no drift, and says it cannot see the received invoice."""
+    revision = _calculate(draft)
+    fingerprints = tuple(
+        InvoiceRowFingerprint(
+            invoice_id=draft.invoice.invoice_id,
+            fingerprint=invoice_row_fingerprint(draft.invoice, field_set_version=2),
+        )
+        for _ in (draft.invoice,)
+    )
+    old = revision.model_copy(
+        update={
+            "invoice_fingerprint": InvoiceFingerprintSnapshot(
+                rows=fingerprints,
+                snapshot_fingerprint=invoice_snapshot_fingerprint(fingerprints),
+                captured_at=revision.created_at,
+                field_set_version=2,
+            )
+        }
+    )
+    draft.calculations.save(upsert_calculation_revision(draft.calculations.load(), old))
+    stored = draft.calculations.load().get(old.calculation_revision_id)
+    assert stored is not None
+
+    draft.invoices.save(build_invoice_catalogue((draft.invoice, _received_unpaid())))
+    report = _verify(draft, stored)
+
+    assert _drift_counts(report) is None
+    (warning,) = [finding for finding in report.findings if finding.message_locale_key == _NARROWER_KEY]
+    assert warning.severity is ModeloVerificationFindingSeverity.WARNING

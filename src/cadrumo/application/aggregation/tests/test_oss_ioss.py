@@ -304,14 +304,9 @@ def test_validation_accepts_candidate_matching_destination_fr_general_rate() -> 
     assert observation.iva_amount == Decimal("20")
 
 
-@pytest.mark.parametrize("iva", (Decimal("19"), Decimal("16")))
-def test_validation_never_judges_a_supply_against_a_projected_destination_rate(iva: Decimal) -> None:
-    """The DE table starts in mid-2025, so an earlier supply's rate is only projected.
-
-    Neither figure is confirmed or refuted: 19 EUR would pass on the nearest edition
-    and 16 EUR would fail on it, so both stay the refusal on the registry's reach.
-    """
-    candidate = _candidate(
+def _projected_de_candidate(iva: Decimal) -> OssIossLedgerCandidate:
+    """The DE table starts in mid-2025, so an earlier supply's rate is only projected."""
+    return _candidate(
         destination=EUMemberState.from_registry("de"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
@@ -319,8 +314,16 @@ def test_validation_never_judges_a_supply_against_a_projected_destination_rate(i
         transaction_date=date(2025, 6, 30),
     )
 
-    with pytest.raises(IvaRateNotFoundError):
-        validate_oss_ioss_observation(candidate)
+
+def test_validation_accepts_a_figure_matching_the_projected_destination_rate() -> None:
+    assert validate_oss_ioss_observation(_projected_de_candidate(Decimal("19"))).iva_amount == Decimal("19")
+
+
+def test_a_figure_differing_from_the_projected_destination_rate_is_a_coverage_gap() -> None:
+    """16 EUR is not refuted by a rate that is only projected, so it stays a refusal on the registry's reach."""
+    with pytest.raises(IvaRateNotFoundError) as refused:
+        validate_oss_ioss_observation(_projected_de_candidate(Decimal("16")))
+    assert refused.value.context["rate_registry_covers_date"] is False
 
 
 def test_validation_rejects_candidate_with_iva_off_by_six_euros_on_destination_de() -> None:
