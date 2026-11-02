@@ -1867,6 +1867,7 @@ export type EvidenceConfirmRequest = {
   operation_type?: string | null;
   operation_date?: string | null;
   retention_rate?: string | null;
+  retention_points?: string | null;
   retention_amount?: string | null;
   recargo_amount?: string | null;
   invoice_class?: string | null;

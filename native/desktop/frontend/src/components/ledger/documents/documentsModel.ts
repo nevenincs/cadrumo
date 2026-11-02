@@ -276,13 +276,20 @@ export function readCorrection(
   }
 }
 
+/** What the ledger takes only as the person's own statement, never from the
+ * reading, so saying what the document says is still saying it. */
+const STATED_NOT_READ: ReadonlySet<CorrectionField> = new Set<CorrectionField>([
+  "retention_rate",
+  "retention_amount",
+]);
+
 /** Whether a corrected value is the value read: no correction at all. */
 export function sameAsRead(
   field: CorrectionField,
   value: string,
   read: string | null,
 ): boolean {
-  if (read === null) return false;
+  if (read === null || STATED_NOT_READ.has(field)) return false;
   const shape = CORRECTION_SHAPES[field];
   if (shape === "amount" || shape === "percent")
     return sameDecimal(value, read);
@@ -451,7 +458,8 @@ export function confirmation(input: {
     input.corrections,
   );
   if (corrected.kind === "refused") holds.push("corrections");
-  const values = corrected.kind === "ok" ? corrected.values : {};
+  const { retention_rate: retentionPoints, ...values } =
+    corrected.kind === "ok" ? corrected.values : {};
   if (!values.currency && !readValue(input.draft, "currency"))
     holds.push("currency");
   const findings = findingsState(input.blockers, input.answers);
@@ -467,6 +475,8 @@ export function confirmation(input: {
       kind: input.kind,
       counterparty_country: country,
       ...values,
+      // A person states a retención in points; the ledger owns its fraction.
+      ...(retentionPoints ? { retention_points: retentionPoints } : {}),
       ...(findings.resolutions.length
         ? { resolutions: findings.resolutions }
         : {}),
