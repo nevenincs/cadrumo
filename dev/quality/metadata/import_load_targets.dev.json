@@ -1058,6 +1058,7 @@
         "dev.registry.compiler.validate_below_floor_export_refs",
         "dev.registry.compiler.validate_binding_grade_caps",
         "dev.registry.compiler.validate_bindings",
+        "dev.registry.compiler.validate_complementaria_only_casillas",
         "dev.registry.compiler.validate_constructs",
         "dev.registry.compiler.validate_cross_revision",
         "dev.registry.compiler.validate_cross_revision_evolution",

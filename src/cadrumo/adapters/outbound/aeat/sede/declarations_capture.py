@@ -48,7 +48,7 @@ from .declarations_observations import (
     observed_filing_kind_marker_from_submitted_file,
     observed_header_facts_from_submitted_file,
 )
-from .errors import JustificanteFetchError, SedeNavigationError, SedeParseError
+from .errors import JustificanteFetchError, SedeNavigationError, SedeParseError, SedeValidationError
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 if TYPE_CHECKING:
@@ -456,19 +456,20 @@ def _relation_source_gaps(
     A casilla the captured filing does not carry counts as present when the
     shared complementaria-only predicate proves it zero: the filing's
     submitted-file marker says original and the filing's own revision declares
-    the casilla complementaria-only. Values the capture could not read as
-    decimals take no part in that proof and are left as observed.
+    the casilla complementaria-only. A non-numeric or unreadable value takes no
+    part in that proof and is left as observed.
     """
     values: dict[CasillaId, Decimal | None] = {}
     for casilla in observation.casillas:
         try:
-            values[casilla.casilla_id] = Decimal(casilla.value)
-        except (InvalidOperation, ValueError):
+            values[casilla.casilla_id] = casilla.decimal_value()
+        except (InvalidOperation, SedeValidationError):
             values[casilla.casilla_id] = None
+    complementaria_only: frozenset[CasillaId]
     try:
         revision = operation.revision(observation.modelo, observation.registry_snapshot_ref.revision_id)
     except RegistrySnapshotError:
-        complementaria_only: frozenset[CasillaId] = frozenset()
+        complementaria_only = frozenset[CasillaId]()
     else:
         complementaria_only = complementaria_only_casilla_ids(revision)
     filing_kind = filed_observation_filing_kind(observation)
