@@ -219,8 +219,8 @@ class _TrackedBorradorRepository:
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return self._repository.list_snapshots()
 
-    def outdated_stored_snapshot_count(self) -> int:
-        return self._repository.outdated_stored_snapshot_count()
+    def list_snapshots_with_outdated_count(self) -> tuple[tuple[Borrador100Snapshot, ...], int]:
+        return self._repository.list_snapshots_with_outdated_count()
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         return self._repository.resolve(snapshot_id)

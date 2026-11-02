@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Final
+from typing import Final, cast
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.hashing import canonical_json_bytes, sha256_hex
@@ -237,7 +237,8 @@ def _canonical(value: object) -> object:
     if isinstance(value, Enum):
         return _canonical(value.value)
     if isinstance(value, tuple | list | frozenset | set):
-        return sorted(canonical_json_bytes(_canonical(item)).decode("utf-8") for item in value)
+        items = cast("Iterable[object]", value)
+        return sorted(canonical_json_bytes(_canonical(item)).decode("utf-8") for item in items)
     return str(value)
 
 

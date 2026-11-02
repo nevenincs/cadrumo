@@ -18,6 +18,7 @@ import hashlib
 import io
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
@@ -27,10 +28,14 @@ from cadrumo.adapters.persistence.profile.review_package_signing import (
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.application.export.review_snapshot_loader import CALCULATION_NOTE_FINDING_PREFIX
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
-from cadrumo.application.modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
+from cadrumo.application.modelo.calculation_notes import (
+    CALCULATION_SCREEN_OUTDATED_REASON,
+    FILED_BEFORE_GRADE_CAP_REASON,
+)
 from cadrumo.application.modelo.calculation_report import (
     CalculationReportRowRole,
     CalculationReportValueState,
@@ -66,6 +71,7 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.calculation_review_snapshot_composition import load_calculation_review_snapshot
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -279,6 +285,100 @@ def test_a_filed_revision_without_a_screen_stamp_keeps_its_report(repos: Repos) 
 
     assert report.header.calculation_revision_id == unstamped.calculation_revision_id
     assert report.header.calculation_revision_state is CalculationRevisionState.PRESENTADO
+
+
+# Hand-derived: the 150,00 and 360,00 retenciones of two invoiced receipts, as casilla 06 held them
+# when filed before a capped binding's figure was withheld.
+_FILED_CAPPED_FIGURE = Decimal("510.00")
+_CAPPED_BOX = "06"
+
+
+def _filed_with_box(repos: Repos, *, value: Decimal, stamped: bool) -> tuple[WorkUnit, CalculationRevision]:
+    """File the verified baseline, then store it as recorded before screens with ``value`` in casilla 06."""
+    work_repo, calculation_repo, filing_repo, _, event_repo = repos
+    work_unit, revision = _verified_130(repos)
+    file_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=event_repo,
+        clock=T2,
+    )
+    filed = calculation_repo.load().revisions[revision.calculation_revision_id]
+    assert filed.state is CalculationRevisionState.PRESENTADO and filed.screen_stamp is not None
+    changed = filed.model_copy(
+        update={
+            "casilla_values": {**filed.casilla_values, _CAPPED_BOX: value},
+            "observations": tuple(
+                item.model_copy(update={"value": value}) if item.casilla_id == _CAPPED_BOX else item
+                for item in filed.observations
+            ),
+            "screen_stamp": filed.screen_stamp if stamped else None,
+        }
+    )
+    changed = changed.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(changed)}
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), changed))
+    return work_unit, calculation_repo.load().revisions[changed.calculation_revision_id]
+
+
+def _review_finding_reasons(work_unit: WorkUnit, revision: CalculationRevision) -> set[str]:
+    snapshot = load_calculation_review_snapshot(
+        revision.calculation_revision_id,
+        profile_id=UUID(work_unit.bucket_id),
+        operation=published_authority_operation(),
+    )
+    return {
+        item.code.removeprefix(CALCULATION_NOTE_FINDING_PREFIX)
+        for item in snapshot.findings
+        if item.code.startswith(CALCULATION_NOTE_FINDING_PREFIX)
+    }
+
+
+def test_a_revision_filed_before_screens_with_a_capped_figure_gets_no_signed_report(repos: Repos) -> None:
+    """Export refuses such a revision, so a signed report must not certify the figure either."""
+    work_unit, revision = _filed_with_box(repos, value=_FILED_CAPPED_FIGURE, stamped=False)
+
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        _report(repos, work_unit, revision)
+
+    context = refused.value.context or {}
+    assert context["reason"] == FILED_BEFORE_GRADE_CAP_REASON
+    assert context["action"] == "report"
+    assert context["box"] == _CAPPED_BOX
+
+
+_ALLOWED_FILED = pytest.mark.parametrize(
+    ("value", "stamped"), [(Decimal("0"), False), (_FILED_CAPPED_FIGURE, True)], ids=["proven_zero", "stamped"]
+)
+
+
+@_ALLOWED_FILED
+def test_a_revision_filed_before_screens_with_a_proven_zero_or_a_stamp_keeps_its_report(
+    repos: Repos, value: Decimal, stamped: bool
+) -> None:
+    work_unit, revision = _filed_with_box(repos, value=value, stamped=stamped)
+
+    assert _report(repos, work_unit, revision).header.calculation_revision_id == revision.calculation_revision_id
+
+
+def test_the_review_workbook_flags_a_revision_filed_before_screens_with_a_capped_figure(repos: Repos) -> None:
+    work_unit, revision = _filed_with_box(repos, value=_FILED_CAPPED_FIGURE, stamped=False)
+
+    assert FILED_BEFORE_GRADE_CAP_REASON in _review_finding_reasons(work_unit, revision)
+
+
+@_ALLOWED_FILED
+def test_the_review_workbook_does_not_flag_a_proven_zero_or_a_stamped_filed_revision(
+    repos: Repos, value: Decimal, stamped: bool
+) -> None:
+    work_unit, revision = _filed_with_box(repos, value=value, stamped=stamped)
+
+    assert FILED_BEFORE_GRADE_CAP_REASON not in _review_finding_reasons(work_unit, revision)
 
 
 def test_report_rows_follow_the_registry_order_of_the_pinned_snapshot(repos: Repos) -> None:

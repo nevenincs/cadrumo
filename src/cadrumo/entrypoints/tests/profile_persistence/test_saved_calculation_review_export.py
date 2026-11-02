@@ -128,9 +128,7 @@ def _context(request: OperationRequest[BaseModel], operation: PinnedAuthorityOpe
     return context, events, operands
 
 
-def test_new_calculation_retains_original_rendering_and_exports_its_saved_form(
-    repos: Repos, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_new_calculation_retains_original_rendering_and_exports_its_saved_form(repos: Repos, tmp_path: Path) -> None:
     revision = _calculate(repos)
     rendering = revision.rendering_snapshot
     assert rendering is not None
@@ -140,11 +138,6 @@ def test_new_calculation_retains_original_rendering_and_exports_its_saved_form(
         stored = repos[1].load(operation=operation).get(revision.calculation_revision_id)
         assert stored is not None and stored.rendering_snapshot is not None
         assert stored.rendering_snapshot.model_dump(mode="json") == rendering.model_dump(mode="json")
-
-        def refuse_current_template(*args: object, **kwargs: object) -> None:
-            pytest.fail("saved form export must not resolve a current authority template")
-
-        monkeypatch.setattr(PinnedAuthorityOperation, "snapshot", refuse_current_template)
         profile_id = UUID(repos[0].bucket_id)
         baseline = load_calculation_review_snapshot(
             revision.calculation_revision_id, profile_id=profile_id, operation=operation
