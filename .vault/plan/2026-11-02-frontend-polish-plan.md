@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:400efb11d0610165c5949d3cb70dc88e1a84d1ce39d62d3459d48bdb7b3a7bac'
+body_hash: 'sha256:dfcc5eb2527c0512b7246f33c2ad5387004e25401187bb954c51dc6bf5109315'
 ---
 
 # `frontend-polish` plan
@@ -75,9 +75,10 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S34` - Retry failed casilla help in place without changing selection or staged edits; `native/desktop/frontend/src/components/modelo/details/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [x] `S35` - Keep delayed agent clarification and approval results within their originating conversation and request owner; `native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`.
 - [x] `S36` - Mount one responsive Modelo details panel and preserve its state across narrow and wide layouts; `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
-- [ ] `S37` - Show refused browser input once per view without storing or replaying person input; `native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/dev/sedeViewFixture.ts, native/desktop/frontend/tests/scenarios/sede-browser.spec.ts, dev/locales/, src/cadrumo/locales/`.
+- [x] `S37` - Show refused browser input once per view without storing or replaying person input; `native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/dev/sedeViewFixture.ts, native/desktop/frontend/tests/scenarios/sede-browser.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [ ] `S38` - Recover failed log subscriptions in place with current-owner isolation; `native/desktop/frontend/src/shell/useHostLogs.ts, native/desktop/frontend/src/components/RecordList.tsx, native/desktop/frontend/src/components/HostRecordList.tsx, native/desktop/frontend/src/dev/, native/desktop/frontend/tests/scenarios/logs.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [ ] `S39` - Expose served IVA wallet balances and explicit managed operations with profile-scoped outcome holds; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/scripts/modelo_fixtures.py, native/desktop/frontend/tests/scenarios/modelo*.spec.ts, dev/locales/, src/cadrumo/locales/`.
+- [ ] `S40` - Show identical filing block explanations once while retaining action-specific refusal and accessible associations; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 
 ## Parallelization
 

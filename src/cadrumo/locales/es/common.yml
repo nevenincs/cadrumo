@@ -1138,6 +1138,8 @@ desktop:
       unknown: Cadrumo no pudo saber cómo terminó.
     forward: Adelante
     home: Página de inicio de la AEAT
+    input_not_sent: Es posible que algunas acciones no hayan llegado a la página.
+      Comprueba la página antes de continuar.
     maximize: Maximizar el navegador
     notice:
       dismiss: Descartar
@@ -4298,6 +4300,7 @@ desktop:
     filters: Filtros de registros
     follow: Seguir
     follow_hint: Mantener visible el registro más reciente
+    interrupted: Algunos registros de la interrupción no están disponibles.
     level_all: Todos los niveles
     level_critical: Solo críticos
     level_error: Solo errores
@@ -4308,6 +4311,7 @@ desktop:
     minimum_level: Nivel mínimo
     no_match: Ningún registro coincide con estos filtros.
     origin: Origen
+    reconnect: Reconectar registros
     rejected: Se han omitido {count} registros con un formato de diagnóstico no válido.
     reveal: Mostrar la ubicación de los registros
     selected: '{count} entradas seleccionadas'

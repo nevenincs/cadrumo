@@ -178,6 +178,8 @@ function OpenBrowser({
           <BrowserPrompts
             acquiring={state.page?.mode === "acquiring"}
             problem={state.problem}
+            inputFailed={view.inputFailed}
+            onDismissInputFailure={view.dismissInputFailure}
             downloads={state.downloads}
             choosers={state.choosers}
             note={state.note}

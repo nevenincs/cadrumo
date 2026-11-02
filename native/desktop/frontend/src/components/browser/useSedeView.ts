@@ -57,6 +57,9 @@ export function useSedeView({
   const [state, dispatch] = useReducer(reduceBrowser, FIRST_STATE);
   const [attempt, setAttempt] = useState(0);
   const session = useRef<SedeViewSession | null>(null);
+  const [inputFailure, setInputFailure] = useState<SedeViewSession | null>(
+    null,
+  );
   const answering = useRef<{ owner: SedeViewSession; id: number } | null>(null);
   const [reply, setReply] = useState<{
     owner: SedeViewSession;
@@ -208,9 +211,14 @@ export function useSedeView({
 
   return {
     state,
+    inputFailed: inputFailure !== null && inputFailure === session.current,
+    dismissInputFailure: useCallback(() => setInputFailure(null), []),
     dialogReply: reply?.owner === session.current ? reply : null,
     input: useCallback((event: SedeViewInput) => {
-      void session.current?.input(event).catch(nothing);
+      const owner = session.current;
+      void owner?.input(event).catch(() => {
+        if (session.current === owner) setInputFailure(owner);
+      });
     }, []),
     navigate: useCallback(
       (verb: SedeViewVerb) => refused(session.current?.navigate(verb)),

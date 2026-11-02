@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa3b7d6f998d4a51e823fae9bc982947cc08f4ed49ab43dce2f22bfc1753546b'
+body_hash: 'sha256:ed3464c325e8a0e7521f8b7158e107bc7e94dbcd4b81be565328877c8d1ed80a'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -200,6 +200,18 @@ related:
 - `S36` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
 - `S36` `verify:` `responsive Details scenario 20261102T214014Z-58260` -> `pass`
 - `S36` `verify:` `scoped ESLint and TypeScript` -> `pass`
+- `S37` `M` `native/desktop/frontend/src/components/browser/useSedeView.ts`
+- `S37` `M` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S37` `M` `native/desktop/frontend/src/components/browser/BrowserPrompts.tsx`
+- `S37` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S37` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S37` `M` `dev/locales/desktop_interface_keys.py`
+- `S37` `M` `src/cadrumo/locales/en/common.yml`
+- `S37` `M` `src/cadrumo/locales/es/common.yml`
+- `S37` `M` `src/cadrumo/locales/ca/common.yml`
+- `S37` `M` `src/cadrumo/locales/hu/common.yml`
+- `S37` `verify:` `31 browser scenarios 20261102T221404Z-60704` -> `pass`
+- `S37` `verify:` `TypeScript scoped ESLint Prettier canonical chrome` -> `pass`
 
 ## Notes
 

@@ -363,6 +363,47 @@ test("the shell's chords stay out of the canvas while it has focus, and run agai
   expect(await heard("a")).toBe(0);
 });
 
+test("refused browser input warns once and is never replayed", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  const box = await bounds(target);
+  await target.mouse.click(box.x + 60, box.y + box.height - 60);
+  const before = (await inputs(target)).length;
+  await target.evaluate(() => window.__scenarioSedeView!.refuseInputs(true));
+  await target.keyboard.insertText("private rejected text");
+  await target.mouse.click(box.x + 90, box.y + box.height - 60);
+  const warning = prompts(target)
+    .getByRole("alert")
+    .filter({ hasText: label("desktop.browser.input_not_sent") });
+  await expect(warning).toHaveCount(1);
+  await expect(warning).not.toContainText("private rejected text");
+  expect((await inputs(target)).length).toBe(before);
+  await target.evaluate(() => window.__scenarioSedeView!.refuseInputs(false));
+  await target.keyboard.insertText("new text");
+  await expect
+    .poll(async () =>
+      (await inputs(target))
+        .filter((input) => input.type === "text")
+        .map((input) => input.text),
+    )
+    .toEqual(["new text"]);
+  await expect(warning).toBeVisible();
+  await warning
+    .getByRole("button", {
+      name: label("desktop.browser.notice.dismiss"),
+      exact: true,
+    })
+    .click();
+  await expect(warning).toHaveCount(0);
+  expect(
+    (await inputs(target)).some(
+      (input) =>
+        input.type === "text" && input.text === "private rejected text",
+    ),
+  ).toBe(false);
+});
+
 test("the person's pointer, wheel and typing reach the page in its own pixels", async ({
   page: target,
 }) => {

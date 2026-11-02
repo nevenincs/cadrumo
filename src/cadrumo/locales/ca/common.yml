@@ -1131,6 +1131,8 @@ desktop:
       unknown: Cadrumo no ha pogut saber com ha acabat.
     forward: Endavant
     home: Pàgina d'inici de l'AEAT
+    input_not_sent: És possible que algunes accions no hagin arribat a la pàgina.
+      Comprova la pàgina abans de continuar.
     maximize: Maximitza el navegador
     notice:
       dismiss: Descarta
@@ -4296,6 +4298,7 @@ desktop:
     filters: Filtres de registres
     follow: Segueix
     follow_hint: Mantén visible el registre més recent
+    interrupted: Alguns registres de la interrupció no estan disponibles.
     level_all: Tots els nivells
     level_critical: Només crítics
     level_error: Només errors
@@ -4306,6 +4309,7 @@ desktop:
     minimum_level: Nivell mínim
     no_match: Cap registre no coincideix amb aquests filtres.
     origin: Origen
+    reconnect: Reconnecta els registres
     rejected: S'han omès {count} registres amb un format de diagnòstic no vàlid.
     reveal: Mostra la ubicació dels registres
     selected: '{count} entrades seleccionades'

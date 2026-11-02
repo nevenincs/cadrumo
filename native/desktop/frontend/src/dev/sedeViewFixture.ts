@@ -43,6 +43,7 @@ export type SedeViewAnswer =
 
 /** What a scenario can play into the open view. */
 export type SedeViewFixtureControls = {
+  refuseInputs(refused: boolean): void;
   failNextDialog(): void;
   holdNextDialog(): void;
   releaseDialog(): void;
@@ -94,6 +95,7 @@ export type SedeViewFixtureOptions = {
 };
 
 type Open = {
+  refuseInputs: boolean;
   refuseDialog: boolean;
   dialogGate: ReturnType<typeof gate> | null;
   resizeGate: ReturnType<typeof gate> | null;
@@ -240,6 +242,9 @@ export function sedeViewFixture({
   };
 
   const controls = (open: Open): SedeViewFixtureControls => ({
+    refuseInputs(refused) {
+      open.refuseInputs = refused;
+    },
     failNextDialog() {
       open.refuseDialog = true;
     },
@@ -344,6 +349,8 @@ export function sedeViewFixture({
     return {
       async input(event: SedeViewInput) {
         await live();
+        if (open.refuseInputs)
+          throw { code: "unavailable", operation_id: null };
         say(`sedeViewInput ${event.type}`);
         open.received[event.type] = (open.received[event.type] ?? 0) + 1;
         open.inputs.push(event);
@@ -489,6 +496,7 @@ export function sedeViewFixture({
       issued += 1;
       const open: Open = {
         refuseDialog: false,
+        refuseInputs: false,
         dialogGate: null,
         resizeGate: null,
         resizeFailures: 0,

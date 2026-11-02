@@ -1094,6 +1094,8 @@ desktop:
       unknown: Cadrumo couldn't tell how that ended.
     forward: Forward
     home: AEAT start page
+    input_not_sent: Some actions may not have reached the page. Check the page before
+      continuing.
     maximize: Maximize the browser
     notice:
       dismiss: Dismiss
@@ -4229,6 +4231,7 @@ desktop:
     filters: Log filters
     follow: Follow
     follow_hint: Keep the newest record in view
+    interrupted: Some log records from the interruption are unavailable.
     level_all: All levels
     level_critical: Critical only
     level_error: Errors only
@@ -4239,6 +4242,7 @@ desktop:
     minimum_level: Minimum level
     no_match: No records match these filters.
     origin: Origin
+    reconnect: Reconnect logs
     rejected: '{count} records omitted because their diagnostic format was invalid.'
     reveal: Reveal log location
     selected: '{count} entries selected'

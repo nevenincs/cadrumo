@@ -1106,6 +1106,8 @@ desktop:
       unknown: A Cadrumo nem tudta megállapítani, hogyan ért véget.
     forward: Előre
     home: Az AEAT kezdőoldala
+    input_not_sent: Előfordulhat, hogy néhány művelet nem jutott el az oldalhoz. Ellenőrizd
+      az oldalt, mielőtt folytatod.
     maximize: Böngésző teljes méretben
     notice:
       dismiss: Elvetés
@@ -4263,6 +4265,7 @@ desktop:
     filters: Naplószűrők
     follow: Követés
     follow_hint: A legújabb bejegyzés maradjon látható
+    interrupted: A megszakítás idejéből néhány naplóbejegyzés nem érhető el.
     level_all: Minden szint
     level_critical: Csak kritikus
     level_error: Csak hibák
@@ -4273,6 +4276,7 @@ desktop:
     minimum_level: Minimális szint
     no_match: Egy bejegyzés sem felel meg ezeknek a szűrőknek.
     origin: Forrás
+    reconnect: Naplók újracsatlakoztatása
     rejected: '{count} bejegyzés kimaradt érvénytelen diagnosztikai formátum miatt.'
     reveal: Napló helyének megnyitása
     selected: '{count} bejegyzés kijelölve'
