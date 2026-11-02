@@ -36,6 +36,7 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import allocate_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..transaction_projection import LedgerTransactionProjection
+from .recording_executor_context_support import RecordingEvents, RecordingOperands
 from .registration_access_context_support import registration_access_context
 from .transaction_projection_support import ledger_transaction_projection
 from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedAttachmentStore, UnusedBucketEventRepository
@@ -186,25 +187,8 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
             finally:
                 in_commit = False
 
-    class Events:
-        def __init__(self) -> None:
-            self.effects: list[OperationEffect] = []
-
-        async def phase(self, _phase: str) -> None:
-            return None
-
-        async def effect(self, effect: OperationEffect) -> None:
-            self.effects.append(effect)
-
-    class Operands:
-        value: BaseModel | None = None
-
-        async def put(self, operand: BaseModel, *, written_at: object) -> str:
-            self.value = operand
-            return "d" * 64
-
-    events = Events()
-    operands = Operands()
+    events = RecordingEvents()
+    operands = RecordingOperands()
     context = SimpleNamespace(
         identity=SimpleNamespace(
             definition_id=operation.LEDGER_ALLOCATE_OPERATION_DEFINITION_ID,
