@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5703470af8a131a951d2f972ba11a81ae53dc8e392c1cd94d77e05d720e85a6d'
+body_hash: 'sha256:8478bb2ff35743d1728d0c5d8787ac11ef02c1093de7008f941ea051003ecf5e'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -74,6 +74,18 @@ related:
 - `S25` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
 - `S25` `verify:` `TypeScript and targeted AEAT ESLint and formatting` -> `pass`
 - `S25` `verify:` `AEAT exact retry scope and overlapping request regressions (6)` -> `pass`
+- `S18` `M` `native/desktop/frontend/src/components/ui/suggestions.tsx`
+- `S18` `M` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S18` `M` `native/desktop/frontend/src/components/ui/dataGridNavigation.ts`
+- `S18` `M` `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx`
+- `S18` `M` `native/desktop/frontend/src/dev/primitives/DataGridHarness.tsx`
+- `S18` `M` `native/desktop/frontend/src/dev/primitives/LayersHarness.tsx`
+- `S18` `M` `native/desktop/frontend/src/dev/primitives/main.tsx`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/escape-layers.spec.ts`
+- `S18` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
+- `S18` `verify:` `Shared grid and escape layer cases (45)` -> `pass`
+- `S18` `verify:` `Editor cases after installing canonical fixture limits (42)` -> `pass`
 
 ## Notes
 

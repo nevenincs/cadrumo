@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:95d6eae39e6053c8fbd7337a8dd7d60c59fd443eec7ff4a1a03c65164ca5775d'
+body_hash: 'sha256:8b49e729e3dda1146e1739e1a463908a12d80413ea9e95674698b0e7aa25ec94'
 ---
 
 # `frontend-polish` plan
@@ -48,7 +48,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S06` - Distinguish failed AEAT result refreshes and unavailable empty outcomes from confirmed empty observations; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/shell/aeatSyncResults.ts`.
 - [x] `S25` - Require host-requested unknown-outcome acknowledgement for exact AEAT retry scopes and prevent overlapping requests; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
 - [x] `S07` - Keep invoice grid row identity stable across unrelated editor and notification updates; `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`.
-- [ ] `S18` - Repair shared suggestion visibility and combobox keyboard escape, and verify grid focus when an active column is hidden; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/tests/scenarios/`.
+- [x] `S18` - Repair shared suggestion visibility and combobox keyboard escape, and verify grid focus when an active column is hidden; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/tests/scenarios/`.
 - [ ] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.
 - [ ] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
 - [ ] `S10` - Complete remaining ledger workflow review across movements, invoices, documents, assets, registers and transfers; `native/desktop/frontend/src/components/ledger/`.

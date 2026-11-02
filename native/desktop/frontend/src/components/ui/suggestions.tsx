@@ -210,6 +210,18 @@ function SuggestionList({
   onChoose(option: Suggestion): void;
 }) {
   const [name, setName] = React.useState<string>();
+  const list = React.useRef<HTMLUListElement>(null);
+  React.useLayoutEffect(() => {
+    const container = list.current;
+    const option = container?.children[at];
+    if (!container || !(option instanceof HTMLElement)) return;
+    // Layout offsets stay accurate while the popover's opening transform animates.
+    const top = option.offsetTop;
+    const bottom = top + option.offsetHeight;
+    if (top < container.scrollTop) container.scrollTop = top;
+    else if (bottom > container.scrollTop + container.clientHeight)
+      container.scrollTop = bottom - container.clientHeight;
+  }, [at, shown]);
   // The list takes the name of the field it serves, however that is named.
   React.useLayoutEffect(() => {
     const input = field.current;
@@ -230,10 +242,11 @@ function SuggestionList({
   };
   return (
     <ul
+      ref={list}
       id={id}
       role="listbox"
       aria-label={name}
-      className="max-h-72 overflow-y-auto p-1.5"
+      className="relative max-h-72 overflow-y-auto p-1.5"
       onPointerDown={keepFocus}
       onMouseDown={keepFocus}
     >
