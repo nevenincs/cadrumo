@@ -38,6 +38,7 @@ import {
   type GrammarRefusal,
   type LedgerPeriod,
 } from "../../../shell/ledgerGrammar";
+import { textLimit } from "../../../shell/ledgerLimits";
 import { heldDecimal } from "../../../shared/numbers";
 
 // ---- Vocabularies -----------------------------------------------------------
@@ -117,7 +118,7 @@ function decimalField(
 /** A one-line text field: its value, or its problem. */
 function textField(
   raw: string,
-  max?: number,
+  max?: number | null,
 ): { value: string | null; problem: Problem | null } {
   const parsed = parseLine(raw, max);
   if (parsed.kind === "refused")
@@ -373,7 +374,10 @@ export function readDraft(
   const retention = readRetention(draft.retentionRate, draft.retentionAmount);
   note("retention_rate", retention.rateProblem);
   note("retention_amount", retention.amountProblem);
-  const name = textField(draft.counterpartyName, 512);
+  const name = textField(
+    draft.counterpartyName,
+    textLimit("invoice_counterparty_name"),
+  );
   note("counterparty_name", name.problem);
   const country = draft.country.trim();
   if (country !== "" && !COUNTRY.test(country))

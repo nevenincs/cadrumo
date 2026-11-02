@@ -23,6 +23,7 @@ from ...core.percentage import PERCENTAGE_BARE_FRACTION_CEILING, PERCENTAGE_ENTR
 from ...core.unit_proportion import UNIT_PROPORTION_MAX
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 from ...domain.identifiers import canonical_decimal_string
+from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH
 from .allocate_operation import LEDGER_ALLOCATE_RATIO_ID_MAX
 from .classify_requests import LEDGER_CLASSIFY_SHORT_TEXT_MAX
@@ -49,6 +50,7 @@ type TextLimitName = Literal[
     "own_account_swift_bic",
     "counterparty_tax_id",
     "counterparty_note",
+    "invoice_counterparty_name",
 ]
 
 
@@ -131,6 +133,7 @@ _TEXT_LIMITS: Final[tuple[LedgerEntryTextLimit, ...]] = (
     LedgerEntryTextLimit(name="own_account_swift_bic", max=LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX),
     LedgerEntryTextLimit(name="counterparty_tax_id", max=LEDGER_COUNTERPARTY_TAX_ID_MAX),
     LedgerEntryTextLimit(name="counterparty_note", max=LEDGER_COUNTERPARTY_NOTE_MAX),
+    LedgerEntryTextLimit(name="invoice_counterparty_name", max=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH),
 )
 
 

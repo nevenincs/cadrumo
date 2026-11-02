@@ -593,6 +593,14 @@ _RULE_TABLE = (
         "invalid_invoice",
         rule=InvoiceRuleFindingCode.LINE_DESCRIPTION_TOO_LONG,
     ),
+    _Case("counterparty-name-at-the-bound", {"counterparty_name": "n" * 256}, "would_accept"),
+    _Case(
+        "counterparty-name-beyond-the-bound",
+        {"counterparty_name": "n" * 257},
+        "would_refuse",
+        "invalid_invoice",
+        rule=InvoiceRuleFindingCode.COUNTERPARTY_NAME_TOO_LONG,
+    ),
 )
 
 

@@ -39,6 +39,7 @@ from ....domain.calculations.registry.invoice_bindings import (
 from ....domain.calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_threshold_buckets
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
+from ....domain.filing.errors import FilingExportValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -573,3 +574,19 @@ def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_
     assert totals["modelo-347-declarante-importe-total-anual-operaciones"] == (
         above_general + above_general + above_clave_c
     )
+
+
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_a_counterparty_name_wider_than_the_declared_slot_is_refused_never_cut(revision_id: str) -> None:
+    """The invoice takes a longer name than the record's slot; the export must not shorten it."""
+    from ....domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
+    from ..record_field_renderer import format_field
+
+    record = _declarado_record(_revision(revision_id))
+    field = next(candidate for candidate in record.fields if str(candidate.binding).endswith("-nombre"))
+    assert field.length is not None
+    assert field.length < INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
+
+    assert format_field(field, "N" * field.length) == "N" * field.length
+    with pytest.raises(FilingExportValidationError):
+        format_field(field, "N" * (field.length + 1))

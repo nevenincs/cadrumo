@@ -24,6 +24,7 @@ from ...domain.invoices.enums import InvoiceClass, default_invoice_class
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.figures import FigureFindingCode
 from ...domain.invoices.models import invoice_class_findings
+from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ...domain.invoices.rule_findings import (
     InvoiceRuleFinding,
     InvoiceRuleFindingCode,
@@ -99,6 +100,19 @@ def _blank_finding(value: str | None, code: InvoiceRuleFindingCode, field: str) 
     if value is None or value.strip():
         return ()
     return (InvoiceRuleFinding(code, f"{field} must not be blank", (field,)),)
+
+
+def _name_length_findings(name: str | None) -> tuple[InvoiceRuleFinding, ...]:
+    if name is None or len(name) <= INVOICE_COUNTERPARTY_NAME_MAX_LENGTH:
+        return ()
+    return (
+        InvoiceRuleFinding(
+            InvoiceRuleFindingCode.COUNTERPARTY_NAME_TOO_LONG,
+            "a counterparty name is longer than an invoice holds",
+            ("counterparty_name",),
+            values={"limit": str(INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)},
+        ),
+    )
 
 
 def _valid_country(country: str | None) -> tuple[str | None, tuple[InvoiceRuleFinding, ...]]:
@@ -270,6 +284,7 @@ def draft_rule_findings(
                 *_blank_finding(
                     request.counterparty_name, InvoiceRuleFindingCode.COUNTERPARTY_NAME_BLANK, "counterparty_name"
                 ),
+                *_name_length_findings(request.counterparty_name),
                 *_blank_finding(request.invoice_number, InvoiceRuleFindingCode.INVOICE_NUMBER_BLANK, "invoice_number"),
                 *_counterparty_rule_findings(request),
                 *_currency_rule_findings(request),

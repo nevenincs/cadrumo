@@ -834,6 +834,7 @@ application:
         counterparty_country_invalid: No és un codi de país de dues lletres que el
           llibre reconegui.
         counterparty_name_blank: El nom de la contrapart no pot quedar en blanc.
+        counterparty_name_too_long: El nom de la contrapart admet fins a {limit} caràcters.
         counterparty_tax_id_invalid: Aquest NIF no és vàlid per al país de la contrapart.
         counterparty_tax_id_required: Aquesta factura necessita el NIF de la contrapart.
           Només una factura simplificada emesa en pot prescindir.

@@ -17,6 +17,8 @@ from ....core.percentage import Percentage, fraction_of_percentage
 from ....core.unit_proportion import UnitProportion
 from ....domain.buckets.event import BucketEvent
 from ....domain.invoices import figures
+from ...invoices.catalogue_add_contracts import InvoiceAddRequest
+from ...invoices.catalogue_update_operation import InvoiceUpdateValues
 from ..allocate_operation import LedgerAllocateRequest
 from ..classify_requests import LedgerClassifyPatch
 from ..counterparty_operation import LedgerCounterpartyRequest
@@ -170,6 +172,10 @@ _OWNERS: Final[dict[str, list[tuple[type[BaseModel], str, Callable[[int], object
     "own_account_swift_bic": [(LedgerOwnAccountRequest, "swift_bic", _text)],
     "counterparty_tax_id": [(LedgerCounterpartyRequest, "tax_identifier", _text)],
     "counterparty_note": [(LedgerCounterpartyRequest, "note", _text)],
+    "invoice_counterparty_name": [
+        (InvoiceAddRequest, "counterparty_name", _text),
+        (InvoiceUpdateValues, "counterparty_name", _text),
+    ],
 }
 
 

@@ -822,6 +822,7 @@ application:
         counterparty_country_invalid: Ez nem olyan kétbetűs országkód, amelyet a főkönyv
           felismer.
         counterparty_name_blank: A partner neve nem maradhat üresen.
+        counterparty_name_too_long: A partner neve legfeljebb {limit} karakter lehet.
         counterparty_tax_id_invalid: Ez az adószám nem érvényes a partner országában.
         counterparty_tax_id_required: Ehhez a számlához kell a partner adószáma. Csak
           a kiállított factura simplificada lehet meg nélküle.

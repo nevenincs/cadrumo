@@ -23,6 +23,7 @@ from ...domain.invoices.business_premises import (
 from ...domain.invoices.enums import IvaRate
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import InvoiceLine
+from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ...domain.iva.schema import InvoiceKind, IvaRateKind
 from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
@@ -176,7 +177,7 @@ class InvoiceAddRequest(BaseModel):
 
     profile_id: UUID
     kind: InvoiceKind
-    counterparty_name: str = Field(min_length=1)
+    counterparty_name: str = Field(min_length=1, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
     counterparty_tax_id: str | None = None
     counterparty_country: CountryCodeAlpha2
     invoice_number: str = Field(min_length=1)

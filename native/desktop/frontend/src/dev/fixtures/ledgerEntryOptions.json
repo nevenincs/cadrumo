@@ -614,6 +614,10 @@
       {
         "name": "counterparty_note",
         "max": 4096
+      },
+      {
+        "name": "invoice_counterparty_name",
+        "max": 256
       }
     ]
   }

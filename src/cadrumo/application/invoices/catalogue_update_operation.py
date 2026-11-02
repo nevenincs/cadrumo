@@ -17,6 +17,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.invoices.enums import PaymentStatus
+from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
@@ -42,7 +43,7 @@ class InvoiceUpdateValues(BaseModel):
     """Wire-safe correction values; selection is carried by the patch field mask."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    counterparty_name: str | None = None
+    counterparty_name: str | None = Field(default=None, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
     counterparty_country: str | None = None
     notes: str | None = None
     payment_status: PaymentStatus | None = None

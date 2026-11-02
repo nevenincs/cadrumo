@@ -829,7 +829,8 @@ export type TextLimitName =
   | "own_account_iban"
   | "own_account_swift_bic"
   | "counterparty_tax_id"
-  | "counterparty_note";
+  | "counterparty_note"
+  | "invoice_counterparty_name";
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */
 export type InventoryEvidenceAddRequest = { source_path: FileToken };
