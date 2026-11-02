@@ -44,17 +44,12 @@ def borrador_admitted_bindings(revision: ModeloRevision) -> dict[BindingId, Bind
     return {binding.id: binding for binding in revision.bindings if binding.aeat_prefilled is True}
 
 
-def project_printed_casillas(
+def _sort_printed_by_owner(
     revision: ModeloRevision,
+    admitted: Mapping[BindingId, BindingDefinition],
     printed: Mapping[CasillaId, Decimal | str],
-) -> BorradorCasillaProjection:
-    """Key each printed casilla by the one admitted binding the revision binds it to.
-
-    Raises:
-        LiveApplicationInputError: When a printed casilla has more than one
-            admitted owner, or one admitted binding owns several printed casillas.
-    """
-    admitted = borrador_admitted_bindings(revision)
+) -> tuple[dict[BindingId, list[CasillaId]], list[CasillaId], list[CasillaId]]:
+    """Sort each printed casilla, in order, to its one owner, to unowned, or to ambiguous."""
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     owned_by: dict[BindingId, list[CasillaId]] = {}
     unowned: list[CasillaId] = []
@@ -69,6 +64,21 @@ def project_printed_casillas(
             ambiguous.append(casilla_id)
         else:
             owned_by.setdefault(owners[0], []).append(casilla_id)
+    return owned_by, unowned, ambiguous
+
+
+def project_printed_casillas(
+    revision: ModeloRevision,
+    printed: Mapping[CasillaId, Decimal | str],
+) -> BorradorCasillaProjection:
+    """Key each printed casilla by the one admitted binding the revision binds it to.
+
+    Raises:
+        LiveApplicationInputError: When a printed casilla has more than one
+            admitted owner, or one admitted binding owns several printed casillas.
+    """
+    admitted = borrador_admitted_bindings(revision)
+    owned_by, unowned, ambiguous = _sort_printed_by_owner(revision, admitted, printed)
     ambiguous.extend(casilla_id for owned in owned_by.values() if len(owned) > 1 for casilla_id in owned)
     if ambiguous:
         raise LiveApplicationInputError(
