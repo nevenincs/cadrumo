@@ -1354,6 +1354,7 @@ export type SedeViewInput =
   | { type: "text"; text: string };
 
 export type SedeViewVerb = "back" | "forward" | "reload" | "home";
+export type SedeClipboardAction = "copy" | "cut";
 
 /** `code` of a refused view command; `operation_id` is for diagnostics and
  * the window never shows it. */
@@ -2276,6 +2277,10 @@ export interface HostCommands {
   };
   sede_view_navigate: {
     args: Authorized<{ view: number; verb: SedeViewVerb }>;
+    result: null;
+  };
+  sede_view_clipboard: {
+    args: Authorized<{ view: number; action: SedeClipboardAction }>;
     result: null;
   };
   sede_view_resize: {
