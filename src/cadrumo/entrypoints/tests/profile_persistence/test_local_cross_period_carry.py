@@ -605,6 +605,20 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
     }
     assert finding.selected_role is SourceDisagreementRole.CALLER
     assert _M130_CARRY_FORWARD_CASILLA in finding.reached_casillas
+    backend, caller = finding.sources
+    # The carried value is named by its declared source, the caller's by the
+    # operator channel; neither names a source object. A previous-filing carry
+    # records no content fingerprint, so its value has no evidence digest.
+    assert (backend.source_family, backend.source_ref) == (
+        "previous_filing",
+        f"previous_filing:binding:{_CARRY_BINDING_ID}",
+    )
+    assert backend.evidence_ref is None
+    assert (caller.source_family, caller.source_ref) == (
+        "operator_input",
+        f"operator_input:binding:{_CARRY_BINDING_ID}",
+    )
+    assert caller.evidence_ref is None
 
     with pytest.raises(ModeloCalculationBlockedError) as refused:
         _verify_revision(
@@ -619,7 +633,9 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
             bucket_event_repository=bv_repo,
             clock=_T4,
         )
-    assert "precedence_tier_divergence" in str(refused.value.context["reasons"]).split(",")
+    context = refused.value.context
+    assert context is not None
+    assert "precedence_tier_divergence" in str(context["reasons"]).split(",")
 
 
 @pytest.mark.parametrize(

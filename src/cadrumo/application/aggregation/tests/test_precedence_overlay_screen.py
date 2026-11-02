@@ -317,7 +317,7 @@ def test_a_row_fed_binding_holds_no_scalar_for_a_higher_scalar_to_contest() -> N
     channel check refuses; the overlay itself reports no divergence for it.
     """
     overlay = _overlay(
-        _tier(_BACKEND, row_binding_values={(_BINDING, 0): Decimal("0.00")}),
+        _tier(_BACKEND, row_binding_values={(_BINDING, 1): Decimal("0.00")}),
         _tier(_CALLER, binding_values={_BINDING: Decimal("12.00")}),
     )
 

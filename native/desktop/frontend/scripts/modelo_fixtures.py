@@ -79,6 +79,13 @@ FILED_130_ANSWERS: tuple[tuple[str, str], ...] = (
     ("modelo-130-resultados-negativos-anteriores", "0"),
     ("modelo-130-pagos-fraccionados-anteriores", "0"),
 )
+#: The earlier Renta's activity income, which a clean check reads from that Renta as filed rather than as an answer.
+FILED_RENTA_BINDING = "irpf.previous_year_economic_activity_net_income"
+#: What the operator answers for the cleanly checked 130: the earlier-filing figures no filed source states.
+#: An answer differing from a filed source's figure would block the check until it was resolved.
+CLEAN_130_ANSWERS: tuple[tuple[str, str], ...] = tuple(
+    answer for answer in FILED_130_ANSWERS if answer[0] != FILED_RENTA_BINDING
+)
 #: The quarter's activity income booked for the calculated-only 130.
 INCOME_130 = Decimal("12000.00")
 #: The boxes whose help card the envelopes carry, by modelo.
@@ -626,12 +633,33 @@ def _verify(work: Any) -> Any:
     return _run_executor(work, MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID, executor, request)
 
 
+def _check_refused_on_divergence(work: Any) -> None:
+    """Check a declaration whose typed box replaced a different figure its source resolved; the check refuses.
+
+    The typed value is used by the calculation, but a filed figure resting on a
+    value that replaced a different source figure is withheld until the sources
+    agree, so the form read afterwards carries the open divergence.
+    """
+    from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+
+    try:
+        _verify(work)
+    except ModeloCalculationBlockedError as refused:
+        reasons = str((refused.context or {}).get("reasons", "")).split(",")
+        if "precedence_tier_divergence" not in reasons:
+            raise
+        return
+    raise SystemExit("the check over a typed box that replaced a different source figure was not refused")
+
+
 def _check_clean(work: Any) -> Any:
     """Answer the earlier-filing figures, calculate and check a Modelo 130 cleanly; the check's result.
 
     A clean check needs the operator's answers to the earlier-filing figures
     and the earlier Renta the 130 reads present as filed AEAT evidence under
-    the profile's own tax id. The profile books no activity in its ledger:
+    the profile's own tax id. That Renta's activity income is read from it, not
+    answered: an answer differing from the filed figure is a divergence the
+    check refuses. The profile books no activity in its ledger:
     the bank-dated income, expense and retención boxes are capped below
     filing grade, so only their proven zero lets the check pass.
     """
@@ -650,7 +678,7 @@ def _check_clean(work: Any) -> Any:
                 kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
                 value=value,
             )
-            for binding_id, value in FILED_130_ANSWERS
+            for binding_id, value in CLEAN_130_ANSWERS
         )
     )
     if applied.refusal is not None:
@@ -1887,7 +1915,8 @@ def write_envelopes(directory: Path) -> None:
         # Checked, its file made and current: what recording the filing starts from.
         _write_form(directory, stale, "modelo-130-1T-exported")
         _write_edits(directory, stale)
-        _verify(stale)
+        # The typed box 06 replaced the ledger's own figure, so checking again is refused on that divergence.
+        _check_refused_on_divergence(stale)
         _write_form(directory, stale, "modelo-130-1T-stale")
         _write_rebase(directory, stale)
     _write_renta(directory)

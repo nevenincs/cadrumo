@@ -322,6 +322,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         profile=profile,
+        backend_source_provenance=source_provenance,
     )
     work_units = prepared.work_units
     work_unit = prepared.work_unit

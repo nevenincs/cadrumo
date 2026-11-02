@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -16,8 +17,10 @@ import pytest
 from cadrumo.domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
+from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.export_layout_format import ExportLayoutFormat
+from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
@@ -29,7 +32,12 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from ....domain.modelos.source_disagreement import DisagreementEnumValue, SourceDisagreementRole
+from ....domain.modelos.calculation_revision_sources import CalculationSourceRef
+from ....domain.modelos.source_disagreement import (
+    DisagreementDecimalValue,
+    DisagreementEnumValue,
+    SourceDisagreementRole,
+)
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ...aggregation import source_profile
@@ -158,7 +166,10 @@ def test_an_operator_value_over_a_different_profile_value_is_used_and_blocks_wit
         (SourceDisagreementRole.CALLER, DisagreementEnumValue.model_validate({"token": "cataluna"})),
     ]
     assert fact.sources[0].source_family == "profile"
+    assert fact.sources[0].source_ref == f"profile:{_PROFILE_ID}:binding:{_CCAA_BINDING}"
     assert fact.sources[1].source_family == "operator_input"
+    assert fact.sources[1].source_ref == f"operator_input:binding:{_CCAA_BINDING}"
+    assert fact.sources[1].resolver_id == "calculate_caller_bindings"
 
 
 def test_a_published_modelo_303_revision_has_filing_bound_figures(
@@ -245,3 +256,54 @@ def test_the_check_fails_when_the_overlay_replaces_values_without_comparing_them
     monkeypatch.setattr(calculation_resolution, "merge_source_resolutions_by_precedence", bare_update)
 
     assert not _caller_over_profile_is_reported(authority_operation)
+
+
+def test_a_backend_value_is_named_by_its_declared_source_and_located_by_its_evidence_fingerprints(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The backend entry names the binding, never a source object, and digests the fingerprints behind it."""
+    snapshot = _latest_snapshot_declaring_the_ccaa_binding()
+    reach = snapshot_filing_bound_reach(snapshot, operation=authority_operation)
+    binding = next(
+        binding
+        for binding in snapshot.revision.bindings
+        if binding.source is BindingSourceKind.PREVIOUS_FILING and reach.binding_reach(binding.id)
+    )
+    fingerprints = ("b" * 64, "a" * 64)
+    provenance = tuple(
+        CalculationSourceRef(
+            resolver_id="previous_filing",
+            resolved_binding_source=BindingSourceKind.PREVIOUS_FILING,
+            contributor_source_kind="previous_filing",
+            contributor_binding_source=BindingSourceKind.PREVIOUS_FILING,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=f"perceptor:{index}",
+            parent_source_ref=None,
+            fingerprint=fingerprint,
+        )
+        for index, fingerprint in enumerate(fingerprints)
+    )
+
+    channels = resolve_calculation_binding_channels(
+        work_unit=_work_unit(snapshot),
+        snapshot=snapshot,
+        casilla_inputs={},
+        caller_binding_values={binding.id: Decimal("12.500")},
+        caller_enum_binding_values={},
+        backend_binding_values={binding.id: Decimal("10.000")},
+        borrador_snapshot_id=None,
+        borrador_snapshot_repository=None,
+        operation=authority_operation,
+        profile=_profile("madrid", authority_operation),
+        backend_source_provenance=provenance,
+    )
+
+    (diagnostic,) = (item for item in channels.precedence_diagnostics if item.binding_id == binding.id)
+    assert diagnostic.disagreement is not None
+    backend, caller = diagnostic.disagreement.sources
+    assert backend.role is SourceDisagreementRole.BACKEND
+    assert backend.source_ref == f"previous_filing:binding:{binding.id}"
+    assert backend.evidence_ref == f"sha256:{content_hash_hex(sorted(fingerprints))}"
+    assert all("perceptor" not in (entry.source_ref or "") for entry in (backend, caller))
+    assert caller.source_ref == f"operator_input:binding:{binding.id}"
+    assert caller.value == DisagreementDecimalValue(amount="12.500")

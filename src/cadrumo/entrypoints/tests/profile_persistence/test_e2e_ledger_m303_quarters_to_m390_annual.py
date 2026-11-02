@@ -1279,8 +1279,8 @@ _CASILLA_44_BINDING = "modelo-303-prorrata-regularizacion-casilla-44"
 
 def _tier_screen_reasons(result: BucketAggregationCalculationResult) -> set[str]:
     """Every tier-screen reason the calculation raised, persisted or shown."""
-    persisted = {issue.reason for issue in result.revision.source_issues}
-    shown = {diagnostic.reason for diagnostic in result.source_diagnostics}
+    persisted = {str(issue.reason) for issue in result.revision.source_issues}
+    shown = {str(diagnostic.reason) for diagnostic in result.source_diagnostics}
     return (persisted | shown) & _TIER_SCREEN_REASONS
 
 
@@ -1300,6 +1300,7 @@ def test_a_register_prorrata_percentage_is_a_governed_source_and_raises_no_tier_
         secure_objects, facts_by_period=PRORRATA_QUARTER_FACTS, received_rate_percent=Decimal("10")
     )
 
+    settled: BucketAggregationCalculationResult | None = None
     for period in _QUARTER_ORDER:
         work_unit, result = _calculate_m303_quarter(
             secure_objects,
@@ -1322,7 +1323,9 @@ def test_a_register_prorrata_percentage_is_a_governed_source_and_raises_no_tier_
             result_disposition=ResultDisposition.INGRESO,
             iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
-    assert Decimal(result.revision.casilla_values[_CASILLA_44]) == _MANUAL_EXCESO_DE_DEDUCCION
+        settled = result
+    assert settled is not None
+    assert Decimal(settled.revision.casilla_values[_CASILLA_44]) == _MANUAL_EXCESO_DE_DEDUCCION
 
     # The annual summary of a general-regime filer declares the simplified-regime
     # boxes, which their resolver settles as not applying rather than as zero.
