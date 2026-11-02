@@ -28,8 +28,9 @@ from ....domain.calculations.registry.tests.authority_lease_support import priva
 from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.invoices.figures import FigureFindingCode, InvoiceRuleFindingCode, StatedFigureVerdict
+from ....domain.invoices.figures import FigureFindingCode, StatedFigureVerdict
 from ....domain.invoices.models import InvoiceLine
+from ....domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ....domain.iva.schema import InvoiceKind
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext

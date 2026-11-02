@@ -10,7 +10,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..calculations.registry.form_codes import RegistryCodedEnum, form_codes_in_scope, require_form_fit
 from .errors import InvoiceValidationError
-from .figures import InvoiceRuleFinding, InvoiceRuleFindingCode, raise_first_rule_finding
+from .rule_findings import InvoiceRuleFinding, InvoiceRuleFindingCode, raise_first_rule_finding
 
 _REFERENCE_WIDTH_KEY = "m347.inmueble.referencia_catastral_max"
 

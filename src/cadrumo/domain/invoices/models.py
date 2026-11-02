@@ -72,27 +72,29 @@ from .enums import (
 )
 from .errors import InvoiceValidationError
 from .figures import (
-    InvoiceRuleFinding,
-    InvoiceRuleFindingCode,
     figure_refusal,
-    invoice_class_rule_findings,
-    invoice_rule_refusal,
     invoice_total_findings,
-    lease_kind_finding,
     line_amount_finding,
     line_iva_finding,
     line_rate_refusal_finding,
     line_subtotal_finding,
     nonnumeric_invoice_findings,
-    operation_date_role_finding,
     quantity_finding,
     raise_first_figure_finding,
-    raise_first_rule_finding,
     recargo_ceiling_finding,
     recargo_sign_finding,
     retention_findings,
     suplido_finding,
     total_sign_finding,
+)
+from .rule_findings import (
+    InvoiceRuleFinding,
+    InvoiceRuleFindingCode,
+    invoice_class_rule_findings,
+    invoice_rule_refusal,
+    lease_kind_finding,
+    operation_date_role_finding,
+    raise_first_rule_finding,
 )
 
 if TYPE_CHECKING:

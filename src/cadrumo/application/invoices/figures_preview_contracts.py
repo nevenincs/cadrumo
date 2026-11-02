@@ -17,9 +17,9 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.invoices.figures import (
     FigureFindingCode,
     FigureFindingSeverity,
-    InvoiceRuleFindingCode,
     StatedFigureVerdict,
 )
+from ...domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ...domain.iva.schema import InvoiceKind
 from ..operations.public_scalar import PublicDecimal, PublicNamedScalar
 

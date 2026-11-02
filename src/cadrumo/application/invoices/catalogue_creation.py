@@ -56,12 +56,12 @@ from ...domain.invoices.enums import (
 )
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.figures import (
-    InvoiceRuleFindingCode,
     computed_grand_total,
     computed_line_iva,
     rounded_line_totals,
 )
 from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ..aggregation.counterpart import counterpart_operation_catalogue_entries

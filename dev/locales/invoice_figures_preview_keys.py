@@ -13,7 +13,8 @@ from typing import Final
 
 from cadrumo.application.invoices.figures_preview_contracts import INVOICE_FIGURES_PREVIEW_LABEL_PREFIX
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.invoices.figures import FigureFindingCode, InvoiceRuleFindingCode
+from cadrumo.domain.invoices.figures import FigureFindingCode
+from cadrumo.domain.invoices.rule_findings import InvoiceRuleFindingCode
 
 _RATE_SLOT_FACT: Final[str] = "0094-iva-rate-slot-catalogue.toml"
 
