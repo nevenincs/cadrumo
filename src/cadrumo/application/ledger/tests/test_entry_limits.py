@@ -149,6 +149,7 @@ def _parts(count: int) -> tuple[LedgerSplitChildRequest, ...]:
 #: Each served text limit, with every request field whose own bound it states and what fills it.
 _OWNERS: Final[dict[str, list[tuple[type[BaseModel], str, Callable[[int], object]]]]] = {
     "split_parts": [(LedgerSplitRequest, "children", _parts)],
+    "split_part_description": [(LedgerSplitChildRequest, "description", _text)],
     "entry_text": [
         (LedgerUpdatePatch, "description", _text),
         (LedgerUpdatePatch, "counterparty", _text),

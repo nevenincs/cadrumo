@@ -818,6 +818,7 @@ export type LedgerEntryLimits = {
  * `split_parts`, the most parts one split makes. */
 export type TextLimitName =
   | "split_parts"
+  | "split_part_description"
   | "entry_text"
   | "group_label"
   | "classify_token"

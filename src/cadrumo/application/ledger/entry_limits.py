@@ -29,7 +29,7 @@ from .classify_requests import LEDGER_CLASSIFY_SHORT_TEXT_MAX
 from .counterparty_operation import LEDGER_COUNTERPARTY_NOTE_MAX, LEDGER_COUNTERPARTY_TAX_ID_MAX
 from .evidence import LEDGER_EVIDENCE_LABEL_MAX, LEDGER_EVIDENCE_TEXT_MAX
 from .own_account_operation import LEDGER_OWN_ACCOUNT_IBAN_MAX, LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX
-from .split_operation import LEDGER_SPLIT_CHILDREN_MAX
+from .split_operation import LEDGER_SPLIT_CHILDREN_MAX, LEDGER_SPLIT_PART_DESCRIPTION_MAX
 from .update_contracts import LEDGER_GROUP_LABEL_MAX, LEDGER_UPDATE_TEXT_MAX
 
 type DecimalRuleName = Literal["amount", "tax_amount", "quantity", "unit_price"]
@@ -37,6 +37,7 @@ type PercentUnit = Literal["points", "fraction"]
 type PercentField = Literal["iva_rate", "retention_rate"]
 type TextLimitName = Literal[
     "split_parts",
+    "split_part_description",
     "entry_text",
     "group_label",
     "classify_token",
@@ -118,6 +119,7 @@ _DOCUMENT_PERCENT_FIELDS: Final[tuple[LedgerEntryPercentField, ...]] = (
 # an operator's note is bound by what a bucket event payload value takes, since it is recorded there.
 _TEXT_LIMITS: Final[tuple[LedgerEntryTextLimit, ...]] = (
     LedgerEntryTextLimit(name="split_parts", max=LEDGER_SPLIT_CHILDREN_MAX),
+    LedgerEntryTextLimit(name="split_part_description", max=LEDGER_SPLIT_PART_DESCRIPTION_MAX),
     LedgerEntryTextLimit(name="entry_text", max=LEDGER_UPDATE_TEXT_MAX),
     LedgerEntryTextLimit(name="group_label", max=LEDGER_GROUP_LABEL_MAX),
     LedgerEntryTextLimit(name="classify_token", max=LEDGER_CLASSIFY_SHORT_TEXT_MAX),

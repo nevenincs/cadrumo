@@ -325,6 +325,7 @@ export type SplitProblem =
   | { kind: "limits_unavailable" }
   | { kind: "amount"; index: number }
   | { kind: "description"; index: number }
+  | { kind: "description_long"; index: number; max: number }
   | { kind: "duplicate"; index: number }
   | { kind: "sum"; difference: string; over: boolean };
 
@@ -339,7 +340,8 @@ export function checkSplit(
   | { ok: true; children: { amount: string; description: string }[] }
   | { ok: false; problem: SplitProblem } {
   const most = textLimit("split_parts");
-  if (most === null)
+  const longest = textLimit("split_part_description");
+  if (most === null || longest === null)
     return { ok: false, problem: { kind: "limits_unavailable" } };
   if (parts.length < 2 || parts.length > most)
     return { ok: false, problem: { kind: "count" } };
@@ -354,6 +356,11 @@ export function checkSplit(
     const description = part.description.trim();
     if (description === "")
       return { ok: false, problem: { kind: "description", index } };
+    if ([...description].length > longest)
+      return {
+        ok: false,
+        problem: { kind: "description_long", index, max: longest },
+      };
     const key = `${amount}␟${description}`;
     if (seen.has(key))
       return { ok: false, problem: { kind: "duplicate", index } };

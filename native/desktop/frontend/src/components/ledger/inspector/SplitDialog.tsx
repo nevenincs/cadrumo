@@ -85,6 +85,7 @@ export function SplitDialog({
 }) {
   const t = useStrings();
   const mostParts = useTextLimit("split_parts");
+  const longestDescription = useTextLimit("split_part_description");
   const reasonLimit = useTextLimit("event_payload_value");
   const reasonId = useId();
   const partId = useId();
@@ -137,6 +138,11 @@ export function SplitDialog({
       case "description":
         return t("desktop.ledger.inspector.split.description_needed", {
           part: found.index + 1,
+        });
+      case "description_long":
+        return t("desktop.ledger.inspector.split.description_long", {
+          part: found.index + 1,
+          max: found.max,
         });
       case "duplicate":
         return t("desktop.ledger.inspector.split.duplicate", {
@@ -291,7 +297,7 @@ export function SplitDialog({
                       id={`${partId}-${at}-description`}
                       controlSize="sm"
                       className="ledger-split-description"
-                      maxLength={4096}
+                      maxLength={longestDescription ?? undefined}
                       value={part.description}
                       onChange={(description) => update(at, { description })}
                       suggestions={partWords}

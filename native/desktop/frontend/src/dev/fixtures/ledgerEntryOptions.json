@@ -568,6 +568,10 @@
         "max": 128
       },
       {
+        "name": "split_part_description",
+        "max": 1024
+      },
+      {
         "name": "entry_text",
         "max": 4096
       },

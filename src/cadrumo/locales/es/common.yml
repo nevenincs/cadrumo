@@ -3032,6 +3032,8 @@ desktop:
         count: Una división tiene de 2 a {max} partes.
         description: Las partes suman {amount}. La última parte se queda con lo que
           falta.
+        description_long: La parte {part} admite una descripción de {max} caracteres
+          como máximo.
         description_needed: La parte {part} necesita una descripción.
         duplicate: 'La parte {part} es igual que otra: cambia su importe o descripción.'
         mixed_hint: ¿Lo usas en parte para trabajar? Usa Mixto con una parte.

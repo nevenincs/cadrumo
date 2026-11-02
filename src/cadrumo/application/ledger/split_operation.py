@@ -51,7 +51,9 @@ LEDGER_SPLIT_CHILDREN_MAX = 128
 _MAX_SPLIT_RESULT_JSON_BYTES = 16_384
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
-_Description = Annotated[str, Field(min_length=1, max_length=1024)]
+LEDGER_SPLIT_PART_DESCRIPTION_MAX = 1024
+"""The most characters the description of one split part takes."""
+_Description = Annotated[str, Field(min_length=1, max_length=LEDGER_SPLIT_PART_DESCRIPTION_MAX)]
 _Reason = Annotated[str, Field(max_length=512)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 

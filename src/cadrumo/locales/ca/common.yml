@@ -3032,6 +3032,8 @@ desktop:
         choose_category: Tria una categoria
         count: Una divisió té de 2 a {max} parts.
         description: Les parts sumen {amount}. L'última part es queda el que falta.
+        description_long: La part {part} admet una descripció de {max} caràcters com
+          a màxim.
         description_needed: La part {part} necessita una descripció.
         duplicate: 'La part {part} és igual que una altra: canvia''n l''import o la
           descripció.'
