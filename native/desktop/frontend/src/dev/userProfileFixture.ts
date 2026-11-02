@@ -274,7 +274,13 @@ export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
         fieldOf("auth.clave_movil_route")!.value = edit.clave_movil_route;
         if (edit.certificate !== null) certificate = PICKED.name;
       } else if (edit.kind === "complete") data.setup_state = "complete";
-      else {
+      else if (
+        edit.kind === "descendants" ||
+        edit.kind === "imputation_election"
+      ) {
+        // The profile fixture serves no household or election to edit.
+        throw { code: "refused" };
+      } else {
         const section = data.sections.find(
           (item) => item.key === edit.section_key,
         )!;

@@ -16,9 +16,11 @@ schemas spells its alphabet in capitals, while an operator types ordinary text, 
 as written and admits it capitalized. Nothing else is rewritten: a character the type
 does not admit in either case is refused, never dropped or replaced.
 
-The same walk holds each element it meets to its declared content: a required child or
-attribute the document lacks refuses by its box, because padding cannot supply a fact
-and a block without its required content is a file AEAT's own schema rejects.
+A filer's export is also held to each element's declared content, by a walk of its own:
+a required child or attribute the document lacks refuses by its box, because padding
+cannot supply a fact and a block without its required content is a file AEAT's own
+schema rejects. It is separate because only a work-unit export states a whole return;
+a bare draft render and a file read back are judged on their values alone.
 
 Refusals name the box and the limit and never carry the value, which may be private.
 """
@@ -290,7 +292,6 @@ def _element_violations(
             yield from _value_violations(node.text or "", simple, path=path)
         return
     yield from _attribute_violations(node, complex_type, path=path, schema=schema)
-    yield from _missing_content_violations(node, complex_type, path=path)
     children = {item.get("name"): item for item in xsd_declared_children(complex_type)}
     for child in node:
         child_path = f"{path}/{child.tag}"
@@ -323,6 +324,45 @@ def _attribute_violations(
         simple = _declared_simple_type(attribute, schema)
         if simple is not None:
             yield from _value_violations(value, simple, path=attribute_path)
+
+
+def refuse_xml_missing_required_content(
+    document: Element[str],
+    *,
+    schema: Element[str],
+    source_id: str,
+    entries: Iterable[XmlDictionaryEntry],
+) -> None:
+    """Refuse a finished declaration lacking a child or attribute its official XSD requires.
+
+    Args:
+        document: The finished ``Declaracion`` element.
+        schema: The parsed XSD of the edition being exported.
+        source_id: Registry id of that XSD, named when it cannot be applied.
+        entries: The edition's dictionary rows, which give each path its box.
+
+    Raises:
+        ModeloApplicationError: Required content is absent. The first sets the message
+            and every box refused is listed.
+    """
+    parsed = xml_value_schema(schema, source_id=source_id, root_tag=document.tag)
+    violations = tuple(_content_violations(document, parsed.declaration, path="", schema=parsed))
+    if violations:
+        raise _refusal(violations, entries=entries, root_tag=document.tag)
+
+
+def _content_violations(
+    node: Element[str], declaration: Element[str], *, path: str, schema: XmlValueSchema
+) -> Iterator[_Violation]:
+    complex_type = _declared_complex_type(declaration, schema)
+    if complex_type is None:
+        return
+    yield from _missing_content_violations(node, complex_type, path=path)
+    declared = {item.get("name"): item for item in xsd_declared_children(complex_type)}
+    for child in node:
+        child_declaration = declared.get(child.tag)
+        if child_declaration is not None:
+            yield from _content_violations(child, child_declaration, path=f"{path}/{child.tag}", schema=schema)
 
 
 def _missing_content_violations(node: Element[str], complex_type: Element[str], *, path: str) -> Iterator[_Violation]:
@@ -597,6 +637,7 @@ __all__ = [
     "canonical_xml_text",
     "is_xml_value_refusal",
     "prune_childless_negative_blocks",
+    "refuse_xml_missing_required_content",
     "refuse_xml_values_outside_schema",
     "xml_value_schema",
     "xsd_declared_children",

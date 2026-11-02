@@ -21,7 +21,6 @@ from .official_text import node_slug
 from .page_fallbacks import _inputs_page, _numbered_casillas, _numbered_page
 from .page_placement import _block_bindings, _block_casillas
 from .page_sections import (
-    _heading_key,
     _page_sections,
     _row_drafts,
     _section_blocks,
@@ -29,6 +28,7 @@ from .page_sections import (
     _signature,
     _unique,
     _with_row_column_groups,
+    form_heading_key,
 )
 from .predecessor_layout import ContinuedLayout
 
@@ -117,7 +117,7 @@ def _section_for_page(
     heading = node_slug(draft.heading) if (draft.heading is not None and draft.heading) else section_id
     return FormSectionDefinition(
         id=section_id,
-        heading_key=_heading_key(state.build.modelo_id, "section", heading),
+        heading_key=form_heading_key(state.build.modelo_id, "section", heading),
         official_heading=draft.heading,
         blocks=tuple(blocks),
     )
@@ -173,7 +173,7 @@ def _append_source_page(
         FormPageDefinition(
             id=page_id,
             official_ref=official_ref,
-            heading_key=_heading_key(state.build.modelo_id, "page", page_id),
+            heading_key=form_heading_key(state.build.modelo_id, "page", page_id),
             condition=condition,
             condition_casilla_id=gate,
             sections=tuple(sections),

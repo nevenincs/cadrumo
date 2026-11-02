@@ -72,7 +72,7 @@ from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity, aeat_aux_version
 from ...domain.submission.models import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
-from ._export_xml_dictionary import render_xml_dictionary_layout
+from ._export_xml_dictionary import refuse_incomplete_xml_dictionary_payload, render_xml_dictionary_layout
 from ._m200_projection import build_m200_filing_projection_plan
 from ._m296_projection import build_m296_filing_projection_plan
 from .export_envelope import FilingEnvelopeOccurrence as _FilingEnvelopeOccurrence
@@ -582,6 +582,31 @@ class ExportLayoutRenderabilityReason(StrEnum):
     NO_EXPORT_RECORDS = "no_export_records"
 
 
+def refuse_incomplete_xml_export(
+    layout: ExportLayoutDefinition | None,
+    *,
+    draft: ModeloDraft,
+    payload: bytes,
+    schema_provider: RegistrySchemaAccessor,
+) -> None:
+    """Refuse a filer's rendered XML declaration that omits what its official XSD requires.
+
+    A layout of another format carries no such schema and passes through. A work-unit
+    export calls this on its staged bytes, so a refused declaration is never published.
+
+    Args:
+        layout: The layout the payload was rendered through, if the revision declares one.
+        draft: The approved draft the payload states.
+        payload: The rendered bytes.
+        schema_provider: Resolves the layout's dictionary and XSD sources.
+
+    Raises:
+        ModeloApplicationError: Required content is absent.
+    """
+    if layout is not None and layout.format is ExportLayoutFormat.XML_DICTIONARY:
+        refuse_incomplete_xml_dictionary_payload(layout, draft=draft, payload=payload, schema_provider=schema_provider)
+
+
 def export_layout_renderability_reason_code(
     layout: ExportLayoutDefinition | None,
 ) -> ExportLayoutRenderabilityReason | None:
@@ -880,5 +905,6 @@ __all__ = [
     "_RecordRenderRow",
     "_preflight_projection_plan",
     "export_draft",
+    "refuse_incomplete_xml_export",
     "render_filing_layout",
 ]

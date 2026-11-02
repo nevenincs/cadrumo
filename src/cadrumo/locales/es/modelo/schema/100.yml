@@ -18293,6 +18293,18 @@ modelo:
                 heading: Resumen y cálculo de la declaración
               datoseconomicos-tomadatosampliada:
                 heading: Datos detallados de rentas y deducciones
+              datosidentificativos:
+                heading: Datos identificativos
+              datosidentificativos-ascendientes:
+                heading: Ascendientes
+              datosidentificativos-conyuge:
+                heading: Cónyuge
+              datosidentificativos-declarante:
+                heading: Declarante
+              datosidentificativos-hijos:
+                heading: Hijos y otros descendientes
+              declaracion:
+                heading: Declaración
               other-inputs:
                 heading: Otros datos que necesita el cálculo
             section:
@@ -18329,6 +18341,8 @@ modelo:
               anexocres:
                 heading: Partidas pendientes de aplicación y otras informaciones (anexo
                   C)
+              ascendiente:
+                heading: Datos de cada ascendiente
               baseimponibleres:
                 heading: Saldo neto positivo del capital mobiliario en la base imponible
                   del ahorro
@@ -18427,6 +18441,8 @@ modelo:
               gpreinversionres:
                 heading: Resumen de ganancias acogidas a diferimiento por reinversión
                   imputables a 2025
+              hijo:
+                heading: Datos de cada descendiente
               ingresodevolucionres:
                 heading: Resultado a ingresar o a devolver
               inmueblesres:

@@ -17,14 +17,17 @@ from lxml import etree
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.filing.runtime import build_runtime_schema_provider
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.errors import ModeloExportError
@@ -40,6 +43,7 @@ from cadrumo.entrypoints.tests.profile_persistence.test_e2e_imputation_calculate
     _DEVENGO,
     _OFFICIAL_M130_C19,
     _persist_ledger,
+    _register_refund_account,
     _verify_and_export,
 )
 from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters_to_m100_annual import (
@@ -59,10 +63,26 @@ __all__ = ["secure_objects"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-_ACTIVITY_KEY_CASILLA: CasillaId = validated_casilla_id("0166")
-_DESCENDANT_MINIMUM_CASILLA: CasillaId = validated_casilla_id("0513")
 _ACTIVITY_KEY = "A05"
 _ACTIVITY_BLOCK = "DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta"
+
+
+def _box(field_id: str) -> CasillaId:
+    """Return the edition's box for a schema field, from the dictionary that maps them."""
+    provider = build_runtime_schema_provider(
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, _M100_ANNUAL_PERIOD),
+        modelos=("100",),
+        operation=published_authority_operation(),
+    )
+    entries = xml_dictionary_entries(
+        provider.get_snapshot("100").revision.export_layouts[0],
+        sources=provider.sources,
+        source_payloads=provider.source_payloads,
+    )
+    casilla = next(entry.casilla_id for entry in entries if entry.field_id == field_id)
+    assert casilla is not None
+    return casilla
 
 
 @pytest.fixture
@@ -114,6 +134,8 @@ def _seed_filer(*, criterion: str, family: tuple[UserProfileFact, ...] = ()) -> 
 
 
 def _calculate(objects: SecureObjectRepository, *, activity_key: str | None) -> CalculationRevision:
+    # The filer's result is a refund, so the export's account page needs the designated account.
+    _register_refund_account(objects)
     _persist_ledger(objects)
     _seed_prior_year_m100(objects)
     for period, result in _OFFICIAL_M130_C19.items():
@@ -138,7 +160,7 @@ def _calculate(objects: SecureObjectRepository, *, activity_key: str | None) -> 
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unit.work_unit_id,
         binding_values=_m100_non_relation_zero_bindings(),
-        text_casilla_inputs={_ACTIVITY_KEY_CASILLA: activity_key} if stated_activity_key else None,
+        text_casilla_inputs={_box("TACT"): activity_key} if stated_activity_key else None,
         work_unit_repository=units,
         calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
         clock=_T0,
@@ -203,7 +225,7 @@ def test_income_with_no_stated_activity_key_refuses_by_its_box_and_writes_nothin
         _verify_and_export(revision, secure_objects, output)
 
     assert str(refused.value.translated_message).endswith("xml_value_required_missing")
-    assert (refused.value.context or {})["box"] == str(_ACTIVITY_KEY_CASILLA)
+    assert (refused.value.context or {})["box"] == str(_box("TACT"))
     assert not output.exists()
 
 
@@ -213,7 +235,7 @@ def test_a_claimed_descendant_minimum_with_no_identifying_row_refuses_rather_tha
 ) -> None:
     _seed_filer(criterion=_DEVENGO, family=_family_facts(minor_children=minor_children))
     revision = _calculate(secure_objects, activity_key=_ACTIVITY_KEY)
-    assert Decimal(revision.casilla_values[_DESCENDANT_MINIMUM_CASILLA]) > 0
+    assert Decimal(revision.casilla_values[_box("MDES")]) > 0
     output = tmp_path / "modelo-100.xml"
 
     with pytest.raises(ModeloExportError) as refused:

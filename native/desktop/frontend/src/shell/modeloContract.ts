@@ -933,27 +933,18 @@ export type CrossPeriodDependencyOrigin =
 /**
  * Which holiday layers were checked when a close date was adjusted.
  *
- * A deadline also moves for a holiday of the taxpayer's autonomous community
- * or municipality (Ley 39/2015 art. 30.6). Municipal holidays are never
- * checked because the registry has no source for them, so no state claims
- * complete coverage.
+ * An electronic filing close moves only for weekends and the national
+ * inhábiles (Ley 39/2015 art. 31.3, which excludes art. 30.6), so the national
+ * calendar is the complete rule for every filer.
  *
- * * `NATIONAL_AND_TERRITORY` — weekends, national holidays and the taxpayer's
- * autonomous-community holidays were checked. * `TERRITORY_UNVERIFIED` — the
- * taxpayer's territory is known but its regional holidays for the year are not
- * verified in the registry, so only weekends and national holidays were
- * applied. * `NATIONAL_ONLY` — the taxpayer's territory is not established, so
- * only weekends and national holidays were checked. * `NOT_SHIFTED` — the
- * modelo's deadline does not move for non-working days, so no calendar
- * applies. * `CALENDAR_UNAVAILABLE` — the holiday calendar could not be
- * resolved and the original close date was kept unverified.
+ * * `NATIONAL_ONLY` — weekends and national inhábiles were checked; the
+ * adjusted date is final. * `NOT_SHIFTED` — the modelo's deadline does not
+ * move for non-working days, so no calendar applies. * `CALENDAR_UNAVAILABLE`
+ * — the holiday calendar could not be resolved and the original close date was
+ * kept unverified.
  */
 export type DeadlineHolidayCoverage =
-  | "national_and_territory"
-  | "territory_unverified"
-  | "national_only"
-  | "not_shifted"
-  | "calendar_unavailable";
+  "national_only" | "not_shifted" | "calendar_unavailable";
 
 /**
  * The work order a filer sees in the portfolio.
@@ -4390,9 +4381,9 @@ export type ModeloFormCounts = {
  *
  * `nominal_closes_on` is the date the registry declares; `closes_on` is the
  * date after the business-day shift, and `holiday_coverage` says which
- * holidays that shift accounted for, so a date computed without the filer's
- * regional holidays is never passed off as final. Exactly one of
- * `days_remaining` and `days_overdue` is set, counted from `reference_on`.
+ * holidays that shift accounted for, so a date computed without its holiday
+ * calendar is never passed off as final. Exactly one of `days_remaining` and
+ * `days_overdue` is set, counted from `reference_on`.
  */
 export type ModeloFormDeadline = {
   closes_on: string;

@@ -63,6 +63,7 @@ from .export_xml_value_limits import (
     XmlValueSchema,
     canonical_xml_text,
     prune_childless_negative_blocks,
+    refuse_xml_missing_required_content,
     refuse_xml_values_outside_schema,
     xml_value_schema,
     xsd_declared_children,
@@ -159,7 +160,6 @@ def _finish_xml_dictionary_root(
         _stamp_individual_return_titular(root)
         _prune_zero_only_xml_subtrees(root, optional_element_paths=optional_element_paths)
         prune_childless_negative_blocks(root, schema=value_schema)
-        refuse_family_minimum_without_its_rows(root)
 
 
 def _serialize_xml_dictionary(root: ElementTree.Element[str]) -> bytes:
@@ -287,6 +287,41 @@ def refuse_xml_dictionary_payload_outside_xsd(
         ),
         schema_provider=schema_provider,
     )
+
+
+def refuse_incomplete_xml_dictionary_payload(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    payload: bytes,
+    schema_provider: RegistrySchemaAccessor,
+) -> None:
+    """Refuse a filer's rendered declaration that omits what its official XSD requires.
+
+    Args:
+        layout: The ``xml_dictionary`` layout the file was rendered through.
+        draft: The approved draft the file states.
+        payload: The rendered bytes.
+        schema_provider: Resolves the layout's dictionary and XSD sources.
+
+    Raises:
+        ModeloApplicationError: Required content is absent, or a family minimum the
+            file claims identifies nobody.
+    """
+    document = DefusedElementTree.fromstring(payload)
+    source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    refuse_xml_missing_required_content(
+        document,
+        schema=_xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
+        source_id=source.id,
+        entries=xml_dictionary_entries(
+            layout,
+            sources=schema_provider.sources,
+            source_payloads=schema_provider.source_payloads,
+        ),
+    )
+    if draft.modelo == form_for_role("renta.annual"):
+        refuse_family_minimum_without_its_rows(document)
 
 
 def _refuse_values_outside_xsd(

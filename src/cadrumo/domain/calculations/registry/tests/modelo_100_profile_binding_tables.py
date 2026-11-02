@@ -43,17 +43,49 @@ PERSONAL_FAMILY_CASILLA_TO_BINDING: Mapping[str, str] = {
 
 """Casilla id -> id of the profile or family binding that must fill it."""
 
-FAMILY_ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
-    "renta-family-descendant-tax-id": ("descendants", "tax_id"),
-    "renta-family-descendant-display-name": ("descendants", "display_name"),
-    "renta-family-descendant-birth-date": ("descendants", "birth_date"),
-    "renta-family-descendant-disability-grade": ("descendants", "disability_grade"),
-    "renta-family-descendant-death-date": ("descendants", "death_date"),
-    "renta-family-ascendant-tax-id": ("ascendants", "tax_id"),
-    "renta-family-ascendant-display-name": ("ascendants", "display_name"),
-    "renta-family-ascendant-birth-date": ("ascendants", "birth_date"),
-    "renta-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
-    "renta-family-ascendant-cohabiting-descendant-count": ("ascendants", "cohabiting_descendant_count"),
-    "renta-family-ascendant-death-date": ("ascendants", "death_date"),
+FAMILY_ROW_BINDINGS: Mapping[str, tuple[str, str, str]] = {
+    "renta-family-descendant-tax-id": ("renta_family.descendiente", "nif", "renta_family.descendientes_count"),
+    "renta-family-descendant-display-name": (
+        "renta_family.descendiente",
+        "apellidos_nombre",
+        "renta_family.descendientes_count",
+    ),
+    "renta-family-descendant-birth-date": (
+        "renta_family.descendiente",
+        "birth_date",
+        "renta_family.descendientes_count",
+    ),
+    "renta-family-descendant-disability-grade": (
+        "renta_family.descendiente",
+        "discapacidad_clave",
+        "renta_family.descendientes_count",
+    ),
+    "renta-family-descendant-death-date": (
+        "renta_family.descendiente",
+        "fallecimiento",
+        "renta_family.descendientes_count",
+    ),
+    "renta-family-ascendant-tax-id": ("renta_family.ascendiente", "nif", "renta_family.ascendientes_count"),
+    "renta-family-ascendant-display-name": (
+        "renta_family.ascendiente",
+        "apellidos_nombre",
+        "renta_family.ascendientes_count",
+    ),
+    "renta-family-ascendant-birth-date": ("renta_family.ascendiente", "birth_date", "renta_family.ascendientes_count"),
+    "renta-family-ascendant-disability-grade": (
+        "renta_family.ascendiente",
+        "discapacidad_clave",
+        "renta_family.ascendientes_count",
+    ),
+    "renta-family-ascendant-cohabiting-descendant-count": (
+        "renta_family.ascendiente",
+        "convivientes",
+        "renta_family.ascendientes_count",
+    ),
+    "renta-family-ascendant-death-date": (
+        "renta_family.ascendiente",
+        "fallecimiento",
+        "renta_family.ascendientes_count",
+    ),
 }
-"""Family row binding id -> (collection name on the family profile, field name on the row model)."""
+"""Family row binding id -> (stored row object, leaf read on each row, the object's stated count)."""

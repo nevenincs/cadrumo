@@ -125,7 +125,9 @@ class ModeloFormIssueLine(BaseModel):
     ``address`` is where choosing the line leads: the box the form shows, or
     with ``in_records`` the table whose records carry the value; ``None`` when
     the line leads nowhere on the form. ``surface`` is the area of the
-    application that owns the value, when one does.
+    application that owns the value, when one does: for a line about a box it is
+    the area its primary source belongs to, so a credit the withholding register
+    supplies leads to that register and never to a place to type it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -375,6 +377,7 @@ def _failed_result_line(field: ModeloFormField, context: _Context) -> ModeloForm
         detail=context.say(_FAILED_RESULT_DETAIL_LOCALE_KEY),
         technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
         address=field.address,
+        surface=_owning_surface(field),
     )
 
 
@@ -414,7 +417,7 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         detail=detail,
         technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
         address=None if field is None else field.address,
-        surface=SourceSurface.LEDGER if note.reason in RECORDS_REASONS else None,
+        surface=SourceSurface.LEDGER if note.reason in RECORDS_REASONS else _owning_surface(field),
         from_calculation=True,
         # A revision the gate refuses before reading its notes is put right by calculating again.
         recalculates=note.reason in DERIVED_GATE_REASONS,

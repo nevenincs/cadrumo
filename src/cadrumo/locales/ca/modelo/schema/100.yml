@@ -18095,6 +18095,18 @@ modelo:
                 heading: Resum i càlcul de la declaració
               datoseconomicos-tomadatosampliada:
                 heading: Dades detallades de rendes i deduccions
+              datosidentificativos:
+                heading: Dades identificatives
+              datosidentificativos-ascendientes:
+                heading: Ascendents
+              datosidentificativos-conyuge:
+                heading: Cònjuge
+              datosidentificativos-declarante:
+                heading: Declarant
+              datosidentificativos-hijos:
+                heading: Fills i altres descendents
+              declaracion:
+                heading: Declaració
               other-inputs:
                 heading: Altres dades que necessita el càlcul
             section:
@@ -18130,6 +18142,8 @@ modelo:
               anexocres:
                 heading: Partides pendents d'aplicació i altres informacions (annex
                   C)
+              ascendiente:
+                heading: Dades de cada ascendent
               baseimponibleres:
                 heading: Saldo net positiu del capital mobiliari a la base imposable
                   de l'estalvi
@@ -18226,6 +18240,8 @@ modelo:
               gpreinversionres:
                 heading: Resum de guanys acollits a diferiment per reinversió imputables
                   al 2025
+              hijo:
+                heading: Dades de cada descendent
               ingresodevolucionres:
                 heading: Resultat a ingressar o a retornar
               inmueblesres:

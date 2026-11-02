@@ -152,6 +152,23 @@ export function tauriHost(): Host {
         },
       },
     },
+    profileCompanions: {
+      household: (language) => call("user_profile_household", { language }),
+      imputationElection: (profile, taxYear, language) =>
+        call("user_profile_imputation_election", {
+          profile,
+          taxYear,
+          language,
+        }),
+    },
+    borrador: {
+      read: (profile, selector) =>
+        call("aeat_sync_borrador_read", { profile, selector }),
+      query: (profile, selector) =>
+        call("aeat_sync_borrador_query", { profile, selector }),
+      compare: (profile, year, language) =>
+        call("aeat_sync_borrador_compare", { profile, year, language }),
+    },
     aeatSync: {
       status: (language) => call("aeat_sync_status", { language }),
       observe: observeAeatSync,

@@ -85,6 +85,8 @@ from .test_e2e_ledger_m130_quarters_to_m100_annual import (
     _T0,
     _TAX_ID,
     _YEAR,
+    M100_ACTIVITY_KEY,
+    M100_ACTIVITY_KEY_CASILLA,
     _autonomaworkflow_profile,
     _calculate_and_file_m130_quarter,
     _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -222,6 +224,7 @@ def _annual(objects: SecureObjectRepository) -> CalculationRevision:
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unit.work_unit_id,
         binding_values=_m100_non_relation_zero_bindings(),
+        text_casilla_inputs={M100_ACTIVITY_KEY_CASILLA: M100_ACTIVITY_KEY},
         work_unit_repository=units,
         calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
         clock=_T0,

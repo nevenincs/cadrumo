@@ -125,6 +125,7 @@ def build_modelo_work_form(
     element_names: Mapping[str, str] | None = None,
     calculation_screen_outdated: bool = False,
     calculation_filed_before_grade_cap: CasillaId | None = None,
+    known_truths: Mapping[BindingId, bool] | None = None,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -156,6 +157,12 @@ def build_modelo_work_form(
     capped box whose figure keeps its export refused, so the form carries that
     blocking note and offers a recalculation in place of the recorded state.
 
+    ``known_truths`` are the yes-or-no facts already known for the filer, by
+    boolean binding. They decide which guarded inputs the calculation is
+    certain to refuse without (:func:`~.calculation_required_inputs.calculation_required_inputs`),
+    so the form asks for those; without them it asks only for inputs no guard
+    can skip.
+
     Raises:
         ModeloWorkFormLayoutError: the layout places a casilla the revision does
             not define, places one twice, or leaves one without a placement.
@@ -186,6 +193,7 @@ def build_modelo_work_form(
             if reason in UNWORKED_BOX_REASONS and casilla_id is not None
         ),
         element_names=element_names,
+        known_truths=known_truths,
     )
     held = calculation_diagnostics is not None
     inspection = _inspection_only_for_unusable_layout(
