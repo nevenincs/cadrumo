@@ -189,6 +189,36 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.retencion_soportada_repository.RetencionSoportadaPersistenceError",
+        ErrorCode(
+            code="FAIL_RETENCION_SOPORTADA_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_retencion_soportada_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.retencion_soportada_repository.RetencionSoportadaRevisionConflictError",
+        ErrorCode(
+            code="REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.retencion_soportada_revision_conflict",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.retencion_soportada_repository.RetencionSoportadaWriteRefusedError",
+        ErrorCode(
+            code="REFUSED_RETENCION_SOPORTADA_WRITE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.retencion_soportada_write_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.invoice_retencion.InvoiceWithholdingEvidenceError",
         ErrorCode(
             code="REFUSED_INVOICE_WITHHOLDING_EVIDENCE",

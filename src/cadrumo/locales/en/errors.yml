@@ -398,6 +398,8 @@ errors:
       the requested operation.
     canonical_retencion_observation_persistence: Retention observations could not
       be persisted.
+    canonical_retencion_soportada_persistence: The withholding records from your payers
+      could not be read or saved.
     canonical_state_projection_read: The application state projection could not be
       read.
     canonical_taxation_comparison_persistence: The work units for the taxation comparison
@@ -1351,6 +1353,10 @@ errors:
       calculation revision. Run aeat app modelo work calculate to produce a fresh
       revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
+    retencion_soportada_revision_conflict: The withholding record changed since you
+      read it; read it again before saving.
+    retencion_soportada_write_refused: The withholding record from this payer was
+      not saved.
     submission_preflight_auth_describe_failed: Auth provider failed to describe itself
       ({cause_type}).
     submission_preflight_auth_not_ready: Auth provider {kind} is not ready (configured={configured}
