@@ -10,11 +10,9 @@ related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
 
-
 # `frontend-polish` ledger
 
 ## Changes
-
 
 - `S02` `M` `native/desktop/frontend/src/components/modelo/declarations/useDeclarationsList.ts`
 - `S02` `M` `native/desktop/frontend/src/dev/main.tsx`

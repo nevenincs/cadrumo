@@ -10,8 +10,6 @@ related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
 
-
-
 # `frontend-polish` audit: `Frontend workflow coverage and hardening`
 
 ## Scope
@@ -23,7 +21,6 @@ S08 static coverage: shared buttons, inputs, textarea, native select, field, cal
 S11 static workflow coverage: declarations list and creation targets; WorkspaceScreen and form/baseline loading; Form, Details/Todo, Check, Sources, History/corrections and Filing; staged edits, preflight, one stale-baseline renewal, apply, calculate/verify, local export, local filing records and justificante import. Reviewed useEditReview, form/session and filing/modelo contracts. Authority includes accepted desktop-modelo-workspace, modelo-editor-workbench-operator-layer and filing-chain-reconciliation decisions. No AEAT submission is implemented or inferred. Remaining evidence: settlement fixes, structured reconciliation details and integrated scenario checks.
 
 ## Findings
-
 
 ### shared-control-keyboard | medium | Highlight visibility and no-match Tab require repair
 
@@ -76,4 +73,3 @@ Terra traced overview, preflight, dependencies/access, assisted sign-in, host-ow
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.
-

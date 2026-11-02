@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { failureCode } from "../errors";
 import type { AgentListedModel, AgentLocalModels } from "../ipc/contract";
 
@@ -32,16 +32,33 @@ export function useReadingModel(
   host: ReadingModelHost | null,
   wanted: AgentListedModel | null,
   refreshVersion: number,
+  reader: string | null,
 ): AgentLocalModels | null {
-  const [stored, setStored] = useState<AgentLocalModels | null>(null);
+  const owner = useMemo(
+    () => ({ host, reader, tried: new Set<string>() }),
+    [host, reader],
+  );
+  const [held, setHeld] = useState<{
+    owner: typeof owner;
+    value: AgentLocalModels;
+  } | null>(null);
+  const stored = held?.owner === owner ? held.value : null;
   const [reads, setReads] = useState(0);
-  const tried = useRef(new Set<string>());
+  const generation = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [owner],
+  );
   useEffect(() => {
-    if (!host) return;
+    const { host, reader } = owner;
+    if (!host || reader === null) return;
     let current = true;
+    const mine = generation.current;
     host.read().then(
       (value) => {
-        if (current) setStored(value);
+        if (current && mine === generation.current) setHeld({ owner, value });
       },
       () => {
         // Nothing read: the picker offers what the catalog lists.
@@ -50,27 +67,32 @@ export function useReadingModel(
     return () => {
       current = false;
     };
-  }, [host, reads, refreshVersion]);
+  }, [owner, reads, refreshVersion]);
   const wantedLane = wanted?.lane ?? null;
   const wantedModel = wanted?.model ?? null;
   useEffect(() => {
-    if (!host || stored?.state !== "readable") return;
+    const { host, reader, tried } = owner;
+    if (!host || reader === null || stored?.state !== "readable") return;
     if (wantedLane === null || wantedModel === null) return;
     const chosen = { lane: wantedLane, model: wantedModel };
     if (same(stored.reading, chosen)) return;
     const attempt = `${wantedLane}\u0000${wantedModel}\u0000${stored.revision}`;
-    if (tried.current.has(attempt)) return;
-    tried.current.add(attempt);
+    if (tried.has(attempt)) return;
+    tried.add(attempt);
+    const mine = generation.current;
     // The answer is kept even when a later read lands first: it is what the
     // service stored last.
     host.choose(wantedLane, wantedModel, stored.revision).then(
-      (value) => setStored(value),
+      (value) => {
+        if (mine === generation.current) setHeld({ owner, value });
+      },
       (error: unknown) => {
+        if (mine !== generation.current) return;
         // Another change came first: what is stored now is read again.
         if (failureCode(error) === "agent_local_models_revision_conflict")
           setReads((count) => count + 1);
       },
     );
-  }, [host, stored, wantedLane, wantedModel]);
-  return host ? stored : null;
+  }, [owner, stored, wantedLane, wantedModel]);
+  return host && reader !== null ? stored : null;
 }
