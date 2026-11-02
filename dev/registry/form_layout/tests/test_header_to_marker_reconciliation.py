@@ -74,9 +74,7 @@ def _header_feed(revision: ModeloRevision) -> ModeloRevision:
         )
         for layout in revision.export_layouts
     )
-    header = revision.model_copy(update={"export_layouts": layouts})
-    form = revision.form_layouts[0].model_copy(update={"source_state_digest": form_layout_source_digest(header)})
-    return header.model_copy(update={"form_layouts": (form,)})
+    return revision.model_copy(update={"export_layouts": layouts})
 
 
 def test_the_form_follows_a_feed_change_that_keeps_every_byte_rule(after: ModeloRevision) -> None:

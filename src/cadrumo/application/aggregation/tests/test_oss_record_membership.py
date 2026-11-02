@@ -151,9 +151,15 @@ def test_fingerprint_covers_membership_and_amounts_but_not_catalogue_order(opera
     assert original != fingerprint((first, changed_supply_date))
 
 
-@pytest.mark.parametrize(
-    "scenario", ["empty", "unbound", "degraded", "unrouted", "no-work-unit", "explicit-candidates"]
-)
+def test_a_complete_read_of_an_empty_period_closes_its_tables(operation: PinnedAuthorityOperation) -> None:
+    """The closure only says every row is blank; declaring the period nil stays the operator's answer."""
+    resolution = _resolver(_InvoiceReader(())).resolve(_context(operation))
+    assert resolution.closed_record_row_sets
+    assert not any(row.occupied for row_set in resolution.closed_record_row_sets for row in row_set.rows)
+    assert not resolution.provenance
+
+
+@pytest.mark.parametrize("scenario", ["unbound", "degraded", "unrouted", "no-work-unit", "explicit-candidates"])
 def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAuthorityOperation, scenario: str) -> None:
     # A Union goods line has no table on this revision, and on its own none either.
     invoice = (
@@ -162,7 +168,7 @@ def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAut
         else _invoice()
     )
     reader = _InvoiceReader(
-        () if scenario == "empty" else (invoice,),
+        (invoice,),
         bucket_id=None if scenario == "unbound" else _BUCKET,
         degraded=scenario == "degraded",
     )

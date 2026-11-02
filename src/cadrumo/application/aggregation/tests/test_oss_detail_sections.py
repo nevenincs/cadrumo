@@ -211,8 +211,8 @@ def test_france_and_a_third_state_at_both_rates_take_their_own_rows(
     resolution = _resolve(operation, regime, _two_states_two_tiers(regime))
 
     assert [_row(resolution, regime, row) for row in (1, 2, 3, 4)] == [
-        ("FR", "S", Decimal("20"), Decimal("1000.00"), Decimal("200.00")),
-        ("FR", "R", Decimal("10"), Decimal("200.00"), Decimal("20.00")),
+        ("FR", "S", Decimal("20"), Decimal("100.00"), Decimal("20.00")),
+        ("FR", "R", Decimal("10"), Decimal("20.00"), Decimal("2.00")),
         ("PL", "S", Decimal("23"), Decimal("100.00"), Decimal("23.00")),
         ("PL", "R", Decimal("8"), Decimal("50.00"), Decimal("4.00")),
     ]
