@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5b63cac6ff859afa2467c8787cc4d30de5f851cb1e04c192958f1b02be0056e4'
+body_hash: 'sha256:24136e4d43fa2848841eb73c5945ca51e3cbc1737f392a39d9c2d2e556d9209d'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -576,6 +576,16 @@ related:
 - `S06` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
 - `S06` `verify:` `python -m dev.docs.sequences check (six sequences)` -> `pass`
 - `S06` `by:` `implementer`
+- `S06` `M` `docs/_sequences/contracts/explanation/how-renta-is-assembled/renta-assembly-bindings.seq`
+- `S06` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-bindings.json`
+- `S06` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-requires.json`
+- `S06` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-dependencies.json`
+- `S06` `M` `docs/_sequences/how-to/modelo-100/modelo-100-dependencies.json`
+- `S06` `M` `docs/how-to/filing-readiness.md`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S06` `verify:` `dev.docs.sequences check --sequence (9 touched)` -> `pass`
+- `S06` `verify:` `pytest test_retencion_soportada_cli.py` -> `pass`
+- `S06` `verify:` `ruff check+format on test_retencion_soportada_cli.py` -> `pass`
 
 ## Notes
 
