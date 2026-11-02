@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.transactions.classification_effects import LifecycleAction
 
 LEDGER_STAGED_CHECK_OPERATION_DEFINITION_ID: Final = "ledger.staged.check"
 
@@ -180,6 +181,10 @@ class LedgerStagedRowAnswer(BaseModel):
     takes_share: bool = False
     category_settable: bool = False
     category_on_income: bool = False
+    takes_changes: bool = False
+    takes_invoice: bool = False
+    evidence_advised: bool = False
+    lifecycle_actions: tuple[LifecycleAction, ...] = ()
     tax_set_skip: TaxSetSkip | None = None
     transfer_locked_fields: tuple[StageFieldName, ...] = ()
     classifying_fields: tuple[StageFieldName, ...] = ()

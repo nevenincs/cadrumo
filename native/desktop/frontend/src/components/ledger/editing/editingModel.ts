@@ -40,7 +40,16 @@ import {
   type StagedRowChanges,
   type StagedValue,
 } from "../../../shell/ledgerStage";
-import { DIRECTIONS } from "../../../shell/ledgerContract";
+import {
+  DECIDED_CLASSIFICATIONS,
+  DIRECTIONS,
+  DRAFT_REQUIRED_FIELDS,
+  REQUIRED_FIELDS,
+  UNCLEARABLE_FIELDS,
+  lockedByDirection,
+  takesBusinessShare,
+  takesChanges,
+} from "../../../shell/ledgerContract";
 import type { ColumnId } from "../movements/movementsModel";
 
 // ---- Columns and fields --------------------------------------------------------
@@ -101,16 +110,6 @@ export const typedPoints = (said: string): string =>
 export const textLimitOf = (field: StageField | DraftField): number =>
   TEXT_LIMITS[field as StageField] ?? 4096;
 
-/** The columns whose value is a tax fact, which a transfer never takes. */
-const TAX_COLUMNS: ReadonlySet<ColumnId> = new Set([
-  "category",
-  "iva_category",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "irpf_category",
-]);
-
 /** The columns whose change gives a movement a new id. */
 export const IDENTITY_COLUMNS: ReadonlySet<ColumnId> = new Set([
   "date",
@@ -169,10 +168,8 @@ export type LockReason =
   | { kind: "after_add" }
   | { kind: "derived" };
 
-const TRANSFER = "INTERNAL_TRANSFER";
-
-/** Why `column` of `subject` cannot be edited, or null where it can. A
- * transfer's tax fields are judged on the direction it will have. */
+/** Why `column` of `subject` cannot be edited, or null where it can. The
+ * fields a direction locks are judged on the direction it will have. */
 export function lockReason(
   column: ColumnId,
   subject: EditSubject,
@@ -181,17 +178,23 @@ export function lockReason(
   if (!EDIT_KINDS[column]) return { kind: "derived" };
   if (subject.kind === "draft") {
     if (column === "group_label") return { kind: "after_add" };
-    if (TAX_COLUMNS.has(column) && subject.draft.fields.direction === TRANSFER)
+    const field = draftField(column);
+    if (field && lockedByDirection(subject.draft.fields.direction, field))
       return { kind: "transfer" };
     return null;
   }
   const state = subject.row.transaction.lifecycle_state;
-  if (state !== "ACTIVE") return { kind: "not_active", lifecycle: state };
+  if (!takesChanges(state)) return { kind: "not_active", lifecycle: state };
   if (subject.sealed) return { kind: "sealed" };
-  if (TAX_COLUMNS.has(column)) {
-    const facts = effectiveFacts(subject.row, subject.changes);
-    if (facts.direction === TRANSFER) return { kind: "transfer" };
-  }
+  const field = columnField(column, subject.row);
+  if (
+    field &&
+    lockedByDirection(
+      effectiveFacts(subject.row, subject.changes).direction,
+      field,
+    )
+  )
+    return { kind: "transfer" };
   return null;
 }
 
@@ -243,9 +246,8 @@ export type CellParse =
 const DIRECTION_ALIASES: Record<string, string> = {
   IN: "INCOMING",
   OUT: "OUTGOING",
-  TRANSFER: TRANSFER,
+  TRANSFER: "INTERNAL_TRANSFER",
 };
-const DECIDED = ["BUSINESS", "PERSONAL", "MIXED"] as const;
 
 const fold = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
@@ -314,8 +316,12 @@ export function parseCell(
       // "Mixed 50%", as the grid writes and copies it.
       const shared = /^(.*\S)\s+(\d+(?:\.\d+)?\s*%)$/.exec(raw.trim());
       if (shared) {
-        const head = choose(shared[1]!, DECIDED, labels.classification);
-        if (head.kind !== "value" || head.value.value !== "MIXED")
+        const head = choose(
+          shared[1]!,
+          DECIDED_CLASSIFICATIONS,
+          labels.classification,
+        );
+        if (head.kind !== "value" || !takesBusinessShare(head.value.value))
           return head.kind === "refused"
             ? head
             : { kind: "refused", refusal: { key: "unknown_choice", raw } };
@@ -323,26 +329,20 @@ export function parseCell(
         if (share.kind === "refused") return share;
         if (share.kind === "empty")
           return { kind: "refused", refusal: { key: "needs_share", raw } };
-        return { kind: "value", value: { value: "MIXED", share: share.value } };
+        return {
+          kind: "value",
+          value: { value: head.value.value, share: share.value },
+        };
       }
-      return choose(raw, DECIDED, labels.classification);
+      return choose(raw, DECIDED_CLASSIFICATIONS, labels.classification);
     }
   }
 }
 
 /** The fields Delete never clears: the four facts every movement has, its
  * currency and classification, and notes, which no operation blanks. */
-const REQUIRED: ReadonlySet<string> = new Set([
-  "booked_date",
-  "amount",
-  "direction",
-  "description",
-  "currency",
-]);
-const NO_CLEAR: ReadonlySet<string> = new Set([
-  "business_classification",
-  "notes",
-]);
+const REQUIRED: ReadonlySet<string> = new Set(REQUIRED_FIELDS);
+const NO_CLEAR: ReadonlySet<string> = new Set(UNCLEARABLE_FIELDS);
 
 /** Why clearing `field` is refused, or null where a clear is staged. */
 export function clearRefusal(
@@ -377,7 +377,7 @@ export function rowCells(
       value: { kind: "set", value: input.share },
       stored: storedShare,
     });
-  else if (input.value !== "MIXED" && storedShare != null)
+  else if (!takesBusinessShare(input.value) && storedShare != null)
     cells.push({
       id,
       field: "business_pct",
@@ -403,7 +403,7 @@ export function draftEdits(
   if (field === "business_classification" && input) {
     if (input.share !== undefined)
       edits.push({ key, field: "business_pct", value: input.share });
-    else if (input.value !== "MIXED")
+    else if (!takesBusinessShare(input.value))
       edits.push({ key, field: "business_pct", value: null });
   }
   return edits;
@@ -454,7 +454,7 @@ export function copyCell(
     case "direction":
       return labels.direction(value);
     case "classification":
-      return value === "MIXED" && share !== null
+      return takesBusinessShare(value) && share !== null
         ? labels.mixedShare(copyPercent(share))
         : labels.classification(value);
     case "category":
@@ -752,7 +752,7 @@ export function planFill(
       }
       const input: CellValue =
         column === "classification" &&
-        source.value === "MIXED" &&
+        takesBusinessShare(source.value) &&
         source.share !== null
           ? { value: source.value, share: source.share }
           : { value: source.value };
@@ -1062,13 +1062,7 @@ export function draftRow(draft: Draft): LedgerRow {
 }
 
 /** The fields a new movement still needs before it can be added. */
-export const DRAFT_REQUIRED: readonly DraftField[] = [
-  "booked_date",
-  "amount",
-  "currency",
-  "direction",
-  "description",
-];
+export const DRAFT_REQUIRED: readonly DraftField[] = DRAFT_REQUIRED_FIELDS;
 export const draftMissing = (draft: Draft): DraftField[] =>
   DRAFT_REQUIRED.filter((field) => !draft.fields[field]);
 

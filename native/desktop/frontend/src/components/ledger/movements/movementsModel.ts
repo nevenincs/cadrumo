@@ -17,7 +17,11 @@ import {
   categoryFamily,
   type ServedVocabulary,
 } from "../../../shell/ledgerServedVocabulary";
-import type { ImportIssue } from "../../../shell/ledgerContract";
+import {
+  BUSINESS_BEARING_CLASSIFICATIONS,
+  awaitsInvoice,
+  type ImportIssue,
+} from "../../../shell/ledgerContract";
 import type {
   LedgerWindowScope,
   ReadinessSnapshot,
@@ -538,8 +542,6 @@ export function activeFilters(filters: MovementFilters): number {
   );
 }
 
-const DECIDED_BUSINESS = ["BUSINESS", "MIXED"];
-
 /** Whether a stored row passes the filters the page applies itself.
  * `members` holds the rows the product's own filters keep, where any is in
  * force. */
@@ -589,11 +591,11 @@ export function keepsRow(
  * movement, not a transfer, with none linked. */
 export function needsInvoice(row: LedgerRow): boolean {
   const t = row.transaction;
-  return (
-    t.lifecycle_state === "ACTIVE" &&
-    t.direction !== "INTERNAL_TRANSFER" &&
-    t.invoice_id === null &&
-    DECIDED_BUSINESS.includes(t.business_classification)
+  return awaitsInvoice(
+    t.lifecycle_state,
+    t.direction,
+    t.business_classification,
+    t.invoice_id !== null,
   );
 }
 
@@ -622,7 +624,10 @@ export const SAVED_VIEWS: Record<
   to_match: { filters: { toMatch: true } },
   foreign: { filters: { foreignOnly: true } },
   business_expenses: {
-    filters: { classification: ["BUSINESS", "MIXED"], direction: ["OUTGOING"] },
+    filters: {
+      classification: [...BUSINESS_BEARING_CLASSIFICATIONS],
+      direction: ["OUTGOING"],
+    },
   },
 };
 export const viewFilters = (view: SavedViewId): MovementFilters => ({

@@ -16,7 +16,11 @@ import {
   type LedgerUpdateRequest,
   type OutputLanguage,
 } from "./ledger";
-import { LEDGER_UPDATE_FIELDS, type LedgerUpdateField } from "./ledgerContract";
+import {
+  LEDGER_UPDATE_FIELDS,
+  takesBusinessShare,
+  type LedgerUpdateField,
+} from "./ledgerContract";
 import { RELAY_PAYLOAD_LIMIT } from "./relayBounds";
 import {
   canonicalDecimal,
@@ -503,7 +507,7 @@ function checkRow(
   const suggestions = actions.filter((action) => action.kind === "suggestion");
   const links = actions.filter((action) => action.kind === "link");
   if (
-    row.transaction.lifecycle_state !== "ACTIVE" &&
+    !answer.takes_changes &&
     (edits || suggestions.length || classifying.length || files.length)
   )
     entry.blockers.push({
@@ -554,7 +558,9 @@ function checkRow(
     const writes = found.writes ?? [];
     const mixed = writes.some(
       (write) =>
-        write.field === "business_classification" && write.value === "MIXED",
+        write.field === "business_classification" &&
+        write.value !== null &&
+        takesBusinessShare(write.value),
     );
     const share = writes.some(
       (write) => write.field === "business_pct" && write.value !== null,

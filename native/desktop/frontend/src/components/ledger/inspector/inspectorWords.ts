@@ -2,7 +2,7 @@ import type { ComboboxOption } from "@/components/ui/combobox";
 import type { LedgerParticipation } from "../../../shell/ledger";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
-import { DIRECTIONS } from "../../../shell/ledgerContract";
+import { DIRECTIONS, sealsMovements } from "../../../shell/ledgerContract";
 import type { Translate } from "../../../shell/strings";
 import {
   categoryOption,
@@ -59,10 +59,8 @@ export function skipName(t: Translate, reason: SkipReason): string {
   }
 }
 
-/** The revision states that seal the movements a revision cites. */
-const SEALING = ["verificado_completo", "presentado"];
 export const seals = (participation: LedgerParticipation) =>
-  SEALING.includes(participation.revision_state);
+  sealsMovements(participation.revision_state);
 
 /** A declaration revision's state in its real words: a local filing is
  * not the AEAT's confirmation, a receipt is. */

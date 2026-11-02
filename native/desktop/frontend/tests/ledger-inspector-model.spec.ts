@@ -1,5 +1,10 @@
+import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
-import type { LedgerLlmSuggestion, LedgerRow } from "../src/shell/ledger";
+import type {
+  LedgerLlmSuggestion,
+  LedgerRow,
+  LedgerStagedRowAnswer,
+} from "../src/shell/ledger";
 import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import {
   checkSplit,
@@ -262,18 +267,14 @@ test("set-for-all cells plan as one bulk save", () => {
   expect(plan.summary.oneAtATime).toBe(0);
 });
 
-test("a lifecycle action is offered only where it can run", () => {
-  const active = movement(hexId("a"));
-  const archived = movement(hexId("b"), { lifecycle_state: "ARCHIVED" });
-  const excluded = movement(hexId("c"), {
-    business_classification: "REVIEWED_EXCLUDED",
-  });
-  expect(lifecycleTakes("archive", active, NONE)).toBe(true);
-  expect(lifecycleTakes("archive", active, new Set([hexId("a")]))).toBe(false);
-  expect(lifecycleTakes("restore", active, NONE)).toBe(false);
-  expect(lifecycleTakes("restore", archived, NONE)).toBe(true);
-  expect(lifecycleTakes("stash", archived, NONE)).toBe(false);
-  expect(lifecycleTakes("exclude", excluded, NONE)).toBe(false);
+test("a lifecycle action waits for the ledger's answer and the seal", () => {
+  const offers = (
+    ...lifecycle_actions: LedgerStagedRowAnswer["lifecycle_actions"]
+  ) => ({ lifecycle_actions }) as LedgerStagedRowAnswer;
+  expect(lifecycleTakes("archive", offers("archive"), false)).toBe(true);
+  expect(lifecycleTakes("archive", offers("archive"), true)).toBe(false);
+  expect(lifecycleTakes("restore", offers("archive"), false)).toBe(false);
+  expect(lifecycleTakes("archive", undefined, false)).toBe(false);
 });
 
 test("a merge needs every active part of the split, and nothing else", () => {

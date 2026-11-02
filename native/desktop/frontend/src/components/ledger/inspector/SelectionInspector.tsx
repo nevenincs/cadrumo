@@ -34,7 +34,10 @@ import {
 import { parseFractionPercent, percentOf } from "../../../shell/ledgerGrammar";
 import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { planApply, SINGLE_WRITE_SECONDS } from "../../../shell/ledgerPlan";
-import { isDecidedClassification } from "../../../shell/ledgerContract";
+import {
+  isDecidedClassification,
+  takesChanges,
+} from "../../../shell/ledgerContract";
 import {
   checkOnce,
   NOTHING_CHECKED,
@@ -463,7 +466,10 @@ export function SelectionInspector({
     );
     const targets = ids
       .filter((id) => visible.has(id))
-      .filter((id) => rows.get(id)?.transaction.lifecycle_state === "ACTIVE")
+      .filter((id) => {
+        const state = rows.get(id)?.transaction.lifecycle_state;
+        return state !== undefined && takesChanges(state);
+      })
       .filter((id) => !answered.has(id))
       .slice(0, ASK_EACH_MAX);
     setAsking(true);

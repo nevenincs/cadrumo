@@ -1,3 +1,4 @@
+import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import {
   categoryLabel,
@@ -155,4 +156,18 @@ test("a category fits a classify command only if it is served, and a share only 
   expect(classify("mixed", plain)).toBe("needs");
   expect(classify("mixed", shared)).toBe("staged");
   expect(classify("business", "zz_a_new_category")).toBe("needs");
+  // While the ledger has not answered, or could not, no category is staged.
+  const unanswered = (kind: "business" | "mixed", category: string) =>
+    classifyCells(
+      { kind, ids: [OUT], category, share: "50", check: null },
+      rows,
+    );
+  expect(unanswered("business", plain)).toEqual({
+    kind: "needs",
+    field: "category",
+  });
+  expect(unanswered("mixed", shared)).toEqual({
+    kind: "needs",
+    field: "category",
+  });
 });

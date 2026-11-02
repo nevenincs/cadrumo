@@ -15,6 +15,7 @@ import type {
   LedgerCheckResult,
   LedgerRow,
 } from "../../../shell/ledger";
+import { takesChanges, takesInvoice } from "../../../shell/ledgerContract";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 
 /** How far apart, in cents, a movement and an invoice may be and still
@@ -177,9 +178,8 @@ export function stagedLinks(actions: readonly StagedAction[]): {
 
 /** Whether a movement can take a link at all. */
 export const linkable = (row: LedgerRow) =>
-  row.transaction.lifecycle_state === "ACTIVE" &&
-  (row.transaction.direction === "INCOMING" ||
-    row.transaction.direction === "OUTGOING");
+  takesChanges(row.transaction.lifecycle_state) &&
+  takesInvoice(row.transaction.direction);
 
 /** Whether `row` settles `invoice` by flow, currency and amount. */
 export function settles(row: LedgerRow, invoice: CatalogueInvoice): boolean {

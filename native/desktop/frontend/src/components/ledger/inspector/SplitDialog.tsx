@@ -18,6 +18,12 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { LedgerRow } from "../../../shell/ledger";
+import {
+  DECIDED_CLASSIFICATIONS,
+  isBusinessBearing,
+  splitPartNeedsCategory,
+  takesBusinessShare,
+} from "../../../shell/ledgerContract";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import type {
   SplitPartClassification,
@@ -46,7 +52,7 @@ import { formatAmount } from "../../../shared/numbers";
 type Part = {
   amount: string;
   description: string;
-  classification: "" | "BUSINESS" | "PERSONAL" | "MIXED";
+  classification: "" | (typeof DECIDED_CLASSIFICATIONS)[number];
   category: string | null;
   share: string;
 };
@@ -162,7 +168,7 @@ export function SplitDialog({
         continue;
       }
       let share: string | null = null;
-      if (part.classification === "MIXED") {
+      if (takesBusinessShare(part.classification)) {
         const parsed = parseFractionPercent(part.share);
         if (parsed.kind !== "value") {
           setProblem(
@@ -176,7 +182,7 @@ export function SplitDialog({
         }
         share = parsed.value;
       }
-      if (part.classification === "BUSINESS" && part.category === null) {
+      if (splitPartNeedsCategory(part.classification) && !part.category) {
         setProblem(
           t("desktop.ledger.inspector.split.category_needed", { part: at + 1 }),
         );
@@ -184,7 +190,7 @@ export function SplitDialog({
       }
       classes.push({
         classification: part.classification,
-        ...(part.category && part.classification !== "PERSONAL"
+        ...(part.category && isBusinessBearing(part.classification)
           ? { category_id: part.category }
           : {}),
         ...(share ? { business_pct: share } : {}),
@@ -324,17 +330,14 @@ export function SplitDialog({
                       <option value="">
                         {t("desktop.ledger.inspector.split.unclassified")}
                       </option>
-                      {(["BUSINESS", "PERSONAL", "MIXED"] as const).map(
-                        (value) => (
-                          <option key={value} value={value}>
-                            {classificationLabel(t, value)}
-                          </option>
-                        ),
-                      )}
+                      {DECIDED_CLASSIFICATIONS.map((value) => (
+                        <option key={value} value={value}>
+                          {classificationLabel(t, value)}
+                        </option>
+                      ))}
                     </NativeSelect>
                   </label>
-                  {(part.classification === "BUSINESS" ||
-                    part.classification === "MIXED") && (
+                  {isBusinessBearing(part.classification) && (
                     <Combobox
                       label={t("desktop.ledger.inspector.split.part_category", {
                         part: at + 1,
@@ -357,7 +360,7 @@ export function SplitDialog({
                       </Button>
                     </Combobox>
                   )}
-                  {part.classification === "MIXED" && (
+                  {takesBusinessShare(part.classification) && (
                     <div className="grid w-fit gap-0.5 text-sm">
                       <Label
                         htmlFor={`${partId}-${at}-share`}

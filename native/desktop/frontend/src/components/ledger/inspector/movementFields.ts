@@ -7,6 +7,7 @@
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { Suggestion } from "@/components/ui/suggestions";
 import type { LedgerRow } from "../../../shell/ledger";
+import { takesChanges } from "../../../shell/ledgerContract";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import {
   effectiveFacts,
@@ -127,7 +128,7 @@ export type InspectorFieldProps = {
 export function fieldLock(scope: FieldScope, field: StageField): string | null {
   const { t, row, sealed, transferLocked } = scope;
   const state = row.transaction.lifecycle_state;
-  if (state !== "ACTIVE")
+  if (!takesChanges(state))
     return lockText(t, { kind: "not_active", lifecycle: state });
   if (sealed) return lockText(t, { kind: "sealed" });
   if (transferLocked === null) return t("desktop.ledger.apply.reading");

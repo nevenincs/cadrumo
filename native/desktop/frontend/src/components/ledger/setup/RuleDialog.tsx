@@ -1,5 +1,6 @@
 import {
   isRuleClassification,
+  ruleNamesCategory,
   RULE_CLASSIFICATIONS,
 } from "../../../shell/ledgerContract";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -185,7 +186,7 @@ export function RuleDialog({
     (pattern !== target.rule.description_pattern ||
       classification !== target.rule.classification ||
       (category || null) !== target.rule.category_id);
-  const takesCategory = classification === "BUSINESS";
+  const takesCategory = ruleNamesCategory(classification);
   const { hold, held } = useWritePause();
   // A save the page settles after this dialog closed says nothing here.
   const mounted = useRef(true);

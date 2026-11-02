@@ -822,6 +822,10 @@ export type LedgerStagedRowAnswer = {
   takes_share: boolean;
   category_settable: boolean;
   category_on_income: boolean;
+  takes_changes: boolean;
+  takes_invoice: boolean;
+  evidence_advised: boolean;
+  lifecycle_actions: ("archive" | "stash" | "restore" | "exclude")[];
   tax_set_skip: "transfer" | "personal" | "unclassified" | null;
   transfer_locked_fields: string[];
   classifying_fields: string[];

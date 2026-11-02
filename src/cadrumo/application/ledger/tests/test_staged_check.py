@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.classification_effects import fields_cleared_by_classification, takes_expense_category
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import Transaction, derive_transaction_id
 from ..actions_manual import transaction_from_command
@@ -25,6 +25,7 @@ from ..staged_check_contracts import (
     LedgerStagedDraft,
     LedgerStagedDraftField,
     LedgerStagedRow,
+    LedgerStagedRowAnswer,
 )
 from ..update_contracts import LedgerUpdatePatch, LedgerUpdateRequest
 
@@ -311,3 +312,29 @@ def test_an_unknown_movement_is_answered_as_not_found_and_categories_fit_by_the_
     assert result.rows[0].found is False
     assert (result.categories[0].business, result.categories[0].mixed) == (False, False)
     assert len(result.input_digest) == 64
+
+
+def test_a_stored_row_says_what_it_takes_from_its_own_codes() -> None:
+    profile_row = _row()
+    plain = check_stored_row(profile_row, _stored(classification=BusinessClassification.BUSINESS, category_id="x"))
+    assert (plain.takes_changes, plain.takes_invoice, plain.evidence_advised) == (True, True, True)
+    assert plain.lifecycle_actions == ("archive", "stash", "exclude")
+
+    held = check_stored_row(
+        profile_row, _stored(classification=BusinessClassification.BUSINESS, category_id="x", evidence="e" * 64)
+    )
+    assert held.evidence_advised is False
+
+    archived = _stored().model_copy(update={"lifecycle_state": TransactionLifecycleState.ARCHIVED})
+    answer = check_stored_row(profile_row, archived)
+    assert (answer.takes_changes, answer.evidence_advised) == (False, False)
+    assert answer.lifecycle_actions == ("restore",)
+
+    transfer = check_stored_row(profile_row, _stored(direction=TransactionDirection.INTERNAL_TRANSFER))
+    assert transfer.takes_invoice is False
+
+
+def test_an_unknown_movement_takes_nothing_until_the_ledger_finds_it() -> None:
+    absent = LedgerStagedRowAnswer(transaction_id="a" * 64, found=False)
+    assert (absent.takes_changes, absent.takes_invoice, absent.evidence_advised) == (False, False, False)
+    assert absent.lifecycle_actions == ()

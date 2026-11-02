@@ -19,6 +19,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ...core.irnr import M210PayerMode
+from ...domain.transactions.classification_effects import takes_m210_income
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification, resolve_m210_payer_mode
@@ -80,7 +81,7 @@ def _require_incoming_m210_transaction(
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     transaction = repository.load().get(transaction_id)
-    if transaction is None or transaction.direction is not TransactionDirection.INCOMING:
+    if transaction is None or not takes_m210_income(transaction.direction):
         raise TransactionValidationError(
             "Modelo 210 declares non-resident income, so only an incoming transaction carries it",
             context={
