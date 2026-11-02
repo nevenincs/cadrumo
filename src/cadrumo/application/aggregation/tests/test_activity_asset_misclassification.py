@@ -381,12 +381,11 @@ class _UnreadableInvoices:
         raise InvoicePersistenceError("invoice catalogue unreadable")
 
 
-def test_an_unreadable_invoice_catalogue_costs_the_instalment_no_figure() -> None:
+def test_an_unreadable_invoice_catalogue_withholds_the_instalment_figure() -> None:
+    """A row's invoice can place it in another year (RIRPF art. 7.4), so no figure stands without the catalogue."""
     row = _described(machine_acquisition_transaction(_OFFICE), "Monitor Dell")
-    readable = resolve_m130(_history(), "2T", rows=(row,))
 
     resolution = resolve_m130(_history(), "2T", rows=(row,), invoices=_UnreadableInvoices())
 
-    assert _expense_total(resolution) == _expense_total(readable)
+    assert _expense_total(resolution) == 0
     assert _reasons(resolution).count("storage_degraded") == 1
-    assert _reasons(resolution).count(_MAY_BE_DURABLE) == 1
