@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:939194becf07a940abde92b63fc8749e4ac564460f71fee11a4770321c9b49da'
+body_hash: 'sha256:b80c535918c64db1ab867f73f3bfda93b558c03e7d8f6a29ade6123011fd378b'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -98,6 +98,10 @@ related:
 - `S26` `verify:` `agent mentions and skills browser scenarios (24)` -> `pass`
 - `S08` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
 - `S08` `verify:` `Shared-control and typed-editor static review plus 87 applicable browser cases after S18` -> `pass`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S09` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S09` `verify:` `Profile account and authentication scenarios after dock selector correction (95)` -> `pass`
+- `S09` `verify:` `TypeScript scoped test lint and format` -> `pass`
 
 ## Notes
 

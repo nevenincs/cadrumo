@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:2987922975ee9dc0b53939486b7396f295621192605230c92186ac009b2141f0'
+body_hash: 'sha256:81b201be226335ab88f6339835037184c56a0e583080138aa35ddd76ac69bafa'
 ---
 
 # `frontend-polish` plan
@@ -50,7 +50,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S07` - Keep invoice grid row identity stable across unrelated editor and notification updates; `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`.
 - [x] `S18` - Repair shared suggestion visibility and combobox keyboard escape, and verify grid focus when an active column is hidden; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/tests/scenarios/`.
 - [x] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.
-- [ ] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
+- [x] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
 - [ ] `S10` - Complete remaining ledger workflow review across movements, invoices, documents, assets, registers and transfers; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `S19` - Preserve uncertain declaration creation across chooser changes and require authoritative settlement before another write; `native/desktop/frontend/src/components/modelo/declarations/, native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`.
 - [ ] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/workspace/, native/desktop/frontend/src/components/modelo/filing/, native/desktop/frontend/tests/scenarios/modelo*.spec.ts`.
