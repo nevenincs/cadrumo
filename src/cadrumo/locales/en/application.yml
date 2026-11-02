@@ -2741,6 +2741,9 @@ application:
       edit_missing_modelo_requirements: 'The identity details are complete, but this
         profile declares IVA and still lacks required Modelo 303 fields. Add these
         flags to the same command and run it again: %{missing_flags}.'
+      imputation_year_required: 'The imputation criterion and the Código de Comercio
+        answer are each stated for one tax year. Add this flag and run the command
+        again: %{missing_flags}.'
       persist_patch_unknown_question_id: Wizard patch references an unknown question
         id.
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'

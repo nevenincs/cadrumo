@@ -46,8 +46,11 @@ profile:
       surnames: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax_id: Adóazonosító (NIF/CIF/DNI/NIE) a bevallásokhoz
     irpf:
+      activity_income_imputation_criterion: Melyik elv rendeli az adóévekhez a tevékenységed
+        bevételeit és kiadásait?
       art109_activity_income_withholding_ge_70pct: Alkalmazandó az Art. 109 szerinti
         70%-os tevékenységi jövedelemfedezeti kivétel
+      codigo_comercio_accounting: Vezetsz Código de Comercio szerinti könyvvitelt?
       estimation_regime: IRPF becslési rend
       special_regime: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
       special_regime_start_date: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
@@ -256,14 +259,12 @@ profile:
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
         activity_income_cash_criterion_elected:
-          label: 'A bevallásban megjelölt pénzforgalmi szemlélet'
+          label: A bevallásban megjelölt pénzforgalmi szemlélet
         activity_income_imputation_criterion:
           choices:
-            cobros_y_pagos: 'Pénzforgalom szerint (RIRPF 7.2. cikk)'
-            devengo: 'Teljesítés szerint'
-          label: 'A bevételek és kiadások időbeli elszámolása'
-        codigo_comercio_accounting:
-          label: 'A Código de Comercio szerinti könyvvitelt vezetsz'
+            cobros_y_pagos: Pénzforgalom szerint (RIRPF 7.2. cikk)
+            devengo: Teljesítés szerint
+          label: A bevételek és kiadások időbeli elszámolása
         activity_kind:
           choices:
             profesional: Szakmai tevékenység
@@ -271,6 +272,8 @@ profile:
           label: Tevékenység típusa
         art109_activity_income_withholding_ge_70pct:
           label: Megfelel a RIRPF 109. cikk 70%-os kivételének
+        codigo_comercio_accounting:
+          label: A Código de Comercio szerinti könyvvitelt vezetsz
         estimation_regime:
           choices:
             directa_normal: Normál közvetlen becslés

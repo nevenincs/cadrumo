@@ -12,6 +12,7 @@ event payload.
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -65,6 +66,46 @@ def _effective(record: UserProfileRecord) -> dict[str, object]:
     return dict(_projector(record))
 
 
+def _windowed(record: UserProfileRecord) -> frozenset[tuple[str, date | None, date | None, str]]:
+    """Project a record to its dated facts, which the effective fact per path hides.
+
+    Only the latest window at a path is effective, so a change to an earlier
+    window leaves :func:`_effective` equal and would read as no change.
+    """
+    return frozenset(
+        (fact.path, fact.valid_from, fact.valid_to, repr(fact.value))
+        for fact in record.facts
+        if fact.valid_from is not None or fact.valid_to is not None
+    )
+
+
+def _facts_after(
+    current: tuple[UserProfileFact, ...], changes: tuple[UserProfileFact, ...]
+) -> tuple[UserProfileFact, ...]:
+    """Return ``current`` with ``changes`` applied: an undated change replaces its path, a dated one its window.
+
+    A taxpayer's statements about different ejercicios share one path, so a
+    change that names a window must leave the other windows standing. A dated
+    change with no value removes its window; the removed fact is not kept as an
+    empty one, because a reader of that window would then see a value that is not there.
+    """
+    whole_paths = {fact.path for fact in changes if fact.valid_from is None and fact.valid_to is None}
+    windows = {
+        (fact.path, fact.valid_from, fact.valid_to)
+        for fact in changes
+        if fact.valid_from is not None or fact.valid_to is not None
+    }
+    kept = tuple(
+        fact
+        for fact in current
+        if fact.path not in whole_paths and (fact.path, fact.valid_from, fact.valid_to) not in windows
+    )
+    stated = tuple(
+        fact for fact in changes if fact.value is not None or (fact.valid_from is None and fact.valid_to is None)
+    )
+    return (*kept, *stated)
+
+
 def apply_profile_fact_changes(
     *,
     profile_id: str,
@@ -81,6 +122,10 @@ def apply_profile_fact_changes(
     resulting sequence with one command event.  A ``value=None`` change is
     retained deliberately: it is the explicit current-record representation
     of clearing an answer.
+
+    A change that carries an effective window replaces only that window at its
+    path, so statements about other ejercicios survive; with ``value=None`` it
+    removes that window instead of retaining an empty one.
 
     This is not the only door onto profile facts -- registration opens the
     initial record and the cotejo censal adopts certificate values -- so what
@@ -111,7 +156,7 @@ def apply_profile_fact_changes(
     current = expected_record if expected_record is not None else repository.load(profile_id)
     profile_context = repository.session.profile_decode_context
     changed_paths = {fact.path for fact in changes}
-    next_facts = (*tuple(fact for fact in current.facts if fact.path not in changed_paths), *changes)
+    next_facts = _facts_after(tuple(current.facts), changes)
     reject_invalid_profile_facts(
         profile_id,
         next_facts,
@@ -125,7 +170,8 @@ def apply_profile_fact_changes(
     # value identical to the stored one was told it had updated the record.
     # Effective facts are the comparison, not raw values, so an explicit clear
     # (value=None) still reads as a real change against a set path.
-    if _effective(current) == _effective(current.model_copy(update={"facts": next_facts})):
+    candidate = current.model_copy(update={"facts": next_facts})
+    if _effective(current) == _effective(candidate) and _windowed(current) == _windowed(candidate):
         return current
     published = repository.apply_fact_changes(
         profile_id,

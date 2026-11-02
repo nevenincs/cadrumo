@@ -3,6 +3,13 @@
 from __future__ import annotations
 
 from ...core.i18n.translatable import Translatable as tr
+from .imputation_election import (
+    ACCOUNTING_PROFILE_PATH,
+    ACCOUNTING_QUESTION_ID,
+    CRITERION_PROFILE_PATH,
+    CRITERION_QUESTION_ID,
+    YEAR_QUESTION_ID,
+)
 from .models import WizardChoice, WizardCondition, WizardQuestion, WizardSection, WizardVisibility, WizardWidget
 from .setup_questions import confirmation_question
 
@@ -138,6 +145,9 @@ def build_obligations_section(
     _premio_loteria_declared: WizardCondition,
     wizard_irpf_estimation_regime_choices: tuple[WizardChoice, ...],
     wizard_irpf_special_regime_choices: tuple[WizardChoice, ...],
+    wizard_imputation_criterion_choices: tuple[WizardChoice, ...],
+    _imputation_criterion_answered: WizardVisibility,
+    _imputation_cash_criterion: WizardCondition,
 ) -> WizardSection:
     """Build the obligations section under the caller's prepared choices."""
     return WizardSection(
@@ -190,6 +200,34 @@ def build_obligations_section(
                 choices=wizard_irpf_estimation_regime_choices,
                 required=False,
                 answer_type=str,
+            ),
+            # No default on the three election questions: an unanswered criterion
+            # stays absent, and absent means undeclared, never devengo.
+            WizardQuestion(
+                id=CRITERION_QUESTION_ID,
+                profile_key=CRITERION_PROFILE_PATH,
+                widget=WizardWidget.SELECT,
+                prompt=tr("wizard.setup.obligations.irpf-activity-income-imputation-criterion.prompt"),
+                help=tr("wizard.setup.obligations.irpf-activity-income-imputation-criterion.help"),
+                choices=wizard_imputation_criterion_choices,
+                required=False,
+                answer_type=str,
+            ),
+            WizardQuestion(
+                id=YEAR_QUESTION_ID,
+                widget=WizardWidget.TEXT,
+                prompt=tr("wizard.setup.obligations.irpf-activity-income-imputation-year.prompt"),
+                help=tr("wizard.setup.obligations.irpf-activity-income-imputation-year.help"),
+                required=False,
+                visible_when=_imputation_criterion_answered,
+                answer_type=str,
+            ),
+            confirmation_question(
+                ACCOUNTING_QUESTION_ID,
+                ACCOUNTING_PROFILE_PATH,
+                suffix="obligations",
+                default=None,
+                visible_when=_imputation_cash_criterion,
             ),
             WizardQuestion(
                 id="irpf-special-regime",

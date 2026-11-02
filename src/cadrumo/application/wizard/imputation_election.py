@@ -25,7 +25,9 @@ CRITERION_QUESTION_ID: Final[str] = "irpf-activity-income-imputation-criterion"
 YEAR_QUESTION_ID: Final[str] = "irpf-activity-income-imputation-year"
 ACCOUNTING_QUESTION_ID: Final[str] = "irpf-codigo-comercio-accounting"
 
-ELECTION_QUESTION_IDS: Final[frozenset[str]] = frozenset({CRITERION_QUESTION_ID, YEAR_QUESTION_ID, ACCOUNTING_QUESTION_ID})
+ELECTION_QUESTION_IDS: Final[frozenset[str]] = frozenset(
+    {CRITERION_QUESTION_ID, YEAR_QUESTION_ID, ACCOUNTING_QUESTION_ID}
+)
 """Questions whose answers are written by :func:`election_changes`, never as an undated fact."""
 
 CRITERION_PROFILE_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
@@ -65,7 +67,8 @@ def election_changes(flow: WizardFlow, supplied: Mapping[str, str]) -> tuple[Use
         answer = validate_widget_answer(question, supplied[question_id])
         if question.profile_key is None:
             raise ValueError(f"election question {question_id!r} must be bound to a profile path")
-        changes.append(UserProfileFact.model_validate({"path": question.profile_key, "value": answer or None, **window}))
+        stated_fact = {"path": question.profile_key, "value": answer or None, **window}
+        changes.append(UserProfileFact.model_validate(stated_fact))
     return tuple(changes)
 
 

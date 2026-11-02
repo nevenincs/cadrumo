@@ -1471,10 +1471,10 @@ application:
         másik eszközöd mezőgazdasági, ezért nem mezőgazdaságiként számít.'
       advisory_imputation_period_ungrounded: 'A(z) {box} mező: {amount} összeg függőben
         van, mert nincs megerősítve, melyik időszakhoz tartozik. A tevékenység bevételei
-        és kiadásai a teljesítéskor számítanak, a levonás pedig a jövedelmével együtt (RIRPF 79.
-        cikk), a nyilvántartásod viszont minden tételt a bankba érkezés napjával
-        datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad (RIRPF
-        7.2. cikk; LIRPF 14.1.b cikk).'
+        és kiadásai a teljesítéskor számítanak, a levonás pedig a jövedelmével együtt
+        (RIRPF 79. cikk), a nyilvántartásod viszont minden tételt a bankba érkezés
+        napjával datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad
+        (RIRPF 7.2. cikk; LIRPF 14.1.b cikk).'
       advisory_value_proven_zero: 'A(z) {box} mező: a nulla érvényes, mert az időszakban
         nincs olyan tétel, amelynek az időszaka kétséges lehetne.'
       agrarian_excluded: '{element}: mezőgazdasági tevékenységhez tartozik, ezért
@@ -2845,6 +2845,9 @@ application:
       edit_missing_modelo_requirements: 'Az azonosító adatok teljesek, de ez a profil
         IVA-t vall be, és még hiányoznak a Modelo 303 kötelező mezői. Add hozzá ezeket
         a kapcsolókat ugyanahhoz a parancshoz, és futtasd újra: %{missing_flags}.'
+      imputation_year_required: 'Az elszámolási elvet és a Código de Comercio-választ
+        egy-egy adóévre kell megadni. Add hozzá ezt a kapcsolót, és futtasd újra a
+        parancsot: %{missing_flags}.'
       persist_patch_unknown_question_id: A varázsló javítása ismeretlen kérdésazonosítóra
         hivatkozik.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit

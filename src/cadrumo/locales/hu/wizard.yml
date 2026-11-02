@@ -37,6 +37,8 @@ wizard:
       A spanyol irányítószám 5 jegyű (01-52 tartománykód, majd három számjegy).'
     invalid_tax_id: 'Érvénytelen NIF/CIF/DNI/NIE a következőhöz: %{prompt_key}: %{raw}.
       %{detail}'
+    invalid_year: 'Érvénytelen adóév ennél: %{prompt_key}: %{raw}. Négy számjegyet
+      használj (ÉÉÉÉ).'
     select_unknown: 'Ismeretlen érték a következőhöz: %{flag} (%{prompt_key}): %{raw}.
       Érvényes lehetőségek: %{choices}.'
     select_without_choices: A(z) %{prompt_key} kérdésnél nincsenek legördülő-lehetőségek
@@ -331,6 +333,18 @@ wizard:
         help: Nettó árbevétel (importe neto de la cifra de negocios) az előző 12 hónapban,
           euróban. 6 000 000 EUR felett a Modelo 202 az LIS 40.3. cikkely szerinti
           módozatot írja elő; alatta mindkét módozat választható. Opcionális.
+      irpf-activity-income-imputation-criterion:
+        help: 'Az RIRPF 7. cikke szerinti elv a tevékenységi bevételekhez és kiadásokhoz
+          a --irpf-activity-income-imputation-year által megadott adóévben: devengo
+          (a szokásos) vagy cobros_y_pagos (három évig köt; Código de Comercio szerinti
+          könyvvitel mellett nem).'
+      irpf-activity-income-imputation-year:
+        help: Négyjegyű adóév (ejercicio), amelyre az elszámolási elv és a Código
+          de Comercio-válasz vonatkozik. Bármelyikhez kötelező; a többi adóév válasza
+          megmarad.
+      irpf-codigo-comercio-accounting:
+        help: Add meg, hogy vezetsz-e Código de Comercio szerinti könyvvitelt a --irpf-activity-income-imputation-year
+          által megadott adóévben.
       irpf-estimation-regime:
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
           hogy a Modelo 130 vagy a Modelo 131 alkalmazandó-e
@@ -548,6 +562,33 @@ wizard:
         prompt: Végez intraközösségi ügyleteket
       has-employees:
         prompt: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
+      irpf-activity-income-imputation-criterion:
+        choices:
+          cobros-y-pagos:
+            description: Csak akkor, ha a bevallásodban ezt választottad, és nem vezetsz
+              a Código de Comercio szerinti könyvvitelt; legalább három évre köt.
+            label: Pénzforgalmi (cobros y pagos)
+          devengo:
+            description: 'A szokásos: a bevétel és a kiadás abban az adóévben számít,
+              amelyben keletkezik, a fizetés időpontjától függetlenül.'
+            label: Teljesítés szerint (devengo)
+        help: 'A teljesítés szerinti elszámolás (devengo) a szokásos: a bevétel és
+          a kiadás abba az adóévbe tartozik, amelyben keletkezik, a fizetés időpontjától
+          függetlenül. A pénzforgalmi elv (cobros y pagos) választható lehetőség,
+          amelyet csak akkor használhatsz, ha nem vezetsz a Código de Comercio szerinti
+          könyvvitelt (RIRPF 7. cikk 2. pont); legalább három évre köt, és az adóbevallásban
+          jelzed. Ha nem vagy biztos benne, hagyd üresen: a tevékenységi rovatok addig
+          feloldatlanok maradnak, amíg meg nem adod.'
+        prompt: Melyik elv szerint rendeled az adóévekhez a vállalkozói tevékenységed
+          bevételeit és kiadásait? A szokásos a teljesítés szerinti elszámolás (devengo).
+      irpf-activity-income-imputation-year:
+        help: Az elvet adóévenként választod, ezért a válasz csak arra az adóévre
+          kerül mentésre, a többi adóév válasza nem változik.
+        prompt: Melyik adóévre (ejercicio) vonatkozik ez a válasz? Négy számjegyet
+          írj.
+      irpf-codigo-comercio-accounting:
+        prompt: Vezetsz ebben az adóévben a Código de Comercio szerinti könyvvitelt
+          (kötelezően vagy önként)? Ha igen, a pénzforgalmi elv nem áll rendelkezésedre.
       irpf-estimation-regime:
         choices:
           directa-normal:

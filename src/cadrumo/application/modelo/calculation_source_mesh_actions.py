@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
     from ..aggregation.renta_imputation import ImputationFilingHistory
     from ..aggregation.source_mesh import (
+        CalculationSourceContext,
         CalculationSourceResolution,
     )
     from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts

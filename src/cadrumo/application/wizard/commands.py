@@ -80,6 +80,7 @@ from .errors import (
     wizard_no_action_verdict,
 )
 from .flow_validators import attach_taxpayer_projection_validator
+from .imputation_election import ELECTION_QUESTION_IDS, election_answers, election_changes
 from .models import WizardFlow
 from .patch_edit import (
     WizardPatchPersister,
@@ -400,9 +401,9 @@ def scripted_profile_facts(
     refuse_foral_ccaa(canonical, canonical, operation=operation)
     profile_values = profile_values_from_patch(flow, canonical)
     profile_values.update(_colegio_concertado_profile_value(kwargs))
-    if not profile_values:
-        return ()
-    return tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items())
+    # A new profile holds no earlier ejercicio to clear, so only stated answers become facts.
+    election = tuple(fact for fact in election_changes(flow, canonical) if fact.value is not None)
+    return (*(UserProfileFact(path=path, value=value) for path, value in profile_values.items()), *election)
 
 
 def _run_patch_edit(
@@ -474,7 +475,16 @@ def _persist_full_flow_answers(
     from ..user_profile.projections import record_to_path_values
     from .persistence import project_answers, serialise_answers
 
+    stated = election_answers(answers)
+    election = election_changes(flow, stated)
     profile_values = serialise_answers(flow, answers)
+    election_values: dict[str, str] = {}
+    for question in (question for section in flow.sections for question in section.questions):
+        if question.id in ELECTION_QUESTION_IDS and question.profile_key is not None:
+            # An undated copy of the dated election facts would drop every other ejercicio's.
+            profile_values.pop(question.profile_key, None)
+            if question.id in stated:
+                election_values[question.profile_key] = stated[question.id]
     profile_decode_context = operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(
         profile_id,
@@ -482,13 +492,17 @@ def _persist_full_flow_answers(
     ).load(profile_id)
     values = record_to_path_values(record)
     values.update({path: value for path, value in profile_values.items() if value})
+    values.update(election_values)
     require_filing_baseline(flow, project_answers(flow, values))
     from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
 
     taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
     apply_profile_fact_changes(
         profile_id=profile_id,
-        changes=tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items() if value),
+        changes=(
+            *(UserProfileFact(path=path, value=value) for path, value in profile_values.items() if value),
+            *election,
+        ),
         door=ProfileFactWriteDoor.ANSWERS,
         profile_decode_context=profile_decode_context,
     )
