@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:85f7fa116fca7f3cb6836b04613f2d92a11da7f2beac27144a630c8908f7eeb6'
+body_hash: 'sha256:5f14c852a4ab6e89ff6e2defe788ae3add96a10cd7e71012cb9a595d694e5487'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -636,6 +636,83 @@ related:
 - `S06` `verify:` `ruff check and format` -> `pass`
 - `S06` `verify:` `lint-imports` -> `pass`
 - `S06` `verify:` `dev.quality.types touched files` -> `pass`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/cross_period_clean_state_support.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/m130_source_support.py`
+- `S06` `M` `src/cadrumo/application/filing/tests/test_date_relation_routing.py`
+- `S06` `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S06` `M` `src/cadrumo/application/modelo/_calculation_preparation.py`
+- `S06` `M` `src/cadrumo/application/modelo/_m210_agrupacion_renta.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_resolution.py`
+- `S06` `M` `src/cadrumo/application/modelo/m303_ordinary_filing_evidence_authoring.py`
+- `S06` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_profile_binding.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/profile_persistence/test_calculation_projection.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/modelo_operation_test_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/modelo_projection_history_conformance_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/_iva_wallet_engine_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/m303_annual_ledger_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/modelo_303_export_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_amend_flow.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_art109_activity_income_period_evidence.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_report_export.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_summary_pdf.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_cross_period_clean_state_provenance.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_period_binding.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_summary.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declarations_portfolio.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_dormant_m369_oss_resolver_live.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_approved_report_cas.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_calculation.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_draft_persistence.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_events.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_filing.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_filing_idempotent.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_verify.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_import_flow_mutation_guards.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_blocked_decision_integration.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_filing.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_integration.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_lifecycle_gate.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_overrides.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_seed_boundaries.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_local_cross_period_carry.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_base_negativa_general_compensation.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_cross_year_carry_continuity.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_carry_forward_continuity.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_cross_year_carry_continuity.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_131_data_base_binding_projection.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_modality_lifecycle.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_210_inmobiliaria_e2e.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_refund_auto_carry_e2e.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_refund_election_e2e.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_347_declarado_rows.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_redeclaration_e2e.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_work_review.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_previous_filing_casilla_override.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_profile_binding_integration.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_profile_readiness_gate.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_retencion_soportada_absence_m100.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_revision_parent_lifecycle_admission.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_row_field_template_input_refusal.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_saved_calculation_review_export.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verificado_completo_regression.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verification_substance_workflow.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verify_report_idempotent_collapse.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_missing_input_publication.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/registered_executor_seeding_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_clock_gate.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_apply_refusal_settlement.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_210_agrupacion_renta_e2e.py`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_projection_history_native.py`
+- `S06` `verify:` `uv run --no-sync pytest -m '' <13 touched test files of 28b7475e9f>` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest -m '' src/cadrumo/application/modelo/tests + profile_persistence calculation tests` -> `fail`
+- `S06` `verify:` `uv run --no-sync ruff check + ruff format --check <touched files>` -> `pass`
+- `S06` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S06` `verify:` `just check-types (no findings in touched files)` -> `pass`
+- `S06` `by:` `implementation-high`
 
 ## Notes
 
@@ -668,3 +745,6 @@ related:
 - `S06` modelo-100-export-file golden record frame `result.row.revision_id` differs between two releases; `dev/docs/tests/test_sequence_goldens.py::test_another_release_changes_only_the_enrolled_export_paths` fails; central mask decision left open
 - `S06` Commit 009999acb4 also swept in 18 `profile_persistence` test files another worker had staged in the shared index; content unchanged, reported to the orchestrator
 - `S06` filing-readiness-project-refine stays blocked (Modelo 100 2026 uncovered), so no sequence refresh; its --casilla 0513 example is a computed box on covered years
+- `S06` The 18 test and support files from `file_flow_test_support.py` to `test_work_missing_input_publication.py` are this Step's work; their content landed in 009999acb4, another worker's commit, which swallowed them while staged.
+- `S06` `test_art109_activity_income_period_evidence.py` and `test_modelo_130_carry_forward_continuity.py` assert verify refusal `advisory_binding_value` on box 01; their verify expectations flip to COMPLETE when the activity-box grade cap is lifted.
+- `S06` Broad run: 3560 passed, 16 failed, all in `test_calculation_note_wording.py` on `retencion_soportada_evidence_required` and `retencion_soportada_absence_contradicted,` which leave `{income_class}` unfilled; those come from withholding-note wording outside this Step.
