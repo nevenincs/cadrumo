@@ -140,7 +140,7 @@ async def test_shared_canonical_view_preserves_scalars_and_withholds_query_prove
     snapshot = _snapshot(
         subject.operation,
         period=period,
-        values={_CERTIFICATE: Decimal("0.00"), "renta-profile-tax-residence-ccaa": "09"},
+        values={_CERTIFICATE: Decimal("0.00"), "renta-profile-tax-residence-ccaa": "madrid"},
     )
     subject.repository.seed(snapshot)
     for query in (False, True):
@@ -154,7 +154,7 @@ async def test_shared_canonical_view_preserves_scalars_and_withholds_query_prove
     assert human.snapshot.source_url == snapshot.source_url
     assert human.snapshot.binding_map() == safe.snapshot.binding_map() == dict(snapshot.binding_values)
     assert safe.snapshot.binding_values[0].value == PublicDecimal(decimal="0.00")
-    assert safe.snapshot.binding_values[1].value == "09"
+    assert safe.snapshot.binding_values[1].value == "madrid"
     assert safe.snapshot.period.to_period() == period
     assert _HUMAN_SOURCE not in safe.model_dump_json() and "source_url" not in safe.model_dump_json()
     assert subject.repository.writes == subject.fence.entries == 0
