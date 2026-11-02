@@ -413,6 +413,11 @@ cli:
           és a kataszteri azonosító mezővel rögzítheted az ingatlan adatait.
         country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
           adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
+        duplicate_help: Megválaszolja, melyik tárolt számla lehet már a dokumentum,
+          és nem ír semmit.
+        duplicate_invalid: A számla típusának és a dokumentum adatainak a várt alakúnak
+          kell lenniük.
+        duplicate_kind_help: 'A számla iránya: issued vagy received.'
         euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
           {date} napra, ezért a számla euróérték nélkül került rögzítésre, és kimarad
           az eurós összesítésekből, amíg árfolyam nem kerül hozzá.

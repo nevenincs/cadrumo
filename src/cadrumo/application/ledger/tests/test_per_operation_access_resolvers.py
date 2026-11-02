@@ -42,6 +42,10 @@ from ...invoices.catalogue_update_operation import (
     InvoiceUpdateRequest,
     resolve_invoice_update_access,
 )
+from ...invoices.duplicate_check_operation import (
+    LedgerInvoiceDuplicateRequest,
+    resolve_ledger_invoice_duplicate_access,
+)
 from ...invoices.figures_preview_operation import (
     InvoiceFiguresPreviewRequest,
     resolve_invoice_figures_preview_access,
@@ -262,6 +266,13 @@ _RESOLVERS = [
     ),
     pytest.param(
         resolve_invoice_update_access, "ledger.invoice.update", InvoiceUpdateRequest, True, id="ledger.invoice.update"
+    ),
+    pytest.param(
+        resolve_ledger_invoice_duplicate_access,
+        "ledger.invoice.duplicate",
+        LedgerInvoiceDuplicateRequest,
+        False,
+        id="ledger.invoice.duplicate",
     ),
     pytest.param(
         resolve_invoice_figures_preview_access,

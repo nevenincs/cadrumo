@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.invoice_confirmation import InvoiceConfirmationResult
 from cadrumo.core.config import Settings
+from cadrumo.domain.invoices.duplicates import likely_duplicate_invoice
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 
 from .....domain.iva.schema import InvoiceKind
@@ -343,3 +344,58 @@ def test_public_confirmation_overrides_are_checked_on_reconfirm(
         assert field in str(refusal.value)
 
     assert len(repository.load().invoices) == 1
+
+
+def test_the_writer_reports_the_duplicate_the_read_finds_and_still_confirms(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
+) -> None:
+    """Another document spelling a stored number otherwise: both owners name the stored one."""
+    repository = InvoiceCatalogueRepository(objects=secure_objects)
+    first_evidence = _attach_the_document(
+        isolated_settings=isolated_settings, secure_objects=secure_objects, tmp_path=tmp_path
+    )
+    first = _confirm(
+        evidence_id=first_evidence,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        invoice_number="PT 0412",
+        authority=invoice_authority,
+    )
+    # A retried confirm is the record itself, never its own duplicate.
+    retried = _confirm(
+        evidence_id=first_evidence,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        invoice_number="PT 0412",
+        authority=invoice_authority,
+    )
+    assert first.likely_duplicate_invoice_id is None
+    assert retried.likely_duplicate_invoice_id is None
+
+    other = tmp_path / "other.xml"
+    other.write_bytes(_FIXTURE.read_bytes() + b"\n")
+    other_evidence = _make_svc(isolated_settings, secure_objects).add(bucket_id=_BUCKET_ID, source_path=other)
+    invoice = first.invoice
+    read = likely_duplicate_invoice(
+        repository.load().invoices.values(),
+        kind=invoice.kind,
+        invoice_number="pt-0412",
+        counterparty_tax_id=invoice.counterparty_tax_id,
+        invoice_date=invoice.issued_at,
+        grand_total=invoice.grand_total,
+    )
+    second = _confirm(
+        evidence_id=other_evidence.record.evidence_id,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        invoice_number="pt-0412",
+        authority=invoice_authority,
+    )
+
+    assert read is not None
+    assert read.basis == "number"
+    assert second.created is True
+    assert second.likely_duplicate_invoice_id == read.invoice_id == first.invoice.invoice_id

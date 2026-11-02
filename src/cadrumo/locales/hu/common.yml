@@ -2142,6 +2142,9 @@ desktop:
       currency_not_read: 'Nincs a dokumentumon: add meg'
       derived: Gépen kívüli beolvasásból készült
       duplicate: 'Már a katalógusban: {number}'
+      duplicate_check_failed: A főkönyv nem mondta meg, hogy ez az olvasat már a katalógusban
+        van-e, ezért még nem erősítheted meg.
+      duplicate_check_retry: Kérdezd újra
       entered_by_you: Te adtad meg
       field:
         counterparty_name: Partner
@@ -2181,6 +2184,7 @@ desktop:
         country: Add meg az országot két betűvel
         currency: Add meg a pénznemet
         duplicate: Lehet, hogy már a katalógusban van
+        duplicate_unread: Várakozás arra, hogy a főkönyv ellenőrizze a katalógust
         findings: Előbb válaszolj minden kérdésre
       in_review: Ellenőrzés alatt
       keep: Megtartás

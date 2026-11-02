@@ -748,6 +748,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             ("ledger.rule.trial",),
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.invoice.duplicate",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.duplicate",),
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.split.check",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,

@@ -2123,6 +2123,9 @@ desktop:
       currency_not_read: 'Not on the document: say which'
       derived: Made from a read off this computer
       duplicate: 'Already in the catalogue: {number}'
+      duplicate_check_failed: The ledger did not say whether this reading is already
+        in the catalogue, so it can't be confirmed yet.
+      duplicate_check_retry: Ask again
       entered_by_you: Entered by you
       field:
         counterparty_name: Counterparty
@@ -2162,6 +2165,7 @@ desktop:
         country: Give the country in two letters
         currency: Say the currency
         duplicate: It may already be in the catalogue
+        duplicate_unread: Waiting for the ledger to check the catalogue
         findings: Answer every question first
       in_review: In review
       keep: Keep it

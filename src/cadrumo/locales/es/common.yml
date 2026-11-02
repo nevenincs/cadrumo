@@ -2158,6 +2158,9 @@ desktop:
       currency_not_read: 'No figura en el documento: indica cuál'
       derived: Generado a partir de una lectura externa
       duplicate: 'Ya está en el catálogo: {number}'
+      duplicate_check_failed: El libro no ha dicho si esta lectura ya está en el catálogo,
+        así que aún no puedes confirmarla.
+      duplicate_check_retry: Volver a preguntar
       entered_by_you: Introducido por ti
       field:
         counterparty_name: Contraparte
@@ -2197,6 +2200,7 @@ desktop:
         country: Indica el país con dos letras
         currency: Indica la moneda
         duplicate: Puede que ya esté en el catálogo
+        duplicate_unread: Esperando a que el libro compruebe el catálogo
         findings: Responde antes a todas las preguntas
       in_review: En revisión
       keep: Conservarlo

@@ -8,6 +8,7 @@
 // with the digest of the review the page read. What it answers is design and
 // test evidence only. Its call lines name a definition, never a value.
 
+import { answerInvoiceDuplicate } from "./ledgerDuplicateFixture";
 import { answerRuleTrial } from "./ledgerRuleTrialFixture";
 import { answerSplitCheck } from "./ledgerSplitCheckFixture";
 import { isClassification, isDirection } from "../shell/ledgerContract";
@@ -33,6 +34,7 @@ import {
   type LedgerSortField,
   type LedgerTransaction,
   type PublicPeriod,
+  type LedgerInvoiceDuplicateRequest,
   type LedgerSplitCheckRequest,
   type LedgerStagedCheckRequest,
 } from "../shell/ledger";
@@ -1975,6 +1977,12 @@ export function ledgerFixture(options: Options): LedgerPort {
       if (!answer) throw new Error("unrecorded rule trial");
       return answer as unknown as JsonObject;
     },
+    "ledger.invoice.duplicate": (request) =>
+      answerInvoiceDuplicate(
+        request as unknown as LedgerInvoiceDuplicateRequest,
+        ledger.invoices,
+        LEDGER_FIXTURE_PROFILE_ID,
+      ) as unknown as JsonObject,
     "ledger.split.check": (request) => {
       const movement = ledger.movements.find(
         (each) => each.transaction.transaction_id === request.transaction_id,

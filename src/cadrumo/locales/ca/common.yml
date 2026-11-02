@@ -2163,6 +2163,9 @@ desktop:
       currency_not_read: 'No consta al document: indica quina'
       derived: Generat a partir d'una lectura externa
       duplicate: 'Ja és al catàleg: {number}'
+      duplicate_check_failed: El llibre no ha dit si aquesta lectura ja és al catàleg,
+        així que encara no pots confirmar-la.
+      duplicate_check_retry: Torna a preguntar
       entered_by_you: Introduït per tu
       field:
         counterparty_name: Contrapart
@@ -2202,6 +2205,7 @@ desktop:
         country: Indica el país amb dues lletres
         currency: Indica la moneda
         duplicate: Pot ser que ja sigui al catàleg
+        duplicate_unread: S'està esperant que el llibre comprovi el catàleg
         findings: Respon abans totes les preguntes
       in_review: En revisió
       keep: Conserva'l

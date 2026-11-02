@@ -183,6 +183,13 @@ class LedgerRuleTrialEnvelope(OutputSchema):
     pending: list[str]
 
 
+class LedgerInvoiceDuplicateEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice duplicate``."""
+
+    invoice_id: str | None
+    basis: str | None
+
+
 class LedgerSplitCheckProblemPayload(OutputSchema):
     """The first thing the split writer would refuse in the parts asked about."""
 
@@ -1028,6 +1035,7 @@ __all__ = [
     "LedgerInvoicePreviewFindingPayload",
     "LedgerInvoicePreviewLinePayload",
     "LedgerInvoicePreviewRateSlotPayload",
+    "LedgerInvoiceDuplicateEnvelope",
     "LedgerInvoicePreviewResult",
     "LedgerInvoicePreviewRetentionPayload",
     "LedgerInvoicePreviewTotalsPayload",

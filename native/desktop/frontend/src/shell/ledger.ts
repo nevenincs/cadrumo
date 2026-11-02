@@ -174,6 +174,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.inventory.retire",
   "ledger.inventory.valuation.preview",
   "ledger.invoice.add",
+  "ledger.invoice.duplicate",
   "ledger.invoice.import",
   "ledger.invoice.list",
   "ledger.invoice.preview",
@@ -838,6 +839,20 @@ export type LedgerRuleTrialResult = {
     "matched" | "empty_pattern" | "invalid_pattern" | "too_long" | "overrun";
   hits: string[];
   pending: string[];
+};
+/** What a document states, as read or corrected. */
+export type LedgerInvoiceDuplicateRequest = {
+  kind: InvoiceKind;
+  invoice_number: string | null;
+  counterparty_tax_id: string | null;
+  invoice_date: string | null;
+  grand_total: string | null;
+};
+/** The stored invoice the document may already be, and what they share. */
+export type LedgerInvoiceDuplicateResult = {
+  profile_id: string;
+  invoice_id: string | null;
+  basis: "number" | "party_day_total" | null;
 };
 /** Unsaved parts of a movement. No amount on the last asks what the others leave. */
 export type LedgerSplitCheckRequest = {
@@ -1933,6 +1948,7 @@ export type EvidenceConfirmResult = {
     draft: EvidenceDraft;
     /** False where the catalogue already held this confirmation. */
     created: boolean;
+    likely_duplicate_invoice_id?: string | null;
     total_discrepancy?: {
       printed_total: PublicDecimal;
       recorded_total: PublicDecimal;
@@ -2121,6 +2137,7 @@ export interface LedgerRequests {
   "ledger.invoice.add": InvoiceAddRequest;
   "ledger.invoice.preview": InvoicePreviewRequest;
   "ledger.rule.trial": LedgerRuleTrialRequest;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateRequest;
   "ledger.split.check": LedgerSplitCheckRequest;
   "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
@@ -2234,6 +2251,7 @@ export interface LedgerResults {
   "ledger.invoice.add": InvoiceAddResult;
   "ledger.invoice.preview": InvoicePreviewResult;
   "ledger.rule.trial": LedgerRuleTrialResult;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateResult;
   "ledger.split.check": LedgerSplitCheckResult;
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;

@@ -121,6 +121,17 @@ def compose_invoices_catalogue_intake_operation(inputs: OperationCompositionInpu
     )
 
 
+def compose_ledger_invoice_duplicate_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read of the stored invoice a document may already be."""
+    from ..application.invoices.duplicate_check_operation import (
+        build_ledger_invoice_duplicate_definition,
+        build_ledger_invoice_duplicate_registration,
+    )
+
+    definition = build_ledger_invoice_duplicate_definition(inputs.invoice_inspection())
+    return built((definition,), (build_ledger_invoice_duplicate_registration(definition),))
+
+
 def compose_invoices_catalogue_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose invoices catalogue read operation."""
     from ..application.invoices.catalogue_read_operation import (

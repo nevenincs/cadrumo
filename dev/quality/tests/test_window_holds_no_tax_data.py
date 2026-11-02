@@ -62,7 +62,11 @@ contracts, the classifications from their enum. Ten rules:
 ``moved_rule``
     A name of a rule the backend now answers (``checkSplit``), or a staged split
     whose ``children`` are not read from the backend's ``answer``: whether parts
-    make a split is the split writer's.
+    make a split is the split writer's. Also, in a ``filter``, ``find``, ``some``
+    or ``every``, a ``counterparty_tax_id`` compared, or an ``invoice_number``
+    folded through a call and compared: whether two invoices are one is the
+    backend's. Finding the exact number just sent, to tell whether a write landed,
+    passes.
 
 Limits. The scan is lexical and per file. It does not follow a value across
 files or through a renamed import, does not see arithmetic on plain numbers
@@ -137,7 +141,9 @@ _RULES: Final = (
     "moved_rule",
 )
 #: The names of rules the backend now answers, so a copy kept or brought back fails by name.
-_MOVED_RULE_NAMES: Final = frozenset({"checkSplit", "splitRemainder", "centsOf"})
+_MOVED_RULE_NAMES: Final = frozenset({"checkSplit", "splitRemainder", "centsOf", "duplicateOf"})
+#: Invoice facts a duplicate rests on; the window asks and never compares them.
+_DUPLICATE_FACTS: Final = frozenset({"invoice_number", "counterparty_tax_id"})
 #: The request and result contracts of an invoice whose decimal fields are the figures a form could compute.
 _INVOICE_CONTRACTS: Final[tuple[type[BaseModel], ...]] = (
     InvoiceAddLine,
@@ -1094,6 +1100,11 @@ def moved_rule_hits(tokens: list[Token]) -> list[Hit]:
         if token.kind != "str" and token.text in _MOVED_RULE_NAMES
     ]
     for index, token in enumerate(tokens):
+        if token.kind != "str" and token.text in _DUPLICATE_FACTS and _inside_predicate(tokens, token):
+            window = tokens[max(index - 6, 0) : index + 5]
+            folded = tokens[index + 1].text == ")" if index + 1 < len(tokens) else False
+            if any(near.text in {"===", "!=="} for near in window) and (folded or token.text != "invoice_number"):
+                hits.append(Hit("moved_rule", token.line, f"{token.text} compared in the window"))
         if token.kind != "str" or token.text != "split" or tokens[index - 1].text != ":":
             continue
         for at in range(index + 1, min(index + 16, len(tokens) - 2)):
@@ -1515,6 +1526,17 @@ def test_a_moved_rule_brought_back_fails_the_moved_rule_rule(facts: Facts) -> No
     assert "moved_rule" in _fired("const remainder = splitRemainder(total, others);\n", facts)
     assert "moved_rule" in _fired("export function checkSplit(total, parts) { return parts; }\n", facts)
     assert "moved_rule" not in _fired('const said = "checkSplit";\n', facts)
+
+
+def test_invoice_identity_compared_in_the_window_fails_the_moved_rule_rule(facts: Facts) -> None:
+    planted = "const same = invoices.find((i) => folded(i.invoice_number) === number);\n"
+    assert "moved_rule" in _fired(planted, facts)
+    planted = "const same = invoices.find((i) => taxId === i.counterparty_tax_id);\n"
+    assert "moved_rule" in _fired(planted, facts)
+    assert "moved_rule" in _fired("const copy = duplicateOf(draft, kind, invoices);\n", facts)
+    assert "moved_rule" not in _fired("const number = invoice.invoice_number;\n", facts)
+    landed = "const saved = invoices.some((i) => i.invoice_number === sent.number);\n"
+    assert "moved_rule" not in _fired(landed, facts)
 
 
 def test_a_split_staged_from_the_windows_own_parts_fails_the_moved_rule_rule(facts: Facts) -> None:
