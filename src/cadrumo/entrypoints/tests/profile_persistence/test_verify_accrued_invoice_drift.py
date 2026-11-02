@@ -29,10 +29,16 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_filing_fingerprint import (
+    CURRENT_INVOICE_FIELD_SET_VERSION,
     capture_invoice_fingerprint,
+    fingerprint_scope_is_narrower,
     invoice_row_fingerprint,
 )
-from cadrumo.application.aggregation.renta_imputation import ImputationCriteria
+from cadrumo.application.aggregation.renta_imputation import (
+    ActivityImputationCriterion,
+    ImputationCriteria,
+    ImputationFilingHistory,
+)
 from cadrumo.application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
     remove_catalogue_invoice,
@@ -377,16 +383,74 @@ def _as_stored_by_the_previous_build(
     return stored
 
 
-def test_a_stored_version_one_draft_stays_readable_and_warns_what_it_leaves_out(draft: _Draft) -> None:
-    """It keeps the old scope, so no stored draft reads as drifted, and says it cannot see the accrued invoice."""
-    stored = _as_stored_by_the_previous_build(draft, _calculate(draft))
-
-    draft.invoices.save(build_invoice_catalogue((_corrected_base(),)))
-    report = _verify(draft, stored)
-
+def _requires_recalculating(report: VerificationReport) -> None:
+    """Assert the one finding says the draft cannot prove it is current, and that it blocks."""
+    (blocking,) = [finding for finding in report.findings if finding.message_locale_key == _NARROWER_KEY]
+    assert blocking.severity is ModeloVerificationFindingSeverity.BLOCKING
+    assert blocking.kind is ModeloVerificationFindingKind.STALE_CALCULATION
     assert _drift_counts(report) is None
-    (warning,) = [finding for finding in report.findings if finding.message_locale_key == _NARROWER_KEY]
-    assert warning.severity is ModeloVerificationFindingSeverity.WARNING
+
+
+def test_a_stored_version_one_draft_stays_readable_and_must_be_calculated_again(draft: _Draft) -> None:
+    """Its scope leaves out what the figures rest on, so it cannot prove it is current, whether or not anything moved."""
+    stored = _as_stored_by_the_previous_build(draft, _calculate(draft))
+    assert stored.invoice_fingerprint is not None
+
+    _requires_recalculating(_verify(draft, stored))
+    draft.invoices.save(build_invoice_catalogue((_corrected_base(),)))
+    _requires_recalculating(_verify(draft, stored))
+
+
+def test_a_narrower_scope_never_binds_a_cash_draft(cash_draft: _Draft) -> None:
+    """Under cash no invoice enters by accrual and no correction nets, so version 1 misses nothing."""
+    stored = _as_stored_by_the_previous_build(cash_draft, _calculate(cash_draft))
+    assert not [f for f in _verify(cash_draft, stored).findings if f.message_locale_key == _NARROWER_KEY]
+
+
+def _narrower(
+    draft: _Draft,
+    version: int,
+    *,
+    criterion: str = "devengo",
+    regime: str = "directa_normal",
+    filings: ImputationFilingHistory | None = None,
+) -> bool:
+    with bundled_indexed_authority().operation() as operation:
+        return fingerprint_scope_is_narrower(
+            InvoiceFingerprintSnapshot(
+                rows=(),
+                snapshot_fingerprint=invoice_snapshot_fingerprint(()),
+                captured_at=_T0,
+                field_set_version=version,
+            ),
+            revision=operation.revision(draft.work_unit.modelo, draft.work_unit.revision_id),
+            work_unit=draft.work_unit,
+            criteria=ImputationCriteria(facts=_facts(criterion, regime), filings=filings or ImputationFilingHistory()),
+        )
+
+
+def test_each_older_version_is_narrower_than_the_current_for_an_accrual_draft(draft: _Draft) -> None:
+    assert [_narrower(draft, version) for version in (1, 2, 3, CURRENT_INVOICE_FIELD_SET_VERSION)] == [
+        True,
+        True,
+        True,
+        False,
+    ]
+
+
+def test_a_filed_return_contradicting_the_election_leaves_no_accrual_scope_to_miss(draft: _Draft) -> None:
+    """The filed return states cash and the profile accrual, so no criterion holds and the resolver refuses the box."""
+    stated = ImputationFilingHistory(stated={_YEAR: ActivityImputationCriterion.COBROS_Y_PAGOS})
+    assert _narrower(draft, 1) is True
+    assert _narrower(draft, 1, filings=stated) is False
+
+
+def test_an_oss_draft_of_an_older_version_is_narrower_under_any_criterion(tmp_path: Path) -> None:
+    """A version 1 OSS digest does not hold the number a correction names, so it never saw a correction move."""
+    cash = {"criterion": "cobros_y_pagos", "regime": "directa_simplificada"}
+    for drafted in _open_draft(tmp_path, modelo="369", period="EXT-1T", **cash):
+        assert _narrower(drafted, 1, **cash) is True
+        assert _narrower(drafted, CURRENT_INVOICE_FIELD_SET_VERSION, **cash) is False
 
 
 def test_recalculating_a_version_one_draft_moves_it_to_the_wider_scope(draft: _Draft) -> None:
@@ -397,7 +461,7 @@ def test_recalculating_a_version_one_draft_moves_it_to_the_wider_scope(draft: _D
 
     assert repinned.calculation_revision_id == stored.calculation_revision_id
     assert repinned.invoice_fingerprint is not None
-    assert repinned.invoice_fingerprint.field_set_version == 3
+    assert repinned.invoice_fingerprint.field_set_version == CURRENT_INVOICE_FIELD_SET_VERSION
     assert [row.invoice_id for row in repinned.invoice_fingerprint.rows] == [draft.invoice.invoice_id]
     assert not [f for f in _verify(draft, repinned).findings if f.message_locale_key == _NARROWER_KEY]
 
@@ -482,13 +546,9 @@ def test_under_cash_an_unpaid_received_invoice_is_out_of_scope(cash_draft: _Draf
     assert _drift_counts(_verify(cash_draft, revision)) is None
 
 
-def test_a_draft_captured_before_the_expense_scope_warns_what_it_leaves_out(draft: _Draft) -> None:
-    """A version 2 draft keeps its scope, so it reads no drift, and says it cannot see the received invoice."""
+def test_a_draft_captured_before_the_expense_scope_must_be_calculated_again(draft: _Draft) -> None:
+    """A version 2 draft cannot see a received invoice that entered its window, so it cannot prove it is current."""
     stored = _as_stored_by_the_previous_build(draft, _calculate(draft), draft.invoice, version=2)
 
     draft.invoices.save(build_invoice_catalogue((draft.invoice, _received_unpaid())))
-    report = _verify(draft, stored)
-
-    assert _drift_counts(report) is None
-    (warning,) = [finding for finding in report.findings if finding.message_locale_key == _NARROWER_KEY]
-    assert warning.severity is ModeloVerificationFindingSeverity.WARNING
+    _requires_recalculating(_verify(draft, stored))
