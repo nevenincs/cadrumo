@@ -48,6 +48,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 # The 2025 Modelo 100 XSD declares Hijo with maxOccurs 15.
 _DESCENDANT_LIMIT = 15
 _ADULT_NIF = "12345678Z"
+_WRONG_LETTER_NIF = "12345678A"
+_FOREIGN_NIF = "X1234567L"
+_ENTITY_NIF = "A58818501"
 
 
 def _row(**leaves: str) -> ProfileDescendantRow:
@@ -161,6 +164,38 @@ def test_a_family_is_stored_as_rows_with_its_count_and_served_back(world: _World
     assert [row.row_index for row in rows] == ["0", "1"]
 
 
+def test_a_valid_nif_or_nie_is_stored_in_canonical_form_and_an_absent_one_is_allowed(world: _World) -> None:
+    world.replace(
+        _row(birth_date="2015-04-03", nif="1234-5678-z"),
+        _row(birth_date="2016-04-03", nif=_FOREIGN_NIF),
+        _row(birth_date="2017-04-03"),
+    )
+
+    facts = world.facts()
+    assert facts[f"{DESCENDANT_OBJECT_PATH}.0.nif"] == _ADULT_NIF
+    assert facts[f"{DESCENDANT_OBJECT_PATH}.1.nif"] == _FOREIGN_NIF
+    assert f"{DESCENDANT_OBJECT_PATH}.2.nif" not in facts
+
+
+def test_a_nif_with_a_wrong_control_letter_is_refused_by_row_and_never_echoed(world: _World) -> None:
+    before = world.record()
+
+    with pytest.raises(UserProfileValidationError) as refused:
+        world.replace(
+            _row(birth_date="2015-04-03", nif=_ADULT_NIF), _row(birth_date="2016-04-03", nif=_WRONG_LETTER_NIF)
+        )
+
+    assert refused.value.context == {"row": 2}
+    assert world.record().content_digest == before.content_digest
+    for language in OutputLanguage:
+        with override_settings(cadrumo_output_language=language.value):
+            detail = build_operation_error_detail(refused.value)
+        assert detail is not None and detail.refusal_words is not None
+        assert not detail.refusal_words.startswith("application.")
+        assert "2" in detail.refusal_words
+        assert _WRONG_LETTER_NIF not in detail.refusal_words and _WRONG_LETTER_NIF not in repr(detail)
+
+
 def test_a_smaller_family_clears_the_rows_it_no_longer_holds(world: _World) -> None:
     world.replace(
         _row(birth_date="2015-04-03", rentas_anuales="900"),
@@ -211,6 +246,9 @@ def test_the_design_limit_is_accepted_and_one_more_is_refused(world: _World) -> 
         ({"birth_date": "2015-04-03", "alta_posterior_nacimiento_mes": "13"}, 1),
         ({"birth_date": "2015-04-03", "apellidos_nombre": "Ana"}, 1),
         ({"birth_date": "2015-04-03", "custodia_compartida": "false"}, 1),
+        ({"birth_date": "2015-04-03", "nif": _WRONG_LETTER_NIF}, 1),
+        ({"birth_date": "2015-04-03", "nif": _ENTITY_NIF}, 1),
+        ({"birth_date": "2015-04-03", "nif": "1234"}, 1),
     ],
 )
 def test_a_row_the_declaration_cannot_hold_is_refused_before_anything_is_written(

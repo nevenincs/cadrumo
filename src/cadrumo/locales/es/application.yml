@@ -3102,6 +3102,8 @@ application:
         almacena.
       descendant_limit_unknown: El diseño de la declaración no indica un límite de
         descendientes, así que la lista no se puede comprobar ni guardar.
+      descendant_nif_invalid: El NIF o NIE del descendiente %{row} no es válido; revisa
+        sus letras y cifras.
       descendant_rows_over_limit: Una declaración incluye como máximo %{limit} descendientes
         y se han indicado %{count}.
       descendant_value_invalid: El descendiente %{row} indica un valor que la declaración

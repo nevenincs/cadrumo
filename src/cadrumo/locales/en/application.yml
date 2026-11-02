@@ -2945,6 +2945,8 @@ application:
         store.
       descendant_limit_unknown: The declaration design states no limit for descendants,
         so the list cannot be checked or saved.
+      descendant_nif_invalid: The NIF or NIE of descendant %{row} is not valid; check
+        its letters and digits.
       descendant_rows_over_limit: A declaration lists at most %{limit} descendants,
         and %{count} were given.
       descendant_value_invalid: Descendant %{row} states a value the declaration cannot

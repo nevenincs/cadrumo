@@ -3104,6 +3104,8 @@ application:
         emmagatzema.
       descendant_limit_unknown: El disseny de la declaració no indica cap límit de
         descendents, així que la llista no es pot comprovar ni desar.
+      descendant_nif_invalid: El NIF o NIE del descendent %{row} no és vàlid; revisa'n
+        les lletres i xifres.
       descendant_rows_over_limit: Una declaració inclou com a màxim %{limit} descendents
         i se n'han indicat %{count}.
       descendant_value_invalid: El descendent %{row} indica un valor que la declaració

@@ -3055,6 +3055,8 @@ application:
         a profil nem tárolja.
       descendant_limit_unknown: A bevallás kialakítása nem ad meg felső korlátot a
         leszármazottakra, ezért a lista nem ellenőrizhető és nem menthető.
+      descendant_nif_invalid: A(z) %{row}. leszármazott NIF- vagy NIE-száma nem érvényes;
+        ellenőrizd a betűit és számjegyeit.
       descendant_rows_over_limit: Egy bevallás legfeljebb %{limit} leszármazottat
         tartalmaz, de %{count} lett megadva.
       descendant_value_invalid: A(z) %{row}. leszármazott olyan értéket ad meg, amelyet

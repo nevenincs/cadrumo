@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import ProfileAnswerTypeError, pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
+from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -27,6 +28,7 @@ from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .capsule_record import ProfileRecordConflictError
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+from .household_person_tax_id import canonical_person_tax_id
 from .household_row_limit import declared_household_row_limit
 from .profile_record_repository import ProfileRecordRepository
 
@@ -34,10 +36,12 @@ DESCENDANT_OBJECT_PATH: Final = "renta_family.descendiente"
 DESCENDANT_COUNT_PATH: Final = "renta_family.descendientes_count"
 
 _BIRTH_DATE_LEAF: Final = "birth_date"
+_NIF_LEAF: Final = "nif"
 
 _ROWS_OVER_LIMIT_KEY: Final = "application.user_profile.errors.descendant_rows_over_limit"
 _LIMIT_UNKNOWN_KEY: Final = "application.user_profile.errors.descendant_limit_unknown"
 _BIRTH_DATE_REQUIRED_KEY: Final = "application.user_profile.errors.descendant_birth_date_required"
+_NIF_INVALID_KEY: Final = "application.user_profile.errors.descendant_nif_invalid"
 _VALUE_INVALID_KEY: Final = "application.user_profile.errors.descendant_value_invalid"
 _FACT_UNSUPPORTED_KEY: Final = "application.user_profile.errors.descendant_fact_unsupported"
 
@@ -92,13 +96,22 @@ def _validated_descendant_row(
 ) -> tuple[DescendantInfo, dict[str, str]]:
     """Validate one row alone and return its record with its canonical leaves.
 
-    The domain decoder drops a leaf it does not know and a row without a birth
-    date, so each is checked against what the decoder kept: nothing the person
-    stated may disappear or change form on its way into the profile.
+    The record itself checks a NIF only for width, so the control letter is
+    enforced here through the identifier check ascendants use, and the stored NIF
+    is its canonical form. The domain decoder drops a leaf it does not know and a
+    row without a birth date, so each is checked against what the decoder kept:
+    nothing the person stated may disappear or change form on its way into the
+    profile.
     """
     supplied = {f"{DESCENDANT_OBJECT_PATH}.0.{fact.field_key}": fact.value for fact in row.facts}
     if f"{DESCENDANT_OBJECT_PATH}.0.{_BIRTH_DATE_LEAF}" not in supplied:
         _refuse(_BIRTH_DATE_REQUIRED_KEY, row=position)
+    nif_path = f"{DESCENDANT_OBJECT_PATH}.0.{_NIF_LEAF}"
+    if nif_path in supplied:
+        try:
+            supplied[nif_path] = canonical_person_tax_id(supplied[nif_path], operation=operation)
+        except IdentityError:
+            _refuse(_NIF_INVALID_KEY, row=position)
     try:
         decoded = descendant_list_from_facts(supplied, authority=operation)
     except (ProfileAnswerTypeError, RegistryValidationError, ValueError):
