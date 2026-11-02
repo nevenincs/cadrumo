@@ -9,7 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
@@ -47,7 +47,6 @@ from .verification_report_public_facts import ModeloVerificationRegistrySnapshot
 
 MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID = "modelo.reconcile.list"
 MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH = 4_096
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _BoundedSourcePath = Annotated[str, Field(max_length=MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH)]
 
@@ -196,7 +195,7 @@ class ModeloReconciliationListExecutor:
                     ModeloReconciliationListEntryProjection.from_history_entry(entry) for entry in entries
                 ),
             )
-            if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
+            if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             return projection
 

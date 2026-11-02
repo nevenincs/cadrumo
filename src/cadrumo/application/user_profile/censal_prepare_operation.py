@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hashing import canonical_json_bytes
@@ -48,7 +48,6 @@ if TYPE_CHECKING:
 CENSAL_PREPARE_OPERATION_DEFINITION_ID = "user-profile.censo-prepare"
 CENSAL_PREPARE_PHASE_READ = "user-profile.censo-prepare.read"
 MAX_CENSAL_PREPARE_VALUE_LENGTH = 4_096
-_CENSAL_PREPARE_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _BoundedEffectiveValue = Annotated[str, Field(max_length=MAX_CENSAL_PREPARE_VALUE_LENGTH)]
 _CensalPath = Annotated[str, Field(min_length=1, max_length=256)]
@@ -147,7 +146,7 @@ def _prepare_exact_profile(
         operation_request=build_censal_operation_request(record),
         effective_fields=tuple(effective_fields),
     )
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _CENSAL_PREPARE_RESULT_MAX_BYTES:
+    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return projection
 
@@ -179,7 +178,7 @@ class CensalPrepareOperationExecutor:
         if self._observation_reader is not None:
             observation = await self._observation_reader(payload.profile_id)
             projection = projection.model_copy(update={"observation": observation})
-        if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _CENSAL_PREPARE_RESULT_MAX_BYTES:
+        if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
         async def capture() -> str:

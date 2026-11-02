@@ -15,7 +15,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
@@ -61,7 +61,6 @@ LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID = "ledger.evidence.view"
 LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID = "ledger.evidence.query"
 LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE = "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"
 _MAX_EVIDENCE_LIST_ROWS = 4_096
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _EvidenceIdentity = Annotated[str, Field(min_length=1, max_length=64)]
 _SourcePath = Annotated[str, Field(min_length=1, max_length=4_096)]
@@ -425,7 +424,7 @@ def _project_query_result(result: BaseModel, receipt: OperationTerminalReceipt, 
 
 def _check_result_size(result: BaseModel) -> None:
     """Refuse a public read result that cannot fit the bounded projection document."""
-    refuse_oversized_result(result, _RESULT_DOCUMENT_MAX_BYTES)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES)
 
 
 class LedgerEvidenceReadExecutor:

@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect
@@ -46,7 +46,6 @@ _LIST_PHASES = ("verify-list.read", "verify-list.result")
 _VIEW_PHASES = ("verify-view.read", "verify-view.result")
 _LATEST_PHASES = ("verify-latest.read", "verify-latest.result")
 _MAX_VERIFY_LIST_ROWS = 16_384
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 VerifyObservationPersistenceFactory = Callable[[str], VerifyObservationPersistencePort]
 
 
@@ -69,7 +68,7 @@ def _summary(observation: VerifyObservation) -> VerifyObservationSummaryPublicV1
 
 
 def _require_bounded_result(result: BaseModel) -> None:
-    refuse_oversized_result(result, _RESULT_DOCUMENT_MAX_BYTES)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES)
 
 
 class VerifyListExecutor:

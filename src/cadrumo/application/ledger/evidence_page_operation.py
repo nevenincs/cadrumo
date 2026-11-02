@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
@@ -54,7 +54,6 @@ from .evidence_page_errors import (
 )
 from .read_access import resolve_ledger_request_read_access
 
-_MAX_RESULT_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 
 @dataclass(frozen=True, slots=True)
@@ -220,7 +219,7 @@ class LedgerEvidencePageExecutor:
         async def capture() -> str:
             result = await asyncio.to_thread(_read_page, self._ports, bucket_id, payload)
             wrapped = LedgerEvidencePageExecutionResult(profile_id=payload.profile_id, result=result)
-            if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
+            if len(canonical_json_bytes(result.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
                 raise LedgerEvidencePageTooLargeError()
             return await context.operands.put(wrapped, written_at=now())
 

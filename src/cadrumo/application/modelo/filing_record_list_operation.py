@@ -10,7 +10,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import profile_operation_subject
@@ -44,7 +44,6 @@ from .verification_repository_ports import VerificationRepositoryBundle, Verific
 MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID = "modelo.filing_record.list"
 
 
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 
 def _record_order_key(record: ModeloRecord) -> tuple[str, int, str, str, datetime, str]:
@@ -92,7 +91,7 @@ def _capture(
         record_count=len(records),
         records=tuple(ModeloFilingRecordListEntryProjection.from_record(record) for record in records),
     )
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
+    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return projection
 

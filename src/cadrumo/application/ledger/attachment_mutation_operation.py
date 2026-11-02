@@ -9,7 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
@@ -73,7 +73,6 @@ LEDGER_ATTACHMENT_VALIDATION_REFUSAL_CODE = "REFUSED_LEDGER_ATTACHMENT_VALIDATIO
 LedgerAttachmentOperationId = Literal["ledger.attach", "ledger.detach"]
 
 _MAX_ATTACHMENT_IDS = 256
-_MAX_RESULT_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 _MAX_VALIDATION_MESSAGES = 16
 _MAX_VALIDATION_MESSAGE_LENGTH = 2048
 _AttachmentId = Annotated[str, Field(min_length=1, max_length=64)]
@@ -480,7 +479,7 @@ def _validation_result(
 
 def _check_result_size(result: LedgerAttachmentExecutionResult) -> None:
     """Keep encrypted receipts within the bounded operation-result budget."""
-    refuse_oversized_result(result, _MAX_RESULT_BYTES - 128)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES - 128)
 
 
 def _attachment_refusal_receipt_matches(

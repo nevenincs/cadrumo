@@ -10,7 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.filing_year import FilingYear
@@ -46,7 +46,6 @@ from .taxation_comparison import (
 from .taxation_comparison_ports import TaxationComparisonPortsFactory
 
 MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID = "modelo.work.compare_taxation"
-_MAX_RESULT_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 _WorkUnitId = Annotated[str, Field(pattern=r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$")]
 _AmountText = Annotated[str, Field(min_length=1, max_length=128)]
 
@@ -157,7 +156,7 @@ class ModeloTaxationComparisonExecutor:
 
         async def capture() -> str:
             projection = await asyncio.to_thread(compare)
-            if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
+            if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             reference = await context.operands.put(projection, written_at=now())
             await context.events.effect(OperationEffect.NONE)

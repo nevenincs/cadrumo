@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
@@ -77,7 +77,6 @@ REVIEW_PACKAGE_RECIPIENT_ADD_OPERATION_DEFINITION_ID = "config.collab.recipient.
 REVIEW_PACKAGE_RECIPIENT_LIST_OPERATION_DEFINITION_ID = "config.collab.recipient.list"
 REVIEW_PACKAGE_RECIPIENT_REMOVE_OPERATION_DEFINITION_ID = "config.collab.recipient.remove"
 MAX_REVIEW_PACKAGE_RECIPIENT_ROWS = 4_096
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 
 class ReviewPackageRecipientAddRequest(BaseModel):
@@ -415,7 +414,7 @@ class ReviewPackageRecipientRemoveExecutor:
 
 
 def _check_projection_size(projection: BaseModel) -> None:
-    refuse_oversized_result(projection, _RESULT_DOCUMENT_MAX_BYTES)
+    refuse_oversized_result(projection, PROJECTION_RESULT_MAX_BYTES)
 
 
 def _require_success_receipt(

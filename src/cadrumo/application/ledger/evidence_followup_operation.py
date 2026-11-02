@@ -9,7 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
@@ -76,7 +76,6 @@ from .invoice_extraction_authority import default_invoice_extraction_period
 from .party_attribution import PartyAttributionAdvisory, party_attribution_advisory
 from .review_advisories import review_advisory_kinds
 
-_MAX_RESULT_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 
 def _require_worker_identity[PayloadT: BaseModel](
@@ -102,7 +101,7 @@ def _require_worker_identity[PayloadT: BaseModel](
 
 def _check_result_size(result: BaseModel) -> None:
     """Refuse an oversized complete result instead of silently omitting rows."""
-    refuse_oversized_result(result, _MAX_RESULT_BYTES)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES)
 
 
 async def _capture_result[ProjectionT: BaseModel](

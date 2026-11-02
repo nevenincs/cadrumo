@@ -10,7 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
@@ -45,7 +45,6 @@ from .invoice_confirmation_ports import InvoiceConfirmationPorts
 from .invoice_draft_extraction_ports import EvidenceConsentProof, InvoiceDraftExtractionPorts
 from .invoice_extraction_authority import default_invoice_extraction_period
 
-_MAX_RESULT_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 
 InvoiceEvidenceReference = Annotated[str, Field(min_length=1, max_length=64)]
@@ -96,7 +95,7 @@ def require_bound_invoice_evidence_ports(ports: InvoiceEvidenceOperationPorts, *
 
 def check_invoice_evidence_result_size(result: BaseModel) -> None:
     """Refuse a private result document that exceeds the registered projection bound."""
-    refuse_oversized_result(result, _MAX_RESULT_BYTES)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES)
 
 
 def invoice_evidence_operation_capabilities(*, mutates: bool, off_host_optional: bool = False) -> OperationCapabilities:
