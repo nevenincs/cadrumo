@@ -50,21 +50,34 @@ def likely_duplicate_invoice(
     spaces or punctuation. A fact the document does not state matches nothing.
     """
     same_kind = tuple(invoice for invoice in invoices if invoice.kind == kind)
-    number = _folded(invoice_number)
     tax_id = _folded(counterparty_tax_id)
-    if number:
-        for invoice in same_kind:
-            theirs = _folded(invoice.counterparty_tax_id)
-            if _folded(invoice.invoice_number) == number and (not tax_id or not theirs or tax_id == theirs):
-                return LikelyDuplicate(invoice_id=invoice.invoice_id, basis="number")
-    if tax_id and invoice_date is not None and grand_total is not None:
-        for invoice in same_kind:
-            if (
-                _folded(invoice.counterparty_tax_id) == tax_id
-                and invoice.issued_at == invoice_date
-                and invoice.grand_total == grand_total
-            ):
-                return LikelyDuplicate(invoice_id=invoice.invoice_id, basis="party_day_total")
+    return _same_number(same_kind, _folded(invoice_number), tax_id) or _same_party_day_total(
+        same_kind, tax_id, invoice_date, grand_total
+    )
+
+
+def _same_number(invoices: tuple[Invoice, ...], number: str, tax_id: str) -> LikelyDuplicate | None:
+    if not number:
+        return None
+    for invoice in invoices:
+        theirs = _folded(invoice.counterparty_tax_id)
+        if _folded(invoice.invoice_number) == number and (not tax_id or not theirs or tax_id == theirs):
+            return LikelyDuplicate(invoice_id=invoice.invoice_id, basis="number")
+    return None
+
+
+def _same_party_day_total(
+    invoices: tuple[Invoice, ...], tax_id: str, invoice_date: date | None, grand_total: Decimal | None
+) -> LikelyDuplicate | None:
+    if not tax_id or invoice_date is None or grand_total is None:
+        return None
+    for invoice in invoices:
+        if (
+            _folded(invoice.counterparty_tax_id) == tax_id
+            and invoice.issued_at == invoice_date
+            and invoice.grand_total == grand_total
+        ):
+            return LikelyDuplicate(invoice_id=invoice.invoice_id, basis="party_day_total")
     return None
 
 

@@ -7,7 +7,7 @@ production-authored CommandSpec as deferred public schema targets and emitted in
 
 The application layer remains authoritative for
 :class:`EligibleCategoryRow`, :class:`RatiosValidationReport`,
-:func:`set_usage_ratio`, and :func:`unset_usage_ratio`; the domain
+:func:`apply_usage_ratio_override`, and :func:`clear_usage_ratio_override`; the domain
 :class:`UsageRatioProfile` owns persisted per-category override validation. This
 module only pins the CLI transport shape for list, set, unset, eligible, and
 validate results.

@@ -52,6 +52,7 @@ from ...domain.calculations.registry.ledger_oss_bindings import (
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import CasillaDataType, DateAxis
+from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.currency.errors import ExchangeRateProviderError
 from ...domain.currency.models import EurRateLookupStatus
@@ -59,7 +60,7 @@ from ...domain.currency.service import published_eur_rate_on_day_or_next_publica
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import TransactionKind, require_transaction_kind
-from ...domain.iva.lookup import lookup_rate, tier_rates_within
+from ...domain.iva.lookup import lookup_published_rate, lookup_rate, tier_rates_within
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
 from ..exchange_rate_provider import exchange_rate_provider
@@ -150,7 +151,7 @@ def _expected_iva_amount(
     Returns:
         The expected IVA amount rounded to two decimal places.
     """
-    rate = lookup_rate(
+    rate = lookup_published_rate(
         candidate.destination_member_state,
         candidate.rate_kind,
         candidate.transaction_date,
@@ -619,17 +620,7 @@ def _record_row_slots(revision: ModeloRevision, record_id: str) -> tuple[tuple[B
     Anything short of one unbroken run of rows is refused: a hole would otherwise
     pass for a row that does not exist.
     """
-    fields = sorted(
-        (
-            (binding.provider.offset, binding.provider.length, binding.provider.data_type, binding.id)
-            for binding in revision.bindings
-            if isinstance(binding.provider, ManualInputProvider)
-            and binding.provider.record == record_id
-            and binding.provider.offset is not None
-            and binding.provider.length is not None
-        ),
-        key=lambda field: field[0],
-    )
+    fields = _record_fields(revision, record_id)
     if len({field[0] for field in fields}) != len(fields):
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
     rows: list[tuple[int, int, tuple[BindingId, ...]]] = []
@@ -641,6 +632,21 @@ def _record_row_slots(revision: ModeloRevision, record_id: str) -> tuple[tuple[B
             rows.append((run[0][0], run[-1][0] + run[-1][1], tuple(field[3] for field in run)))
         index += width or 1
     return _unbroken_rows(rows)
+
+
+def _record_fields(revision: ModeloRevision, record_id: str) -> list[tuple[int, int, CasillaDataType, BindingId]]:
+    """Return a record's positional manual-input bindings ordered by offset."""
+    return sorted(
+        (
+            (binding.provider.offset, binding.provider.length, binding.provider.data_type, binding.id)
+            for binding in revision.bindings
+            if isinstance(binding.provider, ManualInputProvider)
+            and binding.provider.record == record_id
+            and binding.provider.offset is not None
+            and binding.provider.length is not None
+        ),
+        key=lambda field: field[0],
+    )
 
 
 def _fields_match_shape(
@@ -689,8 +695,15 @@ def _can_close_detail_rows(
         context.work_unit_id is None
         or projection.source_bucket_id != context.bucket_id
         or projection.catalogue_fingerprint is None
-        or not projection.candidates
-        or not supplied_binding_ids
+    )
+
+
+def _slot_matches_export_field(provider: object, field: ExportFieldDefinition | None) -> bool:
+    return (
+        field is not None
+        and isinstance(provider, ManualInputProvider)
+        and provider.offset == field.offset
+        and provider.length == field.length
     )
 
 
@@ -702,14 +715,7 @@ def _require_wire_geometry(revision: ModeloRevision, record_id: str, slots: tupl
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
     fields = {field.binding: field for field in records[0].fields if field.binding is not None}
     for binding_id in (binding for row in slots for binding in row):
-        field = fields.get(binding_id)
-        provider = bindings[binding_id].provider
-        if (
-            field is None
-            or not isinstance(provider, ManualInputProvider)
-            or provider.offset != field.offset
-            or provider.length != field.length
-        ):
+        if not _slot_matches_export_field(bindings[binding_id].provider, fields.get(binding_id)):
             raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
 
 
@@ -720,6 +726,23 @@ def _require_slot_coverage(
         bool(supplied_binding_ids.intersection(row)) and not set(row).issubset(supplied_binding_ids) for row in slots
     ):
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+
+
+def _layout_hydrated_revision(context: CalculationSourceContext, *, operation: PinnedAuthorityOperation) -> ModeloRevision:
+    """Return the context's revision carrying its export layouts."""
+    if context.revision.export_layouts:
+        return context.revision
+    # Membership verification also uses the authority's lightweight revision
+    # projection. Hydrate its wire geometry through the same pinned snapshot,
+    # while requiring the binding declarations we already resolved to agree.
+    revision = operation.snapshot(
+        context.modelo,
+        filing_year=context.filing_year,
+        period=context.period.registry_token,
+    ).revision
+    if revision.id != context.revision.id or revision.bindings != context.revision.bindings:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    return revision
 
 
 def _closed_detail_record_rows(
@@ -739,18 +762,7 @@ def _closed_detail_record_rows(
         return ()
     if context.work_unit_id is None or projection.catalogue_fingerprint is None:
         return ()
-    revision = context.revision
-    if not revision.export_layouts:
-        # Membership verification also uses the authority's lightweight revision
-        # projection. Hydrate its wire geometry through the same pinned snapshot,
-        # while requiring the binding declarations we already resolved to agree.
-        revision = operation.snapshot(
-            context.modelo,
-            filing_year=context.filing_year,
-            period=context.period.registry_token,
-        ).revision
-        if revision.id != context.revision.id or revision.bindings != context.revision.bindings:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    revision = _layout_hydrated_revision(context, operation=operation)
     effective_date = _projection_period(context.period).end_date
     capacity = int(_projection_declarations(effective_date, operation=operation)["detail_row.capacity"])
     closed: list[ClosedRecordRowSet] = []
@@ -1142,6 +1154,7 @@ class OssIossLedgerSourceResolver:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
+                closed_record_row_sets=closed_rows,
                 diagnostics=self._no_live_source_diagnostics(context),
             )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable

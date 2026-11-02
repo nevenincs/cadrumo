@@ -11,6 +11,7 @@ movement and invoice do not agree, so the caller states the differences without 
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from typing import Annotated, Final, Literal
 from uuid import UUID
 
@@ -24,6 +25,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.invoices.models import Invoice
 from ...domain.invoices.payment_matching import (
     PICK_HORIZON_DAYS,
     LinkDifference,
@@ -34,6 +36,7 @@ from ...domain.invoices.payment_matching import (
     movement_choices,
     suggest_payments,
 )
+from ...domain.transactions.models import Transaction
 from ..ledger.read_access import resolve_ledger_request_read_access
 from ..ledger.transaction_repository import transaction_catalogue_repository
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -214,6 +217,80 @@ def _suggestion_out(found: PaymentSuggestion) -> LedgerInvoiceMatchSuggestion:
     )
 
 
+def _load_profile_records(
+    factory: InvoiceInspectionReadPortsFactory, profile: str, operation: PinnedAuthorityOperation
+) -> tuple[tuple[Invoice, ...], tuple[Transaction, ...]]:
+    """Return the exact profile's invoices and movements, refusing any record of another profile."""
+    ports = factory(bucket_id=profile, operation=operation)
+    if ports.bucket_id != profile or ports.invoices.bucket_id != profile:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    catalogue = ports.invoices.load_authenticated()
+    if any(bucket_id != profile for bucket_id in catalogue.attributed_bucket_ids()):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    stored = (catalogue.get(invoice_id) for invoice_id in sorted(catalogue.invoice_ids()))
+    invoices = tuple(invoice for invoice in stored if invoice is not None)
+    transactions = tuple(transaction_catalogue_repository(bucket_id=profile).load().values())
+    return invoices, transactions
+
+
+def _judgement_out(
+    link: LedgerInvoiceMatchStagedLink,
+    by_movement: Mapping[TransactionId, Transaction],
+    by_invoice: Mapping[InvoiceId, Invoice],
+) -> LedgerInvoiceMatchJudgement:
+    transaction = by_movement.get(link.transaction_id)
+    invoice = by_invoice.get(link.invoice_id)
+    if transaction is None or invoice is None:
+        return LedgerInvoiceMatchJudgement(transaction_id=link.transaction_id, invoice_id=link.invoice_id, found=False)
+    return LedgerInvoiceMatchJudgement(
+        transaction_id=link.transaction_id,
+        invoice_id=link.invoice_id,
+        found=True,
+        mismatches=tuple(_mismatch_out(found) for found in link_differences(transaction, invoice)),
+    )
+
+
+def _found[K, V](records: Mapping[K, V], key: K | None) -> V | None:
+    return None if key is None else records.get(key)
+
+
+def _suggestions_out(
+    found: tuple[PaymentSuggestion, ...], transaction_id: TransactionId | None
+) -> tuple[LedgerInvoiceMatchSuggestion, ...]:
+    return tuple(
+        _suggestion_out(suggestion)
+        for suggestion in found
+        if transaction_id in (None, suggestion.pair.transaction.transaction_id)
+    )
+
+
+def _invoice_choices_out(
+    movement: Transaction | None, invoices: tuple[Invoice, ...], staged: Mapping[str, str]
+) -> tuple[LedgerInvoiceMatchInvoiceChoice, ...] | None:
+    if movement is None:
+        return None
+    return tuple(
+        LedgerInvoiceMatchInvoiceChoice(
+            invoice_id=choice.invoice.invoice_id,
+            settles=choice.settles,
+            staged_for=choice.staged_for,
+            linked=choice.linked,
+        )
+        for choice in invoice_choices(movement, invoices, staged=staged)
+    )
+
+
+def _movement_choices_out(
+    invoice: Invoice | None, transactions: tuple[Transaction, ...], staged: Mapping[str, str]
+) -> tuple[LedgerInvoiceMatchMovementChoice, ...] | None:
+    if invoice is None:
+        return None
+    return tuple(
+        LedgerInvoiceMatchMovementChoice(transaction_id=choice.transaction.transaction_id, settles=choice.settles)
+        for choice in movement_choices(invoice, transactions, staged=frozenset(staged))
+    )
+
+
 class LedgerInvoiceMatchExecutor:
     """Weigh the exact profile's open movements against its unmatched invoices."""
 
@@ -224,68 +301,19 @@ class LedgerInvoiceMatchExecutor:
     def _answer(
         self, payload: LedgerInvoiceMatchRequest, operation: PinnedAuthorityOperation
     ) -> LedgerInvoiceMatchResult:
-        profile = str(payload.profile_id)
-        ports = self._factory(bucket_id=profile, operation=operation)
-        if ports.bucket_id != profile or ports.invoices.bucket_id != profile:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        catalogue = ports.invoices.load_authenticated()
-        if any(bucket_id != profile for bucket_id in catalogue.attributed_bucket_ids()):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        stored = (catalogue.get(invoice_id) for invoice_id in sorted(catalogue.invoice_ids()))
-        invoices = tuple(invoice for invoice in stored if invoice is not None)
-        transactions = tuple(transaction_catalogue_repository(bucket_id=profile).load().values())
+        invoices, transactions = _load_profile_records(self._factory, str(payload.profile_id), operation)
         staged = {link.transaction_id: link.invoice_id for link in payload.staged}
         weighed = tuple(invoice for invoice in invoices if payload.invoice_id in (None, invoice.invoice_id))
         found = suggest_payments(transactions, weighed, staged=staged)
-        chosen_invoice = next((invoice for invoice in invoices if invoice.invoice_id == payload.invoice_id), None)
-        chosen_movement = next(
-            (transaction for transaction in transactions if transaction.transaction_id == payload.transaction_id),
-            None,
-        )
         by_invoice = {invoice.invoice_id: invoice for invoice in invoices}
         by_movement = {transaction.transaction_id: transaction for transaction in transactions}
-        judgements = tuple(
-            LedgerInvoiceMatchJudgement(
-                transaction_id=link.transaction_id,
-                invoice_id=link.invoice_id,
-                found=link.transaction_id in by_movement and link.invoice_id in by_invoice,
-                mismatches=tuple(
-                    _mismatch_out(found)
-                    for found in link_differences(by_movement[link.transaction_id], by_invoice[link.invoice_id])
-                )
-                if link.transaction_id in by_movement and link.invoice_id in by_invoice
-                else (),
-            )
-            for link in payload.judge
-        )
         return LedgerInvoiceMatchResult(
             profile_id=payload.profile_id,
-            judgements=judgements,
+            judgements=tuple(_judgement_out(link, by_movement, by_invoice) for link in payload.judge),
             window_days=PICK_HORIZON_DAYS,
-            suggestions=tuple(
-                _suggestion_out(suggestion)
-                for suggestion in found
-                if payload.transaction_id in (None, suggestion.pair.transaction.transaction_id)
-            ),
-            invoice_choices=None
-            if chosen_movement is None
-            else tuple(
-                LedgerInvoiceMatchInvoiceChoice(
-                    invoice_id=choice.invoice.invoice_id,
-                    settles=choice.settles,
-                    staged_for=choice.staged_for,
-                    linked=choice.linked,
-                )
-                for choice in invoice_choices(chosen_movement, invoices, staged=staged)
-            ),
-            movement_choices=None
-            if chosen_invoice is None
-            else tuple(
-                LedgerInvoiceMatchMovementChoice(
-                    transaction_id=choice.transaction.transaction_id, settles=choice.settles
-                )
-                for choice in movement_choices(chosen_invoice, transactions, staged=frozenset(staged))
-            ),
+            suggestions=_suggestions_out(found, payload.transaction_id),
+            invoice_choices=_invoice_choices_out(_found(by_movement, payload.transaction_id), invoices, staged),
+            movement_choices=_movement_choices_out(_found(by_invoice, payload.invoice_id), transactions, staged),
         )
 
     async def execute(

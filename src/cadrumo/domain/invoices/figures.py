@@ -33,7 +33,7 @@ from typing import Final
 from ...core.decimal.constants import ONE, ZERO
 from ...core.money.rounding import CENT, round_to_cents
 from ..iva.errors import IvaRateNotFoundError
-from .enums import IvaRate, iva_rate_percentage, iva_rate_slots_on
+from .enums import IvaRate, iva_rate_percentage, iva_rate_slot_is_published, iva_rate_slots_on
 from .errors import InvoiceRetentionFigureError, InvoiceValidationError
 
 _COMPARISON_SCALE: Final = Decimal("0.0001")
@@ -486,6 +486,7 @@ class DatedRateSlot:
     fraction: Decimal | None
     in_force: bool
     coverage_gap: bool = False
+    projected_on: date | None = None
 
 
 def dated_rate_slots(on_date: date) -> tuple[DatedRateSlot, ...]:
@@ -502,7 +503,8 @@ def dated_rate_slots(on_date: date) -> tuple[DatedRateSlot, ...]:
         except IvaRateNotFoundError as refused:
             slots.append(DatedRateSlot(slot, None, in_force=False, coverage_gap=rate_refusal_is_coverage_gap(refused)))
         else:
-            slots.append(DatedRateSlot(slot, fraction, in_force=True))
+            published = iva_rate_slot_is_published(slot, on_date)
+            slots.append(DatedRateSlot(slot, fraction, in_force=True, projected_on=None if published else on_date))
     return tuple(slots)
 
 
@@ -622,6 +624,9 @@ def _iva_figure(
     if base is None:
         return _unchecked(stated), ()
     finding = _stated_iva_finding(base, stated, slot.fraction)
+    if finding is not None and slot.projected_on is not None:
+        # The rate is only the nearest edition, so a differing cuota is not shown wrong.
+        finding = rate_refusal_finding(slot.slot, slot.projected_on, coverage_gap=True)
     return _judged_with(computed_line_iva(base, slot.fraction), stated, finding)
 
 

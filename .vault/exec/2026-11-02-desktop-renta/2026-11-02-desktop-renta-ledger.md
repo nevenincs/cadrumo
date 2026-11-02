@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c26ad0dcb0cc18f94bd0db9a8a8c160d173dee736c7623a06a7ef1e3c03802f3'
+body_hash: 'sha256:44f9359f550e0315ccbf9873811e3d3def700a99fa018285dbcfe3d75ff8415e'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -198,6 +198,62 @@ related:
 - `S11` `verify:` `modelo-fixtures.mjs --check` -> `pass`
 - `S11` `verify:` `test_window_holds_no_tax_data.py` -> `pass`
 - `S11` `by:` `sonnet-high`
+- `S22` `M` `src/cadrumo/application/live/borrador_100.py`
+- `S22` `M` `src/cadrumo/application/live/borrador_100_keys.py`
+- `S22` `M` `src/cadrumo/application/live/borrador_100_comparison.py`
+- `S22` `M` `src/cadrumo/application/live/borrador_100_import.py`
+- `S22` `A` `src/cadrumo/adapters/inbound/borrador/tests/test_borrador_profile_years.py`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S22` `M` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S22` `verify:` `pytest live borrador comparison and window guard` -> `pass`
+- `S22` `verify:` `test_registered_executor_conformance.py -k borrador` -> `fail`
+- `S22` `by:` `opus-medium`
+- `S02` `M` `src/cadrumo/application/modelo/profile_row_binding.py`
+- `S02` `M` `src/cadrumo/application/user_profile/family_rows.py`
+- `S02` `M` `native/desktop/src-tauri/src/shell/user_profile/household.rs`
+- `S02` `M` `native/desktop/frontend/src/shell/profileHousehold.ts`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_work_form_household_rows.py`
+- `S02` `verify:` `pytest household form family rows profile view` -> `pass`
+- `S02` `by:` `sonnet-high`
+- `S13` `A` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.stories.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.stories.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/details/TodoRail.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/form/FieldRow.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/form/FormView.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/modelo/form/SectionView.tsx`
+- `S13` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S13` `M` `dev/locales/desktop_workspace_keys.py`
+- `S13` `verify:` `npm run storybook:build` -> `pass`
+- `S13` `verify:` `test_window_holds_no_tax_data.py` -> `pass`
+- `S13` `by:` `opus-medium`
+- `S24` `A` `src/cadrumo/application/user_profile/ascendant_rows.py`
+- `S24` `A` `src/cadrumo/application/user_profile/household_row_limit.py`
+- `S24` `M` `src/cadrumo/application/user_profile/profile_operation_contracts.py`
+- `S24` `M` `src/cadrumo/application/user_profile/profile_operation_execution.py`
+- `S24` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S24` `M` `src/cadrumo_client/transport/profile_mutations.py`
+- `S24` `A` `src/cadrumo_runtime/host/tests/test_ascendants_operation.py`
+- `S24` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S24` `M` `native/desktop/frontend/src/shell/profileHousehold.ts`
+- `S24` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S24` `verify:` `pytest test_ascendants_operation test_descendants_operation` -> `pass`
+- `S24` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test` -> `fail`
+- `S24` `by:` `sonnet-high`
+- `S05` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_work_form_issue_lines.py`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `verify:` `pytest declarations list and issue lines` -> `pass`
+- `S07` `A` `src/cadrumo/_data/registry/aeat/facts/0175-payment-instalment-split.toml`
+- `S07` `A` `src/cadrumo/domain/calculations/registry/payment_instalment_split.py`
+- `S07` `M` `src/cadrumo/core/payment_instalment_election.py`
+- `S07` `M` `src/cadrumo/application/modelo/export_settlement.py`
+- `S07` `M` `src/cadrumo/application/modelo/settlement_casilla.py`
+- `S07` `A` `src/cadrumo/application/modelo/tests/test_export_settlement_through_export.py`
+- `S07` `verify:` `pytest export settlement through export offer` -> `pass`
+- `S07` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
 
 ## Notes
 
@@ -217,3 +273,9 @@ related:
 - `S21` Committed by sweeps df0021ab64 and e88563425e; new generic `unresolved_outcome` operator; contract lock released early during overlapping regeneration
 - `S18` Commit 834cae6331; 39 prototype-only keys retired in four locales
 - `S11` Landed in b9c6a40a04 plus a8cf3f7af1 and 8b9d4898ce; Modelo 100 envelopes are about 7 MB each
+- `S22` Spread across sweep commits e88563425e, e3f270aeb0, 94ec8679c2, e232347dcd, 3c38b9c427, bd14c643a5, f12928bdb4; contract regeneration and conformance blocked by another session's `calculation_notes` edit; Step left open until contracts regenerate
+- `S02` Review fixes landed in e88563425e, 31826504d9, f12928bdb4, 28c3dc3494 and 54b2775c37; incomplete state with N stated M recorded finding; desktop-host-unit-test blocked by an S07 Decimal schema mismatch
+- `S13` Commit f8c27480bf; Playwright 194 passed with known 347 and two unrelated failures; backend gaps: 100 row `opens_local_work` false, 0596 check line offers manual entry
+- `S24` Commits 31574b0167, d8a5cd6edc, d295ec2d91 plus sweeps; host test failure is the known flaky manager `cancelled_ipc_caller` timeout, 833 others pass
+- `S05` Correction from P04.S13 findings, commit 92a3c0a516: blocked rows open their local work; non-typeable boxes never offer manual entry; fixtures need regenerating after another worker's `box_number` drift
+- `S07` Review fixes in e232347dcd, f12928bdb4, 987d72d1f9 and 3dbcaea611; settlement composes from 0700; split is a dated registry fact; instalment figures advisory; follow-ups in S25
