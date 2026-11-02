@@ -27,12 +27,7 @@ import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
 
 /** The views of one declaration, as its tabs name them. */
 export type WorkspaceView =
-  | "form"
-  | "check"
-  | "credits"
-  | "file"
-  | "sources"
-  | "history";
+  "form" | "check" | "credits" | "file" | "sources" | "history";
 
 /** What the other component lanes put into the workspace. */
 export type WorkspaceSlots = {

@@ -89,6 +89,11 @@ function CreditRow({
         <span className="text-base">
           <BoxLabel text={field.label} />
         </span>
+        {field.value_text && field.origin_words && (
+          <span className="text-sm text-muted-foreground">
+            {field.origin_words}
+          </span>
+        )}
         {field.editability_words && (
           <span className="text-sm text-muted-foreground">
             {field.editability_words}

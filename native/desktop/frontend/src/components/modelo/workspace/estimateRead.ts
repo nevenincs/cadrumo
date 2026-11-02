@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { formatAmount } from "../../../shared/numbers";
+import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import type { LedgerOutcome } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
@@ -91,9 +91,14 @@ export function estimateFigure(
   field: PublicModeloFormField | null,
   value: string,
 ): string {
-  return field?.data_type === "money"
-    ? formatAmount(locale, value, { currency: CURRENCY })
-    : value;
+  switch (field?.data_type) {
+    case "money":
+      return formatAmount(locale, value, { currency: CURRENCY });
+    case "decimal":
+      return formatDecimal(locale, value, { minFraction: 2 });
+    default:
+      return value;
+  }
 }
 
 /** What the estimate gave one box, to be drawn beside the form's own words
