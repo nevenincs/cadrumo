@@ -84,7 +84,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint, draft_contributor_identities
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
-from ..user_profile.projections import profile_fact_index
+from ..user_profile.projections import profile_fact_index, record_to_path_values
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
 )
@@ -114,6 +114,7 @@ from .calculation_resolution import resolve_calculation_inputs as _resolve_calcu
 from .calculation_screen import calculation_screen_stamp
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
+from .m303_regimen_simplificado_scope import m303_general_regime_claimed
 from .profile_export_binding import resolve_profile_text_casilla_inputs
 from .revision_persistence import persist_calculation_revision
 from .work_missing_input import ModeloWorkMissingInputError
@@ -644,6 +645,9 @@ def _evaluate_prepared_calculation(
         snapshot=snapshot,
         casilla_values=casilla_values,
         resolved_binding_values=prepared.channels.bindings,
+        general_regime_claimed=m303_general_regime_claimed(
+            record_to_path_values(prepared.profile.record).get("iva.m303_regime_composition")
+        ),
     )
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
     casilla_values, typed_observations = _drop_row_field_template_outputs(

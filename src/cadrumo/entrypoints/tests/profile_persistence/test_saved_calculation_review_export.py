@@ -11,7 +11,7 @@ from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
-from typing import cast
+from typing import Any, cast
 from uuid import UUID
 
 import pytest
@@ -49,6 +49,8 @@ from ....core.external_constants import OutputLanguage
 from ....core.hashing import content_hash_hex
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.errors import RegistrySnapshotError
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ...calculation_review_snapshot_composition import load_calculation_review_snapshot
 from ...calculation_review_xlsx_operation_composition import build_calculation_review_xlsx_ports
@@ -128,7 +130,9 @@ def _context(request: OperationRequest[BaseModel], operation: PinnedAuthorityOpe
     return context, events, operands
 
 
-def test_new_calculation_retains_original_rendering_and_exports_its_saved_form(repos: Repos, tmp_path: Path) -> None:
+def test_new_calculation_retains_original_rendering_and_exports_its_saved_form(
+    repos: Repos, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     revision = _calculate(repos)
     rendering = revision.rendering_snapshot
     assert rendering is not None
@@ -138,6 +142,18 @@ def test_new_calculation_retains_original_rendering_and_exports_its_saved_form(r
         stored = repos[1].load(operation=operation).get(revision.calculation_revision_id)
         assert stored is not None and stored.rendering_snapshot is not None
         assert stored.rendering_snapshot.model_dump(mode="json") == rendering.model_dump(mode="json")
+
+        # The staleness read asks for the snapshot the law in force selects. A
+        # current template with no layout shows the saved form never renders from it.
+        current_snapshot = PinnedAuthorityOperation.snapshot
+
+        def current_template_without_layout(
+            self: PinnedAuthorityOperation, *args: Any, **kwargs: Any
+        ) -> RegistrySnapshot:
+            selected = current_snapshot(self, *args, **kwargs)
+            return selected.model_copy(update={"revision": selected.revision.model_copy(update={"form_layouts": ()})})
+
+        monkeypatch.setattr(PinnedAuthorityOperation, "snapshot", current_template_without_layout)
         profile_id = UUID(repos[0].bucket_id)
         baseline = load_calculation_review_snapshot(
             revision.calculation_revision_id, profile_id=profile_id, operation=operation
@@ -188,6 +204,25 @@ def test_new_calculation_retains_original_rendering_and_exports_its_saved_form(r
         with pytest.raises(ModeloExportOutputPathError):
             asyncio.run(executor.execute(request, context))
         assert Path(payload.output_path).read_bytes() == prior_bytes
+
+
+def test_saved_form_review_reads_staleness_under_the_law_in_force_not_its_retained_snapshot(
+    repos: Repos, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    revision = _calculate(repos)
+    assert revision.rendering_snapshot is not None
+
+    def no_snapshot_selected(*args: object, **kwargs: object) -> None:
+        raise RegistrySnapshotError("no revision selected")
+
+    with bundled_indexed_authority().operation() as operation:
+        monkeypatch.setattr(PinnedAuthorityOperation, "snapshot", no_snapshot_selected)
+        baseline = load_calculation_review_snapshot(
+            revision.calculation_revision_id, profile_id=UUID(repos[0].bucket_id), operation=operation
+        )
+
+    assert baseline.saved_form is not None
+    assert [item for item in baseline.findings if item.code.endswith("calculation_screen_outdated")]
 
 
 def test_new_current_calculation_does_not_replace_historical_export_values(repos: Repos) -> None:
