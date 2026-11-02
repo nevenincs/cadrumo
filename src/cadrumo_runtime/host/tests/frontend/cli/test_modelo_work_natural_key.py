@@ -396,6 +396,58 @@ def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_
     assert Decimal(casillas["19"]) == Decimal("380.00")
 
 
+def test_modelo_130_without_a_declared_criterion_cannot_be_verified_exported_or_filed(tmp_path: Path) -> None:
+    """Accrual is the legal rule but a cash election in an earlier return binds three years, so absence picks neither.
+
+    RIRPF art. 7.2.1 makes the election a statement in the return, which a fresh
+    profile cannot see. The draft may be calculated, but the boxes it could not
+    work out name the missing fact and keep it from every filing step.
+    """
+    _create_first_year_activity_profile()
+    seed_m130_income_transaction(
+        amount=Decimal("4000.00"),
+        filing_year=2025,
+        source_key="undeclared-criterion",
+        criterion_declared=False,
+    )
+    period = ["--modelo", "130", "--year", "2025", "--period", "1T"]
+    assert _invoke(["--format", "json", "app", "modelo", "work", "create", *period]).exit_code == 0
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", *period,
+            "--binding", "irpf.previous_year_economic_activity_net_income=0",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+
+    assert calculated.exit_code == 0, calculated.output
+    blockers = [
+        notice["context"]
+        for notice in _notices(calculated.output)
+        if notice["context"] is not None and notice["context"].get("level") == "blocks"
+    ]
+    income_blocker = next(context for context in blockers if context.get("box") == "01")
+    assert income_blocker["reason"] == "unresolved_binding"
+    assert "irpf.activity_income_imputation_criterion" in income_blocker["detail"]
+
+    verified = _invoke(["--format", "json", "app", "modelo", "work", "verify", *period])
+    assert verified.exit_code != 0, verified.output
+    assert "REFUSED_MODELO_CALCULATION_BLOCKED" in verified.output
+    assert "unresolved_binding" in verified.output
+
+    out = tmp_path / "modelo-130.txt"
+    exported = _invoke(["--format", "json", "app", "modelo", "export", *period, "--output", str(out)])
+    assert exported.exit_code != 0, exported.output
+    assert not out.exists()
+
+    filed = _invoke(
+        ["--format", "json", "app", "modelo", "work", "file", *period, "--select", "current", "--by", "Daniel"],
+    )
+    assert filed.exit_code != 0, filed.output
+
+
 def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
     """A verified M130 first-year activity revision can seed later local carry."""
 
