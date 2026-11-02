@@ -35,7 +35,7 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.retencion_facts import maximum_supported_activity_retencion_rate
-from .._renta_income_evidence import income_withheld_amount as income_withheld_amount
+from ..renta_income_evidence import income_withheld_amount as income_withheld_amount
 from ..renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from .renta_income_aggregation_support import (
     M130_INGRESOS_CASILLA,

@@ -305,9 +305,9 @@ test("a Modelo 130 recorded as filed shows its proven-zero quarter as zero", asy
   await expect(boxRow(target, zero.box!)).toContainText(zero.value_text);
   // The header states the result the read model stated.
   const result = filed.header.result;
-  if (!result?.text) throw new Error("the filed 130 states no result");
+  if (!result?.short_text) throw new Error("the filed 130 states no result");
   await expect(
-    target.getByText(result.text, { exact: true }).first(),
+    target.getByText(result.short_text, { exact: true }).first(),
   ).toBeVisible();
 });
 

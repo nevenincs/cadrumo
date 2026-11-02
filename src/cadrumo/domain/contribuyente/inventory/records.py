@@ -706,14 +706,6 @@ class InventoryLedgerHistoryEntry(BaseModel):
         return self
 
 
-InventoryYear = FourDigitYear
-"""The calendar year an inventory ledger or movement covers.
-
-Deliberately NOT the filing-year window. An inventory record may reach back
-further than the registry has authored revisions for, so it carries its own
-floor and no ceiling.
-"""
-
 
 class InventoryLedger(BaseModel):
     """Per-activity inventory ledger for one tax year.
@@ -739,7 +731,7 @@ class InventoryLedger(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    year: InventoryYear
+    year: FourDigitYear
     valuation_method: ValuationMethod
     opening_stock: Decimal = Field(ge=Decimal("0"))
     opening_layers: tuple[StockLayer, ...] = ()

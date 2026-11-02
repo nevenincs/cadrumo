@@ -15,7 +15,6 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
     Availability,
     DisclosureCategory,
     DisclosurePermission,
@@ -42,6 +41,7 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     OBSERVATION_DISCLOSING_ACTIONS,
+    OPERATION_LIFECYCLE_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
     operation_disclosures,
@@ -594,17 +594,7 @@ def _query_access_policy(
     return OperationAccessPolicy(
         definition_id=definition_id,
         definition_contract_digest=context.contract.definition_contract_digest,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
+        actions=OPERATION_LIFECYCLE_ACTIONS,
         disclosures=disclosures,
         periods=periods,
         allow_period_independent=period_independent,

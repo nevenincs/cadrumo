@@ -25,7 +25,7 @@ def test_filing_period_token_builds_its_period() -> None:
     ("filing_year", "token"),
     (
         pytest.param(2026, "garbage", id="unknown-token"),
-        pytest.param(1970, "4T", id="year-outside-period-range"),
+        pytest.param(999, "4T", id="year-not-written-with-four-digits"),
     ),
 )
 def test_malformed_token_or_year_is_not_silenced(filing_year: int, token: str) -> None:

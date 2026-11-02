@@ -28,7 +28,6 @@ from pydantic import BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
     Availability,
     DisclosureCategory,
     OperationAccessPolicy,
@@ -48,6 +47,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
     OBSERVATION_DISCLOSING_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
@@ -849,18 +849,7 @@ def compose_modelo_workbench_access(ports_factory: ActiveWorkLifecyclePortsFacto
             policy=OperationAccessPolicy(
                 definition_id=request.definition_id,
                 definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.COMMIT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                        AccessAction.OBSERVE,
-                        AccessAction.RESULT,
-                    }
-                ),
+                actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
                 disclosures=disclosures,
                 periods=periods,
                 allow_period_independent=False,

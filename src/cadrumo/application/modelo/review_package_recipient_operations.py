@@ -11,7 +11,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import Availability, DisclosureCategory
 from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
@@ -33,7 +33,9 @@ from ...core.time.utc import validate_utc_aware
 from ..bucket_event_repository import BucketEventHistoryRepositoryFactory
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
     OBSERVATION_DISCLOSING_ACTIONS,
+    OPERATION_LIFECYCLE_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access,
@@ -601,17 +603,7 @@ def _resolve_access(
         payload_type=request_type,
         access_profile_id=context.profile_id,
     ).profile_id
-    actions = {
-        AccessAction.SUBMIT,
-        AccessAction.START,
-        AccessAction.RESUME,
-        AccessAction.OBSERVE,
-        AccessAction.RESULT,
-        AccessAction.CANCEL,
-        AccessAction.DETACH,
-    }
-    if mutation:
-        actions.add(AccessAction.COMMIT)
+    actions = COMMITTING_OPERATION_LIFECYCLE_ACTIONS if mutation else OPERATION_LIFECYCLE_ACTIONS
     disclosures = operation_disclosures(
         context,
         observed_by=OBSERVATION_DISCLOSING_ACTIONS,
@@ -622,7 +614,7 @@ def _resolve_access(
         context,
         profile_id=profile_id,
         definition_id=definition_id,
-        actions=frozenset(actions),
+        actions=actions,
         disclosures=disclosures,
         periods=frozenset(),
         period_independent=True,

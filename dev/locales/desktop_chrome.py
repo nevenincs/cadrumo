@@ -878,8 +878,16 @@ def shell_key_references(source: Path) -> tuple[frozenset[str], frozenset[str]]:
 def shell_named_keys(
     literals: frozenset[str], templates: frozenset[str], families: Mapping[str, tuple[str, ...]]
 ) -> frozenset[str]:
-    """Return every key named, expanding the templates that have a declared family."""
-    return literals | {f"{prefix}{member}" for prefix in templates & families.keys() for member in families[prefix]}
+    """Return every key named, expanding the templates that have a declared family.
+
+    A prefix whose served members join it without a separator, such as
+    ``desktop.example.s`` before ``1``, is a literal in the source; naming a declared family
+    prefix is naming the family, not a catalogue leaf.
+    """
+    named_prefixes = (templates | literals) & families.keys()
+    return (literals - families.keys()) | {
+        f"{prefix}{member}" for prefix in named_prefixes for member in families[prefix]
+    }
 
 
 def shell_drift(

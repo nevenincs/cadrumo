@@ -1061,9 +1061,9 @@ def test_an_absent_optional_year_zero_fill_reads_back_as_absence() -> None:
     assert render_fixed_width_export_field(optional, None) == "0000"
     assert parse_fixed_width_export_field(optional, "0000") is None
     assert parse_fixed_width_export_field(optional, "2025") == 2025
-    with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
+    with pytest.raises(RegistryValidationError, match="four-digit year"):
         parse_fixed_width_export_field(required, "0000")
-    with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
+    with pytest.raises(RegistryValidationError, match="four-digit year"):
         parse_fixed_width_export_field(optional, "0999")
 
 
@@ -1128,5 +1128,5 @@ def test_a_year_carried_as_an_integral_decimal_renders_and_a_fractional_one_refu
         with pytest.raises(RegistryValidationError, match="four-digit-year export value"):
             render_fixed_width_export_field(field, Decimal(invalid))
     for outside in ("999", "10000"):
-        with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
+        with pytest.raises(RegistryValidationError, match="four-digit year"):
             render_fixed_width_export_field(field, Decimal(outside))

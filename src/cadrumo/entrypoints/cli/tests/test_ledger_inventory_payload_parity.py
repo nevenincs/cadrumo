@@ -277,9 +277,9 @@ class TestLedgerBounds:
         with pytest.raises(ValidationError):
             _ledger_row(valuation_method="bogus")
 
-    def test_year_below_the_canonical_floor_is_refused(self) -> None:
+    def test_year_not_written_with_four_digits_is_refused(self) -> None:
         with pytest.raises(ValidationError):
-            _ledger_row(year=1800)
+            _ledger_row(year=999)
 
     def test_negative_opening_stock_is_refused(self) -> None:
         with pytest.raises(ValidationError):

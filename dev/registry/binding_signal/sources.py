@@ -283,7 +283,7 @@ def _support_scope(
         for revision_id, revision in modelo.revisions.items()
         if _revision_is_entirely_below_floor(modelo, revision, support)
     )
-    return SupportScope(support.floor, support.horizon, support.hard_ceiling, below_floor)
+    return SupportScope(support.floor, support.horizon, below_floor)
 
 
 def _compiled_revisions(
