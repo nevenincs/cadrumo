@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -98,6 +98,9 @@ export const Results = memo(function Results({
   const results = useAeatSyncResults(port, profile, language);
   const { refresh } = results;
   const [trying, setTrying] = useState<string | null>(null);
+  const retrying = useRef(false);
+  // The host owns run uncertainty; retain its acknowledgement requirement by scope.
+  const uncertain = useRef(new Set<string>());
   // The area or part whose outcome is unknown, awaiting the person's word to
   // read it again.
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -110,22 +113,48 @@ export const Results = memo(function Results({
       part: number | null,
       acknowledgedUnknown: boolean,
     ) => {
+      if (retrying.current) return;
       const key = `${area}:${part ?? "all"}`;
+      const hasUnknown = () =>
+        [...uncertain.current].some((held) => held.startsWith(`${area}:`));
+      const needsAcknowledgement =
+        uncertain.current.has(key) ||
+        uncertain.current.has(`${area}:all`) ||
+        (part === null && hasUnknown());
+      if (needsAcknowledgement && !acknowledgedUnknown) {
+        setConfirming(key);
+        return;
+      }
+      retrying.current = true;
       setConfirming(null);
       setTrying(key);
       setTrouble((now) => {
         const next = { ...now };
-        delete next[area];
+        if (!hasUnknown()) delete next[area];
         return next;
       });
       try {
         await port.retry(profile, area, part, acknowledgedUnknown);
+        if (acknowledgedUnknown) {
+          if (part === null) {
+            for (const held of uncertain.current)
+              if (held.startsWith(`${area}:`)) uncertain.current.delete(held);
+          } else uncertain.current.delete(key);
+        }
+        setTrouble((now) => {
+          const next = { ...now };
+          if (hasUnknown()) next[area] = "unknown";
+          else delete next[area];
+          return next;
+        });
       } catch (error) {
+        if (aeatSyncFailure(error) === "unknown") uncertain.current.add(key);
         setTrouble((now) => ({
           ...now,
-          [area]: aeatSyncFailure(error) === "unknown" ? "unknown" : "failed",
+          [area]: hasUnknown() ? "unknown" : "failed",
         }));
       } finally {
+        retrying.current = false;
         setTrying(null);
         refresh();
       }
@@ -235,6 +264,7 @@ export const Results = memo(function Results({
                     size="xs"
                     variant="outline"
                     pending={busy}
+                    disabled={trying !== null}
                     aria-label={t("desktop.aeat_sync.results.retry_named", {
                       name,
                     })}
@@ -282,31 +312,43 @@ export const Results = memo(function Results({
                             )}
                           </span>
                         </span>
-                        <Button
-                          size="xs"
-                          variant="outline"
-                          pending={trying === `${result.area}:${part.part}`}
-                          aria-label={t(
-                            "desktop.aeat_sync.results.retry_named",
-                            {
-                              name: label ?? name,
-                            },
-                          )}
-                          onClick={() =>
-                            void retry(result.area, part.part, false)
-                          }
-                        >
-                          {t("desktop.aeat_sync.results.retry")}
-                        </Button>
+                        {confirming === `${result.area}:${part.part}` ? (
+                          <UnknownWarning
+                            busy={trying !== null}
+                            onProceed={() =>
+                              void retry(result.area, part.part, true)
+                            }
+                            onCancel={() => setConfirming(null)}
+                          />
+                        ) : (
+                          <Button
+                            size="xs"
+                            variant="outline"
+                            pending={trying === `${result.area}:${part.part}`}
+                            disabled={trying !== null}
+                            aria-label={t(
+                              "desktop.aeat_sync.results.retry_named",
+                              {
+                                name: label ?? name,
+                              },
+                            )}
+                            onClick={() =>
+                              void retry(result.area, part.part, false)
+                            }
+                          >
+                            {t("desktop.aeat_sync.results.retry")}
+                          </Button>
+                        )}
                       </li>
                     );
                   })}
                 </ul>
               )}
-              {result.outcome === "unknown" &&
+              {(result.outcome === "unknown" ||
+                confirming === `${result.area}:all`) &&
                 (confirming === `${result.area}:all` ? (
                   <UnknownWarning
-                    busy={busy}
+                    busy={trying !== null}
                     onProceed={() => void retry(result.area, null, true)}
                     onCancel={() => setConfirming(null)}
                   />
@@ -316,6 +358,7 @@ export const Results = memo(function Results({
                       size="xs"
                       variant="outline"
                       pending={busy}
+                      disabled={trying !== null}
                       onClick={() => setConfirming(`${result.area}:all`)}
                     >
                       {t("desktop.aeat_sync.results.retry")}

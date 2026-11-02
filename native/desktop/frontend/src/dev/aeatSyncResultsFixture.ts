@@ -23,6 +23,8 @@ export type AeatSyncResultsMode =
   | "failed_empty"
   | "unknown_empty"
   | "refresh_failed"
+  | "retry_unknown"
+  | "retry_pending"
   /** The results cannot be read. */
   | "unavailable";
 
@@ -212,6 +214,8 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
       };
     case "failed":
     case "refresh_failed":
+    case "retry_unknown":
+    case "retry_pending":
       return {
         areas: [
           summary("census", {
@@ -274,10 +278,14 @@ export function aeatSyncResultsFixture(
   unowned = 0,
 ): AeatSyncResultsPort {
   let reads = 0;
+  let retries = 0;
   return {
     results() {
       reads += 1;
-      if (mode === "refresh_failed" && reads === 2)
+      if (
+        (mode === "refresh_failed" || mode === "retry_unknown") &&
+        reads === 2
+      )
         return Promise.reject({ code: "unavailable" });
       try {
         return Promise.resolve(served(mode));
@@ -286,9 +294,13 @@ export function aeatSyncResultsFixture(
       }
     },
     retry(_profile, area, part, acknowledgedUnknown) {
+      retries += 1;
       say(
         `aeatSyncResults.retry ${area} ${part ?? "all"} acknowledged=${acknowledgedUnknown}`,
       );
+      if (mode === "retry_pending") return new Promise<void>(() => undefined);
+      if (mode === "retry_unknown" && retries === 1)
+        return Promise.reject({ code: "unknown" });
       return Promise.resolve();
     },
     pickBorrador() {

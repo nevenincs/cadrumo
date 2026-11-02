@@ -644,6 +644,134 @@ for (const language of ["en", "es", "ca", "hu"])
     expect(await calls(target, "aeatSyncResults.retry")).toEqual(retried);
   });
 
+for (const attempt of [
+  { area: "notifications", part: "0", year: null },
+  { area: "filed", part: "all", year: null },
+  { area: "filed", part: "1", year: 2025 },
+])
+  test(`an unknown ${attempt.area}/${attempt.part} retry requires acknowledgement even when saved results cannot reload`, async ({
+    page: target,
+  }) => {
+    const page = await open(target, "aeat-sync-retry-unknown");
+    await update(page).click();
+    const result = area(results(page), attempt.area);
+    const name =
+      attempt.year === null
+        ? label(`desktop.aeat_sync.area.${attempt.area}.name`)
+        : label("desktop.aeat_sync.results.part.year", { year: attempt.year });
+    const retry = () =>
+      button(result, "desktop.aeat_sync.results.retry_named", { name });
+    await retry().click();
+    await expect(results(page)).toContainText(
+      label("desktop.aeat_sync.results.refresh_failed"),
+    );
+    await expect(result).toContainText(
+      label("desktop.aeat_sync.results.retry_unknown"),
+    );
+    await retry().click();
+    await expect(result).toContainText(
+      label("desktop.aeat_sync.progress.warn_unknown"),
+    );
+    expect(await calls(target, "aeatSyncResults.retry")).toEqual([
+      `aeatSyncResults.retry ${attempt.area} ${attempt.part} acknowledged=false`,
+    ]);
+    await button(result, "desktop.aeat_sync.progress.warn_cancel").click();
+    await retry().click();
+    await button(result, "desktop.aeat_sync.progress.warn_confirm").click();
+    await expect
+      .poll(() => calls(target, "aeatSyncResults.retry"))
+      .toEqual([
+        `aeatSyncResults.retry ${attempt.area} ${attempt.part} acknowledged=false`,
+        `aeatSyncResults.retry ${attempt.area} ${attempt.part} acknowledged=true`,
+      ]);
+  });
+
+test("retrying another year does not clear the original year's acknowledgement requirement", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-retry-unknown");
+  await update(page).click();
+  const filed = area(results(page), "filed");
+  const year = (value: number) =>
+    button(filed, "desktop.aeat_sync.results.retry_named", {
+      name: label("desktop.aeat_sync.results.part.year", { year: value }),
+    });
+  await year(2025).click();
+  await expect(results(page)).toContainText(
+    label("desktop.aeat_sync.results.refresh_failed"),
+  );
+  await year(2024).click();
+  await expect
+    .poll(() => calls(target, "aeatSyncResults.retry"))
+    .toHaveLength(2);
+  await expect(results(page)).not.toContainText(
+    label("desktop.aeat_sync.results.refresh_failed"),
+  );
+  await year(2025).click();
+  await expect(filed).toContainText(
+    label("desktop.aeat_sync.progress.warn_unknown"),
+  );
+  expect(await calls(target, "aeatSyncResults.retry")).toEqual([
+    "aeatSyncResults.retry filed 1 acknowledged=false",
+    "aeatSyncResults.retry filed 2 acknowledged=false",
+  ]);
+});
+
+test("acknowledging one year does not clear an uncertain whole-area retry", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-retry-unknown");
+  await update(page).click();
+  const filed = area(results(page), "filed");
+  await button(filed, "desktop.aeat_sync.results.retry_named", {
+    name: label("desktop.aeat_sync.area.filed.name"),
+  }).click();
+  await expect(results(page)).toContainText(
+    label("desktop.aeat_sync.results.refresh_failed"),
+  );
+  await button(filed, "desktop.aeat_sync.results.retry_named", {
+    name: label("desktop.aeat_sync.results.part.year", { year: 2025 }),
+  }).click();
+  await button(filed, "desktop.aeat_sync.progress.warn_confirm").click();
+  await expect(results(page)).not.toContainText(
+    label("desktop.aeat_sync.results.refresh_failed"),
+  );
+  await button(filed, "desktop.aeat_sync.results.retry_named", {
+    name: label("desktop.aeat_sync.results.part.year", { year: 2024 }),
+  }).click();
+  await expect(filed).toContainText(
+    label("desktop.aeat_sync.progress.warn_unknown"),
+  );
+  expect(await calls(target, "aeatSyncResults.retry")).toEqual([
+    "aeatSyncResults.retry filed all acknowledged=false",
+    "aeatSyncResults.retry filed 1 acknowledged=true",
+  ]);
+});
+
+test("a pending result retry disables other retries without issuing another request", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-retry-pending");
+  await update(page).click();
+  const saved = results(page);
+  await button(area(saved, "filed"), "desktop.aeat_sync.results.retry_named", {
+    name: label("desktop.aeat_sync.results.part.year", { year: 2025 }),
+  }).click();
+  const retryButtons = saved.getByRole("button", {
+    name: new RegExp(label("desktop.aeat_sync.results.retry")),
+  });
+  for (const retry of await retryButtons.all())
+    await expect(retry).toBeDisabled();
+  await button(
+    area(saved, "notifications"),
+    "desktop.aeat_sync.results.retry_named",
+    { name: label("desktop.aeat_sync.area.notifications.name") },
+  ).dispatchEvent("click");
+  expect(await calls(target, "aeatSyncResults.retry")).toEqual([
+    "aeatSyncResults.retry filed 1 acknowledged=false",
+  ]);
+});
+
 test("the Borrador import is for the year the person chooses", async ({
   page: target,
 }) => {

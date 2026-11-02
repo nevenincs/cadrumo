@@ -446,6 +446,31 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "aeat-sync-retry-unknown",
+    title: "AEAT data: retry outcome is unknown",
+    summary:
+      "The host requires retry acknowledgement and the saved-result read fails.",
+    aeatUpdate: { run: "partial_failure", results: "retry_unknown" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-retry-pending",
+    title: "AEAT data: a retry request is pending",
+    summary: "The host has not yet answered the retry request.",
+    aeatUpdate: { run: "partial_failure", results: "retry_pending" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
     id: "aeat-sync-empty",
     title: "AEAT data: confirmed empty results",
     summary: "Completed reads found no declarations or notifications.",

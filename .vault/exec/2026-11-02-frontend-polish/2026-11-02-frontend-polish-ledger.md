@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:49fab3076b9cd51817c15cbac800f1bd822a7e08ff5fb2b63d278c89f3091122'
+body_hash: 'sha256:5703470af8a131a951d2f972ba11a81ae53dc8e392c1cd94d77e05d720e85a6d'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -68,6 +68,12 @@ related:
 - `S06` `verify:` `canonical desktop-frontend-chrome generation` -> `pass`
 - `S06` `verify:` `TypeScript and targeted AEAT ESLint` -> `pass`
 - `S06` `verify:` `AEAT behavior cases (30) and corrected multilingual local reload cases (4)` -> `pass`
+- `S25` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S25` `M` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S25` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S25` `verify:` `TypeScript and targeted AEAT ESLint and formatting` -> `pass`
+- `S25` `verify:` `AEAT exact retry scope and overlapping request regressions (6)` -> `pass`
 
 ## Notes
 

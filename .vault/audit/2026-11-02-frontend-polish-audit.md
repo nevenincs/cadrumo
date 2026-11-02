@@ -94,6 +94,14 @@ PASS for S06. Sol designed the retained-result warning/local reload; Terra confi
 
 Terra identified that remote retry returning unknown sets trouble but retains an old failed result; failed-part controls can then retry with acknowledgedUnknown=false, especially when the local reread also fails. S25 must preserve the unknown gate until explicit acknowledgement or an authoritative settled result; use the existing UnknownWarning and do not automatically replay the remote action.
 
+### s25-corrective-review | low | Exact retry acknowledgement scopes and serialization pass
+
+PASS for corrected S25. Terra traced aeat_sync_retry through the host run mutex: its unknown refusal requests acknowledgement before mutating selected unknown items. It does not establish that this attempted retry started and lost its response. Results now retains exact part/all acknowledgement scopes, preserves them across unrelated successes and partial acknowledgements, and blocks overlapping requests synchronously. The host remains authoritative when the Results component remounts; fresh-start replacement is a separate path and is not claimed fixed. Six focused browser regressions pass, including failed local reload, unrelated years, whole-area uncertainty and pending overlap. TypeScript, targeted ESLint and formatting pass. Corrective Terra review found no remaining concrete defect in this same-run path.
+
+### s18-review | low | Suggestion visibility and keyboard exit repairs pass
+
+PASS for S18. Keyboard-highlighted suggestions scroll only their own list; unmatched combobox Tab/Shift+Tab cancels without committing and restores the owner, preserving outside interaction and valid selection navigation. Grid navigation resolves a hidden active column to a remaining cell without stealing outside focus. Terra reviewed the behavior and Sol confirmed existing one-step cancellation semantics. The 87-case shared grid/layer/editor batch passed 75 cases and exposed 12 editor harness failures because the standalone harness had not installed canonical recorded entry limits. Installing those fixture limits repaired the harness without changing product grammar; all 42 editor cases then passed. Earlier passing grid/layer cases remain applicable to unchanged sources. TypeScript and targeted ESLint pass; sources formatted. The suggestion hover-scroll behavior is retained and is not a blocking defect. Complete application integration remains S17.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.
