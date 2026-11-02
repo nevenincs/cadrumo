@@ -20,9 +20,12 @@ from typing import Any
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.core.json_contract import Notice
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -40,7 +43,6 @@ _MARITAL_STATUS = "ECIVIL"
 _DECLARATION_TYPE = "TIPOTRIBUTACION"
 _CALCULATE_FLAGS: tuple[str, ...] = (
     "--casilla", "0003=24000",
-    "--binding", "renta-certificado-trabajo-retenciones=2400",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
 )  # fmt: skip
 
@@ -82,6 +84,17 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile, *identity: UserP
         context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label=_LABEL)
+    # Only salary income is declared: the one payer certificate credits 0596 and the other two
+    # credit classes are proven zero by the declared categories.
+    seed_payer_certificate(
+        operation=published_authority_operation(),
+        taxpayer_tax_id="12345678Z",
+        ejercicio=2025,
+        payer_tax_id="B00000000",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=Decimal("2400"),
+        importe_integro_dinerario=Decimal("24000"),
+    )
 
 
 def _calculate_m100_2025() -> tuple[dict[str, Any], list[dict[str, Any]]]:
