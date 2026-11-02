@@ -345,6 +345,19 @@ class PurchaseInvoiceEvidencePatch(BaseModel):
     notes: str | None = None
 
 
+def media_kind_for_path(source_path: str | Path) -> MediaKind | None:
+    """Return the coarse media kind a source file's extension is admitted as, or ``None`` when unsupported."""
+    suffix = Path(source_path).suffix.lower()
+    if suffix in _PDF_EXTENSIONS or suffix in _STRUCTURED_EXTENSIONS:
+        # A structured XML document and a PDF are both read through the
+        # document-shape probe; the coarse media kind stays PDF-side because
+        # neither is an image.
+        return MediaKind.PDF
+    if suffix in _IMAGE_EXTENSIONS:
+        return MediaKind.IMAGE
+    return None
+
+
 def _resolve_media_kind(source_path: Path) -> MediaKind:
     """Admit a source file by extension, refusing with the accepted set named.
 
@@ -354,14 +367,10 @@ def _resolve_media_kind(source_path: Path) -> MediaKind:
     a suffix and a declared MIME both answered "PDF" for a ZUGFeRD invoice
     carrying a complete machine-readable record.
     """
+    media_kind = media_kind_for_path(source_path)
+    if media_kind is not None:
+        return media_kind
     suffix = source_path.suffix.lower()
-    if suffix in _PDF_EXTENSIONS or suffix in _STRUCTURED_EXTENSIONS:
-        # A structured XML document and a PDF are both read through the
-        # document-shape probe; the coarse media kind stays PDF-side because
-        # neither is an image.
-        return MediaKind.PDF
-    if suffix in _IMAGE_EXTENSIONS:
-        return MediaKind.IMAGE
     accepted = ", ".join(sorted(_PDF_EXTENSIONS | _STRUCTURED_EXTENSIONS | _IMAGE_EXTENSIONS))
     raise PurchaseInvoiceEvidenceInputError(
         translated_message="errors.refused.refused_ledger_evidence_input",

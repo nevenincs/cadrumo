@@ -14,7 +14,7 @@ from cadrumo_client.commands.registered_operation_contracts import RegisteredOpe
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 
 from ...application.ledger.actions_common import display_decimal
-from ...application.ledger.evidence import MediaKind, derive_keyed_purchase_invoice_evidence_id
+from ...application.ledger.evidence import MediaKind, derive_keyed_purchase_invoice_evidence_id, media_kind_for_path
 from ...application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     LedgerEvidenceAddProjection,
@@ -24,8 +24,6 @@ from ...application.ledger.evidence_read_operation import LedgerEvidenceRecordPr
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.hex import is_hex16, is_hex64
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-
-_IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
 
 
 def run_ledger_evidence_add(
@@ -67,8 +65,7 @@ def run_ledger_evidence_add(
         timeout=120,
     )
     projection = completed.projection
-    extension = Path(source_path).suffix.lower()
-    expected_media_kind = MediaKind.IMAGE if extension in _IMAGE_EXTENSIONS else MediaKind.PDF
+    expected_media_kind = media_kind_for_path(source_path) or MediaKind.PDF
     keyed_replay = idempotency_key is not None and not projection.bucket_event_ids
     record = projection.record
     invalid = (
