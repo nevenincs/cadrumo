@@ -99,11 +99,6 @@ provider = { kind = "manual_input", record = "page_1", field = "vivienda-deducci
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 [[revisions."2024".bindings]]
-id = "modelo-131.page1.declaracion-complementaria"
-provider = { kind = "manual_input", record = "page_1", field = "declaracion-complementaria", offset = 692, length = 1, data_type = "boolean" }
-value = { data_type = "boolean", channel = "boolean" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
 id = "modelo-131.dpa.epigrafe-iae"
 provider = { kind = "manual_input", record = "DPA", field = "epigrafe-iae", offset = 13, length = 4, data_type = "text" }
 value = { data_type = "text", channel = "text" }
