@@ -37,6 +37,8 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_absence_attestation
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -46,6 +48,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -375,6 +378,13 @@ def test_m100_places_stated_rows_by_the_criterion_through_export(
     _seed_prior_year_m100(secure_objects)
     for period, result in _OFFICIAL_M130_C19.items():
         _import_official_m130_result_observation(secure_objects, period=period, c19_value=result)
+    # The profile declares activity income without an IAE epigraph, so whether the activity includes an urban
+    # rental, whose withholding credits casilla 0598, is not proven: the operator attests that no payer withheld.
+    seed_absence_attestation(
+        operation=published_authority_operation(),
+        ejercicio=_YEAR,
+        income_class=RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD,
+    )
 
     annual = _annual(secure_objects)
 
