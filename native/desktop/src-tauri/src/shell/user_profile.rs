@@ -1871,5 +1871,80 @@ mod tests {
             let unread = change(configured("certificate")).await.unwrap_err();
             assert_eq!(unread.code, "saved_unread");
         }
+
+        const DESCENDANTS: &str = "user-profile.descendants";
+
+        /// A family replacement the runtime stopped, followed to its settlement;
+        /// `detail` is what the runtime serves as that stop's result, if anything.
+        async fn stopped_replacement(stop: Value, detail: Option<Value>) -> Failure {
+            let held = holder(move |_| {
+                let mut steps = vec![step(
+                    "operation_observe",
+                    json!([]),
+                    terminal(DESCENDANTS, stop.clone()),
+                    false,
+                )];
+                if let Some(detail) = detail.clone() {
+                    steps.push(step(
+                        "operation_result",
+                        json!([["operation_id", OPERATION]]),
+                        resulted(DESCENDANTS, detail),
+                        false,
+                    ));
+                }
+                steps
+            });
+            let mut events = held.events.subscribe();
+            settle(
+                &mut events,
+                &held.person,
+                DESCENDANTS,
+                subject(),
+                OPERATION.into(),
+                true,
+            )
+            .await
+            .unwrap_err()
+        }
+
+        #[tokio::test]
+        async fn a_refused_replacement_carries_the_sentence_the_application_served_for_it() {
+            let none = json!({"terminal_condition":"refused","effect":"none"});
+            let served = json!({"detail_version":1,"kind":"registered_error",
+                "refusal_words":"  Descendant 2 has no date of birth, and every descendant needs one. ",
+                "refusal_words_language":"en"});
+            let refused = stopped_replacement(none.clone(), Some(served)).await;
+            assert_eq!(refused.code, "refused");
+            assert_eq!(
+                refused.refusal_words.as_deref(),
+                Some("Descendant 2 has no date of birth, and every descendant needs one.")
+            );
+            assert_eq!(refused.operation_id.as_deref(), Some(OPERATION));
+
+            // A stop whose definition recorded no sentence carries none.
+            let unworded = json!({"detail_version":1,"kind":"registered_error"});
+            let silent = stopped_replacement(none.clone(), Some(unworded)).await;
+            assert_eq!((silent.code, silent.refusal_words), ("refused", None));
+            let unread = stopped_replacement(none, None).await;
+            assert_eq!((unread.code, unread.refusal_words), ("refused", None));
+        }
+
+        #[tokio::test]
+        async fn a_conflict_or_an_unknown_effect_is_relayed_by_its_code_alone() {
+            // Nothing is scripted after the observation: a result read would end the test.
+            let conflict = stopped_replacement(
+                json!({"terminal_condition":"failed","effect":"none",
+                    "failure_error_code":"FAIL_PROFILE_RECORD_CONFLICT"}),
+                None,
+            )
+            .await;
+            assert_eq!((conflict.code, conflict.refusal_words), ("conflict", None));
+            let unknown = stopped_replacement(
+                json!({"terminal_condition":"failed","effect":"unknown"}),
+                None,
+            )
+            .await;
+            assert_eq!((unknown.code, unknown.refusal_words), ("unknown", None));
+        }
     }
 }

@@ -556,7 +556,8 @@ function Ready({
             onOpenSurface={onOpenSurface}
             canOpenSurface={canOpenSurface}
             profileCompanions={
-              profileCompanions && (
+              profileCompanions &&
+              envelope.form.form.asks_imputation_election && (
                 <ProfileCompanions
                   kit={profileCompanions}
                   profile={envelope.profile_id}

@@ -364,6 +364,7 @@ class PublicModeloWorkForm(BaseModel):
     deadline: ModeloFormDeadline | None
     aeat_data: ModeloFormAeatData | None
     projectable: bool = False
+    asks_imputation_election: bool = False
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None

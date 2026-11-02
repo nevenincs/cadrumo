@@ -10,11 +10,12 @@ import type { ProfileChange } from "../shell/userProfile";
 
 // The household the application served for synthetic profiles through the
 // `family_rows` page stream of `user-profile.view`, in every language, and the
-// details of the refusals an ascendants replacement settled with. Regenerate
-// with dev.desktop_household_fixture; never invent fields here. The fixture
-// assembles the stream the way the host does (groups followed by their rows,
-// a hidden value replaced by its mask), keeps what a replacement states and
-// answers the next read with it, so a story or a scenario sees a write land.
+// details of the refusals an ascendants or descendants replacement settled
+// with. Regenerate with dev.desktop_household_fixture; never invent fields
+// here. The fixture assembles the stream the way the host does (groups
+// followed by their rows, a hidden value replaced by its mask), keeps what a
+// replacement states and answers the next read with it, so a story or a
+// scenario sees a write land.
 
 export type HouseholdScenario = keyof typeof fixtures.reads;
 
@@ -24,7 +25,8 @@ export const HOUSEHOLD_SCENARIOS = Object.keys(
 ) as HouseholdScenario[];
 
 /** A refusal the application settled a replacement with, as the host carries
- * it to the window: its code and the finished sentence the application served. */
+ * it to the window: its code and the finished sentence the application served.
+ * Each is the recorded detail of a replacement of one group. */
 export type HouseholdRefusal = keyof typeof fixtures.refusals;
 
 declare global {
@@ -103,7 +105,7 @@ function assemble(items: Item[]): Stored[] {
   return groups;
 }
 
-const refusalWords = (refusal: HouseholdRefusal, language: string) => {
+const refusalWords = (refusal: HouseholdRefusal, language: string): string => {
   const details = fixtures.refusals[refusal] as Record<
     string,
     { refusal_words?: string }
@@ -198,18 +200,24 @@ export function householdFixture(
       const leaves = new Map<string, HouseholdLeaf>(
         group.leaves.map((leaf) => [leaf.leaf, leaf]),
       );
+      // The sentences are the ones the application recorded for the same
+      // two refusals of the group being replaced.
+      if (group.max_rows !== null && edit.rows.length > group.max_rows)
+        throw {
+          code: "refused",
+          refusal_words: refusalWords(`${edit.kind}_over_limit`, language),
+        };
       if (
-        (group.max_rows !== null && edit.rows.length > group.max_rows) ||
         edit.rows.some((row) =>
           row.facts.some((fact) => !leaves.has(fact.field_key)),
         )
       )
         throw {
           code: "refused",
-          refusal_words:
-            group.max_rows !== null && edit.rows.length > group.max_rows
-              ? refusalWords("over_limit", language)
-              : "",
+          refusal_words: refusalWords(
+            `${edit.kind}_fact_unsupported`,
+            language,
+          ),
         };
       standing.set(key, {
         state: edit.rows.length > 0 ? "rows" : "none_declared",

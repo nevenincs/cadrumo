@@ -9031,7 +9031,7 @@
     }
   },
   "refusals": {
-    "over_limit": {
+    "ascendants_over_limit": {
       "en": {
         "detail_version": 1,
         "kind": "registered_error",
@@ -9113,7 +9113,7 @@
         "refusal_words_language": "hu"
       }
     },
-    "second_nif_invalid": {
+    "ascendants_second_nif_invalid": {
       "en": {
         "detail_version": 1,
         "kind": "registered_error",
@@ -9179,7 +9179,7 @@
         "refusal_words_language": "hu"
       }
     },
-    "first_birth_date_missing": {
+    "ascendants_first_birth_date_missing": {
       "en": {
         "detail_version": 1,
         "kind": "registered_error",
@@ -9242,6 +9242,352 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "A(z) 1. felmenőnek nincs születési dátuma, pedig minden felmenőhöz kell egy.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "ascendants_fact_unsupported": {
+      "en": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.ascendant_fact_unsupported",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "Ascendant 1 states a fact that the profile does not keep for an ascendant.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.ascendant_fact_unsupported",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "El ascendiente 1 indica un dato que el perfil no guarda para un ascendiente.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.ascendant_fact_unsupported",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "L'ascendent 1 indica una dada que el perfil no guarda per a un ascendent.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.ascendant_fact_unsupported",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "A(z) 1. felmenő olyan adatot ad meg, amelyet a profil nem tárol felmenőnél.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "descendants_over_limit": {
+      "en": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_rows_over_limit",
+        "context": [
+          {
+            "key": "count",
+            "value": "16"
+          },
+          {
+            "key": "limit",
+            "value": "15"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "A declaration lists at most 15 descendants, and 16 were given.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_rows_over_limit",
+        "context": [
+          {
+            "key": "count",
+            "value": "16"
+          },
+          {
+            "key": "limit",
+            "value": "15"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "Una declaración incluye como máximo 15 descendientes y se han indicado 16.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_rows_over_limit",
+        "context": [
+          {
+            "key": "count",
+            "value": "16"
+          },
+          {
+            "key": "limit",
+            "value": "15"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "Una declaració inclou com a màxim 15 descendents i se n'han indicat 16.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_rows_over_limit",
+        "context": [
+          {
+            "key": "count",
+            "value": "16"
+          },
+          {
+            "key": "limit",
+            "value": "15"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "Egy bevallás legfeljebb 15 leszármazottat tartalmaz, de 16 lett megadva.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "descendants_second_value_invalid": {
+      "en": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_value_invalid",
+        "context": [
+          {
+            "key": "row",
+            "value": "2"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "Descendant 2 states a value the declaration cannot hold; check its dates, amounts and yes-or-no answers.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_value_invalid",
+        "context": [
+          {
+            "key": "row",
+            "value": "2"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "El descendiente 2 indica un valor que la declaración no admite; revisa sus fechas, importes y respuestas de sí o no.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_value_invalid",
+        "context": [
+          {
+            "key": "row",
+            "value": "2"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "El descendent 2 indica un valor que la declaració no admet; revisa'n les dates, els imports i les respostes de sí o no.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_value_invalid",
+        "context": [
+          {
+            "key": "row",
+            "value": "2"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "A(z) 2. leszármazott olyan értéket ad meg, amelyet a bevallás nem fogad el; ellenőrizd a dátumait, összegeit és az igen-nem válaszait.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "descendants_first_birth_date_missing": {
+      "en": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_birth_date_required",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "Descendant 1 has no date of birth, and every descendant needs one.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_birth_date_required",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "El descendiente 1 no tiene fecha de nacimiento, y cada descendiente necesita una.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_birth_date_required",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "El descendent 1 no té data de naixement, i cada descendent en necessita una.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_birth_date_required",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "A(z) 1. leszármazottnak nincs születési dátuma, pedig minden leszármazotthoz kell egy.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "descendants_fact_unsupported": {
+      "en": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_fact_unsupported",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "Descendant 1 states a fact that the profile does not keep for a descendant, or states it in a form the profile does not store.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_fact_unsupported",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "El descendiente 1 indica un dato que el perfil no guarda para un descendiente, o lo indica con una forma que el perfil no almacena.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_fact_unsupported",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "El descendent 1 indica una dada que el perfil no guarda per a un descendent, o la indica amb una forma que el perfil no emmagatzema.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "detail_version": 1,
+        "kind": "registered_error",
+        "error_code": "REFUSED_USER_PROFILE_VALIDATION",
+        "message_key": "application.user_profile.errors.descendant_fact_unsupported",
+        "context": [
+          {
+            "key": "row",
+            "value": "1"
+          }
+        ],
+        "context_entries_omitted": 0,
+        "precondition_verdict_json": null,
+        "refusal_words": "A(z) 1. leszármazott olyan adatot ad meg, amelyet a profil nem tárol leszármazottnál, vagy olyan alakban adja meg, amelyben a profil nem tárolja.",
         "refusal_words_language": "hu"
       }
     }

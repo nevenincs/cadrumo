@@ -15,7 +15,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
-from ...core.aggregation import BindingValueOutcome
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.parsing.utils import parse_bool
 from ...core.period import Period
 from ...domain.calculations.registry.cash_election_minimum_years import cash_election_minimum_years
@@ -136,9 +136,29 @@ class ImputationUnresolved(StrEnum):
     """Money came in on a correction, which contradicts reading it as a reduction of accrued income."""
 
 
+#: The binding sources whose resolvers place activity income and expense in an ejercicio by the
+#: taxpayer's dated criterion. A revision that declares a binding on one of them reads the election,
+#: so the registry alone says which declarations ask for it.
+IMPUTATION_CRITERION_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
+    {
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+    }
+)
+
 _CRITERION_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
 _COMMERCIAL_ACCOUNTING_PATH: Final[str] = "irpf.codigo_comercio_accounting"
 _ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
+
+
+def revision_reads_imputation_criterion(revision: ModeloRevision) -> bool:
+    """Whether ``revision`` declares a binding whose resolver reads the income imputation criterion.
+
+    The answer follows the revision's own bindings, never the modelo's number, so a revision
+    that stops reading the election stops asking for it.
+    """
+    return any(binding.source in IMPUTATION_CRITERION_SOURCES for binding in revision.bindings)
 
 
 def _dated_values(facts: Iterable[UserProfileFact], path: str, year: int) -> set[object]:
@@ -573,6 +593,7 @@ def imputation_blocking_diagnostics(
 
 
 __all__ = [
+    "IMPUTATION_CRITERION_SOURCES",
     "ActivityImputationCriterion",
     "ImputationCriteria",
     "ImputationFilingHistory",
@@ -587,6 +608,7 @@ __all__ = [
     "invoice_accrual_date",
     "ledger_sum_outcome",
     "linked_accrual_date",
+    "revision_reads_imputation_criterion",
     "row_accrual_date",
     "rows_left_out_summary",
     "rows_touching_window",

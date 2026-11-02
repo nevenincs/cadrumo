@@ -99,8 +99,9 @@ export function SourcesView({
   onOpenSurface(surface: OpenableSurface): void;
   /** Whether this window can open an area; a link that cannot is not drawn. */
   canOpenSurface(surface: OpenableSurface): boolean;
-  /** The elements the profile owns, drawn under the group the read model
-   * names as the profile. */
+  /** The elements the profile owns, drawn after the groups. The caller
+   * passes them only where the read model says the declaration asks for
+   * them. */
   profileCompanions?: ReactNode;
 }) {
   const t = useStrings();
@@ -191,10 +192,10 @@ export function SourcesView({
                 onGo={onGo}
               />
             )}
-            {group.kind === "profile" && profileCompanions}
           </section>
         );
       })}
+      {profileCompanions}
     </div>
   );
 }

@@ -254,7 +254,7 @@ export const RefusedWrite: Story = {
     <Element
       scenario="rows"
       locale={language(globals)}
-      refuse="second_nif_invalid"
+      refuse="ascendants_second_nif_invalid"
     />
   ),
   play: async ({ canvasElement, globals }) => {

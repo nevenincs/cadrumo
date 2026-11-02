@@ -3,10 +3,11 @@ import { readFileSync } from "node:fs";
 import type { ImputationElection } from "../../src/shell/profileHousehold";
 import { label } from "../support/strings";
 
-// The imputation election element in the Renta's Sources view, under the
-// profile's source group. The profile states are what the application read
-// through `user-profile.imputation-election.read`; every question, choice and
-// refusal sentence below is that served text, not wording of the window.
+// The imputation election element in the Renta's Sources view, shown because
+// the form says the declaration asks for it. The profile states are what the
+// application read through `user-profile.imputation-election.read`; every
+// question, choice and refusal sentence below is that served text, not wording
+// of the window.
 
 type Served = {
   reads: Record<string, Record<string, ImputationElection>>;

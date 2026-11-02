@@ -3097,6 +3097,17 @@ application:
         l'arxiu. Una càpsula conserva la seva identitat en restaurar-se, així que
         una còpia de seguretat només es pot restaurar en un magatzem que encara no
         la tingui, o després d'eliminar el perfil original.
+      descendant_birth_date_required: El descendent %{row} no té data de naixement,
+        i cada descendent en necessita una.
+      descendant_fact_unsupported: El descendent %{row} indica una dada que el perfil
+        no guarda per a un descendent, o la indica amb una forma que el perfil no
+        emmagatzema.
+      descendant_limit_unknown: El disseny de la declaració no indica cap límit de
+        descendents, així que la llista no es pot comprovar ni desar.
+      descendant_rows_over_limit: Una declaració inclou com a màxim %{limit} descendents
+        i se n'han indicat %{count}.
+      descendant_value_invalid: El descendent %{row} indica un valor que la declaració
+        no admet; revisa'n les dates, els imports i les respostes de sí o no.
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
       passphrase_confirmation_mismatch: La nova contrasenya i la seva confirmació

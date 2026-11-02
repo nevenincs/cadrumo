@@ -230,7 +230,7 @@ function Sources({ locale }: { locale: OutputLanguage }) {
 }
 
 export const InTheSourcesView: Story = {
-  name: "In the Renta's Sources view, under the profile's source group",
+  name: "In the Renta's Sources view, for a declaration that asks for it",
   parameters: { fill: true, layout: "fullscreen" },
   render: (_, { globals }) => <Sources locale={language(globals)} />,
 };

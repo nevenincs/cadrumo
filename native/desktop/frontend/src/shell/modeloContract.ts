@@ -8029,6 +8029,7 @@ export type PublicModeloWorkForm = {
   deadline: ModeloFormDeadline | null;
   aeat_data: ModeloFormAeatData | null;
   projectable: boolean;
+  asks_imputation_election: boolean;
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;

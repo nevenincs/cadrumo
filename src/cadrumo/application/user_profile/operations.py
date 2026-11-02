@@ -198,6 +198,7 @@ USER_PROFILE_OPERATION_DEFINITIONS = (
         result_type=ProfileDescendantsOperationResult,
         executor_type=ProfileDescendantsOperationExecutor,
         phase_codes=PROFILE_DESCENDANTS_PHASES,
+        public_error_detail=True,
     ),
     _definition(
         definition_id=PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,

@@ -3095,6 +3095,17 @@ application:
         el archivo. Una cápsula conserva su identidad al restaurarse, así que una
         copia de seguridad solo puede restaurarse en un almacén que todavía no la
         tenga, o después de eliminar el perfil original.
+      descendant_birth_date_required: El descendiente %{row} no tiene fecha de nacimiento,
+        y cada descendiente necesita una.
+      descendant_fact_unsupported: El descendiente %{row} indica un dato que el perfil
+        no guarda para un descendiente, o lo indica con una forma que el perfil no
+        almacena.
+      descendant_limit_unknown: El diseño de la declaración no indica un límite de
+        descendientes, así que la lista no se puede comprobar ni guardar.
+      descendant_rows_over_limit: Una declaración incluye como máximo %{limit} descendientes
+        y se han indicado %{count}.
+      descendant_value_invalid: El descendiente %{row} indica un valor que la declaración
+        no admite; revisa sus fechas, importes y respuestas de sí o no.
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden.

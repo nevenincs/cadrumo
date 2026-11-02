@@ -120,10 +120,11 @@ export function imputationElectionFixture(
       if (refusal) {
         const settled = refusal;
         refusal = null;
-        throw {
-          code: settled === "stale" ? "conflict" : "refused",
-          refusal_words: refusalWords(settled, language),
-        };
+        // The host carries the application's sentence for a refusal only; a
+        // conflict reaches the window as its code alone.
+        throw settled === "stale"
+          ? { code: "conflict" }
+          : { code: "refused", refusal_words: refusalWords(settled, language) };
       }
       if (change.edit.kind !== "imputation_election") throw { code: "refused" };
       if (

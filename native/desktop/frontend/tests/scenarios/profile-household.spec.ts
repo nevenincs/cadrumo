@@ -230,7 +230,7 @@ test.describe("the household in the profile page", () => {
     for (const language of LANGUAGES) {
       const household = await open(page, "rows", language);
       await page.evaluate(() =>
-        window.__scenarioHousehold!.refuseNext("second_nif_invalid"),
+        window.__scenarioHousehold!.refuseNext("ascendants_second_nif_invalid"),
       );
       await group(household, ASCENDANTS)
         .getByRole("button", {
@@ -248,7 +248,40 @@ test.describe("the household in the profile page", () => {
         })
         .click();
       await expect(dialog.getByRole("alert")).toHaveText(
-        served.refusals.second_nif_invalid![language]!.refusal_words,
+        served.refusals.ascendants_second_nif_invalid![language]!.refusal_words,
+      );
+      await expect(dialog).toBeVisible();
+    }
+  });
+
+  test("a refused descendant replacement shows the application's own sentence for it", async ({
+    page,
+  }) => {
+    for (const language of LANGUAGES) {
+      const household = await open(page, "rows", language);
+      await page.evaluate(() =>
+        window.__scenarioHousehold!.refuseNext(
+          "descendants_second_value_invalid",
+        ),
+      );
+      await group(household, DESCENDANTS)
+        .getByRole("button", {
+          name: label(
+            "desktop.profile.household.edit_person",
+            { number: 1 },
+            language,
+          ),
+        })
+        .click();
+      const dialog = page.getByRole("dialog");
+      await dialog
+        .getByRole("button", {
+          name: label("desktop.profile.save", {}, language),
+        })
+        .click();
+      await expect(dialog.getByRole("alert")).toHaveText(
+        served.refusals.descendants_second_value_invalid![language]!
+          .refusal_words,
       );
       await expect(dialog).toBeVisible();
     }
