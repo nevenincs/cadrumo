@@ -29,6 +29,7 @@ from cadrumo.domain.invoices.decomposition import InvoiceDecompositionDefect, de
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from .....application.aggregation.renta_income_evidence import income_withheld_amount, sales_invoice_evidence_payload
+from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.aggregation import LedgerWithholdingDerivation
 from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -195,15 +196,14 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
     tmp_path: Path,
     invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
-    """From the document's bytes to the income path: 1210.00 - 150.00 = 1060.00 reaches the bank.
+    """From the document's bytes to the income path: 1255.00 - 150.00 = 1105.00 reaches the bank.
 
     The declared figure is the document's, and it comes back once: the derivation is
     the invoice's rather than an inference from the cash added to it.
     """
-    source = tmp_path / "facturae_32_retencion_suplidos_invoice.xml"
     # The specimen prints its seller with the VAT prefix; the filer's profile holds the NIF.
-    printed = (_EVIDENCE_CORPUS / source.name).read_text(encoding="utf-8")
-    source.write_text(printed.replace(f"ES{_FIXTURE_SELLER_TAX_ID}", _FIXTURE_SELLER_TAX_ID), encoding="utf-8")
+    source = tmp_path / "facturae_32_retencion_suplidos_invoice.xml"
+    source.write_bytes((_EVIDENCE_CORPUS / source.name).read_bytes())
     record = _make_svc(isolated_settings, secure_objects).add(bucket_id=_BUCKET_ID, source_path=source).record
     invoice = confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
@@ -219,7 +219,7 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
                 provider_transaction_id="cobro-1",
                 booked_date=invoice.issued_at,
                 value_date=invoice.issued_at,
-                amount=Decimal("1060.00"),
+                amount=Decimal("1105.00"),
                 currency="EUR",
                 counterparty="Cliente Ejemplo SA",
                 description="cobro factura",
@@ -254,6 +254,34 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
     withheld = income_withheld_amount(linked_transaction, evidence=payload)
 
     assert refusal is None
+    assert invoice.suplido_amount == Decimal("45.00")
+    assert invoice.grand_total == Decimal("1255.00")
+    # A suplido is no part of the taxable base or the cuota.
+    assert payload.taxable_base == Decimal("1000.00")
+    assert payload.iva_amount == Decimal("210.00")
     assert payload.retencion_amount == Decimal("150.00")
     assert withheld[0] == Decimal("150.00")
     assert withheld[1] is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+
+
+def test_an_issued_document_printing_another_issuer_is_still_refused(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
+) -> None:
+    """Stripping the VAT prefix is not a way past the check: a different NIF stays another issuer."""
+    source = tmp_path / "facturae_32_retencion_suplidos_invoice.xml"
+    printed = (_EVIDENCE_CORPUS / source.name).read_text(encoding="utf-8")
+    source.write_text(printed.replace(f">ES{_FIXTURE_SELLER_TAX_ID}<", ">ESB12345674<", 1), encoding="utf-8")
+    record = _make_svc(isolated_settings, secure_objects).add(bucket_id=_BUCKET_ID, source_path=source).record
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError, match="another issuer"):
+        confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            evidence_id=record.evidence_id,
+            settings=isolated_settings,
+            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        )

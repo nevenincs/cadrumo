@@ -452,6 +452,8 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.documents.remove_attached",
         "desktop.ledger.documents.remove_note",
         "desktop.ledger.documents.remove_title",
+        "desktop.ledger.documents.retention_differs",
+        "desktop.ledger.documents.retention_unrecorded",
         "desktop.ledger.documents.save",
         "desktop.ledger.documents.say_direction",
         "desktop.ledger.documents.source.gmail",

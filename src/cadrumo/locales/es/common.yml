@@ -2286,6 +2286,10 @@ desktop:
       remove_attached: Primero sepáralo de su movimiento
       remove_note: El registro y su copia guardada salen del libro.
       remove_title: ¿Eliminar este registro?
+      retention_differs: El documento indica {read} retenidos; la factura registra
+        {recorded}.
+      retention_unrecorded: El documento indica {read} retenidos; la factura no registra
+        retención.
       save: Guardar
       say_direction: Indica si los recibiste o los emitiste
       source:

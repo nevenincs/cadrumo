@@ -849,6 +849,34 @@ export function DraftReview({
             })}
           </Alert>
         )}
+        {confirmed.confirmation.retention_discrepancy && (
+          <Alert
+            tone="warning"
+            icon={<Icon name="alert" />}
+            className="ledger-draft-retention-differs"
+          >
+            {confirmed.confirmation.retention_discrepancy.recorded_amount
+              ? t("desktop.ledger.documents.retention_differs", {
+                  read: formatAmount(
+                    locale,
+                    confirmed.confirmation.retention_discrepancy.read_amount
+                      .decimal,
+                  ),
+                  recorded: formatAmount(
+                    locale,
+                    confirmed.confirmation.retention_discrepancy.recorded_amount
+                      .decimal,
+                  ),
+                })
+              : t("desktop.ledger.documents.retention_unrecorded", {
+                  read: formatAmount(
+                    locale,
+                    confirmed.confirmation.retention_discrepancy.read_amount
+                      .decimal,
+                  ),
+                })}
+          </Alert>
+        )}
         {linkStaged ? (
           <Alert
             icon={<Icon name="lock" />}

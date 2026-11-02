@@ -2291,6 +2291,10 @@ desktop:
       remove_attached: Primer separa'l del seu moviment
       remove_note: El registre i la seva còpia desada surten del llibre.
       remove_title: Vols eliminar aquest registre?
+      retention_differs: El document indica {read} retinguts; la factura registra
+        {recorded}.
+      retention_unrecorded: El document indica {read} retinguts; la factura no registra
+        cap retenció.
       save: Desa
       say_direction: Indica si els vas rebre o emetre
       source:
