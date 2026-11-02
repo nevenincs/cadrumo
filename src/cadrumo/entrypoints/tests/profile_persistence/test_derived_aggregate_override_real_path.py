@@ -58,6 +58,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.validation import reject_invalid_profile_facts
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
@@ -126,6 +127,8 @@ _MESH_OWNED_SOURCES = frozenset(
         # Mesh-resolved rather than locked.
         "profile",
         "relation_prefill",
+        # The withholding credits are the payer records' to state, so a caller zero is refused.
+        BindingSourceKind.RETENCION_SOPORTADA.value,
     },
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 
