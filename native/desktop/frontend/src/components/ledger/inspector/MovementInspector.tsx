@@ -542,6 +542,7 @@ export function MovementInspector({
         {section(
           "invoice",
           <InvoiceSection
+            port={port}
             row={row}
             answer={answer}
             rows={rows}

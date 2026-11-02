@@ -760,6 +760,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             ("ledger.invoice.duplicate",),
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.invoice.match",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.match",),
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.split.check",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,

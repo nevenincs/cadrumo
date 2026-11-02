@@ -132,6 +132,17 @@ def compose_ledger_invoice_duplicate_operation(inputs: OperationCompositionInput
     return built((definition,), (build_ledger_invoice_duplicate_registration(definition),))
 
 
+def compose_ledger_invoice_match_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read of which movement settles which invoice."""
+    from ..application.invoices.payment_match_operation import (
+        build_ledger_invoice_match_definition,
+        build_ledger_invoice_match_registration,
+    )
+
+    definition = build_ledger_invoice_match_definition(inputs.invoice_inspection())
+    return built((definition,), (build_ledger_invoice_match_registration(definition),))
+
+
 def compose_invoices_catalogue_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose invoices catalogue read operation."""
     from ..application.invoices.catalogue_read_operation import (

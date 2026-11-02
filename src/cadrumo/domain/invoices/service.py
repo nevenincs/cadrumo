@@ -238,7 +238,7 @@ class _ReconciliationAmountIndex:
         if bucket is None:
             return []
         amounts, members = bucket
-        start = bisect_left(amounts, _reconciliation_settlement(invoice))
+        start = bisect_left(amounts, invoice_settlement(invoice))
         stop = start
         while stop < len(members) and _reconciliation_amount_matches(
             invoice,
@@ -270,25 +270,33 @@ def _reconciliation_amount_matches(
     amount_tolerance: Decimal,
 ) -> bool:
     """Return whether the transaction settles the invoice within the requested tolerance."""
-    return abs(transaction.raw.amount - _reconciliation_settlement(invoice)) <= amount_tolerance
+    return abs(transaction.raw.amount - invoice_settlement(invoice)) <= amount_tolerance
 
 
-def _reconciliation_settlement(invoice: Invoice) -> Decimal:
+def invoice_settlement(invoice: Invoice) -> Decimal:
     """Return the cash an invoice settles for."""
     return settlement_amount(invoice.grand_total, invoice.retention_amount)
 
 
+def counterparties_overlap(invoice_counterparty: str, transaction_counterparty: str | None) -> bool:
+    """Return whether both counterparties have a non-empty overlapping name.
+
+    The one reading of "the same party" for proposing a link: case-insensitive, either name
+    inside the other. A blank name overlaps nothing.
+    """
+    invoice_name = invoice_counterparty.strip().lower()
+    if transaction_counterparty is None or not invoice_name:
+        return False
+    transaction_name = transaction_counterparty.strip().lower()
+    # ``bool(transaction_name)`` guards against the empty-string case; without it
+    # ``"" in invoice_name`` returns True and grants a false-positive
+    # 0.5 score boost.
+    return bool(transaction_name) and (invoice_name in transaction_name or transaction_name in invoice_name)
+
+
 def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:
     """Return whether both counterparties have a non-empty overlapping name."""
-    invoice_counterparty = invoice.counterparty_name.strip().lower()
-    tx_counterparty = transaction.raw.counterparty
-    if tx_counterparty is None or not invoice_counterparty:
-        return False
-    tx_normalised = tx_counterparty.strip().lower()
-    # ``bool(tx_normalised)`` guards against the empty-string case; without it
-    # ``"" in invoice_counterparty`` returns True and grants a false-positive
-    # 0.5 score boost.
-    return bool(tx_normalised) and (invoice_counterparty in tx_normalised or tx_normalised in invoice_counterparty)
+    return counterparties_overlap(invoice.counterparty_name, transaction.raw.counterparty)
 
 
 def _reconciliation_score(*, amount_match: bool, counterparty_match: bool) -> Decimal:
