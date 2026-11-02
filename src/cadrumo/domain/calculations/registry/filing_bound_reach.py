@@ -105,7 +105,7 @@ def _casilla_reach(
         if known is not None:
             return known
         if casilla_id in visiting:
-            return frozenset()
+            return frozenset[CasillaId]()
         visiting.add(casilla_id)
         found = {casilla_id} if casilla_id in exported else set()
         for reader in casilla_readers.get(casilla_id, ()):

@@ -347,6 +347,8 @@ aggregation:
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
         ser únicas.
+      precedence_tier_out_of_order: Las fuentes del cálculo se han superpuesto fuera
+        de su orden de prioridad.
       proven_zero_value_not_zero: Un resolvedor de fuentes declaró un cero probado
         para una vinculación cuyo valor no es cero.
       provenance_binding_source_mismatch: El tipo de origen declarado en la fila de
@@ -4351,7 +4353,14 @@ desktop:
       move: Moverse entre casillas
       next_attention: Siguiente casilla que te necesita (con el formulario enfocado)
     outline:
+      collapse_all: Plegar todos los grupos
+      could_not_calculate: 'No se pudo calcular: {count}'
+      does_not_apply: No aplica
+      expand_all: Desplegar todos los grupos
+      hide_not_applicable: Ocultar lo que no aplica
       label: Esquema del formulario
+      may_apply: Solo si se te aplica
+      needs_you: 'Te necesita: {count}'
     rename:
       name: Nombre
       save: Guardar el nombre
@@ -9732,9 +9741,19 @@ workspace:
         past_filing_window: El plazo de presentación ha terminado, y pagar en dos
           plazos exige presentar la declaración dentro de él.
         result_unknown: 'Calcula antes la declaración: su resultado lo decide.'
+        settlement_unsupported: El importe que liquida esta declaración no va en el
+          mismo sentido que su resultado, como cuando suspendes todo el importe a
+          ingresar con cargo a la devolución de tu cónyuge. El fichero oficial no
+          permite indicarlo, así que no se puede liquidar aquí.
       file_format:
         fixed_width: Fichero de la AEAT con el diseño de registro BOE de ancho fijo
         xml_dictionary: Fichero XML de la AEAT
+      instalment:
+        advisory: 'Orientativo: Cadrumo redondea el primer plazo al céntimo y deja
+          el resto para el segundo. Ninguna norma oficial indica a qué plazo va un
+          céntimo, así que comprueba ambos importes en Renta WEB antes de pagar.'
+        first: 'Primer plazo, el %{share} % al presentar: %{amount}'
+        second: 'Segundo plazo, el %{share} % restante: %{amount}'
       resolve_first: 'Resuelve lo que impide presentar antes de generar el fichero
         o registrar la presentación (impiden presentar: {count}).'
       title: Exportar la declaración

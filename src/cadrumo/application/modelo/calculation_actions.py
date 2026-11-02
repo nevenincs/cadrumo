@@ -48,6 +48,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -84,6 +85,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint, draft_contributor_identities
 from ..aggregation.renta_imputation import declared_imputation_criteria
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
 from ..user_profile.projections import profile_fact_index, record_to_path_values
 from ._calculation_helpers import (
@@ -111,6 +113,7 @@ from .calculation_action_ports import (
 )
 from .calculation_publication import CalculationRevisionPublication
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
+from .calculation_resolution import precedence_tier_issue
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_screen import calculation_screen_stamp
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
@@ -227,6 +230,19 @@ def _trusted_backend_casilla_inputs(
     }
 
 
+@dataclass(frozen=True, slots=True)
+class TrustedMeshCalculation:
+    """A persisted calculation and the precedence divergences its binding overlay found.
+
+    The blocking divergences are already among the revision's source issues;
+    ``precedence_diagnostics`` also carries the advisory ones, which are shown
+    and not persisted.
+    """
+
+    publication: CalculationRevisionPublication
+    precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...]
+
+
 def _trusted_calculation_clock(clock: datetime | None) -> datetime:
     """Resolve the timestamp shared by ledger anchoring and persistence."""
     return clock or _utc_now()
@@ -271,8 +287,12 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
     profile: ModeloWorkProfile | None,
-) -> CalculationRevisionPublication:
-    """Calculate and persist a revision using trusted source evidence."""
+) -> TrustedMeshCalculation:
+    """Calculate and persist a revision using trusted source evidence.
+
+    Every blocking divergence the binding overlay found is persisted as a
+    source issue on the revision beside ``source_issues``.
+    """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     now = _trusted_calculation_clock(clock)
     prepared = _prepare_calculation(
@@ -301,6 +321,12 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
+    precedence_issues = tuple(
+        issue
+        for diagnostic in prepared.channels.precedence_diagnostics
+        if (issue := precedence_tier_issue(diagnostic)) is not None
+    )
+    revision_source_issues = (*source_issues, *precedence_issues)
     (
         engine_result,
         replay_payloads,
@@ -325,7 +351,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         m303_regimen_simplificado_annual_summary_handoff,
     )
 
-    return persist_calculation_revision(
+    publication = persist_calculation_revision(
         operation=ports.operation,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
@@ -345,7 +371,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         invoice_fingerprint=_draft_invoice_fingerprint(
             work_unit=work_unit,
             source_transaction_ids=source_transaction_ids,
-            source_issues=source_issues,
+            source_issues=revision_source_issues,
             ports=ports,
             profile=prepared.profile,
             captured_at=now,
@@ -369,7 +395,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         observations=typed_observations,
         unresolved_outcomes=engine_result.unresolved_outcomes,
         source_provenance=source_provenance,
-        source_issues=source_issues,
+        source_issues=revision_source_issues,
         filing_instance_evidence=validated_filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         detail_rows=detail_rows,
@@ -380,6 +406,9 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_repository=ports.work_unit_repository,
         bucket_event_repository=ports.bucket_event_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+    )
+    return TrustedMeshCalculation(
+        publication=publication, precedence_diagnostics=prepared.channels.precedence_diagnostics
     )
 
 

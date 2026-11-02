@@ -1,7 +1,8 @@
 """The one staleness check for every screen a calculation runs against registry declarations.
 
 A screen is a calculation note that exists because the pinned registry declares
-something: the first is the binding grade cap. A calculation stamps the
+something: the binding grade cap, and the set of figures a precedence
+divergence blocks on because they reach an exported box. A calculation stamps the
 revision with the screen contract version and a digest of the screen-relevant
 declarations of its own registry revision. Checking, exporting and recording
 recompute the expected stamp from the operation's pinned authority and refuse
@@ -25,6 +26,7 @@ from ...domain.calculations.registry.binding_grade_cap_reach import (
     capped_binding_reach_digest,
     snapshot_reach_date,
 )
+from ...domain.calculations.registry.filing_bound_reach import filing_bound_reach, filing_bound_reach_digest
 from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, what_locale_key
 
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos.calculation_revision import CalculationRevision
 
-CALCULATION_SCREEN_CONTRACT_VERSION: Final[int] = 1
+CALCULATION_SCREEN_CONTRACT_VERSION: Final[int] = 2
 """One version for every screen together; raised when a screen is added or its reading changes."""
 
 
@@ -42,6 +44,7 @@ def _screen_payload(snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOpe
         "binding_grade_caps": capped_binding_reach_digest(
             capped_binding_reach(snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot))
         ),
+        "precedence_tier_filing_bound": filing_bound_reach_digest(filing_bound_reach(snapshot.revision)),
     }
 
 

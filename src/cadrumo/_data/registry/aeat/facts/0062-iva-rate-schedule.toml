@@ -2,6 +2,99 @@
 fact_id = "iva-rate-schedule"
 family = "mapping"
 
+# An ordinary tier always has a rate. The coexisting tracks are temporary measures
+# on part of a tier, and the catalogue track is vocabulary: their windows bound them.
+[fact.standing_rate]
+track_selector = { name = "rate_role", value = "ordinary" }
+
+[[fact.variants]]
+variant_id = "iva-rate.es.general.1995-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 1995-01-01
+valid_to = 2009-12-23
+legal_refs = ["ley-37-1992:art-90", "ley-41-1994:art-78-primero"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "16" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.reduced.1995-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 1995-01-01
+valid_to = 2009-12-23
+legal_refs = ["ley-37-1992:art-91", "ley-41-1994:art-78-segundo"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "7" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.general.2012-08-31.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2012-08-31
+valid_to = 2012-08-31
+legal_refs = ["ley-37-1992:art-90"]
+source_refs = ["aeat-manual-iva-2020"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2020"
+required_text = ["18% hasta el 31 de agosto de 2012"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "18" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.reduced.2012-08-31.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2012-08-31
+valid_to = 2012-08-31
+legal_refs = ["ley-37-1992:art-91"]
+source_refs = ["aeat-manual-iva-2020"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2020"
+required_text = ["8% hasta el 31 de agosto de 2012"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "8" },
+  { key = "supersedes_tier_default", value = false },
+]
+
 [[fact.variants]]
 variant_id = "iva-rate.es.general.2012-09-01.ordinary"
 selectors = [

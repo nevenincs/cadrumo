@@ -17,40 +17,58 @@ See Also:
     :func:`application.modelo.binding_resolution.resolve_profile_source_tier`
         Resolves profile-sourced bindings as the lowest-precedence tier.
     :func:`application.aggregation.source_resolution_operations.merge_source_resolutions_by_precedence`
-        Applies the ordered overlay contract used by this module.
+        Applies the ordered overlay contract used by this module and reports
+        every value a higher tier replaced.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Final
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.hashing import content_hash_hex
 from ...core.period import Period
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
 from ...domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
     resolve_bound_casilla_binding_value,
 )
-from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
+from ...domain.calculations.registry.casilla_membership import casillas_by_id, text_family_casilla_ids
+from ...domain.calculations.registry.filing_bound_reach import FilingBoundReach, filing_bound_reach
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
 from ...domain.calculations.registry.schema import (
+    BindingDefinition,
     ModeloRevision,
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.modelos.calculation_binding_values import PERSISTED_BOOLEAN_BINDING_TOKENS
+from ...domain.modelos.calculation_revision_sources import (
+    CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT,
+    CalculationSourceIssue,
+)
 from ...domain.modelos.filing_record import FilingDeclarationKind
-from ...domain.modelos.source_disagreement import SourceDisagreementRole
+from ...domain.modelos.source_disagreement import SourceDisagreementFact, SourceDisagreementRole
 from ...domain.modelos.work_unit import WorkUnit
-from ..aggregation.source_mesh import CalculationSourceResolution
-from ..aggregation.source_resolution_operations import PrecedenceTier, merge_source_resolutions_by_precedence
+from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
+from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
+from ..aggregation.source_resolution_operations import (
+    PrecedenceKeyKind,
+    PrecedenceTier,
+    TierDivergence,
+    TierValueProvenance,
+    merge_source_resolutions_by_precedence,
+)
 from .binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,
     reject_binding_channel_mismatch,
@@ -84,6 +102,8 @@ class ResolvedCalculationChannels:
     boolean_bindings: dict[BindingId, bool]
     borrador_snapshot_id: str | None
     bindings_sourced_from_borrador: tuple[BindingId, ...]
+    precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """Every value a higher tier replaced that a lower tier held differently, as the screen reports it."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,18 +174,12 @@ def resolve_calculation_binding_channels(
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         borrador_snapshot_id=borrador_snapshot_id,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
         borrador_snapshot_repository=borrador_snapshot_repository,
         operation=operation,
     )
     profile_resolution = resolve_profile_source_tier(
         bucket_id=work_unit.bucket_id,
         snapshot=snapshot,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
-        borrador_resolution=borrador_resolution,
-        backend_binding_values=backend_binding_values,
         operation=operation,
         profile=profile,
     )
@@ -178,17 +192,48 @@ def resolve_calculation_binding_channels(
         binding_values=dict(caller_binding_values),
         enum_binding_values=dict(caller_enum_binding_values),
     )
-    merged = merge_source_resolutions_by_precedence(
-        tuple(
-            PrecedenceTier(role=role, resolution=resolution, source_family=role.value)
-            for role, resolution in (
-                (SourceDisagreementRole.PROFILE, profile_resolution),
-                (SourceDisagreementRole.BACKEND, backend_tier),
-                (SourceDisagreementRole.BORRADOR, borrador_resolution),
-                (SourceDisagreementRole.CALLER, caller_tier),
-            )
+    declared_sources = {binding.id: binding.source.value for binding in snapshot.revision.bindings}
+    overlay = merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(
+                role=SourceDisagreementRole.PROFILE,
+                resolution=profile_resolution,
+                source_family=BindingSourceKind.PROFILE.value,
+                provenance=_binding_keyed_provenance(profile_resolution, BindingSourceKind.PROFILE.value),
+            ),
+            PrecedenceTier(
+                role=SourceDisagreementRole.BACKEND,
+                resolution=backend_tier,
+                source_family=_BACKEND_SOURCE_FAMILY,
+                provenance={
+                    binding_id: TierValueProvenance(
+                        source_family=declared_sources.get(binding_id, _BACKEND_SOURCE_FAMILY)
+                    )
+                    for binding_id in backend_binding_values
+                },
+            ),
+            PrecedenceTier(
+                role=SourceDisagreementRole.BORRADOR,
+                resolution=borrador_resolution,
+                source_family=BindingSourceKind.BORRADOR.value,
+                provenance=_binding_keyed_provenance(
+                    borrador_resolution,
+                    BindingSourceKind.BORRADOR.value,
+                    evidence_ref=(
+                        None
+                        if borrador_resolution.borrador_provenance is None
+                        else borrador_resolution.borrador_provenance.snapshot_id
+                    ),
+                ),
+            ),
+            PrecedenceTier(
+                role=SourceDisagreementRole.CALLER,
+                resolution=caller_tier,
+                source_family=OPERATOR_INPUT_SOURCE_FAMILY,
+            ),
         ),
-    ).resolution
+    )
+    merged = overlay.resolution
     resolved_bindings = dict(sorted(merged.binding_values.items()))
     resolved_enum_bindings = dict(sorted(merged.enum_binding_values.items()))
     resolved_date_bindings = dict(sorted(merged.date_binding_values.items()))
@@ -198,6 +243,14 @@ def resolve_calculation_binding_channels(
         resolved_bindings,
         resolved_enum_bindings,
         resolved_boolean_bindings,
+    )
+    screen = precedence_screen_context(work_unit, snapshot.revision)
+    casilla_divergences = _caller_casillas_over_tier_bound_values(
+        snapshot.revision,
+        casilla_inputs=casilla_inputs,
+        resolved_bindings=resolved_bindings,
+        selected_binding_roles=overlay.selected_binding_roles,
+        backend_binding_ids=frozenset(backend_binding_values),
     )
     resolved_bindings = dict(
         sorted(
@@ -216,8 +269,283 @@ def resolve_calculation_binding_channels(
         boolean_bindings=resolved_boolean_bindings,
         borrador_snapshot_id=borrador_provenance.snapshot_id if borrador_provenance is not None else None,
         bindings_sourced_from_borrador=(
-            borrador_provenance.bindings_sourced if borrador_provenance is not None else ()
+            ()
+            if borrador_provenance is None
+            else tuple(
+                binding_id
+                for binding_id in borrador_provenance.bindings_sourced
+                if overlay.selected_binding_roles.get(binding_id) is SourceDisagreementRole.BORRADOR
+            )
         ),
+        precedence_diagnostics=precedence_divergence_diagnostics(
+            (*overlay.divergences, *casilla_divergences),
+            screen=screen,
+        ),
+    )
+
+
+OPERATOR_INPUT_SOURCE_FAMILY: Final[str] = "operator_input"
+"""The source family of every value the operator supplied: a binding, a relation or a box."""
+_BACKEND_SOURCE_FAMILY: Final[str] = "source_mesh"
+_BINDING_REF_MARKER: Final[str] = ":binding:"
+PRECEDENCE_TIER_DIVERGENCE_REASON: Final = "precedence_tier_divergence"
+"""The reason of a divergence on a filed figure; it withholds checking, exporting and recording."""
+PRECEDENCE_TIER_DIVERGENCE_ADVISORY_REASON: Final = "precedence_tier_divergence_advisory"
+"""The reason of a divergence on a figure that reaches no exported box; it withholds nothing."""
+_OPERATOR_OVERRIDE_ADVISORY_REASON: Final = "operator_override_diverges_from_computed"
+
+
+def _binding_keyed_provenance(
+    resolution: CalculationSourceResolution, source_family: str, *, evidence_ref: str | None = None
+) -> dict[str, TierValueProvenance]:
+    """Each binding a tier's provenance names, with its keyed source reference and fingerprint.
+
+    The profile and borrador tiers name each value they source as
+    ``...:binding:<id>``; a supplied ``evidence_ref`` (the borrador snapshot)
+    stands in for the row's fingerprint.
+    """
+    provenance: dict[str, TierValueProvenance] = {}
+    for row in resolution.provenance:
+        if _BINDING_REF_MARKER not in row.source_ref:
+            continue
+        binding_id = row.source_ref.rsplit(_BINDING_REF_MARKER, 1)[1]
+        provenance[binding_id] = TierValueProvenance(
+            source_family=source_family,
+            source_ref=row.source_ref,
+            evidence_ref=evidence_ref if evidence_ref is not None else row.fingerprint,
+        )
+    return provenance
+
+
+def _caller_casillas_over_tier_bound_values(
+    revision: ModeloRevision,
+    *,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    resolved_bindings: Mapping[BindingId, Decimal],
+    selected_binding_roles: Mapping[BindingId, SourceDisagreementRole],
+    backend_binding_ids: frozenset[BindingId],
+) -> tuple[TierDivergence, ...]:
+    """Compare each operator box with the value its binding brought from the profile or the borrador.
+
+    A box bound to a source-mesh binding is compared where the mesh's bound
+    values are merged with the operator's boxes, so it is left out here, as is
+    a box whose binding the operator also set: both values are the operator's.
+    """
+    lower_roles = (SourceDisagreementRole.PROFILE, SourceDisagreementRole.BORRADOR)
+    bound_by_role = {
+        role: resolve_available_bound_inputs_by_casilla_id(
+            revision,
+            {
+                binding_id: value
+                for binding_id, value in resolved_bindings.items()
+                if selected_binding_roles.get(binding_id) is role and binding_id not in backend_binding_ids
+            },
+        )
+        for role in lower_roles
+    }
+    contested = {
+        casilla_id: value
+        for casilla_id, value in casilla_inputs.items()
+        if any(casilla_id in bound for bound in bound_by_role.values())
+    }
+    if not contested:
+        return ()
+    tiers = [
+        PrecedenceTier(
+            role=role,
+            resolution=CalculationSourceResolution(
+                resolver_id=f"calculate_{role.value}_bound_casillas",
+                bound_inputs_by_casilla_id={
+                    casilla_id: value for casilla_id, value in bound_by_role[role].items() if casilla_id in contested
+                },
+            ),
+            source_family=role.value,
+        )
+        for role in lower_roles
+    ]
+    tiers.append(
+        PrecedenceTier(
+            role=SourceDisagreementRole.CALLER,
+            resolution=CalculationSourceResolution(
+                resolver_id="calculate_caller_casillas", bound_inputs_by_casilla_id=contested
+            ),
+            source_family=OPERATOR_INPUT_SOURCE_FAMILY,
+        )
+    )
+    return merge_source_resolutions_by_precedence(tiers).divergences
+
+
+@dataclass(frozen=True, slots=True)
+class PrecedenceScreenContext:
+    """What a precedence divergence is stated against: the declaration, its revision and its filing-bound set."""
+
+    modelo: str
+    filing_year: int
+    period: str
+    work_unit_id: str
+    revision: ModeloRevision
+    reach: FilingBoundReach
+    declared_bindings: Mapping[BindingId, BindingDefinition]
+
+
+def precedence_screen_context(work_unit: WorkUnit, revision: ModeloRevision) -> PrecedenceScreenContext:
+    """Bind the precedence screen to ``work_unit`` and the filing-bound set of ``revision``."""
+    return PrecedenceScreenContext(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+        work_unit_id=work_unit.work_unit_id,
+        revision=revision,
+        reach=filing_bound_reach(revision),
+        declared_bindings=MappingProxyType(dict(revision_bindings_by_id(revision))),
+    )
+
+
+def _declaration_digest(screen: PrecedenceScreenContext, divergence: TierDivergence) -> str:
+    """The content digest of the registry declaration a divergence's key is read from."""
+    if divergence.key_kind is PrecedenceKeyKind.CASILLA:
+        casilla = casillas_by_id(screen.revision).get(validated_casilla_id(divergence.key))
+        declaration: object = None if casilla is None else casilla.model_dump(mode="json")
+    else:
+        binding = screen.declared_bindings.get(divergence.key)
+        declaration = None if binding is None else binding.model_dump(mode="json")
+    return content_hash_hex({"key_kind": divergence.key_kind.value, "key": divergence.key, "declaration": declaration})
+
+
+def _reached_casillas(screen: PrecedenceScreenContext, divergence: TierDivergence) -> tuple[CasillaId, ...]:
+    if divergence.key_kind is PrecedenceKeyKind.CASILLA:
+        return screen.reach.casilla_reach(validated_casilla_id(divergence.key))
+    return screen.reach.binding_reach(divergence.key)
+
+
+def _divergence_reason(divergence: TierDivergence, *, filing_bound: bool) -> CalculationSourceDiagnosticReason:
+    if filing_bound:
+        return PRECEDENCE_TIER_DIVERGENCE_REASON
+    if divergence.key_kind is PrecedenceKeyKind.CASILLA:
+        return _OPERATOR_OVERRIDE_ADVISORY_REASON
+    return PRECEDENCE_TIER_DIVERGENCE_ADVISORY_REASON
+
+
+def _held_roles_text(divergence: TierDivergence) -> str:
+    replaced = dict.fromkeys(
+        source.role.value for source in divergence.sources if source.role is not divergence.selected_role
+    )
+    return ", ".join(replaced)
+
+
+def _divergence_diagnostic(screen: PrecedenceScreenContext, divergence: TierDivergence) -> CalculationSourceDiagnostic:
+    """State one divergence as a diagnostic that names its tiers and never its amounts."""
+    reached = _reached_casillas(screen, divergence)
+    fact = SourceDisagreementFact.of(
+        modelo=screen.modelo,
+        filing_year=screen.filing_year,
+        period=screen.period,
+        work_unit_id=screen.work_unit_id,
+        registry_revision_id=str(screen.revision.id),
+        inputs_digest=_declaration_digest(screen, divergence),
+        key=divergence.key,
+        value_channel=divergence.value_channel,
+        reached_casillas=reached,
+        sources=divergence.sources,
+        selected_role=divergence.selected_role,
+        differing_row_indices=divergence.differing_row_indices,
+    )
+    binding = None if divergence.key_kind is PrecedenceKeyKind.CASILLA else screen.declared_bindings.get(divergence.key)
+    source_kind = OPERATOR_INPUT_SOURCE_FAMILY if binding is None else binding.source.value
+    message = (
+        f"{divergence.key_kind.value} {divergence.key!r}: the {divergence.selected_role.value} value replaced a "
+        f"different value from {_held_roles_text(divergence)}"
+    )
+    return CalculationSourceDiagnostic(
+        reason=_divergence_reason(divergence, filing_bound=bool(reached)),
+        source_kind=source_kind,
+        message=message[:CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT],
+        remedy=(
+            "Correct the source in error so both state the same value, or remove the higher tier's value, "
+            "then calculate again."
+        ),
+        resolver_id=fact.sources[-1].resolver_id,
+        binding_id=divergence.key if divergence.key_kind is PrecedenceKeyKind.BINDING else None,
+        relation_id=divergence.key if divergence.key_kind is PrecedenceKeyKind.RELATION else None,
+        casilla_id=(
+            validated_casilla_id(divergence.key)
+            if divergence.key_kind is PrecedenceKeyKind.CASILLA
+            else sole_bound_casilla(screen.revision, divergence.key)
+        ),
+        disagreement=fact,
+    )
+
+
+def precedence_divergence_diagnostics(
+    divergences: Iterable[TierDivergence], *, screen: PrecedenceScreenContext
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """State every overlay divergence against ``screen``: blocking on a filed figure, an advisory elsewhere.
+
+    A figure is filed when its key reaches an exported casilla of a revision
+    declared at the filing rung (:func:`~cadrumo.domain.calculations.registry.filing_bound_reach.filing_bound_reach`).
+    A box the operator set over a bound value that reaches no exported box
+    keeps the operator-override advisory it always had.
+    """
+    return tuple(_divergence_diagnostic(screen, divergence) for divergence in divergences)
+
+
+def operator_over_source_divergences(
+    *,
+    source_relations: Mapping[RelationId, Decimal],
+    operator_relations: Mapping[RelationId, Decimal],
+    source_casillas: Mapping[CasillaId, Decimal],
+    operator_casillas: Mapping[CasillaId, Decimal],
+) -> tuple[TierDivergence, ...]:
+    """Compare each relation and box the operator set with the value the source mesh resolved for it.
+
+    These two channels are merged where the mesh's own values are in hand
+    rather than in the binding overlay, so they are screened here: the mesh is
+    the backend tier and the operator the caller tier, in the declared order.
+    A key only one side holds is no contest and is left out.
+    """
+    contested_relations = operator_relations.keys() & source_relations.keys()
+    contested_casillas = operator_casillas.keys() & source_casillas.keys()
+    if not contested_relations and not contested_casillas:
+        return ()
+    return merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(
+                role=SourceDisagreementRole.BACKEND,
+                resolution=CalculationSourceResolution(
+                    resolver_id="calculate_backend_relations_and_boxes",
+                    relation_values={key: source_relations[key] for key in contested_relations},
+                    bound_inputs_by_casilla_id={key: source_casillas[key] for key in contested_casillas},
+                ),
+                source_family=_BACKEND_SOURCE_FAMILY,
+            ),
+            PrecedenceTier(
+                role=SourceDisagreementRole.CALLER,
+                resolution=CalculationSourceResolution(
+                    resolver_id="calculate_caller_relations_and_boxes",
+                    relation_values={key: operator_relations[key] for key in contested_relations},
+                    bound_inputs_by_casilla_id={key: operator_casillas[key] for key in contested_casillas},
+                ),
+                source_family=OPERATOR_INPUT_SOURCE_FAMILY,
+            ),
+        )
+    ).divergences
+
+
+def precedence_tier_issue(diagnostic: CalculationSourceDiagnostic) -> CalculationSourceIssue | None:
+    """The persisted issue a blocking divergence diagnostic becomes; ``None`` for an advisory one.
+
+    The issue carries every tier's value inside the encrypted revision, so
+    check, export and recording read the finding without resolving again.
+    """
+    if diagnostic.reason != PRECEDENCE_TIER_DIVERGENCE_REASON or diagnostic.disagreement is None:
+        return None
+    return CalculationSourceIssue(
+        reason=PRECEDENCE_TIER_DIVERGENCE_REASON,
+        binding_source=diagnostic.binding_source,
+        casilla_id=diagnostic.casilla_id,
+        message=diagnostic.message[:CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT],
+        resolver_id=diagnostic.resolver_id,
+        disagreement=diagnostic.disagreement,
     )
 
 
@@ -409,10 +737,18 @@ def _row_binding_replay_values(
 
 
 __all__ = [
+    "OPERATOR_INPUT_SOURCE_FAMILY",
+    "PRECEDENCE_TIER_DIVERGENCE_ADVISORY_REASON",
+    "PRECEDENCE_TIER_DIVERGENCE_REASON",
     "CalculationReplayPayloads",
+    "PrecedenceScreenContext",
     "ResolvedCalculationChannels",
     "ResolvedCalculationInputs",
     "build_calculation_replay_payloads",
+    "operator_over_source_divergences",
+    "precedence_divergence_diagnostics",
+    "precedence_screen_context",
+    "precedence_tier_issue",
     "resolve_calculation_binding_channels",
     "resolve_calculation_inputs",
 ]

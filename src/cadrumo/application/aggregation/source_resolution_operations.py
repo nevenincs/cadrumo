@@ -197,7 +197,8 @@ class TierValueProvenance:
 
 
 def _no_tier_provenance() -> Mapping[str, TierValueProvenance]:
-    return MappingProxyType({})
+    empty: dict[str, TierValueProvenance] = {}
+    return MappingProxyType(empty)
 
 
 @dataclass(frozen=True, slots=True)

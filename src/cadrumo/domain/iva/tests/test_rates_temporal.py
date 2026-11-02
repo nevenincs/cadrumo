@@ -62,8 +62,8 @@ def _published_es_rows(kind: str, role: str) -> tuple[tuple[date, date | None], 
 # boundary it exercises is the published one. The ordinary ES rows split without any
 # rate change, so lookups straddle a row boundary.
 _ORDINARY_ROW_SPLIT = _published_es_rows("general", "ordinary")[-1][0]
-_GENERAL_ORDINARY_START = _published_es_rows("general", "ordinary")[0][0]
-_REDUCED_ORDINARY_START = _published_es_rows("reduced", "ordinary")[0][0]
+_GENERAL_ORDINARY_START = _RDL_20_2012_GENERAL_RATE_START
+_REDUCED_ORDINARY_START = _RDL_20_2012_GENERAL_RATE_START
 _SUPER_REDUCED_ORDINARY_START = _published_es_rows("super_reduced", "ordinary")[0][0]
 _ZERO_ORDINARY_ROWS = _published_es_rows("zero", "ordinary")
 _COEXISTING_5_ROWS = _published_es_rows("reduced", "coexisting-5")
@@ -405,23 +405,26 @@ def test_es_reduced_resolves_on_both_sides_of_the_row_split(operation: PinnedAut
     assert after.pct == Decimal("10")
 
 
-def test_es_lookup_before_the_general_rate_existed_raises(operation: PinnedAuthorityOperation) -> None:
-    """A date before 1 September 2012 has no registered general rate, and must refuse.
+def test_es_general_rate_turns_where_the_statute_turns_it() -> None:
+    """RDL 20/2012 art. 23.Dos moved the general rate from 18 % to 21 % on 1 September 2012.
 
-    This replaces an assertion that 2023 raises. That was true of the table and
-    false of the law: the boundary it pinned was a refresh artefact, so the test
-    encoded the defect as the contract and would have kept the correction out.
-
-    The boundary is still real and still worth a gate -- it has simply moved to
-    where the statute puts it. Before RDL 20/2012 took effect the general rate
-    was 18 %, which this table does not carry, so 2012-08-31 must refuse while
-    2012-09-01 resolves. Both directions are asserted, because a refusal test
-    with no matching acceptance cannot tell a boundary from a blanket gap.
+    This replaces an assertion that the earlier date raises, which pinned the
+    table's reach rather than the law. Both sides are the published rate.
     """
-    with pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2012|rate"):
-        lookup_rate(_ES, _GENERAL, date(2012, 8, 31), operation=operation)
+    with bundled_indexed_authority().operation() as pinned, validating_governed_facts(pinned):
+        before = lookup_rate(_ES, _GENERAL, date(2012, 8, 31), operation=pinned)
+        after = lookup_rate(_ES, _GENERAL, date(2012, 9, 1), operation=pinned)
 
-    assert lookup_rate(_ES, _GENERAL, date(2012, 9, 1), operation=operation).pct == Decimal("21")
+    assert (before.pct, before.published_on_date) == (Decimal("18"), True)
+    assert (after.pct, after.published_on_date) == (Decimal("21"), True)
+
+
+def test_a_table_without_the_declaration_refuses_a_date_it_does_not_reach(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """An authority published before the fact declared its standing rates keeps its old answer."""
+    with pytest.raises(IvaRateNotFoundError):
+        lookup_rate(_ES, _GENERAL, _GENERAL_ORDINARY_START - timedelta(days=1), operation=operation)
 
 
 def test_es_years_before_the_row_split_resolve_inside_prescripcion(operation: PinnedAuthorityOperation) -> None:
@@ -535,7 +538,12 @@ def test_tier_rates_within_lists_each_rate_of_a_span_in_force_order() -> None:
             assert before is not None
             after = before + timedelta(days=1)
             old = lookup_rate(member_state, _GENERAL, before, operation=operation).pct
-            new = lookup_rate(member_state, _GENERAL, after, operation=operation).pct
+            successor = lookup_rate(member_state, _GENERAL, after, operation=operation)
+            if not successor.published_on_date:
+                # An edition with no successor yet: the span lists published rates only.
+                assert tier_rates_within(member_state, _GENERAL, before, after, operation=operation) == (old,)
+                continue
+            new = successor.pct
             assert tier_rates_within(member_state, _GENERAL, before, before, operation=operation) == (old,)
             assert tier_rates_within(member_state, _GENERAL, after, after, operation=operation) == (new,)
             expected = (old,) if old == new else (old, new)

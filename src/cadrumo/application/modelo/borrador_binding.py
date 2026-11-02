@@ -27,14 +27,12 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import prefixed_digest
 from ...core.identity.bucket import BucketId
@@ -86,19 +84,6 @@ class Modelo100BorradorBindingCommand(BaseModel):
     filing_year: FilingYear
     period: Period
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
-    caller_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
-    caller_enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _enforce_binding_key_shape(self) -> Modelo100BorradorBindingCommand:
-        blank_decimal_keys = sorted(key for key in self.caller_binding_values if not key.strip())
-        blank_enum_keys = sorted(key for key in self.caller_enum_binding_values if not key.strip())
-        if blank_decimal_keys or blank_enum_keys:
-            raise Modelo100BorradorBindingError(
-                translated_message="application.modelo.borrador_binding.errors.caller_binding_keys_blank",
-            )
-        return self
 
 
 def _borrador_snapshot_load_failure(
@@ -201,9 +186,8 @@ def _resolve_borrador_binding_values(
     snapshot: Borrador100Snapshot,
     *,
     eligible_bindings: dict[BindingId, BindingDefinition],
-    caller_owned: set[BindingId],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Project eligible snapshot values, leaving explicit caller values in control.
+    """Project every eligible snapshot value; the precedence overlay decides which tier's value is used.
 
     A ``cross_check_only`` binding is held by the snapshot for comparison and
     never enters this tier, so the borrador cannot fill a value that the
@@ -212,8 +196,6 @@ def _resolve_borrador_binding_values(
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
     for binding_id, raw_value in snapshot.binding_values.items():
-        if binding_id in caller_owned:
-            continue
         binding = eligible_bindings[binding_id]
         if binding.value.typed_enum is not None:
             if binding.borrador_supplies_value:
@@ -280,10 +262,11 @@ def resolve_modelo_100_borrador_bindings(
 
     The function is deliberately inert when no snapshot is supplied:
     borrador values are never consumed implicitly. When a snapshot is
-    supplied, caller values take precedence and the snapshot may only
-    contribute bindings explicitly marked ``aeat_prefilled`` by the
-    registry revision passed to the service and not declared
-    ``cross_check_only``; a snapshot may still hold those, for comparison.
+    supplied, the snapshot may only contribute bindings explicitly marked
+    ``aeat_prefilled`` by the registry revision passed to the service and not
+    declared ``cross_check_only``; a snapshot may still hold those, for
+    comparison. Caller values take precedence in the overlay, which still sees
+    every value the snapshot states.
 
     Returns:
         A :class:`CalculationSourceResolution` with ``owned_sources`` set to
@@ -313,12 +296,7 @@ def resolve_modelo_100_borrador_bindings(
     )
     eligible_bindings = borrador_admitted_bindings(registry_snapshot.revision)
     _assert_borrador_bindings_allowed(snapshot, eligible_bindings)
-    caller_owned = set(command.caller_binding_values) | set(command.caller_enum_binding_values)
-    decimal_values, enum_values = _resolve_borrador_binding_values(
-        snapshot,
-        eligible_bindings=eligible_bindings,
-        caller_owned=caller_owned,
-    )
+    decimal_values, enum_values = _resolve_borrador_binding_values(snapshot, eligible_bindings=eligible_bindings)
     return _borrador_resolution(snapshot, decimal_values=decimal_values, enum_values=enum_values)
 
 
@@ -341,16 +319,12 @@ class Modelo100BorradorSourceResolver:
         self,
         *,
         borrador_snapshot_id: str | None,
-        caller_binding_values: Mapping[BindingId, Decimal],
-        caller_enum_binding_values: Mapping[BindingId, str],
         registry_snapshot: RegistrySnapshot | None = None,
         snapshot_repository: Borrador100SnapshotRepository | None = None,
         operation: PinnedAuthorityOperation,
     ) -> None:
-        """Bind the borrador snapshot and the caller-supplied binding values."""
+        """Bind the borrador snapshot this tier reads."""
         self._borrador_snapshot_id = borrador_snapshot_id
-        self._caller_binding_values = caller_binding_values
-        self._caller_enum_binding_values = caller_enum_binding_values
         self._registry_snapshot = registry_snapshot
         self._snapshot_repository = snapshot_repository
         self._operation = operation
@@ -377,8 +351,6 @@ class Modelo100BorradorSourceResolver:
                     filing_year=context.filing_year,
                     period=context.period,
                     borrador_snapshot_id=self._borrador_snapshot_id,
-                    caller_binding_values=self._caller_binding_values,
-                    caller_enum_binding_values=self._caller_enum_binding_values,
                 ),
                 registry_snapshot=snapshot,
                 snapshot_repository=self._snapshot_repository,

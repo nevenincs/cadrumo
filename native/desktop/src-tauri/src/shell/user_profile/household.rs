@@ -156,7 +156,9 @@ impl Family {
                         || (state == GroupState::NotServed
                             && (!leaves.is_empty() || row_count != 0 || stated_count.is_some()))
                         || (state == GroupState::Incomplete)
-                            != incomplete_words.as_deref().is_some_and(|words| !words.is_empty())
+                            != incomplete_words
+                                .as_deref()
+                                .is_some_and(|words| !words.is_empty())
                     {
                         return Err(protocol());
                     }
@@ -353,11 +355,17 @@ mod tests {
         assert_eq!(shown["groups"][0]["state"], "incomplete");
         assert_eq!(shown["groups"][0]["stated_count"], "3");
         assert_eq!(shown["groups"][0]["row_count"], 1);
-        assert_eq!(shown["groups"][0]["incomplete_words"], "3 stated, 1 recorded");
+        assert_eq!(
+            shown["groups"][0]["incomplete_words"],
+            "3 stated, 1 recorded"
+        );
         assert_eq!(shown["groups"][0]["rows"][0]["row_index"], "0");
         // Nothing recorded under a stated count is still an incomplete group, not an unknown one.
         let none = read(vec![incomplete(0)]).unwrap();
-        assert_eq!(serde_json::to_value(&none).unwrap()["groups"][0]["rows"], json!([]));
+        assert_eq!(
+            serde_json::to_value(&none).unwrap()["groups"][0]["rows"],
+            json!([])
+        );
     }
 
     #[test]

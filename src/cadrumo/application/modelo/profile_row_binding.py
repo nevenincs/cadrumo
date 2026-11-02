@@ -30,10 +30,10 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider, ProfileRowsSelector
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceProvenance, RowBindingValue
 
 if TYPE_CHECKING:
