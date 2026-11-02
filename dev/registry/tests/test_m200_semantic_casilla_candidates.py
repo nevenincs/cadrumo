@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import re
 from pathlib import Path
 
 import pytest
@@ -14,15 +15,17 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 
 from ..analysis import m200_semantic_casilla_candidates as subject
 from ..analysis import m200_target_identity_worklist as identity_subject
-from ..analysis.m200_record_design_support import record_design_source
+from ..analysis.m200_record_design_support import record_design_field_index, record_design_source
 from ..compiler.authority import compiled_bundled_authority
+from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS
 from ..pipeline.record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
-from ..pipeline.semantic_map import load_semantic_map_for_revision
+from ..pipeline.semantic_map import load_semantic_map_for_revision, semantic_anchor_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 _TARGET_REVISION = "2024"
+_SHARED_OWNER_CELL_CEILING = 2717
 
 
 @pytest.fixture(scope="module")
@@ -120,10 +123,12 @@ def test_cli_stdout_exports_one_proposal_only_table_per_screened_revision(
         "map_owner_mismatches": "map_owner_mismatch",
         "orphaned_declarations": "orphaned_declaration",
         "printed_identity_diagnostics": "printed_identity_diagnostic",
+        "shared_owners": "shared_owner",
     }
-    assert set(table["counts"]) == set(sections)
+    assert set(table["counts"]) == {*sections, "shared_owner_cells"}
     for count_key, section_key in sections.items():
         assert len(table.get(section_key, [])) == table["counts"][count_key]
+    assert sum(len(row["cells"]) for row in table.get("shared_owner", [])) == table["counts"]["shared_owner_cells"]
     assert "candidate" not in document
 
 
@@ -252,6 +257,11 @@ def test_current_casilla_identity_beats_later_sibling_filler() -> None:
     assert proposed_id == "01683"
 
 
+def _printed_number(fields, entry) -> str:
+    (number,) = re.findall(r"\[([0-9]+)\]", fields[semantic_anchor_key(entry.anchor)].normalized_description)
+    return number.lstrip("0")
+
+
 def _casilla_entries(target_map):
     return [entry for entry in target_map.entries if entry.kind is CasillaFieldKind.CASILLA]
 
@@ -323,6 +333,48 @@ def test_planted_wrong_owner_is_reported(target_identity_inputs, target_identity
     assert [row.export_field_id for row in conflicts] == [str(victim.export_field_id)]
     assert conflicts[0].declared_map_owner == wrong_owner
     assert len(worklist.printed_identity_diagnostics) == len(target_identity_worklist.printed_identity_diagnostics) + 1
+
+
+def test_shared_owner_ignores_the_printed_number_match_that_hides_it(target_identity_inputs) -> None:
+    """Teeth: two sheets printing one number with one owner pass every number check, and are still reported."""
+    target_map, target_design, declarations, placements = target_identity_inputs
+    fields = record_design_field_index(target_design)
+    numbers: dict[str, list] = {}
+    for entry in _casilla_entries(target_map):
+        numbers.setdefault(_printed_number(fields, entry), []).append(entry)
+    worklist_before = _classify(target_map, target_design, declarations, placements)
+    reported = {row.casilla_id for row in worklist_before.shared_owners}
+    (left, right) = next(
+        pair
+        for pair in numbers.values()
+        if len(pair) == 2
+        and {str(pair[0].casilla_id), str(pair[1].casilla_id)}.isdisjoint(reported)
+        and pair[0].casilla_id != pair[1].casilla_id
+    )
+    merged = _with_entry(target_map, right, right.model_copy(update={"casilla_id": left.casilla_id}))
+
+    worklist = _classify(merged, target_design, declarations, placements)
+
+    assert not worklist.printed_identity_diagnostics
+    assert not worklist.map_owner_mismatches
+    (planted,) = [row for row in worklist.shared_owners if row.casilla_id not in reported]
+    assert planted.casilla_id == left.casilla_id
+    assert {cell.export_field_id for cell in planted.cells} == {str(left.export_field_id), str(right.export_field_id)}
+
+
+def test_declared_echo_of_another_sheet_is_not_a_shared_owner(target_identity_worklist) -> None:
+    reported = {row.casilla_id: {cell.sheet for cell in row.cells} for row in target_identity_worklist.shared_owners}
+    echoed = {casilla_id for _sheet, casilla_id in MODELO_200_ECHO_CELLS}
+
+    assert echoed
+    assert echoed.isdisjoint(reported)
+
+
+def test_shared_owner_debt_does_not_grow() -> None:
+    """Each cell here receives another concept's amount, so the count may only fall."""
+    for worklist in identity_subject.load_bundled_m200_target_identity_worklists():
+        cells = sum(len(row.cells) for row in worklist.shared_owners)
+        assert cells <= _SHARED_OWNER_CELL_CEILING, worklist.revision
 
 
 def test_padded_equivalent_owner_is_not_reported(target_identity_inputs, target_identity_worklist) -> None:
