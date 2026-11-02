@@ -29,7 +29,12 @@ if TYPE_CHECKING:
 from ...core.time.utc import coerce_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
-from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import (
+    BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
+    BucketEvent,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
@@ -150,6 +155,19 @@ def require_actor(value: str, *, operation: str) -> str:
     if not trimmed:
         raise TransactionValidationError(f"{operation} actor must not be blank")
     return trimmed
+
+
+def require_recordable_reason(value: str, *, operation: str) -> None:
+    """Refuse a reason its bucket event could not record, before anything is loaded or written.
+
+    A request may be wider than the event: left to the event's own bound, the refusal
+    comes while the commit is under way, after a preview said the same reason was fine.
+    """
+    if len(value.strip()) > BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
+        raise TransactionValidationError(
+            f"{operation} reason is longer than the {BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH} characters an event takes",
+            context={"reason_length": str(len(value.strip()))},
+        )
 
 
 def require_source_command(value: str, *, operation: str) -> str:

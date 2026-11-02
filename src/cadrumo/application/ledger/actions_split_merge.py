@@ -40,6 +40,7 @@ from .actions_common import (
     normalise_timestamp,
     raise_finalized_modelo_blocked,
     require_actor,
+    require_recordable_reason,
     require_source_command,
     require_transaction,
     resolve_bucket_event_repository,
@@ -100,6 +101,7 @@ def split_transaction(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger split")
+    require_recordable_reason(reason, operation="ledger split")
     trimmed_source_command = require_source_command(source_command, operation="ledger split")
     require_splittable_child_count(bucket_id=bucket_id, transaction_id=transaction_id, children=children)
     repository = resolve_revision_guarded_transaction_repository(
@@ -402,6 +404,7 @@ def split_transaction_with_classified_children(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger classified split")
+    require_recordable_reason(reason, operation="ledger classified split")
     trimmed_source_command = require_source_command(source_command, operation="ledger classified split")
     require_splittable_child_count(bucket_id=bucket_id, transaction_id=transaction_id, children=children)
     if len(children) != len(child_classifications):
@@ -807,6 +810,7 @@ def merge_transactions(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger merge")
+    require_recordable_reason(reason, operation="ledger merge")
     trimmed_source_command = require_source_command(source_command, operation="ledger merge")
     if len(child_transaction_ids) < 2:
         raise TransactionValidationError(
