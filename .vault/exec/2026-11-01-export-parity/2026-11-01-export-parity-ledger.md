@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:24136e4d43fa2848841eb73c5945ca51e3cbc1737f392a39d9c2d2e556d9209d'
+body_hash: 'sha256:f137d6107d9d3f0bd9f2f9c02fffec05520e9e502c5375d09201b3c2c31f9be2'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -586,6 +586,8 @@ related:
 - `S06` `verify:` `dev.docs.sequences check --sequence (9 touched)` -> `pass`
 - `S06` `verify:` `pytest test_retencion_soportada_cli.py` -> `pass`
 - `S06` `verify:` `ruff check+format on test_retencion_soportada_cli.py` -> `pass`
+- `S06` `verify:` `dev.docs.sequences check --page how-to/modelo-100 --coherence` -> `pass`
+- `S06` `verify:` `check --sequence modelo-100-inspect-inputs,modelo-100-export-file` -> `pass`
 
 ## Notes
 
@@ -615,3 +617,4 @@ related:
 - `S16` Modelo 131 complementaria export render
 - `S29` Commit 52d53539e6 was made by another committer from in-progress S29 work and also carries a non-S29 `test_borrador_binding.py` hunk; history was not rewritten. Native CLI test `test_retencion_soportada_absence_cli.py` stays red until `contract_manifest.json` is regenerated.
 - `S06` just check-types fails on 9 ty diagnostics in `test_verify_invoice_drift_gate.py` and 2 basedpyright in `invoice_filing_fingerprint.py,` both outside S06; CLI and acceptance journeys keyed on the retired 0596 binding stay open pending S18/S29 operator paths
+- `S06` modelo-100-export-file golden record frame `result.row.revision_id` differs between two releases; `dev/docs/tests/test_sequence_goldens.py::test_another_release_changes_only_the_enrolled_export_paths` fails; central mask decision left open
