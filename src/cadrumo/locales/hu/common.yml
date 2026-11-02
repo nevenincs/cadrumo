@@ -200,6 +200,8 @@ aggregation:
         vagy igazolással.
       own_tax_id: A kifizető adóazonosítója (NIF) a sajátod; az általad végzett levonás
         nem a javadra szóló előleg.
+      stale_revision: Ez a levonási rekord megváltozott, amióta elolvastad; olvasd
+        be újra mentés előtt.
   retenciones:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
