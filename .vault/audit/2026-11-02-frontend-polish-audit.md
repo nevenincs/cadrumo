@@ -78,6 +78,14 @@ PASS for S04. Terra reviewed first-render identity gates, continuous observation
 
 Read-only scoped vault checks reported only template annotations, stale index and body stamps. The broad scoped autofix applied annotation/stamp cleanup but continued consuming CPU without returning; root stopped that own process and rebuilt the feature index through its owning command. Do not treat the interrupted check as a pass; rerun bounded owning checks before final handoff.
 
+### s05-s07-review | low | Complete matching evidence and stable invoice rows pass
+
+PASS for S05/S07. The shared matching Chips view now renders every supplied chip with wrapping; the Turia fixture asserts number, date gap, counterparty and amount while retaining link accessibility and ambiguity semantics. Invoice grid rows are memoized by the already-memoized filtered/sorted invoice rows, preserving indexing and viewport dependencies on unrelated local updates. This avoids unnecessary row-array/index rebuilds; no measured latency claim is made. All 25 matching/invoice scenarios passed, including editing, sorting/filtering, uncertain writes and light/dark accessibility. TypeScript and scoped ESLint passed; changed files formatted. Root reviewed these narrow diffs against the Terra/Sol grounding.
+
+### s04-checkpoint | low | Shared commit captured the implemented agent changes
+
+Concurrent commit 3978e6c5e2 captured the root-implemented S04 source and tests before root staged its checkpoint. ecccd77d02 records the matching execution/review checkpoint. The passing evidence applies to those unchanged sources; no duplicate implementation was made.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

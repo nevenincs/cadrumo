@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:fed011f540ddda58a2b33d20c6ea306330184cfbf91d56fbc8febb9f58cbb2ec'
+body_hash: 'sha256:d270a9ac9c8bc4e559aae77a73d6b74cd7b414a75d77a43430e5997d836567e0'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -49,6 +49,10 @@ related:
 - `S04` `verify:` `TypeScript and targeted agent reader ESLint` -> `pass`
 - `S04` `verify:` `agent-readers and reading-model scenarios (4)` -> `pass`
 - `S04` `verify:` `agent status messaging catalog smoke scenarios (5)` -> `pass`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/ledger-matching.spec.ts`
+- `S05` `verify:` `TypeScript and matching/invoice targeted ESLint` -> `pass`
+- `S05` `verify:` `ledger-matching and ledger-invoices scenarios (25)` -> `pass`
 
 ## Notes
 
