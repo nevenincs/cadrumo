@@ -177,7 +177,7 @@ def _refuse_restated_dispositions(
         )
 
 
-def _typed_claim(entry: object) -> dict[str, object] | None:
+def _typed_claim(entry: object) -> SchemaFamilyDispositionDeclaration | None:
     """Return a disposition's typed meaning without its origin marker, or ``None`` when it is not well formed.
 
     A malformed entry is left for typed construction to refuse with the schema's
@@ -188,6 +188,6 @@ def _typed_claim(entry: object) -> dict[str, object] | None:
         return None
     declared = {key: value for key, value in table.items() if key != _ROW_INHERITED_FROM_FIELD}
     try:
-        return SchemaFamilyDispositionDeclaration.model_validate(declared).model_dump(mode="json")
+        return SchemaFamilyDispositionDeclaration.model_validate(declared)
     except (ValidationError, RegistryValidationError):
         return None
