@@ -97,7 +97,8 @@ def test_late_m303_quarter_surfaces_unassessed_rate_preview() -> None:
         for quarter, filing_year in _quarter_year_cases():
             case_id = f"M303 {filing_year} {quarter}"
             period = Period.from_year_and_code(filing_year, quarter)
-            window = resolve_filing_window("303", filing_year, period)
+            resolution = resolve_filing_window("303", filing_year, period)
+            window = None if resolution is None else resolution.dated_window
             assert window is not None, f"registry must carry an {case_id} window"
             closes_on = window.closes_on
 
@@ -142,7 +143,8 @@ def test_in_time_m303_quarter_is_silent() -> None:
     for quarter, filing_year in _quarter_year_cases():
         case_id = f"M303 {filing_year} {quarter}"
         period = Period.from_year_and_code(filing_year, quarter)
-        window = resolve_filing_window("303", filing_year, period)
+        resolution = resolve_filing_window("303", filing_year, period)
+        window = None if resolution is None else resolution.dated_window
         assert window is not None, case_id
         closes_on = window.closes_on
 
@@ -170,7 +172,8 @@ def test_m303_quarterly_resolver_returns_dates_for_full_cluster() -> None:
     for filing_year in _FILING_YEARS:
         for quarter in _QUARTERS:
             period = Period.from_year_and_code(filing_year, quarter)
-            window = resolve_filing_window("303", filing_year, period)
+            resolution = resolve_filing_window("303", filing_year, period)
+            window = None if resolution is None else resolution.dated_window
             assert window is not None, f"M303 {filing_year} {quarter} window missing"
             closes_on = window.closes_on
             assert isinstance(closes_on, date)

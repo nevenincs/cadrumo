@@ -56,7 +56,8 @@ def _work_unit(period: Period) -> WorkUnit:
 def _overdue_context() -> tuple[WorkUnit, Period, date, date]:
     """Return (work_unit, period, closes_on, reference_on) for late M130 1T."""
     period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
-    window = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    resolution = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    window = None if resolution is None else resolution.dated_window
     assert window is not None, "registry must carry an M130 1T 2026 deadline window"
     closes_on = window.closes_on
     reference_on = closes_on + timedelta(days=40)
@@ -136,7 +137,8 @@ def test_preview_preserves_exact_twelve_month_rate_boundary_without_assessment()
 def test_in_time_deadline_posture_has_no_conditional_rate_preview() -> None:
     """An open voluntary window has only days remaining, with no rate guidance."""
     period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
-    window = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    resolution = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    window = None if resolution is None else resolution.dated_window
     assert window is not None
     closes_on = window.closes_on
     reference_on = closes_on - timedelta(days=5)

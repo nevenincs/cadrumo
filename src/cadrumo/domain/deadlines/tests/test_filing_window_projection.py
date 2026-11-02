@@ -303,7 +303,7 @@ def test_the_engine_reports_an_unknown_close_as_unknown_and_never_overdue(
     # A reference date past every nominal close of 2027.
     schedule = DeadlineEngine().compute(_iva_profile(), 2027, today=date(2028, 12, 31))
 
-    unknown = {(item.modelo, item.period.registry_token): item for item in schedule.close_unknown_obligations}
+    unknown = {(str(item.modelo), item.period.registry_token): item for item in schedule.close_unknown_obligations}
     first_quarter = unknown[("303", "1T")]
     assert first_quarter.status is ObligationStatus.UNKNOWN
     assert first_quarter.opens_on == date(2027, 4, 1)

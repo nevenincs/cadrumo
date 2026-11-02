@@ -125,7 +125,8 @@ def test_resolve_filing_window_returns_the_m130_first_quarter_date(year: int) ->
     windows registered in the canonical TOML.  The resolver
     must return a non-None date for the Q1 window.
     """
-    window = resolve_filing_window("130", year, Period.from_year_and_code(year, "1T"))
+    resolution = resolve_filing_window("130", year, Period.from_year_and_code(year, "1T"))
+    window = None if resolution is None else resolution.dated_window
     assert window is not None
     closes_on = window.closes_on
     assert isinstance(closes_on, date)
@@ -157,7 +158,8 @@ def test_resolve_filing_window_wrong_period_returns_none() -> None:
 
 def test_resolve_filing_window_annual_period() -> None:
     """M100 annual period '0A' resolves to a date in the correct year."""
-    window = resolve_filing_window("100", 2024, Period.from_year_and_code(2024, "0A"))
+    resolution = resolve_filing_window("100", 2024, Period.from_year_and_code(2024, "0A"))
+    window = None if resolution is None else resolution.dated_window
     assert window is not None
     closes_on = window.closes_on
     # M100 2024 anual plazo: AEAT opens April, closes June 30 2025.
@@ -222,13 +224,14 @@ def test_resolve_filing_window_m210_arrendamiento_a_ingresar_closes_on_20_januar
     Orden EHA/3316/2010 art 5.c).1 as worded by Orden HAC/56/2024, which applies from
     2024 devengos. The April window of Orden HAC/623/2026 applies only from 2026 devengos.
     """
-    window = resolve_filing_window(
+    resolution = resolve_filing_window(
         "210",
         2025,
         Period.from_year_and_code(2025, "0A"),
         resultado=ResultDisposition.INGRESO,
         tipo_renta_code="01",
     )
+    window = None if resolution is None else resolution.dated_window
     assert window is not None
     assert (window.opens_on, window.closes_on) == (date(2026, 1, 1), date(2026, 1, 20))
 
