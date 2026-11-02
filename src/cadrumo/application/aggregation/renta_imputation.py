@@ -223,8 +223,10 @@ class ImputationCriteria:
         if declared is not ActivityImputationCriterion.DEVENGO or self._commercial_accounting(year) is True:
             return None
         first_cash_year = self._first_binding_cash_year(year)
+        if first_cash_year is None:
+            return None
         minimum_years = cash_election_minimum_years(filing_year=year)
-        if first_cash_year is None or year - first_cash_year >= minimum_years:
+        if year - first_cash_year >= minimum_years:
             return None
         filed = sorted(
             on_file
