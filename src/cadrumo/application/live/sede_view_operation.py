@@ -76,6 +76,7 @@ from ..auth.view_sessions import (
     ViewSessionSeed,
     view_context_provisioner,
 )
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -105,7 +106,7 @@ from .live_operation_execution import (
     require_exact_profile_worker,
     require_live_executor_identity,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .sede_view_ports import (
     PUBLISHING_ENDS,
     SedeViewBrowser,
@@ -566,8 +567,8 @@ def resolve_sede_view_access(
     """Admit the view only to the person on the desktop, for the request's own profile."""
     if context.frontend is not OperationFrontendProjection.DESKTOP:
         raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    resolved = resolve_whole_profile_capture_access(
-        request, context, definition_id=SEDE_VIEW_DEFINITION_ID, payload_type=SedeViewRequest
+    resolved = resolve_ledger_request_commit_access(
+        request, context, definition_id=SEDE_VIEW_DEFINITION_ID, request_type=SedeViewRequest
     )
     # ``dict(model)`` keeps the nested permission models hashable inside their frozen sets.
     policy = OperationAccessPolicy.model_validate({**dict(resolved.policy), "requires_human": True})

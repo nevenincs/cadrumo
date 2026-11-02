@@ -14,6 +14,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
 from ...core.period import Period
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
@@ -34,7 +35,7 @@ from .live_operation_execution import (
     publish_live_capture_report,
     require_exact_profile_worker,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import (
     IvaRemoteStateAcquisitionReport,
     LiveIvaAuthOutcome,
@@ -260,11 +261,11 @@ def resolve_iva_remote_state_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile IVA read authority and fresh local COMMIT fences."""
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=IVA_REMOTE_STATE_CAPTURE_DEFINITION_ID,
-        payload_type=IvaRemoteStateCaptureRequest,
+        request_type=IvaRemoteStateCaptureRequest,
     )
 
 

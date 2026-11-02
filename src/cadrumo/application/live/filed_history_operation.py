@@ -41,6 +41,7 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -76,7 +77,7 @@ from .filed_history_events import (
 from .filed_history_pull import pull_filed_history
 from .filed_observation_ports import FiledObservationPersistencePorts
 from .iva_remote_state_ports import IvaRemoteStatePort
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .notification_ports import NotificationsPorts
 from .session import LiveSessionWriteReceipt, SessionWriteReporter
 
@@ -603,11 +604,11 @@ def resolve_filed_history_access(
     Provider readiness is checked by the bound worker before browser I/O; the
     runtime's access policy cannot infer it from an automation request.
     """
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=FILED_HISTORY_OPERATION_DEFINITION_ID,
-        payload_type=FiledHistoryOperationRequest,
+        request_type=FiledHistoryOperationRequest,
     )
 
 
