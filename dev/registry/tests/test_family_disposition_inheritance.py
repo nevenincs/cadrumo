@@ -3,7 +3,9 @@
 An edition that omits its predecessor's disposition for a family keeps it, with
 the stating edition recorded, because a missing declaration is not a missing
 rule. Only an authored replacement or an explicit removal changes the inherited
-answer. Every test drives the real directory loader over an on-disk TOML tree.
+answer. An authored disposition that states the claim it would inherit is a restatement
+and is refused. Every test drives the real directory loader over an on-disk TOML
+tree.
 """
 
 from __future__ import annotations
@@ -262,3 +264,122 @@ def test_inheriting_a_claim_adds_no_serialised_trace_and_no_stronger_coverage(tm
     }
     assert rows[_FAMILY].disposition is RegistrySchemaFamilyDisposition.NOT_APPLICABLE
     assert rows[_FAMILY].reason == "Stated once."
+
+
+def test_an_authored_disposition_equal_to_the_inherited_one_is_refused(tmp_path: Path) -> None:
+    """Restating the inherited claim adds nothing an omission does not already say."""
+    modelo_dir = _chain(
+        tmp_path,
+        ("2024", _disposition("2024", "Stated once.")),
+        ("2025", _disposition("2025", "Stated once.")),
+    )
+
+    with pytest.raises(RegistryLoadError) as refusal:
+        load_modelo_directory(modelo_dir)
+
+    message = str(refusal.value)
+    assert f"modelo {_MODELO_ID!r}" in message
+    assert "revision '2025' inheriting from '2024'" in message
+    assert f"family disposition {_FAMILY!r} restates" in message
+    assert "stated by edition '2024'" in message
+
+
+def test_a_restatement_is_refused_against_the_edition_that_first_stated_the_claim(tmp_path: Path) -> None:
+    """Restating over a claim two editions back names the stating edition, not the adjacent one."""
+    modelo_dir = _chain(
+        tmp_path,
+        ("2024", _disposition("2024", "Stated once.")),
+        ("2025", ""),
+        ("2026", _disposition("2026", "Stated once.")),
+    )
+
+    with pytest.raises(RegistryLoadError, match=r"inheriting from '2025'.*stated by edition '2024'"):
+        load_modelo_directory(modelo_dir)
+
+
+def test_a_restatement_over_a_storage_only_edge_is_refused(tmp_path: Path) -> None:
+    """The family storage baseline carries dispositions, so it cannot be restated either."""
+    modelo_dir = _chain(
+        tmp_path,
+        ("2024", _disposition("2024", "Stated once.")),
+        ("2025", _disposition("2025", "Stated once.")),
+        link="family_storage_baseline",
+    )
+
+    with pytest.raises(RegistryLoadError, match="restates, unchanged"):
+        load_modelo_directory(modelo_dir)
+
+
+_OTHER_ORDEN: Final = "orden-hac-200-2024:art-2"
+
+
+@pytest.mark.parametrize(
+    ("reason", "legal_refs", "source_refs"),
+    [
+        ("Changed.", (_ARTICLE,), (_SOURCE,)),
+        ("Stated once.", (_ARTICLE, _OTHER_ORDEN), (_SOURCE,)),
+        ("Stated once.", (_ARTICLE,), (_SOURCE, "aeat-instructions")),
+    ],
+    ids=["reason", "legal-refs", "source-refs"],
+)
+def test_a_changed_claim_is_accepted_as_an_override(
+    tmp_path: Path,
+    reason: str,
+    legal_refs: tuple[str, ...],
+    source_refs: tuple[str, ...],
+) -> None:
+    """A difference in provenance is a difference: the references are part of the claim."""
+    legal = ", ".join(f'"{ref}"' for ref in legal_refs)
+    sources = ", ".join(f'"{ref}"' for ref in source_refs)
+    revised = "\n".join(
+        (
+            f'[revisions."2025".family_dispositions.{_FAMILY}]',
+            f'reason = "{reason}"',
+            f"legal_refs = [{legal}]",
+            f"source_refs = [{sources}]",
+            "",
+        )
+    )
+    definition = load_modelo_directory(
+        _chain(tmp_path, ("2024", _disposition("2024", "Stated once.")), ("2025", revised)),
+    )
+
+    held = definition.revisions["2025"].family_dispositions[_FAMILY]
+    assert held.inherited_from is None
+    assert held != definition.revisions["2024"].family_dispositions[_FAMILY]
+
+
+def test_a_restatement_in_an_edition_with_no_inherited_claim_is_a_first_statement(tmp_path: Path) -> None:
+    """With nothing inherited for the family, the entry is new and is not a restatement."""
+    definition = load_modelo_directory(
+        _chain(tmp_path, ("2024", ""), ("2025", _disposition("2025", "Stated once."))),
+    )
+
+    assert definition.revisions["2025"].family_dispositions[_FAMILY].inherited_from is None
+
+
+def test_removing_and_restating_the_same_claim_stays_refused_as_removed_and_authored(tmp_path: Path) -> None:
+    """The removal-plus-re-author path keeps its existing refusal; the restatement refusal does not replace it."""
+    modelo_dir = _chain(
+        tmp_path,
+        ("2024", _disposition("2024", "Stated once.")),
+        ("2025", _REMOVE_FAMILY + "\n" + _disposition("2025", "Stated once.")),
+    )
+
+    with pytest.raises(RegistryLoadError, match="both removed and authored"):
+        load_modelo_directory(modelo_dir)
+
+
+def test_restating_after_a_removal_one_edition_later_is_a_new_claim(tmp_path: Path) -> None:
+    """Once an edition removes the claim, a later edition stating it again inherits nothing to duplicate."""
+    definition = load_modelo_directory(
+        _chain(
+            tmp_path,
+            ("2024", _disposition("2024", "Stated once.")),
+            ("2025", _REMOVE_FAMILY),
+            ("2026", _disposition("2026", "Stated once.")),
+        ),
+    )
+
+    assert definition.revisions["2025"].family_dispositions == {}
+    assert definition.revisions["2026"].family_dispositions[_FAMILY].inherited_from is None

@@ -198,6 +198,7 @@ def _materialise_revisions(
     semantic_named = {} if declarations is None else declarations.named
     return _materialise_revision_set(
         source_path,
+        modelo_id,
         raw_revisions,
         semantic_named,
         storage_named,
@@ -255,6 +256,7 @@ def _validate_predecessor_declarations(
 
 def _materialise_revision_set(
     source_path: Path,
+    modelo_id: str,
     raw_revisions: Mapping[str, object],
     semantic_named: Mapping[str, str],
     storage_named: Mapping[str, str],
@@ -268,6 +270,7 @@ def _materialise_revision_set(
     for revision_id in revision_ids:
         revision = _materialise_revision(
             source_path,
+            modelo_id,
             raw_revisions,
             semantic_named,
             storage_named,
@@ -294,6 +297,7 @@ def _record_origins(
 
 def _materialise_revision(
     source_path: Path,
+    modelo_id: str,
     raw_revisions: Mapping[str, object],
     named: Mapping[str, str],
     storage_named: Mapping[str, str],
@@ -312,6 +316,7 @@ def _materialise_revision(
     if casilla_baseline_id is None and family_baseline_id is None:
         _disposition_inheritance.inherit_family_dispositions(
             f"{source_path}: revision {revision_id!r}",
+            modelo_id=modelo_id,
             baseline_id=None,
             predecessor=None,
             successor=table,
@@ -320,6 +325,7 @@ def _materialise_revision(
     else:
         rows, label_origins, text_origins = _materialise_revision_casillas(
             source_path,
+            modelo_id,
             raw_revisions,
             named,
             storage_named,
@@ -335,6 +341,7 @@ def _materialise_revision(
         if family_baseline_id is not None:
             _inherit_revision_families(
                 source_path,
+                modelo_id,
                 raw_revisions,
                 named,
                 storage_named,
@@ -349,6 +356,7 @@ def _materialise_revision(
             )
         _inherit_revision_dispositions(
             source_path,
+            modelo_id,
             raw_revisions,
             named,
             storage_named,
@@ -377,6 +385,7 @@ def _revision_table(
 
 def _materialise_revision_casillas(
     source_path: Path,
+    modelo_id: str,
     raw_revisions: Mapping[str, object],
     named: Mapping[str, str],
     storage_named: Mapping[str, str],
@@ -390,7 +399,7 @@ def _materialise_revision_casillas(
     if baseline_id is None:
         return _raw_casilla_rows(source_path, revision_id, table), None, None
     predecessor = _materialise_revision(
-        source_path, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
+        source_path, modelo_id, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
     )
     relation = "inheriting from" if predecessor_id is not None else "hydrating casillas from"
     rows, label_origins, text_origins = _casilla_inheritance.inherit_casillas(
@@ -407,6 +416,7 @@ def _materialise_revision_casillas(
 
 def _inherit_revision_families(
     source_path: Path,
+    modelo_id: str,
     raw_revisions: Mapping[str, object],
     named: Mapping[str, str],
     storage_named: Mapping[str, str],
@@ -420,7 +430,7 @@ def _inherit_revision_families(
     resolved: dict[str, _MaterialisedRevision],
 ) -> None:
     predecessor = _materialise_revision(
-        source_path, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
+        source_path, modelo_id, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
     )
     asserted = as_toml_array(successor.get("scoped_families", ())) or ()
     declined = cleared_family_names(successor.get(_CLEARED_FAMILIES_FIELD, ()))
@@ -444,6 +454,7 @@ def _inherit_revision_families(
 
 def _inherit_revision_dispositions(
     source_path: Path,
+    modelo_id: str,
     raw_revisions: Mapping[str, object],
     named: Mapping[str, str],
     storage_named: Mapping[str, str],
@@ -459,11 +470,12 @@ def _inherit_revision_dispositions(
         None
         if baseline_id is None
         else _materialise_revision(
-            source_path, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
+            source_path, modelo_id, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
         ).table
     )
     effective = _disposition_inheritance.inherit_family_dispositions(
         f"{source_path}: revision {revision_id!r} inheriting from {baseline_id!r}",
+        modelo_id=modelo_id,
         baseline_id=baseline_id,
         predecessor=predecessor,
         successor=successor,
