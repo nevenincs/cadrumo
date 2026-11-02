@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import NamedTuple
 
 from ...core.aggregation import BindingSourceKind
+from ...domain.modelos.source_disagreement import SourceDisagreementRole
 
 
 class CallerOverrideDisposition(StrEnum):
@@ -47,9 +48,13 @@ class CallerOverridePrecedenceTier(NamedTuple):
 #: lowest-precedence tier first. The
 #: guard's lock and carry source sets are the unions of the LOCK- and
 #: CARRY-disposition tiers (see :func:`precedence_ladder_sources`). This encodes
-#: the override DISPOSITION axis only; the merge OVERLAY order (profile < mesh
-#: backend < borrador < caller, later tier wins) is enforced separately by
-#: :func:`merge_source_resolutions`.
+#: the override DISPOSITION axis only. The overlay ORDER (profile < mesh backend
+#: < borrador < caller, later tier wins) is :data:`PRECEDENCE_OVERLAY_ORDER`,
+#: which
+#: :func:`~cadrumo.application.aggregation.source_resolution_operations.merge_source_resolutions_by_precedence`
+#: enforces and screens: a caller tier reaches the overlay only for the CARRY
+#: sources this ladder lets through, and a higher tier replacing a different
+#: lower-tier value there is reported rather than applied in silence.
 CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
     CallerOverridePrecedenceTier(
         name="deterministic_lock",
@@ -91,6 +96,15 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
         disposition=CallerOverrideDisposition.CARRY,
     ),
 )
+
+
+PRECEDENCE_OVERLAY_ORDER: tuple[SourceDisagreementRole, ...] = (
+    SourceDisagreementRole.PROFILE,
+    SourceDisagreementRole.BACKEND,
+    SourceDisagreementRole.BORRADOR,
+    SourceDisagreementRole.CALLER,
+)
+"""The order the precedence overlay lays its tiers in, lowest first; the later tier's value is the one used."""
 
 
 def precedence_ladder_sources(disposition: CallerOverrideDisposition) -> frozenset[BindingSourceKind]:
