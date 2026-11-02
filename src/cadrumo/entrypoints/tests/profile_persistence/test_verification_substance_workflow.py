@@ -276,6 +276,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         detail_rows=revision.detail_rows,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=revision.screen_stamp,
     )
     invalid_revision = CalculationRevision(
         calculation_revision_id=invalid_revision_id,
@@ -295,6 +296,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         updated_at=revision.updated_at,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=revision.screen_stamp,
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), invalid_revision))
 

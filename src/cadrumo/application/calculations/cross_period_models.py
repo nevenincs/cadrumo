@@ -24,6 +24,7 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.filing_kind_evidence import ObservedFilingKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from .observations_repository import ObservationSourceKind
@@ -47,6 +48,11 @@ class _ObservationPayload(Protocol):
     member_nif: str | None
     stamped_revision_id: RevisionId
     source_metadata: dict[str, str]
+
+    @property
+    def observed_filing_kind(self) -> ObservedFilingKind:
+        """Return the observed filing kind, unknown when the envelope carries none."""
+        ...
 
 
 class CrossPeriodDependencyOrigin(StrEnum):
@@ -90,6 +96,15 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     INCOMPLETE_GROUP_MEMBER_COVERAGE = "incomplete_group_member_coverage"
     MISSING_EXPECTED_GROUP_MEMBER_ROSTER = "missing_expected_group_member_roster"
     UNEXPECTED_GROUP_MEMBER_SOURCE = "unexpected_group_member_source"
+    FILING_KIND_DISAGREEMENT = "filing_kind_disagreement"
+    """The source filing's kind evidence contradicts itself or a complementaria-only casilla.
+
+    Either the readings of the filed declaration named different kinds, or an
+    admitted original carries a nonzero value in a casilla only a complementaria
+    fills. The requirement names the coordinate and its source casillas; the
+    envelope keeps every reading and its basis. No side is allowed to win, so the
+    kind stays unknown until the evidence is reconciled.
+    """
     REGISTRY_REVISION_DIVERGENCE = "registry_revision_divergence"
     """Stamped revision id does not re-confirm against the law-determined revision for the source.
 
@@ -125,6 +140,7 @@ OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER: Mapping[
     CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
     CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
     CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
+    CrossPeriodCleanStateBlocker.FILING_KIND_DISAGREEMENT: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
     CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
 }
 """Total operator-action projection retaining each native clean-state blocker."""

@@ -84,7 +84,11 @@ from ...domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_simplificada_token,
     irpf_estimation_regime_objetiva_token,
 )
-from ...domain.calculations.registry.observation_fold import resolve_observed_requirement_value
+from ...domain.calculations.registry.observation_fold import (
+    SourceFilingKindEvidence,
+    fold_observed_requirement_values,
+    gather_observed_requirement_values,
+)
 from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,
@@ -116,12 +120,18 @@ from .relation_prefill_m202 import (
     modelo_202_first_period_previous_payment_defaults as _modelo_202_first_period_previous_payment_defaults,
 )
 from .revision_carry_gate import revision_carry_outcome
+from .source_filing_kind import source_filing_kind_evidence
 
 if TYPE_CHECKING:
     from ...domain.contribuyente.entity_type import EntityType
 
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
 _log = get_logger(__name__)
+
+
+class _GatheredObservations(NamedTuple):
+    observations: tuple[RegistryModeloObservation, ...]
+    filing_kinds: dict[tuple[str, int, str], SourceFilingKindEvidence]
 
 
 def _gather_observations_for_snapshot(
@@ -131,7 +141,7 @@ def _gather_observations_for_snapshot(
     repository: CalculationObservationRepositoryProtocol,
     activity_start_date: date | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
-) -> tuple[RegistryModeloObservation, ...]:
+) -> _GatheredObservations:
     """Collect every observation a relation in ``snapshot.revision`` could need.
 
     Uses the registry relation requirement resolver to compute the set of
@@ -143,8 +153,12 @@ def _gather_observations_for_snapshot(
     out source periods strictly before the operator's activity start (a
     mid-year-start filer has no obligation for the pre-start quarters), so the
     gather set matches the scoped requirement set the resolver folds.
+
+    Each kept observation also yields its filing-kind evidence, so the fold can
+    prove an absent complementaria-only casilla zero for an admitted original.
     """
     needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
+    filing_kinds: dict[tuple[str, int, str], SourceFilingKindEvidence] = {}
     requirements = scoped_relation_source_requirements(
         snapshot,
         activity_start_date,
@@ -169,8 +183,10 @@ def _gather_observations_for_snapshot(
             if refused:
                 continue
             key = (obs.modelo, obs.filing_year, obs.period)
-            needed.setdefault(key, obs)
-    return tuple(needed.values())
+            if key not in needed:
+                needed[key] = obs
+                filing_kinds[key] = source_filing_kind_evidence(payload, operation=operation)
+    return _GatheredObservations(observations=tuple(needed.values()), filing_kinds=filing_kinds)
 
 
 def _provenance_note(
@@ -609,7 +625,7 @@ def _relation_value_for_relation(
     provider: RelationPrefillProvider,
     *,
     requirements_by_relation: Mapping[BindingId, RegistryFoldRequirement],
-    resolved_map: Mapping[BindingId, Decimal],
+    resolved_map: Mapping[BindingId, _ResolvedRelation],
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
@@ -633,7 +649,7 @@ def _relation_value_for_relation(
         )
     return RelationValue(
         relation=binding.id,
-        value=Decimal(resolved),
+        value=Decimal(resolved.value),
         provenance=SheetRelationProvenance.LOCAL_FILING,
         source_filing_year=target_year,
         source_periods=source_periods,
@@ -645,15 +661,24 @@ def _relation_value_for_relation(
             source_periods,
             target_year,
             resolved_at,
-        ),
+        )
+        + _proven_zero_note(resolved.proven_zero),
     )
+
+
+def _proven_zero_note(proven_zero: tuple[tuple[str, CasillaId], ...]) -> str:
+    """Name each source casilla the fold read as zero because its filing is an original."""
+    if not proven_zero:
+        return ""
+    listed = ", ".join(f"casilla {casilla_id} of {period}" for period, casilla_id in proven_zero)
+    return f"; {listed} proven zero by original filing kind"
 
 
 def _relation_values_for_snapshot(
     snapshot: RegistrySnapshot,
     *,
     requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
-    resolved_map: Mapping[RelationId, Decimal],
+    resolved_map: Mapping[RelationId, _ResolvedRelation],
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
@@ -734,7 +759,7 @@ def resolve_relations_from_local_store(
         snapshot,
         not_applicable_source_modelos,
     )
-    observations = _gather_observations_for_snapshot(
+    gathered = _gather_observations_for_snapshot(
         snapshot,
         operation=operation,
         repository=repo,
@@ -750,7 +775,7 @@ def resolve_relations_from_local_store(
         ),
     )
     resolved_map = _resolve_available_relation_values(
-        observations,
+        gathered,
         requirements_by_relation=requirements_by_relation,
     )
     values = _relation_values_for_snapshot(
@@ -764,17 +789,30 @@ def resolve_relations_from_local_store(
     return RelationValues(values=values)
 
 
+class _ResolvedRelation(NamedTuple):
+    value: Decimal
+    proven_zero: tuple[tuple[str, CasillaId], ...]
+
+
 def _resolve_available_relation_values(
-    observations: tuple[RegistryModeloObservation, ...],
+    gathered: _GatheredObservations,
     *,
     requirements_by_relation: dict[RelationId, RegistryFoldRequirement],
-) -> dict[RelationId, Decimal]:
+) -> dict[RelationId, _ResolvedRelation]:
     """Resolve each relation requirement independently from available observations."""
     by_requirement = {requirement: requirement for requirement in requirements_by_relation.values()}
-    resolved: dict[RelationId, Decimal] = {}
+    resolved: dict[RelationId, _ResolvedRelation] = {}
     for requirement in by_requirement:
         try:
-            value = resolve_observed_requirement_value(requirement, observations)
+            gathered_values = gather_observed_requirement_values(
+                requirement,
+                gathered.observations,
+                source_filing_kinds=gathered.filing_kinds,
+            )
+            value = _ResolvedRelation(
+                value=fold_observed_requirement_values(requirement, gathered_values.values),
+                proven_zero=gathered_values.proven_zero,
+            )
         except RegistryValidationError as exc:
             # A requirement with no single observed source filing stays
             # operator-manual. This is a developer breadcrumb only: the

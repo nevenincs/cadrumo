@@ -52,6 +52,7 @@ from ....application.modelo.action_errors import ModeloCrossPeriodCleanStateErro
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ....application.modelo.calculation_screen import calculation_screen_stamp
 from ....application.modelo.export import export_modelo_revision
 from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.modelo.external_import_actions import import_external_filing_evidence
@@ -254,6 +255,7 @@ def _seed_verified_revision(
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period)
+    screen_stamp = calculation_screen_stamp(snapshot, operation=published_authority_operation())
     binding_overrides = _verified_revision_binding_overrides(
         modelo=modelo,
         filing_year=filing_year,
@@ -289,6 +291,7 @@ def _seed_verified_revision(
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -314,6 +317,7 @@ def _seed_verified_revision(
         verified_by="operator-test",
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
@@ -382,6 +386,7 @@ def _seed_draft_revision(
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period)
+    screen_stamp = calculation_screen_stamp(snapshot, operation=published_authority_operation())
     work_period = Period.from_year_and_code(filing_year, period)
     work_unit = create_work_unit(
         bucket_id=bucket_id,
@@ -412,6 +417,7 @@ def _seed_draft_revision(
         casilla_values=resolved_casilla_values,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -430,6 +436,7 @@ def _seed_draft_revision(
         updated_at=_CLOCK,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
