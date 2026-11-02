@@ -72,7 +72,7 @@ def accrued_unpaid_income(
     return tuple(found)
 
 
-def _enters_window(
+def issued_invoice_enters_window(
     invoice: Invoice, *, bucket_id: str, window_start: date, window_end: date, criteria: ImputationCriteria
 ) -> bool:
     """Return whether this bucket's issued invoice accrues inside the window or is carried into it."""
@@ -87,7 +87,7 @@ def _accrues_in_window(
     invoice: Invoice, *, bucket_id: str, window_start: date, window_end: date, criteria: ImputationCriteria
 ) -> bool:
     """Return whether this bucket's issued invoice, with a EUR value, enters the window."""
-    return invoice.base_total_eur is not None and _enters_window(
+    return invoice.base_total_eur is not None and issued_invoice_enters_window(
         invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
     )
 
@@ -137,7 +137,7 @@ def accrued_without_eur_value(
         if (
             invoice.grand_total_eur is not None
             or is_rectificativa(invoice)
-            or not _enters_window(
+            or not issued_invoice_enters_window(
                 invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
             )
         ):
@@ -183,7 +183,7 @@ def rectificativa_reading(
     targets: dict[str, Invoice] = {}
     refused: list[str] = []
     for invoice in invoices.values():
-        if not is_rectificativa(invoice) or not _enters_window(
+        if not is_rectificativa(invoice) or not issued_invoice_enters_window(
             invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
         ):
             continue

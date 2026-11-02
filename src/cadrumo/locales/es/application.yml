@@ -2335,6 +2335,10 @@ application:
         modelo %{modelo} %{filing_year}, %{period} (%{changed_count} modificadas,
         %{removed_count} eliminadas, %{added_count} añadidas). Vuelve a calcularlo
         antes de verificarlo.
+      invoice_fingerprint_narrower_scope: Este cálculo del modelo %{modelo} %{filing_year},
+        %{period} es anterior al seguimiento de las facturas devengadas sin movimiento
+        bancario, así que Cadrumo no puede saber si han cambiado desde entonces. Vuelve
+        a calcularlo para empezar a seguirlas.
       invoice_fingerprint_unavailable: Cadrumo no ha podido leer tus facturas para
         compararlas con el modelo %{modelo} %{filing_year}, %{period}, así que no
         se puede confirmar que este cálculo esté al día. Inténtalo de nuevo cuando

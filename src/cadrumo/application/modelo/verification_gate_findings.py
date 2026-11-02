@@ -492,6 +492,7 @@ def _ledger_snapshot_findings(
             work_unit=work_unit,
             revision=operation.revision(work_unit.modelo, work_unit.revision_id),
             ports=ledger_membership_ports.invoice_catalogue_read_ports,
+            profile=work_profile,
             source_refs=optional_observation_refs(target.observations, "source_refs"),
             blocking_finding_observer=lambda finding, verdict: failures_by_finding_id.__setitem__(
                 id(finding),
