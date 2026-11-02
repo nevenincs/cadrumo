@@ -17,8 +17,8 @@ import pytest
 from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
+from ......application.modelo.work_form_declaration_facts import ModeloFormAeatData
 from ......application.modelo.work_form_models import (
-    ModeloFormAeatData,
     ModeloFormCasillaAddressV1,
     ModeloFormValueSource,
     ModeloWorkForm,

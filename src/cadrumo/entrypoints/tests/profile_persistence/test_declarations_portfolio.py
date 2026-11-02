@@ -13,7 +13,9 @@ import pytest
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 from ....application.modelo.action_errors import WorkUnitMutationRefusedError
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.declaration_summary import DeclarationSummaryState
 from ....application.modelo.declarations_portfolio import project_declarations_portfolio
 from ....application.modelo.declarations_workspace_contracts import (
@@ -29,6 +31,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState
 from ....entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
+from .file_flow_test_support import seed_m130_activity
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _FIRST = Period.from_year_and_code(2026, "1T")
@@ -49,15 +52,14 @@ def two_persisted(tmp_path_factory: pytest.TempPathFactory) -> Iterator[SeededOp
             clock=SEEDED_AT,
             operation=persisted.operation,
         )
+        # Year-to-date activity income: 5 000 by the first quarter, 7 000 by the second.
         for unit, income in ((persisted.work_unit, "5000"), (second, "7000")):
-            calculate_modelo_revision(
+            seed_m130_activity(unit, income=Decimal(income))
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 unit.work_unit_id,
                 ports=persisted.ports,
                 clock=SEEDED_AT,
                 casilla_inputs={
-                    "01": Decimal(income),
-                    "02": Decimal(0),
-                    "06": Decimal(0),
                     "08": Decimal(0),
                     "10": Decimal(0),
                     "16": Decimal(0),

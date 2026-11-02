@@ -16,11 +16,11 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.models import TransactionCatalogue
 from ..renta_income_ledger import (
-    RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_income_ledger,
     aggregate_renta_m100_income_ledger,
     aggregate_renta_m100_income_ledger_from_repositories,
 )
+from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
 from .renta_income_aggregation_support import (
     _ANNUAL_2024,
     _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,

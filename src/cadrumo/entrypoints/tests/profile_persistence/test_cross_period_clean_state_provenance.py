@@ -62,9 +62,6 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support
 from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import (
     snapshot_390 as _snapshot_390,
 )
-from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import (
-    store_ready_profile as _store_ready_profile,
-)
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_clean_state import (
@@ -75,10 +72,13 @@ from cadrumo.application.calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodExpectedMemberSet,
 )
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -416,12 +416,29 @@ def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_pa
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
 
+# The annual 390 also restates the 1T opening credit and the 4T prorrata
+# regularisation. This filer opened the year with no credit and applies no
+# prorrata, so those quarters filed proven zeros.
+_M390_CALCULATION_EXTRA_303_VALUES: dict[str, dict[CasillaId, Decimal]] = {
+    "1T": {
+        validated_casilla_id("iva.compensacion-aplicada-periodo"): Decimal("0.00"),
+        validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores"): Decimal("0.00"),
+    },
+    "4T": {validated_casilla_id("44"): Decimal("0.00")},
+}
+
+
 def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-            _store_ready_profile()
+            # Every quarter is filed, but 1T lacks the justificante that would make it clean.
+            _seed_official_303_source_filings(
+                observation_repository=CalculationObservationRepository(),
+                omit_justificante_metadata_periods={"1T"},
+                extra_values_by_period=_M390_CALCULATION_EXTRA_303_VALUES,
+            )
             work_unit_repository = WorkUnitCatalogueRepository()
             calculation_repository = CalculationRevisionCatalogueRepository()
             bucket_event_repository = BucketEventHistoryRepository()
@@ -438,21 +455,25 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(
                 clock=_CLOCK,
                 operation=operation,
             )
-            snapshot = _snapshot_390()
-            binding_values = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}
+            # Source-owned bindings come from the bucket; the caller supplies only manual inputs.
+            binding_values = {
+                binding.id: Decimal("0")
+                for binding in _snapshot_390().revision.bindings
+                if binding.provider.kind == "manual_input"
+            }
             with calculation_ports_for_test(
                 bucket_id=_BUCKET_ID,
                 work_unit_repository=work_unit_repository,
                 calculation_repository=calculation_repository,
                 bucket_event_repository=bucket_event_repository,
-            ) as _calculation_ports_489:
-                revision = calculate_modelo_revision(
+            ) as calculation_ports:
+                revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                     work_unit.work_unit_id,
                     casilla_inputs={},
                     binding_values=binding_values,
-                    ports=_calculation_ports_489,
+                    ports=calculation_ports,
                     clock=_CLOCK,
-                )
+                ).revision
 
             report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,

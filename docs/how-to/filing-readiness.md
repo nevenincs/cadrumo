@@ -98,16 +98,31 @@ quarters available and marks the output, for example
 planning estimate, not a draft Renta: it assumes the remaining quarters look
 like the filed ones.
 
-Refine the projection with values the quarters cannot know: withholdings,
-personal circumstances, or specific boxes:
+Refine the projection with values the quarters cannot know: personal
+circumstances or specific boxes. `--casilla` accepts only boxes you enter
+yourself, such as casilla 0003 (cash employment pay). It refuses a calculated
+box, whose value the form derives from the others:
 
 ```{cli-sequence} filing-readiness-project-refine
 ```
 
-Withholdings default to zero when not supplied, so a projection without them
-overstates the balance due if you had withholdings. Each projected box carries its
-formula and legal references in the JSON output, the same legal basis as a real
-calculation.
+The headline figures stop at the resulting tax
+(<span lang="es">cuota resultante</span>), which is calculated before any
+withholding credit. The later boxes, total payments on account and
+<span lang="es">cuota diferencial</span>, take the withholding credits from the
+same records a real calculation reads: the payer certificates you saved with
+`app ledger retencion-soportada record` give their sum, and an income class
+your profile does not declare, or that you attested with
+`app ledger retencion-soportada attest-absence`, gives a proven zero. An income
+class your profile declares with no record and no attestation has no value.
+The output then lists its box as unresolved, together with the totals computed
+from it, and shows no number for any of them. The text output prints one
+`unresolved` line per box; the JSON output carries them in
+`unresolved_bindings` and `unresolved_casillas`. You cannot type a withholding
+figure with `--casilla` or `--binding`: as in a real calculation, these boxes
+come only from the records. A projection that includes your withholdings is
+still a planning estimate. Each projected box carries its formula and legal
+references in the JSON output, the same legal basis as a real calculation.
 
 For when the year-end filing actually happens, see
 {ref}`Period codes and dates <period-tokens-and-dates>`.

@@ -152,6 +152,7 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_prorrata_remove_gross",
         "app_ledger_retencion_soportada_attest_absence",
         "app_ledger_retencion_soportada_list",
+        "app_ledger_retencion_soportada_list_absences",
         "app_ledger_retencion_soportada_record",
         "app_ledger_retencion_soportada_remove",
         "app_ledger_retencion_soportada_withdraw_absence",

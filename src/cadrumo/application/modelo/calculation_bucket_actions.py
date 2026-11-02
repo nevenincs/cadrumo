@@ -429,6 +429,7 @@ def _prepare_bucket_aggregation_calculation(
         owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
         caller_binding_values=caller_binding_values,
         caller_casilla_inputs=validated_casilla_inputs,
+        subject_leaf_key="modelo.work.calculate",
     )
     return _BucketAggregationPreparation(
         work_unit=work_unit,
@@ -501,6 +502,7 @@ def _resolve_bucket_aggregation_source_resolution(
         caller_casilla_inputs=preparation.casilla_inputs,
         caller_enum_binding_values=enum_binding_values,
         closed_record_row_sets=source_resolution.closed_record_row_sets,
+        subject_leaf_key="modelo.work.calculate",
     )
     return source_resolution
 

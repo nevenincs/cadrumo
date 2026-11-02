@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from ...application.retencion_soportada_absence.requests import (
     RetencionSoportadaAbsenceAttestRequest,
+    RetencionSoportadaAbsenceListRequest,
     RetencionSoportadaAbsenceWithdrawRequest,
 )
 from ...core.i18n.render import tr
@@ -16,11 +17,16 @@ from ...core.retencion_soportada import RetencionSoportadaClase
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
 from .operation_ledger_retencion_soportada_absence import (
     attest_retencion_soportada_absence,
+    list_retencion_soportada_absences,
     withdraw_retencion_soportada_absence,
 )
 from .retencion_soportada_absence_results import RetencionSoportadaAbsencePayload
 
-__all__ = ["retencion_soportada_attest_absence", "retencion_soportada_withdraw_absence"]
+__all__ = [
+    "retencion_soportada_attest_absence",
+    "retencion_soportada_list_absences",
+    "retencion_soportada_withdraw_absence",
+]
 
 
 def _line(attestation: RetencionSoportadaAbsencePayload) -> str:
@@ -54,6 +60,28 @@ def retencion_soportada_attest_absence(
         command="ledger.retencion_soportada.attest_absence",
         result=result,
         lines=(f"bucket\t{result.bucket_id}", _line(result.attestation)),
+    )
+
+
+def retencion_soportada_list_absences(ctx: typer.Context, ejercicio: int) -> None:
+    """Read every stored absence attestation of one ejercicio, active and withdrawn, with its revision."""
+    try:
+        request = RetencionSoportadaAbsenceListRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            ejercicio=ejercicio,
+        )
+    except ValidationError:
+        raise bad(tr("cli.app.ledger.retencion_soportada.absence_invalid_input")) from None
+    result = list_retencion_soportada_absences(ctx, request)
+    emit_envelope(
+        ctx,
+        command="ledger.retencion_soportada.list_absences",
+        result=result,
+        lines=(
+            f"bucket\t{result.bucket_id}",
+            f"count\t{result.count}",
+            *(f"{_line(row)}\t{row.income_class_label}" for row in result.attestations),
+        ),
     )
 
 

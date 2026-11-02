@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from decimal import Decimal
 from typing import override
 
 import pytest
@@ -17,7 +16,9 @@ from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConf
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, VerificationReportNotFoundError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.filing_actions import ModeloFilingResult, file_modelo_revision
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
@@ -35,7 +36,6 @@ from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_acti
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    M130_INCOME_CASILLA,
     T1,
     T2,
     T3,
@@ -142,13 +142,13 @@ def _verified_target(repos: Repos):
         calculation_repository=calculations,
         bucket_event_repository=events,
     ) as ports:
-        draft = calculate_modelo_revision(
+        draft = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=ports,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         draft.calculation_revision_id,
         revision=draft,

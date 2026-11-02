@@ -8,7 +8,7 @@ They operate on the already resolved registry snapshot and preserve the typed
 observation contract that the calculation action persists.
 
 See Also:
-    :func:`~application.modelo.calculation_actions.calculate_modelo_revision`
+    :func:`~application.modelo.calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`
         Application calculation action that calls these adjustment helpers.
     :func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot`
         Registry engine whose output is adjusted before persistence.
@@ -100,9 +100,8 @@ def require_detail_rows_declared_for_their_owning_modelo(
     refuses through one convention rather than five ad hoc call sites.
 
     This runs at the calculate boundary's single funnel
-    (:func:`~._calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`),
-    so both the direct and bucket-aggregation calculate entry points are
-    covered.
+    (:func:`~.calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`),
+    which the bucket-aggregation calculate entry point feeds.
     """
     if not detail_rows:
         return
@@ -431,6 +430,24 @@ def _general_regime_figure_present(
     return False
 
 
+def _reconciliation_slot_grounded(
+    binding_id: BindingId,
+    annual_casilla: CasillaId,
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+    resolved_annual_casillas: set[CasillaId],
+    general_regime_not_applicable: bool,
+) -> bool:
+    """Whether a slot is resolved, proven zero, or not applicable and so needs no refusal."""
+    if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
+        return True
+    annual_value = casilla_values.get(annual_casilla)
+    if annual_value is None:
+        return general_regime_not_applicable
+    return _calculated_decimal(annual_value) == ZERO
+
+
 def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     *,
     work_unit: WorkUnit,
@@ -468,13 +485,14 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     missing_targets: list[CasillaId] = []
     missing_annuals: list[CasillaId] = []
     for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
-        if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
-            continue
-        annual_value = casilla_values.get(annual_casilla)
-        if annual_value is None:
-            if general_regime_not_applicable:
-                continue
-        elif _calculated_decimal(annual_value) == ZERO:
+        if _reconciliation_slot_grounded(
+            binding_id,
+            annual_casilla,
+            casilla_values=casilla_values,
+            resolved_binding_values=resolved_binding_values,
+            resolved_annual_casillas=resolved_annual_casillas,
+            general_regime_not_applicable=general_regime_not_applicable,
+        ):
             continue
         missing_relations.append(relation_id)
         missing_bindings.append(binding_id)

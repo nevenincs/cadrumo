@@ -30,9 +30,9 @@ from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _TAXPAYER = "12345678Z"
-_PAYER_A = "B00000001"
-_PAYER_B = "B00000002"
-_PAYER_C = "B00000003"
+_PAYER_A = "B00000000"
+_PAYER_B = "B00000018"
+_PAYER_C = "B00000026"
 _EJERCICIO = "2025"
 _FIRST_CERTIFICATE = "1" * 64
 _SECOND_CERTIFICATE = "2" * 64
@@ -158,36 +158,49 @@ def _readable_files_with_tax_ids(root: Path) -> list[Path]:
     return found
 
 
-@pytest.mark.windows_only
-@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
-def test_native_certificates_record_replace_refuse_list_and_remove(
-    native_certificate_profile: RegisteredCliProfile,
-) -> None:
-    profile = native_certificate_profile
-
-    first = RetencionSoportadaRecordResult.model_validate_json(
-        json.dumps(
-            unwrap_cli_result(
-                _record(profile, _PAYER_A, retencion="1000.00", ingreso_a_cuenta="300.00", repercutido="300.00")
-            )
-        )
+def _recorded(
+    profile: RegisteredCliProfile,
+    payer: str,
+    *,
+    retencion: str,
+    origin: str = "payer_certificate",
+    ingreso_a_cuenta: str = "0.00",
+    repercutido: str = "0.00",
+    income_class: str = "trabajo",
+    fingerprint: str | None = _FIRST_CERTIFICATE,
+    revision: str | None = None,
+) -> RetencionSoportadaRecordResult:
+    result = _record(
+        profile,
+        payer,
+        retencion=retencion,
+        origin=origin,
+        ingreso_a_cuenta=ingreso_a_cuenta,
+        repercutido=repercutido,
+        income_class=income_class,
+        fingerprint=fingerprint,
+        revision=revision,
     )
+    return RetencionSoportadaRecordResult.model_validate_json(json.dumps(unwrap_cli_result(result)))
+
+
+def _record_two_certificates(
+    profile: RegisteredCliProfile,
+) -> RetencionSoportadaRecordResult:
+    first = _recorded(profile, _PAYER_A, retencion="1000.00", ingreso_a_cuenta="300.00", repercutido="300.00")
     assert first.count == 1
     assert first.row.pago_a_cuenta == "1300.00"
     assert first.row.evidence_sha256 == _FIRST_CERTIFICATE
     assert first.row.origin == "payer_certificate"
     assert len(first.row.payer_ref) == 64
 
-    second = RetencionSoportadaRecordResult.model_validate_json(
-        json.dumps(
-            unwrap_cli_result(
-                _record(profile, _PAYER_B, retencion="450.00", origin="operator_declaration", fingerprint=None)
-            )
-        )
-    )
+    second = _recorded(profile, _PAYER_B, retencion="450.00", origin="operator_declaration", fingerprint=None)
     assert second.count == 2
     assert second.row.evidence_sha256 is None
+    return first
 
+
+def _assert_revision_conflicts_refused(profile: RegisteredCliProfile) -> None:
     # A first record cannot overwrite a stored row, and a stale revision is refused.
     unguarded = _refusal_context(_record(profile, _PAYER_A, retencion="1200.00", fingerprint=_SECOND_CERTIFICATE))
     assert unguarded["reason"] == "stale_revision"
@@ -206,27 +219,25 @@ def test_native_certificates_record_replace_refuse_list_and_remove(
     assert stale["reason"] == "stale_revision"
     assert sorted(row.retencion for row in _listed(profile).rows) == ["1000.00", "450.00"]
 
+
+def _replace_first_certificate(profile: RegisteredCliProfile, first: RetencionSoportadaRecordResult) -> None:
     # The correct revision replaces the row and records the certificate it supersedes.
-    replaced = RetencionSoportadaRecordResult.model_validate_json(
-        json.dumps(
-            unwrap_cli_result(
-                _record(
-                    profile,
-                    _PAYER_A,
-                    retencion="1200.00",
-                    ingreso_a_cuenta="300.00",
-                    repercutido="300.00",
-                    fingerprint=_SECOND_CERTIFICATE,
-                    revision=first.row.revision_id,
-                )
-            )
-        )
+    replaced = _recorded(
+        profile,
+        _PAYER_A,
+        retencion="1200.00",
+        ingreso_a_cuenta="300.00",
+        repercutido="300.00",
+        fingerprint=_SECOND_CERTIFICATE,
+        revision=first.row.revision_id,
     )
     assert replaced.count == 2
     assert replaced.row.payer_ref == first.row.payer_ref
     assert replaced.row.revision_id != first.row.revision_id
     assert replaced.row.evidence_sha256 == _SECOND_CERTIFICATE
 
+
+def _assert_invalid_records_refused(profile: RegisteredCliProfile) -> None:
     # Refusals: the taxpayer's own NIF, repercutido above the ingreso a cuenta, an unsupported ejercicio,
     # a certificate without its fingerprint and an unreadable amount.
     own = _refusal_context(_record(profile, _TAXPAYER, retencion="10.00"))
@@ -244,16 +255,18 @@ def test_native_certificates_record_replace_refuse_list_and_remove(
     assert malformed.exit_code != 0
     assert "1.234,50" in malformed.output
 
+
+def _assert_refused_records_not_stored(profile: RegisteredCliProfile) -> None:
     # Nothing refused was stored; the class credits are the hand sum 1.200,00 + 300,00 + 450,00.
     listed = _listed(profile)
     assert listed.count == 2
     assert sum(Decimal(row.pago_a_cuenta) for row in listed.rows) == Decimal("1950.00")
     assert {row.payer_name for row in listed.rows} == {"Pagador Sintetico SL"}
 
+
+def _remove_third_certificate(profile: RegisteredCliProfile) -> None:
     # Removal needs the revision the list showed.
-    third = RetencionSoportadaRecordResult.model_validate_json(
-        json.dumps(unwrap_cli_result(_record(profile, _PAYER_C, retencion="75.00", income_class="capital_mobiliario")))
-    )
+    third = _recorded(profile, _PAYER_C, retencion="75.00", income_class="capital_mobiliario")
     assert third.count == 3
     target = ("--ejercicio", _EJERCICIO, "--income-class", "capital_mobiliario")
     stale_removal = _refusal_context(
@@ -274,5 +287,20 @@ def test_native_certificates_record_replace_refuse_list_and_remove(
     )
     assert missing["reason"] == "not_found"
     assert _listed(profile).count == 2
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_native_certificates_record_replace_refuse_list_and_remove(
+    native_certificate_profile: RegisteredCliProfile,
+) -> None:
+    profile = native_certificate_profile
+
+    first = _record_two_certificates(profile)
+    _assert_revision_conflicts_refused(profile)
+    _replace_first_certificate(profile, first)
+    _assert_invalid_records_refused(profile)
+    _assert_refused_records_not_stored(profile)
+    _remove_third_certificate(profile)
 
     assert _readable_files_with_tax_ids(profile.storage_root) == []

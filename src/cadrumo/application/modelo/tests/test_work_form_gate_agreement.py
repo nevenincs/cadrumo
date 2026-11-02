@@ -43,10 +43,11 @@ from ..declarations_list import DeclarationListGroup, DeclarationListNextStep, D
 from ..declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
+from ..work_form_declaration_facts import ModeloFormCalculationNote
 from ..work_form_findings import ModeloFormAttention
 from ..work_form_header import ModeloFormExportHoldReason, export_hold
 from ..work_form_issue_lines import form_issue_lines
-from ..work_form_models import ModeloFormCalculationNote, ModeloFormCasillaAddressV1, ModeloWorkForm
+from ..work_form_models import ModeloFormCasillaAddressV1, ModeloWorkForm
 from ..work_form_next_step import ModeloFormNextAction, check_count, form_next_step, missing_count, result_fields
 from ..work_form_service import ModeloWorkFormLoadV1
 from ..workbench_projection import project_modelo_workbench_form

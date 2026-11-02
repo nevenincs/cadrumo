@@ -46,7 +46,9 @@ from ....adapters.persistence.profile.tests.modelo_export_ports_support import m
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.action_errors import CalculationRevisionStateError, ModeloRequiredBindingsMissingError
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.export import export_modelo_revision
 from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.modelo.external_import_actions import import_external_filing_evidence
@@ -312,7 +314,7 @@ def _calculate_m202(
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-test",
@@ -322,7 +324,7 @@ def _calculate_m202(
                 _M202_PRIOR_PAYMENTS_BINDING: Decimal("0"),
             },
             clock=_CLOCK,
-        )
+        ).revision
     refreshed_work_unit = work_repo.load().get(work_unit.work_unit_id)
     assert refreshed_work_unit is not None
     return refreshed_work_unit, revision, work_repo, calc_repo, filing_repo, verification_repo
@@ -383,7 +385,7 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
             pytest.raises(ModeloRequiredBindingsMissingError) as exc_info,
             bundled_indexed_authority().operation() as operation,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
                 actor="operator-test",
@@ -396,10 +398,11 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
         assert context is not None
         missing_bindings = context["missing_bindings"]
         assert isinstance(missing_bindings, tuple)
+        # The first payment's prior-payments span is empty, so the bucket's
+        # previous-period prefill resolves it; only the operator facts are missing.
         assert set(missing_bindings) == {
             _M202_INCN_BINDING,
             _M202_RELATION_BINDING,
-            _M202_PRIOR_PAYMENTS_BINDING,
         }
         assert calc_repo.load().revisions == {}
         stored_work_unit = work_repo.load().get(work_unit.work_unit_id)
@@ -579,7 +582,7 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(
             pytest.raises(ModeloRequiredBindingsMissingError) as exc_info,
             bundled_indexed_authority().operation() as operation,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
                 actor="operator-test",

@@ -16,13 +16,13 @@ from datetime import UTC, datetime
 import pytest
 from textual.widgets import Static
 
-from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_declaration_facts import (
     ModeloFormCalculationNote,
     ModeloFormExport,
     ModeloFormFiling,
-    ModeloWorkForm,
 )
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_next_step import ModeloFormNextAction, missing_count
 from ......application.modelo.work_form_wording import day_text
 from ......core.config import override_settings

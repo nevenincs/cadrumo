@@ -14,8 +14,11 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 from cadrumo.application.modelo.calculation import visible_calculation_casilla_values
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.revision_inventory_operation import (
     MODELO_WORK_REVISIONS_OPERATION_DEFINITION_ID,
     ModeloWorkRevisionsProjection,
@@ -45,7 +48,6 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
-from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
@@ -154,13 +156,16 @@ def test_revision_snapshot_reads_exact_historical_revision_under_sealed_period(
         unit = WorkUnitCatalogueRepository().load().get(historical.work_unit_id)
         assert unit is not None
 
-        newer = calculate_modelo_revision(
+        seed_m130_income_transaction(
+            amount=Decimal("1000.00"), filing_year=unit.filing_year, source_key="newer", bucket_id=str(profile_id)
+        )
+        newer = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             historical.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=str(profile_id), operation=operation),
             actor=MODELO_OPERATION_TEST_ACTOR,
-            casilla_inputs={validated_casilla_id("06"): Decimal("0")},
+            casilla_inputs={},
             binding_values=FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-        )
+        ).revision
         assert newer.calculation_revision_id != historical_revision_id
         assert newer.created_at > historical.created_at
         persisted_revisions = CalculationRevisionCatalogueRepository().load().for_work_unit(historical.work_unit_id)

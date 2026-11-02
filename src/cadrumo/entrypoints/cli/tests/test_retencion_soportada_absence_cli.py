@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.entrypoints.cli.retencion_soportada_absence_results import (
     RetencionSoportadaAttestAbsenceResult,
+    RetencionSoportadaListAbsencesResult,
     RetencionSoportadaWithdrawAbsenceResult,
 )
 from cadrumo.entrypoints.cli.retencion_soportada_results import RetencionSoportadaListResult
@@ -33,6 +34,12 @@ _EJERCICIO = "2025"
 _NOTE = "Synthetic note: the bank paid no interest subject to withholding."
 _ABSENCE_CODE = "REFUSED_RETENCION_SOPORTADA_ABSENCE"
 _REVISION_CODE = "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT"
+_MOVABLE_CAPITAL_LABELS = {
+    "Income from movable capital",
+    "Rendimientos del capital mobiliario",
+    "Rendiments del capital mobiliari",
+    "Ingóvagyon-jövedelem (tőkejövedelem)",
+}
 _PROFILE_FACTS = {
     "taxpayer_type.entity_type": "natural_person",
     "identity.name": "Native",
@@ -104,6 +111,12 @@ def _attested(result: Result) -> RetencionSoportadaAttestAbsenceResult:
     return RetencionSoportadaAttestAbsenceResult.model_validate_json(json.dumps(unwrap_cli_result(result)))
 
 
+def _listed(profile: RegisteredCliProfile, ejercicio: str = _EJERCICIO) -> RetencionSoportadaListAbsencesResult:
+    return RetencionSoportadaListAbsencesResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_invoke(profile, "list-absences", "--ejercicio", ejercicio)))
+    )
+
+
 def _refusal_context(result: Result) -> dict[str, object]:
     assert result.exit_code != 0, result.output
     document = STR_KEYED_MAPPING_ADAPTER.validate_python(json.loads(result.output))
@@ -118,6 +131,10 @@ def _refusal_context(result: Result) -> dict[str, object]:
 @pytest.mark.windows_only
 def test_native_absence_attest_refuse_withdraw_and_reattest(native_absence_profile: RegisteredCliProfile) -> None:
     profile = native_absence_profile
+
+    # Nothing is stored yet: an empty year lists as an empty result, not an error.
+    empty = _listed(profile)
+    assert (empty.ejercicio, empty.count, empty.attestations) == (int(_EJERCICIO), 0, [])
 
     first = _attested(_attest(profile, "capital_mobiliario"))
     assert first.attestation.ejercicio == int(_EJERCICIO)
@@ -184,10 +201,24 @@ def test_native_absence_attest_refuse_withdraw_and_reattest(native_absence_profi
     again = _refusal_context(_withdraw(profile, "capital_mobiliario", withdrawn.attestation.revision_id))
     assert (again["reason"], again["refusal_code"]) == ("not_attested", _ABSENCE_CODE)
 
+    # A withdrawn attestation stays listed, with the revision a replacing attestation needs.
+    (withdrawn_row,) = _listed(profile).attestations
+    assert (withdrawn_row.income_class, withdrawn_row.state) == ("capital_mobiliario", "withdrawn")
+    assert withdrawn_row.revision_id == withdrawn.attestation.revision_id
+    # The worker resolves the label in the profile's output language, whatever language the CLI renders in.
+    assert withdrawn_row.income_class_label in _MOVABLE_CAPITAL_LABELS
+
     # The decision is reversible: a new attestation replaces the withdrawn one under its revision.
     reattested = _attested(_attest(profile, "capital_mobiliario", revision=withdrawn.attestation.revision_id))
     assert reattested.attestation.state == "active"
     assert reattested.attestation.revision_id != withdrawn.attestation.revision_id
+
+    # The listing is per ejercicio and carries each stored revision and note.
+    (active_row,) = _listed(profile).attestations
+    assert active_row.state == "active"
+    assert active_row.revision_id == reattested.attestation.revision_id
+    assert active_row.note == _NOTE
+    assert _listed(profile, "2024").attestations == []
 
     on_disk = b"".join(path.read_bytes() for path in profile.storage_root.rglob("*") if path.is_file())
     assert _NOTE.encode() not in on_disk

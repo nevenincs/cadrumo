@@ -23,9 +23,9 @@ from rich.console import Console
 from textual.content import Content
 from textual.widgets import OptionList, Static
 
+from ......application.modelo.work_form_declaration_facts import ModeloFormCalculationNote
 from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......application.modelo.work_form_models import (
-    ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormField,

@@ -314,6 +314,30 @@ class CasillaObservationPayload(OutputSchema):
     source_refs: SourceRefs
 
 
+class UnresolvedBindingPayload(OutputSchema):
+    """One source-owned binding a projection left without a value.
+
+    ``casilla_id`` is the box it fills; ``reason`` and ``note`` are untranslated
+    tokens naming why (for a credit, no payer evidence or contradicted evidence).
+    """
+
+    binding_id: str
+    casilla_id: str | None
+    source_kind: str
+    reason: str
+    note: str | None
+
+
+class UnresolvedCasillaPayload(OutputSchema):
+    """One computed box a projection could not give a value, with its formula's grounding."""
+
+    casilla_id: CasillaId
+    reason: str
+    formula_id: FormulaId
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+
 class M130AccumulatedPayload(OutputSchema):
     """M130 summary inputs that feed :class:`ModeloProjectResult`.
 
@@ -360,6 +384,8 @@ class ModeloProjectResult(OutputSchema):
     m130_accumulated: M130AccumulatedPayload
     casilla_observations: list[CasillaObservationPayload]
     m100_projection: M100ProjectionPayload
+    unresolved_bindings: list[UnresolvedBindingPayload]
+    unresolved_casillas: list[UnresolvedCasillaPayload]
 
 
 class ModeloReadinessMissingRequirementPayload(OutputSchema):

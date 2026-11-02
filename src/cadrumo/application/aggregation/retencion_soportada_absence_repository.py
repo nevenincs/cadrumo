@@ -112,6 +112,13 @@ class RetencionSoportadaAbsenceRepository(RetencionSoportadaAbsenceReader, Proto
         """
         ...
 
+    def list_revisioned(self, ejercicio: int) -> tuple[tuple[RetencionSoportadaAbsence, str], ...]:
+        """Return every attestation of ``ejercicio``, active or withdrawn, beside the revision it was read at.
+
+        Rows are ordered by object key.
+        """
+        ...
+
     def save_revisioned(self, attestation: RetencionSoportadaAbsence, *, expected_revision_id: str) -> str:
         """Store ``attestation`` only if its row is still at ``expected_revision_id``; return the new revision.
 

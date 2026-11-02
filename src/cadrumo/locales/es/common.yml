@@ -212,6 +212,25 @@ aggregation:
       unsupported_period: Se requiere un periodo anual para la agregación de ingresos
         del Modelo 100 (p.ej. 2024-0A).
   retencion_soportada:
+    clase:
+      actividad_economica: Rendimientos de actividades económicas
+      arrendamiento_inmueble_urbano: 'Rendimientos del capital inmobiliario: arrendamiento
+        de inmuebles urbanos'
+      arrendamiento_inmueble_urbano_actividad: 'Rendimientos de actividades económicas:
+        arrendamiento de inmuebles urbanos'
+      atribucion_actividad_economica: 'Atribución de rentas: rendimientos de actividades
+        económicas'
+      atribucion_capital_inmobiliario: 'Atribución de rentas: rendimientos del capital
+        inmobiliario'
+      atribucion_capital_mobiliario: 'Atribución de rentas: rendimientos del capital
+        mobiliario'
+      atribucion_ganancia_patrimonial: 'Atribución de rentas: ganancias patrimoniales'
+      capital_mobiliario: Rendimientos del capital mobiliario
+      ganancia_patrimonial: Ganancias patrimoniales
+      imputacion_aie_ute: Imputación de rentas de AIE y UTE
+      imputacion_derechos_imagen: Imputación de rentas por la cesión de derechos de
+        imagen
+      trabajo: Rendimientos del trabajo
     errors:
       certificate_needs_fingerprint: Un certificado del pagador necesita el SHA-256
         del archivo del certificado (--evidence-sha256). Si no tienes certificado,

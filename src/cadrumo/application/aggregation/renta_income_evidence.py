@@ -133,13 +133,9 @@ def sales_invoice_evidence_payload(
     invoice = invoices.get(invoice_id)
     if invoice is None:
         return _SalesInvoiceEvidencePayload(), None
-    transaction_id = transaction.transaction_id
-    if invoice.bucket_id != bucket_id:
-        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.BUCKET_MISMATCH
-    if invoice.kind is not InvoiceKind.ISSUED:
-        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNSUPPORTED_KIND
-    if transaction_id not in invoice.linked_transaction_ids:
-        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
+    refusal = _linkage_refusal(invoice, transaction, bucket_id=bucket_id)
+    if refusal is not None:
+        return _SalesInvoiceEvidencePayload(), refusal
     share = part_payment_share(invoice, transaction) if allocate_part_payments else None
     if share is not None:
         return (
@@ -151,18 +147,9 @@ def sales_invoice_evidence_payload(
             ),
             None,
         )
-    if len(invoice.linked_transaction_ids) != 1:
-        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.PARTIAL_OR_MULTI_TRANSACTION
-    expected_cash = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
-    if abs(transaction.raw.amount) != expected_cash:
-        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
-    # Linkage is established by this point; coherence is a separate question and
-    # the guards above cannot answer it. Delegated rather than re-derived: the
-    # decomposition contract is the single authority on whether an invoice's own
-    # figures are legally interpretable, and consulting it here is what makes a
-    # correctly-linked but untagged invoice visible instead of silently grounded.
-    if not decompose_invoice(invoice).is_grounded:
-        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
+    refusal = _whole_invoice_refusal(invoice, transaction)
+    if refusal is not None:
+        return _SalesInvoiceEvidencePayload(), refusal
     return (
         _SalesInvoiceEvidencePayload(
             taxable_base=invoice.base_total,
@@ -171,6 +158,37 @@ def sales_invoice_evidence_payload(
         ),
         None,
     )
+
+
+def _linkage_refusal(
+    invoice: Invoice, transaction: Transaction, *, bucket_id: str
+) -> SalesInvoiceEvidenceRefusal | None:
+    """Return the first reason the invoice is not this bucket's issued invoice linked back to the row."""
+    transaction_id = transaction.transaction_id
+    if invoice.bucket_id != bucket_id:
+        return SalesInvoiceEvidenceRefusal.BUCKET_MISMATCH
+    if invoice.kind is not InvoiceKind.ISSUED:
+        return SalesInvoiceEvidenceRefusal.UNSUPPORTED_KIND
+    if transaction_id not in invoice.linked_transaction_ids:
+        return SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
+    return None
+
+
+def _whole_invoice_refusal(invoice: Invoice, transaction: Transaction) -> SalesInvoiceEvidenceRefusal | None:
+    """Return the first reason a single receipt cannot stand for the whole invoice."""
+    if len(invoice.linked_transaction_ids) != 1:
+        return SalesInvoiceEvidenceRefusal.PARTIAL_OR_MULTI_TRANSACTION
+    expected_cash = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
+    if abs(transaction.raw.amount) != expected_cash:
+        return SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
+    # Linkage is established by this point; coherence is a separate question and
+    # the guards above cannot answer it. Delegated rather than re-derived: the
+    # decomposition contract is the single authority on whether an invoice's own
+    # figures are legally interpretable, and consulting it here is what makes a
+    # correctly-linked but untagged invoice visible instead of silently grounded.
+    if not decompose_invoice(invoice).is_grounded:
+        return SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
+    return None
 
 
 class _WithheldInference(NamedTuple):
@@ -222,6 +240,14 @@ def income_withheld_amount(
     """
     if not has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NOT_APPLICABLE)
+    stated = _stated_withholding(evidence)
+    if stated is not None:
+        return stated
+    return _inferred_withholding(transaction)
+
+
+def _stated_withholding(evidence: _SalesInvoiceEvidencePayload | None) -> _WithheldInference | None:
+    """Return the retención a linked invoice states, or ``None`` when it states none."""
     if evidence is not None and evidence.allocated_to_part_payment and evidence.retencion_amount not in (None, 0):
         return _WithheldInference(evidence.retencion_amount, LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT)
     # Declared-first: a retención the linked invoice states is the document's
@@ -231,6 +257,11 @@ def income_withheld_amount(
             evidence.retencion_amount,
             LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
         )
+    return None
+
+
+def _inferred_withholding(transaction: Transaction) -> _WithheldInference:
+    """Reconstruct the retención from the invoice gross less the cash that reached the bank."""
     if transaction.taxable_base is None:
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NO_SUBSTRATE)
     cuota = _determinable_cuota(transaction)

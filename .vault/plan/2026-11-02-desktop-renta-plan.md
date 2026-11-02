@@ -15,7 +15,7 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:16862c98afef31fa696093f5378546a54bd062bc084aa9ea34be09165ec592be'
+body_hash: 'sha256:4bda0c7713b589253265a232f6151c69fb1739b1625ba611fdd6ae4783d05f5f'
 ---
 
 # `desktop-renta` plan
@@ -24,9 +24,11 @@ The desktop Renta (Modelo 100) workspace: one generated form plus served compani
 
 ## Description
 
-Build the desktop Renta (Modelo 100) workspace as one generated form with backend-served companion reads that the window renders by payload kind. This plan is a draft for review and is not approved.
+Approved 2026-11-02. The operator approved this plan and accepted `2026-11-02-desktop-renta-adr` in the tui frontend session ("renta and adr are approved, execute"); the approval covers every Phase, including the P01 backend read-model Steps.
 
-Decision coverage: `2026-11-02-desktop-renta-adr` (proposed) settles the boundary between the generated form and the companion reads, and it governs every Phase. `2026-09-07-tuimodelo-form-projection-adr`, `2026-09-30-modelo-editor-workbench-adr` and `2026-10-23-desktop-modelo-workspace-adr` govern P01.S01 to P01.S05 and P04. `2026-11-02-operation-refusal-words-adr` governs P01.S06 and every served word. `2026-11-01-export-parity-income-imputation-criterion-adr` governs P01.S08 and P04.S16. `2026-06-02-modelo-multiyear-renta-adr` governs the earlier-year answer in P01.S03. `2026-10-05-desktop-design-system-adr` governs P04 and P05. No Step executes until the proposed ADR is accepted.
+Build the desktop Renta (Modelo 100) workspace as one generated form with backend-served companion reads that the window renders by payload kind.
+
+Decision coverage: `2026-11-02-desktop-renta-adr` (accepted) settles the boundary between the generated form and the companion reads, and it governs every Phase. `2026-09-07-tuimodelo-form-projection-adr`, `2026-09-30-modelo-editor-workbench-adr` and `2026-10-23-desktop-modelo-workspace-adr` govern P01.S01 to P01.S05 and P04. `2026-11-02-operation-refusal-words-adr` governs P01.S06 and every served word. `2026-11-01-export-parity-income-imputation-criterion-adr` governs P01.S08 and P04.S16. `2026-06-02-modelo-multiyear-renta-adr` governs the earlier-year answer in P01.S03. `2026-10-05-desktop-design-system-adr` governs P04 and P05. The ADR is accepted.
 
 Gap analysis, per section of the 2025 revision:
 

@@ -3,8 +3,6 @@
 The invoice resolver returns the type 2 records on the row-binding channel, the
 bucket calculation persists them on the revision, and filing replay hands them
 to the draft builder, which emits one row per (counterparty, clave) record.
-Operator-supplied rows enter the same channel through ``calculate_modelo_revision``
-and arrive at the same draft rows.
 """
 
 from __future__ import annotations
@@ -27,7 +25,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -306,35 +303,3 @@ def test_bucket_calculation_persists_and_replays_one_declarado_record_per_counte
     _assert_expected_records(persisted, ledger.expected_records())
     assert {record["nombre"] for record in persisted} == {"PROVEEDOR GRANDE SL", "CLIENTE GRANDE SL"}
     _assert_expected_records(_draft_records(result.revision, work_unit), ledger.expected_records())
-
-
-def test_operator_supplied_rows_reach_the_same_draft_records(secure_objects: SecureObjectRepository) -> None:
-    """Rows an operator supplies on the row-binding channel replay to the same draft records."""
-    work_unit_repository = WorkUnitCatalogueRepository(objects=secure_objects)
-    work_unit = _work_unit(work_unit_repository)
-    expected_records = _ledger().expected_records()
-    operator_rows: dict[tuple[str, int], Decimal | str] = {}
-    for row_index, expected in enumerate(expected_records, start=1):
-        operator_rows[(f"{_ROW_PREFIX}nif", row_index)] = str(expected["nif"])
-        operator_rows[(f"{_ROW_PREFIX}nombre", row_index)] = f"CONTRAPARTE {row_index}"
-        operator_rows[(f"{_ROW_PREFIX}clave", row_index)] = str(expected["clave"])
-        operator_rows[(f"{_ROW_PREFIX}pais-codigo", row_index)] = "ES"
-        for field in ("importe", "importe-q1", "importe-q2", "importe-q3", "importe-q4"):
-            amount = expected.get(field, Decimal("0"))
-            assert isinstance(amount, Decimal)
-            operator_rows[(f"{_ROW_PREFIX}{field}", row_index)] = amount
-
-    with calculation_ports_for_test(
-        bucket_id=_BUCKET_ID,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-    ) as ports:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            ports=ports,
-            casilla_inputs={},
-            row_binding_values=operator_rows,
-            clock=_T2,
-        )
-
-    _assert_expected_records(_draft_records(revision, work_unit), expected_records)

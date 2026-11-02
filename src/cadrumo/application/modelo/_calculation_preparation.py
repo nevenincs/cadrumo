@@ -7,7 +7,7 @@ ledger preflight through the application-facing transaction port before
 calculation proceeds.
 
 See Also:
-    :func:`~application.modelo.calculation_actions.calculate_modelo_revision`:
+    :func:`~application.modelo.calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`:
         Consumes the prepared bundle before persisting a draft revision.
     :func:`~application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
         Merges caller, backend, borrador, enum, and date binding channels.

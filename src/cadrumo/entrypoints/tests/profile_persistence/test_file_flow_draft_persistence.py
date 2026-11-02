@@ -18,7 +18,9 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
@@ -48,13 +50,13 @@ def test_a_verified_revision_leaves_its_approved_draft_in_the_store(repos: Repos
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_49:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_49,
             clock=T1,
-        )
+        ).revision
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -87,13 +89,13 @@ def test_re_verifying_the_same_revision_rewrites_one_row(repos: Repos) -> None:
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_85:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_85,
             clock=T1,
-        )
+        ).revision
     for clock in (T1, T2):
         verify_revision(
             revision.calculation_revision_id,
@@ -139,13 +141,13 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
         ) as _calculation_ports_130:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
                 binding_values=DEFAULT_130_BINDING_VALUES,
                 ports=_calculation_ports_130,
                 clock=T1,
-            )
+            ).revision
         report = verify_revision(
             revision.calculation_revision_id,
             revision=revision,

@@ -30,8 +30,8 @@ from ...inventory.registered_options_operation import (
     InventoryOptionsRequest,
     resolve_inventory_options_access,
 )
+from ...invoices.catalogue_add_contracts import InvoiceAddRequest
 from ...invoices.catalogue_add_operation import (
-    InvoiceAddRequest,
     resolve_invoice_add_access,
 )
 from ...invoices.catalogue_remove_operation import (
@@ -46,16 +46,16 @@ from ...invoices.duplicate_check_operation import (
     LedgerInvoiceDuplicateRequest,
     resolve_ledger_invoice_duplicate_access,
 )
+from ...invoices.figures_preview_contracts import InvoiceFiguresPreviewRequest
 from ...invoices.figures_preview_operation import (
-    InvoiceFiguresPreviewRequest,
     resolve_invoice_figures_preview_access,
 )
 from ...invoices.payment_match_operation import (
     LedgerInvoiceMatchRequest,
     resolve_ledger_invoice_match_access,
 )
+from ...modelo.invoice_withholding_capture_contracts import ModeloInvoiceWithholdingCaptureRequest
 from ...modelo.invoice_withholding_capture_operation import (
-    ModeloInvoiceWithholdingCaptureRequest,
     resolve_modelo_invoice_withholding_capture_access,
 )
 from ...modelo.reconciliation_export_operation import (
@@ -82,7 +82,6 @@ from ...overview.pipeline_operation import (
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..add_operation import (
-    LedgerAddRequest,
     resolve_ledger_add_access,
 )
 from ..allocate_operation import (
@@ -104,9 +103,9 @@ from ..check_operation import (
     resolve_ledger_check_access,
 )
 from ..classify_operation import (
-    LedgerClassifyRequest,
     resolve_ledger_classify_access,
 )
+from ..classify_requests import LedgerClassifyRequest
 from ..entry_options_operation import (
     LedgerEntryOptionsRequest,
     resolve_ledger_entry_options_access,
@@ -141,6 +140,7 @@ from ..known_values_operation import (
     LedgerKnownValuesRequest,
     resolve_ledger_known_values_access,
 )
+from ..ledger_add_contracts import LedgerAddRequest
 from ..lifecycle_contracts import LedgerLifecycleMutationRequest
 from ..lifecycle_mutation_operation import (
     resolve_ledger_archive_access,
@@ -152,8 +152,8 @@ from ..merge_operation import (
     LedgerMergeRequest,
     resolve_ledger_merge_access,
 )
+from ..operator_iva_contracts import LedgerOperatorIvaRequest
 from ..operator_iva_operation import (
-    LedgerOperatorIvaRequest,
     resolve_ledger_operator_iva_access,
 )
 from ..participation_operation import (
@@ -174,8 +174,8 @@ from ..split_operation import (
     LedgerSplitRequest,
     resolve_ledger_split_access,
 )
+from ..staged_check_contracts import LedgerStagedCheckRequest
 from ..staged_check_operation import (
-    LedgerStagedCheckRequest,
     resolve_ledger_staged_check_access,
 )
 from ..status_operation import (
@@ -186,8 +186,8 @@ from ..track_operation import (
     LedgerTrackRequest,
     resolve_ledger_track_access,
 )
+from ..update_contracts import LedgerUpdateRequest
 from ..update_operation import (
-    LedgerUpdateRequest,
     resolve_ledger_update_access,
 )
 from ..view_operation import (

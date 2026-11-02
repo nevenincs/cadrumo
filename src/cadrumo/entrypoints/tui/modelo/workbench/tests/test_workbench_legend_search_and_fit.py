@@ -18,11 +18,11 @@ from decimal import Decimal
 import pytest
 from textual.widgets import Footer, Input, Static
 
+from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormOrigin,
-    ModeloFormResultDirection,
     ModeloFormSection,
     ModeloFormText,
     ModeloFormTextDisclosure,

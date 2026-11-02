@@ -196,6 +196,21 @@ aggregation:
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
   retencion_soportada:
+    clase:
+      actividad_economica: Economic activity income
+      arrendamiento_inmueble_urbano: 'Income from real estate capital: urban property
+        rental'
+      arrendamiento_inmueble_urbano_actividad: 'Economic activity income: urban property
+        rental'
+      atribucion_actividad_economica: 'Attributed income: economic activities'
+      atribucion_capital_inmobiliario: 'Attributed income: real estate capital'
+      atribucion_capital_mobiliario: 'Attributed income: movable capital'
+      atribucion_ganancia_patrimonial: 'Attributed income: capital gains'
+      capital_mobiliario: Income from movable capital
+      ganancia_patrimonial: Capital gains
+      imputacion_aie_ute: Income imputed from AIE and UTE
+      imputacion_derechos_imagen: Income imputed from the assignment of image rights
+      trabajo: Employment income
     errors:
       certificate_needs_fingerprint: A payer certificate needs the SHA-256 of the
         certificate file (--evidence-sha256). Use the operator declaration origin

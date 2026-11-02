@@ -134,12 +134,41 @@ class ProjectCasillaObservationProjection(BaseModel):
     source_refs: tuple[_Token, ...]
 
 
-class ModeloProjectOperationProjection(BaseModel):
-    """The complete public projection, bound to its source profile."""
+class ProjectUnresolvedBindingProjection(BaseModel):
+    """One source-owned binding left without a value, named by its box and closed tokens."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    result_version: Literal[1] = 1
+    binding_id: _Token
+    casilla_id: _Token | None
+    source_kind: _Token
+    reason: _Token
+    note: _Token | None
+
+
+class ProjectUnresolvedCasillaProjection(BaseModel):
+    """One computed box with no value, and the grounding of the formula that would compute it."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    casilla_id: _Token
+    reason: _Token
+    formula_id: _Token
+    legal_refs: tuple[_Token, ...]
+    source_refs: tuple[_Token, ...]
+
+
+class ModeloProjectOperationProjection(BaseModel):
+    """The complete public projection, bound to its source profile.
+
+    A box in ``unresolved_casillas`` or bound by a binding in
+    ``unresolved_bindings`` has no value, and never appears in
+    ``casilla_observations``.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    result_version: Literal[2] = 2
     authority_generation: ContentDigest
     profile_id: UUID
     year: FourDigitYear
@@ -150,6 +179,8 @@ class ModeloProjectOperationProjection(BaseModel):
     m130_accumulated: ProjectM130AccumulatedProjection
     casilla_observations: tuple[ProjectCasillaObservationProjection, ...]
     m100_projection: ProjectM100SummaryProjection
+    unresolved_bindings: tuple[ProjectUnresolvedBindingProjection, ...]
+    unresolved_casillas: tuple[ProjectUnresolvedCasillaProjection, ...]
 
     @model_validator(mode="after")
     def _complete_quarters(self) -> Self:
@@ -157,6 +188,16 @@ class ModeloProjectOperationProjection(BaseModel):
             self.quarters_available
         ):
             raise ValueError("projected quarter count or identities disagree")
+        return self
+
+    @model_validator(mode="after")
+    def _unresolved_boxes_carry_no_value(self) -> Self:
+        observed = {row.casilla_id for row in self.casilla_observations}
+        unresolved = {row.casilla_id for row in self.unresolved_casillas} | {
+            row.casilla_id for row in self.unresolved_bindings if row.casilla_id is not None
+        }
+        if observed & unresolved:
+            raise ValueError("an unresolved projected box also carries a value")
         return self
 
     @classmethod
@@ -196,6 +237,26 @@ class ModeloProjectOperationProjection(BaseModel):
                 cuota_liquida_estatal=_decimal(result.m100_projection.cuota_liquida_estatal),
                 cuota_liquida_autonomica=_decimal(result.m100_projection.cuota_liquida_autonomica),
                 cuota_resultante=_decimal(result.m100_projection.cuota_resultante),
+            ),
+            unresolved_bindings=tuple(
+                ProjectUnresolvedBindingProjection(
+                    binding_id=row.binding_id,
+                    casilla_id=row.casilla_id,
+                    source_kind=row.source_kind,
+                    reason=row.reason,
+                    note=str(row.note) if row.note is not None else None,
+                )
+                for row in result.unresolved_bindings
+            ),
+            unresolved_casillas=tuple(
+                ProjectUnresolvedCasillaProjection(
+                    casilla_id=row.casilla_id,
+                    reason=row.reason,
+                    formula_id=row.formula_id,
+                    legal_refs=tuple(row.legal_refs),
+                    source_refs=tuple(row.source_refs),
+                )
+                for row in result.unresolved_casillas
             ),
         )
 

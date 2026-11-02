@@ -16,8 +16,12 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ...adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -28,6 +32,9 @@ from ...adapters.persistence.profile.tests.cross_period_seeding import (
     seed_clean_cross_period_sources,
 )
 from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from ...application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
+from ...application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from ...application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ...application.ledger.lifecycle_contracts import LedgerLifecycleOperationId
 from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
@@ -36,16 +43,20 @@ from ...application.live.expedientes_ports import ExpedientesDeclaration
 from ...application.live.notification_documents import NotificationDocumentRecord
 from ...application.live.notification_ports import NotificationsSnapshot, NotificationType, RemoteNotification
 from ...application.live.notifications import NotificationsService
-from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.external_import_actions import import_external_filing_evidence
 from ...application.modelo.operation_shared import resolve_active_workflow_profile
 from ...application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from ...application.modelo.work_lifecycle import create_work_unit
 from ...application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.section_rows import add_profile_repeatable_section_row
 from ...application.workflow.abort import WorkflowAbortReason
 from ...application.workflow.run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage, WorkflowStep
+from ...core.casilla_id import validated_casilla_id
 from ...core.config import load_settings
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
@@ -70,6 +81,7 @@ from ..adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_expedientes_ports,
     build_verification_repository_bundle,
+    build_work_lifecycle_ports,
 )
 from ..justificante_composition import build_justificante_capture_service
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -80,6 +92,7 @@ from .ledger_lifecycle_operation_test_support import (
     prepare_ledger_lifecycle_operation_conformance_case,
 )
 from .production_operation_registry import production_operation_registry
+from .profile_persistence._iva_wallet_engine_support import _wallet_observation
 from .prorrata_operation_test_support import (
     ProrrataOperationConformanceCase,
     prepare_prorrata_operation_conformance_case,
@@ -192,9 +205,30 @@ def seeded_ledger_track_transaction_id(profile_id: UUID, *, operation: PinnedAut
     return consumed[0][0]
 
 
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA = validated_casilla_id("iva.cuota-devengada-total")
+
+
 def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> str:
-    """Create one ledger transaction consumed by a real, verified calculation."""
-    unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+    """Create one ledger transaction consumed by a real, verified calculation.
+
+    The consumer is a first-quarter Modelo 303 over one domestic 21 % sale.
+    Modelo 130 would read the same kind of row, but its activity boxes stay
+    capped below filing grade until the imputation criterion is grounded, so a
+    Modelo 130 that consumes a ledger row cannot verify.
+    """
+    modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+    period = Period.from_year_and_code(modelo_operation_test_support.MODELO_FILING_YEAR, "1T")
+    snapshot = operation.snapshot("303", filing_year=period.filing_year, period=period.registry_token)
+    unit = create_work_unit(
+        bucket_id=str(profile_id),
+        modelo="303",
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=snapshot.revision.id,
+        actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
+        ports=build_work_lifecycle_ports(bucket_id=str(profile_id)),
+        operation=operation,
+    )
     seed_clean_cross_period_sources(
         unit,
         work_unit_repository=WorkUnitCatalogueRepository(),
@@ -203,32 +237,71 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
         bucket_event_repository=BucketEventHistoryRepository(),
         operation=operation,
     )
+    sale_base = Decimal("12.00")
+    sale_rate = Decimal("0.21")
+    sale_cuota = (sale_base * sale_rate).quantize(Decimal("0.01"))
     ledger_ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=str(profile_id),
-            booked_date=date(2025, 1, 15),
-            amount=Decimal("12.00"),
+            booked_date=date(period.filing_year, 2, 15),
+            amount=sale_base + sale_cuota,
             direction=TransactionDirection.INCOMING,
             description="conformance track participation seed",
             business_classification=BusinessClassification.BUSINESS,
-            taxable_base=Decimal("12.00"),
-            iva_rate=Decimal("0"),
-            iva_amount=Decimal("0"),
+            taxable_base=sale_base,
+            iva_rate=sale_rate,
+            iva_amount=sale_cuota,
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         ),
         ports=ledger_ports,
         occurred_at=now(),
     )
     transaction_id = created.ref.transaction_id
-    calculation = calculate_modelo_revision(
+    # The wallet decision goes through the production reconciliation: the AEAT
+    # wallet shows the same pending credit the filed prior quarter recorded.
+    decided_at = now()
+    observation_repository = CalculationObservationRepository()
+    local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+        snapshot,
+        repository=observation_repository,
+        captured_at=decided_at,
+        iva_history_repository=IvaCompensationHistoryRepository(),
+        operation=operation,
+    )
+    pending = local_recurrence.amount if local_recurrence is not None else Decimal("0")
+    decision = reconcile_modelo_303_iva_compensation(
+        snapshot,
+        taxpayer_nif=SEEDED_SOURCE_TAX_ID,
+        wallet=_wallet_observation(
+            pending=pending,
+            taxpayer_nif=SEEDED_SOURCE_TAX_ID,
+            target_year=period.filing_year,
+            target_period=period,
+            generation_year=period.filing_year - 1,
+            generation_period="4T",
+            captured_at=decided_at,
+        ),
+        repository=observation_repository,
+        decision_repository=IvaWalletDecisionRepository(),
+        decided_at=decided_at,
+        local_recurrence=local_recurrence,
+        prefill_report=prefill_report,
+        operation=operation,
+    ).decision
+    publication = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unit.work_unit_id,
         ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
         actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         casilla_inputs={},
-        binding_values=modelo_operation_test_support.FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-        source_transaction_ids=(transaction_id,),
+        binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+        iva_compensation_decision=decision,
+        filing_instance_evidence=general_m303_filing_evidence(
+            unit.period, reference="test:conformance-track-participation", operation=operation
+        ),
     )
+    calculation = publication.revision
+    assert Decimal(calculation.casilla_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]) == sale_cuota
     report = verify_modelo_revision_with_preconditions(
         calculation.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -271,12 +344,11 @@ def seeded_modelo_edit_submission(
         ModeloEditSubmissionV1,
         ModeloScalarEditIntentV1,
     )
-    from ...core.casilla_id import validated_casilla_id
 
     unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
     seeded_casilla_id = validated_casilla_id("06")
     with bundled_indexed_authority().operation() as operation:
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,

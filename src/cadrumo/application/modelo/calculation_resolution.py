@@ -7,7 +7,7 @@ selected :class:`ModeloRevision`.
 This module is the calculation-service assembly layer between source resolution
 and engine execution. It delegates source-specific work to the binding
 resolution helpers, then returns typed channel bundles that
-:func:`application.modelo.calculation_actions.calculate_modelo_revision` can pass to
+:func:`application.modelo.calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources` can pass to
 :func:`domain.calculations.registry.formula_runtime.calculate_registry_snapshot` and the
 :class:`CalculationRevision` persistence boundary.
 
@@ -363,7 +363,7 @@ def build_calculation_replay_payloads(
         input_values_by_casilla_id=dict(
             sorted(
                 (
-                    validated_casilla_id(k, surface="calculate_modelo_revision.input_values_by_casilla_id"),
+                    validated_casilla_id(k, surface="calculation_replay.input_values_by_casilla_id"),
                     _canonical_decimal_str(v),
                 )
                 for k, v in resolved_inputs.items()

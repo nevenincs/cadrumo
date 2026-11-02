@@ -1,0 +1,208 @@
+"""Run the real Modelo 100 projection over one seeded Modelo 130 quarter, profile and payer records.
+
+The quarter stores the four Modelo 130 boxes the projection reads. The profile
+is a complete general-regime natural person whose IRPF income categories each
+scenario chooses, because they decide whether a suffered-withholding class needs
+payer evidence. Payer records are written through the production write port.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
+from uuid import UUID
+
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.aggregation.retencion_soportada_repository import record_retencion_soportada
+from cadrumo.application.modelo.projection import ModeloProjectServiceResult, project_modelo_100_from_m130
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from cadrumo.domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
+from cadrumo.entrypoints.retencion_soportada_certificado_composition import (
+    build_retencion_soportada_certificado_ports,
+)
+
+from .general_iva_profile_facts_support import general_iva_profile_facts
+
+PROJECTION_YEAR = 2025
+_T0 = datetime(2026, 2, 2, 9, 0, tzinfo=UTC)
+_BUCKET_ID = "59659659-0596-4596-8596-596596596596"
+_TAXPAYER_TAX_ID = "12345678Z"
+_M130_REVISION_ID = "2019-y-siguientes"
+ACTIVITY_ONLY = "actividad_economica"
+"""Income categories that positively exclude every suffered-withholding credit class of Modelo 100."""
+
+# The four Modelo 130 boxes the projection reads: cumulative ingresos, gastos and
+# rendimiento neto, and the quarter's final result, which becomes casilla 0604.
+M130_Q1_RESULTADO = Decimal("1200.00")
+_M130_Q1_VALUES: dict[CasillaId, Decimal] = {
+    validated_casilla_id("01", surface="projection seeding"): Decimal("10000.00"),
+    validated_casilla_id("02", surface="projection seeding"): Decimal("4000.00"),
+    validated_casilla_id("03", surface="projection seeding"): Decimal("6000.00"),
+    validated_casilla_id("19", surface="projection seeding"): M130_Q1_RESULTADO,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class PayerRecord:
+    """One synthetic payer certificate: its payer and the retención it states."""
+
+    payer_tax_id: str
+    income_class: RetencionSoportadaClase
+    retencion: Decimal
+
+
+def _seed_profile(profile_id: str, *, income_categories: str, profile_facts: tuple[UserProfileFact, ...]) -> None:
+    """Seed the complete profile; ``profile_facts`` replace a base fact of the same path."""
+    scenario_paths = {fact.path for fact in profile_facts}
+    base_facts = (
+        *general_iva_profile_facts(tax_id=_TAXPAYER_TAX_ID, activity_start_date="2020-01-01"),
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value=income_categories),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+    )
+    # The base list repeats some paths; the last occurrence is the one the original seeding stored.
+    latest_by_path = {fact.path: fact for fact in base_facts if fact.path not in scenario_paths}
+    seed_test_profile_record(
+        _create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=profile_id,
+            facts=(*latest_by_path.values(), *profile_facts),
+            created_at=_T0,
+            updated_at=_T0,
+            context=_profile_creation_context_for_test(),
+        ),
+    )
+
+
+def _seed_first_quarter(profile: TestRuntimeProfile, operation: PinnedAuthorityOperation) -> None:
+    """Store one Modelo 130 1T draft revision carrying the boxes the projection reads."""
+    work_unit = create_work_unit(
+        bucket_id=profile.bucket_id,
+        modelo="130",
+        filing_year=PROJECTION_YEAR,
+        period=Period.from_year_and_code(PROJECTION_YEAR, "1T"),
+        revision_id=_M130_REVISION_ID,
+        ports=build_work_lifecycle_ports(bucket_id=profile.bucket_id),
+        clock=_T0,
+        operation=operation,
+    )
+    inputs = {casilla_id: str(value) for casilla_id, value in _M130_Q1_VALUES.items()}
+    revision = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=work_unit.work_unit_id,
+            input_values_by_casilla_id=inputs,
+            binding_overrides={},
+            casilla_values=_M130_Q1_VALUES,
+            filing_instance_evidence=None,
+            source_provenance=(),
+        ),
+        work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id=inputs,
+        binding_overrides={},
+        casilla_values=_M130_Q1_VALUES,
+        observations=registry_grounded_observations(
+            modelo="130",
+            filing_year=PROJECTION_YEAR,
+            period="1T",
+            casilla_values=_M130_Q1_VALUES,
+        ),
+        created_at=_T0,
+        updated_at=_T0,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+    repository.save(upsert_calculation_revision(repository.load(), revision))
+
+
+def _seed_payer_records(
+    profile: TestRuntimeProfile, records: tuple[PayerRecord, ...], operation: PinnedAuthorityOperation
+) -> None:
+    ports = build_retencion_soportada_certificado_ports(profile_id=UUID(profile.bucket_id), operation=operation)
+    for index, item in enumerate(records):
+        record = RetencionSoportadaRecord(
+            ejercicio=PROJECTION_YEAR,
+            payer_tax_id=item.payer_tax_id,
+            payer_ref=ports.repository.payer_reference(item.payer_tax_id),
+            income_class=item.income_class,
+            importe_integro_dinerario=Decimal("20000.00"),
+            valoracion_especie=Decimal("0.00"),
+            retencion=item.retencion,
+            ingreso_a_cuenta=Decimal("0.00"),
+            ingreso_a_cuenta_repercutido=Decimal("0.00"),
+            origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
+            evidence_fingerprint=f"{index + 1:x}" * 64,
+            captured_at=_T0,
+        )
+        record_retencion_soportada(
+            record,
+            repository=ports.repository,
+            authority=ports.authority,
+            taxpayer_tax_id=_TAXPAYER_TAX_ID,
+            expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+        )
+
+
+def run_projection(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    *,
+    income_categories: str = ACTIVITY_ONLY,
+    payer_records: tuple[PayerRecord, ...] = (),
+    casilla_overrides: Mapping[str, str] | None = None,
+    binding_overrides: Mapping[str, str] | None = None,
+    profile_facts: tuple[UserProfileFact, ...] = (),
+) -> ModeloProjectServiceResult:
+    """Seed one isolated profile and return the real projection service's result for it."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_profile(profile.bucket_id, income_categories=income_categories, profile_facts=profile_facts)
+        _seed_first_quarter(profile, operation)
+        _seed_payer_records(profile, payer_records, operation)
+        with bundled_indexed_authority().operation() as projection_operation:
+            return project_modelo_100_from_m130(
+                year=PROJECTION_YEAR,
+                ccaa="madrid",
+                bucket_id=profile.bucket_id,
+                ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=projection_operation),
+                operation=projection_operation,
+                casilla_overrides=dict(casilla_overrides) if casilla_overrides is not None else None,
+                binding_overrides=dict(binding_overrides) if binding_overrides is not None else None,
+            )
+
+
+__all__ = ["ACTIVITY_ONLY", "M130_Q1_RESULTADO", "PROJECTION_YEAR", "PayerRecord", "run_projection"]

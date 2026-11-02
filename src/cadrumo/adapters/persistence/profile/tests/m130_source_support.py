@@ -64,6 +64,7 @@ def seed_m130_income_transaction(
     filing_year: int,
     source_key: str,
     value_date: date | None = None,
+    bucket_id: str | None = None,
     criterion_declared: bool = True,
 ) -> None:
     """Seed one real actividad-economica income row for source-bound M130 casilla 01.
@@ -71,11 +72,12 @@ def seed_m130_income_transaction(
     ``value_date`` defaults to 15 February of ``filing_year`` (a Q1 row). Pass an
     explicit date to place the income in a later quarter — useful for exercising
     the cumulative (year-to-date) M130 source window across quarters.
+    ``bucket_id`` names the bucket to write; it defaults to the active one.
     """
 
     # Transactions validate against registry facts, as they do under a CLI invocation's lease.
     with bundled_indexed_authority().operation():
-        bucket_id = resolve_active_bucket_id()
+        bucket_id = bucket_id if bucket_id is not None else resolve_active_bucket_id()
         assert bucket_id is not None, "test profile must install an active bucket pointer"
         if criterion_declared:
             _declare_cash_criterion(bucket_id, filing_year)
@@ -131,6 +133,7 @@ def seed_m130_expense_transaction(
     filing_year: int,
     source_key: str,
     value_date: date | None = None,
+    bucket_id: str | None = None,
     criterion_declared: bool = True,
 ) -> None:
     """Seed one real deductible actividad-economica expense (gasto) row for casilla 02.
@@ -144,7 +147,7 @@ def seed_m130_expense_transaction(
 
     # Transactions validate against registry facts, as they do under a CLI invocation's lease.
     with bundled_indexed_authority().operation():
-        bucket_id = resolve_active_bucket_id()
+        bucket_id = bucket_id if bucket_id is not None else resolve_active_bucket_id()
         assert bucket_id is not None, "test profile must install an active bucket pointer"
         if criterion_declared:
             _declare_cash_criterion(bucket_id, filing_year)

@@ -41,7 +41,9 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support impo
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.calculation_report import (
     ModeloCalculationReport,
     ModeloCalculationReportSourceProvenance,
@@ -79,6 +81,7 @@ from cadrumo.application.modelo.review_package_signing import (
 )
 from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -108,10 +111,12 @@ Outcome = CalculationSummaryVerificationOutcome
 
 _EXPORTED_AT = T1
 
-#: What the Spanish summary of the Modelo 130 baseline must show: income 10 000,
-#: expenses 3 000, their difference 7 000 and the 20 per cent instalment on it,
-#: each grouped with a point and carrying no decimal comma it was not given.
-_EXPECTED_SPANISH_FIGURES = ("10.000", "3.000", "7.000", "1.400")
+#: An agrarian volume the operator enters in casilla 08 of the Modelo 130 baseline.
+_AGRARIAN_VOLUME = {validated_casilla_id("08"): Decimal("70000")}
+#: What the Spanish summary must show: the 70 000 volume and the 2 per cent
+#: agrarian instalment on it (RIRPF art. 110.1.b), 1 400, each grouped with a
+#: point and carrying no decimal comma it was not given.
+_EXPECTED_SPANISH_FIGURES = ("70.000", "1.400")
 
 
 def _verified_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
@@ -123,14 +128,14 @@ def _verified_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
         calculation_repository=calculation_repo,
         bucket_event_repository=event_repo,
     ) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs=dict(DEFAULT_130_BASELINE_INPUTS),
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, **_AGRARIAN_VOLUME},
             binding_values=dict(DEFAULT_130_BINDING_VALUES),
             ports=ports,
             clock=T1,
-        )
+        ).revision
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,

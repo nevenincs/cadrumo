@@ -121,7 +121,8 @@ from ..impatriado_income_ledger import (
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from ..oss_ioss import _candidate_for_invoice_line
 from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
-from ..renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
+from ..renta_income_ledger import _classify_income_transaction
+from ..renta_income_models import RentaIncomeLedgerAggregationIssue
 from ..renta_ledger import RentaCategoryDeductionRules, _classify_renta_transaction
 from ..renta_ledger_models import RentaLedgerAggregationIssue
 

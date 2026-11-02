@@ -14,7 +14,9 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     replace_test_profile_record,
 )
 from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from cadrumo.application.modelo.work_review import (
     ModeloWorkOriginAnomaly,
@@ -621,12 +623,12 @@ def _calculated_m130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
         calculation_repository=calculation_repo,
         bucket_event_repository=bucket_event_repo,
     ) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
             ports=ports,
-        )
+        ).revision
     return work_unit, revision
 
 
@@ -715,57 +717,32 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
 
     assert review.calculation_revision_id == revision.calculation_revision_id
     assert review.lifecycle_state is revision.state
-    assert rows[M130_INCOME_CASILLA].realised_kind is ModeloValueKind.LITERAL
-    assert rows[M130_INCOME_CASILLA].value == Decimal("10000")
-    assert rows[M130_INCOME_CASILLA].origin_anomaly is ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE
-    assert rows[M130_INCOME_CASILLA].concrete_bindings
+    # The ledger owns casilla 01, so its figure is inherited from the ledger binding and nothing
+    # overrides it; the bucket calculation refuses an operator figure there.
+    assert rows[M130_INCOME_CASILLA].realised_kind is ModeloValueKind.INHERITED
+    assert rows[M130_INCOME_CASILLA].value == Decimal("0")
+    assert rows[M130_INCOME_CASILLA].origin_anomaly is None
+    assert rows[M130_INCOME_CASILLA].concrete_bindings[0].binding_id == _M130_INCOME_BINDING
+    assert rows[M130_INCOME_CASILLA].concrete_bindings[0].source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
     assert rows[M130_INCOME_CASILLA].concrete_bindings[0].resolved is True
     assert rows[M130_NET_RESULT_CASILLA].realised_kind is ModeloValueKind.COMPUTED
-    assert rows[M130_NET_RESULT_CASILLA].value == Decimal("7000")
+    assert rows[M130_NET_RESULT_CASILLA].value == Decimal("0")
     assert rows[M130_NET_RESULT_CASILLA].origin_anomaly is None
     assert rows[M130_CARRY_FORWARD_CASILLA].realised_kind is ModeloValueKind.COMPUTED
     carry_forward_formula = rows[M130_CARRY_FORWARD_CASILLA].concrete_formula
     assert carry_forward_formula is not None
     assert "modelo-130-resultados-negativos-anteriores" in carry_forward_formula.operand_refs
-    with calculation_ports_for_test(
-        bucket_id=work_unit.bucket_id,
-        work_unit_repository=work_repo,
-        calculation_repository=calculation_repo,
-        bucket_event_repository=bucket_event_repo,
-    ) as _calculation_ports_453:
-        equal_value_revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("10000")},
-            ports=_calculation_ports_453,
-        )
-    with bundled_indexed_authority().operation() as operation:
-        equal_value_review = build_modelo_work_review(
-            work_unit.bucket_id,
-            work_unit.modelo,
-            work_unit.filing_year,
-            work_unit.period,
-            operation=operation,
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            verification_repository=verification_repo,
-        )
-    equal_value_income = next(row for row in equal_value_review.casillas if row.casilla_id == M130_INCOME_CASILLA)
-    assert equal_value_review.calculation_revision_id == equal_value_revision.calculation_revision_id
-    assert equal_value_income.realised_kind is ModeloValueKind.INHERITED
-    assert equal_value_income.origin_anomaly is None
-    assert equal_value_income.concrete_bindings[0].resolved is True
 
     verification = verify_revision(
-        equal_value_revision.calculation_revision_id,
-        revision=equal_value_revision,
+        revision.calculation_revision_id,
+        revision=revision,
         work_unit=work_unit,
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         filing_repository=filing_repo,
         bucket_event_repository=bucket_event_repo,
-        clock=equal_value_revision.updated_at,
+        clock=revision.updated_at,
     )
     with bundled_indexed_authority().operation() as operation:
         verified_review = build_modelo_work_review(
@@ -792,12 +769,12 @@ def test_real_review_projects_only_fingerprint_for_persisted_row_identity(repos:
         calculation_repository=calculation_repo,
         bucket_event_repository=bucket_event_repo,
     ) as _calculation_ports_511:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_511,
-        )
+        ).revision
     raw_identity = "opaque-review-row-canary"
     fingerprint = "d" * 64
     amended = revision.model_copy(

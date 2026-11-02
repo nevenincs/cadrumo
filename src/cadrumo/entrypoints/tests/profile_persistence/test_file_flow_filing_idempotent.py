@@ -11,13 +11,13 @@ auth provider.
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 import pytest
 
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.domain.buckets.event import BucketEventType
@@ -28,7 +28,6 @@ from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_acti
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    M130_INCOME_CASILLA,
     T1,
     T2,
     T3,
@@ -59,13 +58,13 @@ def _verified_revision(repos: Repos):
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_59:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_59,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -163,13 +162,13 @@ def test_file_of_unverified_revision_still_hard_refuses(repos: Repos) -> None:
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_146:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_146,
             clock=T1,
-        )
+        ).revision
     with (
         pytest.raises(CalculationRevisionStateError, match=r"state|VERIFICADO_COMPLETO"),
         bundled_indexed_authority().operation() as operation,

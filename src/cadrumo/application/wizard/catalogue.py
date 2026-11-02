@@ -441,6 +441,22 @@ def _family_visibility(
     return _joint_declaration, _married, _premio_loteria_declared, _non_resident_irpf, _eu_eea_resident
 
 
+def _iva_regime_tokens_under(operation: PinnedAuthorityOperation) -> Sequence[_RegistryToken]:
+    """Read the IVA regime choices, resolving the default through the same pinned operation."""
+    from ...domain.calculations.registry.iva_regime_vocabulary import (
+        default_iva_regime as _default_iva_regime,
+    )
+    from ...domain.calculations.registry.iva_regime_vocabulary import (
+        iva_regime_choices as _iva_regime_choices,
+    )
+
+    default_iva_regime = partial(_default_iva_regime, authority=operation)
+    iva_regime_choices = partial(_iva_regime_choices, authority=operation)
+    tokens = iva_regime_choices()
+    default_iva_regime()
+    return tokens
+
+
 def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     """Build the setup flow from the caller's pinned authority operation."""
     from ...domain.calculations.registry.ccaa_catalogue import (
@@ -448,12 +464,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     )
     from ...domain.calculations.registry.irpf_income_categories import (
         irpf_income_category_actividad_economica_token as _irpf_income_category_actividad_economica_token,
-    )
-    from ...domain.calculations.registry.iva_regime_vocabulary import (
-        default_iva_regime as _default_iva_regime,
-    )
-    from ...domain.calculations.registry.iva_regime_vocabulary import (
-        iva_regime_choices as _iva_regime_choices,
     )
     from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 
@@ -464,8 +474,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     irpf_income_category_actividad_economica_token = partial(
         _irpf_income_category_actividad_economica_token, authority=operation
     )
-    default_iva_regime = partial(_default_iva_regime, authority=operation)
-    iva_regime_choices = partial(_iva_regime_choices, authority=operation)
     entity_type_attribution_entity_token, entity_type_legal_entity_token, entity_type_natural_person_token = (
         _entity_token_readers(operation)
     )
@@ -475,9 +483,7 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
         operation
     )
 
-    _iva_regime_tokens = iva_regime_choices()
-    _default_iva_regime_value: str = default_iva_regime().value
-    # Resolve the IVA default through the same pinned operation as the choices.
+    _iva_regime_tokens = _iva_regime_tokens_under(operation)
 
     (
         wizard_iva_choices,

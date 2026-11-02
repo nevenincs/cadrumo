@@ -586,6 +586,7 @@ def _seed_official_303_source_period(
     omit_justificante_metadata_periods: set[str],
     source_kind_by_period: dict[str, str],
     source_metadata_by_period: dict[str, dict[str, str] | None],
+    extra_values_by_period: dict[str, dict[CasillaId, Decimal]],
     operation: PinnedAuthorityOperation,
 ) -> None:
     evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
@@ -598,7 +599,7 @@ def _seed_official_303_source_period(
         omitted=omitted,
     )
     work_unit = _create_source_303_work_unit(period, operation=operation)
-    values = _source_values(period, source_casilla_ids)
+    values = {**_source_values(period, source_casilla_ids), **extra_values_by_period.get(period, {})}
     _seed_source_period_filing(
         observation_repository=observation_repository,
         work_unit=work_unit,
@@ -633,7 +634,13 @@ def _seed_official_303_source_filings(
     omit_justificante_metadata_periods: set[str] | None = None,
     source_kind_by_period: dict[str, str] | None = None,
     source_metadata_by_period: dict[str, dict[str, str] | None] | None = None,
+    extra_values_by_period: dict[str, dict[CasillaId, Decimal]] | None = None,
 ) -> None:
+    """Seed one filed M303 per quarter the annual 390 depends on.
+
+    ``extra_values_by_period`` adds filed casillas beyond the cross-period
+    requirement, for a dependent calculation that reads more of each quarter.
+    """
     _store_ready_profile()
     evidence_kind_by_period = evidence_kind_by_period or {}
     omit_justificante_metadata_periods = omit_justificante_metadata_periods or set()
@@ -649,6 +656,7 @@ def _seed_official_303_source_filings(
                 omit_justificante_metadata_periods=omit_justificante_metadata_periods,
                 source_kind_by_period=source_kind_by_period,
                 source_metadata_by_period=source_metadata_by_period,
+                extra_values_by_period=extra_values_by_period or {},
                 operation=operation,
             )
 

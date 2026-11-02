@@ -158,6 +158,15 @@ def _class_state(
     return RetencionSoportadaClassState.MISSING
 
 
+def _records_by_class(
+    records: Sequence[RetencionSoportadaRecord],
+) -> defaultdict[RetencionSoportadaClase, list[RetencionSoportadaRecord]]:
+    by_class: defaultdict[RetencionSoportadaClase, list[RetencionSoportadaRecord]] = defaultdict(list)
+    for record in records:
+        by_class[record.income_class].append(record)
+    return by_class
+
+
 class RetencionSoportadaSourceResolver:
     """Resolve the family's bindings from the per-payer records, attestations and the profile's categories."""
 
@@ -210,9 +219,7 @@ class RetencionSoportadaSourceResolver:
             )
         if records is None:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
-        by_class: defaultdict[RetencionSoportadaClase, list[RetencionSoportadaRecord]] = defaultdict(list)
-        for record in records:
-            by_class[record.income_class].append(record)
+        by_class = _records_by_class(records)
         attested = {item.income_class: item for item in attestations}
         declared = _declared_categories(context)
         binding_values: dict[BindingId, Decimal] = {}
@@ -235,14 +242,22 @@ class RetencionSoportadaSourceResolver:
                 zero_provenance.setdefault(income_class, self._zero_provenance(context, income_class, attestation))
             else:
                 diagnostics.append(self._unresolved_diagnostic(context.revision, binding.id, income_class, state))
-        contributing = tuple(record for record in records if record.income_class in consumed)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             diagnostics=(*diagnostics, *self._unrouted_diagnostics(context.revision, records, consumed)),
-            provenance=(*(self._provenance(record) for record in contributing), *zero_provenance.values()),
+            provenance=self._resolution_provenance(records, consumed, zero_provenance),
         )
+
+    def _resolution_provenance(
+        self,
+        records: tuple[RetencionSoportadaRecord, ...],
+        consumed: set[RetencionSoportadaClase],
+        zero_provenance: dict[RetencionSoportadaClase, CalculationSourceProvenance],
+    ) -> tuple[CalculationSourceProvenance, ...]:
+        contributing = tuple(record for record in records if record.income_class in consumed)
+        return (*(self._provenance(record) for record in contributing), *zero_provenance.values())
 
     def _unresolved_diagnostic(
         self,

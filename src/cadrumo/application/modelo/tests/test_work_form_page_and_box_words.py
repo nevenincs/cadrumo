@@ -20,10 +20,10 @@ from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..value_presentation import format_casilla_value
+from ..work_form_declaration_facts import ModeloFormEditClosure
 from ..work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
-    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormStanding,

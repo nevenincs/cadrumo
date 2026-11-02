@@ -22,6 +22,12 @@ from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, GATE_REFUSED_REASONS
+from ..work_form_declaration_facts import (
+    ModeloFormCalculationNote,
+    ModeloFormDeadline,
+    ModeloFormExport,
+    ModeloFormResultDirection,
+)
 from ..work_form_findings import ModeloFormAttention
 from ..work_form_header import (
     ModeloFormDeadlineTone,
@@ -34,17 +40,7 @@ from ..work_form_header import (
     form_header,
     result_view,
 )
-from ..work_form_models import (
-    ModeloFormCalculationNote,
-    ModeloFormDeadline,
-    ModeloFormExport,
-    ModeloFormField,
-    ModeloFormOrigin,
-    ModeloFormResultDirection,
-    ModeloWorkForm,
-    map_form_fields,
-    revised_field,
-)
+from ..work_form_models import ModeloFormField, ModeloFormOrigin, ModeloWorkForm, map_form_fields, revised_field
 from ..work_form_next_step import (
     ModeloFormNextAction,
     blocking_count,

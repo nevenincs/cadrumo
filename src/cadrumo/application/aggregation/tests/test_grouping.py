@@ -19,7 +19,7 @@ from ....core.period import Period
 from ....domain.transactions.models import TransactionCatalogue
 from .._grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names
 from ..errors import AggregationPeriodError
-from ..renta_income_ledger import RentaIncomeObservation
+from ..renta_income_models import RentaIncomeObservation
 from ..retenciones import RetencionObservation
 from .renta_income_aggregation_support import (
     _M130_ACCEPT_ACTIVITY_MARKER,

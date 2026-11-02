@@ -7,13 +7,18 @@ from datetime import UTC, datetime
 from ...application.aggregation.retencion_soportada_absence_repository import attest_retencion_soportada_absence
 from ...application.retencion_soportada_absence.contracts import (
     RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
+    RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_ABSENCE_WITHDRAW_OPERATION_DEFINITION_ID,
 )
 from ...application.retencion_soportada_absence.requests import (
     RetencionSoportadaAbsenceAttestRequest,
+    RetencionSoportadaAbsenceListRequest,
     RetencionSoportadaAbsenceWithdrawRequest,
 )
-from ...application.retencion_soportada_absence.results import RetencionSoportadaAbsenceMutationProjection
+from ...application.retencion_soportada_absence.results import (
+    RetencionSoportadaAbsenceListProjection,
+    RetencionSoportadaAbsenceMutationProjection,
+)
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
@@ -37,6 +42,17 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     subject = profile_operation_subject(str(context.profile_id))
     ports = build_retencion_soportada_absence_ports(profile_id=context.profile_id, operation=context.operation)
     identity = (_EJERCICIO, _CLASS)
+    attestation = RetencionSoportadaAbsence(
+        ejercicio=_EJERCICIO,
+        income_class=_CLASS,
+        note=_NOTE,
+        attested_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+    )
+
+    def seed() -> str:
+        return attest_retencion_soportada_absence(
+            attestation, ports=ports, expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
 
     if definition_id == RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID:
 
@@ -64,15 +80,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         )
 
     if definition_id == RETENCION_SOPORTADA_ABSENCE_WITHDRAW_OPERATION_DEFINITION_ID:
-        attestation = RetencionSoportadaAbsence(
-            ejercicio=_EJERCICIO,
-            income_class=_CLASS,
-            note=_NOTE,
-            attested_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
-        )
-        revision_id = attest_retencion_soportada_absence(
-            attestation, ports=ports, expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID
-        )
+        revision_id = seed()
 
         def verify_withdraw(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(RetencionSoportadaAbsenceMutationProjection)
@@ -101,6 +109,27 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             verify=verify_withdraw,
         )
 
+    if definition_id == RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID:
+        revision_id = seed()
+
+        def verify_list(outcome: ConformanceOutcome) -> None:
+            result = outcome.resolve_result(RetencionSoportadaAbsenceListProjection)
+            assert result.profile_id == context.profile_id
+            assert result.ejercicio == _EJERCICIO
+            (row,) = result.attestations
+            assert row.income_class is _CLASS
+            assert row.income_class_label
+            assert row.note == _NOTE
+            assert row.revision_id == revision_id
+            assert row.state is RetencionSoportadaAbsenceState.ACTIVE
+            assert ports.attestations.load_revisioned(identity)[1] == revision_id
+
+        return ConformancePreparation(
+            subject,
+            RetencionSoportadaAbsenceListRequest(profile_id=context.profile_id, ejercicio=_EJERCICIO),
+            verify=verify_list,
+        )
+
     raise AssertionError(f"unsupported suffered-withholding absence conformance definition: {definition_id}")
 
 
@@ -115,6 +144,11 @@ RETENCION_SOPORTADA_ABSENCE_CONFORMANCE_FAMILY = ConformanceFamily(
             RETENCION_SOPORTADA_ABSENCE_WITHDRAW_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
+        ),
+        RegisteredExecutorConformanceCase(
+            RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
         ),
     ),
     prepare=_prepare,

@@ -33,6 +33,8 @@ from .modelo_query_results import (
     M130AccumulatedPayload,
     ModeloCompareResult,
     ModeloProjectResult,
+    UnresolvedBindingPayload,
+    UnresolvedCasillaPayload,
 )
 from .operation_modelo_projection import run_modelo_compare, run_modelo_project
 
@@ -150,6 +152,26 @@ def modelo_project(
             cuota_liquida_autonomica=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_autonomica)),
             cuota_resultante=_decimal_wire(Decimal(service_result.m100_projection.cuota_resultante)),
         ),
+        unresolved_bindings=[
+            UnresolvedBindingPayload(
+                binding_id=row.binding_id,
+                casilla_id=row.casilla_id,
+                source_kind=row.source_kind,
+                reason=row.reason,
+                note=row.note,
+            )
+            for row in service_result.unresolved_bindings
+        ],
+        unresolved_casillas=[
+            UnresolvedCasillaPayload(
+                casilla_id=row.casilla_id,
+                reason=row.reason,
+                formula_id=row.formula_id,
+                legal_refs=tuple(row.legal_refs),
+                source_refs=tuple(row.source_refs),
+            )
+            for row in service_result.unresolved_casillas
+        ],
     )
     extrapolation_note = (
         f" (extrapolated from {service_result.quarters_filed}Q)" if service_result.is_extrapolated else ""
@@ -170,6 +192,14 @@ def modelo_project(
         f"m100_cuota_liquida_estatal\t{service_result.m100_projection.cuota_liquida_estatal}",
         f"m100_cuota_liquida_autonomica\t{service_result.m100_projection.cuota_liquida_autonomica}",
         f"m100_cuota_resultante\t{service_result.m100_projection.cuota_resultante}",
+        *(
+            f"unresolved\t{row.casilla_id or '-'}\t{row.binding_id}\t{row.note or row.reason}"
+            for row in service_result.unresolved_bindings
+        ),
+        *(
+            f"unresolved\t{row.casilla_id}\t{row.formula_id}\t{row.reason}"
+            for row in service_result.unresolved_casillas
+        ),
     ]
     emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 

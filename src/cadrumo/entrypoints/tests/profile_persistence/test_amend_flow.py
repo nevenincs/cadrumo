@@ -54,7 +54,9 @@ from ....application.modelo.action_errors import (
     StoredRowFieldScalarInputError,
 )
 from ....application.modelo.amendment_actions import amend_modelo_revision
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.calculation_revision_queries import get_calculation_revision
 from ....application.modelo.export import export_modelo_revision
 from ....application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
@@ -211,7 +213,7 @@ def _seed_work_unit(
     operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     """Modelo 130 1T 2026 — registry-resolvable so the formula engine
-    in ``calculate_modelo_revision`` has a snapshot to operate on."""
+    in ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` has a snapshot to operate on."""
 
     return create_work_unit(
         ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
@@ -410,13 +412,11 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo, operation=operation)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
             casilla_inputs={
-                _AMEND_INCOME_CASILLA: Decimal("1000"),
-                _AMEND_EXPENSE_CASILLA: Decimal("0"),
                 _AMEND_WITHHELD_CASILLA: Decimal("0"),
                 _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
                 _AMEND_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
@@ -426,7 +426,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
             },
             binding_values=_DEFAULT_130_BINDING_VALUES,
             clock=_T1,
-        )
+        ).revision
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
