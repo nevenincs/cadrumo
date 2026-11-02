@@ -19,6 +19,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from pydantic import TypeAdapter
+
 from dev.temporary_output import prepare_temp_root
 
 if TYPE_CHECKING:
@@ -51,10 +53,7 @@ STATES: dict[str, tuple[tuple[str, int, str], ...]] = {
 
 
 def _json_object(text: str) -> dict[str, object]:
-    parsed = json.loads(text)
-    if not isinstance(parsed, dict):
-        raise SystemExit("the imputation election fixture holds objects only")
-    return parsed
+    return TypeAdapter(dict[str, object]).validate_json(text)
 
 
 def _facts(statements: tuple[tuple[str, int, str], ...]) -> tuple[UserProfileFact, ...]:
