@@ -93,6 +93,7 @@ from ..filing.producer_snapshot import (
     FilingProducerSnapshot,
 )
 from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
+from ..filing.shared_owner_refusal import is_shared_owner_refusal
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
@@ -482,7 +483,7 @@ def _consume_export_payload(
 
 def _export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError:
     """Keep a refused box's own message; the generic one would read as a disk problem."""
-    if is_xml_value_refusal(exc):
+    if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(
             translated_message=exc.translated_message,
             context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},

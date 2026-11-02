@@ -35,6 +35,7 @@ from .art52_advisory import art52_reduccion_advisory_finding
 from .dt12_advisory import dt12_reduccion_advisory_finding
 from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from .preconditions import ModeloPreconditionFailure
+from .shared_casilla_cells_findings import append_shared_casilla_cells_findings
 from .verification_finding_contracts import (
     REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO,
     REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO,
@@ -411,6 +412,12 @@ def collect_revision_verification_findings(
         missing_required_casilla_ids=missing_required_casilla_ids,
         failures_by_finding_id=failures_by_finding_id,
         clave_scope=perceptor_clave_scope(work_unit, operation=operation),
+    )
+    append_shared_casilla_cells_findings(
+        target=target,
+        snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
     )
     append_iva_selected_scope_evidence_finding(
         work_unit=work_unit,
