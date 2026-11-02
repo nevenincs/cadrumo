@@ -10,12 +10,20 @@ do, still refuses.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnitState
 from ..declaration_summary import DeclarationSummaryState, declaration_summary
@@ -67,3 +75,45 @@ def test_the_list_and_the_form_read_the_same_revision_at_its_declared_grade(
     assert listed.revision.id == formed.revision.id == revision.id
     # The row's result box is read from the same revision the form shows, whatever it declares.
     assert declaration_result_casilla_id(listed.revision) == declaration_result_casilla_id(formed.revision)
+
+
+def test_a_refusal_of_the_calculation_gate_is_confined_to_its_row(operation: PinnedAuthorityOperation) -> None:
+    """The gate asks for filing grade, which the registry refuses for this 390; the row reads as unreadable."""
+    selected = operation.revision_for_context(_MODELO, filing_year=_YEAR, period=_PERIOD.registry_token)
+    work_unit_id = "e" * 64
+    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    head = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=work_unit_id,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values={},
+            source_provenance=(),
+            filing_instance_evidence=None,
+        ),
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=_MODELO, revision_id=selected.id, modelo_year=_YEAR, period=_PERIOD.registry_token
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        created_at=instant,
+        updated_at=instant,
+        source_provenance=(),
+        filing_instance_evidence=None,
+    )
+    declaration = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id=work_unit_id,
+        modelo=ModeloCode(_MODELO),
+        filing_year=_YEAR,
+        period=_PERIOD,
+        state=WorkUnitState.BORRADOR,
+        has_current_calculation=True,
+        has_current_filing=False,
+    )
+
+    summary = declaration_summary(
+        declaration, revisions={head.calculation_revision_id: head}, verification=None, operation=operation
+    )
+
+    assert summary.state is DeclarationSummaryState.UNREADABLE
+    assert summary.result is None and summary.technical_reason

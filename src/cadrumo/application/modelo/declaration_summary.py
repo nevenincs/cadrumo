@@ -95,9 +95,9 @@ def declaration_summary(
     if head is None:
         return DeclarationSummary(state=DeclarationSummaryState.DRAFT)
     blockers, checked = _verification_summary(head, verification)
-    outdated, blockers, checked = _gated_by_calculation(declaration, head, operation, blockers, checked)
-    state = _summary_state(declaration, head, blockers, checked)
     try:
+        outdated, blockers, checked = _gated_by_calculation(declaration, head, operation, blockers, checked)
+        state = _summary_state(declaration, head, blockers, checked)
         result = settlement_result_values(
             str(declaration.modelo), snapshot.revision, head.casilla_values, declaration.period
         )
