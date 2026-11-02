@@ -79,6 +79,8 @@ entries = [
   { key = "country_code.sk", value = "SK" },
   { key = "country_code.xi", value = "XI" },
   { key = "regime.order", value = "external_scheme,union_scheme,import_scheme" },
+  { key = "no_activity.binding_suffix", value = "2-ejercicio-y-periodo-declaracion-sin-actividad" },
+  { key = "no_activity.declared_value", value = "1" },
   { key = "regime.selector", value = "selector.regime" },
   { key = "regime.common_semantics", value = "Article 163 septiesdecies provides definitions common to all three regimes (declaraciones-liquidaciones periódicas, Estado miembro de consumo, Estado miembro de identificación)." },
   { key = "regime.external_scheme.description", value = "Régimen especial aplicable a los servicios prestados por sujetos pasivos no establecidos en la Comunidad." },

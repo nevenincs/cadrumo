@@ -65,6 +65,7 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
 )
+from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
@@ -660,6 +661,91 @@ def test_an_entered_period_contradicting_the_work_blocks_verification_by_name(
     assert "application.modelo.findings.scheme_period_contradicted" in {
         finding.message_locale_key for finding in report.findings
     }
+
+
+_NO_ACTIVITY_POSITION = {_EXTERIOR.revision_id: 220, _UNION.revision_id: 221, _IMPORT.revision_id: 252}
+
+
+def _declaring_no_activity(scenario: _Scenario) -> dict[str, Decimal]:
+    return {f"{scenario.fichero}.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("1")}
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_a_declared_nil_period_files_blank_rows_and_a_zero_total(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIVA arts. 163 noniesdecies, duovicies, septvicies and Orden HAC/610/2021 art. 7.4: a nil return is still due."""
+    result, _ = _calculate(objects, scenario, (), operation, extra_rows=_declaring_no_activity(scenario))
+    report = _verify(result)
+    assert report.granted_verificado_completo is True, [f.message_locale_key for f in report.findings]
+    wire = _export(objects, tmp_path, scenario, result)
+    page = wire.index(scenario.page_tag)
+    flag = _NO_ACTIVITY_POSITION[scenario.revision_id]
+    assert wire[page + flag - 1 : page + flag] == b"1"
+    start = page + scenario.first_position - 1
+    assert wire[start : start + 28 * 42] == b" " * (28 * 42)
+    assert Decimal(result.revision.casilla_values[scenario.total_casilla]) == Decimal("0")
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_an_empty_period_nobody_declared_stays_blocked(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """No invoices is not proof of no activity, so the zero stays unproven until the operator says so."""
+    result, _ = _calculate(objects, scenario, (), operation)
+    assert "application.modelo.findings.oss_evidence_missing" in {
+        finding.message_locale_key for finding in _verify(result).findings
+    }
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_declaring_no_activity_beside_an_invoice_is_a_named_contradiction(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    result, _ = _calculate(
+        objects,
+        scenario,
+        (_invoice(scenario, "OSS-N", "FR", "general", "100.00", "20.00"),),
+        operation,
+        extra_rows=_declaring_no_activity(scenario),
+    )
+    report = _verify(result)
+    assert report.granted_verificado_completo is False
+    assert "application.modelo.findings.oss_no_activity_contradicted" in {
+        finding.message_locale_key for finding in report.findings
+    }
+
+
+def test_a_direct_ioss_filer_without_intermediary_number_still_refuses_at_export(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """DR369 T36910 marks NIOSSIn obligatory with no alternative content and never names the filer's own number."""
+    declarant = {
+        key: value
+        for key, value in _IMPORT.declarant.items()
+        if key != "1-no-de-identificacion-del-intermediario-niossin"
+    }
+    scenario = replace(_IMPORT, declarant={**declarant, "1-actua-a-traves-de-intermediario": "0"})
+    result, _ = _calculate(
+        objects, scenario, (_invoice(scenario, "IOSS-D", "FR", "general", "100.00", "20.00"),), operation
+    )
+    with pytest.raises(ModeloExportError) as refused:
+        _export(objects, tmp_path, scenario, result)
+    assert refused.value.translated_message == "application.modelo.errors.export_draft_write_failed"
+    assert not (tmp_path / f"modelo-369-{scenario.revision_id}.txt").exists()
 
 
 def _published_rows(scenario: _Scenario, operation: PinnedAuthorityOperation) -> tuple[Invoice, ...]:

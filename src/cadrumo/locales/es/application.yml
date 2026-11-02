@@ -2406,6 +2406,8 @@ application:
         de la estimación objetiva (módulos).'
       oss_evidence_missing: Esta declaración incluye operaciones de ventanilla única
         (OSS), pero no hay justificantes guardados de ellas.
+      oss_no_activity_contradicted: Has declarado este periodo sin actividad, pero
+        hay facturas del régimen en él. Quita la declaración o revisa esas facturas.
       oss_source_unrouted: Algunas operaciones de ventanilla única (OSS) no se cuentan
         en ninguna casilla de este modelo.
       printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas

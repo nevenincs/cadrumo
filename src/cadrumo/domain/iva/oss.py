@@ -60,12 +60,21 @@ class OssIossRegimeDefinition:
 
 
 @dataclass(frozen=True, slots=True)
+class OssIossNoActivityDeclaration:
+    """Which header row of each regime's return says the period had no activity, and the value saying so."""
+
+    binding_suffix: str
+    declared_value: str
+
+
+@dataclass(frozen=True, slots=True)
 class OssIossRegimeCatalogue:
     """Typed projection of the dated Modelo 369 OSS/IOSS mapping fact."""
 
     definitions: tuple[OssIossRegimeDefinition, ...]
     common_semantics: str
     selector_key: str
+    no_activity: OssIossNoActivityDeclaration | None = None
 
     @property
     def all_regimes(self) -> frozenset[OssIossRegime]:
@@ -115,6 +124,15 @@ _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=M
 _ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.TRANSACTION_DATE, policy=_ENTRIES_POLICY)
 
 
+def _no_activity_declaration(entries: Mapping[str, str]) -> OssIossNoActivityDeclaration | None:
+    if "no_activity.binding_suffix" not in entries:
+        return None
+    return OssIossNoActivityDeclaration(
+        binding_suffix=entries["no_activity.binding_suffix"],
+        declared_value=required_mapping_entry(entries, "no_activity.declared_value", subject=_ENTRY_SUBJECT),
+    )
+
+
 def resolve_oss_ioss_regime_catalogue(
     *,
     effective_date: date | None = None,
@@ -153,6 +171,7 @@ def resolve_oss_ioss_regime_catalogue(
         definitions=tuple(definitions),
         common_semantics=required_mapping_entry(entries, _COMMON_SEMANTICS_KEY, subject=_ENTRY_SUBJECT),
         selector_key=required_mapping_entry(entries, _SELECTOR_KEY, subject=_ENTRY_SUBJECT),
+        no_activity=_no_activity_declaration(entries),
     )
 
 

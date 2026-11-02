@@ -2270,6 +2270,9 @@ application:
         for estimación objetiva (módulos).'
       oss_evidence_missing: This declaration includes one-stop-shop (OSS) activity,
         but no supporting documents for it are saved.
+      oss_no_activity_contradicted: You declared this period without activity, but
+        it holds invoices under the regime. Remove the declaration or review those
+        invoices.
       oss_source_unrouted: Some one-stop-shop (OSS) entries are not counted in any
         box of this form.
       printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines

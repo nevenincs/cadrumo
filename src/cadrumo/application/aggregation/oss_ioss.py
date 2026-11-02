@@ -689,8 +689,6 @@ def _can_close_detail_rows(
         context.work_unit_id is None
         or projection.source_bucket_id != context.bucket_id
         or projection.catalogue_fingerprint is None
-        or not projection.candidates
-        or not supplied_binding_ids
     )
 
 
@@ -1139,6 +1137,7 @@ class OssIossLedgerSourceResolver:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
+                closed_record_row_sets=closed_rows,
                 diagnostics=self._no_live_source_diagnostics(context),
             )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable

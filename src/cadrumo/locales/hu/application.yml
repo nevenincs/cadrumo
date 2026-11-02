@@ -2363,6 +2363,9 @@ application:
         objetiva, módulos) %{threshold} határát.'
       oss_evidence_missing: Ez a bevallás egyablakos (OSS) ügyleteket tartalmaz, de
         nincsenek hozzájuk mentett alátámasztó bizonylatok.
+      oss_no_activity_contradicted: Ezt az időszakot tevékenység nélkülinek jelölted,
+        de a rendszerhez tartozó számlák vannak benne. Vond vissza a jelölést, vagy
+        ellenőrizd a számlákat.
       oss_source_unrouted: Egyes egyablakos (OSS) tételek a nyomtatvány egyik rovatában
         sem szerepelnek.
       printed_total_mismatch: A(z) [%{box}] rovat nem egyezik az őt alkotó nyomtatott

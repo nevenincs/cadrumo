@@ -2412,6 +2412,8 @@ application:
         de l''estimació objectiva (mòduls).'
       oss_evidence_missing: Aquesta declaració inclou operacions de finestreta única
         (OSS), però no hi ha justificants desats d'aquestes operacions.
+      oss_no_activity_contradicted: Has declarat aquest període sense activitat, però
+        hi ha factures del règim. Treu la declaració o revisa aquestes factures.
       oss_source_unrouted: Algunes operacions de finestreta única (OSS) no es compten
         a cap casella d'aquest model.
       printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les

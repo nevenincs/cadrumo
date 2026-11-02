@@ -46,7 +46,7 @@ from .verification_iva_evidence import (
     append_iva_compensation_annual_source_evidence_finding,
     append_iva_selected_scope_evidence_finding,
 )
-from .verification_oss_evidence import m369_unresolved_oss_source_finding
+from .verification_oss_evidence import NO_ACTIVITY_CONTRADICTED_KEY, m369_unresolved_oss_source_finding
 from .verification_preconditions import (
     build_verification_precondition_failure,
 )
@@ -300,6 +300,17 @@ def append_oss_verification_finding(
         if issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION and issue.reason == "unrouted_observation"
     )
     is_unrouted = unrouted_issue_count > 0
+    if oss_source_finding.message_locale_key == NO_ACTIVITY_CONTRADICTED_KEY:
+        failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.oss_no_activity.consistent",
+            scenario_id="modelo.work.verify.oss_no_activity.contradicted",
+            evidence_id="modelo.work.verify.oss_no_activity",
+            evidence_values={"modelo": str(work_unit.modelo)},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        )
+        return
     failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
         calculation_revision_id=target.calculation_revision_id,
         work_unit_id=target.work_unit_id,
