@@ -47,9 +47,10 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.modelos.calculation_binding_values import PERSISTED_BOOLEAN_BINDING_TOKENS
 from ...domain.modelos.filing_record import FilingDeclarationKind
+from ...domain.modelos.source_disagreement import SourceDisagreementRole
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.source_mesh import CalculationSourceResolution
-from ..aggregation.source_resolution_operations import merge_source_resolutions_by_precedence
+from ..aggregation.source_resolution_operations import PrecedenceTier, merge_source_resolutions_by_precedence
 from .binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,
     reject_binding_channel_mismatch,
@@ -178,8 +179,16 @@ def resolve_calculation_binding_channels(
         enum_binding_values=dict(caller_enum_binding_values),
     )
     merged = merge_source_resolutions_by_precedence(
-        (profile_resolution, backend_tier, borrador_resolution, caller_tier),
-    )
+        tuple(
+            PrecedenceTier(role=role, resolution=resolution, source_family=role.value)
+            for role, resolution in (
+                (SourceDisagreementRole.PROFILE, profile_resolution),
+                (SourceDisagreementRole.BACKEND, backend_tier),
+                (SourceDisagreementRole.BORRADOR, borrador_resolution),
+                (SourceDisagreementRole.CALLER, caller_tier),
+            )
+        ),
+    ).resolution
     resolved_bindings = dict(sorted(merged.binding_values.items()))
     resolved_enum_bindings = dict(sorted(merged.enum_binding_values.items()))
     resolved_date_bindings = dict(sorted(merged.date_binding_values.items()))
