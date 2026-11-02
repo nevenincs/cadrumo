@@ -602,7 +602,7 @@ test("a check line whose source is the suffered withholding opens that register 
   ).toBeVisible();
 });
 
-test("a file made before the declaration changed is out of date and is to be made again", async ({
+test("a file made before a conflicting edit stays out of date until its export hold is resolved", async ({
   page: target,
 }) => {
   const read = form("130-1T-stale");
@@ -610,11 +610,7 @@ test("a file made before the declaration changed is out of date and is to be mad
     throw new Error("the stale 130 has no out-of-date file");
   await openDeclaration(target, "130", { shape: "stale" });
   await expect(target.getByText(read.header.file.words)).toBeVisible();
-  await target
-    .getByRole("button", {
-      name: label("workspace.modelo.next_button.export_again"),
-    })
-    .click();
+  await tab(target, "workspace.modelo.filing.title").click();
   await expect(tab(target, "workspace.modelo.filing.title")).toHaveAttribute(
     "aria-selected",
     "true",
@@ -626,7 +622,18 @@ test("a file made before the declaration changed is out of date and is to be mad
     target.getByRole("button", {
       name: label("workspace.modelo.filing.export_again"),
     }),
-  ).toBeEnabled();
+  ).toBeDisabled();
+  expect(read.header.export_hold?.reason).toBe("blocks");
+  if (!read.header.export_hold)
+    throw new Error("the changed 130 has no export hold");
+  await expect(
+    target
+      .getByRole("region", {
+        name: label("workspace.modelo.filing.file_title"),
+        exact: true,
+      })
+      .getByText(read.header.export_hold.words, { exact: true }),
+  ).toBeVisible();
 });
 
 test("a filing recorded without a verified receipt asks for it", async ({

@@ -24,7 +24,6 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.export_layout_format import ExportLayoutFormat
 from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -59,17 +58,8 @@ from .work_form_declaration_facts import (
     ModeloFormResultDirection,
 )
 from .work_form_export_offer import (
-    ModeloExportRequestField,
-    ModeloFormArtefactOption,
-    ModeloFormAvailability,
-    ModeloFormElection,
-    ModeloFormElectionChoice,
-    ModeloFormElectionReason,
-    ModeloFormElectionState,
     ModeloFormExportOffer,
-    ModeloFormInstalment,
     ModeloFormReceipt,
-    ModeloFormReviewPackageOffer,
 )
 from .work_form_findings import ModeloFormAttention
 from .work_form_header import ModeloFormHeader
@@ -415,56 +405,6 @@ class PublicSpanishTaxIdFormat(BaseModel):
     cif_letter_table: str
 
 
-class PublicModeloFormElectionFigure(BaseModel):
-    """Exact decimal text at the local-human operation boundary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    instalment: ModeloFormInstalment
-    amount: str = Field(min_length=1)
-    words: str = Field(min_length=1)
-    advisory: bool
-    advisory_words: str | None = None
-
-
-class PublicModeloFormElectionQuestion(BaseModel):
-    """An export election with its exact public instalment figures."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    election: ModeloFormElection
-    request_field: ModeloExportRequestField
-    words: str = Field(min_length=1)
-    state: ModeloFormElectionState = ModeloFormElectionState.AVAILABLE
-    reason: ModeloFormElectionReason | None = None
-    state_words: str | None = None
-    help: str | None = None
-    default: str | None = None
-    choices: tuple[ModeloFormElectionChoice, ...] = ()
-    figures: tuple[PublicModeloFormElectionFigure, ...] = ()
-
-
-class PublicModeloFormExportOffer(BaseModel):
-    """Lossless public mirror of the canonical export offer."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    artefacts: tuple[ModeloFormArtefactOption, ...] = Field(min_length=1)
-    record: ModeloFormAvailability
-    review_package: ModeloFormReviewPackageOffer
-    asks_elections: bool
-    elections: tuple[PublicModeloFormElectionQuestion, ...]
-    file_format: ExportLayoutFormat | None
-    file_format_words: str | None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical_meaning(self) -> Self:
-        # The mirror retains the canonical cross-field and decimal rules.
-        restore_public_mirror(self, ModeloFormExportOffer, PublicModeloFormExportOffer)
-        return self
-
-
 class ModeloWorkbenchFormProjectionV1(BaseModel):
     """Public exact-profile envelope around one declaration's workbench read.
 
@@ -502,7 +442,7 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     #: What typing a value over each box the filer can type on does, in words, by the box's address.
     typing_effects: tuple[ModeloFormTypingEffect, ...] = ()
     #: What exporting offers: the artefacts, whether elections are asked and with which choices, the file format.
-    export_offer: PublicModeloFormExportOffer | None = None
+    export_offer: ModeloFormExportOffer | None = None
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None = None
 
@@ -562,24 +502,6 @@ def _restore_tax_id_format(public: PublicSpanishTaxIdFormat) -> SpanishTaxIdForm
     return restored
 
 
-def _project_export_offer(value: ModeloFormExportOffer | None) -> PublicModeloFormExportOffer | None:
-    if value is None:
-        return None
-    projected = project_public_mirror(value, ModeloFormExportOffer, PublicModeloFormExportOffer)
-    if not isinstance(projected, PublicModeloFormExportOffer):
-        raise TypeError("export offer public projection failed")
-    return projected
-
-
-def _restore_export_offer(public: PublicModeloFormExportOffer | None) -> ModeloFormExportOffer | None:
-    if public is None:
-        return None
-    restored = restore_public_mirror(public, ModeloFormExportOffer, PublicModeloFormExportOffer)
-    if not isinstance(restored, ModeloFormExportOffer):
-        raise TypeError("export offer restoration failed")
-    return restored
-
-
 def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchFormReadV1:
     baseline = projection.admitted_baseline
     admission = (
@@ -596,7 +518,7 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
         asks_modelo_390=projection.asks_modelo_390,
         registry_revision_id=projection.registry_revision_id,
         tax_id_format=_restore_tax_id_format(projection.tax_id_format),
-        export_offer=_restore_export_offer(projection.export_offer),
+        export_offer=projection.export_offer,
         receipt=projection.receipt,
     )
 
@@ -646,7 +568,7 @@ def project_modelo_workbench_form(
         registry_revision_id=read.registry_revision_id,
         tax_id_format=_project_tax_id_format(read.tax_id_format),
         typing_effects=read.typing_effects,
-        export_offer=_project_export_offer(read.export_offer),
+        export_offer=read.export_offer,
         receipt=read.receipt,
     )
     _require_projection_roundtrip(read, projection)

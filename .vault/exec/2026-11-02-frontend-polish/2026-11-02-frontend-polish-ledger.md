@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#frontend-polish'
 date: '2026-11-02'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2606d8356962fef02e2f9ffe031ece888c59a2c6f70858bc8ebd42d6cf829241'
+body_hash: 'sha256:8050315fcc1ea391404bc7eb4a17dc2abb56ae9ffab27bd22f2f3285b4e75d38'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -222,6 +222,17 @@ related:
 - `S38` `verify:` `TypeScript scoped ESLint Prettier canonical chrome` -> `pass`
 - `S12` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
 - `S12` `verify:` `44 AEAT six calendar profile-view and31 browser scenarios` -> `pass`
+- `S32` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_work_form_export_offer.py`
+- `S32` `D` `src/cadrumo/application/modelo/tests/test_workbench_export_offer_projection.py`
+- `S32` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S32` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S32` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S32` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S32` `verify:` `canonical 218-envelope generation and post-simplification validation` -> `pass`
+- `S32` `verify:` `159 focused Python cases combined final evidence` -> `pass`
+- `S32` `verify:` `165 Modelo logs browser scenarios` -> `pass`
+- `S32` `verify:` `TypeScript and scoped Ruff ESLint Prettier` -> `pass`
 
 ## Notes
 

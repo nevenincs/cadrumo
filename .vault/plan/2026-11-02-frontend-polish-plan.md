@@ -14,9 +14,12 @@ related:
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
   - '[[2026-06-30-obligation-coverage-completeness-adr]]'
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
+  - '[[2026-06-19-iva-compensation-override-cli-adr]]'
+  - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
+  - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:138ba002ce3a05f92eaa195523ac5ed6551bcde7254cbc5bd11ea7301528468d'
+body_hash: 'sha256:e70cf41669f4a0dee03039f554276f78caa1a24ab1850c60e8587665eca1a186'
 ---
 
 # `frontend-polish` plan
@@ -70,7 +73,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S29` - Distinguish pending and failed Local AI discovery from no lanes and offer model-list read recovery; `native/desktop/frontend/src/shell/localAiLanes.ts, native/desktop/frontend/src/shell/localModels.ts, native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/src/components/setup/LocalAi.tsx, native/desktop/frontend/src/components/setup/ProvisioningPanel.tsx, native/desktop/frontend/src/components/settings/LocalModels.tsx, native/desktop/frontend/src/dev/agentFixtureHost.ts, native/desktop/frontend/tests/scenarios/local-models.spec.ts`.
 - [x] `S30` - Render palette search results only for their query and distinguish unavailable search; `native/desktop/frontend/src/components/CommandPalette.tsx, native/desktop/frontend/tests/scenarios/palette.spec.ts, dev/locales/`.
 - [ ] `S31` - Render served context-fact box numbers and regenerate canonical Modelo fixtures to match the current contract; `native/desktop/frontend/src/components/modelo/form/RecordsBlock.tsx, native/desktop/frontend/src/dev/fixtures/modelo/, native/desktop/frontend/src/shell/modeloContract.ts, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
-- [ ] `S32` - Restore canonical frontend input generation with accepted diagnostic severity parity and lossless public export-offer projection; `src/cadrumo/application/modelo/calculation_notes.py, src/cadrumo/application/modelo/workbench_projection.py, src/cadrumo/application/modelo/projection_operation.py, src/cadrumo/core/errors/registry/_application_modelo.py, src/cadrumo/application/modelo/tests/, native/desktop/frontend/scripts/modelo_fixtures.py, native/desktop/frontend/src/shell/modeloContract.ts, native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx, native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx, native/desktop/frontend/src/components/modelo/workspace/EstimateView.tsx`.
+- [x] `S32` - Restore canonical frontend input generation with accepted diagnostic severity parity and lossless public export-offer projection; `src/cadrumo/application/modelo/calculation_notes.py, src/cadrumo/application/modelo/workbench_projection.py, src/cadrumo/application/modelo/projection_operation.py, src/cadrumo/core/errors/registry/_application_modelo.py, src/cadrumo/application/modelo/tests/, native/desktop/frontend/scripts/modelo_fixtures.py, native/desktop/frontend/src/shell/modeloContract.ts, native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx, native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx, native/desktop/frontend/src/components/modelo/workspace/EstimateView.tsx`.
 - [x] `S33` - Expose the supported local declaration PDF comparison beside receipt import, preserving backend refusals and write holds; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [x] `S34` - Retry failed casilla help in place without changing selection or staged edits; `native/desktop/frontend/src/components/modelo/details/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [x] `S35` - Keep delayed agent clarification and approval results within their originating conversation and request owner; `native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`.

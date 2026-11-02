@@ -629,9 +629,9 @@ def _verify(work: Any) -> Any:
 def _check_clean(work: Any) -> Any:
     """Answer the earlier-filing figures, calculate and check a Modelo 130 cleanly; the check's result.
 
-    A clean check needs the operator's answers to the earlier-filing figures
-    and the earlier Renta the 130 reads present as filed AEAT evidence under
-    the profile's own tax id. The profile books no activity in its ledger:
+    A clean check takes earlier income from the seeded filed Renta evidence,
+    without a competing operator override. The operator answers only the
+    first quarter's absent earlier-quarter figures. The profile books no activity in its ledger:
     the bank-dated income, expense and retención boxes are capped below
     filing grade, so only their proven zero lets the check pass.
     """
@@ -651,6 +651,7 @@ def _check_clean(work: Any) -> Any:
                 value=value,
             )
             for binding_id, value in FILED_130_ANSWERS
+            if binding_id != "irpf.previous_year_economic_activity_net_income"
         )
     )
     if applied.refusal is not None:
@@ -1877,7 +1878,7 @@ def write_envelopes(directory: Path) -> None:
     ):
         renewing.recalculate()
         _write_renewal_flow(directory, renewing, started)
-    # Its own profile: the file for the AEAT is written, then the declaration changes and is checked again.
+    # Its own profile: the file is written, then a conflicting edit makes it stale and blocks verification.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _seeded(Path(tmp), facts=facts) as stale,
@@ -1887,7 +1888,6 @@ def write_envelopes(directory: Path) -> None:
         # Checked, its file made and current: what recording the filing starts from.
         _write_form(directory, stale, "modelo-130-1T-exported")
         _write_edits(directory, stale)
-        _verify(stale)
         _write_form(directory, stale, "modelo-130-1T-stale")
         _write_rebase(directory, stale)
     _write_renta(directory)

@@ -4535,6 +4535,47 @@ export type ModeloFormElectionChoice = {
 };
 
 /**
+ * One amount an election states, in the filer's words, and whether it is
+ * advisory.
+ *
+ * `amount` is the exact decimal text of a non-negative amount in cents, so the
+ * served contract carries the figure as written rather than a number a reader
+ * may round. An advisory figure is one Cadrumo works out where no official
+ * rule fixes it; `advisory_words` then says why, and only then.
+ */
+export type ModeloFormElectionFigure = {
+  instalment: ModeloFormInstalment;
+  amount: string;
+  words: string;
+  advisory: boolean;
+  advisory_words: string | null;
+};
+
+/**
+ * One election the export asks, its state, and its answers pre-set to the
+ * neutral default.
+ *
+ * An available question carries its choices; its `default` is one of them, or
+ * `None` when no answer is neutral (an account nothing designates), and the
+ * export then resolves the register's designation. A question that is not
+ * applicable or unavailable carries its reason and its words instead, no
+ * choices and no default, and is not sent. `request_field` is the export
+ * request field an answer is sent in.
+ */
+export type ModeloFormElectionQuestion = {
+  election: ModeloFormElection;
+  request_field: ModeloExportRequestField;
+  words: string;
+  state: ModeloFormElectionState;
+  reason: ModeloFormElectionReason | null;
+  state_words: string | null;
+  help: string | null;
+  default: string | null;
+  choices: ModeloFormElectionChoice[];
+  figures: ModeloFormElectionFigure[];
+};
+
+/**
  * Why an election is not applicable or cannot be answered now.
  */
 export type ModeloFormElectionReason =
@@ -4546,7 +4587,8 @@ export type ModeloFormElectionReason =
   | "filing_window_unknown"
   | "no_open_account"
   | "no_spanish_account"
-  | "settlement_unsupported";
+  | "settlement_unsupported"
+  | "second_instalment_nothing";
 
 /**
  * Whether the filer can answer an election now.
@@ -4582,6 +4624,24 @@ export type ModeloFormExportHold = {
  * Why the file for the AEAT is withheld, most pressing first.
  */
 export type ModeloFormExportHoldReason = "blocks" | "confirm" | "verify";
+
+/**
+ * What the declaration may export, whether the export asks elections, and the
+ * file its revision writes.
+ *
+ * `elections` is empty exactly when `asks_elections` is false; the export then
+ * carries each election's neutral default. `file_format` is `None` when the
+ * revision declares no export layout.
+ */
+export type ModeloFormExportOffer = {
+  artefacts: ModeloFormArtefactOption[];
+  record: ModeloFormAvailability;
+  review_package: ModeloFormReviewPackageOffer;
+  asks_elections: boolean;
+  elections: ModeloFormElectionQuestion[];
+  file_format: ExportLayoutFormat | null;
+  file_format_words: string | null;
+};
 
 /**
  * The latest file for the AEAT, and whether it no longer matches the
@@ -7140,7 +7200,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   registry_revision_id: string;
   tax_id_format: PublicSpanishTaxIdFormat;
   typing_effects: ModeloFormTypingEffect[];
-  export_offer: PublicModeloFormExportOffer | null;
+  export_offer: ModeloFormExportOffer | null;
   receipt: ModeloFormReceipt | null;
 };
 
@@ -7698,46 +7758,6 @@ export type PublicModeloFormContextFieldBlock = {
 export type PublicModeloFormEarlierFiling = {
   modelo: string;
   period: PublicPeriod;
-};
-
-/**
- * Exact decimal text at the local-human operation boundary.
- */
-export type PublicModeloFormElectionFigure = {
-  instalment: ModeloFormInstalment;
-  amount: string;
-  words: string;
-  advisory: boolean;
-  advisory_words: string | null;
-};
-
-/**
- * An export election with its exact public instalment figures.
- */
-export type PublicModeloFormElectionQuestion = {
-  election: ModeloFormElection;
-  request_field: ModeloExportRequestField;
-  words: string;
-  state: ModeloFormElectionState;
-  reason: ModeloFormElectionReason | null;
-  state_words: string | null;
-  help: string | null;
-  default: string | null;
-  choices: ModeloFormElectionChoice[];
-  figures: PublicModeloFormElectionFigure[];
-};
-
-/**
- * Lossless public mirror of the canonical export offer.
- */
-export type PublicModeloFormExportOffer = {
-  artefacts: ModeloFormArtefactOption[];
-  record: ModeloFormAvailability;
-  review_package: ModeloFormReviewPackageOffer;
-  asks_elections: boolean;
-  elections: PublicModeloFormElectionQuestion[];
-  file_format: ExportLayoutFormat | null;
-  file_format_words: string | null;
 };
 
 /**

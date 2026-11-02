@@ -250,6 +250,16 @@ PASS for the frontend scope of S12. The inventory includes connection/sign-in pr
 
 Evidence combines the unchanged 44 AEAT cases, six calendar cases including four-language advice, the prior profile-view lifecycle regression and the current full 31-case browser run. S23/S24/S37 close the established recovery findings. These are simulated-host frontend results, not live AEAT traffic, native engine/picker/certificate verification or submission evidence. Native input admission does not prove page effect, and person-driven AEAT submission stays separate. Terra found no remaining concrete S12 candidate in the bounded review.
 
+### s32-public-contract-review | low | Canonical export offers replace the redundant public mirror
+
+The merged canonical election figures already carry validated decimal strings. The public workbench projection now uses the canonical export-offer model directly, removing the duplicate model and conversion layer. Its real calculated-form roundtrip retains exact `600.01` and `400.00` text, rejects malformed, negative, over-precision and numeric amounts, and preserves the existing grammar's accepted `01.0` text. The test's read identity now matches its calculated form; production identity checks remain unchanged. The redundant mirror-only test was removed and its cross-field rejection moved into the real roundtrip test.
+
+The five-file Python batch passed 158 cases; its remaining test passed after those test-assumption corrections in 20261102T224730.788816Z-pytest-11892-216f1d3c. Scoped Ruff lint/format and frontend TypeScript, ESLint and Prettier pass. Terra confirmed the canonical grammar and reviewed the removal's consumers. Canonical `modelo-fixtures.mjs --check` passes after simplification. The current generated contract and all 218 envelopes validate without compatibility shims or altered dependency locks.
+
+### s31-context-boxes-review | low | Served context box numbers survive canonical regeneration
+
+PASS for S31. RecordsBlock renders the backend's context-fact box numbers alongside their returned values. The canonical 218-envelope refresh now includes the current contract, and all 117 Modelo browser cases passed in 20261102T221404Z-60704, including the Modelo 347 context-box assertions in all four supported languages. Subsequent export-offer type simplification preserves the fixture wire shape and passes canonical validation. RecordsBlock implementation was already retained in the corrective merge; this closes its generation and regression verification.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.
