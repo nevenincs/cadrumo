@@ -72,7 +72,6 @@ from ....domain.calculations.registry.authority import (
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ....domain.modelos.filing_record import ExternalEvidenceKind
@@ -83,6 +82,7 @@ from ....domain.user_profile.values import create_user_profile_record as _create
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
+from .verification_substance_support import workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -123,17 +123,6 @@ def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
     """Read required manual casillas from the real registry — no duplication."""
     snap = published_authority_operation().snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
     return tuple(c.id for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
-
-
-def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
 
 
 def _seed_runtime_profile_record(bucket_id: str) -> None:

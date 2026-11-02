@@ -72,13 +72,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_coordinates,
 )
-from ....domain.deadlines.models import (
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
@@ -86,9 +79,9 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, c
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import build_calculation_action_ports
 from .observation_seeding_support import save_stamped_observation
+from .verification_substance_support import general_iva_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -225,25 +218,6 @@ def _seed_ready_profile(*, profile_id: str) -> None:
             facts=_READY_PROFILE_FACTS,
             created_at=_CLOCK,
             updated_at=_CLOCK,
-        ),
-    )
-
-
-def _workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.from_registry("common_regime"),
-            regime_composition=M303RegimeComposition.from_registry("general"),
-            redeme_enrolled=False,
-            cash_accounting_regime_enrolled=False,
-            voluntary_sii_enrolled=False,
-            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
         ),
     )
 
@@ -572,7 +546,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
         actor="operator-test",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=general_iva_workflow_profile(),
         settings=ready_clave_settings("X1234567L"),
         clock=_CLOCK,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,

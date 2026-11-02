@@ -11,7 +11,13 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -94,4 +100,24 @@ def workflow_profile() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+    )
+
+
+def general_iva_workflow_profile() -> TaxpayerProfile:
+    """The general-regime workflow profile with an explicit common-territory general IVA composition."""
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime("GENERAL"),
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
     )
