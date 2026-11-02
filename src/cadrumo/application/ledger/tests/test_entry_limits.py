@@ -4,20 +4,29 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
-from typing import Final
+from typing import Final, get_args
 
 import pytest
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
 from ....core.percentage import Percentage, fraction_of_percentage
 from ....core.unit_proportion import UnitProportion
+from ....domain.buckets.event import BucketEvent
 from ....domain.invoices import figures
-from ..entry_limits import LedgerEntryDecimalRule, ledger_entry_limits
+from ..allocate_operation import LedgerAllocateRequest
+from ..classify_requests import LedgerClassifyPatch
+from ..counterparty_operation import LedgerCounterpartyRequest
+from ..entry_limits import LedgerEntryDecimalRule, TextLimitName, ledger_entry_limits
+from ..evidence_add_operation import LedgerEvidenceAddRequest
 from ..evidence_mutation_operation import LedgerEvidenceUpdatePatch
 from ..invoice_evidence_confirm_operation import LedgerEvidenceConfirmRequest
+from ..ledger_add_contracts import LedgerAddRequest
+from ..own_account_operation import LedgerOwnAccountRequest
+from ..split_operation import LedgerSplitChildRequest, LedgerSplitRequest
 from ..update_contracts import LedgerUpdatePatch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -127,3 +136,60 @@ def test_an_evidence_rate_is_on_the_points_scale_the_field_is_served_on() -> Non
 def test_the_recorded_limits_are_what_the_backend_answers() -> None:
     recorded = json.loads(_RECORDING.read_text(encoding="utf-8"))
     assert recorded["limits"] == ledger_entry_limits().model_dump(mode="json")
+
+
+def _text(length: int) -> str:
+    return "x" * length
+
+
+def _parts(count: int) -> tuple[LedgerSplitChildRequest, ...]:
+    return tuple(LedgerSplitChildRequest(amount="1", description=f"part {at}") for at in range(count))
+
+
+#: Each served text limit, with every request field whose own bound it states and what fills it.
+_OWNERS: Final[dict[str, list[tuple[type[BaseModel], str, Callable[[int], object]]]]] = {
+    "split_parts": [(LedgerSplitRequest, "children", _parts)],
+    "entry_text": [
+        (LedgerUpdatePatch, "description", _text),
+        (LedgerUpdatePatch, "counterparty", _text),
+        (LedgerUpdatePatch, "notes", _text),
+        (LedgerAddRequest, "description", _text),
+    ],
+    "group_label": [(LedgerUpdatePatch, "group_label", _text)],
+    "classify_token": [(LedgerClassifyPatch, "category_id", _text), (LedgerClassifyPatch, "iva_category", _text)],
+    "usage_ratio_id": [(LedgerAllocateRequest, "usage_ratio_id", _text)],
+    "event_payload_value": [(BucketEvent, "payload", lambda n: {"reason": _text(n)})],
+    "evidence_label": [
+        (LedgerEvidenceUpdatePatch, "supplier", _text),
+        (LedgerEvidenceUpdatePatch, "invoice_number", _text),
+        (LedgerEvidenceAddRequest, "supplier", _text),
+    ],
+    "evidence_note": [(LedgerEvidenceUpdatePatch, "notes", _text), (LedgerEvidenceAddRequest, "notes", _text)],
+    "own_account_iban": [(LedgerOwnAccountRequest, "iban", _text)],
+    "own_account_swift_bic": [(LedgerOwnAccountRequest, "swift_bic", _text)],
+    "counterparty_tax_id": [(LedgerCounterpartyRequest, "tax_identifier", _text)],
+    "counterparty_note": [(LedgerCounterpartyRequest, "note", _text)],
+}
+
+
+def _takes(model: type[BaseModel], field: str, value: object) -> bool:
+    adapter = TypeAdapter(model.model_fields[field].rebuild_annotation())
+    try:
+        adapter.validate_python(value)
+    except ValidationError:
+        return False
+    return True
+
+
+def test_every_served_text_limit_is_one_a_writer_owns() -> None:
+    served = {limit.name for limit in ledger_entry_limits().text_limits}
+    assert served == set(_OWNERS) == set(get_args(TextLimitName.__value__))
+    assert len(ledger_entry_limits().text_limits) == len(served)
+
+
+@pytest.mark.parametrize("name", sorted(_OWNERS))
+def test_the_writers_take_exactly_what_the_text_limit_served_says(name: str) -> None:
+    served = next(limit.max for limit in ledger_entry_limits().text_limits if limit.name == name)
+    for model, field, fill in _OWNERS[name]:
+        assert _takes(model, field, fill(served)), f"{model.__name__}.{field} refuses the served {served}"
+        assert not _takes(model, field, fill(served + 1)), f"{model.__name__}.{field} takes more than {served}"

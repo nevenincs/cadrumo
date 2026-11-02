@@ -84,6 +84,13 @@ class LedgerEntryPercentFieldPayload(OutputSchema):
     unit: str
 
 
+class LedgerEntryTextLimitPayload(OutputSchema):
+    """The most characters (or items) one kind of entry takes."""
+
+    name: str
+    max: int
+
+
 class LedgerEntryLimitsPayload(OutputSchema):
     """Every limit a ledger entry form holds typed text to."""
 
@@ -96,6 +103,7 @@ class LedgerEntryLimitsPayload(OutputSchema):
     percent_bare_fraction_ceiling: str
     document_percent_fields: list[LedgerEntryPercentFieldPayload]
     rule_pattern_max: int
+    text_limits: list[LedgerEntryTextLimitPayload]
 
 
 class LedgerEntryOptionsResult(OutputSchema):
@@ -983,6 +991,7 @@ __all__ = [
     "LedgerEntryOptionPayload",
     "LedgerEntryOptionsResult",
     "LedgerEntryPercentFieldPayload",
+    "LedgerEntryTextLimitPayload",
     "LedgerExcludeResult",
     "LedgerHistoryEventPayload",
     "LedgerHistoryResult",
