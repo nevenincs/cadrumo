@@ -323,6 +323,7 @@ class _ResolvedCalculationInputs:
     resolved_relations: Mapping[RelationId, Decimal]
     resolved_unresolved_relations: frozenset[RelationId]
     resolved_unresolved_bindings: frozenset[BindingId]
+    settled_bindings: frozenset[BindingId]
     resolved_date_bindings: Mapping[BindingId, date]
     resolved_boolean_bindings: Mapping[BindingId, bool]
     resolved_text_inputs: Mapping[CasillaId, str]
@@ -409,6 +410,7 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
     relation_values: Mapping[RelationId, Decimal] | None,
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
+    settled_binding_ids: tuple[BindingId, ...],
     date_binding_values: Mapping[BindingId, date] | None,
     boolean_binding_values: Mapping[BindingId, bool] | None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None,
@@ -458,6 +460,7 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
         resolved_relations=resolved_relations,
         resolved_unresolved_relations=resolved_unresolved_relations,
         resolved_unresolved_bindings=resolved_unresolved_bindings,
+        settled_bindings=frozenset(settled_binding_ids),
         resolved_date_bindings=resolved_date_bindings,
         resolved_boolean_bindings=resolved_boolean_bindings,
         resolved_text_inputs=resolved_text_inputs,
@@ -553,7 +556,11 @@ def _prepare_calculation_state(
         resolved.resolved_inputs,
         binding_values=resolved.supplied_bindings,
         target_period=snapshot.period,
-        unresolved_binding_ids=resolved.resolved_unresolved_bindings,
+        # A settled binding has no scalar value because its source answered
+        # elsewhere -- nothing applies to the filer, or its values arrived as
+        # rows -- not because the source failed: its bound casilla keeps the
+        # unsupplied-input reading.
+        unresolved_binding_ids=resolved.resolved_unresolved_bindings.difference(resolved.settled_bindings),
     )
     formulas = {formula.target_casilla_id: formula for formula in resolved.revision.formulas}
     parameters = {parameter.id: parameter for parameter in resolved.revision.parameters}
@@ -586,6 +593,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
     unresolved_binding_ids: tuple[BindingId, ...] = (),
+    settled_binding_ids: tuple[BindingId, ...] = (),
     date_binding_values: Mapping[BindingId, date] | None = None,
     boolean_binding_values: Mapping[BindingId, bool] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
@@ -649,6 +657,13 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             A bound casilla fed through the input channel whose binding is
             listed here and which has no supplied input is omitted as well,
             never seeded as zero, so every formula reading it is omitted too.
+        settled_binding_ids: Bindings among ``unresolved_binding_ids``
+            whose source answered without a scalar value: its resolver
+            established from the filer's typed profile that the source does
+            not apply to this filing, or the values arrived on the row
+            channel. They stay unresolved as formula operands, but a bound
+            casilla fed by one is not left unresolved: it keeps the
+            unsupplied-input reading.
         date_binding_values: Optional date-valued profile bindings (e.g.
             ``birth_date``) consumed by date-aware ops.
         boolean_binding_values: Optional truth-valued bindings, keyed by binding
@@ -672,6 +687,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids,
         date_binding_values=date_binding_values,
         boolean_binding_values=boolean_binding_values,
         text_inputs=text_inputs,

@@ -5,7 +5,9 @@ the caller's inputs. When the source resolver ran and could not settle the
 binding, the casilla must stay absent and every formula reading it must stay
 unresolved, rather than folding the gap into a zero that is indistinguishable
 from a proven one. A binding nobody reported unresolved keeps the unsupplied
-input reading, and absent-by-design observation-backed slots keep their
+input reading, as does one whose source answered off the scalar channel
+(declared inapplicable to the filer, or delivered as rows), and absent-by-design
+observation-backed slots keep their
 structural zero.
 
 Each case runs the published Modelo 303 or 390 revision through
@@ -64,6 +66,7 @@ def _calculate_m303(
     *,
     source_values: dict[BindingId, Decimal],
     unresolved: tuple[BindingId, ...] = (),
+    settled: tuple[BindingId, ...] = (),
     operator_inputs: dict[CasillaId, Decimal] | None = None,
 ) -> RegistryCalculationResult:
     """Run the published 303 formulas with the given input-channel source values.
@@ -91,6 +94,7 @@ def _calculate_m303(
         inputs={**resolve_available_bound_inputs_by_casilla_id(revision, input_channel), **(operator_inputs or {})},
         binding_values=others,
         unresolved_binding_ids=unresolved,
+        settled_binding_ids=settled,
         date_context={"filing_period": date(_YEAR + 1, 1, 30)},
     )
 
@@ -106,7 +110,10 @@ def test_the_published_settlement_chain_reads_the_casillas_this_module_names(
     revision = _m303_settlement_snapshot(operation).revision
     bindings = revision_bindings_by_id(revision)
     casillas = {casilla.id: casilla for casilla in revision.casillas}
-    for casilla_id, binding_id in ((_CASILLA_44, _PRORRATA_44_BINDING), (_SOPORTADO_INTERIORES, _SOPORTADO_INTERIORES_BINDING)):
+    for casilla_id, binding_id in (
+        (_CASILLA_44, _PRORRATA_44_BINDING),
+        (_SOPORTADO_INTERIORES, _SOPORTADO_INTERIORES_BINDING),
+    ):
         assert casillas[casilla_id].input_kind is InputKind.BOUND
         assert bound_casilla_binding_ids(casillas[casilla_id]) == (binding_id,)
         assert bindings[binding_id].source in _INPUT_CHANNEL_SOURCES
@@ -164,6 +171,19 @@ def test_unresolved_ledger_binding_leaves_its_casilla_and_dependants_absent(
     assert _SOPORTADO_INTERIORES not in observed
     assert observed.isdisjoint(_DEDUCTION_CHAIN)
     assert result.values[_CASILLA_44] == Decimal("-217.60")
+
+
+def test_a_settled_binding_keeps_the_unsupplied_input_reading(*, operation: PinnedAuthorityOperation) -> None:
+    """A source that answered off the scalar channel (inapplicable, or rows) is not a failed source."""
+    result = _calculate_m303(
+        _m303_settlement_snapshot(operation),
+        source_values={_SOPORTADO_INTERIORES_BINDING: Decimal("89.60")},
+        unresolved=(_PRORRATA_44_BINDING,),
+        settled=(_PRORRATA_44_BINDING,),
+    )
+
+    assert result.values[_CASILLA_44] == Decimal("0")
+    assert result.values[_DEDUCIBLE_TOTAL] == Decimal("89.60")
 
 
 def test_a_supplied_value_wins_over_an_unresolved_report(*, operation: PinnedAuthorityOperation) -> None:

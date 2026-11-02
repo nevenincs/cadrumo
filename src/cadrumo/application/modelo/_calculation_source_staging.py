@@ -343,6 +343,7 @@ def _materialise_prorrata_regularizacion_source_values(
             source_resolution.unresolved_binding_ids,
             caller_binding_values,
         ),
+        settled_binding_ids=settled_binding_ids(source_resolution),
         staging_binding_defaults=_iva_wallet_staging_defaults(
             registry_snapshot=registry_snapshot,
             effective_binding_values=effective_binding_values,
@@ -439,6 +440,7 @@ def _calculate_staged_registry_values(
     relation_values: Mapping[RelationId, Decimal] | None,
     unresolved_relation_ids: tuple[RelationId, ...],
     effective_unresolved_binding_ids: tuple[BindingId, ...],
+    settled_binding_ids: tuple[BindingId, ...],
     filing_period_date: date | None,
 ) -> SourceResolutionRegistryValues:
     """Run the registry engine and retain its staged values and diagnostics."""
@@ -461,6 +463,7 @@ def _calculate_staged_registry_values(
         relation_values=relation_values or {},
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=effective_unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids,
         date_binding_values=date_binding_values or None,
     )
     return SourceResolutionRegistryValues(
@@ -483,6 +486,7 @@ def materialise_registry_values_for_source_resolution(
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
     unresolved_binding_ids: tuple[BindingId, ...] = (),
+    settled_binding_ids: tuple[BindingId, ...] = (),
     staging_binding_defaults: Mapping[BindingId, Decimal] | None = None,
     filing_period_date: date | None = None,
 ) -> SourceResolutionRegistryValues:
@@ -516,7 +520,26 @@ def materialise_registry_values_for_source_resolution(
         relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
         effective_unresolved_binding_ids=effective_unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids,
         filing_period_date=filing_period_date,
+    )
+
+
+def settled_binding_ids(source_resolution: CalculationSourceResolution) -> tuple[BindingId, ...]:
+    """Return the bindings whose source answered without a scalar value.
+
+    A binding the owning resolver declared inapplicable to the filer, or
+    whose values arrived on the row channel, stays in the unresolved set for
+    formula operands; the registry engine must still not read its bound
+    casilla as a source that failed.
+    """
+    return tuple(
+        sorted(
+            {
+                *source_resolution.inapplicable_binding_ids,
+                *(binding_id for binding_id, _row_index in source_resolution.row_binding_values),
+            }
+        )
     )
 
 
