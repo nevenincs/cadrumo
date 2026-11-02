@@ -13,9 +13,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, Protocol, override
+from typing import Annotated, Literal, Protocol, cast, override
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, PlainSerializer, PlainValidator, StringConstraints, TypeAdapter, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
@@ -42,6 +42,70 @@ from .snapshot_base import (
 )
 
 type _BorradorValue = Decimal | str
+
+_BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
+_KIND_DECIMAL = "decimal"
+_KIND_TEXT = "text"
+
+
+def encode_borrador_binding_values(values: Mapping[BindingId, _BorradorValue]) -> dict[str, dict[str, str]]:
+    """Return the stored tagged form of ``values``, ordered by binding id.
+
+    Each value is ``{"kind": "decimal" | "text", "value": <string>}``. A decimal
+    keeps its plain-notation string and a text value its exact characters, so
+    text such as ``"09"`` and the decimal nine stay distinct once stored.
+    """
+    encoded: dict[str, dict[str, str]] = {}
+    for key, value in sorted(values.items()):
+        if isinstance(value, Decimal):
+            if not value.is_finite():
+                raise ValueError("borrador decimal binding value must be finite")
+            encoded[key] = {"kind": _KIND_DECIMAL, "value": format(value, "f")}
+        elif isinstance(value, str):
+            encoded[key] = {"kind": _KIND_TEXT, "value": value}
+        else:
+            raise ValueError("borrador binding value must be a decimal or text")
+    return encoded
+
+
+def _decode_borrador_binding_value(raw: object) -> _BorradorValue:
+    if isinstance(raw, (Decimal, str)):
+        return raw
+    if not isinstance(raw, Mapping):
+        raise ValueError("borrador binding value must be a tagged decimal or text")
+    tagged = cast("Mapping[object, object]", raw)
+    text = tagged.get("value")
+    if set(tagged) != {"kind", "value"} or not isinstance(text, str):
+        raise ValueError("borrador binding value must be a tagged decimal or text")
+    kind = tagged["kind"]
+    if kind == _KIND_TEXT:
+        return text
+    if kind == _KIND_DECIMAL:
+        try:
+            value = Decimal(text)
+        except ArithmeticError as exc:
+            raise ValueError("borrador decimal binding value is not a decimal") from exc
+        if not value.is_finite():
+            raise ValueError("borrador decimal binding value must be finite")
+        return value
+    raise ValueError("borrador binding value kind must be decimal or text")
+
+
+def _decode_borrador_binding_values(raw: object) -> dict[str, _BorradorValue]:
+    if not isinstance(raw, Mapping):
+        raise ValueError("borrador binding values must be a mapping")
+    entries = cast("Mapping[object, object]", raw)
+    return {
+        _BINDING_ID_ADAPTER.validate_python(key, strict=True): _decode_borrador_binding_value(value)
+        for key, value in entries.items()
+    }
+
+
+type _BorradorBindingValues = Annotated[
+    Mapping[BindingId, _BorradorValue],
+    PlainValidator(_decode_borrador_binding_values),
+    PlainSerializer(encode_borrador_binding_values, when_used="json"),
+]
 
 
 BorradorSourceUrl = Annotated[str, StringConstraints(min_length=1, max_length=2048)]
@@ -73,7 +137,7 @@ class Borrador100Snapshot(BaseModel):
     captured_at: datetime
     source_url: BorradorSourceUrl
     state: SnapshotLifecycleState
-    binding_values: Mapping[BindingId, _BorradorValue] = Field(default_factory=dict)
+    binding_values: _BorradorBindingValues = Field(default_factory=dict)
     superseded_by_snapshot_id: SnapshotId | None = None
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
@@ -145,10 +209,14 @@ class Borrador100SnapshotReading:
 
     A refused snapshot is neither dropped nor counted as absent: a reading with
     no admitted snapshot and one refused snapshot is not an empty store.
+    ``outdated_stored_snapshots`` counts stored rows written under an older
+    storage schema. Such a row cannot be decoded, so it is counted rather than
+    named, and it is not an empty store either.
     """
 
     readable: tuple[Borrador100Snapshot, ...]
     refused: tuple[Borrador100RefusedSnapshot, ...]
+    outdated_stored_snapshots: int = 0
 
 
 def borrador_100_snapshot_refusal(
@@ -241,10 +309,7 @@ def derive_borrador_100_snapshot_id(
             "period": period.registry_token,
             "registry_snapshot_ref": registry_snapshot_ref.model_dump(mode="json"),
             "source_url": source_url,
-            "binding_values": {
-                key: format(value, "f") if isinstance(value, Decimal) else value
-                for key, value in sorted(binding_values.items())
-            },
+            "binding_values": encode_borrador_binding_values(binding_values),
         },
     )
 
@@ -254,8 +319,14 @@ class Borrador100SnapshotRepository(SnapshotRepository[Borrador100Snapshot], Pro
 
     Encrypted secure-object storage, namespaces, object keys, and persistence
     errors belong to the outer adapter. Implementations satisfy this structural
-    contract without inheriting application code.
+    contract without inheriting application code. ``list_snapshots`` returns the
+    snapshots stored under the current schema;
+    ``outdated_stored_snapshot_count`` counts the rows stored under an older one.
     """
+
+    def outdated_stored_snapshot_count(self) -> int:
+        """Return how many stored rows were written under an older storage schema."""
+        ...
 
 
 class _Borrador100CaptureRequest(BaseModel):
@@ -329,6 +400,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
     ) -> None:
         """Initialize this public contract."""
         super().__init__(bucket_id=bucket_id, repository=repository)
+        self._borrador_repository = repository
 
     def capture(
         self,
@@ -453,7 +525,11 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
                 readable.append(snapshot)
             else:
                 refused.append(Borrador100RefusedSnapshot(snapshot=snapshot, reason=reason))
-        return Borrador100SnapshotReading(readable=tuple(readable), refused=tuple(refused))
+        return Borrador100SnapshotReading(
+            readable=tuple(readable),
+            refused=tuple(refused),
+            outdated_stored_snapshots=self._borrador_repository.outdated_stored_snapshot_count(),
+        )
 
     def show(self, snapshot_id: str, *, operation: PinnedAuthorityOperation) -> Borrador100Snapshot:
         """Return one snapshot, refusing it when the pinned authority does not admit it."""
@@ -477,7 +553,11 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         readable = [snapshot for snapshot in reading.readable if period is None or snapshot.period == period]
         refused = tuple(item for item in reading.refused if period is None or item.snapshot.period == period)
         latest = () if not readable else (max(readable, key=lambda snapshot: snapshot.captured_at),)
-        return Borrador100SnapshotReading(readable=latest, refused=refused)
+        return Borrador100SnapshotReading(
+            readable=latest,
+            refused=refused,
+            outdated_stored_snapshots=reading.outdated_stored_snapshots,
+        )
 
     # ---- SnapshotService[Borrador100Snapshot] hooks ----------------------
 
@@ -552,5 +632,6 @@ __all__ = [
     "borrador_100_snapshot_object_key",
     "borrador_100_snapshot_refusal",
     "derive_borrador_100_snapshot_id",
+    "encode_borrador_binding_values",
     "require_borrador_100_snapshot_coordinates_current",
 ]

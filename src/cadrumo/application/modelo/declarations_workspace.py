@@ -22,7 +22,6 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from .declarations_workspace_contracts import (
     DeclarationResultCasillaReaderV1,
     DeclarationsSanitizedLifecycleFactV1,
-    DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceCalculationRevisionRefV1,
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceFilingRefV1,
@@ -72,12 +71,7 @@ def _validate_current_revisions(
 def _observable_zones(
     observations: Mapping[DeclarationsWorkspaceZone, DeclarationsWorkspaceZoneObservationV1],
 ) -> set[DeclarationsWorkspaceZone]:
-    return {
-        zone
-        for zone, observation in observations.items()
-        if observation.availability
-        in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
-    }
+    return {zone for zone, observation in observations.items() if observation.availability.is_observable}
 
 
 def _declaration_rows_if_observable(

@@ -21,13 +21,12 @@ if TYPE_CHECKING:
 
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.currency.service import CurrencyNormalizationService
-from ...domain.transactions.classification_effects import fields_cleared_by_classification
+from ...domain.transactions.classification_effects import fields_cleared_by_classification, takes_changes
 from ...domain.transactions.classification_origin import (
     CLASSIFICATION_DECISION_FIELDS,
     resolved_classification_origin,
     with_classification_origin,
 )
-from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
@@ -328,7 +327,7 @@ def _manual_update_preconditions(
     transaction_id: str,
     evidence_authority: bool,
 ) -> tuple[tuple[LedgerRemovalBlocker, ...], bool]:
-    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(current.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
             context={

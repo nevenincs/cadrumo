@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period, PeriodError
@@ -90,7 +91,7 @@ ACTIVITY_ASSET_REFUSAL_CODES = frozenset(
 
 ActivityAssetId = Annotated[str, Field(min_length=1, max_length=128)]
 
-ActivityAssetTaxYear = Annotated[int, Field(ge=1900, le=9999)]
+ActivityAssetTaxYear = FourDigitYear
 
 ActivityAssetRefusalCode = Literal[
     "REFUSED_ACTIVIDAD_ASSET_VALIDATION",

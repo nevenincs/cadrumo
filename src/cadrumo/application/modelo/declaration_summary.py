@@ -21,9 +21,15 @@ from pydantic import BaseModel, Field
 from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationReportCatalogue
 from ...domain.modelos.work_unit import WorkUnitState
-from .calculation_note_gate import blocking_calculation_issues, calculation_screen_outdated
+from .calculation_note_gate import (
+    blocking_calculation_issues,
+    calculation_filed_before_grade_cap,
+    calculation_screen_outdated,
+    proven_zero_calculation_issues,
+)
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .work_form_models import ModeloFormResult
 from .work_form_result import settlement_result_values
@@ -60,6 +66,11 @@ class DeclarationSummary(BaseModel):
     is_correction: bool = False
     #: Whether the calculation-note gate refuses the revision as stale; a recalculation is then its next step.
     calculation_outdated: bool = False
+    #: The facts of each capped value the calculation proved to be zero: they withhold nothing and are shown.
+    proven_zero_notes: tuple[CalculationNoteFact, ...] = ()
+    #: Whether the revision was recorded as filed before screens existed with a figure in a capped box, so its
+    #: export is refused until it is calculated again and recorded anew; a recalculation is then its next step.
+    filed_before_grade_cap: bool = False
     technical_reason: str | None = Field(default=None, exclude=True, repr=False)
 
 
@@ -97,6 +108,16 @@ def declaration_summary(
     blockers, checked = _verification_summary(head, verification)
     try:
         outdated, blockers, checked = _gated_by_calculation(declaration, head, operation, blockers, checked)
+        filed_before_cap = head.state is CalculationRevisionState.PRESENTADO and (
+            calculation_filed_before_grade_cap(
+                head,
+                modelo=str(declaration.modelo),
+                filing_year=declaration.filing_year,
+                period=declaration.period,
+                operation=operation,
+            )
+            is not None
+        )
         state = _summary_state(declaration, head, blockers, checked)
         result = settlement_result_values(
             str(declaration.modelo), snapshot.revision, head.casilla_values, declaration.period
@@ -110,6 +131,8 @@ def declaration_summary(
         result=result,
         is_correction=head.amendment_identity is not None,
         calculation_outdated=outdated,
+        filed_before_grade_cap=filed_before_cap,
+        proven_zero_notes=tuple(issue.fact for issue in proven_zero_calculation_issues(head) if issue.fact is not None),
     )
 
 

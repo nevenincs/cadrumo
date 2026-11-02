@@ -15,6 +15,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, NonNegativeInt, ValidationError, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.clock import now as _now_utc
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -72,7 +73,7 @@ class InventoryActividadSummary(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     valuation_method: ValuationMethod
     opening_stock: Decimal = Field(ge=Decimal("0"))
     movement_count: NonNegativeInt
@@ -119,7 +120,7 @@ class InventoryValuationPreview(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     valuation_method: ValuationMethod
     derived_closing_value: Decimal = Field(ge=Decimal("0"))
     cogs: Decimal = Field(ge=Decimal("0"))

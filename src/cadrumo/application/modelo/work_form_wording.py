@@ -26,6 +26,7 @@ from .value_presentation import absent_value_text, format_casilla_value
 from .work_form_models import (
     ABSENT_FROM_ADMISSION,
     ASKS_FOR_A_VALUE,
+    FED_BY_A_SOURCE,
     ModeloFormEditability,
     ModeloFormEditClosure,
     ModeloFormField,
@@ -186,11 +187,6 @@ names none for this declaration is a scope-out, so an empty list for one of
 these carries means no earlier declaration applies, never that one was not
 identified.
 """
-_FROM_EARLIER_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
-)
-"""Origins whose words say where a carried value comes from, so they must not name a declaration that does not exist."""
-
 _NO_EARLIER_WORDS_LOCALE_KEY: Final[str] = "workspace.modelo.origin_source.imported.earlier_filings_none"
 _NO_EARLIER_EXPLANATION_LOCALE_KEY: Final[str] = "workspace.modelo.help.origin_no_earlier_declaration"
 
@@ -203,7 +199,7 @@ def no_earlier_filing(field: ModeloFormField) -> bool:
     """
     source = field.source
     return (
-        field.origin in _FROM_EARLIER_ORIGINS
+        field.origin in FED_BY_A_SOURCE
         and source is not None
         and source.family is SourceFamily.EARLIER_FILINGS
         and source.source_kind in _NAMING_CARRY_KINDS

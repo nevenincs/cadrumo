@@ -32,9 +32,10 @@ from cadrumo.application.transactions.diagnostics import LedgerImportDiagnosticK
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.period import Period, PeriodKind, StandardPeriodCode
 from cadrumo.domain.invoices.enums import PaymentStatus
-from cadrumo.domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevisionState
+from cadrumo.domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from cadrumo.domain.transactions.classification_effects import (
     awaits_invoice,
+    fields_cleared_by_classification,
     takes_changes,
     takes_classification,
     takes_invoice,
@@ -47,6 +48,7 @@ from cadrumo.domain.transactions.enums import (
     RULE_DECIDED_STATES,
     SHARE_BEARING_STATES,
     SPLIT_PART_CATEGORY_REQUIRED_STATES,
+    UNDECIDED_STATES,
     BusinessClassification,
     TransactionDirection,
     TransactionLifecycleState,
@@ -129,6 +131,12 @@ _CLASSIFICATION_SETS: tuple[tuple[str, str, str, frozenset[BusinessClassificatio
         "splitPartNeedsCategory",
         "The classifications a split part cannot be staged as without a spending category.",
         SPLIT_PART_CATEGORY_REQUIRED_STATES,
+    ),
+    (
+        "UNDECIDED_CLASSIFICATIONS",
+        "isUndecided",
+        "The classifications no person or rule decided, so classifying over one overwrites nothing.",
+        UNDECIDED_STATES,
     ),
 )
 
@@ -300,7 +308,12 @@ def _rules() -> list[str]:
             "SEALING_REVISION_STATES",
             "sealsMovements",
             "The declaration revision states that seal the movements a revision cites.",
-            [state.value for state in CalculationRevisionState if state in CURRENT_SEALED_REVISION_STATES],
+            [state.value for state in CalculationRevisionState if state in SEALED_REVISION_STATES],
+        ),
+        _fields(
+            "FIELDS_DROPPED_BY_PERSONAL",
+            "What a classification write of Personal drops from a movement.",
+            fields_cleared_by_classification(BusinessClassification.PERSONAL),
         ),
         _fields(
             "UNCLEARABLE_FIELDS",

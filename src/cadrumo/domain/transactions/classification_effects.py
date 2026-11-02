@@ -78,10 +78,7 @@ def takes_classification(direction: TransactionDirection, classification: Busine
 
 
 def takes_invoice(direction: TransactionDirection) -> bool:
-    """Return whether a row going ``direction`` is offered an invoice to settle.
-
-    Narrower than the link writer, which does not look at direction.
-    """
+    """Return whether a row going ``direction`` can have an invoice linked; the link writer asks this."""
     return direction is not TransactionDirection.INTERNAL_TRANSFER
 
 
@@ -97,7 +94,7 @@ def awaits_invoice(
     *,
     linked: bool,
 ) -> bool:
-    """Return whether a row still waits for its invoice: an active business row, no transfer, with none linked."""
+    """Return whether to tell a person a row still waits for its invoice; advice, never a block."""
     return (
         not linked
         and takes_changes(lifecycle)
@@ -125,13 +122,14 @@ def advises_purchase_evidence(
 def lifecycle_actions_taken(
     lifecycle: TransactionLifecycleState, classification: BusinessClassification
 ) -> tuple[LifecycleAction, ...]:
-    """Return the lifecycle actions a person is offered on a row in this state.
+    """Return the lifecycle actions the lifecycle writer takes on a row in this state.
 
-    Narrower than the lifecycle writer, which also takes a stashed row to archived.
     Whether a finalized declaration seals the row is a separate fact.
     """
-    if lifecycle in {TransactionLifecycleState.ARCHIVED, TransactionLifecycleState.STASHED}:
+    if lifecycle is TransactionLifecycleState.ARCHIVED:
         return ("restore",)
+    if lifecycle is TransactionLifecycleState.STASHED:
+        return ("restore", "archive")
     if not takes_changes(lifecycle):
         return ()
     if classification is BusinessClassification.REVIEWED_EXCLUDED:

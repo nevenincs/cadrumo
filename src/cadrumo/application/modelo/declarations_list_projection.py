@@ -30,6 +30,7 @@ from .declarations_list import (
     aeat_filing_notes,
     applicable_modelos,
     blocking_count,
+    calculation_note_words,
     creation_targets,
     group_words,
     is_unlinked_local_draft,
@@ -96,6 +97,8 @@ class ModeloDeclarationListRowV1(BaseModel):
     opens_aeat_filing: bool = False
     #: What choosing a row with no step of its own says, such as why it cannot be opened.
     help_words: str | None = None
+    #: What the row's current calculation noted that withholds nothing, such as a box whose zero was proven.
+    calculation_notes: tuple[str, ...] = ()
     #: The details the row opens of a return the AEAT holds; set exactly when ``opens_aeat_filing`` is.
     aeat_filing: ModeloDeclarationAeatFilingV1 | None = None
     advice: CoverageAdviceReason | None = None
@@ -184,6 +187,7 @@ def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> Modelo
         blocking_count=blocking_count(row),
         opens_aeat_filing=opens_aeat_filing(row),
         help_words=row_help_words(row, language),
+        calculation_notes=calculation_note_words(row, language),
         aeat_filing=None if notes is None else ModeloDeclarationAeatFilingV1(notes=notes),
         advice=row.advice,
         advice_words=None

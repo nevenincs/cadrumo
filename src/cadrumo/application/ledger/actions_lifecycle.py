@@ -23,6 +23,7 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.classification_effects import takes_changes
 from ...domain.transactions.classification_origin import with_classification_origin, written_classification_origin
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
@@ -242,7 +243,7 @@ def mark_transaction_reviewed_excluded(
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
-    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(current.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be reviewed-excluded; archived, stashed, "
             "and split-parent rows are already out of filing scope",

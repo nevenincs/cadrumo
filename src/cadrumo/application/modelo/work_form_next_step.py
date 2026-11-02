@@ -337,6 +337,9 @@ def _next(form: ModeloWorkForm, *, verified: bool, filed: bool) -> tuple[ModeloF
     counts = to_do_counts(form)
     to_fill = counts.needs_input
     unboxed = missing_findings(form)
+    if filed and form.filed_before_grade_cap:
+        # The recorded file cannot be exported until a new calculation replaces it.
+        return ModeloFormNextAction.RECALCULATE, 0, False
     if filed:
         return ModeloFormNextAction.RECORDED, 0, False
     if form.calculation_revision_id is not None and form.calculation_out_of_date:

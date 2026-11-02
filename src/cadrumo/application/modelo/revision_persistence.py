@@ -44,6 +44,7 @@ from ...domain.modelos.calculation_revision_rendering import CalculationRenderin
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
 from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.invoice_fingerprint import InvoiceFingerprintSnapshot
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -143,6 +144,7 @@ def _build_calculation_revision(
     source_issues: tuple[CalculationSourceIssue, ...],
     detail_rows: tuple[ModeloDetailRow, ...],
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
+    invoice_fingerprint: InvoiceFingerprintSnapshot | None,
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: (M303RegimenSimplificadoAnnualSummaryHandoff | None),
     now: datetime,
@@ -177,6 +179,7 @@ def _build_calculation_revision(
         source_issues=source_issues,
         detail_rows=detail_rows,
         ledger_filing_snapshot=ledger_filing_snapshot,
+        invoice_fingerprint=invoice_fingerprint,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         created_at=now,
@@ -219,9 +222,36 @@ def _duplicate_calculation_secure_writes(
     return additional_secure_object_writes_for_revision(revision_id, None)
 
 
+def _refreshed_draft_fingerprint(
+    existing: CalculationRevision,
+    invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    *,
+    now: datetime,
+) -> CalculationRevision | None:
+    """Return the draft re-pinned to what this calculation read, when that moved.
+
+    An invoice edit that moves no casilla derives the same revision id. Without
+    this the operator's recalculation would land on the stored draft and leave it
+    reporting drift that no further recalculation could clear.
+    """
+    if existing.state is not CalculationRevisionState.BORRADOR or invoice_fingerprint is None:
+        return None
+    recorded = existing.invoice_fingerprint
+    if recorded is not None and (
+        recorded.field_set_version == invoice_fingerprint.field_set_version
+        and recorded.snapshot_fingerprint == invoice_fingerprint.snapshot_fingerprint
+    ):
+        return None
+    return existing.model_copy(update={"invoice_fingerprint": invoice_fingerprint, "updated_at": now})
+
+
 def _persist_duplicate_calculation_revision(
     *,
     existing: CalculationRevision,
+    revisions: CalculationRevisionCatalogue,
+    revisions_revision_id: str,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    invoice_fingerprint: InvoiceFingerprintSnapshot | None,
     revision_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
@@ -242,6 +272,24 @@ def _persist_duplicate_calculation_revision(
         revision_id=revision_id,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
+    refreshed = _refreshed_draft_fingerprint(existing, invoice_fingerprint, now=now)
+    if refreshed is not None:
+        calculation_repository.save_with_secure_object_writes(
+            upsert_calculation_revision(revisions, refreshed),
+            (
+                work_unit_repository.to_secure_object_write(
+                    duplicate_work_units,
+                    expected_revision_id=work_units_revision_id,
+                ),
+                *duplicate_writes,
+            ),
+            expected_revision_id=revisions_revision_id,
+        )
+        return CalculationRevisionPublication(
+            revision=refreshed,
+            work_unit=duplicate_work_units.work_units[work_unit.work_unit_id],
+            published=True,
+        )
     if duplicate_work_units is work_units and not duplicate_writes:
         return CalculationRevisionPublication(revision=existing, work_unit=work_unit, published=False)
     # Guarded, never a bare `.save`: an unguarded write here would silently
@@ -552,6 +600,7 @@ def _load_calculation_publication_target(
     *,
     operation: PinnedAuthorityOperation,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    invoice_fingerprint: InvoiceFingerprintSnapshot | None,
     revision_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
@@ -567,6 +616,10 @@ def _load_calculation_publication_target(
         return revisions, revisions_revision_id, None
     publication = _persist_duplicate_calculation_revision(
         existing=existing,
+        revisions=revisions,
+        revisions_revision_id=revisions_revision_id,
+        calculation_repository=calculation_repository,
+        invoice_fingerprint=invoice_fingerprint,
         revision_id=revision_id,
         work_unit=work_unit,
         work_units=work_units,
@@ -616,6 +669,7 @@ def persist_calculation_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
+    invoice_fingerprint: InvoiceFingerprintSnapshot | None = None,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     additional_secure_object_writes_for_revision: (
@@ -658,6 +712,7 @@ def persist_calculation_revision(
     revisions, revisions_revision_id, duplicate = _load_calculation_publication_target(
         operation=operation,
         calculation_repository=calculation_repository,
+        invoice_fingerprint=invoice_fingerprint,
         revision_id=revision_id,
         work_unit=work_unit,
         work_units=work_units,
@@ -696,6 +751,7 @@ def persist_calculation_revision(
         source_issues=source_issues,
         detail_rows=detail_rows,
         ledger_filing_snapshot=ledger_filing_snapshot,
+        invoice_fingerprint=invoice_fingerprint,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=stamped_annual_summary_handoff,
         now=now,

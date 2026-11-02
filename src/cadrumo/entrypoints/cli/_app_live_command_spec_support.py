@@ -17,7 +17,7 @@ from cadrumo_client.commands.shared_contracts import (
 from cadrumo_client.commands.spec import ExecutionPolicySpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandWriteRoute
 
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 _METADATA_GROUP_INVOCATION: Final[InvocationSpec] = InvocationSpec(
@@ -75,7 +75,7 @@ _OPTIONAL_YEAR_FROM_OPTION: Final[OptionSpec] = OptionSpec(
     multiple=False,
     is_flag=False,
     flag_value=None,
-    constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+    constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
 )
 _OPTIONAL_YEAR_TO_OPTION: Final[OptionSpec] = OptionSpec(
     name="year_to",
@@ -86,7 +86,7 @@ _OPTIONAL_YEAR_TO_OPTION: Final[OptionSpec] = OptionSpec(
     multiple=False,
     is_flag=False,
     flag_value=None,
-    constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+    constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
 )
 _OPTIONAL_MODELOS_OPTION: Final[OptionSpec] = OptionSpec(
     name="modelos",
@@ -108,7 +108,7 @@ _OPTIONAL_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
     multiple=False,
     is_flag=False,
     flag_value=None,
-    constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+    constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
 )
 _OUTPUT_ROOT_OPTION: Final[OptionSpec] = OptionSpec(
     name="output_root",
@@ -144,7 +144,7 @@ _REQUIRED_FILING_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
     multiple=False,
     is_flag=False,
     flag_value=None,
-    constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+    constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
 )
 _REQUIRED_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
     name="year",
@@ -155,7 +155,7 @@ _REQUIRED_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
     multiple=False,
     is_flag=False,
     flag_value=None,
-    constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+    constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
 )
 _REQUIRED_PERIOD_OPTION: Final[OptionSpec] = OptionSpec(
     name="period",
@@ -188,7 +188,7 @@ _REQUIRED_YEAR_FROM_OPTION: Final[OptionSpec] = OptionSpec(
     multiple=False,
     is_flag=False,
     flag_value=None,
-    constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+    constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
 )
 _REQUIRED_YEAR_TO_OPTION: Final[OptionSpec] = OptionSpec(
     name="year_to",
@@ -199,7 +199,7 @@ _REQUIRED_YEAR_TO_OPTION: Final[OptionSpec] = OptionSpec(
     multiple=False,
     is_flag=False,
     flag_value=None,
-    constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+    constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
 )
 
 __all__ = [

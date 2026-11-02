@@ -15,11 +15,9 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
 )
 from ....application.modelo.declarations_workspace_contracts import (
-    DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
 )
-from ....application.overview.home import HomeAvailability
 from ....core.i18n.render import tr
 from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -109,7 +107,7 @@ def _calendar_is_observable(calendar: DeclarationsCalendarProjectionV1) -> bool:
     """Return whether the authoritative schedule source can be displayed."""
     return next(
         item.availability for item in calendar.sources if item.source is DeclarationsCalendarSource.SCHEDULE
-    ) in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
+    ).is_observable
 
 
 def _workspace_route_is_available(
@@ -119,11 +117,9 @@ def _workspace_route_is_available(
 ) -> bool:
     """Require both an observable zone and a concrete screen admission."""
     state = controller.zone_state(zone)
-    observable = state.availability in {
-        DeclarationsWorkspaceAvailability.AVAILABLE,
-        DeclarationsWorkspaceAvailability.STALE,
-    }
-    return observable and (route.factory is not None or controller.modelo_workspace_factory is not None)
+    return state.availability.is_observable and (
+        route.factory is not None or controller.modelo_workspace_factory is not None
+    )
 
 
 def _resolve_calendar_screen(

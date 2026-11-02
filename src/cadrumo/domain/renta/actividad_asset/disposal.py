@@ -17,17 +17,18 @@ from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Final, Self
+from typing import Final, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.filing_year import FourDigitYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
 from .election import require_euro_cents
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
 
-DisposalTaxYear = Annotated[int, Field(ge=1900, le=9999)]
+DisposalTaxYear = FourDigitYear
 """A service year, which can predate every filing year the registry knows."""
 
 

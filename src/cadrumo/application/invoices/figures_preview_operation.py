@@ -32,6 +32,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.facts.resolution import reading_dated_facts_below_support
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ...domain.invoices.errors import InvoiceValidationError
@@ -127,6 +128,27 @@ def _rate_date_unresolved_finding(on_date: date) -> FigureFinding:
         ("iva_rate", "operation_date", "issued_at"),
         values={"on_date": on_date.isoformat()},
     )
+
+
+def _rate_date_projected_finding(on_date: date, nearest: date) -> FigureFinding:
+    return FigureFinding(
+        FigureFindingCode.RATE_DATE_PROJECTED,
+        "these IVA rates are read from the nearest declarations; this date predates the filing years",
+        ("iva_rate", "operation_date", "issued_at"),
+        severity=FigureFindingSeverity.WARNING,
+        values={"on_date": on_date.isoformat(), "nearest": nearest.isoformat()},
+    )
+
+
+def _rate_date_findings(
+    on_date: date,
+    slots: tuple[DatedRateSlot, ...] | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[FigureFinding, ...]:
+    if slots is None:
+        return (_rate_date_unresolved_finding(on_date),)
+    floor = operation.supported_filing_years().date_envelope().floor
+    return (_rate_date_projected_finding(on_date, floor),) if on_date < floor else ()
 
 
 def _slots_on_date(
@@ -429,7 +451,20 @@ def preview_invoice_figures(
 
     A date the registry serves no rates for yields no slots and no cuota, and a
     finding saying so. The moment the registry answers for that date, the same
-    path returns its slots with no other change here.
+    path returns its slots with no other change here. A date older than the
+    filing years reads the nearest declarations, and a finding says the answer
+    is a projection; a declared legal start after the date still answers nothing.
+    """
+    with reading_dated_facts_below_support():
+        return _preview_invoice_figures(request, operation=operation)
+
+
+def _preview_invoice_figures(
+    request: InvoiceFiguresPreviewRequest,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> InvoiceFiguresPreviewResult:
+    """Answer one draft inside the reach its date needs.
 
     A refused draft always says why: a refusing figure finding, a rule finding, or
     ``other_invoice_rule`` when acceptance refused by a rule no code names yet.
@@ -438,7 +473,7 @@ def preview_invoice_figures(
     slots = _slots_on_date(on_date, operation)
     lines = tuple(_line_figures(line, slots, on_date) for line in request.lines)
     invoice = _invoice_figures(request, lines)
-    date_findings = () if slots is not None else (_rate_date_unresolved_finding(on_date),)
+    date_findings = _rate_date_findings(on_date, slots, operation)
     line_findings = tuple(finding for figures in lines for finding in figures.findings)
     every_finding = (*date_findings, *line_findings, *invoice.findings)
     missing = _missing_fields(request)

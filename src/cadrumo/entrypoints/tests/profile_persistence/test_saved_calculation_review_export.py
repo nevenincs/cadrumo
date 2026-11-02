@@ -150,6 +150,8 @@ def test_new_calculation_retains_original_rendering_and_exports_its_saved_form(
             revision.calculation_revision_id, profile_id=profile_id, operation=operation
         )
         assert baseline.saved_form is not None
+        assert revision.screen_stamp is not None
+        assert not [item for item in baseline.findings if item.code.endswith("calculation_screen_outdated")]
         with pytest.raises(ProfileAccessRefusedError):
             load_calculation_review_snapshot(
                 revision.calculation_revision_id,

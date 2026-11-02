@@ -664,6 +664,8 @@ def _link_refusal(reason: str | None) -> typer.BadParameter:
     """Map the closed worker refusal reason to its existing operator message."""
     if reason == "cross_bucket_invoice":
         return bad(tr("cli.ledger.link.errors.cross_bucket_invoice"))
+    if reason == "transaction_takes_no_invoice":
+        return bad(tr("cli.ledger.link.errors.transaction_takes_no_invoice"))
     if reason == "missing_invoice":
         return bad(tr("cli.ledger.link.errors.invoice_not_found"))
     return invoice_link_error_bad_parameter()

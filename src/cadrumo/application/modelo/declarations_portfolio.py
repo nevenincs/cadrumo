@@ -60,10 +60,7 @@ def project_declarations_portfolio(
     filings: list[DeclarationsWorkspaceFilingRefV1] = []
     lifecycle: list[DeclarationsWorkspaceLifecycleRefV1] = []
     refused = False
-    declarations_observable = empty.zones[0].availability in {
-        DeclarationsWorkspaceAvailability.AVAILABLE,
-        DeclarationsWorkspaceAvailability.STALE,
-    }
+    declarations_observable = empty.zones[0].availability.is_observable
     for unit in work_units.values():
         try:
             part = _project_work_unit_partition(
@@ -118,7 +115,7 @@ def project_declarations_portfolio(
                 ),
             }
         )
-        if zone.availability in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
+        if zone.availability.is_observable
         else zone
         for zone in empty.zones
     )

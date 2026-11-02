@@ -21,7 +21,7 @@ from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...core.identity.digest import ContentDigest
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
@@ -64,10 +64,10 @@ from .revision_carry_gate import revision_carry_outcome
 def iva_compensation_period_key(period: Period) -> str:
     """Return the latest-state key for one Modelo 303 period."""
     filing_year = period.filing_year
-    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= filing_year <= FOUR_DIGIT_YEAR_LAST:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
-            context={"filing_year": filing_year, "min_year": FILING_YEAR_MIN, "max_year": FILING_YEAR_MAX},
+            context={"filing_year": filing_year, "min_year": FOUR_DIGIT_YEAR_FIRST, "max_year": FOUR_DIGIT_YEAR_LAST},
         )
     return f"303:{filing_year}:{period.registry_token}"
 

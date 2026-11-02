@@ -10,6 +10,7 @@ from typing import Annotated
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.filing_year import FourDigitYear
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.modelo import Modelo
 from .convenio import ConvenioAuthority
@@ -45,7 +46,7 @@ class SociedadesAnnualManualCoverageDisposition(RegistryModel):
     Modelo 200 revision selection and filing capability.
     """
 
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     status: SociedadesAnnualManualCoverageStatusField
     source_ref: SourceRefId | None = None
     official_locator: RegistryExternalLink

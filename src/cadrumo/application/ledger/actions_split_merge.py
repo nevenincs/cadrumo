@@ -20,6 +20,7 @@ from ...core.money.rounding import round_to_cents
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.classification_effects import takes_changes
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -515,7 +516,7 @@ def _resolve_active_split_parent(
     operator can diagnose why the split is blocked.
     """
     parent = require_transaction(catalogue, transaction_id)
-    if parent.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(parent.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be split",
             context={
@@ -1099,7 +1100,7 @@ def _resolve_merge_split_group(
 
 
 def _require_child_active_and_role(child: Transaction) -> None:
-    if child.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(child.lifecycle_state):
         raise TransactionValidationError(
             "ledger merge children must all be active",
             context={

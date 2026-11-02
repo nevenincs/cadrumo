@@ -2452,15 +2452,21 @@ desktop:
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:
+      art_104_tres_exclusion: 104.Tres. cikk szerinti kizárás
+      attachment_ids: Mellékletek
       booked_date: Könyvelési dátum
       business_pct: Üzleti arány
       counterparty_country: Partner országa
       counterparty_identification_state: Közösségi adószám
       currency: Pénznem
       deduction_fact_kind: Levonási tény
+      input_classification: Beszerzés felhasználása
       investment_asset_id: Beruházási javak
       m210_income_classification: 210-es modell jövedelme
       own_account_id: Számla
+      prorrata_reference: Arányosítási hivatkozás
+      prorrata_sector_id: Arányosítási ágazat
+      purchase_invoice_evidence_id: Beszerzési bizonylat
       recargo_amount: Egyenértékűségi pótdíj
       usage_ratio_id: Használati arány
       value_date: Értéknap
@@ -3032,7 +3038,6 @@ desktop:
         sealed: zárolt
         sealed_unread: nem tudni, zárolt-e
         transfer: átvezetés
-        unclassified: még nincs besorolva
       source_jurisdiction: Forrás szerinti joghatóság
       split:
         add_part: Rész hozzáadása
@@ -7951,6 +7956,8 @@ tui:
           össze.
         missing_invoice: A számla már nincs a katalógusban, ezért nem kapcsolható
           össze.
+        transaction_takes_no_invoice: 'Ehhez a tételhez nem kapcsolható számla: csak
+          aktív, pénzbevételi vagy pénzkiadási tételhez lehet.'
     overview:
       affected_declarations: Érintett bevallások
       areas: A Nyilvántartás területei
