@@ -33,7 +33,6 @@ from cadrumo.application.user_profile.automation_lifecycle import (
     AutomationDenial,
     AutomationDenialKind,
     AutomationDenialReceipt,
-    AutomationLifecycleService,
 )
 from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
@@ -54,6 +53,7 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
+from ..automation_lifecycle_service import AutomationLifecycleService
 from ..session_authority_contracts import SessionAuthorityFacts
 from ._session_authority_support import AdmissionOwner, Subject, lifecycle, lock_native_login, session_published
 
