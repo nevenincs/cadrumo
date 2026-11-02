@@ -4493,6 +4493,35 @@ desktop:
     search: Search
     settings: Settings
     tui: Workspace
+  renta:
+    proto:
+      election:
+        save: Save the answer
+        year: Tax year
+      excerpt: This prototype holds only some sections of the real declaration. Choose
+        another section to see it here.
+      family:
+        boxes: Boxes these facts feed
+        edit: Change it in your profile
+        empty: Not given
+        profile: From your profile
+      gap:
+        body: The backend does not serve this yet, so the window shows nothing in
+          its place.
+        operation: 'Needs: {operation}'
+        title: Not served yet
+      nav:
+        boxes: 'Boxes: {count}'
+        failed: 'Could not calculate: {count}'
+        needs_you: 'Needs you: {count}'
+        only_attention: Only what needs you
+        proposed: Proposed outline
+        served: As served today
+        technical: 'Technical heading: the layout has no reviewed heading here yet'
+        title: Sections
+      result:
+        composed: Figure worded by the backend's own header builder, not calculated
+        example: Shape already served for another declaration
   session:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
@@ -10038,3 +10067,27 @@ workspace:
       not_applicable: n/a
       not_known_yet: Not known yet
     was: was {value}
+  renta:
+    election:
+      proposed: Proposed answer
+      stated: Stated for {year}
+      title: Imputation criterion for your activity
+      undeclared: Not stated yet. The activity boxes that depend on it stay unresolved
+        until you state it.
+    outline:
+      activities: Economic activities
+      annexes: Annexes and additional information
+      bases: Taxable bases
+      capital_gains: Capital gains and losses
+      credits: Withholding and payments on account
+      employment: Employment income
+      family: Family unit
+      identification: Identification and family situation
+      liability: Tax liability and deductions
+      minimums: Personal and family minimum
+      movable_capital: Income from movable capital
+      other: Other inputs
+      real_estate: Real estate income and imputed income
+      result: Result of the return
+    result:
+      settlement: How it is paid or refunded
