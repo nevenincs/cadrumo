@@ -1376,6 +1376,16 @@ application:
           Cadrumo did not work out that tax.
         what_to_do: No action is needed if you made no such sales. Otherwise enter
           the amounts yourself.
+      precedence_tier_divergence:
+        what: Two sources hold different values for a figure that reaches box {box},
+          and Cadrumo used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong, then calculate
+          again. Checking, exporting and recording wait until they agree.
+      precedence_tier_divergence_advisory:
+        what: Two sources hold different values for a working figure, and Cadrumo
+          used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong. No exported
+          box depends on this figure.
       prior_payment_minoracion_not_captured:
         what: The reduction that comes from earlier payments is not recorded in box
           {box}.

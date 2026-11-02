@@ -48,7 +48,6 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
-from ...domain.user_profile.labels import profile_field_label_key
 from ...domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
@@ -57,6 +56,7 @@ from ...domain.modelos.calculation_revision_sources import (
     element_names_of,
     recorded_calculation_notes,
 )
+from ...domain.user_profile.labels import profile_field_label_key
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
@@ -77,6 +77,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unhandled_binding_source",
         "source_domain_not_ready",
         "advisory_binding_value",
+        "precedence_tier_divergence",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
@@ -178,6 +179,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "register_acquisition_partly_accounted": _C,
         "register_acquisition_row_missing": _C,
         "ledger_expense_may_be_durable": _C,
+        # Two sources hold different values for a figure that reaches no exported box.
+        "precedence_tier_divergence_advisory": _C,
         # For the filer's information.
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,
