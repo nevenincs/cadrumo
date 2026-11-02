@@ -2512,6 +2512,7 @@ application:
           booked_date: Booking date
           business_pct: Recorded business proportion
           byte_length: Original byte length
+          calculation_note: Calculation note
           calculation_revision: Calculation revision
           calculation_state: Saved calculation state
           calculation_state_borrador: 'Draft: provisional'

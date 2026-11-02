@@ -19,6 +19,7 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
+from ..modelo.calculation_note_gate import blocking_calculation_issues
 from .review_form_data import capture_review_form
 from .review_snapshot import (
     CalculationReviewSelection,
@@ -189,6 +190,7 @@ def _review_findings(revision: CalculationRevision, has_saved_form: bool) -> lis
         ]
     if has_saved_form:
         findings = [finding for finding in findings if finding.code != "review.saved_form_layout_unavailable"]
+    findings.extend(calculation_note_findings(revision))
     if revision.source_transaction_ids and revision.ledger_filing_evidence is None:
         findings.append(
             ReviewFinding(
@@ -307,3 +309,26 @@ def _text_values(revision: CalculationRevision, contributions: list[ReviewContri
             )
         )
     return text_values
+
+
+CALCULATION_NOTE_FINDING_PREFIX = "calculation_note."
+"""Prefix of the finding code that carries one persisted note withholding the saved revision from filing."""
+
+
+def calculation_note_findings(revision: CalculationRevision) -> list[ReviewFinding]:
+    """One finding per persisted note that withholds the revision from checking, exporting and recording.
+
+    The review is a preview, so it shows such a value rather than refusing it.
+    The first related id is the box the note names; the second, when present,
+    is the source the note names, such as the binding whose grade cap holds it.
+    """
+    return [
+        ReviewFinding(
+            code=CALCULATION_NOTE_FINDING_PREFIX + issue.reason,
+            detail="This saved figure is shown for review; the calculation withholds it from checking, "
+            "exporting and recording.",
+            related_ids=(str(issue.casilla_id), *(() if issue.source_ref is None else (issue.source_ref,))),
+        )
+        for issue in blocking_calculation_issues(revision)
+        if issue.casilla_id is not None
+    ]

@@ -18,6 +18,8 @@ the real work-form service, which the TUI and MCP read:
 * verification refuses with ``advisory_binding_value``; the gate export and
   local filing run refuses with it too, and the actions themselves refuse an
   unchecked revision before reaching it;
+* the review workbook, a preview, shows the capped figure with the note's
+  sentence beside it rather than refusing it;
 * a quarter whose receipts carry no retención proves casilla 06 zero, carries
   no blocking note and passes the gate.
 
@@ -30,6 +32,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Final
+from uuid import UUID
 
 import pytest
 
@@ -61,8 +64,12 @@ from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction,
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.storage.calc_sheets.review_labels import ReviewWorkbookLabels
+from cadrumo.application.storage.calc_sheets.review_workbook import build_review_workbook
+from cadrumo.application.storage.calc_sheets.workbook_cells import plan_value_blocks
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -85,6 +92,7 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
 )
+from cadrumo.entrypoints.calculation_review_snapshot_composition import load_calculation_review_snapshot
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -326,6 +334,31 @@ def _form(secure_objects: SecureObjectRepository, year: int, operation: PinnedAu
     )
 
 
+_NOTE_COLUMN: Final = "M"
+"""The results tab's calculation-note column, after amount, box, row, values, units, sources and references."""
+
+
+def _review_notes_by_box(
+    revision: CalculationRevision, language: OutputLanguage, operation: PinnedAuthorityOperation
+) -> dict[str, object]:
+    """The review workbook's note beside each saved box, from the persisted revision through the real composition."""
+    snapshot = load_calculation_review_snapshot(
+        revision.calculation_revision_id, profile_id=UUID(_BUCKET_ID), operation=operation
+    )
+    plan = build_review_workbook(
+        snapshot, publication_id=UUID(int=7), exported_at=_T0, label=ReviewWorkbookLabels(language)
+    )
+    cells = {
+        address.qualified(): value for block in plan_value_blocks(plan) for address, value in block.addressed_values()
+    }
+    rows = {
+        int(address.removeprefix("'Cálculos'!B")): value
+        for address, value in cells.items()
+        if address.startswith("'Cálculos'!B") and address.removeprefix("'Cálculos'!B").isdigit()
+    }
+    return {str(box): cells.get(f"'Cálculos'!{_NOTE_COLUMN}{row}") for row, box in rows.items() if row >= 5}
+
+
 def _verify(revision: CalculationRevision, operation: PinnedAuthorityOperation) -> None:
     verify_modelo_revision_with_preconditions(
         revision.calculation_revision_id,
@@ -376,6 +409,16 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
             action: _REASON for action in ("verify", "export", "file")
         }
 
+        # The review workbook is a preview: it shows the capped figure with the note's own sentence beside it.
+        for language in (OutputLanguage.ES, OutputLanguage.EN):
+            sentence = lookup_translation(
+                "application.modelo.calc_diagnostic.advisory_binding_value.what", locale=language.value
+            )
+            assert sentence is not None
+            notes = _review_notes_by_box(revision, language, operation)
+            assert notes["06"] == sentence, language
+            assert {box for box, note in notes.items() if note} == {"06"}, language
+
         # The export and the recording each refuse the unchecked revision before their gate is reached.
         with pytest.raises(CalculationRevisionStateError):
             export_modelo_revision(
@@ -419,3 +462,5 @@ def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(
         assert _gate_reasons(work_unit, revision, operation) == {}
         load = _form(secure_objects, _ZERO_YEAR, operation)
         assert not [item for item in load.form.calculation_notes if item.withholds_filing]
+        notes = _review_notes_by_box(revision, OutputLanguage.ES, operation)
+        assert "06" in notes and not any(notes.values())

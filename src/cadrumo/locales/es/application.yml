@@ -2652,6 +2652,7 @@ application:
           booked_date: Fecha contable
           business_pct: Proporción empresarial registrada
           byte_length: Tamaño original en bytes
+          calculation_note: Nota del cálculo
           calculation_revision: Revisión del cálculo
           calculation_state: Estado del cálculo guardado
           calculation_state_borrador: 'Borrador: provisional'

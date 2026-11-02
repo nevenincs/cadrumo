@@ -2612,6 +2612,7 @@ application:
           booked_date: Könyvelési dátum
           business_pct: Rögzített üzleti hányad
           byte_length: Eredeti méret bájtban
+          calculation_note: Számítási megjegyzés
           calculation_revision: A számítás verziója
           calculation_state: A mentett számítás állapota
           calculation_state_borrador: 'Piszkozat: előzetes'
