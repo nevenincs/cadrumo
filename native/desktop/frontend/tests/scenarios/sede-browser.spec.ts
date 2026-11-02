@@ -322,9 +322,9 @@ test("the shell's chords stay out of the canvas while it has focus, and run agai
     ).length;
   const box = await bounds(target);
   await target.mouse.click(box.x + 60, box.y + 60);
-  await expect(surface(target)).toBeFocused();
+  await expect(surface(target).locator("textarea")).toBeFocused();
 
-  // Ctrl+K belongs to the page, as it does in a terminal.
+  // The platform's primary modifier plus K belongs to the page.
   await target.keyboard.press("ControlOrMeta+KeyK");
   await expect.poll(() => heard("k")).toBe(2);
   await expect(palette).toHaveCount(0);
@@ -332,12 +332,15 @@ test("the shell's chords stay out of the canvas while it has focus, and run agai
     (await inputs(target)).find(
       (each) => each.type === "key" && each.key === "k",
     ),
-  ).toMatchObject({ action: "down", modifiers: 2 });
+  ).toMatchObject({
+    action: "down",
+    modifiers: process.platform === "darwin" ? 4 : 2,
+  });
 
   // Tab is the page's too: focus stays in the canvas.
   await target.keyboard.press("Tab");
   await expect.poll(() => heard("Tab")).toBe(2);
-  await expect(surface(target)).toBeFocused();
+  await expect(surface(target).locator("textarea")).toBeFocused();
 
   // The chords that fire everywhere still do, and the page does not get them.
   await target.keyboard.press("ControlOrMeta+Shift+KeyK");
@@ -347,9 +350,9 @@ test("the shell's chords stay out of the canvas while it has focus, and run agai
   await target.keyboard.press("Escape");
   await expect(palette).toHaveCount(0);
 
-  // Out of the canvas, Ctrl+K opens the palette and the page hears nothing.
+  // Out of the canvas, the same chord opens the palette.
   await browserPage(target).focus();
-  await expect(surface(target)).not.toBeFocused();
+  await expect(surface(target).locator("textarea")).not.toBeFocused();
   await target.keyboard.press("ControlOrMeta+KeyK");
   await expect(palette).toBeVisible();
   await target.keyboard.press("Escape");
@@ -428,7 +431,7 @@ test("the person's pointer, wheel and typing reach the page in its own pixels", 
 
   // Typing is each key and the text it types, in the order it was pressed.
   await target.mouse.click(box.x + 120, box.y + 80);
-  await expect(surface(target)).toBeFocused();
+  await expect(surface(target).locator("textarea")).toBeFocused();
   from = await next();
   await target.keyboard.type("hola 7");
   const typed = [..."hola 7"].flatMap((each) => [
@@ -461,6 +464,65 @@ test("the person's pointer, wheel and typing reach the page in its own pixels", 
       "up:Enter",
       "text:segunda linea",
     ]);
+});
+
+test("a held pointer is released at its last position when the window or surface loses focus", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  const box = await bounds(target);
+  const pointerSince = async (from: number) =>
+    (await inputs(target))
+      .slice(from)
+      .filter((event) => event.type === "pointer");
+
+  for (const lost of ["window", "surface"] as const) {
+    const from = (await inputs(target)).length;
+    await target.mouse.move(box.x + 40, box.y + 40);
+    await target.mouse.down();
+    await target.mouse.move(box.x + 170, box.y + 95);
+    await expect
+      .poll(async () =>
+        (await pointerSince(from)).some((event) => event.action === "move"),
+      )
+      .toBe(true);
+    if (lost === "window")
+      await target.evaluate(() => window.dispatchEvent(new Event("blur")));
+    else await browserPage(target).focus();
+
+    await expect
+      .poll(async () =>
+        (await pointerSince(from))
+          .filter((event) => event.action !== "move")
+          .map((event) => event.action),
+      )
+      .toEqual(["down", "up"]);
+    const release = (await pointerSince(from)).find(
+      (event) => event.action === "up",
+    );
+    if (!release) throw new Error("The held pointer was not released.");
+    near(release.x, 170);
+    near(release.y, 95);
+    await target.mouse.up();
+    expect(
+      (await pointerSince(from)).filter((event) => event.action === "up"),
+    ).toHaveLength(1);
+  }
+
+  // Moving outside the panel while the window stays active remains a drag.
+  const from = (await inputs(target)).length;
+  await target.mouse.move(box.x + 40, box.y + 40);
+  await target.mouse.down();
+  await target.mouse.move(box.x + box.width + 20, box.y + 100);
+  expect(
+    (await pointerSince(from)).filter((event) => event.action === "up"),
+  ).toHaveLength(0);
+  await target.mouse.up();
+  await expect
+    .poll(async () =>
+      (await pointerSince(from)).filter((event) => event.action === "up"),
+    )
+    .toHaveLength(1);
 });
 
 // ---------------------------------------------------------------------------
@@ -810,7 +872,7 @@ test("a view that is saving its session shows it, holds every navigation and tak
   await showBrowser(target);
   const box = await bounds(target);
   await target.mouse.click(box.x + 50, box.y + 50);
-  await expect(surface(target)).toBeFocused();
+  await expect(surface(target).locator("textarea")).toBeFocused();
 
   await target.evaluate(() => window.__scenarioSedeView?.phase("closing"));
   await expect(browserPage(target)).toHaveAttribute("aria-busy", "true");

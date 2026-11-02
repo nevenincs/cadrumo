@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalError
 from cadrumo_client.contracts.view_stream import (
+    ViewClipboardSelection,
     ViewClosed,
     ViewImage,
     ViewNotice,
@@ -135,7 +136,15 @@ class ViewDownstreamReader:
 
     def read(
         self, *, deadline: float
-    ) -> ViewState | ViewNotice | ViewClosed | AssembledViewImage | ViewTransferDownstreamDocument | ViewTransferChunk:
+    ) -> (
+        ViewState
+        | ViewNotice
+        | ViewClosed
+        | ViewClipboardSelection
+        | AssembledViewImage
+        | ViewTransferDownstreamDocument
+        | ViewTransferChunk
+    ):
         """Return the next control document, complete image or transfer chunk."""
         try:
             while True:
@@ -151,7 +160,7 @@ class ViewDownstreamReader:
                 document = decode_document(payload, ViewConnectionDownstreamFrame).root
                 if self._transfers is not None:
                     self._transfers.observe(document)
-                elif not isinstance(document, (ViewImage, ViewState, ViewNotice, ViewClosed)):
+                elif not isinstance(document, (ViewImage, ViewState, ViewNotice, ViewClosed, ViewClipboardSelection)):
                     raise view_stream_violation("view_transfer_unexpected")
                 if isinstance(document, ViewImage):
                     self._assembler.announce(document)

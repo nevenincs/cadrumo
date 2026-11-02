@@ -171,6 +171,8 @@ function OpenBrowser({
           isShellChord={isShellChord}
           onSize={measured}
           onInput={view.input}
+          onCopy={() => view.clipboard("copy")}
+          onCut={() => view.clipboard("cut")}
         />
         {live && (
           <BrowserPrompts

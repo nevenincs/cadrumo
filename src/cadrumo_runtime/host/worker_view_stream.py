@@ -35,6 +35,9 @@ from cadrumo_client.contracts.contracts import (
     ServerHello,
 )
 from cadrumo_client.contracts.view_stream import (
+    ViewClipboard,
+    ViewClipboardCommit,
+    ViewClipboardSelection,
     ViewClose,
     ViewClosed,
     ViewClosedReason,
@@ -111,7 +114,7 @@ _UPLOAD_REGRANT = VIEW_TRANSFER_CREDIT_MAX_CHUNKS // 2
 
 type _Write = (
     tuple[ViewClosedReason, None, None, None]
-    | tuple[None, ViewState | ViewNotice | ViewTransferDownstreamDocument, None, None]
+    | tuple[None, ViewState | ViewNotice | ViewClipboardSelection | ViewTransferDownstreamDocument, None, None]
     | tuple[None, None, tuple[ViewImage, bytes], None]
     | tuple[None, None, None, ViewTransferSender]
     | tuple[None, None, None, None]
@@ -135,7 +138,7 @@ def _close_quietly(channel: WorkerChannel) -> None:
 
 def _is_person_input(item: ViewSinkInput) -> bool:
     """Whether an inbox item is person input, which the reader paces, rather than something the view waits on."""
-    return isinstance(item, ViewInput | ViewNavigate | ViewResize | ViewDialog)
+    return isinstance(item, ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClipboard | ViewClipboardCommit)
 
 
 class _Upload:
@@ -174,6 +177,7 @@ class WorkerViewStream:
         self._signal = Condition(Lock())
         self._outbox = ViewImageOutbox()
         self._documents: deque[ViewState | ViewNotice] = deque()
+        self._clipboard_reply: ViewClipboardSelection | None = None
         self._transfer_documents: deque[ViewTransferDownstreamDocument] = deque()
         self._inbox: deque[ViewSinkInput] = deque()
         self._person_inputs = 0
@@ -213,12 +217,18 @@ class WorkerViewStream:
         with self._signal:
             self._signal.notify_all()
 
-    def send(self, document: ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel) -> None:
+    def send(
+        self,
+        document: ViewState | ViewNotice | ViewClipboardSelection | ViewDownload | ViewFileChooser | ViewTransferCancel,
+    ) -> None:
         """Queue one page document, dropped when the queue is full, or one transfer request, never dropped."""
         with self._signal:
             if self._ended.is_set() or self._closing is not None:
                 return
-            if isinstance(document, ViewDownload | ViewFileChooser | ViewTransferCancel):
+            if isinstance(document, ViewClipboardSelection):
+                # A solicited reply cannot be lost behind a burst of page states.
+                self._clipboard_reply = document
+            elif isinstance(document, ViewDownload | ViewFileChooser | ViewTransferCancel):
                 self._transfer_documents.append(document)
             elif len(self._documents) < _DOCUMENT_QUEUE:
                 self._documents.append(document)
@@ -291,6 +301,7 @@ class WorkerViewStream:
             if self._closing is None:
                 self._closing = reason
             self._documents.clear()
+            self._clipboard_reply = None
             self._transfer_documents.clear()
             self._outbox.clear()
             self._signal.notify_all()
@@ -508,7 +519,7 @@ class WorkerViewStream:
                 if closing is not None:
                     write_view_document(channel, ViewClosed(reason=closing), deadline=deadline)
                     return
-                if isinstance(document, ViewState | ViewNotice):
+                if isinstance(document, ViewState | ViewNotice | ViewClipboardSelection):
                     write_view_document(channel, document, deadline=deadline)
                 elif document is not None:
                     write_view_transfer_document(channel, document, deadline=deadline)
@@ -541,6 +552,9 @@ class WorkerViewStream:
             while not self._ended.is_set():
                 if self._closing is not None:
                     return self._closing, None, None, None
+                if self._clipboard_reply is not None:
+                    reply, self._clipboard_reply = self._clipboard_reply, None
+                    return None, reply, None, None
                 if self._documents:
                     return None, self._documents.popleft(), None, None
                 if self._transfer_documents:

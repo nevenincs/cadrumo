@@ -3026,6 +3026,24 @@ export function App({ host }: { host: Host }) {
           )}
           onToggleMaximize={() => toggleMaximize("docs")}
           controls={[
+            ...(!pageOn && docsEntry
+              ? ([
+                  {
+                    id: "docs-back",
+                    icon: "back",
+                    label: t("desktop.action.docs_back"),
+                    shortcut: primaryChord(byId("docs.back")),
+                    run: () => runAction("docs.back"),
+                  },
+                  {
+                    id: "docs-forward",
+                    icon: "forward",
+                    label: t("desktop.action.docs_forward"),
+                    shortcut: primaryChord(byId("docs.forward")),
+                    run: () => runAction("docs.forward"),
+                  },
+                ] satisfies PaneControl[])
+              : []),
             maximizeControl(
               "docs",
               profileOn

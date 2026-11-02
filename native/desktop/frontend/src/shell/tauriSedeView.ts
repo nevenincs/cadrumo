@@ -49,6 +49,10 @@ export function tauriSedeView(call: HostCall): SedeViewPort {
           call("sede_view_input", { view: id, event }).then(() => undefined),
         navigate: (verb) =>
           call("sede_view_navigate", { view: id, verb }).then(() => undefined),
+        clipboard: (action) =>
+          call("sede_view_clipboard", { view: id, action }).then(
+            () => undefined,
+          ),
         resize: ({ cssWidth, cssHeight, scale }) =>
           call("sede_view_resize", {
             view: id,

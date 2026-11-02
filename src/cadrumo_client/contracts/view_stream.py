@@ -69,6 +69,8 @@ VIEW_MAX_TITLE_LENGTH = 1024
 VIEW_MAX_DIALOG_MESSAGE_LENGTH = 2048
 VIEW_MAX_PROMPT_TEXT_LENGTH = 1024
 VIEW_MAX_TEXT_INPUT_LENGTH = 256
+VIEW_MAX_CLIPBOARD_BYTES = 16 * 1024
+"""Largest plain-text selection relayed for an explicit desktop copy or cut."""
 VIEW_MAX_KEY_LENGTH = 32
 VIEW_MAX_WHEEL_DELTA = 10_000
 VIEW_MAX_MODIFIERS = 15
@@ -470,8 +472,53 @@ class ViewClose(BaseModel):
     kind: Literal["view.close"] = "view.close"
 
 
-type ViewDownstreamDocument = ViewImage | ViewState | ViewNotice | ViewClosed
-type ViewUpstreamDocument = ViewCredit | ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClose
+class ViewClipboardAction(StrEnum):
+    """Explicit actions supported by the native Sede clipboard command."""
+
+    COPY = "copy"
+    CUT = "cut"
+
+
+class ViewClipboard(BaseModel):
+    """Ask the currently shown browser page for its focused plain-text selection."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.clipboard"] = "view.clipboard"
+    request_id: _DialogId
+    action: ViewClipboardAction
+
+
+class ViewClipboardSelection(BaseModel):
+    """One bounded selection, or a refusal without any page content."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.clipboard_selection"] = "view.clipboard_selection"
+    request_id: _DialogId
+    text: str | None = None
+
+    @model_validator(mode="after")
+    def _bounded_selection(self) -> Self:
+        if self.text is not None and (not self.text or len(self.text.encode("utf-8")) > VIEW_MAX_CLIPBOARD_BYTES):
+            raise ValueError("clipboard selection must be nonempty and bounded")
+        return self
+
+
+class ViewClipboardCommit(BaseModel):
+    """After a successful native clipboard write, apply a cut only if its selection is unchanged."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.clipboard_commit"] = "view.clipboard_commit"
+    request_id: _DialogId
+    apply: bool
+
+
+type ViewDownstreamDocument = ViewImage | ViewState | ViewNotice | ViewClosed | ViewClipboardSelection
+type ViewUpstreamDocument = (
+    ViewCredit | ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClose | ViewClipboard | ViewClipboardCommit
+)
 
 
 SEDE_VIEW_DEFINITION_ID: Final = "live.sede.view"
@@ -572,7 +619,9 @@ class ViewWorkerBind(BaseModel):
     session_id: UUID
 
 
-type ViewPersonInput = ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClose
+type ViewPersonInput = (
+    ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClose | ViewClipboard | ViewClipboardCommit
+)
 """Upstream documents the view's executor acts on; credit is consumed by the sink itself."""
 
 type ViewSinkInput = ViewPersonInput | ViewTransferEvent
@@ -623,7 +672,10 @@ class ViewStreamSink(Protocol):
         """Make this the newest pending image, replacing any older one not yet sent."""
         ...
 
-    def send(self, document: ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel) -> None:
+    def send(
+        self,
+        document: ViewState | ViewNotice | ViewClipboardSelection | ViewDownload | ViewFileChooser | ViewTransferCancel,
+    ) -> None:
         """Queue one page document, or one transfer request or cancel, for the window."""
         ...
 

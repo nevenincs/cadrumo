@@ -334,7 +334,7 @@ const HAS_CONTROL = /\p{Cc}/u;
 export type KeyPress = Pick<
   KeyboardEvent,
   "key" | "code" | "altKey" | "ctrlKey" | "metaKey" | "shiftKey" | "isComposing"
-> & { altGraph: boolean };
+> & { altGraph: boolean; keyCode?: number };
 
 /** What one key press sends: the key itself and, for a key that types a
  * character, the text it types. */
@@ -348,7 +348,7 @@ export type KeyPlan = {
 /** The events a key press becomes, or null for a key the page cannot be
  * given: a dead key, a composition in progress, a media key. */
 export function keyPlan(press: KeyPress, mac: boolean): KeyPlan | null {
-  if (press.isComposing) return null;
+  if (press.isComposing || press.keyCode === 229) return null;
   const single = characters(press.key) === 1;
   if (!single && !NAMED_KEYS.has(press.key)) return null;
   if (single && HAS_CONTROL.test(press.key)) return null;
