@@ -45,8 +45,6 @@ from .invoice_confirmation_ports import InvoiceConfirmationPorts
 from .invoice_draft_extraction_ports import EvidenceConsentProof, InvoiceDraftExtractionPorts
 from .invoice_extraction_authority import default_invoice_extraction_period
 
-
-
 InvoiceEvidenceReference = Annotated[str, Field(min_length=1, max_length=64)]
 
 

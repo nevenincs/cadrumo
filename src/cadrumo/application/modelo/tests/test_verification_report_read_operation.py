@@ -331,7 +331,7 @@ def test_capture_filters_orders_reports_and_refuses_incomplete_overlimit_results
         assert oversized.value.reason is AccessDenialCode.OPERATION_DENIED
 
         monkeypatch.setattr(capture_module, "MAX_MODELO_VERIFICATION_REPORT_LIST_ROWS", 4_096)
-        monkeypatch.setattr(capture_module, "VERIFICATION_REPORT_RESULT_DOCUMENT_MAX_BYTES", 1)
+        monkeypatch.setattr(capture_module, "PROJECTION_RESULT_MAX_BYTES", 1)
         with pytest.raises(ProfileAccessRefusedError) as too_large:
             capture_verification_report_view(
                 ModeloVerificationReportViewRequest(

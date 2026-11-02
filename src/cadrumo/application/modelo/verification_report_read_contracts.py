@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
-
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.models import CredentialFreeOperationRequest
@@ -29,8 +27,6 @@ MAX_MODELO_VERIFICATION_REPORT_FINDING_REFS = 512
 
 
 MAX_MODELO_VERIFICATION_REPORT_FACTS = 64
-
-
 
 
 class ModeloVerificationReportListRequest(CredentialFreeOperationRequest):

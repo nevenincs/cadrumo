@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import CalculationRevisionId

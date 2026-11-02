@@ -77,7 +77,6 @@ from .party_attribution import PartyAttributionAdvisory, party_attribution_advis
 from .review_advisories import review_advisory_kinds
 
 
-
 def _require_worker_identity[PayloadT: BaseModel](
     request: OperationRequest[PayloadT],
     context: OperationExecutorContext,

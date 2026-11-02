@@ -55,7 +55,6 @@ from .evidence_page_errors import (
 from .read_access import resolve_ledger_request_read_access
 
 
-
 @dataclass(frozen=True, slots=True)
 class _StoredDocument:
     """Where a requested document's bytes are kept and the digest they must hash to."""

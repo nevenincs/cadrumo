@@ -44,8 +44,6 @@ from .verification_repository_ports import VerificationRepositoryBundle, Verific
 MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID = "modelo.filing_record.list"
 
 
-
-
 def _record_order_key(record: ModeloRecord) -> tuple[str, int, str, str, datetime, str]:
     """Retain legacy list ordering and break ties by stable receipt identity."""
     return (
