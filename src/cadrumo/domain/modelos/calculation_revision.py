@@ -1073,6 +1073,9 @@ class CalculationRevision(BaseModel):
         payload = TypeAdapter(dict[str, object]).validate_python(handled)
         if self.rendering_snapshot is None:
             payload.pop("rendering_snapshot", None)
+        if self.invoice_fingerprint is None:
+            # Left out while absent so a stored revision dumps, and digests, as before.
+            payload.pop("invoice_fingerprint", None)
         context = _string_keyed_context(getattr(info, "context", None))
         if context is None or context.get("secure_calculation_revision") is not True:
             payload.pop("closed_record_row_sets", None)

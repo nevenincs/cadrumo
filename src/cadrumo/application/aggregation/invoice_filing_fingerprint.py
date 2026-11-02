@@ -191,6 +191,8 @@ def _invoices_in_scope(
         else None
     )
     oss_period = _oss_period(period) if selection.oss else None
+    # A period without a calendar span (the OSS exterior periods) has no issue-date scope.
+    direct_period = period if selection.direct_sources and period.has_date_span() else None
 
     def in_scope(invoice: Invoice) -> bool:
         if invoice.bucket_id is not None and invoice.bucket_id != bucket_id:
@@ -198,7 +200,8 @@ def _invoices_in_scope(
         devengo = resolve_invoice_devengo(invoice).devengo_date
         return (
             (
-                invoice_in_bucket_and_period(invoice, bucket_id=bucket_id, period=period)
+                direct_period is not None
+                and invoice_in_bucket_and_period(invoice, bucket_id=bucket_id, period=direct_period)
                 and BindingSourceKind(invoice_source_kind(invoice)) in selection.direct_sources
             )
             or (iva_period is not None and iva_period.contains(devengo))

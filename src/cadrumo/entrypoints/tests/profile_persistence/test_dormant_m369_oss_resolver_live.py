@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -657,11 +658,24 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             for diag in result.source_diagnostics
         )
 
+        # Verification compares the draft's pinned invoices, so it reads the store calculation read.
+        verification_repositories = build_test_verification_repository_bundle()
+        membership_ports = verification_repositories.ledger_membership_ports
+        verification_repositories = replace(
+            verification_repositories,
+            ledger_membership_ports=replace(
+                membership_ports,
+                invoice_catalogue_read_ports=replace(
+                    membership_ports.invoice_catalogue_read_ports,
+                    invoice_reader=invoice_repo,
+                ),
+            ),
+        )
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision_with_preconditions(
                 result.revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=build_test_verification_repository_bundle(),
+                verification_repositories=verification_repositories,
                 actor="m369-live-operator",
                 workflow_profile=workflow_profile(),
                 clock=_T1,
