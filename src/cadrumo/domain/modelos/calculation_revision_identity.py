@@ -63,17 +63,29 @@ def _validated_relation_id(value: object, *, surface: str) -> RelationId:
         raise ModeloValidationError(f"{surface} contains non-canonical relation id {value!r}") from exc
 
 
+def _detail_row_amount_text(value: Decimal) -> str:
+    """Spell one detail-row amount for the identity payload.
+
+    Non-zero amounts keep ``str(value.normalize())``, scientific notation included,
+    because stored revision ids were derived from exactly that spelling and
+    :func:`~cadrumo.domain.identifiers.canonical_decimal_string` would respell
+    them. Every zero, a negative one included, collapses to ``"0"`` so two
+    amounts that are equal never derive different ids.
+    """
+    return "0" if value.is_zero() else str(value.normalize())
+
+
 def _detail_row_payload(row: ModeloDetailRow) -> dict[str, object]:
     d: dict[str, object] = {}
     if isinstance(row, Modelo156AfiliadoRow):
         d.update(row_type=row.row_type, nif=row.nif, nombre=row.nombre, numero_afiliacion=row.numero_afiliacion)
         for month in row.cotizaciones:
             d[f"month_{month.month:02d}_status"] = month.status
-            d[f"month_{month.month:02d}_amount"] = None if month.amount is None else str(month.amount.normalize())
+            d[f"month_{month.month:02d}_amount"] = None if month.amount is None else _detail_row_amount_text(month.amount)
         return dict(sorted(d.items()))
     for field_name, field_value in row.model_dump().items():
         if isinstance(field_value, Decimal):
-            d[field_name] = str(field_value.normalize())
+            d[field_name] = _detail_row_amount_text(field_value)
         else:
             d[field_name] = str(field_value)
     return dict(sorted(d.items()))
