@@ -139,13 +139,15 @@ test("a calculation whose settlement was not seen is unknown and holds", async (
   });
   if (await proceed.isVisible()) await proceed.click();
   const alert = workspace(target)
-    .getByRole("status")
+    .getByRole("alert")
     .filter({
-      hasText: label("workspace.modelo.outcome.unknown"),
+      hasText: label("workspace.modelo.write_hold.unknown"),
     });
   await expect(alert).toBeVisible();
   await expect(
-    alert.getByRole("button", { name: label("workspace.modelo.read_again") }),
+    alert.getByRole("button", {
+      name: label("workspace.modelo.write_hold.check_status"),
+    }),
   ).toBeVisible();
 });
 

@@ -30,6 +30,7 @@ import {
 } from "../form/session";
 import { stagedText } from "../form/stagedWords";
 import { useEditReview, type ReviewPhase } from "./useEditReview";
+import { ScopedWriteHoldNotice } from "../WriteScope";
 
 // The review of every staged edit before anything is applied: each change
 // with its box, how it read and how it will read, what the application's
@@ -140,13 +141,7 @@ function ChangeLine({
   );
 }
 
-function PhaseNotice({
-  phase,
-  onReread,
-}: {
-  phase: ReviewPhase;
-  onReread: () => void;
-}) {
+function PhaseNotice({ phase }: { phase: ReviewPhase }) {
   const t = useStrings();
   switch (phase.kind) {
     case "checking":
@@ -186,16 +181,7 @@ function PhaseNotice({
         </Alert>
       );
     case "unknown":
-      return (
-        <Alert tone="warning" icon={<Icon name="unknown" />} role="alert">
-          <span className="flex flex-col items-start gap-1">
-            <span>{t("workspace.modelo.review.unknown")}</span>
-            <Button size="xs" variant="link" className="p-0" onClick={onReread}>
-              {t("workspace.modelo.read_again")}
-            </Button>
-          </span>
-        </Alert>
-      );
+      return null;
     case "applied":
       return (
         <Alert tone="success" icon={<Icon name="check" />}>
@@ -238,7 +224,13 @@ export function ReviewDialog({
   const t = useStrings();
   const ackId = useId();
   const [acknowledged, setAcknowledged] = useState(false);
-  const { phase, apply, recheck, prerequisite } = useEditReview({
+  const {
+    phase,
+    apply,
+    recheck,
+    prerequisite,
+    blocked: writeHeld,
+  } = useEditReview({
     open,
     envelope,
     session,
@@ -279,6 +271,7 @@ export function ReviewDialog({
   // A renewal's report not yet applied leaves the marks unknown: nothing is
   // applied until the declaration it waits for is read.
   const mayApply =
+    !writeHeld &&
     phase.kind === "checked" &&
     !session.rebasePending &&
     edits.length > 0 &&
@@ -409,12 +402,8 @@ export function ReviewDialog({
             </span>
           </Alert>
         )}
-        <PhaseNotice
-          phase={phase}
-          onReread={() => {
-            void onReread();
-          }}
-        />
+        <PhaseNotice phase={phase} />
+        <ScopedWriteHoldNotice />
         {mustAcknowledge && phase.kind === "checked" && !blocked && (
           <label
             htmlFor={ackId}
@@ -459,7 +448,7 @@ export function ReviewDialog({
               {phase.kind === "check_failed" ||
               phase.kind === "not_applied" ||
               phase.kind === "still_moving" ? (
-                <Button onClick={recheck}>
+                <Button disabled={writeHeld} onClick={recheck}>
                   {t("workspace.modelo.review.check_again")}
                 </Button>
               ) : (

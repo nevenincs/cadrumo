@@ -9,7 +9,7 @@ import type { ModeloPort } from "../../../shell/modelo";
 // One write, sent once and followed until it settles. A write that may have
 // reached the runtime and whose settlement was not seen is unknown: it may
 // have committed, so the caller never sends it again and holds further
-// writes of its kind until the declaration is read again.
+// writes until its completion is observed and a later declaration read succeeds.
 
 export type OperationRun<Result> =
   | { kind: "settled"; result: Result }

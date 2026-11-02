@@ -13,6 +13,17 @@ const target = creationWriteKey({
   period_code: "2T",
 });
 
+test("a completed write invalidates earlier reads after its hold has gone", () => {
+  const holds = createModeloWriteHolds();
+  const before = holds.version(target);
+  const lease = holds.begin(target)!;
+  holds.needsRead(lease);
+  holds.readCompleted(holds.get(target)!);
+  assert.equal(holds.get(target), undefined);
+  assert.notEqual(holds.version(target), before);
+  assert.equal(holds.version(declarationWriteKey("other")), 0);
+});
+
 test("an operation holds admission synchronously and a retired lease cannot unlock its replacement", () => {
   const holds = createModeloWriteHolds();
   const first = holds.begin(target)!;
