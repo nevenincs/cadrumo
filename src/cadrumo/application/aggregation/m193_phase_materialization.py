@@ -19,7 +19,7 @@ from pydantic import AfterValidator, BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
-from ...core.filing_year import FILING_YEAR_MIN, FilingYear
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -90,7 +90,7 @@ class Modelo193SettledAmountAuthorityAdvisory(BaseModel):
         default_factory=partial(form_for_role, "withholding.capital_annual")
     )
     filing_year: FilingYear
-    accrual_year: int = Field(ge=FILING_YEAR_MIN, le=9999)
+    accrual_year: FourDigitYear
     affected_fields: tuple[Modelo193PhaseAmountField, ...] = (
         Modelo193PhaseAmountField.BASE_RETENCIONES,
         Modelo193PhaseAmountField.RETENCION_PRACTICADA,
@@ -127,7 +127,7 @@ class Modelo193PhaseRow(BaseModel):
 
     phase: Modelo193DisclosurePhase
     filing_year: FilingYear
-    original_accrual_year: int = Field(ge=FILING_YEAR_MIN, le=9999)
+    original_accrual_year: FourDigitYear
     recognized_on: date
     source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1, max_length=128)

@@ -22,6 +22,7 @@ from ....core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
     hydrate_filing_projection_ref,
 )
+from ....core.filing_year import FourDigitYear
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.identity.digest import ContentDigest
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -565,7 +566,7 @@ class ExportFieldDefinition(RegistryModel):
     """
     value_policy: ExportValuePolicyValue = None
     allowed_values: tuple[str, ...] | None = None
-    minimum_year: int | None = Field(default=None, ge=1000)
+    minimum_year: FourDigitYear | None = None
     """An official lower bound on a four-digit filing-year value."""
     presence_marker: str | None = Field(default=None, min_length=1)
     """The constant a mandatory slot prints when its boolean fact holds.

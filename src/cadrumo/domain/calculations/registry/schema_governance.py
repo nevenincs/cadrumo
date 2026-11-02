@@ -79,17 +79,13 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 
-from ....core.filing_year import FILING_YEAR_MIN
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .errors import RegistryValidationError
 from .ids import RevisionId
 
-_REVIEW_YEAR_CEILING = 2100
-_REVIEW_YEAR_FLOOR = FILING_YEAR_MIN
-
-REVISION_REVIEW_DATE_CEILING: date = date(_REVIEW_YEAR_CEILING, 1, 1)
+REVISION_REVIEW_DATE_CEILING: date = date.max
 """Exclusive upper bound on a governance stamp's ``reviewed_at`` signoff date.
 
 A signoff dated beyond any living reviewer's horizon is not a signoff: it is a
@@ -99,13 +95,11 @@ module's docstring for why the bound is a fixed calendar date rather than a
 reading of the local clock.
 """
 
-REVISION_REVIEW_DATE_FLOOR: date = date(_REVIEW_YEAR_FLOOR, 1, 1)
+REVISION_REVIEW_DATE_FLOOR: date = datetime.fromtimestamp(0, UTC).date() + timedelta(days=1)
 """Inclusive lower bound on a governance stamp's ``reviewed_at`` signoff date.
 
-A signoff predating the year 2000 is a sentinel or a template artefact: the Unix
-epoch (``1970-01-01``), common template placeholders (``1900-01-01``,
-``0001-01-01``), or a date so remote it cannot record a real signoff of any
-revision in this registry. Each renders in a conformance report as a valid
+A signoff on or before the Unix epoch is a sentinel or a template artefact: the
+epoch itself or a common template placeholder from before it. Each renders in a conformance report as a valid
 countersignature while naming a date no auditor can verify.
 """
 

@@ -8983,6 +8983,7 @@ workspace:
         link_aeat: Link the AEAT filing
         none: Nothing to do
         open_local_draft: Open local draft
+        recalculate: Calculate again
         start: Start it
       no_match: No declaration matches “{query}”.
       none_listed: No declarations are listed.

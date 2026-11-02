@@ -19,14 +19,16 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistrySnapshotError
+from ...calculations.registry.errors import RegistrySnapshotError
 from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
 )
+from ..filing_window_projection import AuthoredFilingWindow, ProjectedFilingWindowCloseUnavailable
 from ..plazo import resolve_filing_window
 from ..recargo import (
     build_recovery_for_overdue,
@@ -192,18 +194,18 @@ def test_resolve_filing_window_annual_period_does_not_borrow_a_future_window(
         assert resolve_filing_window(modelo, filing_year, period, authority=withdrawn) is None
 
 
-def test_resolve_filing_window_annual_period_below_the_supported_floor_is_refused() -> None:
-    """A tax year below the supported floor is refused, never answered with a later window.
+def test_resolve_filing_window_below_the_supported_floor_answers_its_own_year_only() -> None:
+    """A tax year below the floor answers the window authored for it or ``None``, never a later window.
 
-    Modelo 100 annual windows begin before the floor, so the preceding-year case
-    for it is a refusal: the caller learns the deadline is unknown rather than
-    absent or borrowed.
+    The answer is a value at any distance from the floor: the envelope decides
+    what can be filed, not what the law dated, so no envelope refusal escapes.
     """
     supported_years = published_supported_filing_years()
     assert supported_years is not None
-    filing_year = supported_years.floor - 1
-    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        resolve_filing_window("100", filing_year, Period.from_year_and_code(filing_year, "0A"))
+    for filing_year in (supported_years.floor - 1, FOUR_DIGIT_YEAR_FIRST):
+        answer = resolve_filing_window("100", filing_year, Period.from_year_and_code(filing_year, "0A"))
+        assert answer is None or isinstance(answer, AuthoredFilingWindow)
+        assert answer is None or answer.window.filing_year == filing_year
 
 
 # ---------------------------------------------------------------------------
@@ -245,3 +247,19 @@ def test_resolve_filing_window_m210_annual_0a_without_resultado_returns_none() -
     """
     result = resolve_filing_window("210", 2025, Period.from_year_and_code(2025, "0A"))
     assert result is None
+
+
+def test_resolve_filing_window_far_beyond_the_horizon_is_a_typed_projection() -> None:
+    """A year far ahead is not refused for being far ahead; its close is unknown without a calendar."""
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    far_ahead = supported_years.horizon + (FOUR_DIGIT_YEAR_LAST - supported_years.horizon) // 2
+    answer = resolve_filing_window("303", far_ahead, Period.from_year_and_code(far_ahead, "1T"))
+    assert isinstance(answer, ProjectedFilingWindowCloseUnavailable)
+    assert answer.period.filing_year == far_ahead
+    assert answer.closes_on is None
+
+
+def test_resolve_filing_window_on_the_last_writable_year_is_an_answer_not_a_crash() -> None:
+    period = Period.from_year_and_code(FOUR_DIGIT_YEAR_LAST, "4T")
+    assert resolve_filing_window("303", FOUR_DIGIT_YEAR_LAST, period) is None

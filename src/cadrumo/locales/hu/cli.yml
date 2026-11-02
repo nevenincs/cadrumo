@@ -672,6 +672,8 @@ cli:
         list_help: Mentett Modelo 100 borrador pillanatképek listázása.
         modelo_100_help: Modelo 100 borrador pillanatkép-parancsok.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
+        snapshot_schema_outdated: '%{count} korábbi verzióval mentett borrador-pillanatkép
+          nem olvasható. Importáld újra a dokumentumot.'
         state_help: 'Pillanatkép-állapot szűrő: `active`, `superseded`, `discarded`
           vagy `all`.'
         view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.

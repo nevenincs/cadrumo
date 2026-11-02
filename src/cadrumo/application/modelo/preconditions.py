@@ -526,6 +526,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.invoice_fingerprint.current",
+        "modelo.work.verify.invoice_fingerprint.drift_detected",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.invoice_fingerprint.current",
+        "modelo.work.verify.invoice_fingerprint.catalogue_unavailable",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.m210.agrupacion.valid",
         "modelo.work.verify.m210.agrupacion.invalid",
     ),

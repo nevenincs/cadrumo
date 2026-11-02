@@ -91,6 +91,9 @@ class _InMemoryBorradorSnapshotRepository:
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return tuple(self._snapshots[snapshot_id] for snapshot_id in sorted(self._snapshots))
 
+    def outdated_stored_snapshot_count(self) -> int:
+        return 0
+
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         trimmed_snapshot_id = snapshot_id.strip()
         matches = tuple(

@@ -20,8 +20,12 @@ the real work-form service, which the TUI and MCP read:
   unchecked revision before reaching it;
 * the review workbook, a preview, shows the capped figure with the note's
   sentence beside it rather than refusing it;
+* a revision recorded as filed before the cap existed, with no screen stamp and
+  no note, is refused its export while casilla 06 holds the 510,00 and exports
+  past the gate with a zero, and its form offers the recalculation;
 * a quarter whose receipts carry no retención proves casilla 06 zero, carries
-  no blocking note and passes the gate.
+  no blocking note and passes the gate; the proven zero persists, so the form
+  reopened in a new process and the declarations list both say the zero stands.
 
 Every figure is invoice arithmetic worked out here, with synthetic data.
 """
@@ -47,7 +51,8 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
+from cadrumo.application.modelo import work_form_service
+from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloCrossPeriodCleanStateError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -55,11 +60,21 @@ from cadrumo.application.modelo.calculation_note_gate import (
     ModeloCalculationBlockedError,
     require_work_unit_calculation_unblocked,
 )
+from cadrumo.application.modelo.calculation_notes import (
+    FILED_BEFORE_GRADE_CAP_REASON,
+    CalculationNoteStore,
+    note_fact_text,
+)
 from cadrumo.application.modelo.calculation_screen import calculation_screen_is_current, calculation_screen_stamp
+from cadrumo.application.modelo.declaration_summary import declaration_summary
+from cadrumo.application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
+from cadrumo.application.modelo.declarations_list_projection import worded_list_row
+from cadrumo.application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from cadrumo.application.modelo.work_form_findings import ModeloFormAttention
 from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction, form_next_step
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -67,6 +82,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.storage.calc_sheets.review_labels import ReviewWorkbookLabels
 from cadrumo.application.storage.calc_sheets.review_workbook import build_review_workbook
 from cadrumo.application.storage.calc_sheets.workbook_cells import plan_value_blocks
+from cadrumo.core.aggregation import BindingValueOutcome
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
@@ -79,8 +95,15 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_perce
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id_from_revision,
+)
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -225,7 +248,14 @@ def _receipt(
     )
 
 
-def _issued_invoice(number: str, *, base: Decimal, retencion: Decimal, linked: str) -> Invoice:
+def _issued_invoice(
+    number: str,
+    *,
+    base: Decimal,
+    retencion: Decimal,
+    linked: str | None,
+    issued_at: date | None = None,
+) -> Invoice:
     rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_CAPPED_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
@@ -240,7 +270,7 @@ def _issued_invoice(number: str, *, base: Decimal, retencion: Decimal, linked: s
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": number,
-            "issued_at": date(_CAPPED_YEAR, 2, 10),
+            "issued_at": date(_CAPPED_YEAR, 2, 10) if issued_at is None else issued_at,
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
@@ -254,12 +284,12 @@ def _issued_invoice(number: str, *, base: Decimal, retencion: Decimal, linked: s
             "iva_category": IvaCategory("domestic_general"),
             "retention_rate": Decimal("0.15"),
             "retention_amount": retencion,
-            "linked_transaction_ids": (linked,),
+            "linked_transaction_ids": () if linked is None else (linked,),
         },
     )
 
 
-def _persist_ledger(secure_objects: SecureObjectRepository) -> None:
+def _persist_ledger(secure_objects: SecureObjectRepository, *, older: tuple[Invoice, ...] = ()) -> None:
     """The capped quarter's two invoiced receipts, and an earlier year's receipt paid in full."""
     receipts = [_receipt(number, value_date=date(_CAPPED_YEAR, 2, 10), cash=cash) for number, _, _, cash in _INVOICES]
     unwithheld = _receipt(
@@ -277,7 +307,9 @@ def _persist_ledger(secure_objects: SecureObjectRepository) -> None:
     for invoice, receipt in zip(invoices, receipts, strict=True):
         catalogue = link_invoice(catalogue, receipt.transaction_id, invoice.invoice_id)
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(catalogue)
-    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(build_invoice_catalogue(invoices))
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        build_invoice_catalogue((*invoices, *older)),
+    )
 
 
 def _work_unit(secure_objects: SecureObjectRepository, year: int, operation: PinnedAuthorityOperation) -> WorkUnit:
@@ -447,20 +479,207 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
             )
 
 
-def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(
+def _listed_row(work_unit: WorkUnit, head: CalculationRevision, operation: PinnedAuthorityOperation):
+    """The declarations-list row the portfolio shows for ``head``, through the real summary and projection."""
+    declaration = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id=work_unit.work_unit_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        state=work_unit.state,
+        has_current_calculation=True,
+        has_current_filing=False,
+    )
+    summary = declaration_summary(
+        declaration, revisions={head.calculation_revision_id: head}, verification=None, operation=operation
+    )
+    row = DeclarationListRow(
+        declaration.work_unit_id,
+        str(declaration.modelo),
+        declaration.period,
+        summary.state.value,
+        DeclarationListGroup.IN_PROGRESS,
+        declaration=declaration.model_copy(update={"summary": summary}),
+    )
+    return summary, worded_list_row(row, OutputLanguage.EN)
+
+
+def test_an_invoice_older_than_the_filing_years_stays_readable_and_moves_no_box(
     secure_objects: SecureObjectRepository,
+) -> None:
+    _seed_taxpayer_profile()
+    with bundled_indexed_authority().operation() as operation:
+        floor = operation.supported_filing_years().floor
+        older = _issued_invoice(
+            "F-ANTERIOR",
+            base=Decimal("1000.00"),
+            retencion=Decimal("150.00"),
+            linked=None,
+            issued_at=date(floor - 1, 2, 10),
+        )
+        _persist_ledger(secure_objects, older=(older,))
+        work_unit = _work_unit(secure_objects, _CAPPED_YEAR, operation)
+        revision = _calculate(work_unit, operation)
+
+        assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == _STATED_RETENCION
+        assert older.invoice_id in {
+            invoice.invoice_id
+            for invoice in InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load()
+        }
+
+
+def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(
+    secure_objects: SecureObjectRepository, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _seed_taxpayer_profile()
     _persist_ledger(secure_objects)
 
     with bundled_indexed_authority().operation() as operation:
         work_unit = _work_unit(secure_objects, _ZERO_YEAR, operation)
-        revision = _calculate(work_unit, operation)
+        calculated = _calculate(work_unit, operation)
 
+        # Read back from the encrypted store, as a declaration opened afresh reads it.
+        revision = (
+            CalculationRevisionCatalogueRepository(objects=secure_objects)
+            .load(operation=operation)
+            .get(calculated.calculation_revision_id)
+        )
+        assert revision is not None
         assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == Decimal("0")
-        assert [issue for issue in revision.source_issues if issue.reason == _REASON] == []
+        (proven,) = [issue for issue in revision.source_issues if issue.reason == _REASON]
+        assert proven.casilla_id == _RETENCIONES_BOX
+        assert proven.value_outcome is BindingValueOutcome.PROVEN_ZERO
+        assert proven.fact is not None and proven.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
         assert _gate_reasons(work_unit, revision, operation) == {}
+
+        # A new process holds none of the calculation's notes, so the form reads only what persisted.
+        monkeypatch.setattr(work_form_service, "CALCULATION_NOTES", CalculationNoteStore())
         load = _form(secure_objects, _ZERO_YEAR, operation)
         assert not [item for item in load.form.calculation_notes if item.withholds_filing]
+        (shown,) = [item for item in load.form.calculation_notes if item.reason == _REASON]
+        assert shown.attention is ModeloFormAttention.INFO and shown.box == "06"
+        assert shown.fact == proven.fact
+        assert note_fact_text(shown.fact, locale="en") == (
+            "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt."
+        )
+
+        summary, listed = _listed_row(work_unit, revision, operation)
+        assert summary.blocking_count is None and summary.proven_zero_notes == (proven.fact,)
+        assert listed.calculation_notes == (
+            "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt.",
+        )
         notes = _review_notes_by_box(revision, OutputLanguage.ES, operation)
         assert "06" in notes and not any(notes.values())
+
+
+def _store_as_filed_before_the_cap(
+    secure_objects: SecureObjectRepository,
+    work_unit: WorkUnit,
+    calculated: CalculationRevision,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision:
+    """Store ``calculated`` as a revision recorded filed before stamps and caps existed, and point the unit at it.
+
+    Such a revision carries no screen stamp and no capped-value note: neither existed when it was written.
+    """
+    revisions = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    units = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    old_shape = calculated.model_copy(
+        update={
+            "screen_stamp": None,
+            "source_issues": tuple(issue for issue in calculated.source_issues if issue.reason != _REASON),
+            "state": CalculationRevisionState.PRESENTADO,
+            "verified_at": _T0,
+            "verified_by": "operator",
+            "filed_at": _T0,
+            "filed_by": "operator",
+        }
+    )
+    filed = CalculationRevision.model_validate(
+        {
+            **old_shape.model_dump(),
+            "calculation_revision_id": derive_calculation_revision_id_from_revision(old_shape),
+        }
+    )
+    revisions.save(upsert_calculation_revision(revisions.load(operation=operation), filed))
+    unit = units.load().work_units[work_unit.work_unit_id]
+    units.save(
+        upsert_work_unit(
+            units.load(),
+            unit.model_copy(
+                update={
+                    "current_calculation_revision_id": filed.calculation_revision_id,
+                    "filed_calculation_revision_id": filed.calculation_revision_id,
+                }
+            ),
+        )
+    )
+    return filed
+
+
+def _export(revision: CalculationRevision, operation: PinnedAuthorityOperation, path: Path) -> None:
+    export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=revision.calculation_revision_id, output_path=path, actor="operator"
+        ),
+        workflow_profile=_workflow_profile(),
+        export_ports=modelo_export_ports_for_test(bucket_id=_BUCKET_ID),
+        clock=_T0,
+        operation=operation,
+    )
+
+
+def test_a_revision_filed_before_the_cap_is_refused_its_export_until_it_is_calculated_again(
+    secure_objects: SecureObjectRepository, tmp_path: Path
+) -> None:
+    _seed_taxpayer_profile()
+    _persist_ledger(secure_objects)
+
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = _work_unit(secure_objects, _CAPPED_YEAR, operation)
+        filed = _store_as_filed_before_the_cap(secure_objects, work_unit, _calculate(work_unit, operation), operation)
+        assert filed.screen_stamp is None and not [i for i in filed.source_issues if i.reason == _REASON]
+
+        output = tmp_path / "modelo-130.txt"
+        with pytest.raises(ModeloCalculationBlockedError) as refused:
+            _export(filed, operation, output)
+        assert (refused.value.context or {})["reason"] == FILED_BEFORE_GRADE_CAP_REASON
+        assert (refused.value.context or {})["box"] == "06"
+        assert not output.exists()
+
+        load = _form(secure_objects, _CAPPED_YEAR, operation)
+        assert load.filed
+        (shown,) = [item for item in load.form.calculation_notes if item.reason == FILED_BEFORE_GRADE_CAP_REASON]
+        assert shown.withholds_filing and shown.box == "06"
+        step = form_next_step(load.form, verified=load.verified, filed=load.filed)
+        assert step.action is ModeloFormNextAction.RECALCULATE
+
+        # The recalculation is the existing one: a new calculation of the same declaration, stamped and noted.
+        recalculated = _calculate(work_unit, operation)
+        assert recalculated.state is CalculationRevisionState.BORRADOR
+        assert recalculated.screen_stamp is not None
+        assert [issue.reason for issue in recalculated.source_issues if issue.reason == _REASON] == [_REASON]
+
+
+def test_a_revision_filed_before_the_cap_with_a_zero_in_casilla_06_passes_the_gate(
+    secure_objects: SecureObjectRepository, tmp_path: Path
+) -> None:
+    _seed_taxpayer_profile()
+    _persist_ledger(secure_objects)
+
+    with bundled_indexed_authority().operation() as operation:
+        # The earlier year's receipt carries no retención, so its calculation proves casilla 06 zero.
+        work_unit = _work_unit(secure_objects, _ZERO_YEAR, operation)
+        filed = _store_as_filed_before_the_cap(secure_objects, work_unit, _calculate(work_unit, operation), operation)
+        assert Decimal(filed.casilla_values[_RETENCIONES_BOX]) == Decimal("0")
+
+        assert _gate_reasons(work_unit, filed, operation) == {}
+        # The export passes the calculation-note gate and stops at the next precondition: the cross-period
+        # clean state, which needs the prior quarters this single hand-stored filing does not have.
+        with pytest.raises(ModeloCrossPeriodCleanStateError):
+            _export(filed, operation, tmp_path / "modelo-130.txt")
+
+        load = _form(secure_objects, _ZERO_YEAR, operation)
+        assert not [item for item in load.form.calculation_notes if item.reason == FILED_BEFORE_GRADE_CAP_REASON]
+        step = form_next_step(load.form, verified=load.verified, filed=load.filed)
+        assert step.action is ModeloFormNextAction.RECORDED

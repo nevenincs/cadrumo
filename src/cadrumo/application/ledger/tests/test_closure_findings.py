@@ -26,9 +26,11 @@ from decimal import Decimal
 import pytest
 
 from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....domain.invoices.figures import retention_findings
 from ..closure_findings import (
     ROUNDING_ALLOWANCE_PER_TERM,
     closure_findings,
+    retention_figures_disagree,
     within_rounding_allowance,
 )
 from ..invoice_draft_records import InvoiceDraft, InvoiceDraftRateBreakdown
@@ -150,6 +152,19 @@ def test_a_retencion_inconsistent_with_its_rate_is_reported() -> None:
     )
 
     assert DraftDiscrepancyKind.RATE_INCONSISTENT in _closure_over(draft)
+
+
+@pytest.mark.parametrize(
+    ("amount", "disagrees"),
+    [("150.01", False), ("149.99", False), ("150.02", True), ("149.98", True)],
+)
+def test_a_retencion_finding_fires_exactly_where_the_invoice_refuses(amount: str, disagrees: bool) -> None:
+    """15 % of 1000.00 is 150.00, and the invoice allows one cent either way."""
+    assert (
+        retention_figures_disagree(rate_points=Decimal("15"), amount=Decimal(amount), base=Decimal("1000.00"))
+        is disagrees
+    )
+    assert bool(retention_findings(Decimal("0.15"), Decimal(amount), Decimal("1000.00"))) is disagrees
 
 
 def test_a_consistent_retencion_raises_nothing() -> None:

@@ -62,6 +62,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..export.errors import ExportFormatError
 from ..filing.runtime import build_runtime_schema_provider
+from .calculation_note_gate import require_work_unit_calculation_screen_current
 from .calculation_report import ModeloCalculationReport, build_modelo_calculation_report
 from .calculation_report_document import (
     CalculationReportDocument,
@@ -274,6 +275,11 @@ def build_modelo_calculation_report_for_revision(
         operation=operation,
     )
     require_exportable_revision_state(revision)
+    # A sealed revision verified before a note was screened is refused as export
+    # refuses it; only a revision already recorded as filed keeps its history.
+    require_work_unit_calculation_screen_current(
+        work_unit=work_unit, revision=revision, action="report", operation=operation
+    )
     # The same two-step resolution the review assembly performs: select the
     # revision metadata first so the snapshot is built at the rung of authority
     # that revision declares, rather than at the strictest rung a modelo filed

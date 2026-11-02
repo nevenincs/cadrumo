@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, Final
 
 from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....core.config import Settings
-from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from .....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.time.clock import now
@@ -315,7 +315,9 @@ def filed_register_ejercicio_options(html: str) -> tuple[int, ...]:
         for match in (_EJERCICIO_OPTION_RE.match(text),)
         if match is not None
     }
-    return tuple(sorted((year for year in years if FILING_YEAR_MIN <= year <= FILING_YEAR_MAX), reverse=True))
+    return tuple(
+        sorted((year for year in years if FOUR_DIGIT_YEAR_FIRST <= year <= FOUR_DIGIT_YEAR_LAST), reverse=True)
+    )
 
 
 async def discover_filed_declaration_availability(

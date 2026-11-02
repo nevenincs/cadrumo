@@ -700,10 +700,20 @@ _STRUCTURED_ENVELOPE_FIELDS: Final = (
     "iva_amount",
     "grand_total",
     "recargo_amount",
+    "retencion_rate",
+    "retencion_amount",
     "regime_legend",
 )
 
 _STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
+    "retencion_rate": {
+        DocumentShape.XML_FACTURAE: "TaxesWithheld/Tax/TaxRate",
+        DocumentShape.XML_UBL: "cac:WithholdingTaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent",
+    },
+    "retencion_amount": {
+        DocumentShape.XML_FACTURAE: "TaxesWithheld/Tax/TaxAmount/TotalAmount",
+        DocumentShape.XML_UBL: "cac:WithholdingTaxTotal/cac:TaxSubtotal/cbc:TaxAmount",
+    },
     "supplier_postal_code": {
         DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/PostCode",
         DocumentShape.XML_UBL: "cac:AccountingSupplierParty/cac:PostalAddress/cbc:PostalZone",

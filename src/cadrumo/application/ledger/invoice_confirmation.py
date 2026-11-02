@@ -88,6 +88,7 @@ from .confirmed_field_resolution import (
     confirmed_counterparty_name,
     confirmed_currency,
     confirmed_lines_from_the_document,
+    confirmed_retention,
     operator_restated_the_amounts,
     operator_value_or_reading,
     rate_tier_the_document_charged,
@@ -99,8 +100,10 @@ from .counterparty_establishment_ports import CounterpartyEstablishmentRepositor
 from .evidence import PurchaseInvoiceEvidencePatch, PurchaseInvoiceEvidenceService
 from .evidence_draft import (
     PrintedTotalDiscrepancy,
+    RetentionReadingDiscrepancy,
     counterparty_draft_side,
     printed_total_discrepancy,
+    retention_reading_discrepancy,
 )
 from .evidence_ports import LedgerEvidencePorts
 from .evidence_reference import find_bytes_bearing_evidence_record, refuse_reference_without_document_bytes
@@ -152,6 +155,9 @@ class InvoiceConfirmationResult(BaseModel):
             ``False`` when an invoice with the identical derived identity
             already existed and this call returned it unchanged (the guarded
             idempotent-retry no-op).
+        retention_discrepancy: Set when the document reads a withheld figure the
+            invoice on record does not hold, which re-confirming an invoice confirmed
+            before retention was read reports rather than writes.
         total_discrepancy: Set when the document's printed total disagrees with
             the derived total now on record -- see
             :class:`PrintedTotalDiscrepancy` for why that is always worth
@@ -189,6 +195,7 @@ class InvoiceConfirmationResult(BaseModel):
     draft: InvoiceDraft
     created: bool
     total_discrepancy: PrintedTotalDiscrepancy | None = None
+    retention_discrepancy: RetentionReadingDiscrepancy | None = None
     confirmation_id: Hex16Str | None = None
     confirmed_provenance: tuple[FieldProvenance, ...] = ()
     establishment: ConfirmedEstablishment | None = None
@@ -280,12 +287,41 @@ def _fields_a_reconfirm_would_change(candidate: Invoice, stored: Invoice) -> tup
     compared = candidate.model_dump(mode="json")
     against = stored.model_dump(mode="json")
     field_names = tuple(Invoice.model_fields)
+
+    def differs(name: str) -> bool:
+        # A figure compares by value: a printed 150.00 and a stated 150 are one
+        # amount, and only their serialised text differs.
+        new, old = getattr(candidate, name), getattr(stored, name)
+        if isinstance(new, Decimal) and isinstance(old, Decimal):
+            return bool(new != old)
+        return bool(compared.get(name) != against.get(name))
+
     return tuple(
-        sorted(
-            name
-            for name in field_names
-            if name not in _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR and compared.get(name) != against.get(name)
-        ),
+        sorted(name for name in field_names if name not in _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR and differs(name)),
+    )
+
+
+def _only_a_reading_the_record_predates(
+    divergent: tuple[str, ...],
+    *,
+    stored: Invoice,
+    overrides: Mapping[str, object | None],
+) -> bool:
+    """Return whether a re-confirm differs only by a retention nobody stated.
+
+    An invoice confirmed before retention was read holds none, so re-confirming its
+    document resolves a figure the record never had. That is not a different statement
+    about the document, so it does not refuse, and it is not a correction either, so
+    it does not write: the stored invoice comes back unchanged and the result reports
+    the reading. A retention stated here still refuses, because that one is a
+    correction and the catalogue update owns it.
+    """
+    return (
+        set(divergent) <= {"retention_amount", "retention_rate"}
+        and stored.retention_rate is None
+        and stored.retention_amount is None
+        and overrides.get("retencion_rate") is None
+        and overrides.get("retencion_amount") is None
     )
 
 
@@ -721,6 +757,11 @@ def _build_confirmed_invoice_candidate(
         if preparation.operator_restated_amounts
         else operator_value_or_reading(recargo_amount, draft.recargo_amount)
     )
+    resolved_retention_rate, resolved_retention_amount = confirmed_retention(
+        draft,
+        stated_rate=retention_rate,
+        stated_amount=retention_amount,
+    )
     resolved_iva_category = operator_value_or_reading(iva_category, preparation.establishment.category.category)
     resolved_rectifies = operator_value_or_reading(rectifies_invoice_number, draft.rectifies_invoice_number)
     resolved_series = operator_value_or_reading(series, draft.invoice_series)
@@ -744,8 +785,8 @@ def _build_confirmed_invoice_candidate(
         iva_category=resolved_iva_category,
         operation_type=operation_type,
         operation_date=operation_date,
-        retention_rate=retention_rate,
-        retention_amount=retention_amount,
+        retention_rate=resolved_retention_rate,
+        retention_amount=resolved_retention_amount,
         invoice_class=resolved_invoice_class,
         series=resolved_series,
         rectifies_invoice_number=resolved_rectifies,
@@ -787,7 +828,12 @@ def _persist_confirmed_invoice(
         )
     existing = catalogue.get(candidate.invoice_id)
     if existing is not None:
-        if _fields_a_reconfirm_would_change(candidate, existing):
+        divergent = _fields_a_reconfirm_would_change(candidate, existing)
+        if divergent and not _only_a_reading_the_record_predates(
+            divergent,
+            stored=existing,
+            overrides=preparation.operator_overrides,
+        ):
             _refuse_a_divergent_reconfirm(
                 candidate=candidate,
                 prior=existing,
@@ -828,6 +874,7 @@ def _persist_confirmed_invoice(
                 assertions=existing_record.assertions,
             ),
             total_discrepancy=printed_total_discrepancy(draft=preparation.draft, invoice=existing),
+            retention_discrepancy=retention_reading_discrepancy(draft=preparation.draft, invoice=existing),
             establishment=preparation.establishment,
         )
     result = create_catalogue_invoice(invoice=candidate, ports=catalogue_creation_ports)
@@ -861,6 +908,7 @@ def _persist_confirmed_invoice(
         draft=preparation.draft,
         created=True,
         total_discrepancy=printed_total_discrepancy(draft=preparation.draft, invoice=result.invoice),
+        retention_discrepancy=retention_reading_discrepancy(draft=preparation.draft, invoice=result.invoice),
         confirmation_id=confirmation_record.confirmation_id,
         confirmed_provenance=re_stamped_provenance(
             draft=preparation.draft,

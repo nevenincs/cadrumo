@@ -12,13 +12,17 @@ from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, Se
 
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.declaration_summary import DeclarationSummaryState, declaration_summary
+from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListNextStep, DeclarationListRow
+from ....application.modelo.declarations_list_projection import worded_list_row
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.work_form_models import ModeloFormResultDirection
-from ....domain.modelos.calculation_revision import CalculationRevisionState
+from ....core.external_constants import OutputLanguage
+from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -265,3 +269,119 @@ def test_only_the_latest_current_heads_check_supplies_its_blocking_count(persist
     assert blocked.state is DeclarationSummaryState.BLOCKED and blocked.blocking_count == 1
     assert checked.blocking_count == 0
     assert checked.state is DeclarationSummaryState.CALCULATED
+
+
+def _next_step(persisted: SeededOperatorWork, head: CalculationRevision, *, recorded: bool = False):
+    """The step the real list projection offers for ``head``, through the summary the portfolio computes."""
+    declaration = _declaration(persisted).model_copy(update={"has_current_filing": recorded})
+    summary = declaration_summary(
+        declaration, revisions={head.calculation_revision_id: head}, verification=None, operation=persisted.operation
+    )
+    row = DeclarationListRow(
+        declaration.work_unit_id,
+        str(declaration.modelo),
+        declaration.period,
+        summary.state.value,
+        DeclarationListGroup.IN_PROGRESS,
+        declaration=declaration.model_copy(update={"summary": summary}),
+    )
+    return summary, worded_list_row(row, OutputLanguage.EN)
+
+
+def test_a_checked_revision_with_a_current_screen_still_offers_the_file(persisted: SeededOperatorWork) -> None:
+    head = persisted.require_head().model_copy(update={"state": CalculationRevisionState.VERIFICADO_COMPLETO})
+
+    summary, row = _next_step(persisted, head)
+
+    assert head.screen_stamp is not None
+    assert summary.state is DeclarationSummaryState.CHECKED and not summary.calculation_outdated
+    assert row.next_step is DeclarationListNextStep.CREATE_FILE
+
+
+def test_a_checked_revision_without_a_screen_stamp_is_calculated_again_not_filed(
+    persisted: SeededOperatorWork,
+) -> None:
+    head = persisted.require_head().model_copy(
+        update={"state": CalculationRevisionState.VERIFICADO_COMPLETO, "screen_stamp": None}
+    )
+
+    summary, row = _next_step(persisted, head)
+
+    assert summary.calculation_outdated and not summary.checked
+    assert row.next_step is DeclarationListNextStep.RECALCULATE and row.opens_local_work
+
+
+def test_a_checked_revision_screened_otherwise_is_calculated_again(persisted: SeededOperatorWork) -> None:
+    current = persisted.require_head()
+    assert current.screen_stamp is not None
+    other = current.screen_stamp.model_copy(update={"digest": "0" * 64})
+    head = current.model_copy(update={"state": CalculationRevisionState.VERIFICADO_COMPLETO, "screen_stamp": other})
+
+    _, row = _next_step(persisted, head)
+
+    assert row.next_step is DeclarationListNextStep.RECALCULATE
+
+
+def test_a_checked_revision_with_a_blocking_note_offers_no_gated_step(persisted: SeededOperatorWork) -> None:
+    issue = CalculationSourceIssue.model_validate(
+        {"reason": "advisory_binding_value", "binding_source": None, "message": "advisory", "casilla_id": None}
+    )
+    head = persisted.require_head().model_copy(
+        update={"state": CalculationRevisionState.VERIFICADO_COMPLETO, "source_issues": (issue,)}
+    )
+
+    summary, row = _next_step(persisted, head)
+
+    assert not summary.calculation_outdated and not summary.checked
+    assert summary.state is DeclarationSummaryState.BLOCKED and summary.blocking_count == 1
+    assert row.next_step is DeclarationListNextStep.FIX and row.blocking_count == 1
+
+
+def test_a_filed_revision_without_a_screen_stamp_is_not_calculated_again(persisted: SeededOperatorWork) -> None:
+    head = persisted.require_head().model_copy(
+        update={"state": CalculationRevisionState.PRESENTADO, "screen_stamp": None}
+    )
+
+    summary, row = _next_step(persisted, head, recorded=True)
+
+    assert summary.state is DeclarationSummaryState.RECORDED and not summary.calculation_outdated
+    assert row.next_step is DeclarationListNextStep.NONE
+
+
+# Hand-derived: the 150,00 and 360,00 retenciones of two invoiced receipts in a Modelo 130 casilla 06.
+_CAPPED_FIGURE = Decimal("510.00")
+
+
+def _filed_before_the_cap(persisted: SeededOperatorWork, figure: Decimal, *, stamped: bool = False):
+    head = persisted.require_head()
+    assert head.screen_stamp is not None
+    return head.model_copy(
+        update={
+            "state": CalculationRevisionState.PRESENTADO,
+            "screen_stamp": head.screen_stamp if stamped else None,
+            "casilla_values": {**head.casilla_values, "06": figure},
+        }
+    )
+
+
+def test_a_filed_revision_from_before_the_cap_with_a_capped_figure_is_calculated_again(
+    persisted: SeededOperatorWork,
+) -> None:
+    summary, row = _next_step(persisted, _filed_before_the_cap(persisted, _CAPPED_FIGURE), recorded=True)
+
+    assert summary.state is DeclarationSummaryState.RECORDED and summary.filed_before_grade_cap
+    assert not summary.calculation_outdated
+    assert row.next_step is DeclarationListNextStep.RECALCULATE and row.opens_local_work
+
+
+def test_a_filed_revision_from_before_the_cap_with_a_zero_or_a_stamp_stays_recorded(
+    persisted: SeededOperatorWork,
+) -> None:
+    for head in (
+        _filed_before_the_cap(persisted, Decimal(0)),
+        _filed_before_the_cap(persisted, _CAPPED_FIGURE, stamped=True),
+    ):
+        summary, row = _next_step(persisted, head, recorded=True)
+
+        assert summary.state is DeclarationSummaryState.RECORDED and not summary.filed_before_grade_cap
+        assert row.next_step is DeclarationListNextStep.NONE

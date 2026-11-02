@@ -12,6 +12,7 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 
 from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -19,7 +20,8 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
-from ..modelo.calculation_note_gate import blocking_calculation_issues
+from ..modelo.calculation_note_gate import blocking_calculation_issues, saved_calculation_screen_outdated
+from ..modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
 from .review_form_data import capture_review_form
 from .review_snapshot import (
     CalculationReviewSelection,
@@ -44,6 +46,7 @@ def build_calculation_review_snapshot(
     revision: CalculationRevision,
     work_unit: WorkUnit,
     filing_record: ModeloRecord | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ReviewSnapshot:
     """Retain saved values and captured evidence, with explicit attribution gaps.
 
@@ -53,6 +56,8 @@ def build_calculation_review_snapshot(
     source trace does not prove any individual amount's contributing rows.
 
     The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    ``operation``, when given, is the pinned authority the staleness of the
+    revision's screen is read under; without it the review states no staleness.
     The ``filing_record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
     """
     _assert_saved_selection(selection, revision, work_unit)
@@ -63,6 +68,14 @@ def build_calculation_review_snapshot(
     _assert_ledger_fingerprints(revision)
     saved_form = capture_review_form(revision)
     findings = _review_findings(revision, saved_form is not None)
+    if operation is not None and saved_calculation_screen_outdated(
+        revision,
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        operation=operation,
+    ):
+        findings.append(_screen_outdated_finding())
     evidence = tuple(
         EvidenceInventoryItem(
             evidence_id=attachment_id,
@@ -315,20 +328,32 @@ CALCULATION_NOTE_FINDING_PREFIX = "calculation_note."
 """Prefix of the finding code that carries one persisted note withholding the saved revision from filing."""
 
 
+def _screen_outdated_finding() -> ReviewFinding:
+    return ReviewFinding(
+        code=CALCULATION_NOTE_FINDING_PREFIX + CALCULATION_SCREEN_OUTDATED_REASON,
+        detail="This saved revision was screened against other declarations than the pinned authority holds; "
+        "it is shown for review, and the calculation withholds it from checking, exporting and recording "
+        "until it is calculated again.",
+    )
+
+
 def calculation_note_findings(revision: CalculationRevision) -> list[ReviewFinding]:
     """One finding per persisted note that withholds the revision from checking, exporting and recording.
 
     The review is a preview, so it shows such a value rather than refusing it.
-    The first related id is the box the note names; the second, when present,
-    is the source the note names, such as the binding whose grade cap holds it.
+    A note that names a box has that box as its first related id and, when it
+    names a source such as the binding whose grade cap holds it, that source
+    as the second. A note naming no box is a revision-level finding with no
+    related ids, which the workbook lists among the review findings only.
     """
     return [
         ReviewFinding(
             code=CALCULATION_NOTE_FINDING_PREFIX + issue.reason,
             detail="This saved figure is shown for review; the calculation withholds it from checking, "
             "exporting and recording.",
-            related_ids=(str(issue.casilla_id), *(() if issue.source_ref is None else (issue.source_ref,))),
+            related_ids=()
+            if issue.casilla_id is None
+            else (str(issue.casilla_id), *(() if issue.source_ref is None else (issue.source_ref,))),
         )
         for issue in blocking_calculation_issues(revision)
-        if issue.casilla_id is not None
     ]

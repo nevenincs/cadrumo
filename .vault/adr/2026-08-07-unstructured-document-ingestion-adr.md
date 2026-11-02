@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-10-29'
+modified: '2026-11-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:c104dca3c918dde69c439a33806c9933e006c5c6bde3b52bfc70fa9e4b70617e'
+body_hash: 'sha256:69d80fadab7931c36b2e20e2c0f6da3b2276d0b73e11507e5cb0a020a4e5fa87'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -512,6 +512,24 @@ code). Its direction-threading decision and the counterparty rename survive
 and are consumed here; its two named open operator rulings (the
 domestic-versus-not discriminator, the transcribed taxable base on the
 standalone path) remain open and are *not* decided by this record.
+
+**Reconciliation (2026-11-02, operator ruling on retención).** The retención
+widening above is settled, not merely proposed:
+`2026-08-06-invoice-canonical-structure-adr` D-F, as amended, holds that a stated
+retención is read on both directions and kept through the reviewed confirm. Its
+earlier "not added to the extraction draft" no longer conflicts with this
+decision. The readers keep their different limits:
+
+- S0 exact parsers read it only where the format has an element for it and
+  identifies it as IRPF: Facturae `TaxesWithheld` with `TaxTypeCode` 04, and UBL
+  2.1 `cac:WithholdingTaxTotal` naming IRPF. EN 16931 models no withholding, and
+  its CII binding has no element, so a CII document yields none and nothing is
+  inferred from its payable amount.
+- S2 and the label reader read it as printed, anchored and grounded like any
+  figure, and it remains a proposal until confirmed.
+- `cash = total - retención` stays the identity it is, and the rate-to-amount check
+  runs at the one-cent tolerance the invoice itself enforces, so a reading that
+  would be refused at the write is a finding at review instead.
 
 ### D7 — Tabular inputs: same pipeline, schema-level semantic mapping
 
