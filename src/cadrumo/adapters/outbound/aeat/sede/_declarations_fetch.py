@@ -33,6 +33,7 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 # the M100 routing referential-integrity gate runs on this declarations path.
 from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._playwright import BrowserContext, Locator, Page, PlaywrightError
+from ..browser.api_request_guard import GuardedApiRequests
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._adapter_utils import assert_query_browser_action_for, assert_read_http_for, assert_read_landing
 from ._adapter_utils import landed_origin as _landed_origin
@@ -252,7 +253,7 @@ async def capture_row_pdf_artefact(
     csv = _extract_csv_from_url(cotejo_url)
     pdf_url = AnyHttpUrl(cotejo_document_url(origin_of(cotejo_url), csv))
     assert_declarations_read_http("GET", str(pdf_url), policy=read_policy)
-    response = await context.request.get(str(pdf_url))
+    response = await GuardedApiRequests(context, (read_policy,)).get(str(pdf_url))
     content_type = response.headers.get("content-type", "")
     body = await response.body()
     _assert_pdf_response(
@@ -334,7 +335,7 @@ async def capture_submitted_file_artefact(
         )
     source_url = AnyHttpUrl(download_url)
     assert_declarations_read_http("GET", str(source_url), policy=read_policy)
-    response = await context.request.get(str(source_url))
+    response = await GuardedApiRequests(context, (read_policy,)).get(str(source_url))
     body = await response.body()
     if not body:
         raise JustificanteFetchError(
