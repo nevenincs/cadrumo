@@ -802,6 +802,7 @@ desktop:
     bring_all: Actualizar desde la AEAT
     close: Cerrar datos de la AEAT
     count:
+      borrador_refused: '{count} no se pueden usar'
       filed_aeat_only: '{count} solo en la AEAT'
       filed_differing: '{count} difieren'
       unread_notifications: '{count} sin leer'
@@ -845,11 +846,20 @@ desktop:
       warn_unknown: Puede que ya esté actualizado. ¿Comprobar igualmente?
     results:
       borrador:
+        already_active: '{name} ya estaba importado. No ha cambiado nada.'
+        captured: Importado {name}.
+        captured_superseded: Se guardó {name}, pero ya se usa un Borrador más reciente.
         failed: No se pudo importar {name}.
         import: Importar PDF
-        imported: Importado {name}.
         nothing_found: No hay Borrador en {name}.
+        resolved_discarded: '{name} se importó antes y se descartó. No ha cambiado
+          nada.'
+        resolved_superseded: '{name} se importó antes y desde entonces lo ha sustituido
+          uno más reciente. No ha cambiado nada.'
         unknown: No se sabe si se importó {name}. Compruébalo antes.
+        unowned:
+          one: Se leyó {count} casilla, pero no se conservó.
+          other: Se leyeron {count} casillas, pero no se conservaron.
         year: Año
       census_review: Revisar
       changed:
@@ -932,6 +942,7 @@ desktop:
     start_failed: No se pudo iniciar. Inténtalo de nuevo.
     start_unknown: No se sabe si se inició. Mira antes esta página.
     state:
+      capture_refused: El Borrador guardado no se puede usar. Impórtalo de nuevo.
       current: Actualizado el {date}
       current_undated: Al día
       never_brought: Sin actualizar

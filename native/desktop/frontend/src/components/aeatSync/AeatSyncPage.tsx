@@ -35,6 +35,7 @@ const STATE_LOOK: Record<AeatSyncState, { icon: IconName; tone: string }> = {
   current: { icon: "check", tone: "text-success" },
   possibly_stale: { icon: "alert", tone: "text-warning" },
   unavailable: { icon: "unknown", tone: "text-destructive" },
+  capture_refused: { icon: "alert", tone: "text-destructive" },
 };
 
 // Only the counts that ask for something: the rest are in the results.
@@ -42,6 +43,7 @@ const COUNT_KEYS: Partial<Record<AeatSyncCountKind, string>> = {
   unread_notifications: "desktop.aeat_sync.count.unread_notifications",
   filed_aeat_only: "desktop.aeat_sync.count.filed_aeat_only",
   filed_differing: "desktop.aeat_sync.count.filed_differing",
+  borrador_refused: "desktop.aeat_sync.count.borrador_refused",
 };
 
 /** The area's standing in words: only what the host served, with its date. */
@@ -62,6 +64,8 @@ function standing(t: Translate, locale: string, area: AeatSyncArea): string {
       return t("desktop.aeat_sync.state.never_brought");
     case "unavailable":
       return t("desktop.aeat_sync.state.unavailable");
+    case "capture_refused":
+      return t("desktop.aeat_sync.state.capture_refused");
   }
 }
 

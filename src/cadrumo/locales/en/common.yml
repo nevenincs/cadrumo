@@ -773,6 +773,7 @@ desktop:
     bring_all: Update from AEAT
     close: Close AEAT data
     count:
+      borrador_refused: '{count} can''t be used'
       filed_aeat_only: '{count} only at AEAT'
       filed_differing: '{count} differ'
       unread_notifications: '{count} unread'
@@ -815,11 +816,19 @@ desktop:
       warn_unknown: May already be updated. Check anyway?
     results:
       borrador:
+        already_active: '{name} was already imported. Nothing changed.'
+        captured: Imported {name}.
+        captured_superseded: Saved {name}, but a newer Borrador is already in use.
         failed: Couldn't import {name}.
         import: Import PDF
-        imported: Imported {name}.
         nothing_found: No Borrador in {name}.
+        resolved_discarded: '{name} was imported before and discarded. Nothing changed.'
+        resolved_superseded: '{name} was imported before and has since been replaced
+          by a newer one. Nothing changed.'
         unknown: Can't tell if {name} was imported. Check first.
+        unowned:
+          one: '{count} box was read but not kept.'
+          other: '{count} boxes were read but not kept.'
         year: Year
       census_review: Review
       changed:
@@ -902,6 +911,7 @@ desktop:
     start_failed: Couldn't start. Try again.
     start_unknown: Can't tell if it started. Check this page first.
     state:
+      capture_refused: The saved Borrador can't be used. Import it again.
       current: Updated {date}
       current_undated: Up to date
       never_brought: Not updated yet

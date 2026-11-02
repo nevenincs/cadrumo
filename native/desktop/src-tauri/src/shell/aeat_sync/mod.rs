@@ -536,6 +536,9 @@ fn status_reply(profile: &str, result: &Value, now: std::time::SystemTime) -> Re
                 Some("never_brought") => "never_brought",
                 Some("current") => "current",
                 Some("possibly_stale") => "possibly_stale",
+                Some("unavailable") if entry["refusal"] == "aeat_sync.status.capture_refused" => {
+                    "capture_refused"
+                }
                 Some("unavailable") => "unavailable",
                 _ => return Err(protocol()),
             };
@@ -555,6 +558,13 @@ fn status_reply(profile: &str, result: &Value, now: std::time::SystemTime) -> Re
                 counts.push(CountValue {
                     kind: "unread_notifications",
                     value: unread,
+                });
+            }
+            let refused = entry["refused_snapshots"].as_array().map_or(0, Vec::len);
+            if refused > 0 && matches!(state, "current" | "possibly_stale") {
+                counts.push(CountValue {
+                    kind: "borrador_refused",
+                    value: refused as u64,
                 });
             }
             let periods = &entry["filed_periods"];
@@ -1190,6 +1200,45 @@ pub async fn aeat_sync_borrador_pick<R: tauri::Runtime>(
     }))
 }
 
+/// What importing a Borrador came to: the backend's outcome token passed
+/// through, and how many boxes were read but not kept.
+#[derive(Debug, PartialEq, Serialize)]
+pub struct BorradorImported {
+    outcome: &'static str,
+    unowned: u64,
+}
+
+/// The outcome token the backend served, if it is one of the five it defines.
+fn borrador_outcome(result: &Value) -> Option<&'static str> {
+    Some(match result["outcome"].as_str()? {
+        "captured" => "captured",
+        "captured_superseded" => "captured_superseded",
+        "already_active" => "already_active",
+        "resolved_superseded" => "resolved_superseded",
+        "resolved_discarded" => "resolved_discarded",
+        _ => return None,
+    })
+}
+
+/// The import's result as the window's outcome and unkept-box count.
+fn borrador_import_reply(result: &Value) -> Result<BorradorImported> {
+    if result["snapshot"]["binding_count"].as_u64() == Some(0) {
+        return Ok(BorradorImported {
+            outcome: "nothing_found",
+            unowned: 0,
+        });
+    }
+    match (result["snapshot"].is_object(), borrador_outcome(result)) {
+        (true, Some(outcome)) => Ok(BorradorImported {
+            outcome,
+            unowned: result["unowned_casillas"]
+                .as_array()
+                .map_or(0, |unowned| unowned.len() as u64),
+        }),
+        _ => Err(bare("unknown")),
+    }
+}
+
 /// Imports a Borrador 100 document the person picked, named by its file
 /// token, for the filing year the person chose.
 #[tauri::command]
@@ -1198,7 +1247,7 @@ pub async fn aeat_sync_borrador_import(
     profile: String,
     file: String,
     year: Option<u16>,
-) -> Result<&'static str> {
+) -> Result<BorradorImported> {
     let year = year
         .filter(|year| YEARS.contains(year))
         .ok_or_else(invalid)?;
@@ -1215,15 +1264,16 @@ pub async fn aeat_sync_borrador_import(
         host.run(&person, "live.borrador.100.import", payload, true)
             .await
     };
-    Ok(match imported {
-        Ok(result) if result["snapshot"]["binding_count"].as_u64() == Some(0) => "nothing_found",
-        Ok(result) if result["snapshot"].is_object() => "imported",
-        Ok(_) => return Err(bare("unknown")),
+    match imported {
+        Ok(result) => borrador_import_reply(&result),
         Err(failure) if failure.code == "unknown" || failure.code == "saved_unread" => {
-            return Err(bare("unknown"));
+            Err(bare("unknown"))
         }
-        Err(_) => "failed",
-    })
+        Err(_) => Ok(BorradorImported {
+            outcome: "failed",
+            unowned: 0,
+        }),
+    }
 }
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {

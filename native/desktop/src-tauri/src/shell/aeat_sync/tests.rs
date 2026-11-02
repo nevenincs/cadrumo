@@ -1154,6 +1154,76 @@ fn no_identifier_code_or_path_reaches_the_window() {
 }
 
 #[test]
+fn a_refused_borrador_capture_is_named_by_state_and_count_without_its_tokens() {
+    let at = Some("2026-10-01T10:00:00Z");
+    let mut refused = status_area("borrador_100", "unavailable", None);
+    refused["refusal"] = json!("aeat_sync.status.capture_refused");
+    refused["refused_snapshots"] = json!([{"snapshot_id": "abc", "reason": "generation_retired"}]);
+    let mut other = status_area("borrador_100", "unavailable", None);
+    other["refusal"] = json!("aeat_sync.status.profile_tax_id_missing");
+    let mut partial = status_area("borrador_100", "current", at);
+    partial["refused_snapshots"] = json!([
+        {"snapshot_id": "a", "reason": "generation_retired"},
+        {"snapshot_id": "b", "reason": "generation_retired"}
+    ]);
+    let status = json!({"status": {"areas": [refused, other, partial]}});
+    let served = status_reply("p", &status, std::time::SystemTime::now()).unwrap();
+    assert_eq!(served.areas[0].state, "capture_refused");
+    assert!(served.areas[0].counts.is_empty());
+    assert_eq!(served.areas[1].state, "unavailable");
+    assert_eq!(served.areas[2].state, "current");
+    assert_eq!(
+        served.areas[2].counts,
+        [CountValue {
+            kind: "borrador_refused",
+            value: 2
+        }]
+    );
+    let text = serde_json::to_string(&served).unwrap();
+    assert!(!text.contains("generation_retired"));
+    leaks(&text);
+}
+
+#[test]
+fn a_borrador_import_passes_the_served_outcome_through() {
+    for token in [
+        "captured",
+        "captured_superseded",
+        "already_active",
+        "resolved_superseded",
+        "resolved_discarded",
+    ] {
+        let result = json!({"outcome": token, "snapshot": {"binding_count": 4},
+            "unowned_casillas": ["0001", "0002"]});
+        assert_eq!(
+            borrador_import_reply(&result).unwrap(),
+            BorradorImported {
+                outcome: token,
+                unowned: 2
+            }
+        );
+    }
+    let bare_result = json!({"outcome": "captured", "snapshot": {"binding_count": 4}});
+    assert_eq!(borrador_import_reply(&bare_result).unwrap().unowned, 0);
+    let empty = json!({"outcome": "captured", "snapshot": {"binding_count": 0},
+        "unowned_casillas": ["0001"]});
+    assert_eq!(
+        borrador_import_reply(&empty).unwrap(),
+        BorradorImported {
+            outcome: "nothing_found",
+            unowned: 0
+        }
+    );
+    for unserved in [
+        json!({"snapshot": {"binding_count": 4}}),
+        json!({"outcome": "imported", "snapshot": {"binding_count": 4}}),
+        json!({"outcome": "captured"}),
+    ] {
+        assert!(borrador_import_reply(&unserved).is_err());
+    }
+}
+
+#[test]
 fn the_borrador_years_are_the_served_ones_or_the_last_six_before_this_year() {
     let served = json!({"status": {"filed_declaration_years": [2023, 2025, 2024, 2025]}});
     let now = std::time::SystemTime::now();
