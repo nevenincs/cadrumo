@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:41866fe6369cdc2a475fe655ede45e05a293c36ea44bb2264bfb2c15015b5518'
+body_hash: 'sha256:fed011f540ddda58a2b33d20c6ea306330184cfbf91d56fbc8febb9f58cbb2ec'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -41,6 +41,14 @@ related:
 - `S03` `verify:` `TypeScript and targeted provider read ESLint` -> `pass`
 - `S03` `verify:` `provider-reads deferred response scenarios (7)` -> `pass`
 - `S03` `verify:` `selected provider settings save/refusal/reopen/switch/sign-in scenarios (7)` -> `pass`
+- `S04` `M` `native/desktop/frontend/src/shell/readingModel.ts`
+- `S04` `M` `native/desktop/frontend/src/shell/agentLive.ts`
+- `S04` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S04` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S04` `A` `native/desktop/frontend/tests/scenarios/agent-readers.spec.ts`
+- `S04` `verify:` `TypeScript and targeted agent reader ESLint` -> `pass`
+- `S04` `verify:` `agent-readers and reading-model scenarios (4)` -> `pass`
+- `S04` `verify:` `agent status messaging catalog smoke scenarios (5)` -> `pass`
 
 ## Notes
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5135155612044ad2b9c1520c21c7b41e1ba1b4d73ec8a2a661cc5f332619b036'
+body_hash: 'sha256:c62b8f7be1c4bd05f2c41e0ba60bc4da2cddf1d701a71010cebb402bb2331358'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -69,6 +69,14 @@ Terra inspected userProfile state/readback, ProfileEditor, AeatAccessEditor, Cre
 ### s12-static-coverage | medium | AEAT observation and Sede recovery need focused repairs
 
 Terra traced overview, preflight, dependencies/access, assisted sign-in, host-owned progress queue, area results, comparisons, notifications and Borrador import; BrowserPage/Toolbar/Surface/Prompts/PageDialog, useSedeView and the typed Sede port. Accepted desktop-aeat-sync and sede-browser decisions preserve no-network status reads, host queue lifetime, explicit uncertain retry, person-driven browser actions and native upload/download authority. S23 addresses progress errors hidden both before any snapshot and after a retained clean done snapshot, without interpreting absent progress as permission for another update. S24 addresses page-dialog answers removed before confirmed enqueue even when native code restores the offer on queue refusal; download/chooser offers have different consumption semantics and must not inherit that fix. Resize records a sent size before acknowledgement and swallows rejection; retain acknowledged geometry and provide bounded recovery without replaying input. Input rejection is also swallowed, but its outcome needs precise host-code grounding before deciding warning/retry behavior. Existing test seams: aeat-sync and sede-browser, using fixtures only. Calendar coverage grouping is already verified, but S12 is not closed.
+
+### s04-review | low | Agent observations and reading choices follow profile identity
+
+PASS for S04. Terra reviewed first-render identity gates, continuous observation cleanup, subscription disposal and model choice attempt lifetime. Three direct lifecycle cases plus the existing document-reading model-picker case pass; five existing agent cases pass for lock/unlock, message streaming, unavailable runtime and catalog lane/model behavior. TypeScript and scoped ESLint pass; sources/tests formatted. The direct A-to-B switch is demonstrated in the scenario/hook harness, not claimed as the only real account transition. Existing same-profile choice-result ordering and revision-conflict rereads are preserved. No new high/critical findings in the scoped review.
+
+### vault-verification | low | Scoped repair cleanup was interrupted
+
+Read-only scoped vault checks reported only template annotations, stale index and body stamps. The broad scoped autofix applied annotation/stamp cleanup but continued consuming CPU without returning; root stopped that own process and rebuilt the feature index through its owning command. Do not treat the interrupted check as a pass; rerun bounded owning checks before final handoff.
 
 ## Recommendations
 
