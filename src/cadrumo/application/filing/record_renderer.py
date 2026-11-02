@@ -32,6 +32,7 @@ from ...domain.modelos.perceptor_clave_scope import (
     resolve_perceptor_clave_scope,
 )
 from .export_parity import did_page_suppressed
+from .m347_declarado_row_scope import require_m347_declarado_casillas_have_one_row
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
 from .record_field_renderer import format_field, render_record
@@ -81,6 +82,11 @@ def render_layout_records(
         )
         if record.required and not rows:
             raise FilingExportValidationError(f"required export record {record.id!r} has no applicable occurrence")
+        require_m347_declarado_casillas_have_one_row(
+            record,
+            rows=tuple(row for row, _context in rows),
+            casilla_values=casilla_values,
+        )
         for row, context in rows:
             _guard_record_export(record, casilla_values=casilla_values)
             occurrences.append(

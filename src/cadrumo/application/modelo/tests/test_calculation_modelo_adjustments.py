@@ -8,6 +8,7 @@ from typing import Literal, get_args
 
 import pytest
 
+from ....core.casilla_id import CasillaId
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -17,10 +18,11 @@ from ....domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._calculation_modelo_adjustments import (
     detail_row_binding_values_for_calculation,
+    raise_if_m390_303_reconciliation_would_save_silent_zero,
     reconciliation_relation_targets,
     union_detail_rows_by_identity,
 )
-from ..action_errors import ModeloAggregationBindingError
+from ..action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -192,3 +194,48 @@ def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> 
     assert row_kinds - incomplete_table == {Modelo184MemberRow}
     # The real table stays fully covered -- this test does not mutate it.
     assert row_kinds - real_table == set()
+
+
+def _guard(casilla_values: dict[CasillaId, Decimal]) -> None:
+    snapshot = published_snapshot(Modelo("390").value, filing_year=2025, period="0A")
+    raise_if_m390_303_reconciliation_would_save_silent_zero(
+        work_unit=_work_unit(Modelo("390")),
+        snapshot=snapshot,
+        casilla_values=casilla_values,
+        resolved_binding_values={},
+    )
+
+
+def _annual_casillas() -> tuple[CasillaId, ...]:
+    snapshot = published_snapshot(Modelo("390").value, filing_year=2025, period="0A")
+    return tuple(row[4] for row in reconciliation_relation_targets(snapshot))
+
+
+def test_m390_silent_zero_guard_skips_only_a_calculated_zero_annual_box() -> None:
+    annuals = _annual_casillas()
+    assert annuals
+
+    _guard({annual: Decimal("0.00") for annual in annuals})
+
+
+def test_m390_silent_zero_guard_refuses_an_annual_box_that_was_never_calculated() -> None:
+    annuals = _annual_casillas()
+
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as raised:
+        _guard({})
+
+    context = raised.value.context
+    assert context is not None
+    assert context["annual_casillas_not_proven_zero"] == tuple(annuals)
+
+
+def test_m390_silent_zero_guard_refuses_a_nonzero_annual_box_without_303_evidence() -> None:
+    annuals = _annual_casillas()
+    only_first_unproven = {annual: Decimal("0") for annual in annuals[1:]} | {annuals[0]: Decimal("125.50")}
+
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as raised:
+        _guard(only_first_unproven)
+
+    context = raised.value.context
+    assert context is not None
+    assert context["annual_casillas_not_proven_zero"] == (annuals[0],)
