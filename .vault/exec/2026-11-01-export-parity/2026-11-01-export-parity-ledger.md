@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b27d647bbac33c466a8bd9a42ff9afc9a1c90a7d38fa97681cf2786ef52bea26'
+body_hash: 'sha256:6b865344ec21fabcd7b478d824a084ea975469c0a1aabae05a3812686942d110'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -259,6 +259,11 @@ related:
 - `S05` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
 - `S05` `verify:` `pytest test_registry_scenarios.py` -> `pass`
 - `S05` `by:` `implementation-engineer`
+- `S14` `M` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S14` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_summary.py`
+- `S14` `verify:` `pytest-declarations-list+gate-agreement+tui-declarations` -> `pass`
+- `S14` `by:` `standard-executor`
 
 ## Notes
 
@@ -275,3 +280,4 @@ related:
 - `S15` phase-review fix
 - `S14` phase-review fix
 - `S05` phase-review fix
+- `S14` phase-review-fix
