@@ -9,6 +9,11 @@ import type { Channel } from "@tauri-apps/api/core";
 import type {
   AgentAnswerResult,
   AgentApproval,
+  AgentAttachmentCard,
+  AgentAttachmentGrants,
+  AgentAttachmentRefusal,
+  AgentAttachmentRelease,
+  AgentAttachmentScope,
   AgentCatalogAnswer,
   AgentModelLicence,
   AgentQuestionnaire,
@@ -2108,6 +2113,30 @@ export interface HostCommands {
       optionId: string;
     }>;
     result: null;
+  };
+  /** What the service says the card shows for a parked attachment read. */
+  agent_attachment_card: {
+    args: Authorized<{
+      approval: Pick<AgentApproval, "reply_id" | "request_id">;
+    }>;
+    result: AgentAttachmentCard;
+  };
+  /** Puts the person's answer to the service; the request is answered only once released. */
+  agent_attachment_release: {
+    args: Authorized<{
+      approval: Pick<AgentApproval, "reply_id" | "request_id">;
+      optionId: string;
+      scope: AgentAttachmentScope | null;
+    }>;
+    result: AgentAttachmentRelease;
+  };
+  agent_attachment_grants: {
+    args: Authorized<Record<string, never>>;
+    result: AgentAttachmentGrants;
+  };
+  agent_attachment_grant_revoke: {
+    args: Authorized<{ grantId: string }>;
+    result: { kind: "revoked" } | AgentAttachmentRefusal;
   };
   agent_observe: {
     args: Authorized<{

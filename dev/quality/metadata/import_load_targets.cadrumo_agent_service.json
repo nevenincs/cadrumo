@@ -17,6 +17,7 @@
       "targets": [
         "cadrumo_agent_service",
         "cadrumo_agent_service.adapters",
+        "cadrumo_agent_service.adapters.agent_attachment_gateway",
         "cadrumo_agent_service.adapters.agent_background_runs",
         "cadrumo_agent_service.adapters.agent_diagnostics",
         "cadrumo_agent_service.adapters.agent_process",
@@ -44,6 +45,7 @@
         "cadrumo_agent_service.providers",
         "cadrumo_agent_service.providers.application",
         "cadrumo_agent_service.providers.application.agent_credentials",
+        "cadrumo_agent_service.providers.application.attachment_releases",
         "cadrumo_agent_service.providers.application.contracts",
         "cadrumo_agent_service.providers.application.lane_entries",
         "cadrumo_agent_service.providers.application.local_model_list",
@@ -55,6 +57,7 @@
         "cadrumo_agent_service.providers.domain.catalog",
         "cadrumo_agent_service.providers.domain.record",
         "cadrumo_agent_service.providers.persistence",
+        "cadrumo_agent_service.providers.persistence.attachment_disclosures",
         "cadrumo_agent_service.providers.persistence.store",
         "cadrumo_agent_service.service",
         "cadrumo_agent_service.service_administration",
