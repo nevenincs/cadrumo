@@ -12,12 +12,12 @@ from ...core.decimal.coercion import coerce_decimal
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from ...domain.calculations.registry.m303_schema_vocabulary import (
-    m303_tax_territory_state_attribution_ratio,
-)
 from ...domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_normal_token,
     irpf_estimation_regime_directa_simplificada_token,
+)
+from ...domain.calculations.registry.m303_schema_vocabulary import (
+    m303_tax_territory_state_attribution_ratio,
 )
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_formula import ParameterDefinition

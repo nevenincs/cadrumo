@@ -77,10 +77,10 @@ from ..user_profile.projections import profile_fact_index
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
-    inject_derived_cash_election_fact,
     family_fact_context,
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
+    inject_derived_cash_election_fact,
     inject_derived_deduccion_maternidad_facts,
     inject_derived_incremento_guarderia_facts,
     inject_derived_marriage_facts,

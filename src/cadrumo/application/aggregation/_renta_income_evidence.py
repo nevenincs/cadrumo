@@ -222,7 +222,7 @@ def income_withheld_amount(
     """
     if not has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NOT_APPLICABLE)
-    if evidence is not None and evidence.allocated_to_part_payment and evidence.retencion_amount:
+    if evidence is not None and evidence.allocated_to_part_payment and evidence.retencion_amount not in (None, 0):
         return _WithheldInference(evidence.retencion_amount, LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT)
     # Declared-first: a retención the linked invoice states is the document's
     # figure; the inference below reconstructs one from what reached the bank.

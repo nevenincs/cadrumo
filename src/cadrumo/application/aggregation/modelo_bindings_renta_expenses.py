@@ -512,9 +512,9 @@ def _expense_imputation_diagnostics(
     covered: dict[str, Decimal] = {}
     for row in transactions.values():
         if row.purchase_invoice_evidence_id is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE:
-            covered[row.purchase_invoice_evidence_id] = covered.get(
-                row.purchase_invoice_evidence_id, Decimal("0")
-            ) + (row.taxable_base or Decimal("0"))
+            covered[row.purchase_invoice_evidence_id] = covered.get(row.purchase_invoice_evidence_id, Decimal("0")) + (
+                row.taxable_base or Decimal("0")
+            )
     unpaid = tuple(
         (
             f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"

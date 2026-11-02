@@ -452,9 +452,7 @@ def part_payment_diagnostics(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Report the part payments whose base and retencion are a pro rata share, not a stated figure."""
     allocated = [
-        row
-        for row in observations
-        if row.withheld_derivation is LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT
+        row for row in observations if row.withheld_derivation is LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT
     ]
     if not allocated:
         return ()
@@ -493,7 +491,7 @@ def rectification_diagnostics(
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE or transaction.invoice_id is None:
             continue
         invoice = invoices.get(transaction.invoice_id)
-        if invoice is None or invoice.bucket_id != bucket_id or not invoice.retention_amount:
+        if invoice is None or invoice.bucket_id != bucket_id or invoice.retention_amount in (None, 0):
             continue
         accrual = linked_accrual_date(invoice, kind=InvoiceKind.ISSUED)
         if accrual is None or criteria.usable(accrual.year) is not ActivityImputationCriterion.DEVENGO:
@@ -675,7 +673,14 @@ def aggregate_renta_income_ledger(
         modelo=modelo,
         period=window.period,
         observations=tuple(observations),
-        issues=(*issues, *(() if criteria is None else _overpaid_invoice_issues(transactions, resolved_invoices, bucket_id=bucket_id))),
+        issues=(
+            *issues,
+            *(
+                ()
+                if criteria is None
+                else _overpaid_invoice_issues(transactions, resolved_invoices, bucket_id=bucket_id)
+            ),
+        ),
         casilla_aggregation=casilla_aggregation,
         accrued_unpaid=()
         if criteria is None
@@ -824,7 +829,14 @@ def aggregate_renta_m100_income_ledger(
         modelo=modelo,
         period=period,
         observations=tuple(observations),
-        issues=(*issues, *(() if criteria is None else _overpaid_invoice_issues(transactions, resolved_invoices, bucket_id=bucket_id))),
+        issues=(
+            *issues,
+            *(
+                ()
+                if criteria is None
+                else _overpaid_invoice_issues(transactions, resolved_invoices, bucket_id=bucket_id)
+            ),
+        ),
         casilla_aggregation=casilla_aggregation,
         accrued_unpaid=()
         if criteria is None

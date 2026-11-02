@@ -85,7 +85,7 @@ def _part_paid(accrued: date, *payments: tuple[date, str]) -> tuple[tuple[Transa
 
 def _resolve(
     operation: PinnedAuthorityOperation,
-    facts: tuple[object, ...],
+    facts: tuple[UserProfileFact, ...],
     *,
     rows: tuple[Transaction, ...] = (),
     invoices: tuple[Invoice, ...] = (),

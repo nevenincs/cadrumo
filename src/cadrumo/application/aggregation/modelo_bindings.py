@@ -111,13 +111,13 @@ from .renta_imputation import (
 )
 from .renta_income_ledger import (
     RentaIncomeLedgerAggregation,
-    accrued_withholding_unpaid_diagnostics,
-    part_payment_diagnostics,
-    rectification_diagnostics,
     RentaIncomeLedgerAggregationIssueReason,
+    accrued_withholding_unpaid_diagnostics,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
     aggregate_renta_m131_agrario_income_ledger_from_repositories,
+    part_payment_diagnostics,
+    rectification_diagnostics,
 )
 from .renta_income_ledger import (
     fitted_diagnostic_id_list as _fitted_id_list,

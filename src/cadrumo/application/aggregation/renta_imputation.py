@@ -29,9 +29,9 @@ from .source_resolution_operations import unresolved_binding_diagnostics
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.bindings import RegistryModeloObservation
-    from ...domain.modelos.filing_record import ModeloRecordCatalogue
     from ...domain.calculations.registry.ids import BindingId
     from ...domain.calculations.registry.schema import ModeloRevision
+    from ...domain.modelos.filing_record import ModeloRecordCatalogue
 
 
 def invoice_accrual_date(invoice: Invoice) -> date | None:
@@ -170,10 +170,7 @@ class ImputationCriteria:
         if self.filed_conflict(year) is not None:
             return False
         if declared is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return (
-                self._regime_declared(year)
-                and self._commercial_accounting(year) is False
-            )
+            return self._regime_declared(year) and self._commercial_accounting(year) is False
         if declared is ActivityImputationCriterion.DEVENGO and self._commercial_accounting(year) is not True:
             first_cash_year = self._first_binding_cash_year(year)
             return first_cash_year is None or year - first_cash_year >= _MINIMUM_ELECTION_YEARS
