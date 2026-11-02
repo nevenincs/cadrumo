@@ -527,7 +527,7 @@ _FIRST_QUARTER_ACCRUAL = (date(2025, 3, 20), date(2025, 4, 10))
 
 @pytest.mark.parametrize(
     ("criterion", "income", "credit"),
-    [(_DEVENGO, _BASE, _RETENCION), (_CASH, _ZERO, _ZERO)],
+    [(_DEVENGO, _BASE, _ZERO), (_CASH, _ZERO, _ZERO)],
 )
 def test_m130_first_quarter_income_and_credit_follow_the_criterion(
     operation: PinnedAuthorityOperation, criterion: str, income: Decimal, credit: Decimal
@@ -545,6 +545,45 @@ def test_m130_first_quarter_income_and_credit_follow_the_criterion(
     )
     assert resolution.binding_values[_INCOME_M130_01] == income
     assert resolution.binding_values[_CREDIT_M130_06] == credit
+
+
+def _first_quarter_accrual(operation: PinnedAuthorityOperation, period: str) -> CalculationSourceResolution:
+    row, invoice = _paid_invoice(*_FIRST_QUARTER_ACCRUAL)
+    return _resolve(
+        operation,
+        _declared((2025, _DEVENGO)),
+        rows=(row,),
+        invoices=(invoice,),
+        year=2025,
+        modelo="130",
+        period=period,
+    )
+
+
+def _paid_after_cut_off_findings(resolution: CalculationSourceResolution) -> list[str]:
+    return [
+        item.message
+        for item in resolution.diagnostics
+        if item.reason == "source_issue" and item.source_ref == "withholding_paid_after_cut_off"
+    ]
+
+
+def test_a_retencion_paid_after_the_quarter_is_reported_and_left_out_of_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Accrued 20 March, paid 10 April: the 150,00 is practised in April, after the first quarter ends."""
+    first = _first_quarter_accrual(operation, "1T")
+    assert first.binding_values[_CREDIT_M130_06] == _ZERO
+    (finding,) = _paid_after_cut_off_findings(first)
+    assert "1 receipt(s)" in finding
+    assert "150.00 EUR" in finding
+
+
+def test_the_next_quarter_credits_the_retencion_once_paid(operation: PinnedAuthorityOperation) -> None:
+    second = _first_quarter_accrual(operation, "2T")
+    assert second.binding_values[_INCOME_M130_01] == _BASE
+    assert second.binding_values[_CREDIT_M130_06] == _RETENCION
+    assert _paid_after_cut_off_findings(second) == []
 
 
 @pytest.mark.parametrize(

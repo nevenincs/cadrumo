@@ -113,6 +113,7 @@ from .renta_imputation import (
 )
 from .renta_income_diagnostics import (
     accrued_withholding_unpaid_diagnostics,
+    paid_after_cut_off_diagnostics,
     part_payment_diagnostics,
     rectification_diagnostics,
     rectificativa_netting_diagnostics,
@@ -449,6 +450,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             )
             + accrued_withholding_unpaid_diagnostics(aggregation.accrued_unpaid, resolver_id=self.resolver_id)
             + part_payment_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + paid_after_cut_off_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
             + rectificativa_netting_diagnostics(aggregation.rectificativa_corrections, resolver_id=self.resolver_id)
             + rectification_diagnostics(
                 self._ports.transaction_reader.load(),

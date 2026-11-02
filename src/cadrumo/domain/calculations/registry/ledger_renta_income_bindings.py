@@ -663,6 +663,8 @@ def _carries_withholding(observation: RentaIncomeObservationProtocol) -> bool:
     derivation = observation.withheld_derivation
     if derivation in _INFERRED_WITHHOLDING_DERIVATIONS or derivation in _UNRESOLVED_WITHHOLDING_DERIVATIONS:
         return True
+    if derivation is LedgerWithholdingDerivation.PAID_AFTER_CUT_OFF:
+        return True
     if derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE:
         return observation.withheld_amount != 0
     return False

@@ -30,7 +30,7 @@ from datetime import date
 from decimal import Decimal
 from typing import NamedTuple
 
-from ...core.aggregation import LedgerIncomeGrounding
+from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.period import Period, PeriodKind
@@ -257,7 +257,7 @@ def aggregate_renta_income_ledger(
         if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
             issues.append(outcome)
         else:
-            observations.append(outcome)
+            observations.append(_held_past_cut_off(outcome, transaction, cut_off=window.end))
 
     casilla_aggregation = _income_casilla_aggregation(
         window.period,
@@ -313,6 +313,25 @@ def aggregate_renta_income_ledger(
             criteria=criteria,
         ),
     )
+
+
+def _held_past_cut_off(
+    observation: RentaIncomeObservation, transaction: Transaction, *, cut_off: date
+) -> RentaIncomeObservation:
+    """Keep a pago fraccionado from crediting a declared retención its receipt paid after the window.
+
+    Only accrual places a receipt dated after the window inside it, so under cash
+    basis no row reaches this. The income still counts in the window it accrues in;
+    the retención is held with its figure and reported (RIRPF art. 110.3.a; TEAC
+    00/03187/2011).
+    """
+    paid_on = transaction.raw.value_date or transaction.raw.booked_date
+    if (
+        paid_on <= cut_off
+        or observation.withheld_derivation is not LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+    ):
+        return observation
+    return observation.model_copy(update={"withheld_derivation": LedgerWithholdingDerivation.PAID_AFTER_CUT_OFF})
 
 
 def aggregate_renta_m100_income_ledger_from_repositories(

@@ -414,6 +414,29 @@ def part_payment_diagnostics(
     )
 
 
+def paid_after_cut_off_diagnostics(
+    observations: Sequence[RentaIncomeObservation], *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report the retencion imputed to a pago fraccionado's window whose receipt is dated after it."""
+    held = [row for row in observations if row.withheld_derivation is LedgerWithholdingDerivation.PAID_AFTER_CUT_OFF]
+    if not held:
+        return ()
+    total = sum((row.withheld_amount for row in held), Decimal("0"))
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"{len(held)} receipt(s) paid after the end of this window carry {total} EUR of retencion on "
+                "income imputed to it. It is deducted only once paid (RIRPF art. 110.3.a; TEAC 00/03187/2011), "
+                "so this pago fraccionado leaves it out; the annual return credits it."
+            ),
+            source_ref="withholding_paid_after_cut_off",
+        ),
+    )
+
+
 def rectification_diagnostics(
     transactions: TransactionCatalogue,
     invoices: InvoiceCatalogue,

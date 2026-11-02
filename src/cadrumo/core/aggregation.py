@@ -700,6 +700,16 @@ class LedgerWithholdingDerivation(StrEnum):
     pro rata share stays out of the credit and is reported until the payer states it.
     """
 
+    PAID_AFTER_CUT_OFF = "paid_after_cut_off"
+    """The linked invoice's declared retención, imputed to a pago fraccionado's window but paid after it.
+
+    RIRPF art. 110.3.a counts the withholding that corresponds to the window's
+    income (DGT V3298-15), and it is practised only when the income is paid
+    (TEAC 00/03187/2011). The window's end is the cut-off that is always safe, so
+    a receipt dated after it keeps its figure for reporting and stays out of the
+    pago fraccionado; the annual return still credits it, whatever its payment date.
+    """
+
     INFERRED_FROM_DECLARED_CUOTA = "inferred_from_declared_cuota"
     """Derived as invoice gross minus cash, with the cuota read from the row."""
 

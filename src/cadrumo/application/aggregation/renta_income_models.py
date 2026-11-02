@@ -55,6 +55,7 @@ _DERIVED_WITHHOLDING_MARKERS: frozenset[LedgerWithholdingDerivation] = frozenset
     {
         LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
         LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT,
+        LedgerWithholdingDerivation.PAID_AFTER_CUT_OFF,
         LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA,
         LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
     },
