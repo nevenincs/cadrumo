@@ -329,18 +329,29 @@ def imputation_filing_history(
         if record is not None:
             filed_on[past] = record.filed_at.date()
         observation = load_observation(annual_form, period)
-        flags: tuple[Decimal | str, ...] = ()
         if observation is not None and past in supported_years:
-            revision = authority.revision_for_context(annual_form, filing_year=past, period=annual_period_code)
-            boxes = {str(box.id) for box in revision.casillas if str(box.semantic_role) in _CASH_ELECTION_ROLES}
-            flags = tuple(row.value for row in observation.observations if str(row.casilla_id) in boxes)
-        if flags:
-            stated[past] = (
-                ActivityImputationCriterion.COBROS_Y_PAGOS
-                if any(_marked(flag) for flag in flags)
-                else ActivityImputationCriterion.DEVENGO
-            )
+            criterion = _criterion_stated_by(observation, annual_form, past, annual_period_code, authority)
+            if criterion is not None:
+                stated[past] = criterion
     return ImputationFilingHistory(stated=stated, filed_on=filed_on)
+
+
+def _criterion_stated_by(
+    observation: RegistryModeloObservation,
+    annual_form: str,
+    past: int,
+    annual_period_code: str,
+    authority: PinnedAuthorityOperation,
+) -> ActivityImputationCriterion | None:
+    """Return the criterion a captured return states through its cash-election boxes, or ``None`` when it has none."""
+    revision = authority.revision_for_context(annual_form, filing_year=past, period=annual_period_code)
+    boxes = {str(box.id) for box in revision.casillas if str(box.semantic_role) in _CASH_ELECTION_ROLES}
+    flags = tuple(row.value for row in observation.observations if str(row.casilla_id) in boxes)
+    if not flags:
+        return None
+    if any(_marked(flag) for flag in flags):
+        return ActivityImputationCriterion.COBROS_Y_PAGOS
+    return ActivityImputationCriterion.DEVENGO
 
 
 def accrual_entry_date(accrual: date, criteria: ImputationCriteria, *, through_year: int) -> date | None:

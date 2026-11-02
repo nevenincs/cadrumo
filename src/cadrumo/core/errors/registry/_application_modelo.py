@@ -98,7 +98,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.projection.ModeloCompareNeedTwoYearsError",
+        "cadrumo.application.modelo.projection_compare.ModeloCompareNeedTwoYearsError",
         ErrorCode(
             code="REFUSED_MODELO_COMPARE_NEED_TWO_YEARS",
             category=ErrorCategory.REFUSED,
@@ -108,7 +108,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.projection.ModeloCompareNoWorkUnitsError",
+        "cadrumo.application.modelo.projection_compare.ModeloCompareNoWorkUnitsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_WORK_UNITS",
             category=ErrorCategory.ERROR,
@@ -118,7 +118,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.projection.ModeloCompareNoRevisionsError",
+        "cadrumo.application.modelo.projection_compare.ModeloCompareNoRevisionsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_REVISIONS",
             category=ErrorCategory.ERROR,
@@ -128,7 +128,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.projection.ModeloCompareNoUsableRevisionsError",
+        "cadrumo.application.modelo.projection_compare.ModeloCompareNoUsableRevisionsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_USABLE_REVISIONS",
             category=ErrorCategory.ERROR,

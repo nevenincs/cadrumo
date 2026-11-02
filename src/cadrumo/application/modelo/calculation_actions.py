@@ -47,7 +47,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -84,8 +84,8 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint, draft_contributor_identities
-from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..aggregation.renta_imputation import declared_imputation_criteria
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
 from ..user_profile.projections import profile_fact_index, record_to_path_values
 from ._calculation_helpers import (
@@ -248,6 +248,11 @@ def _trusted_calculation_clock(clock: datetime | None) -> datetime:
     return clock or _utc_now()
 
 
+def _precedence_issues(diagnostics: Iterable[CalculationSourceDiagnostic]) -> tuple[CalculationSourceIssue, ...]:
+    """Persist every blocking divergence the binding overlay found as a source issue."""
+    return tuple(issue for diagnostic in diagnostics if (issue := precedence_tier_issue(diagnostic)) is not None)
+
+
 def calculate_modelo_revision_with_trusted_mesh_sources(
     work_unit_id: str,
     *,
@@ -321,12 +326,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
-    precedence_issues = tuple(
-        issue
-        for diagnostic in prepared.channels.precedence_diagnostics
-        if (issue := precedence_tier_issue(diagnostic)) is not None
-    )
-    revision_source_issues = (*source_issues, *precedence_issues)
+    revision_source_issues = (*source_issues, *_precedence_issues(prepared.channels.precedence_diagnostics))
     (
         engine_result,
         replay_payloads,
@@ -351,6 +351,22 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         m303_regimen_simplificado_annual_summary_handoff,
     )
 
+    ledger_filing_snapshot = _draft_ledger_anchor(
+        work_unit=work_unit,
+        source_transaction_ids=source_transaction_ids,
+        transaction_repository=(
+            transaction_repository if transaction_repository is not None else ports.transaction_repository
+        ),
+        captured_at=now,
+    )
+    invoice_fingerprint = _draft_invoice_fingerprint(
+        work_unit=work_unit,
+        source_transaction_ids=source_transaction_ids,
+        source_issues=revision_source_issues,
+        ports=ports,
+        profile=prepared.profile,
+        captured_at=now,
+    )
     publication = persist_calculation_revision(
         operation=ports.operation,
         work_unit_id=work_unit_id,
@@ -360,22 +376,8 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit=work_unit,
         work_units=work_units,
         work_units_revision_id=prepared.work_units_revision_id,
-        ledger_filing_snapshot=_draft_ledger_anchor(
-            work_unit=work_unit,
-            source_transaction_ids=source_transaction_ids,
-            transaction_repository=(
-                transaction_repository if transaction_repository is not None else ports.transaction_repository
-            ),
-            captured_at=now,
-        ),
-        invoice_fingerprint=_draft_invoice_fingerprint(
-            work_unit=work_unit,
-            source_transaction_ids=source_transaction_ids,
-            source_issues=revision_source_issues,
-            ports=ports,
-            profile=prepared.profile,
-            captured_at=now,
-        ),
+        ledger_filing_snapshot=ledger_filing_snapshot,
+        invoice_fingerprint=invoice_fingerprint,
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,

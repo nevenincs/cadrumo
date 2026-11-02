@@ -132,25 +132,36 @@ def accrued_without_eur_value(
     """
     if criteria.usable(window_end.year) is not ActivityImputationCriterion.DEVENGO:
         return ()
-    found: list[str] = []
-    for invoice in invoices.values():
-        if (
-            invoice.grand_total_eur is not None
-            or is_rectificativa(invoice)
-            or not issued_invoice_enters_window(
-                invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
-            )
-        ):
-            continue
-        receipts = [
-            row
-            for row in (transactions.get(row_id) for row_id in invoice.linked_transaction_ids)
-            if row is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE
-        ]
-        comparison = renta_income_evidence.settlement_comparison(invoice, receipts)
-        if not receipts or comparison is None or not comparison.settled:
-            found.append(invoice.invoice_number)
-    return tuple(found)
+    return tuple(
+        invoice.invoice_number
+        for invoice in invoices.values()
+        if _accrues_unrated_in_window(
+            invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
+        )
+        and not _settled_by_active_receipts(transactions, invoice)
+    )
+
+
+def _accrues_unrated_in_window(
+    invoice: Invoice, *, bucket_id: str, window_start: date, window_end: date, criteria: ImputationCriteria
+) -> bool:
+    return (
+        invoice.grand_total_eur is None
+        and not is_rectificativa(invoice)
+        and issued_invoice_enters_window(
+            invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
+        )
+    )
+
+
+def _settled_by_active_receipts(transactions: TransactionCatalogue, invoice: Invoice) -> bool:
+    receipts = [
+        row
+        for row in (transactions.get(row_id) for row_id in invoice.linked_transaction_ids)
+        if row is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE
+    ]
+    comparison = renta_income_evidence.settlement_comparison(invoice, receipts)
+    return bool(receipts) and comparison is not None and comparison.settled
 
 
 class RectificativaReading(NamedTuple):
@@ -179,6 +190,29 @@ def rectificativa_reading(
     """
     if criteria.usable(window_end.year) is not ActivityImputationCriterion.DEVENGO:
         return RectificativaReading()
+    corrected, targets, refused = _placed_rectificativas(
+        invoices, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
+    )
+    corrections: list[RectificativaCorrection] = []
+    for target_id, rows in corrected.items():
+        net = _net_corrections(rows, targets[target_id], target_casilla_id=target_casilla_id)
+        if net is None:
+            unresolved = ImputationUnresolved.RECTIFICATIVA_ABOVE_INVOICE.value
+            refused.extend(f"{unresolved}: rectificativa {row.invoice_number}" for row in rows)
+        else:
+            corrections.extend(net)
+    return RectificativaReading(tuple(corrections), tuple(refused))
+
+
+def _placed_rectificativas(
+    invoices: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
+    criteria: ImputationCriteria,
+) -> tuple[dict[str, list[Invoice]], dict[str, Invoice], list[str]]:
+    """Group the window's rectificativas by the accrued invoice they reduce; list those that cannot be placed."""
     corrected: dict[str, list[Invoice]] = {}
     targets: dict[str, Invoice] = {}
     refused: list[str] = []
@@ -194,25 +228,27 @@ def rectificativa_reading(
         elif target is not None and _accrues_by(target, window_end):
             targets[target.invoice_id] = target
             corrected.setdefault(target.invoice_id, []).append(invoice)
-    corrections: list[RectificativaCorrection] = []
-    for target_id, rows in corrected.items():
-        total = sum((row.base_total_eur or Decimal("0") for row in rows), Decimal("0"))
-        base = targets[target_id].base_total_eur
-        if base is None or total > base:
-            unresolved = ImputationUnresolved.RECTIFICATIVA_ABOVE_INVOICE.value
-            refused.extend(f"{unresolved}: rectificativa {row.invoice_number}" for row in rows)
-            continue
-        corrections.extend(
-            RectificativaCorrection(
-                invoice_id=row.invoice_id,
-                invoice_number=row.invoice_number,
-                target_casilla_id=target_casilla_id,
-                reduction=row.base_total_eur,
-            )
-            for row in rows
-            if row.base_total_eur is not None and row.base_total_eur != Decimal("0")
+    return corrected, targets, refused
+
+
+def _net_corrections(
+    rows: list[Invoice], target: Invoice, *, target_casilla_id: CasillaId
+) -> list[RectificativaCorrection] | None:
+    """Return the nonzero reductions the rectificativas make, or ``None`` when they exceed the invoice."""
+    total = sum((row.base_total_eur or Decimal("0") for row in rows), Decimal("0"))
+    base = target.base_total_eur
+    if base is None or total > base:
+        return None
+    return [
+        RectificativaCorrection(
+            invoice_id=row.invoice_id,
+            invoice_number=row.invoice_number,
+            target_casilla_id=target_casilla_id,
+            reduction=row.base_total_eur,
         )
-    return RectificativaReading(tuple(corrections), tuple(refused))
+        for row in rows
+        if row.base_total_eur is not None and row.base_total_eur != Decimal("0")
+    ]
 
 
 def _rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue, *, bucket_id: str) -> Invoice | None:

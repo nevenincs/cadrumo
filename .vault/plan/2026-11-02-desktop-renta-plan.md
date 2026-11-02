@@ -16,7 +16,7 @@ related:
   - '[[2026-11-02-desktop-renta-renta-family-canonical-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:a59440c0bcb317b66d4d68c5d904785d74e727671bd073d6197ef81a92d2b798'
+body_hash: 'sha256:ae85ed5599dd0e7284882a73230e7c34229dc9739e7633c53a41618acc9c27fd'
 ---
 
 # `desktop-renta` plan
@@ -60,7 +60,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S09` - [Sonnet high] serve declaration_type choices and the descendant and ascendant arrays in user-profile.view; `src/cadrumo/application/user_profile`.
 - [x] `P01.S10` - [Opus medium] add a borrador-versus-calculation comparison read over the captured Borrador 100 and the saved calculation; `src/cadrumo/application/live`.
 - [x] `P01.S21` - [Sonnet high] degrade a waived refund (0694 above zero) to an unresolved box 0700 with a served reason instead of refusing the whole 2025 calculation; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`.
-- [ ] `P01.S22` - [Opus medium] keep the Borrador 100 printed result values as comparison-only observations (never calculation inputs) and author the 2024 and 2025 borrador extraction profiles so the borrador comparison has values to compare; `src/cadrumo/adapters/inbound/borrador`.
+- [x] `P01.S22` - [Opus medium] keep the Borrador 100 printed result values as comparison-only observations (never calculation inputs) and author the 2024 and 2025 borrador extraction profiles so the borrador comparison has values to compare; `src/cadrumo/adapters/inbound/borrador`.
 - [x] `P01.S23` - [Sonnet high] reconcile the imputation-criterion ADR wording with the implemented rule that an unstated year stays undeclared and is never preselected as devengo; `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`.
 - [x] `P01.S24` - [Sonnet high] add a profile writer for renta_family.ascendiente rows mirroring user-profile.descendants, with the four-row cap from the 2025 design and NIF validation, and admit it in the desktop relay; `src/cadrumo/application/user_profile`.
 - [ ] `P01.S25` - [Sonnet high] ground the instalment-split fact back to every supported filing year so 2022-2024 returns keep the split, refuse the split when the second instalment would be zero, and refuse settlement for years without a computed 0700 while 0693 is above zero; `src/cadrumo/_data/registry/aeat/facts/0175-payment-instalment-split.toml`.
@@ -84,9 +84,10 @@ The window renders the outline, household, credits, election, comparison, settle
 - [x] `P04.S13` - [Opus medium] build the Renta workspace shell and outline navigator over the served outline, replacing the prototype grouping; `native/desktop/frontend/src/components/modelo/workspace`.
 - [ ] `P04.S14` - [Sonnet high] build the household element from the served profile sections, descendants and minimum boxes; `native/desktop/frontend/src/components/modelo/workspace`.
 - [ ] `P04.S15` - [Sonnet high] build the credits element with withholding routing and the projection estimate in served words; `native/desktop/frontend/src/components/modelo/workspace`.
-- [ ] `P04.S16` - [Sonnet high] build the imputation election element over the registered profile operation; `native/desktop/frontend/src/components/modelo/workspace`.
+- [x] `P04.S16` - [Sonnet high] build the imputation election element over the registered profile operation; `native/desktop/frontend/src/components/modelo/workspace`.
 - [ ] `P04.S17` - [Sonnet high] build the taxation comparison, settlement and borrador comparison elements by payload kind; `native/desktop/frontend/src/components/modelo/workspace`.
 - [x] `P04.S18` - [Sonnet high] retire the Renta prototypes and their prototype-only locale keys now (operator ruling 2026-11-02: Storybook shows only real components over generated fixtures; no prototype copies), so every Renta element is built and reviewed in the real components; `native/desktop/frontend/src/dev/prototypes/renta`.
+- [ ] `P04.S26` - [Sonnet high] forward the served refusal reason and words through the desktop host's profile write path instead of the bare code, and serve a per-revision flag naming which declarations ask the imputation election so the window stops gating on the profile source group; `native/desktop/src-tauri/src/shell/user_profile.rs`.
 
 ### Phase `P05` - proof
 

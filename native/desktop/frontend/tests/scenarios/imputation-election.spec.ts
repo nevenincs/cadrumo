@@ -61,7 +61,9 @@ async function openSources(
     workspace(target).getByRole("heading", { level: 1 }),
   ).toBeVisible({ timeout: 30_000 });
   await workspace(target)
-    .getByRole("tab", { name: label("workspace.modelo.key.sources", {}, language) })
+    .getByRole("tab", {
+      name: label("workspace.modelo.key.sources", {}, language),
+    })
     .click();
   const element = workspace(target).getByRole("region", {
     name: label("workspace.modelo.election.title", { year: YEAR }, language),
@@ -91,7 +93,9 @@ test("an unstated year reads undeclared and none of the choices is selected", as
   await expect(element).toContainText(read.criterion_question.prompt);
   for (const choice of read.criterion_question.choices)
     await expect(element).toContainText(choice.label);
-  await expect(radios(element)).toHaveCount(read.criterion_question.choices.length);
+  await expect(radios(element)).toHaveCount(
+    read.criterion_question.choices.length,
+  );
   for (const radio of await radios(element).all())
     await expect(radio).not.toBeChecked();
   // The accounting question is not asked, and nothing can be saved yet.
@@ -179,7 +183,9 @@ test("a save names the revision it read, and the election is read again", async 
 }) => {
   const read = served.reads.undeclared!.en!;
   const element = await openSources(target, "undeclared");
-  const before = await target.evaluate(() => window.__scenarioElection!.reads());
+  const before = await target.evaluate(() =>
+    window.__scenarioElection!.reads(),
+  );
   await radios(element).nth(0).click();
   await element
     .getByRole("button", {
@@ -193,7 +199,9 @@ test("a save names the revision it read, and the election is read again", async 
   await expect(element).toContainText(
     label("workspace.modelo.election.saved", { year: YEAR }),
   );
-  const writes = await target.evaluate(() => window.__scenarioElection!.writes());
+  const writes = await target.evaluate(() =>
+    window.__scenarioElection!.writes(),
+  );
   expect(writes).toHaveLength(1);
   expect(writes[0]).toMatchObject({
     expected_revision: read.record_revision,
@@ -206,9 +214,9 @@ test("a save names the revision it read, and the election is read again", async 
     },
   });
   // The read after the write is the one that shows the stated year.
-  expect(
-    await target.evaluate(() => window.__scenarioElection!.reads()),
-  ).toBe(before + 1);
+  expect(await target.evaluate(() => window.__scenarioElection!.reads())).toBe(
+    before + 1,
+  );
   await expect(radios(element).nth(0)).toBeChecked();
 });
 
@@ -225,7 +233,9 @@ test("clearing a stated year sends an empty token and the year reads undeclared 
     "data-election-state",
     "undeclared",
   );
-  const writes = await target.evaluate(() => window.__scenarioElection!.writes());
+  const writes = await target.evaluate(() =>
+    window.__scenarioElection!.writes(),
+  );
   expect(writes[0]).toMatchObject({
     edit: { criterion: "", codigo_comercio_accounting: null },
   });

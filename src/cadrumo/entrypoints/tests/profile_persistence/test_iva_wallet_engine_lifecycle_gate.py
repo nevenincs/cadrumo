@@ -33,7 +33,7 @@ from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -45,9 +45,9 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _snapshot_303,
     _store_operator_profile,
     _store_operator_profile_with_tax_id,
-    _wallet_observation,
     _work_unit_and_revision_for_wallet_gate,
     _work_unit_repositories_with_modelo_303_work_unit,
+    wallet_observation,
     workflow_profile,
 )
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
@@ -230,7 +230,7 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
         report = _reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(pending=Decimal("1200.00")),
+            wallet=wallet_observation(pending=Decimal("1200.00")),
             repository=CalculationObservationRepository(),
             decided_at=_DECIDED_AT,
             local_recurrence=None,
@@ -329,7 +329,7 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
             fresh = _reconcile_modelo_303_iva_compensation(
                 snapshot,
                 taxpayer_nif=_TAXPAYER_NIF,
-                wallet=_wallet_observation(
+                wallet=wallet_observation(
                     pending=Decimal("0"), target_period=work_unit.period, captured_at=lifecycle_at
                 ),
                 repository=observations,
@@ -370,7 +370,7 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
         stale = _reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(pending=Decimal("0"), target_period=work_unit.period),
+            wallet=wallet_observation(pending=Decimal("0"), target_period=work_unit.period),
             repository=observations,
             decision_repository=decisions,
             decided_at=lifecycle_at,
