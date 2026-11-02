@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:045e9f44f8eb29a15d2b27c6751d670195c8d5b49f59d73eb365101976762251'
+body_hash: 'sha256:ab944236e856a6b7b182d147f6431a506c6d0d3ae782943e9bd7914a47287e19'
 ---
 
 # `frontend-polish` plan
@@ -52,7 +52,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.
 - [x] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
 - [ ] `S10` - Complete remaining ledger workflow review across movements, invoices, documents, assets, registers and transfers; `native/desktop/frontend/src/components/ledger/`.
-- [ ] `S19` - Preserve uncertain declaration creation across chooser changes and require authoritative settlement before another write; `native/desktop/frontend/src/components/modelo/declarations/, native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`.
+- [ ] `S19` - Keep declaration creation outcome holds across selection and navigation, and require authoritative completion plus a successful list refresh; `native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/src/components/modelo/WriteHoldNotice.tsx, native/desktop/frontend/src/components/modelo/declarations/, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts, native/desktop/frontend/tests/live/modelo-write-holds.unit.ts, dev/locales/desktop_workspace_keys.py, src/cadrumo/locales/`.
 - [ ] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/workspace/, native/desktop/frontend/src/components/modelo/filing/, native/desktop/frontend/tests/scenarios/modelo*.spec.ts`.
 - [ ] `S21` - Expose returned reconciliation differences and advisory limitations using the Sol design brief and localized labels; `native/desktop/frontend/src/components/modelo/filing/, native/desktop/frontend/src/dev/, dev/locales/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [ ] `S11` - Complete modelo workflow review from declaration selection through editing, review, calculation, export and reconciliation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modelo.ts`.
