@@ -209,6 +209,29 @@ def test_a_stated_count_of_zero_ascendants_is_declared_none_and_leaves_descendan
     assert ascendants.stated_count == "0" and ascendants.row_count == 0
 
 
+@pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
+def test_a_stated_count_larger_than_the_stored_rows_is_incomplete_in_every_language(
+    tmp_path: Path, language: str
+) -> None:
+    facts = (
+        UserProfileFact(path="renta_family.ascendientes_count", value="3"),
+        UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
+    )
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register_profile(facts=facts)
+        items = _read(profile_id, ProfileViewPageKind.FAMILY_ROWS, language)
+    descendants, ascendants, row = items
+    assert isinstance(descendants, ProfileViewFamilyGroupItem) and isinstance(ascendants, ProfileViewFamilyGroupItem)
+    assert isinstance(row, ProfileViewFamilyRowItem)
+    assert descendants.state is ProfileFamilyGroupState.UNKNOWN and descendants.incomplete_words is None
+    assert ascendants.state is ProfileFamilyGroupState.INCOMPLETE
+    assert (ascendants.stated_count, ascendants.row_count) == ("3", 1)
+    assert ascendants.incomplete_words == tr(
+        "application.user_profile.family_rows.incomplete", locale=language, stated="3", recorded=1
+    )
+    assert row.group_key == "renta_family.ascendiente" and row.row_index == "0"
+
+
 def test_family_rows_page_keeps_the_revision_pin(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path), bundled_indexed_authority().operation() as authority:
         profile_id = _register_profile(facts=_descendant_facts())
