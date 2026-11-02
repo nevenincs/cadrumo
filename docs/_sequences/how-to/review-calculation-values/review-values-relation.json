@@ -86,7 +86,7 @@
         "ledger",
         "retencion-soportada",
         "record",
-        "B00000001",
+        "B00000000",
         "--ejercicio",
         "2025",
         "--income-class",
@@ -213,7 +213,7 @@
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "bde0d7360677d0f944ec4a26eb79314cf21b1c28051a0bae90b86b23d91f3dd9",
+          "calculation_revision_id": "7a55959584a2d21c5ea23723ddd9a8c9287fff26453c539964b125eac1c1d6ba",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4059,7 +4059,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision bde0d7360677d0f944ec4a26eb79314cf21b1c28051a0bae90b86b23d91f3dd9 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 7a55959584a2d21c5ea23723ddd9a8c9287fff26453c539964b125eac1c1d6ba (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "retencion_soportada",
@@ -4070,7 +4070,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "retencion_soportada",
               "resolver_id": "retencion_soportada",
-              "source_ref": "retencion-soportada:2025:trabajo:e4b83a90b7ee2b5e993c5b78dfa09a1c0326684abff25777b515c73e8ca76e11"
+              "source_ref": "retencion-soportada:2025:trabajo:d6e577984bddfc88faf2ad2926fa2527c0611fae83bbcf8aeced8276f1fa4cbd"
             },
             {
               "contributor_binding_source": "retencion_soportada",

@@ -63,7 +63,7 @@
         "ledger",
         "retencion-soportada",
         "record",
-        "B00000000",
+        "B00000018",
         "--ejercicio",
         "2025",
         "--income-class",
@@ -187,7 +187,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e",
+          "calculation_revision_id": "5c7ba687eceb5dabd8a01195df3dca037998982e04fa6a601d0cbb81df5b60cb",
           "observation_count": 1818,
           "observations": [
             {"absent_by_design":false,"casilla_id":"0002","formula_id":null,"legal_refs":["ley-35-2006:art-17","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
