@@ -15,7 +15,7 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:8e33032092ca8ed52d870ac2f1df3cca7da3593375a00a618519b4111c18af7c'
+body_hash: 'sha256:8b21a68a05627ca3fb0287811d3e42a9b36894c34c9a467b006f2c3e602f0d94'
 ---
 
 # `desktop-renta` plan
@@ -25,6 +25,8 @@ The desktop Renta (Modelo 100) workspace: one generated form plus served compani
 ## Description
 
 Approved 2026-11-02. The operator approved this plan and accepted `2026-11-02-desktop-renta-adr` in the tui frontend session ("renta and adr are approved, execute"); the approval covers every Phase, including the P01 backend read-model Steps.
+
+Implementation decisions, made by the implementing session on 2026-11-02 because the operator delegated the specifics: an unstated imputation criterion stays undeclared and is never preselected as devengo, because the window may not infer a taxpayer election and the calculation already keeps the year unresolved (P01.S23 aligns the ADR); a waived refund leaves only box 0700 unresolved instead of failing the whole return, because unresolved inputs degrade locally (P01.S21); earlier-period carries within the campaign (130 box 05, 131 box 11, the 303 compensation carry) stay waiting rather than needs-you, because the product produces them from its own earlier declarations; and Borrador printed results are kept as comparison-only observations, never calculation inputs, so the comparison can confirm or contradict the local result (P01.S22).
 
 Build the desktop Renta (Modelo 100) workspace as one generated form with backend-served companion reads that the window renders by payload kind.
 
@@ -56,6 +58,9 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S08` - [Opus medium] register a profile operation that reads and writes the dated imputation criterion per tax year with the wizard's served words; `src/cadrumo/application/wizard/imputation_election.py`.
 - [x] `P01.S09` - [Sonnet high] serve declaration_type choices and the descendant and ascendant arrays in user-profile.view; `src/cadrumo/application/user_profile`.
 - [x] `P01.S10` - [Opus medium] add a borrador-versus-calculation comparison read over the captured Borrador 100 and the saved calculation; `src/cadrumo/application/live`.
+- [ ] `P01.S21` - [Sonnet high] degrade a waived refund (0694 above zero) to an unresolved box 0700 with a served reason instead of refusing the whole 2025 calculation; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`.
+- [ ] `P01.S22` - [Opus medium] keep the Borrador 100 printed result values as comparison-only observations (never calculation inputs) and author the 2024 and 2025 borrador extraction profiles so the borrador comparison has values to compare; `src/cadrumo/adapters/inbound/borrador`.
+- [ ] `P01.S23` - [Sonnet high] reconcile the imputation-criterion ADR wording with the implemented rule that an unstated year stays undeclared and is never preselected as devengo; `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`.
 
 ### Phase `P02` - contracts and fixtures
 
