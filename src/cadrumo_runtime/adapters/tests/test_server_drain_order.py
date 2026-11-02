@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event, Thread
 from typing import cast, override
@@ -73,10 +74,13 @@ class _BlockedRequestServer(RetainedRuntimeTransportServer):
         self.stop.wait(timeout=2)
 
 
-def test_profile_drain_releases_blocked_handler_before_executor_wait() -> None:
+def _blocked_request_setup(
+    make_profiles: Callable[[Event], _Profiles],
+) -> tuple[Event, Event, Event, _Listener, _Profiles, _BlockedRequestServer]:
+    """Build a server whose one accepted request blocks until ``release`` is set."""
     stop, entered, release = Event(), Event(), Event()
     listener = _Listener()
-    profiles = _Profiles(release)
+    profiles = make_profiles(release)
     server = _BlockedRequestServer(
         cast("RuntimeListener", listener),
         stop=stop,
@@ -84,6 +88,10 @@ def test_profile_drain_releases_blocked_handler_before_executor_wait() -> None:
         entered=entered,
         release=release,
     )
+    return stop, entered, release, listener, profiles, server
+
+
+def _serve_in_thread(server: _BlockedRequestServer) -> tuple[Thread, list[BaseException]]:
     failures: list[BaseException] = []
 
     def serve() -> None:
@@ -94,6 +102,12 @@ def test_profile_drain_releases_blocked_handler_before_executor_wait() -> None:
 
     running = Thread(target=serve, daemon=True)
     running.start()
+    return running, failures
+
+
+def test_profile_drain_releases_blocked_handler_before_executor_wait() -> None:
+    stop, entered, release, listener, profiles, server = _blocked_request_setup(_Profiles)
+    running, failures = _serve_in_thread(server)
     try:
         assert entered.wait(timeout=2)
         stop.set()
@@ -109,26 +123,10 @@ def test_profile_drain_releases_blocked_handler_before_executor_wait() -> None:
 
 
 def test_incomplete_profile_drain_retains_listener_ownership() -> None:
-    stop, entered, release = Event(), Event(), Event()
-    listener = _Listener()
-    profiles = _Profiles(release, ProfileDrainResult((), (), (uuid4(),), ()))
-    server = _BlockedRequestServer(
-        cast("RuntimeListener", listener),
-        stop=stop,
-        profiles=cast("ProfileHandler", profiles),
-        entered=entered,
-        release=release,
+    stop, entered, release, listener, _profiles, server = _blocked_request_setup(
+        lambda release: _Profiles(release, ProfileDrainResult((), (), (uuid4(),), ()))
     )
-    failures: list[BaseException] = []
-
-    def serve() -> None:
-        try:
-            server.serve()
-        except BaseException as error:
-            failures.append(error)
-
-    running = Thread(target=serve, daemon=True)
-    running.start()
+    running, failures = _serve_in_thread(server)
     try:
         assert entered.wait(timeout=2)
         stop.set()
@@ -144,27 +142,9 @@ def test_incomplete_profile_drain_retains_listener_ownership() -> None:
 
 
 def test_pending_transport_request_retains_listener_ownership() -> None:
-    stop, entered, release = Event(), Event(), Event()
-    listener = _Listener()
-    profiles = _ProfilesWithoutRelease(release)
-    server = _BlockedRequestServer(
-        cast("RuntimeListener", listener),
-        stop=stop,
-        profiles=cast("ProfileHandler", profiles),
-        entered=entered,
-        release=release,
-    )
+    stop, entered, release, listener, profiles, server = _blocked_request_setup(_ProfilesWithoutRelease)
     server.DRAIN_SECONDS = 0.1
-    failures: list[BaseException] = []
-
-    def serve() -> None:
-        try:
-            server.serve()
-        except BaseException as error:
-            failures.append(error)
-
-    running = Thread(target=serve, daemon=True)
-    running.start()
+    running, failures = _serve_in_thread(server)
     try:
         assert entered.wait(timeout=2)
         stop.set()
