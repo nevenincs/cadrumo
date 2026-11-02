@@ -104,12 +104,18 @@ def _mutation(
         projection.outcome != outcome
         or attestation is None
         or attestation.income_class is not request.income_class
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.UPDATED
-        or completed.refusal_code is not None
+        or not _completed_as_update(completed)
     ):
         raise invalid_completion_error(completed)
     return attestation
+
+
+def _completed_as_update(completed: RegisteredOperationCompletion[RetencionSoportadaAbsenceMutationProjection]) -> bool:
+    return (
+        completed.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        and completed.effect is OperationEffect.UPDATED
+        and completed.refusal_code is None
+    )
 
 
 def attest_retencion_soportada_absence(

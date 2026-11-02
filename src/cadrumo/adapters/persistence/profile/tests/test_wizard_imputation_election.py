@@ -21,13 +21,13 @@ from cadrumo.application.aggregation.renta_imputation import (
     ActivityImputationCriterion,
     declared_imputation_criteria,
 )
-from cadrumo.application.user_profile.edit_baseline import ProfileRecordConflictError
+from cadrumo.application.user_profile.capsule_record import ProfileRecordConflictError
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.wizard.catalogue import build_setup_flow
-from cadrumo.application.wizard.commands import _persist_full_flow_answers, _run_wizard_persistence_path
+from cadrumo.application.wizard.commands import persist_full_flow_answers, run_wizard_persistence_path
 from cadrumo.application.wizard.errors import WizardMissingFlagError, WizardValidationError
 from cadrumo.application.wizard.imputation_election import (
     ACCOUNTING_PROFILE_PATH,
@@ -120,7 +120,7 @@ def _facts_at(record: UserProfileRecord, path: str) -> list[tuple[date | None, d
 
 def test_a_non_interactive_run_leaves_the_election_absent(world: _World) -> None:
     before = world.record()
-    values, _changed = _run_wizard_persistence_path(
+    values, _changed = run_wizard_persistence_path(
         world.flow,
         "edit",
         {},
@@ -144,7 +144,7 @@ def test_a_non_interactive_run_leaves_the_election_absent(world: _World) -> None
 def test_the_quiet_edit_route_writes_the_flags_it_was_given_as_dated_facts(world: _World) -> None:
     explicit = _election(world, _FIRST, "cobros_y_pagos", accounting="false")
 
-    values, changed = _run_wizard_persistence_path(
+    values, changed = run_wizard_persistence_path(
         world.flow,
         "edit",
         dict(explicit),
@@ -279,7 +279,7 @@ def test_a_full_flow_run_dates_the_answer_and_preserves_what_it_did_not_state(wo
     answers = _answers_without_election(world)
 
     # A run that states nothing about the election keeps every ejercicio.
-    _persist_full_flow_answers(world.flow, answers, profile_id=world.profile_id, operation=world.operation)
+    persist_full_flow_answers(world.flow, answers, profile_id=world.profile_id, operation=world.operation)
     assert world.criteria().declared(_FIRST) is ActivityImputationCriterion.COBROS_Y_PAGOS
 
     stated = answers.model_copy(
@@ -289,7 +289,7 @@ def test_a_full_flow_run_dates_the_answer_and_preserves_what_it_did_not_state(wo
             "irpf_codigo_comercio_accounting": "",
         }
     )
-    values = _persist_full_flow_answers(world.flow, stated, profile_id=world.profile_id, operation=world.operation)
+    values = persist_full_flow_answers(world.flow, stated, profile_id=world.profile_id, operation=world.operation)
 
     criteria = world.criteria()
     assert criteria.declared(_FIRST) is ActivityImputationCriterion.COBROS_Y_PAGOS
@@ -304,7 +304,7 @@ def test_a_full_flow_answer_without_its_ejercicio_is_refused_and_writes_nothing(
     before = world.record()
 
     with pytest.raises(WizardMissingFlagError):
-        _persist_full_flow_answers(world.flow, stated, profile_id=world.profile_id, operation=world.operation)
+        persist_full_flow_answers(world.flow, stated, profile_id=world.profile_id, operation=world.operation)
 
     assert world.record().content_digest == before.content_digest
 

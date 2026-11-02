@@ -89,21 +89,24 @@ def _facts_after(
     change with no value removes its window; the removed fact is not kept as an
     empty one, because a reader of that window would then see a value that is not there.
     """
-    whole_paths = {fact.path for fact in changes if fact.valid_from is None and fact.valid_to is None}
-    windows = {
-        (fact.path, fact.valid_from, fact.valid_to)
-        for fact in changes
-        if fact.valid_from is not None or fact.valid_to is not None
-    }
-    kept = tuple(
-        fact
-        for fact in current
-        if fact.path not in whole_paths and (fact.path, fact.valid_from, fact.valid_to) not in windows
-    )
-    stated = tuple(
-        fact for fact in changes if fact.value is not None or (fact.valid_from is None and fact.valid_to is None)
-    )
-    return (*kept, *stated)
+    stated = tuple(fact for fact in changes if fact.value is not None or _is_undated(fact))
+    return (*_facts_left_standing(current, changes), *stated)
+
+
+def _facts_left_standing(
+    current: tuple[UserProfileFact, ...], changes: tuple[UserProfileFact, ...]
+) -> tuple[UserProfileFact, ...]:
+    whole_paths = {fact.path for fact in changes if _is_undated(fact)}
+    windows = {_fact_window(fact) for fact in changes if not _is_undated(fact)}
+    return tuple(fact for fact in current if fact.path not in whole_paths and _fact_window(fact) not in windows)
+
+
+def _is_undated(fact: UserProfileFact) -> bool:
+    return fact.valid_from is None and fact.valid_to is None
+
+
+def _fact_window(fact: UserProfileFact) -> tuple[str, object, object]:
+    return (fact.path, fact.valid_from, fact.valid_to)
 
 
 def apply_profile_fact_changes(

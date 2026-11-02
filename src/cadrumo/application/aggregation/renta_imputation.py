@@ -203,6 +203,10 @@ class ImputationCriteria:
         stated = self.filings.stated.get(year)
         if stated is not None and stated is not declared:
             return f"the filed return of {year} states {stated.value} but the profile declares {declared.value}"
+        return self._binding_cash_conflict(year, declared)
+
+    def _binding_cash_conflict(self, year: int, declared: ActivityImputationCriterion) -> str | None:
+        """Name the filed cash return whose three-year election still binds a declared accrual ``year``."""
         if declared is not ActivityImputationCriterion.DEVENGO or self._commercial_accounting(year) is True:
             return None
         first_cash_year = self._first_binding_cash_year(year)
@@ -284,6 +288,44 @@ def _quarter(on: date) -> int:
     return (on.month - 1) // 3
 
 
+def _impute_without_accrual(cash: date, at_cash: ActivityImputationCriterion | None) -> date | ImputationUnresolved:
+    if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
+        return cash
+    if at_cash is ActivityImputationCriterion.DEVENGO:
+        return ImputationUnresolved.ACCRUAL_UNKNOWN
+    return ImputationUnresolved.CRITERION_UNDECLARED
+
+
+def _impute_within_year(
+    cash: date, accrual: date, at_cash: ActivityImputationCriterion | None
+) -> date | ImputationUnresolved:
+    if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
+        return cash
+    if at_cash is ActivityImputationCriterion.DEVENGO:
+        return accrual
+    return cash if _quarter(cash) == _quarter(accrual) else ImputationUnresolved.CRITERION_UNDECLARED
+
+
+def _impute_accrued_before_cash(
+    cash: date,
+    accrual: date,
+    criteria: ImputationCriteria,
+    at_cash: ActivityImputationCriterion,
+    at_accrual: ActivityImputationCriterion,
+) -> date | ImputationUnresolved:
+    if at_accrual is ActivityImputationCriterion.DEVENGO:
+        return accrual
+    if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
+        return cash
+    for year in range(accrual.year + 1, cash.year + 1):
+        between = criteria.usable(year)
+        if between is None:
+            return ImputationUnresolved.CRITERION_UNDECLARED
+        if between is ActivityImputationCriterion.DEVENGO:
+            return date(year, 1, 1)
+    return ImputationUnresolved.UNCOMPUTED_ACROSS_CHANGE
+
+
 def impute_row(cash: date, accrual: date | None, criteria: ImputationCriteria) -> date | ImputationUnresolved:
     """Return the one date a banked row is computed on, or why no date can be given.
 
@@ -297,32 +339,14 @@ def impute_row(cash: date, accrual: date | None, criteria: ImputationCriteria) -
     if not criteria.election_open(cash.year):
         return ImputationUnresolved.ELECTION_NOT_OPEN
     if accrual is None:
-        if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return cash
-        if at_cash is ActivityImputationCriterion.DEVENGO:
-            return ImputationUnresolved.ACCRUAL_UNKNOWN
-        return ImputationUnresolved.CRITERION_UNDECLARED
+        return _impute_without_accrual(cash, at_cash)
     if accrual.year == cash.year:
-        if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return cash
-        if at_cash is ActivityImputationCriterion.DEVENGO:
-            return accrual
-        return cash if _quarter(cash) == _quarter(accrual) else ImputationUnresolved.CRITERION_UNDECLARED
+        return _impute_within_year(cash, accrual, at_cash)
     at_accrual = criteria.usable(accrual.year)
     if at_cash is None or at_accrual is None:
         return ImputationUnresolved.CRITERION_UNDECLARED
     if accrual < cash:
-        if at_accrual is ActivityImputationCriterion.DEVENGO:
-            return accrual
-        if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return cash
-        for year in range(accrual.year + 1, cash.year + 1):
-            between = criteria.usable(year)
-            if between is None:
-                return ImputationUnresolved.CRITERION_UNDECLARED
-            if between is ActivityImputationCriterion.DEVENGO:
-                return date(year, 1, 1)
-        return ImputationUnresolved.UNCOMPUTED_ACROSS_CHANGE
+        return _impute_accrued_before_cash(cash, accrual, criteria, at_cash, at_accrual)
     if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
         return cash
     if at_accrual is ActivityImputationCriterion.DEVENGO:

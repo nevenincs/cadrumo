@@ -431,6 +431,24 @@ def _general_regime_figure_present(
     return False
 
 
+def _reconciliation_slot_grounded(
+    binding_id: BindingId,
+    annual_casilla: CasillaId,
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+    resolved_annual_casillas: set[CasillaId],
+    general_regime_not_applicable: bool,
+) -> bool:
+    """Whether a slot is resolved, proven zero, or not applicable and so needs no refusal."""
+    if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
+        return True
+    annual_value = casilla_values.get(annual_casilla)
+    if annual_value is None:
+        return general_regime_not_applicable
+    return _calculated_decimal(annual_value) == ZERO
+
+
 def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     *,
     work_unit: WorkUnit,
@@ -468,13 +486,14 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     missing_targets: list[CasillaId] = []
     missing_annuals: list[CasillaId] = []
     for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
-        if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
-            continue
-        annual_value = casilla_values.get(annual_casilla)
-        if annual_value is None:
-            if general_regime_not_applicable:
-                continue
-        elif _calculated_decimal(annual_value) == ZERO:
+        if _reconciliation_slot_grounded(
+            binding_id,
+            annual_casilla,
+            casilla_values=casilla_values,
+            resolved_binding_values=resolved_binding_values,
+            resolved_annual_casillas=resolved_annual_casillas,
+            general_regime_not_applicable=general_regime_not_applicable,
+        ):
             continue
         missing_relations.append(relation_id)
         missing_bindings.append(binding_id)
