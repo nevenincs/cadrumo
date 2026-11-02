@@ -1144,7 +1144,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: The keys of the values supplied must not be blank.
         decimal_value_invalid: The borrador value for numeric source %{binding_id}
           must be decimal-compatible.
         forbidden_bindings: 'The borrador contains values that the modelo definitions

@@ -1222,8 +1222,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Les claus dels valors aportats no poden estar en
-          blanc.
         decimal_value_invalid: El valor d'esborrany per a l'origen numèric %{binding_id}
           ha de ser compatible amb decimal.
         forbidden_bindings: 'L''esborrany conté valors que les definicions del model

@@ -1189,7 +1189,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: A megadott értékek kulcsai nem lehetnek üresek.
         decimal_value_invalid: A(z) %{binding_id} numerikus forrás borrador-értékének
           decimális számként értelmezhetőnek kell lennie.
         forbidden_bindings: 'A borrador olyan értékeket tartalmaz, amelyeket a nyomtatványdefiníciók

@@ -519,6 +519,7 @@ def _resolve_bucket_aggregation_source_resolution(
 def _bucket_aggregation_channels(
     *,
     preparation: _BucketAggregationPreparation,
+    operation: PinnedAuthorityOperation,
     source_resolution: CalculationSourceResolution,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     detail_rows: tuple[ModeloDetailRow, ...],
@@ -562,6 +563,7 @@ def _bucket_aggregation_channels(
     )
     screen_diagnostics = _operator_over_source_diagnostics(
         preparation,
+        operation=operation,
         source_relations=source_resolution.relation_values,
         operator_relations={
             # A fold slot the operator set by ``--binding`` over a binding the mesh also
@@ -601,6 +603,7 @@ def _bucket_aggregation_channels(
 def _operator_over_source_diagnostics(
     preparation: _BucketAggregationPreparation,
     *,
+    operation: PinnedAuthorityOperation,
     source_relations: Mapping[RelationId, Decimal],
     operator_relations: Mapping[RelationId, Decimal],
     source_casillas: Mapping[CasillaId, Decimal],
@@ -620,7 +623,7 @@ def _operator_over_source_diagnostics(
     if not divergences:
         return ()
     diagnostics = precedence_divergence_diagnostics(
-        divergences, screen=precedence_screen_context(preparation.work_unit, preparation.snapshot.revision)
+        divergences, screen=precedence_screen_context(preparation.work_unit, preparation.snapshot, operation=operation)
     )
     return tuple(diagnostic for diagnostic in diagnostics if diagnostic.reason != _OPERATOR_OVERRIDE_ADVISORY_REASON)
 
@@ -721,6 +724,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     )
     channels = _bucket_aggregation_channels(
         preparation=preparation,
+        operation=ports.operation,
         source_resolution=source_resolution,
         transaction_repository=memoized_transaction_repository,
         detail_rows=detail_rows,
