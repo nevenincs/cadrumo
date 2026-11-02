@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind
@@ -12,6 +12,7 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
+from ...domain.iva.oss import resolve_oss_ioss_regime_catalogue
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...domain.modelos.verification_report import (
@@ -39,13 +40,21 @@ def m369_oss_bindings(snapshot: RegistrySnapshot) -> tuple[BindingDefinition, ..
     )
 
 
+NO_ACTIVITY_CONTRADICTED_KEY = "application.modelo.findings.oss_no_activity_contradicted"
+
+
 def m369_source_issue_finding(
     *,
     target: CalculationRevision,
     legal_refs: tuple[LegalRefId, ...],
     source_refs: tuple[SourceRefId, ...],
+    declares_no_activity: bool = False,
 ) -> ModeloVerificationFinding | None:
-    """Project an OSS routing or missing-evidence source issue.
+    """Project an OSS routing, missing-evidence or no-activity contradiction issue.
+
+    A period without invoices is unknown, not nil, until the operator declares it
+    so: only that declaration lets a return without OSS evidence through, and it
+    cannot stand beside evidence of activity.
 
     Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
@@ -57,8 +66,39 @@ def m369_source_issue_finding(
     if unrouted_issues:
         return unrouted_oss_source_finding(unrouted_issues, legal_refs=legal_refs, source_refs=source_refs)
     if any(ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION for ref in target.source_provenance):
+        return (
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message_locale_key=NO_ACTIVITY_CONTRADICTED_KEY,
+                message_facts={},
+                legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
+                source_refs=source_refs,
+            )
+            if declares_no_activity
+            else None
+        )
+    if declares_no_activity:
         return None
     return missing_oss_evidence_finding(legal_refs=legal_refs, source_refs=source_refs)
+
+
+def _declares_no_activity(work_unit: WorkUnit, target: CalculationRevision) -> bool:
+    """Read the operator's own answer on the return's no-activity row through the dated fact."""
+    declaration = resolve_oss_ioss_regime_catalogue(effective_date=work_unit.period.end_date).no_activity
+    if declaration is None:
+        return False
+    for binding_id, entered in target.binding_overrides.items():
+        if str(binding_id).endswith(f".{declaration.binding_suffix}"):
+            return _same_value(entered, declaration.declared_value)
+    return False
+
+
+def _same_value(entered: str, declared: str) -> bool:
+    try:
+        return Decimal(entered) == Decimal(declared)
+    except InvalidOperation:
+        return entered.strip() == declared
 
 
 def m369_unresolved_oss_source_finding(
@@ -90,6 +130,7 @@ def m369_unresolved_oss_source_finding(
         target=target,
         legal_refs=legal_refs,
         source_refs=source_refs,
+        declares_no_activity=_declares_no_activity(work_unit, target),
     )
 
 

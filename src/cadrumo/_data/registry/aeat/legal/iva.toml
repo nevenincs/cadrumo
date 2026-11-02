@@ -1675,6 +1675,18 @@ applies_from = 2021-07-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.shtml"
 review_status = "pending_review"
 
+[sources."aeat-modelo-369-file-description"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/instructions/modelo_369/files/Descripcion_PresentacionFichero369_v1.pdf"
+sha256 = "521fb8e9918b77555be781434006d560bbec28d30318ff158096ecca0e9ed56d"
+bytes = 702350
+retrieved_at = 2026-05-27
+applies_from = 2021-07-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.shtml"
+review_status = "pending_review"
+
 [sources."boe-modelo-369-2021-form"]
 evidence_tier = "layout_authority"
 authority = "boe"
@@ -3168,6 +3180,24 @@ reviewed_by = "agent-prepared-pending-operator"
 notes = "RDL 20/2012 art. 23, apartado Tres: da nueva redacción al art. 91 LIVA y fija el tipo reducido en el 10 por ciento, con efectos desde el 1 de septiembre de 2012. Entrada SEPARADA de la del apartado Dos deliberadamente: el mismo artículo fija dos tipos en dos apartados distintos, y una sola entrada obligaría a cada tipo a citar una provisión que no es exactamente la suya. La nota de modificación del art. 90 consolidado cita 23.2, que es correcta para el 21 por ciento y NO para este tipo. El tipo super-reducido del 4 por ciento es anterior a esta norma y necesita su propia provisión. PROVENANCIA. Mismo documento y mismo sha256 que la entrada del apartado Dos, d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df; adquirido mediante la herramienta de adquisición del corpus consolidado oficial. Entrada preparada por agente, no revisada por un operador humano."
 required_text = [
     "Se aplicará el tipo del 10 por ciento",
+]
+
+[legal."ley-41-1994:art-78-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/xml/ley-41-1994-art-78.xml#primero"
+document_id = "BOE-A-1994-28967"
+article = "78.Primero"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-28967"
+published_at = 1994-12-31
+effective_from = 1995-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Ley 41/1994 art. 78, apartado Primero: da nueva redacción al art. 90 Uno LIVA y fija el tipo general en el 16 por 100, con efectos desde el 1 de enero de 1995. El apartado Segundo fija el 7 por 100 reducido y el 4 por 100 super-reducido. El art. 90 consolidado no registra ninguna modificación del apartado 1 entre esta norma y la Ley 26/2009, de 23 de diciembre, de modo que el 16 por 100 alcanza al menos hasta esa fecha; el texto de esa ley y la fecha de efectos de su art. 79 no están en el corpus empaquetado. Entrada preparada por agente, no revisada por un operador humano."
+required_text = [
+    "se exigirá al tipo del 16 por 100",
 ]
 
 [legal."ley-41-1994:art-78-segundo"]

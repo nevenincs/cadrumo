@@ -1,11 +1,19 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { ModeloWorkbenchFormProjectionV1 } from "../shell/modeloContract";
+import { wholeEnvelopes } from "./modeloEnvelopePatch";
 
 // A form envelope of ./fixtures/modelo/, read when a story asks for it: the
 // largest are over a megabyte, and a story needs one of four languages.
-const found = import.meta.glob<ModeloWorkbenchFormProjectionV1>(
-  "./fixtures/modelo/modelo-*.json",
-  { import: "default" },
+const found = import.meta.glob<unknown>("./fixtures/modelo/modelo-*.json", {
+  import: "default",
+});
+const envelopes = wholeEnvelopes(
+  Object.fromEntries(
+    Object.entries(found).map(([path, load]) => [
+      path.slice(path.lastIndexOf("/") + 1, -".json".length),
+      load,
+    ]),
+  ),
 );
 
 /** The envelope stored under `name` (`modelo-130-1T-es`), or nothing while it
@@ -27,7 +35,7 @@ export function ModeloEnvelope({
   } | null>(null);
   const [failure, setFailure] = useState<Error | null>(null);
   useEffect(() => {
-    const load = found[`./fixtures/modelo/${name}.json`];
+    const load = envelopes[name];
     if (!load) {
       setFailure(new Error(`No envelope is stored as ${name}`));
       return;
@@ -35,7 +43,7 @@ export function ModeloEnvelope({
     let current = true;
     void load().then((envelope) => {
       if (!current) return;
-      const copy = structuredClone(envelope);
+      const copy = structuredClone(envelope) as ModeloWorkbenchFormProjectionV1;
       adjust?.(copy);
       setRead({ name, envelope: copy });
     });

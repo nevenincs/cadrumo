@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import type {
@@ -90,6 +91,7 @@ export function SourcesView({
   onGo,
   onOpenSurface,
   canOpenSurface,
+  profileCompanions,
 }: {
   groups: ModeloFormSourceGroup[];
   fieldAt(address: ModeloFormAddressV1): PublicModeloFormField | null;
@@ -97,6 +99,9 @@ export function SourcesView({
   onOpenSurface(surface: OpenableSurface): void;
   /** Whether this window can open an area; a link that cannot is not drawn. */
   canOpenSurface(surface: OpenableSurface): boolean;
+  /** The elements the profile owns, drawn under the group the read model
+   * names as the profile. */
+  profileCompanions?: ReactNode;
 }) {
   const t = useStrings();
   return (
@@ -186,6 +191,7 @@ export function SourcesView({
                 onGo={onGo}
               />
             )}
+            {group.kind === "profile" && profileCompanions}
           </section>
         );
       })}

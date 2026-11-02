@@ -70,6 +70,9 @@ _VALUES = {
     "box": "0208",
     "year": "2024",
     "count": "2",
+    "group": "renta_family.descendiente",
+    "stated": "3",
+    "recorded": "1",
     "income_class": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD.value,
 }
 _RAW = re.compile(

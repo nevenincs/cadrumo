@@ -8,8 +8,11 @@ a removal and a move in as an addition:
 - A revision with screened IVA bindings (Modelo 303, Modelo 390) compares every
   invoice devengando in its aggregation period against the ledger.
 - OSS/IOSS reads tagged issued invoices devengando in the period.
-- The renta income and expense sources read an invoice only through a row: its
-  figures replace the row's, so only invoices linked to a contributor count.
+- The renta income and expense sources read an invoice through a row: its figures
+  replace the row's, so invoices linked to a contributor count.
+- The renta income source also adds what accrued and is still unpaid, and nets
+  corrections, with no row at all, so from field-set version 2 every issued invoice
+  entering its window under the declared criterion counts.
 
 The field set is the union of what those readers consult, including the
 decomposition contract that grounds income evidence. What is left out, and why:
@@ -17,8 +20,6 @@ decomposition contract that grounds income evidence. What is left out, and why:
 - ``invoice_number``, ``series``, ``notes``, both addresses, ``payment_id``,
   ``exemption_reference``, ``created_at``, ``updated_at``, ``provenance``: no
   calculation reads them.
-- ``rectifies_invoice_number``: only an advisory reads it; the rectificativa
-  treatment comes from ``invoice_class``.
 - ``retention_rate``: nothing reads it; ``retention_amount`` is the figure.
 - ``fx_rate_date``, ``fx_rate_source``, ``fx_rate_observation_date``: they
   evidence ``fx_rate`` without entering the conversion.
@@ -42,6 +43,7 @@ from typing import Final, cast
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.period import Period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.invoices.catalogue import InvoiceCatalogue
@@ -66,6 +68,8 @@ from ..invoices.source_observations import (
 from .invoice_devengo import resolve_invoice_devengo
 from .ledger_membership import ledger_transaction_ref_identity
 from .modelo_bindings import aggregation_period_for_modelo
+from .renta_imputation import ActivityImputationCriterion, ImputationCriteria
+from .renta_income_diagnostics import issued_invoice_enters_window
 
 # Append-only and versioned for the reasons the ledger field sets are: widening a
 # set in place would report every stored draft as drifted at once.
@@ -104,10 +108,17 @@ _INVOICE_FIELDS_V1: Final[tuple[str, ...]] = (
     "lines",
 )
 
-_INVOICE_FIELD_SETS: Final[Mapping[int, tuple[str, ...]]] = {1: _INVOICE_FIELDS_V1}
+# A correction nets against the invoice it names, so the name moves a figure.
+_INVOICE_FIELDS_V2: Final[tuple[str, ...]] = (*_INVOICE_FIELDS_V1, "rectifies_invoice_number")
+
+_INVOICE_FIELD_SETS: Final[Mapping[int, tuple[str, ...]]] = {1: _INVOICE_FIELDS_V1, 2: _INVOICE_FIELDS_V2}
 
 #: The version every new fingerprint is captured under.
-CURRENT_INVOICE_FIELD_SET_VERSION: Final = 1
+CURRENT_INVOICE_FIELD_SET_VERSION: Final = 2
+
+#: The first version whose scope holds the invoices renta income reads with no row.
+#: An older snapshot keeps its narrower scope, or its every draft would read as drifted.
+_ACCRUED_INCOME_SCOPE_VERSION: Final = 2
 
 _LINKED_INVOICE_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
     {
@@ -128,6 +139,7 @@ class _InvoiceReadSelection:
     iva_screen: bool
     oss: bool
     linked: bool
+    accrued_income: bool
 
     @property
     def reads_invoices(self) -> bool:
@@ -142,12 +154,30 @@ def _read_selection(revision: ModeloRevision, *, work_unit: WorkUnit) -> _Invoic
         and bool(invoice_ledger_screen_binding_ids(revision, modelo=work_unit.modelo)),
         oss=BindingSourceKind.LEDGER_OSS_AGGREGATION in declared,
         linked=bool(declared & _LINKED_INVOICE_SOURCES),
+        # The objective instalment's income has no accrued path: it reads activity volume.
+        accrued_income=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION in declared
+        and work_unit.modelo != form_for_role("renta.objective_instalment"),
     )
 
 
 def revision_reads_invoices(revision: ModeloRevision, *, work_unit: WorkUnit) -> bool:
     """Whether any calculation reader of this registry revision consults the catalogue."""
     return _read_selection(revision, work_unit=work_unit).reads_invoices
+
+
+def fingerprint_scope_is_narrower(
+    snapshot: InvoiceFingerprintSnapshot,
+    *,
+    revision: ModeloRevision,
+    work_unit: WorkUnit,
+    criteria: ImputationCriteria,
+) -> bool:
+    """Whether this stored fingerprint leaves out invoices the draft's accrued income may rest on."""
+    return (
+        snapshot.field_set_version < _ACCRUED_INCOME_SCOPE_VERSION
+        and _read_selection(revision, work_unit=work_unit).accrued_income
+        and criteria.usable(work_unit.filing_year) is ActivityImputationCriterion.DEVENGO
+    )
 
 
 def draft_contributor_identities(
@@ -218,6 +248,7 @@ def _invoices_in_scope(
     work_unit: WorkUnit,
     linked_invoice_ids: frozenset[str],
     contributors: frozenset[str],
+    accrued_scope_criteria: ImputationCriteria | None,
 ) -> tuple[Invoice, ...]:
     period = work_unit.period
     bucket_id = work_unit.bucket_id
@@ -229,6 +260,24 @@ def _invoices_in_scope(
     oss_period = _oss_period(period) if selection.oss else None
     # A period without a calendar span (the OSS exterior periods) has no issue-date scope.
     direct_period = period if selection.direct_sources and period.has_date_span() else None
+    accrued_end = (
+        aggregation_period_for_modelo(filing_year=work_unit.filing_year, code=period.registry_token).end_date
+        if accrued_scope_criteria is not None
+        else None
+    )
+
+    def in_accrued_scope(invoice: Invoice) -> bool:
+        return (
+            accrued_scope_criteria is not None
+            and accrued_end is not None
+            and issued_invoice_enters_window(
+                invoice,
+                bucket_id=bucket_id,
+                window_start=date(work_unit.filing_year, 1, 1),
+                window_end=accrued_end,
+                criteria=accrued_scope_criteria,
+            )
+        )
 
     def in_scope(invoice: Invoice) -> bool:
         if invoice.bucket_id is not None and invoice.bucket_id != bucket_id:
@@ -241,6 +290,7 @@ def _invoices_in_scope(
             or _in_linked_scope(
                 invoice, selection=selection, linked_invoice_ids=linked_invoice_ids, contributors=contributors
             )
+            or in_accrued_scope(invoice)
         )
 
     return tuple(invoice for invoice in catalogue.values() if in_scope(invoice))
@@ -329,6 +379,7 @@ def _current_rows(
     contributors: frozenset[str],
     ports: InvoiceCatalogueReadPorts,
     field_set_version: int,
+    criteria: ImputationCriteria,
 ) -> dict[str, str]:
     selection = _read_selection(revision, work_unit=work_unit)
     invoices = _invoices_in_scope(
@@ -337,6 +388,9 @@ def _current_rows(
         work_unit=work_unit,
         linked_invoice_ids=_linked_invoice_ids(ports, contributors) if selection.linked else frozenset(),
         contributors=contributors,
+        accrued_scope_criteria=(
+            criteria if selection.accrued_income and field_set_version >= _ACCRUED_INCOME_SCOPE_VERSION else None
+        ),
     )
     return {
         invoice.invoice_id: invoice_row_fingerprint(invoice, field_set_version=field_set_version)
@@ -351,6 +405,7 @@ def capture_invoice_fingerprint(
     contributors: frozenset[str],
     ports: InvoiceCatalogueReadPorts,
     captured_at: datetime,
+    criteria: ImputationCriteria,
 ) -> InvoiceFingerprintSnapshot | None:
     """Fingerprint the in-scope invoices, or return ``None`` when the modelo reads none."""
     if not revision_reads_invoices(revision, work_unit=work_unit):
@@ -361,6 +416,7 @@ def capture_invoice_fingerprint(
         contributors=contributors,
         ports=ports,
         field_set_version=CURRENT_INVOICE_FIELD_SET_VERSION,
+        criteria=criteria,
     )
     rows = tuple(
         InvoiceRowFingerprint(invoice_id=invoice_id, fingerprint=current[invoice_id]) for invoice_id in sorted(current)
@@ -380,8 +436,9 @@ def evaluate_invoice_fingerprint(
     revision: ModeloRevision,
     contributors: frozenset[str],
     ports: InvoiceCatalogueReadPorts,
+    criteria: ImputationCriteria,
 ) -> InvoiceFingerprintVerdict:
-    """Compare a stored fingerprint with the catalogue, under the stored field set."""
+    """Compare a stored fingerprint with the catalogue, under the stored version's fields and scope."""
     return diff_invoice_fingerprints(
         snapshot,
         _current_rows(
@@ -390,6 +447,7 @@ def evaluate_invoice_fingerprint(
             contributors=contributors,
             ports=ports,
             field_set_version=snapshot.field_set_version,
+            criteria=criteria,
         ),
     )
 
@@ -399,6 +457,7 @@ __all__ = [
     "capture_invoice_fingerprint",
     "draft_contributor_identities",
     "evaluate_invoice_fingerprint",
+    "fingerprint_scope_is_narrower",
     "invoice_row_fingerprint",
     "revision_reads_invoices",
 ]

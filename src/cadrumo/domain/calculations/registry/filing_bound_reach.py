@@ -144,7 +144,7 @@ def _casilla_reach(
         if casilla_id in visiting:
             return frozenset[CasillaId]()
         visiting.add(casilla_id)
-        found = {casilla_id} if casilla_id in exported else set()
+        found: set[CasillaId] = {casilla_id} if casilla_id in exported else set()
         for reader in casilla_readers.get(casilla_id, ()):
             found.update(walk(reader))
         visiting.discard(casilla_id)

@@ -60,8 +60,15 @@ const PICKED = { token: "c".repeat(64), name: "firma-ana-soler.p12" };
 
 /** Synthetic values, but the complete production schema and localized projection.
  * Regenerate with dev.desktop_profile_fixture; never invent fields here. */
-export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
+export function userProfileFixture(
+  censoSetup?: CensoMode,
+  /** Facts the made-up profile states, by path: where a scenario needs one
+   * the production fixture leaves unstated. */
+  stated: Record<string, string> = {},
+): ProfileFixture {
   const data = structuredClone(fixtures.en) as UserProfile;
+  for (const field of data.sections.flatMap((section) => section.fields))
+    if (field.path in stated) field.value = stated[field.path]!;
   if (censoSetup) {
     const values: Record<string, string> = {
       "identity.tax_id": "X1234567L",

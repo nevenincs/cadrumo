@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
@@ -261,20 +262,24 @@ class ModeloFormInstalment(StrEnum):
 class ModeloFormElectionFigure(BaseModel):
     """One amount an election states, in the filer's words, and whether it is advisory.
 
-    An advisory figure is one Cadrumo works out where no official rule fixes it;
-    ``advisory_words`` then says why, and only then.
+    ``amount`` is the exact decimal text of a non-negative amount in cents, so
+    the served contract carries the figure as written rather than a number a
+    reader may round. An advisory figure is one Cadrumo works out where no
+    official rule fixes it; ``advisory_words`` then says why, and only then.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     instalment: ModeloFormInstalment
-    amount: Decimal
+    amount: str = Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)
     words: str = Field(min_length=1)
     advisory: bool
     advisory_words: str | None = None
 
     @model_validator(mode="after")
     def _advisory_says_why(self) -> ModeloFormElectionFigure:
+        if try_parse_canonical_decimal(self.amount, signed=False, max_fraction_digits=2) is None:
+            raise ValueError("a figure's amount is the decimal text of a non-negative amount in cents")
         if self.advisory is (self.advisory_words is None):
             raise ValueError("an advisory figure carries its words, and only an advisory one")
         return self
@@ -608,7 +613,7 @@ def _instalment_figures(
     return tuple(
         ModeloFormElectionFigure(
             instalment=instalment,
-            amount=figure,
+            amount=f"{figure:f}",
             words=tr(
                 key,
                 share=f"{percent:f}",

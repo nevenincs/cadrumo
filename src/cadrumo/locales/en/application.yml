@@ -2215,6 +2215,10 @@ application:
       invoice_fingerprint_drift: Your invoices changed after modelo %{modelo} %{filing_year},
         %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
         %{added_count} added). Calculate it again before verifying.
+      invoice_fingerprint_narrower_scope: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates the tracking of invoices accrued with no bank movement,
+        so Cadrumo cannot say whether those have changed since. Calculate it again
+        to start tracking them.
       invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
         them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
         cannot be shown to be current. Try again once they can be read.
@@ -2289,6 +2293,9 @@ application:
         for estimación objetiva (módulos).'
       oss_evidence_missing: This declaration includes one-stop-shop (OSS) activity,
         but no supporting documents for it are saved.
+      oss_no_activity_contradicted: You declared this period without activity, but
+        it holds invoices under the regime. Remove the declaration or review those
+        invoices.
       oss_source_unrouted: Some one-stop-shop (OSS) entries are not counted in any
         box of this form.
       printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines
@@ -2304,6 +2311,9 @@ application:
         enough to file it.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
+      scheme_period_contradicted: The value {entered} in {binding_id} contradicts
+        this work's period, which is {expected}. Correct it or open the work for the
+        right period.
       selected_option_requires_nonzero: The selected option requires a nonzero value
         in this field.
       selected_option_requires_zero: The selected option requires an explicit zero

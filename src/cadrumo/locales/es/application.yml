@@ -2344,6 +2344,10 @@ application:
         modelo %{modelo} %{filing_year}, %{period} (%{changed_count} modificadas,
         %{removed_count} eliminadas, %{added_count} añadidas). Vuelve a calcularlo
         antes de verificarlo.
+      invoice_fingerprint_narrower_scope: Este cálculo del modelo %{modelo} %{filing_year},
+        %{period} es anterior al seguimiento de las facturas devengadas sin movimiento
+        bancario, así que Cadrumo no puede saber si han cambiado desde entonces. Vuelve
+        a calcularlo para empezar a seguirlas.
       invoice_fingerprint_unavailable: Cadrumo no ha podido leer tus facturas para
         compararlas con el modelo %{modelo} %{filing_year}, %{period}, así que no
         se puede confirmar que este cálculo esté al día. Inténtalo de nuevo cuando
@@ -2425,6 +2429,8 @@ application:
         de la estimación objetiva (módulos).'
       oss_evidence_missing: Esta declaración incluye operaciones de ventanilla única
         (OSS), pero no hay justificantes guardados de ellas.
+      oss_no_activity_contradicted: Has declarado este periodo sin actividad, pero
+        hay facturas del régimen en él. Quita la declaración o revisa esas facturas.
       oss_source_unrouted: Algunas operaciones de ventanilla única (OSS) no se cuentan
         en ninguna casilla de este modelo.
       printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas
@@ -2441,6 +2447,9 @@ application:
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.
+      scheme_period_contradicted: El valor {entered} de {binding_id} contradice el
+        periodo de este trabajo, que es {expected}. Corrígelo o abre el trabajo del
+        periodo correcto.
       selected_option_requires_nonzero: La opción seleccionada exige un valor distinto
         de cero en este campo.
       selected_option_requires_zero: La opción seleccionada exige un cero explícito

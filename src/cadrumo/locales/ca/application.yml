@@ -2348,6 +2348,10 @@ application:
         el model %{modelo} %{filing_year}, %{period} (%{changed_count} modificades,
         %{removed_count} eliminades, %{added_count} afegides). Torna a calcular-lo
         abans de verificar-lo.
+      invoice_fingerprint_narrower_scope: Aquest càlcul del model %{modelo} %{filing_year},
+        %{period} és anterior al seguiment de les factures meritades sense moviment
+        bancari, així que Cadrumo no pot saber si han canviat des d'aleshores. Torna
+        a calcular-lo per començar a seguir-les.
       invoice_fingerprint_unavailable: Cadrumo no ha pogut llegir les teves factures
         per comparar-les amb el model %{modelo} %{filing_year}, %{period}, així que
         no es pot confirmar que aquest càlcul estigui al dia. Torna-ho a provar quan
@@ -2431,6 +2435,8 @@ application:
         de l''estimació objectiva (mòduls).'
       oss_evidence_missing: Aquesta declaració inclou operacions de finestreta única
         (OSS), però no hi ha justificants desats d'aquestes operacions.
+      oss_no_activity_contradicted: Has declarat aquest període sense activitat, però
+        hi ha factures del règim. Treu la declaració o revisa aquestes factures.
       oss_source_unrouted: Algunes operacions de finestreta única (OSS) no es compten
         a cap casella d'aquest model.
       printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
@@ -2446,6 +2452,9 @@ application:
         per presentar-lo.
       registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
         de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
+      scheme_period_contradicted: El valor {entered} de {binding_id} contradiu el
+        període d'aquest treball, que és {expected}. Corregeix-lo o obre el treball
+        del període correcte.
       selected_option_requires_nonzero: L’opció seleccionada exigeix un valor diferent
         de zero en aquest camp.
       selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit

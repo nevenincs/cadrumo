@@ -4319,7 +4319,14 @@ desktop:
       next_attention: A következő rovat, amely rád vár (amíg a nyomtatványon van a
         fókusz)
     outline:
+      collapse_all: Összes csoport összecsukása
+      could_not_calculate: 'Nem számítható ki: {count}'
+      does_not_apply: Nem alkalmazandó
+      expand_all: Összes csoport kibontása
+      hide_not_applicable: A nem alkalmazandók elrejtése
       label: A nyomtatvány vázlata
+      may_apply: Csak ha rád vonatkozik
+      needs_you: 'Rád vár: {count}'
     rename:
       name: Név
       save: Név mentése
@@ -9659,6 +9666,20 @@ workspace:
       save: Megtartás átnézésre
       save_next: Megtartás és tovább
       unreadable: Ez az érték nem olvasható.
+    election:
+      clear: A(z) {year}. év törlése
+      contradictory: A profilod több választ is tartalmaz a(z) {year}. évre. Válaszd
+        ki a helyeset, és mentsd el, vagy töröld az évet.
+      other_years: Más évek, amelyeket a profilod megad
+      reading: A profilod adatainak beolvasása…
+      retry: Olvasás újra
+      save: Mentés a(z) {year}. évre
+      saved: Elmentve a(z) {year}. évre.
+      state:
+        contradictory: A(z) {year}. évre többször is meg van adva, eltérő válasszal
+        declared: Megadva a(z) {year}. évre
+        undeclared: Nincs megadva a(z) {year}. évre
+      title: A vállalkozói bevétel elszámolási módja, {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt erősítsd
@@ -9676,9 +9697,20 @@ workspace:
         past_filing_window: A benyújtási határidő lejárt, a két részletben fizetéshez
           pedig azon belül kell benyújtanod a bevallást.
         result_unknown: 'Előbb számold ki a bevallást: az eredménye dönt erről.'
+        settlement_unsupported: A bevallás által rendezett összeg nem az eredményével
+          azonos irányú, például ha a teljes fizetendő összeget a házastársad visszatérítésének
+          terhére felfüggeszted. A hivatalos fájl ezt nem tudja rögzíteni, ezért itt
+          nem rendezhető.
       file_format:
         fixed_width: AEAT-fájl a rögzített szélességű BOE-formátumban
         xml_dictionary: AEAT XML-fájl
+      instalment:
+        advisory: 'Tájékoztató jellegű: a Cadrumo az első részletet centre kerekíti,
+          a maradékot a második részlethez adja. Hivatalos szabály nem mondja meg,
+          melyik részlethez tartozik egy cent, ezért fizetés előtt ellenőrizd mindkét
+          összeget a Renta WEB-ben.'
+        first: 'Első részlet, a %{share}% a benyújtáskor: %{amount}'
+        second: 'Második részlet, a fennmaradó %{share}%: %{amount}'
       resolve_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg,
         ami akadályozza a benyújtást (akadályozó: {count}).'
       title: A bevallás exportálása
@@ -9843,6 +9875,11 @@ workspace:
     in_spanish: (spanyolul)
     issues:
       action:
+        at_source: Add meg vagy javítsd ki azokat a nyilvántartásokat vagy adatokat,
+          amelyekből származik, majd számolj újra.
+        at_source_if_applies: Nincs teendőd, kivéve ha ez az összeg rád vonatkozik.
+          Ha igen, add meg vagy javítsd ki azokat a nyilvántartásokat, amelyekből
+          származik, majd számolj újra.
         confirm: Nyisd meg a rovatokat egyenként, és erősítsd meg az értéküket, vagy
           írd be a helyeset.
         confirm_by_section: Nyisd meg a szakaszokat egyenként, és erősítsd meg az

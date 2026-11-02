@@ -4353,7 +4353,14 @@ desktop:
       move: Moverse entre casillas
       next_attention: Siguiente casilla que te necesita (con el formulario enfocado)
     outline:
+      collapse_all: Plegar todos los grupos
+      could_not_calculate: 'No se pudo calcular: {count}'
+      does_not_apply: No aplica
+      expand_all: Desplegar todos los grupos
+      hide_not_applicable: Ocultar lo que no aplica
       label: Esquema del formulario
+      may_apply: Solo si se te aplica
+      needs_you: 'Te necesita: {count}'
     rename:
       name: Nombre
       save: Guardar el nombre
@@ -9716,6 +9723,20 @@ workspace:
       save: Dejar para revisar
       save_next: Dejar y pasar a la siguiente
       unreadable: No se ha podido leer este valor.
+    election:
+      clear: Borrar {year}
+      contradictory: Tu perfil indica más de una respuesta para {year}. Elige la correcta
+        y guárdala, o borra el ejercicio.
+      other_years: Otros años que indica tu perfil
+      reading: Leyendo lo que indica tu perfil…
+      retry: Volver a leer
+      save: Guardar para {year}
+      saved: Guardado para {year}.
+      state:
+        contradictory: Indicado más de una vez para {year}, con respuestas distintas
+        declared: Indicado para {year}
+        undeclared: Sin indicar para {year}
+      title: Criterio de ingresos de tu actividad en {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma los valores supuestos antes de generar el fichero o
@@ -9734,9 +9755,19 @@ workspace:
         past_filing_window: El plazo de presentación ha terminado, y pagar en dos
           plazos exige presentar la declaración dentro de él.
         result_unknown: 'Calcula antes la declaración: su resultado lo decide.'
+        settlement_unsupported: El importe que liquida esta declaración no va en el
+          mismo sentido que su resultado, como cuando suspendes todo el importe a
+          ingresar con cargo a la devolución de tu cónyuge. El fichero oficial no
+          permite indicarlo, así que no se puede liquidar aquí.
       file_format:
         fixed_width: Fichero de la AEAT con el diseño de registro BOE de ancho fijo
         xml_dictionary: Fichero XML de la AEAT
+      instalment:
+        advisory: 'Orientativo: Cadrumo redondea el primer plazo al céntimo y deja
+          el resto para el segundo. Ninguna norma oficial indica a qué plazo va un
+          céntimo, así que comprueba ambos importes en Renta WEB antes de pagar.'
+        first: 'Primer plazo, el %{share} % al presentar: %{amount}'
+        second: 'Segundo plazo, el %{share} % restante: %{amount}'
       resolve_first: 'Resuelve lo que impide presentar antes de generar el fichero
         o registrar la presentación (impiden presentar: {count}).'
       title: Exportar la declaración
@@ -9902,6 +9933,10 @@ workspace:
     in_spanish: (en español)
     issues:
       action:
+        at_source: Añade o corrige los registros o datos de los que procede y vuelve
+          a calcular.
+        at_source_if_applies: No hace falta hacer nada, salvo que esa cifra te afecte.
+          Si es así, añade o corrige los registros de los que procede y vuelve a calcular.
         confirm: Abre cada casilla y confirma su valor, o escribe el correcto.
         confirm_by_section: Abre cada sección y confirma sus valores, o escribe los
           correctos.

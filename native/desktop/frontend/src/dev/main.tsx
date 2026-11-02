@@ -16,6 +16,7 @@ import {
   scenarioHost,
   type CalendarShape,
 } from "./scenarioHost";
+import { ELECTION_SCENARIOS } from "./imputationElectionFixture";
 import { LEDGER_SHAPES } from "./ledgerFixture";
 import { MODELO_SHAPES } from "./modeloFixture";
 import { findScenario, type Scenario } from "./scenarios";
@@ -95,6 +96,10 @@ function readParams() {
     ledger: LEDGER_SHAPES.find((shape) => shape === params.get("ledger")),
     // How the made-up declarations answer.
     modelo: MODELO_SHAPES.find((shape) => shape === params.get("modelo")),
+    // What the made-up profile states for the imputation election.
+    election: ELECTION_SCENARIOS.find(
+      (state) => state === params.get("election"),
+    ),
     // A made-up window port, for how the page answers a close.
     window: params.get("window") === "port",
   };

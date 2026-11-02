@@ -535,6 +535,7 @@ def _ledger_expense_value_outcomes(
             bucket_id=context.bucket_id,
             start=date(period.filing_year, 1, 1),
             end=period.end_date,
+            criteria=declared_imputation_criteria(context.profile.record if context.profile is not None else None),
         )
     return {
         binding_id: ledger_sum_outcome(value, rows_present=held_back_rows, accruing_invoice_present=bool(accruing))
@@ -613,6 +614,7 @@ def _expense_imputation_diagnostics(
             bucket_id=context.bucket_id,
             start=date(period.filing_year, 1, 1),
             end=period.end_date,
+            criteria=criteria,
         )
     unpaid = _unpaid_received_invoice_details(
         accruing, _received_invoice_rows(transactions), criteria, period.filing_year
