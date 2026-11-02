@@ -32,10 +32,12 @@ from ...core.filing_year import FilingYear
 from ...core.hex import HEX_PATTERN_64, Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from ...domain.modelos.codes import ModeloCode
+from ..live.borrador_100 import Borrador100SnapshotRefusalReason
 from ..modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ..modelo.reconciliation_records import ModeloReconciliationDiff
 from ..operations.models import OperationDefinitionId
@@ -716,8 +718,25 @@ class AeatSyncFiledRowV1(BaseModel):
             raise ValueError("match group contradicts the local record and the AEAT observation")
 
 
+class AeatSyncRefusedSnapshotV1(BaseModel):
+    """One stored capture of an area that the pinned authority refuses to read.
+
+    It is named with its reason rather than dropped, so a refused capture never
+    reads as one that was never brought.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+    snapshot_id: SnapshotId
+    reason: Borrador100SnapshotRefusalReason
+
+
 class AeatSyncAreaStatusV1(BaseModel):
-    """One area's state, last successful capture and last attempt."""
+    """One area's state, last successful capture and last attempt.
+
+    ``refused_snapshots`` names each stored Borrador 100 capture the pinned
+    authority refuses. The area still reports its readable captures; with none
+    it is unavailable rather than never brought.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
     area: AeatSyncStatusArea
@@ -734,6 +753,7 @@ class AeatSyncAreaStatusV1(BaseModel):
     filed_periods: AeatSyncFiledPeriodCountsV1 | None = None
     filed_rows: tuple[AeatSyncFiledRowV1, ...] | None = None
     """Each declaration the counts count, served with them and only with them."""
+    refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...] = ()
 
     @field_validator("last_brought_at", "last_attempt_at")
     @classmethod
@@ -754,7 +774,20 @@ class AeatSyncAreaStatusV1(BaseModel):
         if self.state is AeatSyncAreaState.POSSIBLY_STALE and self.stale_after_days is None:
             raise ValueError("a possibly stale area requires its horizon")
         self._validate_counts(brought=brought)
+        self._validate_refused_snapshots()
         return self
+
+    def _validate_refused_snapshots(self) -> None:
+        """Require refused captures to belong to a store that was read, in snapshot-id order."""
+        if not self.refused_snapshots:
+            return
+        if self.area is not AeatSyncStatusArea.BORRADOR_100:
+            raise ValueError("only Borrador 100 names refused captures")
+        if self.state is AeatSyncAreaState.NEVER_BROUGHT:
+            raise ValueError("an area with a refused capture was brought")
+        ids = tuple(item.snapshot_id for item in self.refused_snapshots)
+        if ids != tuple(sorted(set(ids))):
+            raise ValueError("refused captures must be sorted and unique")
 
     def _validate_counts(self, *, brought: bool) -> None:
         """Require counts to belong to a captured area of the matching kind."""

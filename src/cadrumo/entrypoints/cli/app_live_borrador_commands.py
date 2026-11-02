@@ -12,7 +12,10 @@ from typing import Literal, TypedDict
 
 import typer
 
-from ...application.live.borrador_100_contracts import Borrador100SnapshotSummary
+from ...application.live.borrador_100_contracts import (
+    Borrador100RefusedSnapshotSummary,
+    Borrador100SnapshotSummary,
+)
 from ...application.live.snapshot_base import SnapshotLifecycleState, SnapshotLifecycleStateValue, SnapshotStateFilter
 from ...application.operations.public_period import PublicPeriod
 from ...core.i18n.render import tr
@@ -21,6 +24,7 @@ from .app_live_borrador_results import (
     Borrador100ImportResult,
     Borrador100LatestResult,
     Borrador100ListResult,
+    Borrador100RefusedSnapshotPayload,
     Borrador100SnapshotSummaryPayload,
     Borrador100ViewResult,
 )
@@ -63,6 +67,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
         blank_casillas=sorted(projection.blank_casillas),
         unowned_casillas=sorted(projection.unowned_casillas),
         warnings=list(projection.warnings),
+        outcome=projection.outcome,
     )
     lines = [
         f"bucket\t{bucket_id}",
@@ -75,6 +80,8 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
         f"binding_count\t{snapshot.binding_count}",
         f"blank_casillas\t{len(projection.blank_casillas)}",
         f"unowned_casillas\t{len(projection.unowned_casillas)}",
+        f"state\t{snapshot.state.value}",
+        f"outcome\t{projection.outcome.value}",
     ]
     emit_envelope(ctx, command="app.live.borrador.100.import", result=result, lines=lines)
 
@@ -88,6 +95,7 @@ def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotS
         bucket_id=bucket_id,
         count=len(rows),
         rows=[Borrador100SnapshotSummaryPayload(**_borrador_row(row)) for row in rows],
+        refused=_refused_payloads(projection.refused_snapshots),
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     lines.extend(
@@ -95,6 +103,7 @@ def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotS
         f"bindings={row.binding_count}\t{row.state.value}"
         for row in rows
     )
+    lines.extend(_refused_lines(projection.refused_snapshots))
     emit_envelope(ctx, command="app.live.borrador.100.list", result=result, lines=lines)
 
 
@@ -132,13 +141,21 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
     projection = read_borrador_100_for_cli(ctx, kind="latest", filing_year=filing_year)
     bucket_id = str(projection.profile_id)
     record = projection.snapshot
+    refused = _refused_payloads(projection.refused_snapshots)
     if record is None:
-        result = Borrador100LatestResult(bucket_id=bucket_id, filing_year=filing_year, snapshot_id=None)
+        result = Borrador100LatestResult(
+            bucket_id=bucket_id, filing_year=filing_year, snapshot_id=None, refused=refused
+        )
         emit_envelope(
             ctx,
             command="app.live.borrador.100.latest",
             result=result,
-            lines=[f"bucket\t{bucket_id}", f"filing_year\t{filing_year}", "snapshot_id\t-"],
+            lines=[
+                f"bucket\t{bucket_id}",
+                f"filing_year\t{filing_year}",
+                "snapshot_id\t-",
+                *_refused_lines(projection.refused_snapshots),
+            ],
         )
         return
     result = Borrador100LatestResult(
@@ -150,6 +167,7 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
         source_url=record.source_url,
         binding_count=record.binding_count,
         state=_active_borrador_state(record.state),
+        refused=refused,
     )
     emit_envelope(
         ctx,
@@ -162,8 +180,31 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
             f"period\t{record.period.to_period()}",
             f"captured_at\t{record.captured_at.isoformat()}",
             f"binding_count\t{record.binding_count}",
+            *_refused_lines(projection.refused_snapshots),
         ],
     )
+
+
+def _refused_payloads(
+    refused: tuple[Borrador100RefusedSnapshotSummary, ...],
+) -> list[Borrador100RefusedSnapshotPayload]:
+    """Project refused snapshots into the CLI payload, never with their values."""
+    return [
+        Borrador100RefusedSnapshotPayload(
+            snapshot_id=str(item.snapshot_id),
+            filing_year=item.filing_year,
+            period=str(item.period.to_period()),
+            captured_at=item.captured_at.isoformat(),
+            state=item.state,
+            reason=item.reason,
+        )
+        for item in refused
+    ]
+
+
+def _refused_lines(refused: tuple[Borrador100RefusedSnapshotSummary, ...]) -> list[str]:
+    """Name each refused snapshot and its reason on its own text line."""
+    return [f"refused\t{item.snapshot_id}\t{item.filing_year}\t{item.reason.value}" for item in refused]
 
 
 def _borrador_row(snapshot: Borrador100SnapshotSummary) -> _BorradorRow:

@@ -25,6 +25,7 @@ from .errors import LiveApplicationInputError
 __all__ = [
     "BorradorCasillaProjection",
     "borrador_admitted_bindings",
+    "borrador_keys_not_admitted",
     "project_printed_casillas",
     "require_borrador_keys_admitted",
 ]
@@ -80,15 +81,20 @@ def project_printed_casillas(
     )
 
 
+def borrador_keys_not_admitted(keys: Iterable[BindingId], revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Return, sorted, the keys the pinned revision does not admit to a borrador snapshot."""
+    admitted = borrador_admitted_bindings(revision)
+    return tuple(sorted(key for key in keys if key not in admitted))
+
+
 def require_borrador_keys_admitted(keys: Iterable[BindingId], revision: ModeloRevision) -> None:
-    """Refuse stored keys the pinned revision does not admit to a borrador snapshot.
+    """Refuse keys the pinned revision does not admit to a borrador snapshot.
 
     This refuses a free casilla key and a binding id the revision no longer
     declares alike. No stored key is rewritten: such a snapshot is unusable and
     the document has to be imported again.
     """
-    admitted = borrador_admitted_bindings(revision)
-    refused = sorted(key for key in keys if key not in admitted)
+    refused = borrador_keys_not_admitted(keys, revision)
     if refused:
         raise LiveApplicationInputError(
             translated_message="application.live.borrador.errors.binding_keys_not_admitted",

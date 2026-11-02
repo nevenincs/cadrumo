@@ -118,7 +118,7 @@ def compose_aeat_sync_status_ports(
 
     def borrador_snapshots():
         repository = build_borrador_100_snapshot_repository(bucket_id=bucket_id)
-        return Borrador100SnapshotService(bucket_id=bucket_id, repository=repository).list_snapshots(
+        return Borrador100SnapshotService(bucket_id=bucket_id, repository=repository).read_snapshots(
             state=SnapshotLifecycleState.ACTIVE, operation=operation
         )
 
