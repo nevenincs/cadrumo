@@ -2318,6 +2318,16 @@ application:
         megadott arányban vett figyelembe költségkategória nélkül. Ha most számolsz,
         ezek visszatartásra kerülnek, amíg meg nem adod a kategóriát. A mentett értékek
         nem változtak.
+      withholding_count_exceeds_summary_perceptors: A Modelo %{source_modelo} (%{filing_year},
+        %{period}) a(z) %{casilla_id} mezőben %{declared_perceptors} kedvezményezettet
+        számol, de a Modelo %{modelo} az egész évre csak %{summary_perceptors} különböző
+        kedvezményezettet tartalmaz. Az éves összesítőben szerepelnie kell mindenkinek,
+        akit ez a mező számol. Vedd fel a hiányzó kedvezményezetteket ennek a modelónak
+        a részletezőjébe, vagy javítsd a számot a Modelo %{source_modelo} bevallásban.
+      withholding_count_not_cross_checked: 'A Modelo %{modelo} (%{filing_year}) nem
+        volt összevethető a Modelo %{source_modelo} bevallással a következő időszakokra:
+        %{unchecked_periods}, mert ezekről nincs rögzített bevallás. Összevetett időszakok:
+        %{checked_periods}. Ez nem jelenti azt, hogy ezekben senkinek sem fizettél.'
       withholding_detail_absent_against_ledger_evidence: 'A Modelo %{modelo} (%{filing_year})
         egyetlen kedvezményezettnek sem jelent be kifizetést, de a nyilvántartásaid
         szerint abban az évben adólevonás alá eső kifizetések történtek: %{contradicting_invoice_count}

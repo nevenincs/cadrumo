@@ -2362,6 +2362,16 @@ application:
         sin categoría de gasto por la parte indicada. Si calculas ahora, quedarán
         retenidos hasta que les asignes la categoría. Los valores guardados no han
         cambiado.
+      withholding_count_exceeds_summary_perceptors: El modelo %{source_modelo} del
+        %{period} de %{filing_year} cuenta %{declared_perceptors} perceptor(es) en
+        la casilla %{casilla_id}, pero el modelo %{modelo} solo recoge %{summary_perceptors}
+        perceptor(es) distinto(s) en todo el año. Toda persona contada en esa casilla
+        debe figurar en el resumen anual. Añade los perceptores que faltan al detalle
+        de este modelo o corrige el recuento del modelo %{source_modelo}.
+      withholding_count_not_cross_checked: 'No se ha podido comparar el modelo %{modelo}
+        de %{filing_year} con el modelo %{source_modelo} en %{unchecked_periods},
+        porque no consta ninguna declaración de esos periodos. Periodos comparados:
+        %{checked_periods}. Esto no significa que no pagaras a nadie en ellos.'
       withholding_detail_absent_against_ledger_evidence: 'El modelo %{modelo} de %{filing_year}
         no declara ninguna percepción para ningún perceptor, pero tus registros recogen
         rentas sometidas a retención pagadas ese año: %{contradicting_invoice_count}

@@ -2366,6 +2366,16 @@ application:
         període %{period}, va comptar %{rows} despesa(es) d'ús mixt sense categoria
         de despesa per la part indicada. Si calcules ara, quedaran retingudes fins
         que els assignis la categoria. Els valors desats no han canviat.
+      withholding_count_exceeds_summary_perceptors: El model %{source_modelo} del
+        %{period} de %{filing_year} compta %{declared_perceptors} perceptor(s) a la
+        casella %{casilla_id}, però el model %{modelo} només recull %{summary_perceptors}
+        perceptor(s) diferent(s) en tot l'any. Tota persona comptada en aquesta casella
+        ha de figurar al resum anual. Afegeix els perceptors que falten al detall
+        d'aquest model o corregeix el recompte del model %{source_modelo}.
+      withholding_count_not_cross_checked: 'No s''ha pogut comparar el model %{modelo}
+        de %{filing_year} amb el model %{source_modelo} a %{unchecked_periods}, perquè
+        no consta cap declaració d''aquests períodes. Períodes comparats: %{checked_periods}.
+        Això no vol dir que no paguessis ningú en aquests períodes.'
       withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} de %{filing_year}
         no declara cap percepció per a cap perceptor, però els teus registres recullen
         rendes sotmeses a retenció pagades aquell any: %{contradicting_invoice_count}

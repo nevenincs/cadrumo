@@ -2226,6 +2226,16 @@ application:
         period %{period}, counted %{rows} mixed-use expense(s) with no spending category
         at their stated share. Calculating now would hold them back until you assign
         the category. The stored values have not changed.
+      withholding_count_exceeds_summary_perceptors: Modelo %{source_modelo} %{period}
+        %{filing_year} counts %{declared_perceptors} payee(s) in box %{casilla_id},
+        but modelo %{modelo} names only %{summary_perceptors} different payee(s) for
+        the whole year. Everyone counted in that box must appear on the annual summary.
+        Add the missing payees to this modelo's detail, or correct the count on modelo
+        %{source_modelo}.
+      withholding_count_not_cross_checked: 'Modelo %{modelo} %{filing_year} could
+        not be compared with modelo %{source_modelo} for %{unchecked_periods}, because
+        no declaration is recorded for those periods. Compared periods: %{checked_periods}.
+        This does not mean nobody was paid in them.'
       withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
         declares no payments to anyone, but your records show payments subject to
         withholding made that year: %{contradicting_invoice_count} received invoice(s)
