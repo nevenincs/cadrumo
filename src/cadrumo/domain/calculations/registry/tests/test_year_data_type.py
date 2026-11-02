@@ -3,10 +3,10 @@
 The `year` variant on `CasillaDefinition.data_type` plus the
 `ModeloYear` `Annotated` alias on the schema module carry the
 registry's fiscal-year contract. These tests exercise the alias
-against valid years in the supported window, the boundary cases at
-2000 and 2099, and rejection paths for out-of-range, blank,
-non-integer, boolean, and float inputs. The window matches
-`RegistrySnapshotRef.modelo_year`.
+against years written with four digits, the boundary cases at
+1000 and 9999, and rejection paths for years of another width, blank,
+non-integer, boolean, and float inputs. Which years the registry covers is
+not this alias's claim.
 """
 
 from __future__ import annotations
@@ -43,9 +43,11 @@ class TestModeloYearAccepts:
 
     def test_canonical_input_returns_int(self) -> None:
         cases = (
+            (1000, 1000),
             (2000, 2000),
             (2025, 2025),
             (2099, 2099),
+            (9999, 9999),
             ("2024", 2024),
             ("  2026  ", 2026),
         )
@@ -59,10 +61,10 @@ class TestModeloYearRejects:
 
     def test_invalid_values_rejected(self) -> None:
         cases: tuple[object, ...] = (
-            1999,
-            2100,
-            "1999",
-            "2100",
+            999,
+            10000,
+            "999",
+            "10000",
             "",
             "   ",
             "twenty-twenty",
