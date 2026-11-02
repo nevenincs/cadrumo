@@ -1,5 +1,6 @@
 import {
   ledgerFailure,
+  servedRefusalWords,
   type LedgerFailureCode,
   type LedgerOutcome,
 } from "../../../shell/ledger";
@@ -12,8 +13,15 @@ import type { ModeloPort } from "../../../shell/modelo";
 
 export type OperationRun<Result> =
   | { kind: "settled"; result: Result }
-  /** The runtime settled it without changing anything. */
-  | { kind: "refused"; operationId: string; reason: string | null }
+  /** The runtime settled it without changing anything. `words` is the
+   * sentence the backend served for why, shown as served; null when it
+   * served none. */
+  | {
+      kind: "refused";
+      operationId: string;
+      reason: string | null;
+      words: string | null;
+    }
   /** The request never reached the runtime; nothing was changed. */
   | { kind: "not_sent"; code: LedgerFailureCode }
   /** It committed, and its result could not be read. */
@@ -52,6 +60,7 @@ export async function runOperation<Result>(
         kind: "refused",
         operationId: failure.operation_id,
         reason: failure.reason ?? null,
+        words: null,
       };
     if (NOT_SENT.has(failure.code))
       return { kind: "not_sent", code: failure.code };
@@ -65,6 +74,7 @@ export async function runOperation<Result>(
         kind: "refused",
         operationId: outcome.operation_id,
         reason: outcome.reason,
+        words: servedRefusalWords(outcome.detail),
       };
     // A write of this family never pauses for a review; one that does is
     // not followed here, and what it did is not known.

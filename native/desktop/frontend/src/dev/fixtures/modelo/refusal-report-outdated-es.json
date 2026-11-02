@@ -1,0 +1,19 @@
+{
+  "detail_version": 1,
+  "kind": "registered_error",
+  "error_code": "REFUSED_MODELO_CALCULATION_BLOCKED",
+  "message_key": "application.modelo.calc_diagnostic.calculation_screen_outdated.what",
+  "context": [
+    { "key": "action", "value": "report" },
+    {
+      "key": "calculation_revision_id",
+      "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    { "key": "reason", "value": "calculation_screen_outdated" },
+    { "key": "reasons", "value": "calculation_screen_outdated" }
+  ],
+  "context_entries_omitted": 0,
+  "precondition_verdict_json": null,
+  "refusal_words": "Este cálculo se hizo antes de las comprobaciones actuales de Cadrumo sobre sus cifras, así que no se puede comprobar, exportar ni registrar tal como está.",
+  "refusal_words_language": "es"
+}

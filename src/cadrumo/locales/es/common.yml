@@ -201,6 +201,16 @@ aggregation:
         de ingresos del Modelo 130 (por ejemplo --year 2024 --period 1T).
       unsupported_period: Se requiere un periodo anual para la agregación de ingresos
         del Modelo 100 (p.ej. 2024-0A).
+  retencion_soportada:
+    errors:
+      ejercicio_unsupported: El ejercicio de este registro está fuera de los años
+        de presentación que admite Cadrumo.
+      family_not_declared: La revisión del Modelo 100 de este ejercicio no lee retenciones
+        soportadas, así que el registro nunca llegaría a un cálculo.
+      identity_mismatch: El registro no coincide con el pagador, la clase de renta
+        o el certificado ya guardados para él.
+      own_tax_id: El NIF del pagador es el tuyo; una retención que practicas tú no
+        es un pago a cuenta a tu favor.
   retenciones:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido

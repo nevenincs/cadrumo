@@ -18,7 +18,7 @@ from typing import NoReturn
 from uuid import UUID
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import AggregationUnsupportedModeloError
@@ -26,6 +26,8 @@ from cadrumo.application.cli_exception_preconditions import (
     CliExceptionPrecondition,
     cli_exception_no_recovery_verdict,
 )
+from cadrumo.application.modelo.action_errors import ModeloDomiciliationPastCutoffError
+from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from cadrumo.application.modelo.query_read_contracts import ModeloReadinessOperationRequest
 from cadrumo.application.modelo.query_read_operation import (
     build_modelo_readiness_definition,
@@ -38,6 +40,8 @@ from cadrumo.application.modelo.work_create_operation import (
 )
 from cadrumo.application.operations.capabilities import OperationOwnedResource
 from cadrumo.application.operations.error_detail import (
+    RECORD_FAULT_WORDS_LOCALE_KEY,
+    UNWORDED_REGISTERED_ERROR_LOCALE_KEY,
     OperationErrorDetailKind,
     OperationErrorDetailV1,
     operation_error_detail_schema,
@@ -58,12 +62,23 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
-from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.config import override_settings
+from cadrumo.core.errors.error_codes import get_registered_error_code, resolve_error_message
+from cadrumo.core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.i18n.translatable import Translatable as tr
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.invoices.errors import InvoiceValidationError
+from cadrumo.domain.invoices.rule_findings import (
+    InvoiceRuleFindingCode,
+    advance_payment_collection_finding,
+    raise_first_rule_finding,
+    rule_finding_words_key,
+)
 
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
@@ -145,9 +160,10 @@ def _settle_and_read(
     *,
     authority_operation: PinnedAuthorityOperation,
     result_schema: object | None = None,
+    language: str = "en",
 ) -> _SettledCase:
     storage_root = tmp_path / "durable-state"
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, override_settings(cadrumo_output_language=language):
         journal, leases, operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
@@ -401,3 +417,170 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
         assert context["period"] == "1T"
         assert context["available_revision_ids"] == "2025, 2026-y-siguientes"
         assert OperationErrorDetailV1.model_validate_json(detail.model_dump_json()) == detail
+
+
+#: A synthetic NIF-IVA: a private identifier a served sentence must never carry.
+_PRIVATE_NIF = "ESB12345674"
+
+#: Context of a direct debit refused past its cutoff, every placeholder of its sentence filled.
+_PAST_CUTOFF_CONTEXT: dict[str, object] = {
+    "calculation_revision_id": "calc-0001",
+    "modelo": "303",
+    "filing_year": "2026",
+    "period": "1T",
+    "payment_cutoff_on": "2026-04-15",
+    "payment_cutoff_source": "filing_window",
+    "payment_cutoff_legal_refs": "Orden HAC/3625/2003, art. 3",
+    "export_on": "2026-04-16",
+}
+
+
+def _past_cutoff_refusal(**context: object) -> ModeloDomiciliationPastCutoffError:
+    return ModeloDomiciliationPastCutoffError(
+        translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff", context=context
+    )
+
+
+class _AdvancePaymentRecord(BaseModel):
+    """A record whose own validator refuses an advance payment on a partly collected price."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    paid_in_full: bool
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _advance_collected(self) -> _AdvancePaymentRecord:
+        raise_first_rule_finding(
+            (advance_payment_collection_finding(advance_role=True, fully_collected=self.paid_in_full),)
+        )
+        return self
+
+
+def _raising(make: Callable[[], BaseException]) -> type[object]:
+    """An executor class that stops by raising what ``make`` builds."""
+
+    class _Raising:
+        async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> NoReturn:
+            del request, context
+            raise make()
+
+    return _Raising
+
+
+def _served(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    make: Callable[[], BaseException],
+    *,
+    language: str,
+) -> OperationErrorDetailV1:
+    executor = _raising(make)
+    case = _settle_and_read(
+        tmp_path, _executor_registry(executor, executor), authority_operation=authority_operation, language=language
+    )
+    assert isinstance(case.detail, OperationResultProjectionSuccessV1)
+    detail = case.detail.projection
+    assert isinstance(detail, OperationErrorDetailV1)
+    return detail
+
+
+def _record_fault() -> BaseException:
+    try:
+        _BoundedRecord(actor=_OFFENDING_VALUE)
+    except ValidationError as error:
+        return error
+    raise AssertionError("the bounded record admitted an over-long value")
+
+
+def _advance_payment_fault() -> BaseException:
+    try:
+        _AdvancePaymentRecord(paid_in_full=False)
+    except ValidationError as error:
+        return error
+    raise AssertionError("a partly collected advance payment was admitted")
+
+
+@pytest.mark.parametrize("language", ["en", "es", "ca", "hu"])
+def test_a_catalogue_refusal_serves_its_finished_sentence_in_the_worker_language(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation, language: str
+) -> None:
+    """The sentence is the one the in-process command prints, legal references included, in that language."""
+    detail = _served(
+        tmp_path, authority_operation, lambda: _past_cutoff_refusal(**_PAST_CUTOFF_CONTEXT), language=language
+    )
+
+    assert detail.refusal_words_language is OutputLanguage(language)
+    assert detail.refusal_words == resolve_error_message(_past_cutoff_refusal(**_PAST_CUTOFF_CONTEXT), locale=language)
+    assert detail.refusal_words is not None
+    assert "Orden HAC/3625/2003, art. 3" in detail.refusal_words
+    assert "2026-04-15" in detail.refusal_words
+    # The machine-readable facts the CLI and MCP read are unchanged.
+    assert detail.error_code == get_registered_error_code(ModeloDomiciliationPastCutoffError).code
+    assert detail.message_key == "errors.refused.refused_modelo_domiciliation_past_cutoff"
+
+
+def test_a_free_text_refusal_falls_back_to_its_code_sentence_and_never_serves_the_text(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """Prose an error site wrote is not catalogue wording: its code's own sentence is served instead."""
+    prose = f"no contract for {_ROW_IDENTITY}"
+    detail = _served(tmp_path, authority_operation, lambda: InvoiceValidationError(prose), language="es")
+
+    registered = get_registered_error_code(InvoiceValidationError)
+    assert detail.message_key is None
+    assert detail.refusal_words == lookup_translation(registered.message_key, locale="es")
+    assert _ROW_IDENTITY not in detail.model_dump_json()
+
+
+def test_a_sentence_its_context_cannot_finish_names_the_code_rather_than_a_template(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """With its dates missing neither the key nor the code's sentence can be finished, so neither is served."""
+    detail = _served(tmp_path, authority_operation, lambda: _past_cutoff_refusal(modelo="303"), language="ca")
+
+    code = get_registered_error_code(ModeloDomiciliationPastCutoffError).code
+    template = lookup_translation(UNWORDED_REGISTERED_ERROR_LOCALE_KEY, locale="ca")
+    assert template is not None
+    assert detail.refusal_words == template.replace("{error_code}", code)
+
+
+def test_a_private_value_reaches_the_sentence_only_as_the_redaction_leaves_it(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """The sentence is filled from the scrubbed context, never from the error's raw values."""
+
+    def refusal() -> CadrumoError:
+        return ModeloCalculationBlockedError(
+            translated_message="application.modelo.errors.calculate_m349_invalid_nif",
+            context={"nif": _PRIVATE_NIF, "pais": "ES"},
+        )
+
+    detail = _served(tmp_path, authority_operation, refusal, language="en")
+
+    assert detail.refusal_words is not None
+    assert _REDACTED_VALUE in detail.refusal_words
+    assert _PRIVATE_NIF[2:] not in detail.model_dump_json()
+
+
+def test_a_rule_refused_inside_a_record_validator_serves_the_rule_sentence(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """The record fault keeps its shape, and the sentence is the refused rule's, not a generic fault."""
+    detail = _served(tmp_path, authority_operation, _advance_payment_fault, language="hu")
+
+    assert detail.kind is OperationErrorDetailKind.RECORD_VALIDATION
+    assert detail.error_code is None and detail.message_key is None
+    assert detail.refusal_words == lookup_translation(
+        rule_finding_words_key(InvoiceRuleFindingCode.ADVANCE_PAYMENT_NOT_FULLY_COLLECTED), locale="hu"
+    )
+
+
+def test_a_record_fault_with_no_registered_rule_serves_the_record_fault_sentence(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """A record the application built that broke a plain field bound is worded as such, without its value."""
+    detail = _served(tmp_path, authority_operation, _record_fault, language="en")
+
+    assert detail.refusal_words == lookup_translation(RECORD_FAULT_WORDS_LOCALE_KEY, locale="en")
+    assert _OFFENDING_VALUE[:20] not in detail.model_dump_json()

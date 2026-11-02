@@ -39,6 +39,7 @@ from cadrumo.adapters.persistence.profile.percepciones_observations import Perce
 from cadrumo.adapters.persistence.profile.profile_path_values import ProfilePathValuesPersistenceAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
     SEED_CLOCK,
     seed_clean_cross_period_sources,
@@ -51,6 +52,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
+from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.live.borrador_100 import Borrador100SnapshotRepository
@@ -236,6 +238,9 @@ def calculation_ports_for_test(
             ),
             retencion_observation_ports=RetencionObservationPorts(
                 repository=RetencionObservationRepositoryAdapter(objects=objects),
+            ),
+            retencion_soportada_ports=RetencionSoportadaPorts(
+                repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
             ),
             relation_override_migration=_RelationOverrideMigration(),
         )

@@ -246,7 +246,6 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.inspector.skip.sealed",
         "desktop.ledger.inspector.skip.sealed_unread",
         "desktop.ledger.inspector.skip.transfer",
-        "desktop.ledger.inspector.skip.unclassified",
         "desktop.ledger.inspector.source_jurisdiction",
         "desktop.ledger.inspector.split.add_part",
         "desktop.ledger.inspector.split.amount",
