@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a1596453b037ccfe6aff010761042efc269d0495ac17aba090f20cca9bcde9c9'
+body_hash: 'sha256:82c3c668b64b72b07d04d8764a680f6f8d7b6590890686cd1251077af6cc38ea'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -716,6 +716,10 @@ related:
 - `S06` `M` `dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py`
 - `S06` `verify:` `pytest dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py` -> `pass`
 - `S06` `by:` `implementer-low`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_calculation_note_wording.py`
+- `S06` `verify:` `pytest-test_calculation_note_wording` -> `pass`
+- `S06` `by:` `implementation-engineer-high`
 
 ## Notes
 
