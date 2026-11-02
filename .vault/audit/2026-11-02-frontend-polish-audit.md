@@ -142,6 +142,20 @@ PASS for the export/import resource-lifecycle repair. Pending exports cannot dis
 
 The initial 70-case setup/transfer/write-pause batch passed 67 cases; its three failures were test assertions/interception. The corrected focused batch passes all 11 cases, including four picker/export regressions. Fixture file hooks now run inside the original file methods, so tests exercise the host's copied methods and actually observe forgetting. Existing transfer and write-pause cases remain applicable. TypeScript, targeted ESLint and formatting pass. No dependency lock or production host contract changed.
 
+### s29-review | low | Local AI read states and recovery remain truthful
+
+PASS for S29. Setup combines provider settings and catalogue reads under stable session/profile owners and distinguishes pending/failed from successful-empty. The program row and controls remain visible. The agent provider panel also passes catalogue state to every supported keyless lane, including the plural-contract branch. Failed model-list reads have an explicit read-only retry; reset remains reserved for a successfully read but unreadable list. Sol reused existing status/copy/primitives; Terra found no remaining concrete defect. Multiple keyless lanes are supported by the typed contract but the current fixture serves one, so plural-host runtime coverage is not claimed.
+
+All 17 local-model scenarios pass, including delayed catalogue failure, provider-settings failure, read retry without reset, list mutation/revision handling and provisioning/model integration. TypeScript, targeted ESLint and formatting pass. Early new-test failures were corrected by keeping the injected failure active across StrictMode reads and scoping the model retry separately from the program retry.
+
+### s30-review | low | Palette results belong to the current query and provider
+
+PASS for S30. Documentation rows are withheld immediately when their query or search-provider identity differs, including the debounce interval; the existing status line remains outside the listbox. A nonempty unmatched query with no provider says search is unavailable. Shell actions and pasted links retain their behavior. Removed the unreachable loading indicator inside completed result groups. Sol specified the existing presentation and Terra reviewed identity/late-reply handling. All 15 palette scenarios pass, including a clock-paused query replacement and an absent-provider case; the clock resumes after the immediate-removal assertion so the real documentation bridge can finish. TypeScript, scoped ESLint and formatting pass.
+
+### shared-worktree-checkpoint | low | Source changes were included by a concurrent checkpoint
+
+The shared worktree checkpoint f734e601ba included the S27-S30 implementation sources before this session completed its scoped metadata commits; b5554a9db3 and c543d76662 retain the S28/S27 checkpoints. The final 32-case Local AI/palette run passed after the concurrent checkpoint and TUI merge. Unrelated native-modularity plan changes are preserved and excluded from this feature's commits. These source-history boundaries do not substitute for final S17 integration review.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

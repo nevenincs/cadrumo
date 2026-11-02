@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:1aa69b9ddbfee8388ca6b873e35c7040e939538b01e479de4412593e206bc3dd'
+body_hash: 'sha256:461babb82624cf9aca870587ee29b3efe0cc5a36784c9e91ba5b7772edffe2b3'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -124,6 +124,16 @@ related:
 - `S27` `M` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
 - `S27` `verify:` `Transfer and write-pause scenarios plus four focused picker/export regressions` -> `pass`
 - `S27` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
+- `S29` `M` `native/desktop/frontend/src/shell/localAiLanes.ts`
+- `S29` `M` `native/desktop/frontend/src/shell/localModels.ts`
+- `S29` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/setup/LocalAi.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/setup/ProvisioningPanel.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/settings/LocalModels.tsx`
+- `S29` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S29` `M` `native/desktop/frontend/tests/scenarios/local-models.spec.ts`
+- `S29` `verify:` `All local models browser scenarios 17` -> `pass`
+- `S29` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
 
 ## Notes
 
