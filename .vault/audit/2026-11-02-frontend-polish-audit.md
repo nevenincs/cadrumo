@@ -102,6 +102,34 @@ PASS for corrected S25. Terra traced aeat_sync_retry through the host run mutex:
 
 PASS for S18. Keyboard-highlighted suggestions scroll only their own list; unmatched combobox Tab/Shift+Tab cancels without committing and restores the owner, preserving outside interaction and valid selection navigation. Grid navigation resolves a hidden active column to a remaining cell without stealing outside focus. Terra reviewed the behavior and Sol confirmed existing one-step cancellation semantics. The 87-case shared grid/layer/editor batch passed 75 cases and exposed 12 editor harness failures because the standalone harness had not installed canonical recorded entry limits. Installing those fixture limits repaired the harness without changing product grammar; all 42 editor cases then passed. Earlier passing grid/layer cases remain applicable to unchanged sources. TypeScript and targeted ESLint pass; sources formatted. The suggestion hover-scroll behavior is retained and is not a blocking defect. Complete application integration remains S17.
 
+### s08-coverage | low | Shared controls and typed editors pass bounded review
+
+PASS for S08 after S18. The shared-control/editor inventory in Scope is covered by the 45 grid/layer and 42 editor cases, including keyboard exit, nested Escape, focus restoration, overflowing choices, locale parsing, date/timezone behavior and served limits. Existing invoice/matching/profile consumers add integration evidence; remaining ledger workflows and whole-app measurement are separately owned by S10/S16/S17. No demonstrated additional shared-control defect remains; browser-locale collation is an optional presentation candidate, not a required repair.
+
+### s09-review | low | Profile and account workflows pass
+
+PASS for S09. The static inventory above is backed by 95 applicable browser cases across user-profile, profiles, manage-profiles, profile-views, profile-completion-notice and titlebar-account. The initial batch passed 94 and timed out looking for the removed profile header fullscreen control. The test now uses the dock's Expand in workspace control; the remaining schema/section-index/autofill case passes. No product change was needed. This covers pending/failed reads, unknown creation, conflict/unknown/saved-unread saves, secret masking, account transitions, deletion confirmation, narrow layouts, translation and focus. TypeScript and targeted lint/format pass for the corrected test.
+
+### s13-static-coverage | medium | Agent workflows expose supported actions; long names needed repair
+
+Terra traced AgentColumn, Composer, Transcript, HistoryList, DocumentsPanel, AttachmentWell/Tile, Approval/Consent/Questions, SkillDialog and AgentSession/Skills contracts. Status/retry, catalogue, local models/license, skills review/verify, conversations, documents, policy, approvals/questions and stream are surfaced. Reply retry and archive restoration remain intentionally unavailable because the host has no such action; attachment availability stays subject to accepted attachment authority. The desktop-agent-host ADR remains proposed, not binding. S26 addresses the two confirmed readability gaps; full conversation/approval/document scenario coverage still belongs to S13.
+
+### s26-review | low | Every sent filename and skill path is readable
+
+PASS for S26. Sol specified full wrapping names, six initial file badges and a native keyboard-operable disclosure for the remainder, with a focusable bounded scroll list; skill paths and sent skill names wrap. Removed the now-unused Transcript locale prop and updated both Storybook consumers. All 24 agent-mentions/agent-skills scenarios pass, including eight filenames, Enter/Space disclosure, remainder focus and long path clipping checks. TypeScript, scoped ESLint and formatting pass. Terra found no concrete source defect; no supported attachment capability was enabled or invented.
+
+### s10-static-coverage | medium | Remaining ledger review found export and counterparty repairs
+
+Terra inspected movement filtering/selection and internal-transfer restrictions; invoices; document intake/read/view/review; accounts, prorrata, capital goods, withholding, rules, ratios, counterparties, diagnostics and health; fixed-asset create/describe/correct/dispose/timeline/plan/claim/handoff; stock books/movements/closing/proofs and preview valuation; import preview/apply/outcomes and export recovery. S27 addresses pending export dismissal and late file picks. S28 addresses counterparty query identity, actual request/response shape, conflict visibility and unsafe recovery assumptions. Invoice catalogue hidden-read cancellation remains a candidate to reproduce. No separate cash/opening-balance workflow was established; do not claim parity without backend mapping. Existing setup, asset, movement, transfer and pause scenarios remain to be integrated with these repairs.
+
+### s14-static-coverage | medium | Local AI read states need truthful presentation and recovery
+
+Terra inspected appearance, terminal layout/font, language, reset/About; provisioning status/plans/progress/cancellation/removal; model list/download/removal/conflicts; providers/sign-in/secrets; conversation provider/model/effort choices. Existing S03/S04 lifecycle fixes remain applicable. Local AI currently collapses provider/catalogue pending or failed reads into no lanes, and a failed model-list read has no in-place retry. Record distinct repair Steps before closing S14; existing local-models, providers, provider-picker, provisioning-recovery and ledger-provisioning scenarios are the verification seams.
+
+### s15-static-coverage | medium | Palette results retain the previous query
+
+Terra inspected DocsFrame origin checks, bounded iframe requests, readiness/malformed replies/timeouts; palette actions/search/deep links; log subscription/source states/filters/export/details; terminal startup/exit/failure/hidden lifetime/input/backpressure/output acknowledgement. Palette rows accepted for query A remain selectable while B is displayed during debounce and request; null docs search also misleadingly says type to search for a nonempty unmatched query. Add a bounded repair before S15 closes. Log resubscription and non-queue-full terminal input recovery are candidates without demonstrated product-loss evidence. Authority: accepted desktop-shell/local docs and docs-terminology-search decisions; no host implementation completeness claim.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

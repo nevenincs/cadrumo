@@ -1403,7 +1403,6 @@ export function AgentColumn({
             )}
             <Transcript
               items={history.value}
-              locale={locale}
               onOpenProviderSettings={openSettings}
               onOpenLink={(url) => {
                 // Cadrumo's own addresses never reach the browser.

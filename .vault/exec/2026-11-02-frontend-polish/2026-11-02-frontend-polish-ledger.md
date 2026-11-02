@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:8478bb2ff35743d1728d0c5d8787ac11ef02c1093de7008f941ea051003ecf5e'
+body_hash: 'sha256:d79fbb44152f10871a2f2fee796e33782d2b2ea81d621b408f2f9bd46c3f298d'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -86,6 +86,16 @@ related:
 - `S18` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
 - `S18` `verify:` `Shared grid and escape layer cases (45)` -> `pass`
 - `S18` `verify:` `Editor cases after installing canonical fixture limits (42)` -> `pass`
+- `S26` `M` `native/desktop/frontend/src/components/agent/Transcript.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/agent/Transcript.stories.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/agent/SkillDialog.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S26` `M` `native/desktop/frontend/src/dev/fixtures/agent.ts`
+- `S26` `M` `native/desktop/frontend/src/dev/fixtures/agentSkills.ts`
+- `S26` `M` `native/desktop/frontend/tests/scenarios/agent-mentions.spec.ts`
+- `S26` `M` `native/desktop/frontend/tests/scenarios/agent-skills.spec.ts`
+- `S26` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
+- `S26` `verify:` `agent mentions and skills browser scenarios (24)` -> `pass`
 
 ## Notes
 

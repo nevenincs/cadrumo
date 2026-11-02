@@ -342,6 +342,14 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
               sha256: fixtureDigest("contrato-renting.pdf"),
               media_type: "application/pdf",
             },
+            ...Array.from({ length: 7 }, (_, at) => {
+              const name = `anexo-${at + 1}-${"documentacion-".repeat(9)}vehiculo.pdf`;
+              return {
+                name,
+                sha256: fixtureDigest(name),
+                media_type: "application/pdf",
+              };
+            }),
           ],
         },
         agent(

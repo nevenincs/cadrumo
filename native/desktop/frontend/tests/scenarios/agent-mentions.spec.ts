@@ -39,6 +39,37 @@ test.beforeEach(() => {
   scenarioOnly("the stored documents are the scenario host's");
 });
 
+test("every sent filename is readable and the remainder opens by keyboard", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openConversation(target, "¿Puedo deducir los gastos del coche?");
+  const turn = personTurns(target).filter({ hasText: "Uso el coche" });
+  const more = turn.locator("summary");
+  await expect(more).toHaveText(
+    label("desktop.agent.more_files", { count: 2 }),
+  );
+  const names = Array.from(
+    { length: 7 },
+    (_, at) => `anexo-${at + 1}-${"documentacion-".repeat(9)}vehiculo.pdf`,
+  );
+  await expect(turn.getByText(names[6]!, { exact: true })).toBeHidden();
+  await more.focus();
+  await more.press("Enter");
+  for (const name of names) {
+    const text = turn.getByText(name, { exact: true });
+    await expect(text).toBeVisible();
+    expect(
+      await text.evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
+    ).toBe(true);
+  }
+  await more.press("Tab");
+  await expect(turn.locator("details ul")).toBeFocused();
+  await more.focus();
+  await more.press("Space");
+  await expect(turn.getByText(names[6]!, { exact: true })).toBeHidden();
+});
+
 test("an @ lists every stored document above the composer, and the list scrolls", async ({
   page: target,
 }) => {

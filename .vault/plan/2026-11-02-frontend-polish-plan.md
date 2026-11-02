@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:8b49e729e3dda1146e1739e1a463908a12d80413ea9e95674698b0e7aa25ec94'
+body_hash: 'sha256:60774d55b2760cfd157920643382a70211fd02e62cfbef1e32cdaddb22fd51b4'
 ---
 
 # `frontend-polish` plan
@@ -64,6 +64,9 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [ ] `S15` - Complete diagnostics, logs, terminals, documentation, search and command-palette review; `native/desktop/frontend/src/components/RecordList.tsx, native/desktop/frontend/src/components/TerminalPane.tsx, native/desktop/frontend/src/components/DocsFrame.tsx, native/desktop/frontend/src/components/CommandPalette.tsx`.
 - [ ] `S16` - Measure cross-surface read, rendering, subscription and retained-state costs and implement justified improvements; `native/desktop/frontend/src/shell/, native/desktop/frontend/scripts/benchmark.mjs, native/desktop/frontend/tests/`.
 - [ ] `S17` - Verify integrated workflows and close the complete surface coverage audit; `native/desktop/frontend/tests/, native/desktop/tests/, .vault/audit/`.
+- [x] `S26` - Make every sent attachment name and skill path readable by keyboard and touch; `native/desktop/frontend/src/components/agent/Transcript.tsx, native/desktop/frontend/src/components/agent/SkillDialog.tsx, native/desktop/frontend/tests/scenarios/agent*.spec.ts`.
+- [ ] `S27` - Preserve import and export file tokens across pending picker and export outcomes; `native/desktop/frontend/src/components/ledger/transfer/, native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts, native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`.
+- [ ] `S28` - Bind counterparty decisions to the requested identifier and retire obsolete answers; `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`.
 
 ## Parallelization
 
