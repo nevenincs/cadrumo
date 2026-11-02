@@ -2422,6 +2422,13 @@ application:
         tots els períodes que no hi va haver retencions. Registra les percepcions
         de cada perceptor al detall d''aquest model, o confirma cada període al teu
         perfil.'
+      xml_required_content_missing: L'esquema oficial exigeix la casella %{box} i
+        no té valor, així que l'exportació rebutjaria aquesta declaració.
+      xml_return_not_rendered: No es pot generar el fitxer de la declaració a partir
+        d'aquest càlcul, així que l'exportació el rebutjaria. Revisa les teves dades
+        identificatives i les xifres de la declaració.
+      xml_value_refused: La casella %{box} té un valor que l'esquema oficial no admet,
+        així que l'exportació rebutjaria aquesta declaració.
     help:
       constraint:
         at_least: Com a mínim {minimum}.
@@ -2556,6 +2563,7 @@ application:
           detall d'aquest model, o confirma cada període al teu perfil.
         enter_payee_payments: Introdueix les percepcions de cada perceptor al detall
           d'aquest model i torna a comprovar.
+        enter_required_statement: Omple aquesta casella i torna a calcular.
         enter_withholding_certificate: Introdueix la retenció que figura al certificat
           de retencions i ingressos a compte del teu pagador i torna a calcular.
         file_another_way: Cadrumo encara no pot preparar aquesta declaració per presentar-la.

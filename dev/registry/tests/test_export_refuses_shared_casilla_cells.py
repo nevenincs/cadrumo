@@ -15,12 +15,14 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.filing.draft_construction import build_draft
-from cadrumo.application.filing.export import export_draft
+from cadrumo.application.filing.export import _render_export_layout, export_draft
 from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.period import Period
+from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.export_shared_owner import (
@@ -200,6 +202,41 @@ def test_tributos_is_refused_naming_its_six_sheets_and_nothing_is_delivered(year
     assert isinstance(target_cells, dict)
     assert {_sheet(cell) for cell in target_cells["00281"]} == _TRIBUTOS_SHEETS
     assert context["modelo"] == _M200
+
+
+def test_a_dictionary_layout_holding_a_shared_box_is_refused_like_a_fixed_width_one() -> None:
+    """No bundled dictionary layout declares records today, so one is planted to prove the branch still asks."""
+    year = _m200_filing_years()[-1]
+    period = Period.from_year_and_code(year, "0A")
+    scenario = _m200_scenario(year)
+    with bundled_indexed_authority().operation() as operation:
+        provider = build_runtime_schema_provider(filing_year=year, period=period, modelos=(_M200,), operation=operation)
+        registry_snapshot = provider.get_snapshot(_M200)
+        planted = canonical_export_layout(registry_snapshot.revision.export_layouts)
+        assert planted is not None
+        draft = build_draft(
+            modelo=_M200,
+            period=period,
+            profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Shared cells"),
+            inputs={**scenario.inputs, "00281": Decimal("123.45")},
+            schema_provider=provider,
+        )
+        with pytest.raises(FilingExportValidationError) as caught:
+            _render_export_layout(
+                planted.model_copy(update={"format": ExportLayoutFormat.XML_DICTIONARY}),
+                draft=draft,
+                headers={},
+                producer_snapshot=scenario.producer_snapshot(),
+                dictionary_values=None,
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=None,
+                xml_aux_version="planted",
+                schema_provider=provider,
+                registry_snapshot=registry_snapshot,
+            )
+
+    assert caught.value.translated_message == _REFUSAL
+    assert (caught.value.context or {})["casilla_ids"] == "00281"
 
 
 @pytest.mark.parametrize("year", _m200_filing_years())

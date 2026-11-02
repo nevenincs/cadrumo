@@ -2280,6 +2280,13 @@ application:
         for modelo %{source_modelo} is empty, and you have not confirmed for every
         period that nothing was withheld. Enter the payments for each payee in this
         modelo''s detail, or confirm each period in your profile.'
+      xml_required_content_missing: Box %{box} is required by the official schema
+        and has no value, so the export would refuse this declaration.
+      xml_return_not_rendered: The declaration file can't be built from this calculation,
+        so the export would refuse it. Check your identity details and the figures
+        in the declaration.
+      xml_value_refused: Box %{box} holds a value the official schema doesn't admit,
+        so the export would refuse this declaration.
     help:
       constraint:
         at_least: At least {minimum}.
@@ -2414,6 +2421,7 @@ application:
           detail, or confirm each period in your profile.
         enter_payee_payments: Enter the payments for each payee in this modelo's detail,
           then check again.
+        enter_required_statement: Enter this box, then calculate again.
         enter_withholding_certificate: Enter the withholding shown on your payer's
           certificado de retenciones e ingresos a cuenta, then calculate again.
         file_another_way: Cadrumo cannot yet prepare this declaration for filing.

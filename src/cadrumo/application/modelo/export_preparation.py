@@ -330,6 +330,36 @@ def requireprior_domiciliation_marker_layout(
     )
 
 
+def build_revision_export_draft(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    period: Period,
+    schema_provider: RegistrySchemaAccessor,
+    operation: PinnedAuthorityOperation,
+) -> ModeloDraft:
+    """Build the draft a :class:`~CalculationRevision` exports, before any approval.
+
+    Export approves this draft and verification judges it, so both read one declaration.
+    """
+    inputs: ModeloInputs = revision_filing_replay_inputs(
+        revision=revision,
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        operation=operation,
+    )
+    draft = build_draft(
+        modelo=work_unit.modelo,
+        period=period,
+        profile=filing_profile_from_taxpayer(workflow_profile),
+        inputs=inputs,
+        closed_record_row_sets=revision.closed_record_row_sets,
+        schema_provider=schema_provider,
+    )
+    return attach_revision_row_source_identities(draft=draft, revision=revision)
+
+
 def approve_export_draft(
     *,
     work_unit: WorkUnit,
@@ -350,21 +380,15 @@ def approve_export_draft(
     workflow gate. Returns the resolved :class:`~cadrumo.core.period.Period` and approved
     :class:`~domain.filing.schema.ModeloDraft`.
     """
-    inputs: ModeloInputs = revision_filing_replay_inputs(
-        revision=revision,
-        work_unit=work_unit,
-        workflow_profile=workflow_profile,
-    )
     try:
-        draft = build_draft(
-            modelo=work_unit.modelo,
+        draft = build_revision_export_draft(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=workflow_profile,
             period=period,
-            profile=filing_profile_from_taxpayer(workflow_profile),
-            inputs=inputs,
-            closed_record_row_sets=revision.closed_record_row_sets,
             schema_provider=schema_provider,
+            operation=operation,
         )
-        draft = attach_revision_row_source_identities(draft=draft, revision=revision)
         approved = approve_draft(
             draft,
             bucket_id=work_unit.bucket_id,
