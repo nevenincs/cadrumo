@@ -14,6 +14,8 @@ from ...domain.renta.retencion_soportada_absence import RETENCION_SOPORTADA_ABSE
 
 __all__ = [
     "RetencionSoportadaAbsenceAttestRequest",
+    "RetencionSoportadaAbsenceListRequest",
+    "RetencionSoportadaAbsenceProfileRequest",
     "RetencionSoportadaAbsenceRequest",
     "RetencionSoportadaAbsenceWithdrawRequest",
 ]
@@ -21,13 +23,22 @@ __all__ = [
 type _Revision = Annotated[str, Field(min_length=1, max_length=128)]
 
 
-class RetencionSoportadaAbsenceRequest(BaseModel):
-    """The exact profile, ejercicio and income class an attestation operation addresses."""
+class RetencionSoportadaAbsenceProfileRequest(BaseModel):
+    """The exact profile and ejercicio an attestation operation addresses."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     ejercicio: FilingYear
+
+
+class RetencionSoportadaAbsenceListRequest(RetencionSoportadaAbsenceProfileRequest):
+    """Read every stored attestation of one ejercicio, active or withdrawn."""
+
+
+class RetencionSoportadaAbsenceRequest(RetencionSoportadaAbsenceProfileRequest):
+    """The exact profile, ejercicio and income class an attestation write addresses."""
+
     income_class: RetencionSoportadaClase
 
 

@@ -962,7 +962,8 @@ export function ledgerFixture(options: Options): LedgerPort {
       } else if (
         field === "booked_date" ||
         field === "value_date" ||
-        field === "operation_date"
+        field === "operation_date" ||
+        field === "accrual_date"
       ) {
         if (value !== null && !DATE.test(value))
           return refused("The date is not a calendar day.");
@@ -1235,6 +1236,7 @@ export function ledgerFixture(options: Options): LedgerPort {
       booked_date: booked,
       value_date: text(request.value_date),
       operation_date: text(request.operation_date),
+      accrual_date: text(request.accrual_date),
       amount: money(cents(amount)),
       currency: text(request.currency) ?? "EUR",
       direction,
@@ -2569,6 +2571,7 @@ function fixtureTemplate(): LedgerTransaction {
     booked_date: "",
     value_date: null,
     operation_date: null,
+    accrual_date: null,
     amount: "0.00",
     currency: "EUR",
     direction: "OUTGOING",

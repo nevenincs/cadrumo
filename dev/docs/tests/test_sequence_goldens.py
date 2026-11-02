@@ -63,7 +63,7 @@ from ..sequences.compare import compare_transcript_to_golden
 from ..sequences.golden_store import SequenceGolden, build_golden, normalise_document_paths
 from ..sequences.parser import parse_sequence
 from ..sequences.runner import SequenceTranscript, execute_sequence
-from ..sequences.schema import ParsedSequence
+from ..sequences.schema import FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -342,13 +342,18 @@ class TestModeloExportReleaseMaskHonesty:
         self,
         export_release_double_run: tuple[tuple[str, SequenceTranscript, bytes], tuple[str, SequenceTranscript, bytes]],
     ) -> None:
-        """The mask covers exactly what a release changes, so it cannot widen unnoticed."""
+        """The mask covers exactly what a release changes in compared frames, so it cannot widen unnoticed.
+
+        Setup envelopes never reach a golden, so per-write identities such as a
+        stored row's revision id are outside what the mask has to cover.
+        """
         (first_aux, first, _), (second_aux, second, _) = export_release_double_run
         assert first_aux != second_aux
         residual: dict[int, frozenset[str]] = {}
         for index, (left, right) in enumerate(zip(first.frames, second.frames, strict=True)):
             if (
-                left.envelope is not None
+                left.kind is not FrameKind.SETUP
+                and left.envelope is not None
                 and right.envelope is not None
                 and (
                     paths := differing_paths(

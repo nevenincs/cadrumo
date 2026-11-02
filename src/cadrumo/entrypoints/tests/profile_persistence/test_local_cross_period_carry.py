@@ -63,7 +63,6 @@ from ....application.calculations.observations_repository import APP_FILING_SOUR
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -233,13 +232,13 @@ def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityO
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_190:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=_NEGATIVE_1T_INPUTS,
             binding_values=_DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_190,
             clock=_T1,
-        )
+        ).revision
     assert Decimal(revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("5000")
     assert Decimal(revision.casilla_values[_M130_HOME_DEDUCTION_CASILLA]) == Decimal("0")
     assert Decimal(revision.casilla_values[_M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")

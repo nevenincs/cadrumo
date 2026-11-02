@@ -30,7 +30,9 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import iso
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.application.export.review_snapshot_loader import CALCULATION_NOTE_FINDING_PREFIX
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from cadrumo.application.modelo.calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
@@ -59,6 +61,7 @@ from cadrumo.application.modelo.calculation_screen import calculation_screen_out
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -110,8 +113,10 @@ _BASELINE_INPUTS = {
 }
 
 
-def _calculate_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
-    """Calculate the shared Modelo 130 1T baseline through the real engine."""
+def _calculate_130(
+    repos: Repos, *, inputs: dict[CasillaId, Decimal] | None = None
+) -> tuple[WorkUnit, CalculationRevision]:
+    """Calculate the shared Modelo 130 1T baseline, or ``inputs`` over it, through the real engine."""
     work_repo, calculation_repo, _, _, event_repo = repos
     work_unit = seed_work_unit(work_repo)
     with calculation_ports_for_test(
@@ -120,21 +125,23 @@ def _calculate_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
         calculation_repository=calculation_repo,
         bucket_event_repository=event_repo,
     ) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs=dict(_BASELINE_INPUTS),
+            casilla_inputs={**_BASELINE_INPUTS, **(inputs or {})},
             binding_values=dict(DEFAULT_130_BINDING_VALUES),
             ports=ports,
             clock=T1,
-        )
+        ).revision
     return work_unit, revision
 
 
-def _verified_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
+def _verified_130(
+    repos: Repos, *, inputs: dict[CasillaId, Decimal] | None = None
+) -> tuple[WorkUnit, CalculationRevision]:
     """Calculate and verify the Modelo 130 1T baseline, returning the sealed revision."""
     work_repo, calculation_repo, filing_repo, verification_repo, event_repo = repos
-    work_unit, revision = _calculate_130(repos)
+    work_unit, revision = _calculate_130(repos, inputs=inputs)
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -404,14 +411,28 @@ def test_report_rows_follow_the_registry_order_of_the_pinned_snapshot(repos: Rep
     assert report.header.row_count == len(report.rows)
 
 
+_AGRARIAN_VOLUME_CASILLA = validated_casilla_id("08")
+# Hand-derived, RIRPF art. 110.1.b: the agrarian payment is 2 % of the quarter's 2.000,00 volume,
+# and apartado II subtracts the casilla 10 retenciones, which the baseline holds at zero.
+_AGRARIAN_MEASURED = {
+    _AGRARIAN_VOLUME_CASILLA: Decimal("2000.00"),
+    validated_casilla_id("09"): Decimal("40.00"),
+    validated_casilla_id("11"): Decimal("40.00"),
+}
+
+
 def test_measured_zero_absent_and_not_applicable_stay_three_states(repos: Repos) -> None:
     """A proven zero, an unrealised casilla and a non-applicable one never merge."""
-    work_unit, revision = _verified_130(repos)
+    work_unit, revision = _verified_130(repos, inputs={_AGRARIAN_VOLUME_CASILLA: Decimal("2000.00")})
     report = _report(repos, work_unit, revision)
+
+    measured = {row.casilla_id: row for row in report.rows if row.casilla_id in _AGRARIAN_MEASURED}
+    assert {row.value_state for row in measured.values()} == {CalculationReportValueState.VALUE}
+    assert {casilla_id: Decimal(str(row.value)) for casilla_id, row in measured.items()} == _AGRARIAN_MEASURED
 
     income = next(row for row in report.rows if row.casilla_id == M130_INCOME_CASILLA)
     assert income.value_state is CalculationReportValueState.VALUE
-    assert Decimal(str(income.value)) == _BASELINE_INPUTS[M130_INCOME_CASILLA]
+    assert Decimal(str(income.value)) == Decimal("0")
 
     zeros = [
         row

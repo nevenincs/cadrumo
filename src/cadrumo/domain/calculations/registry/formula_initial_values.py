@@ -34,7 +34,7 @@ from decimal import Decimal
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.casilla_value_absence import AbsentCasillaReading
-from ....core.decimal.constants import ZERO
+from ....core.decimal.constants import ONE, ZERO
 from .binding_selector_utils import provider_member
 from .binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from .binding_temporal import SameTargetContext
@@ -44,6 +44,7 @@ from .casilla_membership import casillas_by_id, text_family_casilla_ids
 from .errors import CasillaConstraintViolationError, RegistryValidationError
 from .ids import BindingId
 from .schema import BindingDefinition, ModeloRevision
+from .schema_base import CasillaDataType
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 
@@ -148,6 +149,7 @@ def initial_values(
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
     unresolved_binding_ids: frozenset[BindingId] = frozenset(),
+    boolean_binding_values: Mapping[BindingId, bool] | None = None,
 ) -> InitialCasillaValues:
     """Build initial numeric casilla values, absent-by-design and unresolved markers.
 
@@ -157,6 +159,8 @@ def initial_values(
     before formula evaluation starts. ``unresolved_binding_ids`` are bindings
     whose resolver ran and could not settle a value; a bound casilla fed only by
     such a binding, with no supplied input, is left unresolved.
+    ``boolean_binding_values`` answer a bound yes/no casilla in the record design's
+    1/0 encoding; a profile fact nobody stated leaves the box absent rather than no.
     """
     casillas = casillas_by_id(revision)
     _reject_unknown_inputs(inputs, casillas)
@@ -186,6 +190,7 @@ def initial_values(
         binding_values=binding_values,
         target_period=target_period,
         unresolved_binding_ids=unresolved_binding_ids,
+        boolean_binding_values=boolean_binding_values or {},
     )
 
 
@@ -440,6 +445,7 @@ def _initial_values_for_casillas(
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
     unresolved_binding_ids: frozenset[BindingId],
+    boolean_binding_values: Mapping[BindingId, bool],
 ) -> InitialCasillaValues:
     """Build initial values for non-computed registry casilla definitions."""
     values: dict[CasillaId, Decimal] = {}
@@ -456,6 +462,13 @@ def _initial_values_for_casillas(
             unresolved_binding_ids=unresolved_binding_ids,
         ):
             unresolved.add(casilla.id)
+            continue
+        answer = _bound_boolean_answer(casilla, inputs, bindings_by_id, boolean_binding_values)
+        if answer is not None:
+            value, absent = answer
+            values[casilla.id] = value
+            if absent:
+                absent_by_design.add(casilla.id)
             continue
         value, absent = _initial_value_for_casilla(
             casilla,
@@ -492,6 +505,26 @@ def _bound_casilla_is_unresolved(
     if _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id):
         return False
     return any(binding_id in unresolved_binding_ids for binding_id in bound_casilla_binding_ids(casilla))
+
+
+def _bound_boolean_answer(
+    casilla: CasillaDefinition,
+    inputs: Mapping[CasillaId, Decimal],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
+    boolean_binding_values: Mapping[BindingId, bool],
+) -> tuple[Decimal, bool] | None:
+    """Answer a bound yes/no casilla from its profile fact; ``None`` when another route owns it."""
+    if casilla.input_kind != InputKind.BOUND or casilla.data_type != CasillaDataType.BOOLEAN or casilla.id in inputs:
+        return None
+    binding_ids = bound_casilla_binding_ids(casilla)
+    for binding_id in binding_ids:
+        truth = boolean_binding_values.get(binding_id)
+        if truth is not None:
+            return (ONE if truth else ZERO), False
+    bindings = (bindings_by_id[binding_id] for binding_id in binding_ids)
+    if any(binding.source == BindingSourceKind.PROFILE for binding in bindings):
+        return ZERO, True
+    return None
 
 
 def _initial_value_for_casilla(

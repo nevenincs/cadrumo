@@ -33,13 +33,14 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
@@ -73,7 +74,7 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
 
 def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
     """Seed the bucket profile with the taxpayer NIF so the IVA wallet
-    reconciliation gate added to ``calculate_modelo_revision`` resolves
+    reconciliation gate of the bucket calculation resolves
     the work-unit taxpayer identity."""
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
@@ -95,18 +96,6 @@ def _repositories():
         CalculationRevisionCatalogueRepository(),
         BucketEventHistoryRepository(),
     )
-
-
-def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
-    return {
-        "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
-        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-        "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-    }
 
 
 def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaCompensationReconciliationDecision:
@@ -175,11 +164,12 @@ def _calculate_303(
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_174:
-            return calculate_modelo_revision(
+            return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
-                binding_values=_modelo_303_engine_inputs(),
+                # The quarter's cuotas come from the bucket's IVA ledger, here empty.
+                binding_values={},
                 iva_compensation_decision=decision,
                 filing_period_date=period_date,
                 ports=_calculation_ports_174,
@@ -187,7 +177,7 @@ def _calculate_303(
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:m303-declaration-period-binding", operation=operation
                 ),
-            )
+            ).revision
 
 
 def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(

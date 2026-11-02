@@ -22,7 +22,8 @@ proportionality, the IVA base/rate/amount/category, the spending and IRPF
 categories, the M210 source-jurisdiction/classification facts, the EU member
 state, the FX conversion, the lifecycle state, and (from field-set version 3)
 the bienes de inversion link and the customer's identifying Member State, and
-(from version 5) the operation date and the deduction evidence behind the row.
+(from version 5) the operation date and the deduction evidence behind the row,
+and (from version 7) the operator-stated accrual date.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
@@ -176,19 +177,31 @@ _FINGERPRINT_FIELDS_V6: tuple[tuple[str, str], ...] = (
     ("iva_vehicle_use", "iva_vehicle_use"),
 )
 
+# V7 adds ``accrual_date``: the operator-stated LIRPF art. 14 date moves the Renta
+# year or period an income or expense falls in without moving any amount or IVA
+# fact V6 watches.
+_FINGERPRINT_FIELDS_V7: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V6,
+    ("accrual_date", "accrual_date"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: _FINGERPRINT_FIELDS_V1,
     2: _FINGERPRINT_FIELDS_V2,
     3: _FINGERPRINT_FIELDS_V3,
     5: _FINGERPRINT_FIELDS_V5,
     6: _FINGERPRINT_FIELDS_V6,
+    7: _FINGERPRINT_FIELDS_V7,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 6
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 7
 
 #: The first version whose hash sees a row's operation date.
 OPERATION_DATE_FIELD_SET_VERSION: Final = 5
+
+#: The first version whose hash sees a row's stated accrual date.
+ACCRUAL_DATE_FIELD_SET_VERSION: Final = 7
 
 
 def _fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
@@ -344,6 +357,7 @@ def _evidence_row(
         booked_date=raw.booked_date.isoformat(),
         value_date=raw.value_date.isoformat() if raw.value_date is not None else None,
         operation_date=transaction.operation_date.isoformat() if transaction.operation_date is not None else None,
+        accrual_date=transaction.accrual_date.isoformat() if transaction.accrual_date is not None else None,
         deduction_evidence_digest=deduction_provenance.evidence_digest if deduction_provenance is not None else None,
         amount=raw.amount,
         currency=raw.currency,
@@ -554,6 +568,7 @@ def stale_filed_revisions(
 
 
 __all__ = [
+    "ACCRUAL_DATE_FIELD_SET_VERSION",
     "OPERATION_DATE_FIELD_SET_VERSION",
     "FiledRegisterReader",
     "assert_evidence_covers_snapshot",

@@ -19,7 +19,9 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.application.live.justificante import JustificanteCaptureSnapshot
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.operation_shared import resolve_active_workflow_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -80,13 +82,13 @@ def seeded_modelo_calculation_revision(profile_id: UUID, *, operation: PinnedAut
     """Calculate one real revision for the seeded unit, and return its id."""
     unit = seeded_modelo_work_unit(profile_id, operation=operation)
     with bundled_indexed_authority().operation() as calculation_operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=calculation_operation),
             actor=MODELO_OPERATION_TEST_ACTOR,
             casilla_inputs={},
             binding_values=FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-        )
+        ).revision
     return str(revision.calculation_revision_id)
 
 
@@ -102,13 +104,13 @@ def seeded_modelo_verification_report(profile_id: UUID, *, operation: PinnedAuth
         operation=operation,
     )
     with bundled_indexed_authority().operation() as verification_operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=verification_operation),
             actor=MODELO_OPERATION_TEST_ACTOR,
             casilla_inputs={},
             binding_values=FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-        )
+        ).revision
         revision_id = str(revision.calculation_revision_id)
         report = verify_modelo_revision_with_preconditions(
             revision_id,

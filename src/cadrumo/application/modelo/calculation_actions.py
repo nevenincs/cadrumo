@@ -11,13 +11,14 @@ application-owned :class:`~.calculation_action_ports.CalculationActionPorts`,
 so the work-unit pointer and
 ``modelo.calculation.created`` event advance with the stored draft revision.
 
-:func:`~application.modelo.calculation_actions.calculate_modelo_revision` is the lower-level
-calculation service: callers provide already-resolved manual, binding,
-enum-binding, relation, borrador, and IVA-wallet inputs.
+:func:`~application.modelo.calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`
+is the lower-level calculation service: it takes manual, binding, enum-binding,
+relation, borrador and IVA-wallet inputs together with the backend channels,
+source provenance and unresolved-source issues the source mesh resolved.
 :func:`~application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
 first runs the application source mesh over bucket-local ledgers, invoices,
 previous filings, relation prefill, retenciones, withholding, and detail rows,
-then feeds the resolved backend channels into the same persistence path. It is
+then feeds the resolved backend channels into that service. It is
 the only entry point into that orchestration, and it returns the non-blocking
 source diagnostics with the revision rather than beside it, so no caller can
 reach the mesh and lose the advisories on the way out.
@@ -69,7 +70,6 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
-from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
@@ -136,95 +136,6 @@ from .calculation_source_guards import (
     require_m303_regimen_simplificado_annual_summary_handoff,
     validate_m210_agrupacion_renta_detail_rows,
 )
-
-
-def calculate_modelo_revision(
-    work_unit_id: str,
-    *,
-    ports: CalculationActionPorts,
-    actor: str = "system",
-    casilla_inputs: Mapping[CasillaId, Decimal],
-    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
-    binding_values: Mapping[BindingId, Decimal] | None = None,
-    enum_binding_values: Mapping[BindingId, str] | None = None,
-    backend_binding_values: Mapping[BindingId, Decimal] | None = None,
-    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
-    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
-    iva_compensation_decision: object | None = None,
-    borrador_snapshot_id: str | None = None,
-    relation_values: Mapping[RelationId, Decimal] | None = None,
-    unresolved_relation_ids: tuple[RelationId, ...] = (),
-    unresolved_binding_ids: tuple[BindingId, ...] = (),
-    source_transaction_ids: tuple[str, ...] = (),
-    m210_official_tipo_renta_code: str | None = None,
-    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
-    filing_period_date: date | None = None,
-    detail_rows: tuple[ModeloDetailRow, ...] = (),
-    filing_instance_evidence: FilingInstanceEvidence | None = None,
-    clock: datetime | None = None,
-) -> CalculationRevision:
-    """Run the registry formula engine, persist a draft revision, and return a :class:`CalculationRevision`.
-
-    This public service accepts operator and application calculation inputs only.
-    Source-mesh provenance and unresolved-source issues are established solely
-    by the private mesh bridge below; callers cannot manufacture the M369
-    OSS/IOSS source-assessment record used by verification and export.
-
-    Args:
-        work_unit_id: Identifier of the filing work unit to calculate.
-        actor: Audit actor recorded on the persisted calculation revision.
-        casilla_inputs: Operator-supplied numeric values keyed by casilla.
-        text_casilla_inputs: Optional operator-supplied text values keyed by casilla.
-        binding_values: Optional numeric overrides for registry bindings.
-        enum_binding_values: Optional enumerated registry-binding values.
-        backend_binding_values: Optional binding values resolved by backend authorities.
-        row_binding_values: Optional detail-row binding values keyed by binding and row.
-        backend_casilla_inputs: Optional casilla values resolved by backend authorities.
-        iva_compensation_decision: Optional IVA compensation election for this calculation.
-        ports: Required application-owned persistence capabilities for this
-            calculation and its source mesh.
-        borrador_snapshot_id: Optional Modelo 100 draft snapshot selected as input.
-        relation_values: Optional numeric overrides for declared registry relations.
-        unresolved_relation_ids: Relations that source resolution could not satisfy.
-        unresolved_binding_ids: Bindings that source resolution could not satisfy.
-        source_transaction_ids: Ledger transactions contributing to the calculation.
-        m210_official_tipo_renta_code: Optional official Modelo 210 income-type code.
-        m210_gross_income_source_mode: Selected Modelo 210 gross-income source authority.
-        filing_period_date: Date used to resolve the applicable filing period.
-        detail_rows: Repeating detail rows supplied to the registry engine.
-        filing_instance_evidence: Immutable operator-selected Modelo 303 filing facts.
-        clock: Optional deterministic timestamp for the persisted revision.
-
-    """
-    return calculate_modelo_revision_with_trusted_mesh_sources(
-        work_unit_id,
-        ports=ports,
-        actor=actor,
-        casilla_inputs=casilla_inputs,
-        text_casilla_inputs=text_casilla_inputs,
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        backend_binding_values=backend_binding_values,
-        row_binding_values=row_binding_values,
-        row_source_identities=None,
-        closed_record_row_sets=(),
-        backend_casilla_inputs=backend_casilla_inputs,
-        iva_compensation_decision=iva_compensation_decision,
-        borrador_snapshot_id=borrador_snapshot_id,
-        relation_values=relation_values,
-        unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_binding_ids=unresolved_binding_ids,
-        source_transaction_ids=source_transaction_ids,
-        source_provenance=(),
-        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
-        m210_gross_income_source_mode=m210_gross_income_source_mode,
-        filing_period_date=filing_period_date,
-        detail_rows=detail_rows,
-        filing_instance_evidence=filing_instance_evidence,
-        source_issues=(),
-        clock=clock,
-        profile=None,
-    ).revision
 
 
 def _draft_ledger_anchor(

@@ -643,6 +643,8 @@ cli:
           et va repercutir. No pot superar l'ingrés a compte.
         invalid_input: 'Un valor no és vàlid: revisa la referència del pagador, la
           revisió i l''empremta del certificat.'
+        list_absences_help: Llista les teves declaracions d'absència de retenció d'un
+          exercici, vigents i retirades, amb la revisió en què consta cadascuna.
         list_help: Llista els registres de pagadors d'un exercici sense cap NIF.
         origin_help: 'Qui declara les xifres: payer_certificate o operator_declaration.'
         payer_name_help: Raó social del pagador.
@@ -1335,7 +1337,9 @@ cli:
         binding_help: Valor addicional per a l'origen d'una casella del Modelo 100,
           com a KEY=VALUE. Repeteix l'opció per indicar-ne diversos. Els orígens de
           retencions valen zero si no s'indiquen.
-        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (repetible).
+        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (p. ex. 0003=1150
+          per a retribucions dineràries del treball). Només s'accepten caselles d'entrada;
+          una casella calculada es rebutja. Repeteix l'opció per indicar-ne diverses.
         ccaa_help: Clau de la comunitat autònoma de residència fiscal per a l'escala
           autonòmica del Modelo 100 (p. ex. cataluna, comunidad-valenciana). Ha de
           coincidir amb un valor de les definicions dels models.
@@ -1345,6 +1349,9 @@ cli:
         no_m130_units: No hi ha declaracions del Modelo 130 en esborrany per a l'exercici
           %{year}. Crea'n una abans amb `aeat app modelo work create --modelo 130
           --year %{year} --period 1T`.
+        profile_fact_missing: 'La projecció no pot obtenir les caselles de base liquidable
+          i quota perquè el perfil actiu no declara: %{profile_facts}. Indica-ho amb
+          `%{command}` i torna a executar la projecció.'
         year_help: Any fiscal per a la projecció.
       project_help: Executar projeccions agregades de models (p. ex. agregació anual
         del Model 130).
@@ -3154,6 +3161,9 @@ cli:
     add:
       account_help: Compte bancari propi al qual pertany el moviment, pel seu id (p.
         ex. acc-01).
+      accrual_date_help: Data en què l'ingrés o la despesa es merita a la Renda segons
+        l'art. 14 LIRPF i l'art. 7 RIRPF (AAAA-MM-DD). No canvia el període de l'IVA.
+        Si l'omets no es desa cap data.
       actor_help: El teu nom, registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
         p. ex. 1200.50).
@@ -3514,6 +3524,7 @@ cli:
       kind_help: Només aquest tipus de valor; repeteix-lo per a diversos. Sense això,
         tots els tipus.
     labels:
+      accrual_date: Data de meritació a la Renda
       active: Actives
       amount: Import
       archived: Arxivades
@@ -3718,6 +3729,8 @@ cli:
     update:
       account_help: Vincula l'entrada a aquest compte bancari propi, pel seu id (p.
         ex. acc-01).
+      accrual_date_help: Nova data en què l'ingrés o la despesa es merita a la Renda
+        segons l'art. 14 LIRPF i l'art. 7 RIRPF (AAAA-MM-DD).
       amount_help: Nova magnitud d'import no negativa de la transacció
       counterparty_help: Nova descripció de la contrapart
       currency_help: Nou codi de moneda ISO 4217

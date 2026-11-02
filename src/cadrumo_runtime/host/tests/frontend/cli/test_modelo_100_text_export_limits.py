@@ -16,9 +16,12 @@ from pathlib import Path
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
@@ -40,8 +43,6 @@ _CALCULATE_FLAGS: tuple[str, ...] = (
     "--casilla",
     "0003=24000",
     "--binding",
-    "renta-certificado-trabajo-retenciones=2400",
-    "--binding",
     "renta-base-liquidable-negativa-general-anterior=0",
 )
 
@@ -52,7 +53,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield profile
 
 
-def _seed(runtime_profile: TestRuntimeProfile, *, name: str, surnames: str) -> None:
+def _seed(runtime_profile: TestRuntimeProfile, *, name: str, surnames: str, certificate: bool = True) -> None:
     record = create_user_profile_record(
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
@@ -79,6 +80,18 @@ def _seed(runtime_profile: TestRuntimeProfile, *, name: str, surnames: str) -> N
         context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label=_LABEL)
+    if certificate:
+        # The profile declares only salary income: the one payer certificate credits 0596 and the
+        # other two credit classes are proven zero by the declared categories.
+        seed_payer_certificate(
+            operation=published_authority_operation(),
+            taxpayer_tax_id="12345678Z",
+            ejercicio=_FILING_YEAR,
+            payer_tax_id="B00000000",
+            income_class=RetencionSoportadaClase.TRABAJO,
+            retencion=Decimal("2400"),
+            importe_integro_dinerario=Decimal("24000"),
+        )
 
 
 def _name_pattern() -> str:
@@ -154,7 +167,7 @@ def test_a_surname_stored_past_the_bound_after_work_began_refuses_calculate_nami
         modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(_FILING_YEAR)
     )
     surnames = "Pérez" * 80
-    _seed(runtime_profile, name="Ana", surnames=surnames)
+    _seed(runtime_profile, name="Ana", surnames=surnames, certificate=False)
 
     result = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_CALCULATE_FLAGS]

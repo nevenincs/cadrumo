@@ -25,7 +25,9 @@ from cadrumo.application.calculations.iva_wallet_reconciliation import (
     reconcile_modelo_303_iva_compensation,
 )
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -53,6 +55,10 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _wallet_observation,
     _work_unit_repositories_with_modelo_303_work_unit,
 )
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    M303_LEDGER_CUOTA,
+    seed_m303_period_cuotas,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -73,7 +79,7 @@ def _calculate_modelo_revision(
     if bucket_id is None:
         raise RuntimeError("Modelo calculation test requires a resolved work-unit repository bucket")
     with bundled_indexed_authority().operation() as operation:
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
             actor=actor,
@@ -83,7 +89,7 @@ def _calculate_modelo_revision(
             filing_period_date=filing_period_date,
             clock=clock,
             filing_instance_evidence=filing_instance_evidence,
-        )
+        ).revision
 
 
 def _reconcile_modelo_303_iva_compensation(
@@ -165,6 +171,7 @@ def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
     # refusal the operator actually receives.
     expected_reason_key = _BLOCKED_REASON_KEY_BY_DIVERGENCE[expected_divergence]
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as blocked:
+        seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
         _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
@@ -259,6 +266,7 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
             )
 
         with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
+            seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
             _calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -363,6 +371,7 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
             ModeloIvaWalletReconciliationBlocked,
             match="application\\.iva_wallet\\.decision_reason\\.wallet_local_recurrence_divergence",
         ):
+            seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
             _calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",

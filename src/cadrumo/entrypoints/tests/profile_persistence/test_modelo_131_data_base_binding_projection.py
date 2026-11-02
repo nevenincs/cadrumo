@@ -15,7 +15,9 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -101,7 +103,7 @@ def test_m131_page1_activity_bindings_feed_data_base_liquidation_without_repurpo
     work_unit = _seed_m131_work_unit(wu_repo, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             casilla_inputs={"03": Decimal("1000")},
@@ -112,7 +114,7 @@ def test_m131_page1_activity_bindings_feed_data_base_liquidation_without_repurpo
                 "modelo-131.page1.actividad-2-resultado": Decimal("50"),
             },
             clock=_T0,
-        )
+        ).revision
 
     assert revision.casilla_values["01"] == Decimal("12000")
     assert revision.casilla_values["02"] == Decimal("450.00")
@@ -130,7 +132,7 @@ def test_m131_dpa_module_rendimiento_can_supply_data_base_casilla_01_when_page1_
     work_unit = _seed_m131_work_unit(wu_repo, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             casilla_inputs={"03": Decimal("500")},
@@ -140,7 +142,7 @@ def test_m131_dpa_module_rendimiento_can_supply_data_base_casilla_01_when_page1_
                 "modelo-131.page1.actividad-1-resultado": Decimal("64"),
             },
             clock=_T0,
-        )
+        ).revision
 
     assert revision.casilla_values["01"] == Decimal("1600")
     assert revision.casilla_values["02"] == Decimal("64")
@@ -158,13 +160,13 @@ def test_m131_unrelated_fixed_record_manual_binding_is_not_projected_as_a_casill
     work_unit = _seed_m131_work_unit(wu_repo, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             casilla_inputs={},
             binding_values={"modelo-131.dpa.vehiculos-afectos": Decimal("9")},
             clock=_T0,
-        )
+        ).revision
 
     assert revision.casilla_values["01"] == Decimal("0")
     assert revision.casilla_values["02"] == Decimal("0")
@@ -179,7 +181,7 @@ def test_m131_explicit_casilla_inputs_override_data_base_binding_projection(
     work_unit = _seed_m131_work_unit(wu_repo, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             casilla_inputs={
@@ -191,7 +193,7 @@ def test_m131_explicit_casilla_inputs_override_data_base_binding_projection(
                 "modelo-131.page1.actividad-1-porcentaje": Decimal("4"),
             },
             clock=_T0,
-        )
+        ).revision
 
     assert revision.casilla_values["01"] == Decimal("777")
     assert revision.casilla_values["02"] == Decimal("33")

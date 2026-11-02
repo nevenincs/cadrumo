@@ -491,16 +491,16 @@ def persist_full_flow_answers(
     from ..user_profile.projections import record_to_path_values
     from .persistence import project_answers, serialise_answers
 
-    stated = election_answers(answers)
-    election = election_changes(flow, stated)
-    profile_values = serialise_answers(flow, answers)
-    election_values = _detach_election_values(flow, stated, profile_values)
     profile_decode_context = operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(
         profile_id,
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
     values = record_to_path_values(record)
+    stated = election_answers(answers, stored=values)
+    election = election_changes(flow, stated)
+    profile_values = serialise_answers(flow, answers)
+    election_values = _detach_election_values(flow, stated, profile_values)
     values.update({path: value for path, value in profile_values.items() if value})
     values.update(election_values)
     require_filing_baseline(flow, project_answers(flow, values))

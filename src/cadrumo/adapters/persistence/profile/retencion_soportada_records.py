@@ -50,6 +50,7 @@ from ....domain.renta.retencion_soportada_absence import (
     RetencionSoportadaAbsence,
     RetencionSoportadaAbsenceIdentity,
 )
+from ..storage.crypto.encrypted_columns import secure_object_key_digest
 from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.errors import STORED_RECORD_FAILURES, SecureObjectRevisionConflictError, SecureObjectRowIdentityError
@@ -247,6 +248,25 @@ class RetencionSoportadaAbsenceRepositoryAdapter(
                 ),
             ),
         )
+
+    @override
+    def list_revisioned(self, ejercicio: int) -> tuple[tuple[RetencionSoportadaAbsence, str], ...]:
+        """Return every attestation of ``ejercicio``, active or withdrawn, with its revision, ordered by object key."""
+
+        def scan() -> tuple[tuple[RetencionSoportadaAbsence, str], ...]:
+            rows: list[tuple[str, RetencionSoportadaAbsence, str]] = []
+            for stored, envelope in self._iter_validated_rows():
+                payload = envelope.payload
+                identifier = self.extract_identifier(payload)
+                if secure_object_key_digest(identifier) != stored.object_key:
+                    raise SecureObjectRowIdentityError(self.namespace, expected_identifier=identifier)
+                if payload.ejercicio == ejercicio:
+                    rows.append((identifier, payload, stored.revision_id))
+            return tuple(
+                (payload, revision_id) for _identifier, payload, revision_id in sorted(rows, key=lambda row: row[0])
+            )
+
+        return _translate_storage_failure("retencion_soportada_list_attestations", scan)
 
     @override
     def load_revisioned(

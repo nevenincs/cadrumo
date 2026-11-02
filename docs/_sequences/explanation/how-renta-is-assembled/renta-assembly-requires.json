@@ -33,10 +33,10 @@
             "action": null,
             "code": "modelo.requires.unbucketed_binding_source",
             "context": {
-              "binding_ids": "renta-activity-asset-disposal-element-type-1626, renta-activity-asset-disposal-excess-direct-0179, renta-activity-asset-disposal-excess-objective-1478, renta-activity-asset-disposal-gain-element-1654, renta-activity-asset-disposal-gain-no-transmission-0304, renta-activity-asset-disposal-gain-property-1843, renta-activity-asset-disposal-loss-element-1639, renta-activity-asset-disposal-loss-no-transmission-0305, renta-activity-asset-disposal-loss-property-1832, renta-certificado-trabajo-retenciones, renta-inventory-activity-acquisition-cost-0181, renta-inventory-activity-closing-decrease-0182, renta-inventory-activity-closing-increase-0177",
-              "casilla_ids": "0177, 0179, 0181, 0182, 0304, 0305, 0596, 1478, 1626, 1639, 1654, 1832, 1843",
+              "binding_ids": "renta-activity-asset-disposal-element-type-1626, renta-activity-asset-disposal-excess-direct-0179, renta-activity-asset-disposal-excess-objective-1478, renta-activity-asset-disposal-gain-element-1654, renta-activity-asset-disposal-gain-no-transmission-0304, renta-activity-asset-disposal-gain-property-1843, renta-activity-asset-disposal-loss-element-1639, renta-activity-asset-disposal-loss-no-transmission-0305, renta-activity-asset-disposal-loss-property-1832, renta-inventory-activity-acquisition-cost-0181, renta-inventory-activity-closing-decrease-0182, renta-inventory-activity-closing-increase-0177",
+              "casilla_ids": "0177, 0179, 0181, 0182, 0304, 0305, 1478, 1626, 1639, 1654, 1832, 1843",
               "modelo": "100",
-              "source_kinds": "activity_asset_disposal, inventory, manual_input"
+              "source_kinds": "activity_asset_disposal, inventory"
             },
             "message": "Some declared box sources do not belong to a modelo.requires data-inventory bucket. They are reported without a suggested repair because where their values come from needs review.",
             "severity": "warning"
@@ -50,7 +50,7 @@
           }
         ],
         "result": {
-          "authority_generation": "9e9eded53160b980e64be276abb7b7a306a89d61b92513d4da9e63d4b77f9c4c",
+          "authority_generation": "5d9138632e9cb6daa27d2a2f2fde8b8801e87c558afbb2cbe06ed61b32ccd174",
           "detail_row_fields": [],
           "filing_year": 2025,
           "ledger_derivable": [
@@ -69,9 +69,79 @@
             {"binding_id":"renta-ledger-expense-0206-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0206","label":"Other tax-deductible levies","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0206","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":"renta-ledger-expense-0208-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0208","label":"Depreciation of tangible fixed assets","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0208","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":"renta-ledger-expense-0217-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0217","label":"Other tax-deductible items, excluding provisions","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0217","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
-            {"binding_id":"renta-ledger-expense-0227-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0227","label":"Depreciation of intangible fixed assets","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0227","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]}
+            {"binding_id":"renta-ledger-expense-0227-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0227","label":"Depreciation of intangible fixed assets","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0227","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-actividad-retenciones-0599","binding_source":"ledger_renta_income_aggregation","casilla_id":"0599","label":"For income from economic activities","legal_refs":["ley-35-2006:art-99","rd-439-2007:art-95","orden-hac-277-2026:art-3"],"number":"0599","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]}
           ],
-          "live_observation": [],
+          "live_observation": [
+            {
+              "binding_id": "renta-retencion-soportada-trabajo",
+              "binding_source": "retencion_soportada",
+              "casilla_id": "0596",
+              "label": "For employment income",
+              "legal_refs": [
+                "ley-35-2006:art-17",
+                "ley-35-2006:art-18",
+                "ley-35-2006:art-19",
+                "ley-35-2006:art-20",
+                "ley-35-2006:art-101",
+                "rd-439-2007:art-80",
+                "rd-439-2007:art-86",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-108",
+                "orden-hac-277-2026:art-3",
+                "orden-eha-3127-2009:art-1",
+                "orden-hac-1431-2025:art-2"
+              ],
+              "number": "0596",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "boe-modelo-100-2025-form",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-modelo-190-instructions-2025",
+                "boe-modelo-190-2025-form"
+              ]
+            },
+            {
+              "binding_id": "renta-retencion-soportada-capital-mobiliario",
+              "binding_source": "retencion_soportada",
+              "casilla_id": "0597",
+              "label": "For movable-capital income",
+              "legal_refs": [
+                "ley-35-2006:art-25",
+                "ley-35-2006:art-26",
+                "ley-35-2006:art-101",
+                "rd-439-2007:art-90",
+                "ley-35-2006:art-99",
+                "orden-eha-3377-2011:art-1",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "0597",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-193-296-note-2025",
+                "boe-modelo-193-2011-form"
+              ]
+            },
+            {
+              "binding_id": "renta-retencion-soportada-ganancia-patrimonial",
+              "binding_source": "retencion_soportada",
+              "casilla_id": "0603",
+              "label": "For capital gains, including prizes",
+              "legal_refs": [
+                "ley-35-2006:art-33",
+                "ley-35-2006:art-34",
+                "ley-35-2006:art-37",
+                "ley-35-2006:art-99",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "0603",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "boe-modelo-100-2025-form"
+              ]
+            }
+          ],
           "modelo": "100",
           "operation": "modelo.requires",
           "optional_manual": [
@@ -512,12 +582,9 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"0592","label":"For attributed withholdings on movable-capital income","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0592","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0593","label":"For attributed withholdings on real-estate-capital income","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0593","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0594","label":"For attributed withholdings on income from economic activities","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0594","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"0597","label":"For movable-capital income","legal_refs":["ley-35-2006:art-25","ley-35-2006:art-26","ley-35-2006:art-101","rd-439-2007:art-90","ley-35-2006:art-99","orden-eha-3377-2011:art-1","orden-hac-277-2026:art-3"],"number":"0597","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form","aeat-modelo-193-296-note-2025","boe-modelo-193-2011-form"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"0599","label":"For income from economic activities","legal_refs":["ley-35-2006:art-99","rd-439-2007:art-95","orden-hac-277-2026:art-3"],"number":"0599","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0600","label":"For attributed withholdings on capital gains and losses imputable to 2025","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","ley-35-2006:art-37","ley-35-2006:art-86","ley-35-2006:art-87","ley-35-2006:art-88","ley-35-2006:art-89","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0600","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0601","label":"Imputed by economic-interest groupings and joint ventures (UTEs)","legal_refs":["ley-35-2006:art-86","ley-35-2006:art-87","ley-35-2006:art-88","ley-35-2006:art-89","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0601","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0602","label":"Payments on account under article 92.8 of the Tax Law","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0602","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"0603","label":"For capital gains, including prizes","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","ley-35-2006:art-37","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0603","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0605","label":"Non-Resident Income Tax liabilities","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0605","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0606","label":"Withholdings under article 11 of Directive 2003/48/EC accrued before 2019","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0606","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0607","label":"For the purchase of plug-in electric and fuel-cell vehicles (amount from this box of Annex A.2): State portion","legal_refs":["ley-35-2006:da-58","orden-hac-277-2026:art-3"],"number":"0607","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -2221,34 +2288,6 @@
                 "boe-modelo-100-2025-form",
                 "aeat-modelo-100-procedure",
                 "aeat-renta-web-open"
-              ]
-            },
-            {
-              "binding_id": "renta-certificado-trabajo-retenciones",
-              "binding_source": "manual_input",
-              "casilla_id": "0596",
-              "label": "For employment income",
-              "legal_refs": [
-                "ley-35-2006:art-17",
-                "ley-35-2006:art-18",
-                "ley-35-2006:art-19",
-                "ley-35-2006:art-20",
-                "ley-35-2006:art-101",
-                "rd-439-2007:art-80",
-                "rd-439-2007:art-86",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-108",
-                "orden-hac-277-2026:art-3",
-                "orden-eha-3127-2009:art-1",
-                "orden-hac-1431-2025:art-2"
-              ],
-              "number": "0596",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "boe-modelo-100-2025-form",
-                "aeat-renta-2025-manual-parte1",
-                "aeat-modelo-190-instructions-2025",
-                "boe-modelo-190-2025-form"
               ]
             },
             {

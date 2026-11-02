@@ -60,5 +60,4 @@ _ANNUAL_EDITS: Final[tuple[tuple[tuple[str, str], str], ...]] = (
     (("casilla", "0165"), "declarante"),
     (("casilla", "0166"), "A05"),
     (("binding", "renta-modelo-100-estimacion-directa-es-normal"), "1"),
-    (("binding", "renta-certificado-trabajo-retenciones"), "0"),
 )

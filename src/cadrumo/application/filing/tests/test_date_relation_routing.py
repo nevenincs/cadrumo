@@ -12,7 +12,7 @@ This made every ``work verify`` / ``work file`` replay of a draft that needed
 those inputs crash at ``BUILDING_DRAFT`` with either
 ``date_binding '...' has no supplied value`` (input absent) or
 ``input '...' must be a Decimal value`` (ISO date wrongly coerced through the
-Decimal channel). ``calculate_modelo_revision`` now persists the resolved
+Decimal channel). ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` now persists the resolved
 date-bindings on the revision's ``binding_overrides`` snapshot and relations on
 ``relation_overrides``; replay merges both into the flat input map, and
 ``build_draft`` routes them back onto their dedicated channels by registry

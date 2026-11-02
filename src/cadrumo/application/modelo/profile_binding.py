@@ -63,7 +63,7 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_date_binding_refs,
 )
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
-from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES
+from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES, CasillaDataType
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
@@ -89,6 +89,7 @@ from .profile_derived_facts import (
     inject_ordinary_work_maritime_facts,
 )
 
+_BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
 
@@ -362,8 +363,8 @@ def _select_profile_bindings(snapshot: RegistrySnapshot) -> _ProfileBindingSelec
     """Select the ``source = "profile"`` bindings the source mesh must resolve.
 
     A profile binding matters to the calculation source mesh when a formula
-    consumes it, when it feeds a ``bound`` NUMERIC input casilla (e.g. M303
-    casilla 65), or when it is a calculation-only selector. The latter has no
+    consumes it, when it feeds a ``bound`` numeric or yes/no input casilla (e.g.
+    M303 casilla 65), or when it is a calculation-only selector. The latter has no
     XSD/dictionary export address: M202's INCN applicability fact and M036's
     censo event are registry-owned profile inputs even though neither is read
     by a numeric formula. Identity/export-layout bindings (NIF, display name,
@@ -379,7 +380,7 @@ def _select_profile_bindings(snapshot: RegistrySnapshot) -> _ProfileBindingSelec
     bound_casilla_binding_ids: set[BindingId] = {
         casilla.binding
         for casilla in snapshot.revision.casillas
-        if casilla.binding is not None and casilla.data_type in NUMERIC_CASILLA_DATA_TYPES
+        if casilla.binding is not None and casilla.data_type in _BOUND_CHANNEL_CASILLA_DATA_TYPES
     }
     bindings = tuple(
         binding

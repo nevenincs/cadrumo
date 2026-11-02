@@ -98,7 +98,7 @@ from .errors import AggregationPeriodError
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
-from .renta_imputation import ImputationCriteria, ImputationUnresolved, impute_row, linked_accrual_date
+from .renta_imputation import ImputationCriteria, ImputationUnresolved, impute_ledger_row
 from .renta_ledger_evidence import iva_amount_for, purchase_invoice_evidence_payload, taxable_base_for
 from .renta_ledger_models import (
     RentaLedgerAggregationIssue,
@@ -930,12 +930,11 @@ def _classify_renta_transaction(
         period=resolved_period,
         imputed=None
         if criteria is None
-        else impute_row(
-            fact.operation_date,
-            linked_accrual_date(
-                None if fact.invoice_id is None else invoices.get(fact.invoice_id), kind=InvoiceKind.RECEIVED
-            ),
-            criteria,
+        else impute_ledger_row(
+            transaction,
+            None if fact.invoice_id is None else invoices.get(fact.invoice_id),
+            kind=InvoiceKind.RECEIVED,
+            criteria=criteria,
         ),
     )
 

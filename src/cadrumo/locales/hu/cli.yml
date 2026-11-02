@@ -640,6 +640,9 @@ cli:
           Nem haladhatja meg az ingreso a cuentát.
         invalid_input: 'Egy érték érvénytelen: ellenőrizd a kifizetői hivatkozást,
           a revíziót és az igazolás ujjlenyomatát.'
+        list_absences_help: Listázd a kiválasztott adóév retenciómentességi nyilatkozataidat,
+          az érvényeseket és a visszavontakat is, azzal a változattal, amelyen mindegyik
+          tárolva van.
         list_help: Listázd egy ejercicio kifizetői rekordjait adóazonosító nélkül.
         origin_help: 'Ki állítja az adatokat: payer_certificate vagy operator_declaration.'
         payer_name_help: A kifizető cégneve.
@@ -1318,7 +1321,9 @@ cli:
         binding_help: További érték egy Modelo 100 rovatforráshoz KEY=VALUE formában.
           Több értékhez ismételd meg. A levonási források megadás hiányában nulla
           értékűek.
-        casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
+        casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (pl. 0003=1150 a munkából
+          származó pénzbeli jövedelemhez). Csak beviteli mezők fogadhatók el; a számított
+          mezőt a parancs elutasítja. Több értékhez ismételd meg.
         ccaa_help: Az adóügyi illetőség szerinti autonóm közösség kulcsa a Modelo
           100 autonóm közösségi adótáblájához (pl. cataluna, comunidad-valenciana).
           Egyeznie kell a nyomtatványdefiníciókban felsorolt egyik értékkel.
@@ -1328,6 +1333,9 @@ cli:
         no_m130_units: Nincs Modelo 130 piszkozat bevallás a(z) %{year} adóévre. Előbb
           hozd létre az `aeat app modelo work create --modelo 130 --year %{year} --period
           1T` paranccsal.
+        profile_fact_missing: 'A vetítés nem tudja előállítani az adóalap- és adórovatokat,
+          mert az aktív profil nem tartalmazza: %{profile_facts}. Add meg a(z) `%{command}`
+          paranccsal, majd futtasd újra a vetítést.'
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
         összesítés).
@@ -3124,6 +3132,9 @@ cli:
     add:
       account_help: A saját bankszámla, amelyhez a mozgás tartozik, azonosítója szerint
         (pl. acc-01).
+      accrual_date_help: Az a nap, amikor a bevétel vagy a költség a személyi jövedelemadóban
+        elszámolandó (LIRPF 14. cikk, RIRPF 7. cikk; ÉÉÉÉ-HH-NN). Nem módosítja az
+        áfaidőszakot. Ha kihagyod, nem rögzítünk dátumot.
       actor_help: A neved, amelyet a bucket-eseményen rögzítünk.
       amount_help: Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).
       art_104_tres_exclusion_help: Az általad megadott LIVA art. 104.Tres nevezői
@@ -3477,6 +3488,7 @@ cli:
         a legfrissebbekkel kezdve.
       kind_help: Csak ez az értéktípus; többhöz ismételd meg. Nélküle minden típus.
     labels:
+      accrual_date: IRPF szerinti elszámolás dátuma
       active: Aktív
       amount: Összeg
       archived: Archivált
@@ -3689,6 +3701,8 @@ cli:
     update:
       account_help: A bejegyzés hozzárendelése ehhez a saját bankszámlához, azonosítója
         szerint (pl. acc-01).
+      accrual_date_help: A bevétel vagy a költség új elszámolási napja a személyi
+        jövedelemadóban (LIRPF 14. cikk, RIRPF 7. cikk; ÉÉÉÉ-HH-NN).
       amount_help: Új nem negatív összegmagnitúdó (teljes csere).
       counterparty_help: Új szerződő fél leírása.
       currency_help: Új háromjegyű ISO 4217 pénznemkód.

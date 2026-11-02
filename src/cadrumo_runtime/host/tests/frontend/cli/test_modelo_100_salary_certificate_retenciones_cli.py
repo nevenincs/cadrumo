@@ -1,4 +1,4 @@
-"""CLI reproduction for the M100 work-retention credit the payee keys."""
+"""CLI reproduction for the M100 work-retention credit a payer certificate records."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
@@ -20,6 +21,7 @@ from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METAD
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
@@ -46,12 +48,18 @@ _REVIEWED_EDITION = newest_authored_edition("100")
 
 _CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
 
+#: The withholding the synthetic payer's certificate states.
+_CERTIFIED_RETENCION = Decimal("4200")
+
 
 _M100_PROFILE_FACTS = (
     UserProfileFact(path="identity.tax_id", value="12345678Z"),
     UserProfileFact(path="identity.name", value="Ana"),
     UserProfileFact(path="identity.surnames", value="Retenciones"),
     UserProfileFact(path="activities.description", value="economic activity"),
+    # Salary only: the certificate below credits 0596, and the declared categories prove
+    # the capital mobiliario and ganancia patrimonial credits zero.
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
     *GENERAL_REGIME_NATURAL_PERSON_FACTS,
     UserProfileFact(path="censo.activity_start_date", value=date(_REVIEWED_EDITION - 5, 1, 1)),
     UserProfileFact(path="renta_taxpayer.birth_date", value=date(_REVIEWED_EDITION - 45, 3, 15)),
@@ -88,6 +96,15 @@ def _prepare_m100_profile(profile_id: UUID, root: Path, authority_operation: Pin
         )
     assert ready.setup_state is ProfileSetupState.COMPLETE
     _seed_prior_year_zero_carry(profile_id)
+    seed_payer_certificate(
+        operation=authority_operation,
+        taxpayer_tax_id="12345678Z",
+        ejercicio=_REVIEWED_EDITION,
+        payer_tax_id="B00000000",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=_CERTIFIED_RETENCION,
+        importe_integro_dinerario=Decimal("32000"),
+    )
 
 
 def _seed_prior_year_zero_carry(profile_id: UUID) -> None:
@@ -119,7 +136,7 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
     authority_operation: PinnedAuthorityOperation,
     run_cadrumo_cli,
 ) -> None:
-    """Real CLI reproduction: the payee salary-certificate binding affects 0596."""
+    """Real CLI reproduction: the payer's recorded certificate credits 0596."""
     with native_api_cli_session(
         tmp_path,
         scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
@@ -155,8 +172,6 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
             "0102=9600",
             "--binding",
             "renta-modelo-100-estimacion-directa-es-normal=1",
-            "--binding",
-            "renta-certificado-trabajo-retenciones=4200",
             "--relation",
             "renta-modelo-130-pagos-fraccionados=0",
             "--relation",
@@ -165,5 +180,5 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
 
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
-    assert Decimal(payload["casilla_values"]["0596"]) == Decimal("4200")
-    assert Decimal(payload["casilla_values"]["0609"]) == Decimal("4200")
+    assert Decimal(payload["casilla_values"]["0596"]) == _CERTIFIED_RETENCION
+    assert Decimal(payload["casilla_values"]["0609"]) == _CERTIFIED_RETENCION

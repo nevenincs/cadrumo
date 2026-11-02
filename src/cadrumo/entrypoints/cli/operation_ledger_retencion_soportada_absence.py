@@ -15,26 +15,36 @@ from cadrumo_client.commands.registered_operation_errors import invalid_completi
 from ...application.aggregation.retencion_soportada_absence_repository import RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS
 from ...application.retencion_soportada_absence.contracts import (
     RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
+    RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_ABSENCE_WITHDRAW_OPERATION_DEFINITION_ID,
 )
 from ...application.retencion_soportada_absence.requests import (
     RetencionSoportadaAbsenceAttestRequest,
+    RetencionSoportadaAbsenceListRequest,
     RetencionSoportadaAbsenceRequest,
     RetencionSoportadaAbsenceWithdrawRequest,
 )
 from ...application.retencion_soportada_absence.results import (
+    RetencionSoportadaAbsenceListProjection,
     RetencionSoportadaAbsenceMutationProjection,
     RetencionSoportadaAbsenceProjection,
     RetencionSoportadaAbsenceRefusalProjection,
+    RetencionSoportadaAbsenceRowProjection,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .retencion_soportada_absence_results import (
     RetencionSoportadaAbsencePayload,
+    RetencionSoportadaAbsenceRowPayload,
     RetencionSoportadaAttestAbsenceResult,
+    RetencionSoportadaListAbsencesResult,
     RetencionSoportadaWithdrawAbsenceResult,
 )
 
-__all__ = ["attest_retencion_soportada_absence", "withdraw_retencion_soportada_absence"]
+__all__ = [
+    "attest_retencion_soportada_absence",
+    "list_retencion_soportada_absences",
+    "withdraw_retencion_soportada_absence",
+]
 
 
 def _raise_refusal(
@@ -70,6 +80,52 @@ def _payload(attestation: RetencionSoportadaAbsenceProjection) -> RetencionSopor
         attested_at=attestation.attested_at.isoformat(),
         withdrawn_at=None if attestation.withdrawn_at is None else attestation.withdrawn_at.isoformat(),
         revision_id=attestation.revision_id,
+    )
+
+
+def _row_payload(row: RetencionSoportadaAbsenceRowProjection) -> RetencionSoportadaAbsenceRowPayload:
+    return RetencionSoportadaAbsenceRowPayload(
+        ejercicio=row.ejercicio,
+        income_class=row.income_class.value,
+        note=row.note,
+        state=row.state.value,
+        attested_at=row.attested_at.isoformat(),
+        withdrawn_at=None if row.withdrawn_at is None else row.withdrawn_at.isoformat(),
+        revision_id=row.revision_id,
+        income_class_label=row.income_class_label,
+    )
+
+
+def list_retencion_soportada_absences(
+    ctx: typer.Context, request: RetencionSoportadaAbsenceListRequest
+) -> RetencionSoportadaListAbsencesResult:
+    """Read every stored absence attestation of one ejercicio through the profile worker."""
+    client = require_profile_client(ctx, expected_profile_id=request.profile_id)
+    completed = run_registered_operation(
+        client,
+        request,
+        definition_id=RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        result_type=RetencionSoportadaAbsenceListProjection,
+        request_version=1,
+        result_version=1,
+        timeout=120,
+        allow_refusal_detail=False,
+    )
+    projection = completed.projection
+    if (
+        projection.profile_id != client.profile_id
+        or projection.ejercicio != request.ejercicio
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+    ):
+        raise invalid_completion_error(completed)
+    return RetencionSoportadaListAbsencesResult(
+        bucket_id=str(request.profile_id),
+        ejercicio=projection.ejercicio,
+        attestations=[_row_payload(row) for row in projection.attestations],
+        count=len(projection.attestations),
     )
 
 

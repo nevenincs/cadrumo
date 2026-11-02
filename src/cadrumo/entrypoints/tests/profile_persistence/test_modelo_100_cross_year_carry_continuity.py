@@ -1,7 +1,7 @@
 """Cross-year carry continuity for Modelo 100 (IRPF anual).
 
 This module drives the real M100 calculation engine
-(``calculate_modelo_revision``) across two distinct renta years.
+(``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics``) across two distinct renta years.
 
 The cross-renta hook is the Anexo C base-liquidable-general-negativa
 carry-forward. A year's *generated* negative general base left pending —
@@ -20,7 +20,7 @@ carried saldo. The carry is origin-year-matched in both revisions (each
 revision's 1388 is the immediately-prior origin year).
 
 Calc-mode (honest evidence): each renta year is driven through the REAL
-``calculate_modelo_revision`` — the same full-engine path M130/M200/M202/M151
+``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` — the same full-engine path M130/M200/M202/M151
 use — so the ``evidence_class = calculation`` manifest label is backed by an
 actual calculation, not resolver output. A taxpayer-unit ``UserProfileRecord``
 is seeded so the ``source = "profile"`` bindings (tax-residence CCAA, taxpayer
@@ -55,17 +55,18 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -140,7 +141,7 @@ def _seed_taxpayer_unit_profile() -> None:
     chain consumes across the 2024 and 2025 revisions (tax-residence CCAA,
     taxpayer birth date for ``age_at_year_end``, declaration type, marital
     status and the derived marriage facts, minor-children count). The profile
-    is the substrate of record, so ``calculate_modelo_revision`` auto-resolves
+    is the substrate of record, so ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` auto-resolves
     these via ``_resolve_profile_bindings_for_calculation`` — no profile fact
     is hand-fed through the caller binding channel.
     """
@@ -180,30 +181,23 @@ def _seed_taxpayer_unit_profile() -> None:
 
 
 def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationRepository):
-    """Run the REAL M100 ``calculate_modelo_revision`` for ``filing_year``.
+    """Run the bucket M100 calculation for ``filing_year``.
 
-    Resolves the ``previous_filing`` carry from the local observation store and
-    supplies it (plus a zero default for every other non-profile binding)
-    through the caller binding channel; the seeded user profile auto-resolves
-    the ``source = "profile"`` bindings; relations are supplied as zero (no
-    dependent-modelo activity for this pure-carry persona). Returns the
+    The bucket resolves the ``previous_filing`` carry from the local observation
+    store and the seeded profile fills the ``source = "profile"`` bindings.
+    Every other operator-owned binding is supplied as zero, and relations are
+    zero (no dependent-modelo activity for this pure-carry persona). Returns the
     persisted :class:`CalculationRevision`.
     """
     snapshot = _snapshot(filing_year)
     with bundled_indexed_authority().operation() as operation:
-        carry = resolve_bindings_from_local_store(
-            snapshot,
-            operation=operation,
-            repository=obs_repo,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        ).binding_values
-        # Every non-profile binding defaults to zero through the caller channel;
-        # the previous_filing carry overlays its real resolved value. profile
-        # bindings are deliberately omitted so the profile resolver fills them.
         binding_values: dict[BindingId, Decimal] = {
-            binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
+            binding.id: Decimal("0")
+            for binding in snapshot.revision.bindings
+            if binding.source != "profile"
+            and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
+            and binding.provider.kind not in {"retencion_soportada", "previous_filing"}
         }
-        binding_values.update(carry)
         relation_values: dict[RelationId, Decimal] = {
             binding.id: Decimal("0")
             for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
@@ -219,7 +213,7 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
             operation=operation,
             clock=_CLOCK,
         )
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             actor=_BUCKET_ID,
@@ -227,7 +221,7 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
             binding_values=binding_values,
             relation_values=relation_values,
             clock=_CLOCK,
-        )
+        ).revision
 
 
 def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Path) -> None:
@@ -235,7 +229,7 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
 
     The cross-renta continuity contract: once the prior M100 is recorded, the
     ``filing_year_delta = -1`` carry populates casilla 1388 from that prior
-    1391 generated saldo, and a real ``calculate_modelo_revision`` emits it —
+    1391 generated saldo, and a real ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` emits it —
     the operator does not re-key the carried negative general base.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -249,7 +243,7 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
 def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: M100 general-base saldo carry across two renta years.
 
-    Drives the REAL M100 ``calculate_modelo_revision`` for two distinct renta
+    Drives the REAL M100 ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` for two distinct renta
     years (2024, 2025), each sourcing the prior year's 1391 generated saldo
     (2023, 2024), records each through the ``cross-year observation`` (CALC;
     evidence = the _produced-value count from the real engine run), and

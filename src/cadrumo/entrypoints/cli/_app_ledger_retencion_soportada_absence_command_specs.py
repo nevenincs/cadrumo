@@ -18,7 +18,7 @@ from cadrumo_client.commands.shared_contracts import (
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 
-from ._app_ledger_command_spec_policies import _POLICY_4
+from ._app_ledger_command_spec_policies import _POLICY_4, _POLICY_5
 
 _CLI_MODULE: Final[str] = ".retencion_soportada_absence_commands"
 _RESULT_MODULE: Final[str] = ".retencion_soportada_absence_results"
@@ -109,6 +109,21 @@ LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(_CLI_MODULE, "retencion_soportada_attest_absence", __package__)),
         result_schema=_result_schema(
             "RetencionSoportadaAttestAbsenceResult", "ledger.retencion_soportada.attest_absence"
+        ),
+    ),
+    CommandSpec(
+        "app_ledger_retencion_soportada_list_absences",
+        _PARENT,
+        "list-absences",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey(_help("list_absences_help")),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(_EJERCICIO_OPTION,),
+        policy=_POLICY_5,
+        handler=LazyBinding.available(DeferredTarget(_CLI_MODULE, "retencion_soportada_list_absences", __package__)),
+        result_schema=_result_schema(
+            "RetencionSoportadaListAbsencesResult", "ledger.retencion_soportada.list_absences"
         ),
     ),
     CommandSpec(

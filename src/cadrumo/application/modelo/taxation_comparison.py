@@ -492,7 +492,7 @@ def compare_taxation_for_work_unit(
 
     period_date = calculation_filing_date(work_unit.period)
 
-    # Build resolved inputs the same way calculate_modelo_revision does,
+    # Build resolved inputs the same way the calculation service does,
     # using zero casilla overrides (the work unit has no explicit inputs here —
     # the comparison uses pure profile bindings).
     # ``compare_taxation_modes`` is Modelo 100 only, and no Modelo 100 revision

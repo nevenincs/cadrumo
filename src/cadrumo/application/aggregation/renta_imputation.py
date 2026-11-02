@@ -94,6 +94,9 @@ class ImputationUnresolved(StrEnum):
     OVERPAID_INVOICE = "overpaid_invoice"
     """The receipts linked to one invoice exceed what it leaves to be paid, so no share of it is known."""
 
+    ACCRUAL_CONFLICT = "accrual_conflict"
+    """The accrual date stated on the row disagrees with the one its invoice documents."""
+
     CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN = "capital_subsidy_schedule_unknown"
     """A capital subsidy follows its asset's amortization under either criterion, and no schedule links one."""
 
@@ -359,6 +362,36 @@ def linked_accrual_date(invoice: Invoice | None, *, kind: InvoiceKind) -> date |
     return invoice_accrual_date(invoice) if invoice is not None and invoice.kind is kind else None
 
 
+def row_accrual_date(
+    row: Transaction, invoice: Invoice | None, *, kind: InvoiceKind
+) -> date | ImputationUnresolved | None:
+    """Return the date a row accrues on from its invoice or its stated date, ``None`` when neither gives one.
+
+    The stated date is the operator's own statement for a row no document places,
+    and it is never read from the row's IVA ``operation_date``: LIVA art. 75 moves
+    the IVA at an advance while the income or expense accrues on delivery. When a
+    linked invoice documents a different date neither is preferred, because the
+    disagreement is the operator's to settle.
+    """
+    linked = linked_accrual_date(invoice, kind=kind)
+    stated = row.accrual_date
+    if stated is None:
+        return linked
+    if linked is None or linked == stated:
+        return stated
+    return ImputationUnresolved.ACCRUAL_CONFLICT
+
+
+def impute_ledger_row(
+    row: Transaction, invoice: Invoice | None, *, kind: InvoiceKind, criteria: ImputationCriteria
+) -> date | ImputationUnresolved:
+    """Place one ledger row by what it and its invoice state about its accrual."""
+    accrual = row_accrual_date(row, invoice, kind=kind)
+    if isinstance(accrual, ImputationUnresolved):
+        return accrual
+    return impute_row(row.raw.value_date or row.raw.booked_date, accrual, criteria)
+
+
 def rows_touching_window(
     transactions: TransactionCatalogue,
     invoices: InvoiceCatalogue,
@@ -370,12 +403,15 @@ def rows_touching_window(
 ) -> TransactionCatalogue:
     """Keep the rows banked in the window or linked to an invoice accruing in it.
 
-    Only these can land in the window, so other years' rows raise no refusal here.
+    A date stated on the row counts as its invoice's does. Only these can land in
+    the window, so other years' rows raise no refusal here.
     """
 
     def touches(row: Transaction) -> bool:
         cash = row.raw.value_date or row.raw.booked_date
         if start <= cash <= end:
+            return True
+        if row.accrual_date is not None and start <= row.accrual_date <= end:
             return True
         invoice_id = invoice_id_of(row)
         accrual = linked_accrual_date(None if invoice_id is None else invoices.get(invoice_id), kind=kind)
@@ -448,10 +484,12 @@ __all__ = [
     "declared_imputation_criteria",
     "imputation_blocking_diagnostics",
     "imputation_filing_history",
+    "impute_ledger_row",
     "impute_row",
     "invoice_accrual_date",
     "ledger_sum_outcome",
     "linked_accrual_date",
+    "row_accrual_date",
     "rows_left_out_summary",
     "rows_touching_window",
 ]

@@ -87,7 +87,7 @@ def author_ordinary_m303_filing_instance_evidence(
     attachment_store: AttachmentStoreProtocol,
     profile: ModeloWorkProfile | None = None,
 ) -> FilingInstanceEvidence:
-    """Construct validated ordinary evidence ready for ``calculate_modelo_revision``.
+    """Construct validated ordinary evidence ready for a Modelo 303 calculation.
 
     The returned transient envelope is the existing calculation action's
     ``filing_instance_evidence`` input; it is durable only when that action

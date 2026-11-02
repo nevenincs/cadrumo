@@ -259,7 +259,7 @@ def _binding_rows(
             aggregation={"op": binding.aggregation.op.value} if binding.aggregation is not None else None,
             legal_refs=tuple(binding.legal_refs),
             source_refs=tuple(binding.source_refs),
-            borrador_capable=binding.aeat_prefilled is True,
+            borrador_capable=binding.borrador_supplies_value,
             relation_inputs=(binding.id,) if binding.id in fold_binding_ids else (),
             encoded_options=boolean_binding_encoded_values(binding),
             operator_input_required=operator_required.get(binding.id, True),

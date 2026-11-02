@@ -37,7 +37,6 @@ from ...core.period import Period, PeriodKind
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.catalogue import InvoiceCatalogue
-from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -55,7 +54,7 @@ from .renta_imputation import (
     ActivityImputationCriterion,
     ImputationCriteria,
     ImputationUnresolved,
-    impute_row,
+    impute_ledger_row,
     linked_accrual_date,
     rows_left_out_summary,
     rows_touching_window,
@@ -878,10 +877,23 @@ def _imputed_income_date_or_issue(
     cash = transaction.raw.value_date or transaction.raw.booked_date
     invoice = None if transaction.invoice_id is None else invoices.get(transaction.invoice_id)
     accrual = linked_accrual_date(invoice, kind=InvoiceKind.ISSUED)
-    in_window = cumulative_start <= cash <= cumulative_end or (
-        accrual is not None and cumulative_start <= accrual <= cumulative_end
+    in_window = any(
+        on is not None and cumulative_start <= on <= cumulative_end for on in (cash, accrual, transaction.accrual_date)
     )
-    imputed = _placed_by_election(transaction, invoice, accrual, cash, criteria)
+    imputed = impute_ledger_row(transaction, invoice, kind=InvoiceKind.ISSUED, criteria=criteria)
+    # A capital subsidy follows its asset's amortization under either criterion, and no
+    # ledger row carries a schedule: AEAT Manual Renta, ch. 6, citing STS 398/2022.
+    if str(transaction.concepto_ingreso) == _CAPITAL_SUBSIDY_CONCEPT:
+        imputed = ImputationUnresolved.CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN
+    # A shared receipt of an invoice whose figures cannot be shared out stands for nothing known.
+    elif (
+        invoice is not None
+        and accrual is not None
+        and len(invoice.linked_transaction_ids) != 1
+        and criteria.usable(accrual.year) is ActivityImputationCriterion.DEVENGO
+        and renta_income_evidence.part_payment_share(invoice, transaction) is None
+    ):
+        imputed = ImputationUnresolved.ACCRUAL_UNKNOWN
     if isinstance(imputed, ImputationUnresolved):
         if not in_window:
             return None
@@ -891,31 +903,6 @@ def _imputed_income_date_or_issue(
             detail=f"{imputed.value}: receipt of {cash} cannot be placed in an ejercicio",
         )
     return imputed if cumulative_start <= imputed <= cumulative_end else None
-
-
-def _placed_by_election(
-    transaction: Transaction,
-    invoice: Invoice | None,
-    accrual: date | None,
-    cash: date,
-    criteria: ImputationCriteria,
-) -> date | ImputationUnresolved:
-    """Return the date the dated election places one receipt on, or why it cannot be placed."""
-    imputed = impute_row(cash, accrual, criteria)
-    # A capital subsidy follows its asset's amortization under either criterion, and no
-    # ledger row carries a schedule: AEAT Manual Renta, ch. 6, citing STS 398/2022.
-    if str(transaction.concepto_ingreso) == _CAPITAL_SUBSIDY_CONCEPT:
-        return ImputationUnresolved.CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN
-    # A shared receipt of an invoice whose figures cannot be shared out stands for nothing known.
-    if (
-        invoice is not None
-        and accrual is not None
-        and len(invoice.linked_transaction_ids) != 1
-        and criteria.usable(accrual.year) is ActivityImputationCriterion.DEVENGO
-        and renta_income_evidence.part_payment_share(invoice, transaction) is None
-    ):
-        return ImputationUnresolved.ACCRUAL_UNKNOWN
-    return imputed
 
 
 def _income_observation(

@@ -17,7 +17,8 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from ...domain.buckets.event import BucketEventType
-from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ...domain.user_profile.errors import ProfileSchemaValidationError
+from ...domain.user_profile.setup_answers import EJERCICIO_STATED_PROFILE_PATHS, PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 if TYPE_CHECKING:
@@ -82,31 +83,56 @@ def _windowed(record: UserProfileRecord) -> frozenset[tuple[str, date | None, da
 def _facts_after(
     current: tuple[UserProfileFact, ...], changes: tuple[UserProfileFact, ...]
 ) -> tuple[UserProfileFact, ...]:
-    """Return ``current`` with ``changes`` applied: an undated change replaces its path, a dated one its window.
+    """Return ``current`` with ``changes`` applied: each change replaces the exact window it names.
 
     A taxpayer's statements about different ejercicios share one path, so a
-    change that names a window must leave the other windows standing. A dated
-    change with no value removes its window; the removed fact is not kept as an
-    empty one, because a reader of that window would then see a value that is not there.
+    change never reaches past its own window: an undated change replaces only
+    the undated fact and every dated fact stands. A dated change with no value
+    removes its window; the removed fact is not kept as an empty one, because a
+    reader of that window would then see a value that is not there.
     """
-    stated = tuple(fact for fact in changes if fact.value is not None or _is_undated(fact))
-    return (*_facts_left_standing(current, changes), *stated)
+    named = {(fact.path, fact.valid_from, fact.valid_to) for fact in changes}
+    kept = tuple(fact for fact in current if (fact.path, fact.valid_from, fact.valid_to) not in named)
+    stated = tuple(
+        fact for fact in changes if fact.value is not None or (fact.valid_from is None and fact.valid_to is None)
+    )
+    return (*kept, *stated)
 
 
-def _facts_left_standing(
-    current: tuple[UserProfileFact, ...], changes: tuple[UserProfileFact, ...]
+def _undated_changes_with_effect(
+    current: UserProfileRecord, changes: tuple[UserProfileFact, ...]
 ) -> tuple[UserProfileFact, ...]:
-    whole_paths = {fact.path for fact in changes if _is_undated(fact)}
-    windows = {_fact_window(fact) for fact in changes if not _is_undated(fact)}
-    return tuple(fact for fact in current if fact.path not in whole_paths and _fact_window(fact) not in windows)
+    """Drop an undated restatement of a dated path's value and refuse an undated change to it.
+
+    A later window supersedes an undated fact at its path, so an undated answer
+    there could never take effect: accepting it would report an edit nothing
+    reads, and letting it replace the path would erase the dated history. A path
+    only a dated fact can answer refuses an undated value even before it holds one.
+    """
+    from .projections import record_to_path_values
+
+    stored = record_to_path_values(current)
+    dated_paths = {fact.path for fact in current.facts if fact.valid_from is not None or fact.valid_to is not None}
+    kept: list[UserProfileFact] = []
+    for change in changes:
+        if change.valid_from is not None or change.valid_to is not None:
+            kept.append(change)
+        elif change.path in dated_paths and change.value is not None and stored.get(change.path) == _token(change):
+            continue
+        elif change.path in dated_paths or change.path in EJERCICIO_STATED_PROFILE_PATHS:
+            raise ProfileSchemaValidationError(
+                f"profile field {change.path} is stated per ejercicio and this change names none",
+                context={"field": change.path},
+                translated_message="application.user_profile.errors.profile_field_needs_ejercicio",
+            )
+        else:
+            kept.append(change)
+    return tuple(kept)
 
 
-def _is_undated(fact: UserProfileFact) -> bool:
-    return fact.valid_from is None and fact.valid_to is None
-
-
-def _fact_window(fact: UserProfileFact) -> tuple[str, object, object]:
-    return (fact.path, fact.valid_from, fact.valid_to)
+def _token(fact: UserProfileFact) -> str:
+    """Render a fact value as the profile's canonical token, booleans in lowercase."""
+    return ("true" if fact.value else "false") if isinstance(fact.value, bool) else str(fact.value)
 
 
 def apply_profile_fact_changes(
@@ -128,7 +154,8 @@ def apply_profile_fact_changes(
 
     A change that carries an effective window replaces only that window at its
     path, so statements about other ejercicios survive; with ``value=None`` it
-    removes that window instead of retaining an empty one.
+    removes that window instead of retaining an empty one. An undated change
+    never touches a window, and one that a window would shadow is refused.
 
     This is not the only door onto profile facts -- registration opens the
     initial record and the cotejo censal adopts certificate values -- so what
@@ -158,6 +185,7 @@ def apply_profile_fact_changes(
     )
     current = expected_record if expected_record is not None else repository.load(profile_id)
     profile_context = repository.session.profile_decode_context
+    changes = _undated_changes_with_effect(current, changes)
     changed_paths = {fact.path for fact in changes}
     next_facts = _facts_after(tuple(current.facts), changes)
     reject_invalid_profile_facts(

@@ -22,11 +22,13 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
 from cadrumo.application.retencion_soportada_absence.contracts import (
     RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
+    RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_ABSENCE_WITHDRAW_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.retencion_soportada_absence.executor import RetencionSoportadaAbsenceExecutor
 from cadrumo.application.retencion_soportada_absence.requests import (
     RetencionSoportadaAbsenceAttestRequest,
+    RetencionSoportadaAbsenceListRequest,
     RetencionSoportadaAbsenceWithdrawRequest,
 )
 from cadrumo.application.retencion_soportada_absence.results import RetencionSoportadaAbsenceExecutionResult
@@ -59,13 +61,14 @@ class _Cancellation:
 
 
 class _Operands:
-    def __init__(self, cancellation: _Cancellation) -> None:
+    def __init__(self, cancellation: _Cancellation, *, writes: bool) -> None:
         self._cancellation = cancellation
+        self._writes = writes
         self.value: BaseModel | None = None
 
     async def put(self, value: BaseModel, *, written_at: object) -> str:
         del written_at
-        assert self._cancellation.inside
+        assert self._cancellation.inside == self._writes
         self.value = value
         return "d" * 64
 
@@ -80,7 +83,9 @@ class _Context:
         self.authority_operation = authority_operation
         self.events = RecordingEvents()
         self.cancellation = _Cancellation()
-        self.operands = _Operands(self.cancellation)
+        self.operands = _Operands(
+            self.cancellation, writes=definition_id != RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID
+        )
 
 
 def _run(
@@ -97,28 +102,38 @@ def _run(
     return outcome, retained, context.events.effects
 
 
-def _attest(authority_operation: PinnedAuthorityOperation, *, expected: str | None = None):
+def _attest(
+    authority_operation: PinnedAuthorityOperation,
+    *,
+    expected: str | None = None,
+    income_class: RetencionSoportadaClase = RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+):
     return _run(
         authority_operation,
         RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
         RetencionSoportadaAbsenceAttestRequest(
             profile_id=UUID(_PROFILE),
             ejercicio=_EJERCICIO,
-            income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+            income_class=income_class,
             note=_NOTE,
             expected_revision_id=expected,
         ),
     )
 
 
-def _withdraw(authority_operation: PinnedAuthorityOperation, expected: str):
+def _withdraw(
+    authority_operation: PinnedAuthorityOperation,
+    expected: str,
+    *,
+    income_class: RetencionSoportadaClase = RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+):
     return _run(
         authority_operation,
         RETENCION_SOPORTADA_ABSENCE_WITHDRAW_OPERATION_DEFINITION_ID,
         RetencionSoportadaAbsenceWithdrawRequest(
             profile_id=UUID(_PROFILE),
             ejercicio=_EJERCICIO,
-            income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+            income_class=income_class,
             expected_revision_id=expected,
         ),
     )
@@ -156,6 +171,61 @@ def test_attest_refuse_and_withdraw_through_the_registered_executor(
         assert withdrawn.attestation is not None
         assert withdrawn.attestation.state is RetencionSoportadaAbsenceState.WITHDRAWN
         assert withdrawn.attestation.revision_id != revision_id
+
+
+def _list(authority_operation: PinnedAuthorityOperation, ejercicio: int = _EJERCICIO):
+    return _run(
+        authority_operation,
+        RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
+        RetencionSoportadaAbsenceListRequest(profile_id=UUID(_PROFILE), ejercicio=ejercicio),
+    )
+
+
+def test_list_shows_every_stored_attestation_with_the_revision_a_withdrawal_needs(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
+        # A year with no attestations lists as empty: success, no change, no refusal.
+        outcome, empty, empty_effects = _list(operation)
+        assert not isinstance(outcome, OperationRefusalEvidence)
+        assert empty.outcome == "success"
+        assert empty.attestations == ()
+        assert empty_effects == [OperationEffect.NONE]
+
+        _, first, _ = _attest(operation)
+        assert first.attestation is not None
+        _, withdrawn, _ = _withdraw(operation, first.attestation.revision_id)
+        assert withdrawn.attestation is not None
+        _, second, _ = _attest(operation, income_class=RetencionSoportadaClase.GANANCIA_PATRIMONIAL)
+        assert second.attestation is not None
+
+        _, listed, effects = _list(operation)
+        assert effects == [OperationEffect.NONE]
+        assert listed.attestations is not None
+        rows = {row.income_class: row for row in listed.attestations}
+        assert set(rows) == {RetencionSoportadaClase.CAPITAL_MOBILIARIO, RetencionSoportadaClase.GANANCIA_PATRIMONIAL}
+        stored_withdrawn = rows[RetencionSoportadaClase.CAPITAL_MOBILIARIO]
+        assert stored_withdrawn.state is RetencionSoportadaAbsenceState.WITHDRAWN
+        assert stored_withdrawn.revision_id == withdrawn.attestation.revision_id
+        assert stored_withdrawn.withdrawn_at == withdrawn.attestation.withdrawn_at
+        stored_active = rows[RetencionSoportadaClase.GANANCIA_PATRIMONIAL]
+        assert stored_active.state is RetencionSoportadaAbsenceState.ACTIVE
+        assert stored_active.revision_id == second.attestation.revision_id
+        assert stored_active.note == _NOTE
+        assert stored_active.income_class_label.strip()
+        assert stored_withdrawn.income_class_label != stored_active.income_class_label
+        assert "retencion_soportada" not in stored_active.income_class_label
+
+        # The listed revision is the one the guarded write accepts.
+        _, again, _ = _withdraw(
+            operation, stored_active.revision_id, income_class=RetencionSoportadaClase.GANANCIA_PATRIMONIAL
+        )
+        assert again.outcome == "success"
+        assert again.attestation is not None
+        assert again.attestation.state is RetencionSoportadaAbsenceState.WITHDRAWN
+
+        # Only the requested ejercicio is listed.
+        assert _list(operation, _EJERCICIO - 1)[1].attestations == ()
 
 
 def test_the_composed_ports_refuse_a_profile_other_than_the_active_one(

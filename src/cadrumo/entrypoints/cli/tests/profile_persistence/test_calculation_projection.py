@@ -5,7 +5,9 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.calculation_projection import ModeloCalculationSnapshot
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.core.config import override_settings
@@ -34,14 +36,14 @@ def test_real_encrypted_calculation_snapshot_preserves_existing_result_facts(rep
         calculation_repository=revisions,
         bucket_event_repository=events,
     ) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             unit.work_unit_id,
             actor="operator-A",
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=ports,
             clock=T1,
-        )
+        ).revision
         stored = revisions.load().get(revision.calculation_revision_id)
         assert stored is not None
         assert stored == revision

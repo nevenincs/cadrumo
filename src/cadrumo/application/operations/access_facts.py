@@ -88,6 +88,7 @@ _LOCAL_READS: Final = (
     "ledger.ratios.list",
     "ledger.ratios.validate",
     "ledger.retencion_soportada.list",
+    "ledger.retencion_soportada.list_absences",
     "ledger.review",
     "ledger.rule.list",
     "ledger.status",

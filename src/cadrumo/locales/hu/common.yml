@@ -191,6 +191,20 @@ aggregation:
       unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
         (pl. 2024-0A).
   retencion_soportada:
+    clase:
+      actividad_economica: Gazdasági tevékenységből származó jövedelem
+      arrendamiento_inmueble_urbano: 'Ingatlanvagyon-jövedelem: városi ingatlan bérbeadása'
+      arrendamiento_inmueble_urbano_actividad: 'Gazdasági tevékenységből származó
+        jövedelem: városi ingatlan bérbeadása'
+      atribucion_actividad_economica: 'Jövedelem-hozzárendelés: gazdasági tevékenység'
+      atribucion_capital_inmobiliario: 'Jövedelem-hozzárendelés: ingatlanvagyon-jövedelem'
+      atribucion_capital_mobiliario: 'Jövedelem-hozzárendelés: ingóvagyon-jövedelem'
+      atribucion_ganancia_patrimonial: 'Jövedelem-hozzárendelés: tőkenyereség'
+      capital_mobiliario: Ingóvagyon-jövedelem (tőkejövedelem)
+      ganancia_patrimonial: Tőkenyereség
+      imputacion_aie_ute: Az AIE-től és az UTE-től betudott jövedelem
+      imputacion_derechos_imagen: Képmásjogok átruházásából betudott jövedelem
+      trabajo: Munkából származó jövedelem
     errors:
       certificate_needs_fingerprint: A kifizetői igazoláshoz meg kell adnod az igazolás
         fájljának SHA-256 ujjlenyomatát (--evidence-sha256). Ha nincs igazolásod,
@@ -2493,6 +2507,7 @@ desktop:
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:
+      accrual_date: IRPF szerinti elszámolás dátuma
       art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
       attachment_ids: Mellékletek
       booked_date: Könyvelési dátum
@@ -4441,6 +4456,9 @@ desktop:
       adatokat, majd nyisd meg újra a mezőt. A piszkozatodat nem mentettük.
     dismiss: Elrejtés
     edit_field: '{field} szerkesztése'
+    ejercicio: Adóév
+    ejercicio_help: "Az év, amelyre ez a válasz szól. A többi év megtartja a sajátját."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
     entries_count: 'Bejegyzések: {count}'
     entries_none: Még nincs bejegyzés
@@ -7299,6 +7317,7 @@ tui:
         created: 'Hozzáadva: {entry}. Átnézési állapot: {status}.'
         edit_again: Szerkesztés újra
         field:
+          accrual_date: IRPF szerinti elszámolás dátuma (ÉÉÉÉ-HH-NN)
           amount: Összeg, előjel nélkül
           art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
           booked_date: Könyvelési dátum (ÉÉÉÉ-HH-NN)
@@ -8309,6 +8328,7 @@ tui:
       totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Tétel részletei
       transaction_field:
+        accrual_date: IRPF szerinti elszámolás dátuma (ÉÉÉÉ-HH-NN, nem kötelező)
         amount: Összeg (előjel nélkül)
         booked_date: Könyvelés dátuma (ÉÉÉÉ-HH-NN)
         counterparty: Partner (nem kötelező)

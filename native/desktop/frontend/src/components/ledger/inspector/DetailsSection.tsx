@@ -112,6 +112,7 @@ export function DetailsSection({
         {field("booked_date", "date", changes?.booked_date ? moveNote : null)}
         {field("value_date", "date", changes?.value_date ? moveNote : null)}
         {field("operation_date", "date")}
+        {field("accrual_date", "date")}
         {field("amount", "amount", changes?.amount ? identity : null)}
         {field("direction", "direction")}
         {field("currency", "currency")}

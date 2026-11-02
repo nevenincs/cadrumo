@@ -19,7 +19,9 @@ import pytest
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
@@ -63,7 +65,7 @@ def _recalculate_after_the_baseline(submission: ModeloEditSubmissionV1) -> Model
     """Change the declaration after its baseline was captured, leaving the submission itself unchanged."""
     baseline = submission.baseline
     with bundled_indexed_authority().operation() as operation:
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             baseline.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=baseline.bucket_id, operation=operation),
             actor=MODELO_OPERATION_TEST_ACTOR,

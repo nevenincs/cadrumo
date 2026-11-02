@@ -23,8 +23,11 @@ from xml.etree.ElementTree import Element
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
@@ -54,7 +57,6 @@ _PROFILE_IDENTITY: dict[str, str] = {
 _REDACTED_IN_ENVELOPE = frozenset({"DPNIF_D"})
 _CALCULATE_FLAGS: tuple[str, ...] = (
     "--casilla", "0003=24000",
-    "--binding", "renta-certificado-trabajo-retenciones=2400",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
 )  # fmt: skip
 
@@ -92,6 +94,17 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile) -> None:
         context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label=_LABEL)
+    # The profile declares only salary income, so 0596 is the one certificate of its payer
+    # and the other two credit classes are proven zero by the declared categories.
+    seed_payer_certificate(
+        operation=published_authority_operation(),
+        taxpayer_tax_id="12345678Z",
+        ejercicio=_FILING_YEAR,
+        payer_tax_id="B00000000",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=Decimal("2400"),
+        importe_integro_dinerario=Decimal("24000"),
+    )
 
 
 def _cli_json(*args: str) -> dict[str, Any]:

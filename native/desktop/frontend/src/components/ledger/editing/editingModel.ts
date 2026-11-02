@@ -1024,6 +1024,7 @@ export function draftRow(draft: Draft): LedgerRow {
       booked_date: fields.booked_date ?? "",
       value_date: fields.value_date ?? null,
       operation_date: fields.operation_date ?? null,
+      accrual_date: fields.accrual_date ?? null,
       amount: fields.amount ?? "",
       currency: fields.currency ?? "",
       direction: fields.direction ?? "",

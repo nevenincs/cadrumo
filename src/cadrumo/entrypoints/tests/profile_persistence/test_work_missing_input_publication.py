@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from cadrumo.domain.user_profile.tests.general_regime_facts import (
     GENERAL_REGIME_NATURAL_PERSON_FACTS,
     RENTA_UNMARRIED_TAXPAYER_FACTS,
@@ -20,7 +21,9 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo import calculate_input
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.modelo.work_missing_input import ModeloWorkMissingInputError
@@ -70,6 +73,8 @@ def _inputs(snapshot: RegistrySnapshot, *, omit_required: bool) -> WorkCalculate
         if binding.id != "renta-profile-tax-residence-ccaa"
         and (not omit_required or binding.id != _REQUIRED_MANUAL_BINDING)
         and binding.source != "profile"
+        and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
+        and binding.provider.kind != "retencion_soportada"
     }
     return WorkCalculateInputBundle.build(
         casilla_inputs={},
@@ -125,7 +130,7 @@ def test_real_missing_manual_binding_stops_before_revision_publication(
             ) as ports,
             pytest.raises(ModeloWorkMissingInputError) as refused,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 unit.work_unit_id,
                 actor="operator",
                 casilla_inputs=inputs.casilla_inputs,

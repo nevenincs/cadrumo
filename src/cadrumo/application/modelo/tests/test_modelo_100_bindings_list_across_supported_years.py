@@ -74,3 +74,31 @@ def test_bindings_list_carries_the_identity_and_ledger_surface(filing_year: int)
     declared = {casilla.id for casilla in snapshot.revision.casillas}
     for casilla_id, binding_id in _LEDGER_CASILLA_BINDINGS.items():
         assert (binding_id in listed) is (casilla_id in declared), (filing_year, casilla_id, binding_id)
+
+
+# The borrador may hold these credits but only cross-checks them, so it never
+# supplies one; the tax-residence enum is the 2025 binding it does supply.
+_CROSS_CHECK_ONLY_CREDITS = frozenset(
+    {
+        "renta-retencion-soportada-trabajo",
+        "renta-retencion-soportada-capital-mobiliario",
+        "renta-retencion-soportada-ganancia-patrimonial",
+    }
+)
+_BORRADOR_SUPPLIED_FROM_2025 = "renta-profile-tax-residence-ccaa"
+
+
+@pytest.mark.parametrize("filing_year", _supported_years())
+def test_bindings_list_reports_borrador_capability_as_the_value_the_borrador_may_supply(filing_year: int) -> None:
+    """A cross-check-only credit is never listed as borrador-capable; a supplying binding still is."""
+    with bundled_indexed_authority().operation() as operation:
+        result = _read_bindings_list(
+            ModeloBindingsListRequest(profile_id=uuid4(), modelo=_MODELO, year=filing_year, period_code=_PERIOD),
+            operation=operation,
+        )
+    capable = {row.binding_id: row.borrador_capable for row in result.bindings}
+
+    assert {binding_id: capable[binding_id] for binding_id in _CROSS_CHECK_ONLY_CREDITS} == dict.fromkeys(
+        _CROSS_CHECK_ONLY_CREDITS, False
+    )
+    assert capable[_BORRADOR_SUPPLIED_FROM_2025] is (filing_year >= 2025)

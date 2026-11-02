@@ -110,6 +110,39 @@
         "--format",
         "json",
         "app",
+        "ledger",
+        "retencion-soportada",
+        "record",
+        "B00000000",
+        "--ejercicio",
+        "2025",
+        "--income-class",
+        "trabajo",
+        "--origin",
+        "operator_declaration",
+        "--retencion",
+        "2400",
+        "--ingreso-a-cuenta",
+        "0",
+        "--importe-integro",
+        "24000",
+        "--payer-name",
+        "Pagador Sintetico SL"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
         "modelo",
         "work",
         "calculate",
@@ -117,44 +150,36 @@
         "--casilla",
         "0003=24000",
         "--binding",
-        "renta-certificado-trabajo-retenciones=2400",
-        "--binding",
         "renta-base-liquidable-negativa-general-anterior=0"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "e197df5e87011f992437d11121ad200fc8c249272ba38635fe62ae91548387a9"
+          "value": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e"
         }
       ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
         "notices": [
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "box": "0513",
-              "casilla_id": "0513",
-              "detail": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero and the active profile declares no descendant facts",
-              "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
-              "level": "missing",
-              "reason": "source_issue",
-              "remedy": "Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.",
-              "source_kind": "minimo_descendientes_undeclared"
-            },
-            "message": "Some information this figure depends on is missing or could not be used.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "config.login.session_not_persisted",
-            "context": null,
-            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
-            "severity": "warning"
-          }
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0186-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0186","casilla_id":"0186","detail":"binding 'renta-ledger-expense-0186-deductible' reaches box 0186 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0186-deductible"},"message":"Box 0186: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0192-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0192","casilla_id":"0192","detail":"binding 'renta-ledger-expense-0192-deductible' reaches box 0192 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0192-deductible"},"message":"Box 0192: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0199-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0199","casilla_id":"0199","detail":"binding 'renta-ledger-expense-0199-deductible' reaches box 0199 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0199-deductible"},"message":"Box 0199: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0203-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0203","casilla_id":"0203","detail":"binding 'renta-ledger-expense-0203-deductible' reaches box 0203 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0203-deductible"},"message":"Box 0203: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-income-0171","binding_source":"ledger_renta_income_aggregation","box":"0171","casilla_id":"0171","detail":"binding 'renta-ledger-income-0171' reaches box 0171 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_income_aggregation","source_ref":"renta-ledger-income-0171"},"message":"Box 0171: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-actividad-retenciones-0599","binding_source":"ledger_renta_income_aggregation","box":"0599","casilla_id":"0599","detail":"binding 'renta-ledger-actividad-retenciones-0599' reaches box 0599 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_income_aggregation","source_ref":"renta-ledger-actividad-retenciones-0599"},"message":"Box 0599: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0183-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0183","casilla_id":"0183","detail":"binding 'renta-ledger-expense-0183-deductible' reaches box 0183 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0183-deductible"},"message":"Box 0183: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0191-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0191","casilla_id":"0191","detail":"binding 'renta-ledger-expense-0191-deductible' reaches box 0191 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0191-deductible"},"message":"Box 0191: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0193-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0193","casilla_id":"0193","detail":"binding 'renta-ledger-expense-0193-deductible' reaches box 0193 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0193-deductible"},"message":"Box 0193: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0194-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0194","casilla_id":"0194","detail":"binding 'renta-ledger-expense-0194-deductible' reaches box 0194 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0194-deductible"},"message":"Box 0194: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0195-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0195","casilla_id":"0195","detail":"binding 'renta-ledger-expense-0195-deductible' reaches box 0195 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0195-deductible"},"message":"Box 0195: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0200-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0200","casilla_id":"0200","detail":"binding 'renta-ledger-expense-0200-deductible' reaches box 0200 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0200-deductible"},"message":"Box 0200: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0202-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0202","casilla_id":"0202","detail":"binding 'renta-ledger-expense-0202-deductible' reaches box 0202 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0202-deductible"},"message":"Box 0202: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0206-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0206","casilla_id":"0206","detail":"binding 'renta-ledger-expense-0206-deductible' reaches box 0206 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0206-deductible"},"message":"Box 0206: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0217-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0217","casilla_id":"0217","detail":"binding 'renta-ledger-expense-0217-deductible' reaches box 0217 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0217-deductible"},"message":"Box 0217: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
+          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"box":"0513","casilla_id":"0513","detail":"casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero and the active profile declares no descendant facts","legal_refs":"ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3","level":"missing","reason":"source_issue","remedy":"Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.","source_kind":"minimo_descendientes_undeclared"},"message":"Some information this figure depends on is missing or could not be used.","severity":"warning"},
+          {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
         ],
         "result": {
           "authorization_state": null,
@@ -168,7 +193,7 @@
             "renta-activity-asset-disposal-loss-no-transmission-0305": "0",
             "renta-activity-asset-disposal-loss-property-1832": "0",
             "renta-base-liquidable-negativa-general-anterior": "0",
-            "renta-certificado-trabajo-retenciones": "2400",
+            "renta-ledger-actividad-retenciones-0599": "0",
             "renta-ledger-expense-0183-deductible": "0",
             "renta-ledger-expense-0186-deductible": "0",
             "renta-ledger-expense-0191-deductible": "0",
@@ -203,9 +228,12 @@
             "renta-profile-minimo-descendientes-estatal": "0",
             "renta-profile-tax-residence-ccaa": "madrid",
             "renta-profile-taxpayer-birth-date": "1985-06-15",
-            "renta-profile-unidad-familiar-otros-miembros-base": "0"
+            "renta-profile-unidad-familiar-otros-miembros-base": "0",
+            "renta-retencion-soportada-capital-mobiliario": "0",
+            "renta-retencion-soportada-ganancia-patrimonial": "0",
+            "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "e197df5e87011f992437d11121ad200fc8c249272ba38635fe62ae91548387a9",
+          "calculation_revision_id": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -728,13 +756,13 @@
             "0594": "0",
             "0595": "3472.12",
             "0596": "2400",
-            "0597": "0",
+            "0597": "0.00",
             "0598": "0.00",
             "0599": "0",
             "0600": "0",
             "0601": "0",
             "0602": "0",
-            "0603": "0",
+            "0603": "0.00",
             "0604": "0.00",
             "0605": "0",
             "0606": "0",
@@ -2055,6 +2083,9 @@
             "0304": "0",
             "0305": "0",
             "0596": "2400",
+            "0597": "0",
+            "0599": "0",
+            "0603": "0",
             "1388": "0",
             "1478": "0",
             "1639": "0",
@@ -2591,19 +2622,19 @@
             {"absent_by_design":false,"casilla_id":"0594","formula_id":null,"legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0595","formula_id":"renta-cuota-resultante-autoliquidacion","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0587","0588","0414","0589","0590","0591"],"operand_refs":["0587","0588","0414","0589","0590","0591"],"operand_values":["3472.12","0","0","0","0","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"3472.12"},
             {"absent_by_design":false,"casilla_id":"0596","formula_id":null,"legal_refs":["ley-35-2006:art-17","ley-35-2006:art-18","ley-35-2006:art-19","ley-35-2006:art-20","ley-35-2006:art-101","rd-439-2007:art-80","rd-439-2007:art-86","ley-35-2006:art-99","rd-439-2007:art-108","orden-hac-277-2026:art-3","orden-eha-3127-2009:art-1","orden-hac-1431-2025:art-2"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form","aeat-renta-2025-manual-parte1","aeat-modelo-190-instructions-2025","boe-modelo-190-2025-form"],"value":"2400"},
-            {"absent_by_design":false,"casilla_id":"0597","formula_id":null,"legal_refs":["ley-35-2006:art-25","ley-35-2006:art-26","ley-35-2006:art-101","rd-439-2007:art-90","ley-35-2006:art-99","orden-eha-3377-2011:art-1","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form","aeat-modelo-193-296-note-2025","boe-modelo-193-2011-form"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"0597","formula_id":null,"legal_refs":["ley-35-2006:art-25","ley-35-2006:art-26","ley-35-2006:art-101","rd-439-2007:art-90","ley-35-2006:art-99","orden-eha-3377-2011:art-1","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form","aeat-modelo-193-296-note-2025","boe-modelo-193-2011-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0598","formula_id":"renta-retenciones-arrendamientos-urbanos","legal_refs":["ley-35-2006:art-99","ley-35-2006:art-22","ley-35-2006:art-23","ley-35-2006:art-24","ley-35-2006:art-101","rd-439-2007:art-100","orden-hac-277-2026:art-3"],"op":"copy","operand_casilla_refs":["0153"],"operand_refs":["0153"],"operand_values":["0"],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0599","formula_id":null,"legal_refs":["ley-35-2006:art-99","rd-439-2007:art-95","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0600","formula_id":null,"legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","ley-35-2006:art-37","ley-35-2006:art-86","ley-35-2006:art-87","ley-35-2006:art-88","ley-35-2006:art-89","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0601","formula_id":null,"legal_refs":["ley-35-2006:art-86","ley-35-2006:art-87","ley-35-2006:art-88","ley-35-2006:art-89","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0602","formula_id":null,"legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"0603","formula_id":null,"legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","ley-35-2006:art-37","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"0603","formula_id":null,"legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","ley-35-2006:art-37","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0604","formula_id":"renta-pagos-fraccionados-ingresados","legal_refs":["ley-35-2006:art-99","rd-439-2007:art-109","rd-439-2007:art-110","orden-eha-672-2007:art-1","orden-eha-672-2007:art-3","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":[],"operand_refs":["renta-modelo-130-pagos-fraccionados","renta-modelo-131-pagos-fraccionados"],"operand_values":["0","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0605","formula_id":null,"legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0606","formula_id":null,"legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0607","formula_id":null,"legal_refs":["ley-35-2006:da-58","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0608","formula_id":null,"legal_refs":["ley-35-2006:da-58","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"0609","formula_id":"renta-total-pagos-a-cuenta","legal_refs":["ley-35-2006:art-99","rd-439-2007:art-109","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0592","0593","0594","0596","0597","0598","0599","0600","0601","0602","0603","0604","0605","0606"],"operand_refs":["0592","0593","0594","0596","0597","0598","0599","0600","0601","0602","0603","0604","0605","0606"],"operand_values":["0","0","0","2400","0","0.00","0","0","0","0","0","0.00","0","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"2400.00"},
+            {"absent_by_design":false,"casilla_id":"0609","formula_id":"renta-total-pagos-a-cuenta","legal_refs":["ley-35-2006:art-99","rd-439-2007:art-109","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0592","0593","0594","0596","0597","0598","0599","0600","0601","0602","0603","0604","0605","0606"],"operand_refs":["0592","0593","0594","0596","0597","0598","0599","0600","0601","0602","0603","0604","0605","0606"],"operand_values":["0","0","0","2400","0.00","0.00","0","0","0","0","0.00","0.00","0","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"2400.00"},
             {"absent_by_design":false,"casilla_id":"0610","formula_id":"renta-cuota-diferencial","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":"subtract","operand_casilla_refs":["0595","0609"],"operand_refs":["0595","0609"],"operand_values":["3472.12","2400.00"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"1072.12"},
             {"absent_by_design":false,"casilla_id":"0611","formula_id":"renta-deduccion-maternidad-0611","legal_refs":["ley-35-2006:art-81"],"op":"value","operand_casilla_refs":[],"operand_refs":["renta-profile-deduccion-maternidad"],"operand_values":["0"],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0612","formula_id":null,"legal_refs":["ley-35-2006:art-81","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
@@ -4147,18 +4178,40 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision e197df5e87011f992437d11121ad200fc8c249272ba38635fe62ae91548387a9 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
-              "contributor_binding_source": "relation_prefill",
-              "contributor_source_kind": "relation_prefill",
-              "dependency_treatment": "direct_annual_settlement",
+              "contributor_binding_source": "retencion_soportada",
+              "contributor_source_kind": "retencion_soportada",
+              "dependency_treatment": "",
               "fingerprint": null,
               "lineage_role": "primary",
               "parent_source_ref": null,
-              "resolved_binding_source": "relation_prefill",
-              "resolver_id": "relation_prefill",
-              "source_ref": "renta-modelo-130-pagos-fraccionados:130:2025:1T,2T,3T,4T:19"
+              "resolved_binding_source": "retencion_soportada",
+              "resolver_id": "retencion_soportada",
+              "source_ref": "retencion-soportada:2025:trabajo:d6e577984bddfc88faf2ad2926fa2527c0611fae83bbcf8aeced8276f1fa4cbd"
+            },
+            {
+              "contributor_binding_source": "retencion_soportada",
+              "contributor_source_kind": "retencion_soportada",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "retencion_soportada",
+              "resolver_id": "retencion_soportada",
+              "source_ref": "profile:<profile-id>:taxpayer_type.irpf_income_categories:2025:capital_mobiliario"
+            },
+            {
+              "contributor_binding_source": "retencion_soportada",
+              "contributor_source_kind": "retencion_soportada",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "retencion_soportada",
+              "resolver_id": "retencion_soportada",
+              "source_ref": "profile:<profile-id>:taxpayer_type.irpf_income_categories:2025:ganancia_patrimonial"
             },
             {
               "contributor_binding_source": "relation_prefill",
@@ -4169,7 +4222,18 @@
               "parent_source_ref": null,
               "resolved_binding_source": "relation_prefill",
               "resolver_id": "relation_prefill",
-              "source_ref": "renta-modelo-131-pagos-fraccionados:131:2025:1T,2T,3T,4T:15"
+              "source_ref": "renta-modelo-130-pagos-fraccionados:130:2025:1T,2T,3T,4T:19,18"
+            },
+            {
+              "contributor_binding_source": "relation_prefill",
+              "contributor_source_kind": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "relation_prefill",
+              "resolver_id": "relation_prefill",
+              "source_ref": "renta-modelo-131-pagos-fraccionados:131:2025:1T,2T,3T,4T:15,14"
             }
           ],
           "state": "borrador",
@@ -4197,72 +4261,35 @@
         "modelo",
         "work",
         "verify",
-        "e197df5e87011f992437d11121ad200fc8c249272ba38635fe62ae91548387a9"
+        "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.verify",
         "notices": [
-          {
-            "action": null,
-            "code": "modelo.work.verify.finding.blocking_rule",
-            "context": {
-              "casilla_id": "0011",
-              "ingreso_id": "0003",
-              "ingreso_value": "24000",
-              "kind": "blocking_rule",
-              "legal_refs": "ley-35-2006:dt-12",
-              "reduccion_id": "0011",
-              "severity": "warning",
-              "source_refs": "aeat-renta-2025-manual-parte1, boe-lirpf-statutory-facts"
-            },
-            "message": "Box [0003] shows 24000 EUR of employment income (rendimientos del trabajo), above the DT 12ª threshold, so box [0011] may give you a reduction you are not using yet. Check whether it applies to you.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "kind": "advisory",
-              "legal_refs": "ley-35-2006:art-48, ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-50, orden-hac-277-2026:art-3",
-              "origin_ids": "renta-base-liquidable-negativa-general-anterior",
-              "severity": "warning",
-              "source_filing_year": "2024",
-              "source_modelo": "100",
-              "source_period": "0A",
-              "source_refs": "aeat-dr-100-2025-dictionary, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form",
-              "target_filing_year": "2025",
-              "target_modelo": "100",
-              "target_period": "0A"
-            },
-            "message": "Modelo 100 for 2024, period 0A, carried a zero into this declaration (modelo 100 for 2025, period 0A). Check that the zero is right.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "kind": "advisory",
-              "legal_refs": "ley-58-2003:art-119, ley-58-2003:art-120, orden-eha-672-2007:art-1, orden-hac-277-2026:art-3, rd-439-2007:art-109, orden-eha-672-2007:art-3",
-              "severity": "warning",
-              "source_modelo_count": "2",
-              "source_modelos": "130|131",
-              "source_refs": "aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form"
-            },
-            "message": "2 modelos were not used, because they do not apply to you.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "config.login.session_not_persisted",
-            "context": null,
-            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
-            "severity": "warning"
-          }
+          {"action":null,"code":"modelo.work.verify.finding.blocking_rule","context":{"casilla_id":"0011","ingreso_id":"0003","ingreso_value":"24000","kind":"blocking_rule","legal_refs":"ley-35-2006:dt-12","reduccion_id":"0011","severity":"warning","source_refs":"aeat-renta-2025-manual-parte1, boe-lirpf-statutory-facts"},"message":"Box [0003] shows 24000 EUR of employment income (rendimientos del trabajo), above the DT 12ª threshold, so box [0011] may give you a reduction you are not using yet. Check whether it applies to you.","severity":"warning"},
+          {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"kind":"advisory","legal_refs":"ley-35-2006:art-48, ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-50, orden-hac-277-2026:art-3","origin_ids":"renta-base-liquidable-negativa-general-anterior","severity":"warning","source_filing_year":"2024","source_modelo":"100","source_period":"0A","source_refs":"aeat-dr-100-2025-dictionary, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form","target_filing_year":"2025","target_modelo":"100","target_period":"0A"},"message":"Modelo 100 for 2024, period 0A, carried a zero into this declaration (modelo 100 for 2025, period 0A). Check that the zero is right.","severity":"warning"},
+          {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"kind":"advisory","legal_refs":"ley-58-2003:art-119, ley-58-2003:art-120, orden-eha-672-2007:art-1, orden-hac-277-2026:art-3, rd-439-2007:art-109, orden-eha-672-2007:art-3","severity":"warning","source_modelo_count":"2","source_modelos":"130|131","source_refs":"aeat-modelo-130-instructions, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-modelo-131-instructions"},"message":"2 modelos were not used, because they do not apply to you.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0186: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0192: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0199: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0203: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0171: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0599: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0183: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0191: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0193: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0194: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0195: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0200: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0202: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0206: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0217: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
+          {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
         ],
         "result": {
-          "calculation_revision_id": "e197df5e87011f992437d11121ad200fc8c249272ba38635fe62ae91548387a9",
+          "calculation_revision_id": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4316,8 +4343,10 @@
               "message": "2 modelos were not used, because they do not apply to you.",
               "severity": "warning",
               "source_refs": [
+                "aeat-modelo-130-instructions",
                 "aeat-renta-2025-manual-parte1",
-                "boe-modelo-100-2025-form"
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-131-instructions"
               ]
             }
           ],
@@ -4332,7 +4361,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "61e4030124c23350a82f7efdebaefa5cce5ba23c51cbd63347f057c917b4a4a6",
+          "verification_report_id": "99895d3998cacc18ed72bafc490d29391794baee135d7a06f21d8efc4cebfc8a",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

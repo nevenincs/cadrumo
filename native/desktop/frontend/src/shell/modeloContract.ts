@@ -396,7 +396,9 @@ export type CalculationNoteSentence =
   | "disposal_minimum_unresolved"
   | "disposal_exemption_not_computed"
   | "advisory_imputation_period_ungrounded"
-  | "advisory_value_proven_zero";
+  | "advisory_value_proven_zero"
+  | "retencion_soportada_evidence_required"
+  | "retencion_soportada_absence_contradicted";
 
 /**
  * Closed set of serialisations of one modelo calculation report.
@@ -5350,9 +5352,13 @@ export type ModeloProfileRefusalCause =
 
 /**
  * The complete public projection, bound to its source profile.
+ *
+ * A box in `unresolved_casillas` or bound by a binding in
+ * `unresolved_bindings` has no value, and never appears in
+ * `casilla_observations`.
  */
 export type ModeloProjectOperationProjection = {
-  result_version: 1;
+  result_version: 2;
   authority_generation: ContentDigest;
   profile_id: string;
   year: number;
@@ -5363,6 +5369,8 @@ export type ModeloProjectOperationProjection = {
   m130_accumulated: ProjectM130AccumulatedProjection;
   casilla_observations: ProjectCasillaObservationProjection[];
   m100_projection: ProjectM100SummaryProjection;
+  unresolved_bindings: ProjectUnresolvedBindingProjection[];
+  unresolved_casillas: ProjectUnresolvedCasillaProjection[];
 };
 
 /**
@@ -7193,6 +7201,30 @@ export type ProjectM130AccumulatedProjection = {
   gastos: string;
   rendimiento_neto: string;
   pagos_fraccionados: string;
+};
+
+/**
+ * One source-owned binding left without a value, named by its box and closed
+ * tokens.
+ */
+export type ProjectUnresolvedBindingProjection = {
+  binding_id: string;
+  casilla_id: string | null;
+  source_kind: string;
+  reason: string;
+  note: string | null;
+};
+
+/**
+ * One computed box with no value, and the grounding of the formula that would
+ * compute it.
+ */
+export type ProjectUnresolvedCasillaProjection = {
+  casilla_id: string;
+  reason: string;
+  formula_id: string;
+  legal_refs: string[];
+  source_refs: string[];
 };
 
 /**

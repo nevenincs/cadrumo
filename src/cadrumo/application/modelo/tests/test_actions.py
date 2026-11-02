@@ -910,6 +910,7 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
             owned_sources=frozenset({BindingSourceKind.LEDGER_IVA_AGGREGATION}),
             caller_binding_values={},
             caller_casilla_inputs={_SOURCE_BOUND_CASILLA: Decimal("12.34")},
+            subject_leaf_key="modelo.work.calculate",
         )
 
     assert raised.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"

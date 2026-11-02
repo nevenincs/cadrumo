@@ -202,6 +202,25 @@ aggregation:
       unsupported_period: Se requiere un periodo anual para la agregación de ingresos
         del Modelo 100 (p.ej. 2024-0A).
   retencion_soportada:
+    clase:
+      actividad_economica: Rendimientos de actividades económicas
+      arrendamiento_inmueble_urbano: 'Rendimientos del capital inmobiliario: arrendamiento
+        de inmuebles urbanos'
+      arrendamiento_inmueble_urbano_actividad: 'Rendimientos de actividades económicas:
+        arrendamiento de inmuebles urbanos'
+      atribucion_actividad_economica: 'Atribución de rentas: rendimientos de actividades
+        económicas'
+      atribucion_capital_inmobiliario: 'Atribución de rentas: rendimientos del capital
+        inmobiliario'
+      atribucion_capital_mobiliario: 'Atribución de rentas: rendimientos del capital
+        mobiliario'
+      atribucion_ganancia_patrimonial: 'Atribución de rentas: ganancias patrimoniales'
+      capital_mobiliario: Rendimientos del capital mobiliario
+      ganancia_patrimonial: Ganancias patrimoniales
+      imputacion_aie_ute: Imputación de rentas de AIE y UTE
+      imputacion_derechos_imagen: Imputación de rentas por la cesión de derechos de
+        imagen
+      trabajo: Rendimientos del trabajo
     errors:
       certificate_needs_fingerprint: Un certificado del pagador necesita el SHA-256
         del archivo del certificado (--evidence-sha256). Si no tienes certificado,
@@ -2511,6 +2530,7 @@ desktop:
       without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
     field:
+      accrual_date: Fecha de devengo (Renta)
       art_104_tres_exclusion: Exclusión del art. 104.Tres
       attachment_ids: Adjuntos
       booked_date: Fecha contable
@@ -4459,6 +4479,9 @@ desktop:
       datos actualizados y vuelve a abrir el campo. Tu borrador no se ha guardado.
     dismiss: Descartar el aviso
     edit_field: Editar {field}
+    ejercicio: Ejercicio
+    ejercicio_help: "El año que declara esta respuesta. Los demás conservan la suya."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: Ningún dato coincide con estos filtros. Prueba otra búsqueda o sección.
     entries_count: 'Registros: {count}'
     entries_none: Aún no hay registros
@@ -7333,6 +7356,7 @@ tui:
         created: 'Añadido: {entry}. Estado de revisión: {status}.'
         edit_again: Volver a editar
         field:
+          accrual_date: Fecha de devengo en Renta (AAAA-MM-DD)
           amount: Importe, sin signo
           art_104_tres_exclusion: Exclusión del art. 104.Tres
           booked_date: Fecha de operación (AAAA-MM-DD)
@@ -8354,6 +8378,7 @@ tui:
       totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Detalle del apunte
       transaction_field:
+        accrual_date: Fecha de devengo en Renta (AAAA-MM-DD, opcional)
         amount: Importe (sin signo)
         booked_date: Fecha de apunte (AAAA-MM-DD)
         counterparty: Contraparte (opcional)

@@ -107,8 +107,7 @@ from .errors import AggregationValidationError
 from .renta_imputation import (
     ImputationCriteria,
     ImputationUnresolved,
-    impute_row,
-    linked_accrual_date,
+    impute_ledger_row,
     rows_left_out_summary,
     rows_touching_window,
 )
@@ -752,7 +751,7 @@ def _imputed_gasto_date(
         return cash
     evidence_id = transaction.purchase_invoice_evidence_id
     invoice = None if invoices is None or evidence_id is None else invoices.get(evidence_id)
-    return impute_row(cash, linked_accrual_date(invoice, kind=InvoiceKind.RECEIVED), criteria)
+    return impute_ledger_row(transaction, invoice, kind=InvoiceKind.RECEIVED, criteria=criteria)
 
 
 def _gasto_gate_issue(

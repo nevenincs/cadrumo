@@ -645,6 +645,8 @@ cli:
           te repercutió. No puede superar el ingreso a cuenta.
         invalid_input: 'Un valor no es válido: revisa la referencia del pagador, la
           revisión y la huella del certificado.'
+        list_absences_help: Lista tus declaraciones de ausencia de retención de un
+          ejercicio, vigentes y retiradas, con la revisión en que consta cada una.
         list_help: Lista los registros de pagadores de un ejercicio sin ningún NIF.
         origin_help: 'Quién declara las cifras: payer_certificate u operator_declaration.'
         payer_name_help: Razón social del pagador.
@@ -1350,7 +1352,10 @@ cli:
         binding_help: Valor adicional para el origen de una casilla del Modelo 100,
           como KEY=VALUE. Repite la opción para indicar varios. Los orígenes de retenciones
           valen cero si no se indican.
-        casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
+        casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (p. ej.
+          0003=1150 para retribuciones dinerarias del trabajo). Solo se aceptan casillas
+          de entrada; una casilla calculada se rechaza. Repite la opción para indicar
+          varias.
         ccaa_help: Clave de la comunidad autónoma de residencia fiscal para la escala
           autonómica del Modelo 100 (p. ej. cataluna, comunidad-valenciana). Debe
           coincidir con un valor de las definiciones de los modelos.
@@ -1360,6 +1365,9 @@ cli:
         no_m130_units: No existen declaraciones del Modelo 130 en borrador para el
           ejercicio %{year}. Crea antes una con `aeat app modelo work create --modelo
           130 --year %{year} --period 1T`.
+        profile_fact_missing: 'La proyección no puede obtener las casillas de base
+          liquidable y cuota porque el perfil activo no declara: %{profile_facts}.
+          Indícalo con `%{command}` y vuelve a ejecutar la proyección.'
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -3175,6 +3183,9 @@ cli:
     add:
       account_help: Cuenta bancaria propia a la que pertenece el movimiento, por su
         id (p. ej. acc-01).
+      accrual_date_help: Fecha en que el ingreso o el gasto se devenga en la Renta
+        según el art. 14 LIRPF y el art. 7 RIRPF (AAAA-MM-DD). No cambia el periodo
+        del IVA. Si la omites no se guarda ninguna.
       actor_help: Tu nombre, registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
@@ -3537,6 +3548,7 @@ cli:
       kind_help: Solo este tipo de valor; repítelo para varios. Sin él, todos los
         tipos.
     labels:
+      accrual_date: Fecha de devengo en Renta
       active: Activas
       amount: Importe
       archived: Archivadas
@@ -3741,6 +3753,8 @@ cli:
     update:
       account_help: Vincula la entrada a esta cuenta bancaria propia, por su id (p.
         ej. acc-01).
+      accrual_date_help: Nueva fecha en que el ingreso o el gasto se devenga en la
+        Renta según el art. 14 LIRPF y el art. 7 RIRPF (AAAA-MM-DD).
       amount_help: Nueva magnitud de importe no negativa de la transacción
       counterparty_help: Nueva descripción de la contraparte
       currency_help: Nuevo código de moneda ISO 4217

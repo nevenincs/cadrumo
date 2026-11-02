@@ -198,6 +198,24 @@ aggregation:
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
         del Model 100 (p.ex. 2024-0A).
   retencion_soportada:
+    clase:
+      actividad_economica: Rendiments d'activitats econòmiques
+      arrendamiento_inmueble_urbano: 'Rendiments del capital immobiliari: arrendament
+        d''immobles urbans'
+      arrendamiento_inmueble_urbano_actividad: 'Rendiments d''activitats econòmiques:
+        arrendament d''immobles urbans'
+      atribucion_actividad_economica: 'Atribució de rendes: rendiments d''activitats
+        econòmiques'
+      atribucion_capital_inmobiliario: 'Atribució de rendes: rendiments del capital
+        immobiliari'
+      atribucion_capital_mobiliario: 'Atribució de rendes: rendiments del capital
+        mobiliari'
+      atribucion_ganancia_patrimonial: 'Atribució de rendes: guanys patrimonials'
+      capital_mobiliario: Rendiments del capital mobiliari
+      ganancia_patrimonial: Guanys patrimonials
+      imputacion_aie_ute: Imputació de rendes d'AIE i UTE
+      imputacion_derechos_imagen: Imputació de rendes per la cessió de drets d'imatge
+      trabajo: Rendiments del treball
     errors:
       certificate_needs_fingerprint: Un certificat del pagador necessita el SHA-256
         del fitxer del certificat (--evidence-sha256). Si no tens certificat, fes
@@ -2513,6 +2531,7 @@ desktop:
       without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
     field:
+      accrual_date: Data de meritació (Renda)
       art_104_tres_exclusion: Exclusió de l'art. 104.Tres
       attachment_ids: Adjunts
       booked_date: Data comptable
@@ -4461,6 +4480,9 @@ desktop:
       revisa les dades actualitzades i torna a obrir el camp. No s’ha desat l’esborrany.
     dismiss: Descarta l’avís
     edit_field: Edita {field}
+    ejercicio: Exercici
+    ejercicio_help: "L'any que declara aquesta resposta. Els altres conserven la seva."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
     entries_count: 'Registres: {count}'
     entries_none: Encara no hi ha registres
@@ -7328,6 +7350,7 @@ tui:
         created: 'Afegit: {entry}. Estat de revisió: {status}.'
         edit_again: Torna a editar
         field:
+          accrual_date: Data de meritació a la Renda (AAAA-MM-DD)
           amount: Import, sense signe
           art_104_tres_exclusion: Exclusió de l'art. 104.Tres
           booked_date: Data d'operació (AAAA-MM-DD)
@@ -8342,6 +8365,7 @@ tui:
       totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Detall de l'apunt
       transaction_field:
+        accrual_date: Data de meritació a la Renda (AAAA-MM-DD, opcional)
         amount: Import (sense signe)
         booked_date: Data d'apunt (AAAA-MM-DD)
         counterparty: Contrapart (opcional)
