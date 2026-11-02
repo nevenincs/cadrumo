@@ -187,6 +187,22 @@ aggregation:
         és a fogyasztás szerinti tagállam adómértéke ebben az időszakban megváltozott,
         ezért a kiállítás dátumából nem állapítható meg, melyik adómérték alkalmazandó.
         Rögzítsd a teljesítési dátumot a számlán.
+      rate_tier_ambiguous: A rendeltetési tagállam ugyanazon sávjának két kulcsa is
+        ezt az adót adja, így nem tudható, melyik kulcs kerüljön a sorba. Ellenőrizd
+        a számla tételét.
+      rectificativa_above_row: 'Az OSS/IOSS helyesbítő számlák többet vonnak le, mint
+        amennyit a helyesbített sor tartalmaz. Ellenőrizd az összegeket: lehet, hogy
+        a helyesbítés utáni eredményt adják meg, nem a csökkentést.'
+      rectificativa_outside_period: Egy OSS/IOSS helyesbítő számla egy másik időszak
+        számláját helyesbíti. Ez a 369-es modell korábbi időszakokra vonatkozó helyesbítései
+        közé tartozik, és a terv e mezője itt nem fogad negatív összeget. Nem történt
+        export; vallsd be közvetlenül a Sede felületén.
+      rectificativa_target_differs: Egy OSS/IOSS helyesbítő számla rendszere, ügylettípusa
+        vagy tagállama eltér a helyesbített számláétól, így nem vonható le annak sorából.
+        Ellenőrizd mindkét számlát.
+      rectificativa_target_unknown: Egy OSS/IOSS helyesbítő számla olyan számlát nevez
+        meg, amely nincs rögzítve, így nem tudható, melyik sort helyesbíti. Rögzítsd
+        azt a számlát, vagy javítsd a hivatkozást.
   per_modelo:
     errors:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.

@@ -257,11 +257,11 @@ def sales_invoice_evidence_payload(
     refusal = _linkage_refusal(invoice, transaction, bucket_id=bucket_id)
     if refusal is not None:
         return _SalesInvoiceEvidencePayload(), refusal
-    return _linked_invoice_payload(invoice, transaction, allocate_part_payments=allocate_part_payments)
+    return _linked_invoice_payload(invoice, transaction, receipts_by_invoice=receipts_by_invoice)
 
 
 def _linked_invoice_payload(
-    invoice: Invoice, transaction: Transaction, *, allocate_part_payments: bool
+    invoice: Invoice, transaction: Transaction, *, receipts_by_invoice: Mapping[str, Sequence[Transaction]] | None
 ) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
     """Return the figures of an invoice already linked back to the row: its part-payment share, else the whole."""
     base_eur = invoice.base_total_eur
