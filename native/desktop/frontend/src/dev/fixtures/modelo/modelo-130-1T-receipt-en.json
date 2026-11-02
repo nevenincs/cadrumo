@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+      "calculation_revision_id": "0ee3ecd22c8d6a179afcc959cac847f6a5974fd2ef51b7d5eb0a2f9ff81c39ff",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1586,7 +1586,7 @@
         "days_overdue": 196
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-11-02T09:26:04.796817Z" },
+      "filing": { "recorded_at": "2026-11-02T16:44:36.084898Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF instalment payment, direct assessment",
@@ -1602,7 +1602,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "8a5a449de28d62f8b6cf014dc64eceaea1267e419dad5f12c69c7bbedbf28681",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1637,9 +1637,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "680ca0e7211b0d97e8e4e0e94836d781a3f2fd23d2c714e86eb2edc79c8e768e",
-    "calculation_head_digest": "285fa06475d6fcae40c324220b825eca660125e1168e7b12ca462edb31088fa5",
-    "current_calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+    "work_unit_record_digest": "0e24140a05aede2119b31a82274966335cf4b99c53d41b8a120640bf78b54179",
+    "calculation_head_digest": "9986ec869806f916849f3c4586752cf5b511d198e2985c41d05b30b924df52db",
+    "current_calculation_revision_id": "0ee3ecd22c8d6a179afcc959cac847f6a5974fd2ef51b7d5eb0a2f9ff81c39ff",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1942,9 +1942,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:26:22.537517Z",
-    "expires_at": "2026-11-02T09:31:22.537517Z",
-    "baseline_id": "df2d7a5a7a5851ff225c99a7a3d2bb6037245682320256565eb8910ccea4bfc7"
+    "issued_at": "2026-11-02T16:44:56.733789Z",
+    "expires_at": "2026-11-02T16:49:56.733789Z",
+    "baseline_id": "0915fd5f5455b872b28ff2628f40b49c9476a46c7a2e6d705342785821295608"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1953,7 +1953,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-11-02T09:26:04.796817Z",
+    "recorded_at": "2026-11-02T16:44:36.084898Z",
     "file_created_at": null,
     "receipt_to_add": false
   },
@@ -1998,8 +1998,8 @@
     "words": "The check passed.",
     "unapplied_words": "The saved calculation passed its check; your changes are not applied."
   },
-  "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
-  "verification_report_id": "8988638e6722d5796a0b3f72f4a6ddcfdf6bd2e56d8d98ea9db7638693055a0f",
+  "calculation_revision_id": "0ee3ecd22c8d6a179afcc959cac847f6a5974fd2ef51b7d5eb0a2f9ff81c39ff",
+  "verification_report_id": "b4998c64da06c73e8ac58216ce2609438654df2b510931ed942955eefb686367",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -2061,7 +2061,7 @@
     "file_format_words": "AEAT file in the fixed-width BOE design"
   },
   "receipt": {
-    "recorded_at": "2026-11-02T09:26:04.796817Z",
+    "recorded_at": "2026-11-02T16:44:36.084898Z",
     "verified": true,
     "verified_at": "2026-04-21T09:30:00Z",
     "words": "AEAT receipt verified on Apr 21, 2026."

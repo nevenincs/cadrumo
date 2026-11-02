@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+      "calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1477,13 +1477,23 @@
       "issues": [],
       "calculation_notes": [
         {
+          "reason": "unresolved_binding",
+          "attention": "check",
+          "casilla_id": null,
+          "box": null,
+          "withholds_filing": true,
+          "fact": null,
+          "element_names": [],
+          "message": null
+        },
+        {
           "reason": "advisory_binding_value",
-          "attention": "blocks",
+          "attention": "info",
           "casilla_id": "06",
           "box": "06",
-          "withholds_filing": true,
+          "withholds_filing": false,
           "fact": {
-            "sentence": "advisory_imputation_period_ungrounded",
+            "sentence": "advisory_value_proven_zero",
             "values": [
               ["amount", "0"],
               [
@@ -1495,26 +1505,6 @@
             "element_refs": [],
             "row_refs": []
           },
-          "element_names": [],
-          "message": null
-        },
-        {
-          "reason": "unresolved_retencion_substrate",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": false,
-          "fact": null,
-          "element_names": [],
-          "message": null
-        },
-        {
-          "reason": "unresolved_binding",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": true,
-          "fact": null,
           "element_names": [],
           "message": null
         }
@@ -1620,7 +1610,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "8a5a449de28d62f8b6cf014dc64eceaea1267e419dad5f12c69c7bbedbf28681",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1655,9 +1645,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "997ce9758f02f670e904df81476db1f3ff8e826b5d19dc28e20c863cf478b288",
-    "calculation_head_digest": "34b4b435ca9a74efe621b574507895bab9abb128d08476789a378abd3be6c2ed",
-    "current_calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+    "work_unit_record_digest": "ccf6cf4ec0e2722a3447afc4050758b86cc62696b321490087789b612ea658d1",
+    "calculation_head_digest": "5ba8cad6e2eec129de0864e238ec13322f8debb535e6fa84e04f6ee27a10d2b9",
+    "current_calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1960,26 +1950,23 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:26:30.104905Z",
-    "expires_at": "2026-11-02T09:31:30.104905Z",
-    "baseline_id": "5a165b210bd7c93a580d1b9b41a43fe97b475c255dcb71a593a92346b7749477"
+    "issued_at": "2026-11-02T16:45:05.966341Z",
+    "expires_at": "2026-11-02T16:50:05.966341Z",
+    "baseline_id": "a58ee0b0953fb497053bc418189a49ac125c546f36ea90c35865058dfab96449"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
   "rules_incomplete": false,
   "next_step": {
     "action": "resolve",
-    "count": 3,
+    "count": 2,
     "findings_lead": false,
     "recorded_at": null,
     "file_created_at": null,
     "receipt_to_add": false
   },
   "header": {
-    "attention": [
-      { "level": "blocks", "count": 3, "words": "akadályozó: 3" },
-      { "level": "check", "count": 1, "words": "átnézendő: 1" }
-    ],
+    "attention": [{ "level": "blocks", "count": 2, "words": "akadályozó: 2" }],
     "result": {
       "state": "failed",
       "casilla_id": "19",
@@ -2003,8 +1990,8 @@
     "file": null,
     "export_hold": {
       "reason": "blocks",
-      "count": 3,
-      "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 3)."
+      "count": 2,
+      "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 2)."
     }
   },
   "issue_lines": [
@@ -2024,20 +2011,6 @@
     },
     {
       "level": "blocks",
-      "box": "06",
-      "where": "Levonások és adóelőlegek",
-      "message": "A(z) 06 mező: 0,00 € összeg függőben van, mert nincs megerősítve, melyik időszakhoz tartozik. A tevékenység bevételei és kiadásai a teljesítéskor számítanak, a levonás pedig a jövedelmével együtt (RIRPF 79. cikk), a nyilvántartásod viszont minden tételt a bankba érkezés napjával datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad (RIRPF 7.2. cikk; LIRPF 14.1.b cikk).",
-      "action": "Teendő: Vesd össze az összeget a saját nyilvántartásoddal és a kifizető igazolásával. Amíg az összeg függőben van, a Cadrumo nem tudja ellenőrizni, exportálni vagy rögzíteni ezt a bevallást; egy későbbi változat, amely megerősíti az időszakot, feloldja.",
-      "detail": "Egy mező összege olyan értelmezésen alapul, amelyet a Cadrumo még nem tud megerősíteni: megnézheted és előnézetben láthatod, de a bevallást ezzel nem ellenőrizheted, nem exportálhatod és nem rögzítheted.",
-      "technical": "Technikai részletek: advisory_binding_value · 06",
-      "address": { "kind": "casilla", "casilla_id": "06" },
-      "in_records": false,
-      "surface": null,
-      "from_calculation": true,
-      "recalculates": false
-    },
-    {
-      "level": "blocks",
       "box": null,
       "where": "A teljes bevallás",
       "message": "A Cadrumo nem tudott egy értéket kiszámolni az adataidból, és figyelmeztetés nélkül nullát mutatott volna.",
@@ -2051,14 +2024,14 @@
       "recalculates": false
     },
     {
-      "level": "check",
-      "box": null,
-      "where": "A teljes bevallás",
-      "message": "Néhány kiállított számlánál a Cadrumo nem tudja, mennyit vontak le, ezért a levonási jóváírásból ismeretlen összeg hiányozhat, és a szükségesnél többet fizethetsz.",
-      "action": "Teendő: Add meg a nyilvántartásodban az érintett számlák alapját és a levonást, majd számolj újra.",
-      "detail": null,
-      "technical": "Technikai részletek: unresolved_retencion_substrate",
-      "address": null,
+      "level": "info",
+      "box": "06",
+      "where": "Levonások és adóelőlegek",
+      "message": "A(z) 06 mező: a nulla érvényes, mert az időszakban nincs olyan tétel, amelynek az időszaka kétséges lehetne.",
+      "action": "Teendő: Vesd össze az összeget a saját nyilvántartásoddal és a kifizető igazolásával. Amíg az összeg függőben van, a Cadrumo nem tudja ellenőrizni, exportálni vagy rögzíteni ezt a bevallást; egy későbbi változat, amely megerősíti az időszakot, feloldja.",
+      "detail": "Egy mező összege olyan értelmezésen alapul, amelyet a Cadrumo még nem tud megerősíteni: megnézheted és előnézetben láthatod, de a bevallást ezzel nem ellenőrizheted, nem exportálhatod és nem rögzítheted.",
+      "technical": "Technikai részletek: advisory_binding_value · 06",
+      "address": { "kind": "casilla", "casilla_id": "06" },
       "in_records": false,
       "surface": null,
       "from_calculation": true,
@@ -2070,7 +2043,7 @@
     "words": "A bevallást még nem ellenőrizték.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+  "calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
@@ -2134,7 +2107,7 @@
         "availability": {
           "available": false,
           "reason": "blocks",
-          "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 3)."
+          "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 2)."
         }
       },
       {
@@ -2164,14 +2137,14 @@
     "record": {
       "available": false,
       "reason": "blocks",
-      "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 3)."
+      "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 2)."
     },
     "review_package": {
       "words": "Csomag a könyvelődnek",
       "availability": {
         "available": false,
         "reason": "blocks",
-        "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 3)."
+        "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 2)."
       }
     },
     "asks_elections": false,

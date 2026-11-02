@@ -526,6 +526,7 @@
         "cadrumo.application.aggregation.invoice_kind",
         "cadrumo.application.aggregation.invoice_retencion",
         "cadrumo.application.aggregation.irnr_income_ledger",
+        "cadrumo.application.aggregation.iva_cuota_disagreement",
         "cadrumo.application.aggregation.iva_ledger",
         "cadrumo.application.aggregation.iva_ledger_apportionment",
         "cadrumo.application.aggregation.iva_ledger_classification",

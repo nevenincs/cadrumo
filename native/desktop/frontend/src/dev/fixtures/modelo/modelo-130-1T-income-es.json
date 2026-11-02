@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+      "calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
       "language": "es",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1474,13 +1474,23 @@
       "issues": [],
       "calculation_notes": [
         {
+          "reason": "unresolved_binding",
+          "attention": "check",
+          "casilla_id": null,
+          "box": null,
+          "withholds_filing": true,
+          "fact": null,
+          "element_names": [],
+          "message": null
+        },
+        {
           "reason": "advisory_binding_value",
-          "attention": "blocks",
+          "attention": "info",
           "casilla_id": "06",
           "box": "06",
-          "withholds_filing": true,
+          "withholds_filing": false,
           "fact": {
-            "sentence": "advisory_imputation_period_ungrounded",
+            "sentence": "advisory_value_proven_zero",
             "values": [
               ["amount", "0"],
               [
@@ -1492,26 +1502,6 @@
             "element_refs": [],
             "row_refs": []
           },
-          "element_names": [],
-          "message": null
-        },
-        {
-          "reason": "unresolved_retencion_substrate",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": false,
-          "fact": null,
-          "element_names": [],
-          "message": null
-        },
-        {
-          "reason": "unresolved_binding",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": true,
-          "fact": null,
           "element_names": [],
           "message": null
         }
@@ -1617,7 +1607,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "8a5a449de28d62f8b6cf014dc64eceaea1267e419dad5f12c69c7bbedbf28681",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1652,9 +1642,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "997ce9758f02f670e904df81476db1f3ff8e826b5d19dc28e20c863cf478b288",
-    "calculation_head_digest": "34b4b435ca9a74efe621b574507895bab9abb128d08476789a378abd3be6c2ed",
-    "current_calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+    "work_unit_record_digest": "ccf6cf4ec0e2722a3447afc4050758b86cc62696b321490087789b612ea658d1",
+    "calculation_head_digest": "5ba8cad6e2eec129de0864e238ec13322f8debb535e6fa84e04f6ee27a10d2b9",
+    "current_calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1957,16 +1947,16 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:26:29.640495Z",
-    "expires_at": "2026-11-02T09:31:29.640495Z",
-    "baseline_id": "868c3b83ee077f57b1225207916c06f858a7c346328c5f15990cf729bc98543a"
+    "issued_at": "2026-11-02T16:45:05.535805Z",
+    "expires_at": "2026-11-02T16:50:05.535805Z",
+    "baseline_id": "72eb5295f28ec50261e3cf7160a5fe423d7e4fb6156a67b51fa1d3dd46f98580"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
   "rules_incomplete": false,
   "next_step": {
     "action": "resolve",
-    "count": 3,
+    "count": 2,
     "findings_lead": false,
     "recorded_at": null,
     "file_created_at": null,
@@ -1974,8 +1964,7 @@
   },
   "header": {
     "attention": [
-      { "level": "blocks", "count": 3, "words": "impiden presentar: 3" },
-      { "level": "check", "count": 1, "words": "para revisar: 1" }
+      { "level": "blocks", "count": 2, "words": "impiden presentar: 2" }
     ],
     "result": {
       "state": "failed",
@@ -2000,8 +1989,8 @@
     "file": null,
     "export_hold": {
       "reason": "blocks",
-      "count": 3,
-      "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 3)."
+      "count": 2,
+      "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 2)."
     }
   },
   "issue_lines": [
@@ -2021,20 +2010,6 @@
     },
     {
       "level": "blocks",
-      "box": "06",
-      "where": "Retenciones e ingresos a cuenta",
-      "message": "Casilla 06: 0,00 € queda en espera porque no está confirmado el periodo al que corresponde. Los ingresos y gastos de la actividad se imputan al devengo y una retención va con su renta (art. 79 RIRPF), y tus registros fechan cada movimiento por su llegada al banco, lo que solo es correcto si optaste por el criterio de cobros y pagos (art. 7.2 RIRPF; art. 14.1.b LIRPF).",
-      "action": "Qué hacer: Compara la cifra con tus registros y con el certificado del pagador. Mientras esté en espera, Cadrumo no puede comprobar, exportar ni registrar esta declaración; una versión posterior que confirme el periodo la liberará.",
-      "detail": "Una cifra de una casilla se basa en una lectura que Cadrumo aún no puede confirmar: puedes verla y previsualizarla, pero no comprobar, exportar ni registrar la declaración con ella.",
-      "technical": "Detalles técnicos: advisory_binding_value · 06",
-      "address": { "kind": "casilla", "casilla_id": "06" },
-      "in_records": false,
-      "surface": null,
-      "from_calculation": true,
-      "recalculates": false
-    },
-    {
-      "level": "blocks",
       "box": null,
       "where": "Toda la declaración",
       "message": "Cadrumo no ha podido sacar una cifra de tus datos y habría mostrado un cero sin avisar.",
@@ -2048,14 +2023,14 @@
       "recalculates": false
     },
     {
-      "level": "check",
-      "box": null,
-      "where": "Toda la declaración",
-      "message": "En algunas facturas emitidas Cadrumo no puede saber cuánto se retuvo, así que a tu deducción por retenciones le puede faltar un importe desconocido y podrías pagar más de lo necesario.",
-      "action": "Qué hacer: Indica en tus registros la base y la retención de cada una de esas facturas y vuelve a calcular.",
-      "detail": null,
-      "technical": "Detalles técnicos: unresolved_retencion_substrate",
-      "address": null,
+      "level": "info",
+      "box": "06",
+      "where": "Retenciones e ingresos a cuenta",
+      "message": "Casilla 06: el cero se mantiene, porque en el periodo no hay ninguna cifra cuyo periodo pueda estar en duda.",
+      "action": "Qué hacer: Compara la cifra con tus registros y con el certificado del pagador. Mientras esté en espera, Cadrumo no puede comprobar, exportar ni registrar esta declaración; una versión posterior que confirme el periodo la liberará.",
+      "detail": "Una cifra de una casilla se basa en una lectura que Cadrumo aún no puede confirmar: puedes verla y previsualizarla, pero no comprobar, exportar ni registrar la declaración con ella.",
+      "technical": "Detalles técnicos: advisory_binding_value · 06",
+      "address": { "kind": "casilla", "casilla_id": "06" },
       "in_records": false,
       "surface": null,
       "from_calculation": true,
@@ -2067,7 +2042,7 @@
     "words": "La declaración aún no se ha comprobado.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+  "calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
@@ -2131,7 +2106,7 @@
         "availability": {
           "available": false,
           "reason": "blocks",
-          "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 3)."
+          "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 2)."
         }
       },
       {
@@ -2161,14 +2136,14 @@
     "record": {
       "available": false,
       "reason": "blocks",
-      "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 3)."
+      "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 2)."
     },
     "review_package": {
       "words": "Paquete para tu gestor",
       "availability": {
         "available": false,
         "reason": "blocks",
-        "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 3)."
+        "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 2)."
       }
     },
     "asks_elections": false,

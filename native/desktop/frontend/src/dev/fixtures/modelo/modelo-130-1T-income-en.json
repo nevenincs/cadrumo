@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+      "calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1474,13 +1474,23 @@
       "issues": [],
       "calculation_notes": [
         {
+          "reason": "unresolved_binding",
+          "attention": "check",
+          "casilla_id": null,
+          "box": null,
+          "withholds_filing": true,
+          "fact": null,
+          "element_names": [],
+          "message": null
+        },
+        {
           "reason": "advisory_binding_value",
-          "attention": "blocks",
+          "attention": "info",
           "casilla_id": "06",
           "box": "06",
-          "withholds_filing": true,
+          "withholds_filing": false,
           "fact": {
-            "sentence": "advisory_imputation_period_ungrounded",
+            "sentence": "advisory_value_proven_zero",
             "values": [
               ["amount", "0"],
               [
@@ -1492,26 +1502,6 @@
             "element_refs": [],
             "row_refs": []
           },
-          "element_names": [],
-          "message": null
-        },
-        {
-          "reason": "unresolved_retencion_substrate",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": false,
-          "fact": null,
-          "element_names": [],
-          "message": null
-        },
-        {
-          "reason": "unresolved_binding",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": true,
-          "fact": null,
           "element_names": [],
           "message": null
         }
@@ -1617,7 +1607,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "8a5a449de28d62f8b6cf014dc64eceaea1267e419dad5f12c69c7bbedbf28681",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1652,9 +1642,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "997ce9758f02f670e904df81476db1f3ff8e826b5d19dc28e20c863cf478b288",
-    "calculation_head_digest": "34b4b435ca9a74efe621b574507895bab9abb128d08476789a378abd3be6c2ed",
-    "current_calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+    "work_unit_record_digest": "ccf6cf4ec0e2722a3447afc4050758b86cc62696b321490087789b612ea658d1",
+    "calculation_head_digest": "5ba8cad6e2eec129de0864e238ec13322f8debb535e6fa84e04f6ee27a10d2b9",
+    "current_calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1957,26 +1947,23 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:26:29.456336Z",
-    "expires_at": "2026-11-02T09:31:29.456336Z",
-    "baseline_id": "9898b5ad9081208b60d18f5b11c54f2b84e48eaed4db0a75dc44a50f17adb48d"
+    "issued_at": "2026-11-02T16:45:05.336056Z",
+    "expires_at": "2026-11-02T16:50:05.336056Z",
+    "baseline_id": "91b9d51ff18c4472fc696e65b19199ffd336d2e7f521987f8503842da70f8de2"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
   "rules_incomplete": false,
   "next_step": {
     "action": "resolve",
-    "count": 3,
+    "count": 2,
     "findings_lead": false,
     "recorded_at": null,
     "file_created_at": null,
     "receipt_to_add": false
   },
   "header": {
-    "attention": [
-      { "level": "blocks", "count": 3, "words": "blocking: 3" },
-      { "level": "check", "count": 1, "words": "to check: 1" }
-    ],
+    "attention": [{ "level": "blocks", "count": 2, "words": "blocking: 2" }],
     "result": {
       "state": "failed",
       "casilla_id": "19",
@@ -2000,8 +1987,8 @@
     "file": null,
     "export_hold": {
       "reason": "blocks",
-      "count": 3,
-      "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 3)."
+      "count": 2,
+      "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 2)."
     }
   },
   "issue_lines": [
@@ -2021,20 +2008,6 @@
     },
     {
       "level": "blocks",
-      "box": "06",
-      "where": "Withholdings and payments on account",
-      "message": "Box 06: 0.00 € is held back because the period it belongs to is not confirmed. Activity income and expenses count when they accrue, and a withholding counts with its income (RIRPF art. 79), while your records date each entry by when it reached the bank, which is right only if you chose to declare when you are paid or pay (RIRPF art. 7.2; LIRPF art. 14.1.b).",
-      "action": "What to do: Compare the figure with your records and the payer's certificate. While it is held back, Cadrumo cannot check, export or record this declaration; a later version that confirms the period will release it.",
-      "detail": "A figure in a box rests on a reading Cadrumo cannot confirm yet, so you can see and preview it, but you cannot check, export or record the declaration with it.",
-      "technical": "Technical details: advisory_binding_value · 06",
-      "address": { "kind": "casilla", "casilla_id": "06" },
-      "in_records": false,
-      "surface": null,
-      "from_calculation": true,
-      "recalculates": false
-    },
-    {
-      "level": "blocks",
       "box": null,
       "where": "Whole declaration",
       "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
@@ -2048,14 +2021,14 @@
       "recalculates": false
     },
     {
-      "level": "check",
-      "box": null,
-      "where": "Whole declaration",
-      "message": "For some issued invoices Cadrumo cannot tell how much was withheld, so your withholding credit may be missing an unknown amount and you may pay more than needed.",
-      "action": "What to do: Enter the invoice base and the withholding for each of those invoices in your records, then calculate again.",
-      "detail": null,
-      "technical": "Technical details: unresolved_retencion_substrate",
-      "address": null,
+      "level": "info",
+      "box": "06",
+      "where": "Withholdings and payments on account",
+      "message": "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt.",
+      "action": "What to do: Compare the figure with your records and the payer's certificate. While it is held back, Cadrumo cannot check, export or record this declaration; a later version that confirms the period will release it.",
+      "detail": "A figure in a box rests on a reading Cadrumo cannot confirm yet, so you can see and preview it, but you cannot check, export or record the declaration with it.",
+      "technical": "Technical details: advisory_binding_value · 06",
+      "address": { "kind": "casilla", "casilla_id": "06" },
       "in_records": false,
       "surface": null,
       "from_calculation": true,
@@ -2067,7 +2040,7 @@
     "words": "The declaration has not been checked yet.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+  "calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
@@ -2131,7 +2104,7 @@
         "availability": {
           "available": false,
           "reason": "blocks",
-          "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 3)."
+          "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 2)."
         }
       },
       {
@@ -2161,14 +2134,14 @@
     "record": {
       "available": false,
       "reason": "blocks",
-      "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 3)."
+      "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 2)."
     },
     "review_package": {
       "words": "Package for your accountant",
       "availability": {
         "available": false,
         "reason": "blocks",
-        "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 3)."
+        "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 2)."
       }
     },
     "asks_elections": false,

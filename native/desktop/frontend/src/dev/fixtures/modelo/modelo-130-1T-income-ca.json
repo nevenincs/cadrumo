@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+      "calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1471,13 +1471,23 @@
       "issues": [],
       "calculation_notes": [
         {
+          "reason": "unresolved_binding",
+          "attention": "check",
+          "casilla_id": null,
+          "box": null,
+          "withholds_filing": true,
+          "fact": null,
+          "element_names": [],
+          "message": null
+        },
+        {
           "reason": "advisory_binding_value",
-          "attention": "blocks",
+          "attention": "info",
           "casilla_id": "06",
           "box": "06",
-          "withholds_filing": true,
+          "withholds_filing": false,
           "fact": {
-            "sentence": "advisory_imputation_period_ungrounded",
+            "sentence": "advisory_value_proven_zero",
             "values": [
               ["amount", "0"],
               [
@@ -1489,26 +1499,6 @@
             "element_refs": [],
             "row_refs": []
           },
-          "element_names": [],
-          "message": null
-        },
-        {
-          "reason": "unresolved_retencion_substrate",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": false,
-          "fact": null,
-          "element_names": [],
-          "message": null
-        },
-        {
-          "reason": "unresolved_binding",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": true,
-          "fact": null,
           "element_names": [],
           "message": null
         }
@@ -1614,7 +1604,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "8a5a449de28d62f8b6cf014dc64eceaea1267e419dad5f12c69c7bbedbf28681",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1649,9 +1639,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "997ce9758f02f670e904df81476db1f3ff8e826b5d19dc28e20c863cf478b288",
-    "calculation_head_digest": "34b4b435ca9a74efe621b574507895bab9abb128d08476789a378abd3be6c2ed",
-    "current_calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+    "work_unit_record_digest": "ccf6cf4ec0e2722a3447afc4050758b86cc62696b321490087789b612ea658d1",
+    "calculation_head_digest": "5ba8cad6e2eec129de0864e238ec13322f8debb535e6fa84e04f6ee27a10d2b9",
+    "current_calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1954,16 +1944,16 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:26:29.910345Z",
-    "expires_at": "2026-11-02T09:31:29.910345Z",
-    "baseline_id": "4a7a0b56491a116da0b993adc13417e1ab3216552979ec1d4c6e55f04e50d607"
+    "issued_at": "2026-11-02T16:45:05.742703Z",
+    "expires_at": "2026-11-02T16:50:05.742703Z",
+    "baseline_id": "907ec12ee419ee1111c797a38858cfea2539269e334d92481e9521db57c22279"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
   "rules_incomplete": false,
   "next_step": {
     "action": "resolve",
-    "count": 3,
+    "count": 2,
     "findings_lead": false,
     "recorded_at": null,
     "file_created_at": null,
@@ -1971,8 +1961,7 @@
   },
   "header": {
     "attention": [
-      { "level": "blocks", "count": 3, "words": "impedeixen presentar: 3" },
-      { "level": "check", "count": 1, "words": "per revisar: 1" }
+      { "level": "blocks", "count": 2, "words": "impedeixen presentar: 2" }
     ],
     "result": {
       "state": "failed",
@@ -1997,8 +1986,8 @@
     "file": null,
     "export_hold": {
       "reason": "blocks",
-      "count": 3,
-      "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 3)."
+      "count": 2,
+      "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 2)."
     }
   },
   "issue_lines": [
@@ -2018,20 +2007,6 @@
     },
     {
       "level": "blocks",
-      "box": "06",
-      "where": "Retencions i ingressos a compte",
-      "message": "Casella 06: 0,00 € queda en espera perquè no està confirmat el període al qual correspon. Els ingressos i les despeses de l'activitat s'imputen a la meritació i una retenció va amb la seva renda (art. 79 RIRPF), i els teus registres daten cada moviment per la seva arribada al banc, cosa que només és correcta si vas optar pel criteri de cobraments i pagaments (art. 7.2 RIRPF; art. 14.1.b LIRPF).",
-      "action": "Què cal fer: Compara la xifra amb els teus registres i amb el certificat del pagador. Mentre estigui en espera, Cadrumo no pot comprovar, exportar ni registrar aquesta declaració; una versió posterior que confirmi el període l'alliberarà.",
-      "detail": "Una xifra d'una casella es basa en una lectura que Cadrumo encara no pot confirmar: pots veure-la i previsualitzar-la, però no comprovar, exportar ni registrar la declaració amb ella.",
-      "technical": "Detalls tècnics: advisory_binding_value · 06",
-      "address": { "kind": "casilla", "casilla_id": "06" },
-      "in_records": false,
-      "surface": null,
-      "from_calculation": true,
-      "recalculates": false
-    },
-    {
-      "level": "blocks",
       "box": null,
       "where": "Tota la declaració",
       "message": "Cadrumo no ha pogut treure una xifra de les teves dades i hauria mostrat un zero sense avisar.",
@@ -2045,14 +2020,14 @@
       "recalculates": false
     },
     {
-      "level": "check",
-      "box": null,
-      "where": "Tota la declaració",
-      "message": "En algunes factures emeses Cadrumo no pot saber quant es va retenir, així que a la teva deducció per retencions li pot faltar un import desconegut i podries pagar més del necessari.",
-      "action": "Què cal fer: Indica als teus registres la base i la retenció de cadascuna d'aquestes factures i torna a calcular.",
-      "detail": null,
-      "technical": "Detalls tècnics: unresolved_retencion_substrate",
-      "address": null,
+      "level": "info",
+      "box": "06",
+      "where": "Retencions i ingressos a compte",
+      "message": "Casella 06: el zero es manté, perquè en el període no hi ha cap xifra el període de la qual pugui ser dubtós.",
+      "action": "Què cal fer: Compara la xifra amb els teus registres i amb el certificat del pagador. Mentre estigui en espera, Cadrumo no pot comprovar, exportar ni registrar aquesta declaració; una versió posterior que confirmi el període l'alliberarà.",
+      "detail": "Una xifra d'una casella es basa en una lectura que Cadrumo encara no pot confirmar: pots veure-la i previsualitzar-la, però no comprovar, exportar ni registrar la declaració amb ella.",
+      "technical": "Detalls tècnics: advisory_binding_value · 06",
+      "address": { "kind": "casilla", "casilla_id": "06" },
       "in_records": false,
       "surface": null,
       "from_calculation": true,
@@ -2064,7 +2039,7 @@
     "words": "La declaració encara no s'ha comprovat.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "465f0342fbbdf5d8fb454ccd2d2aeaeab44c77f1b4e7c00be2d707972dfb8cd1",
+  "calculation_revision_id": "255a6a789b911b1c1bd146b736211ef07d1609d38b7efa3865ad5b08a353f914",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
@@ -2128,7 +2103,7 @@
         "availability": {
           "available": false,
           "reason": "blocks",
-          "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 3)."
+          "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 2)."
         }
       },
       {
@@ -2158,14 +2133,14 @@
     "record": {
       "available": false,
       "reason": "blocks",
-      "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 3)."
+      "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 2)."
     },
     "review_package": {
       "words": "Paquet per al teu gestor",
       "availability": {
         "available": false,
         "reason": "blocks",
-        "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 3)."
+        "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 2)."
       }
     },
     "asks_elections": false,
