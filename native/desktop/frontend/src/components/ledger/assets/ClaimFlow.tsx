@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
 import type {
   ActivityAssetForecast,
@@ -11,8 +13,6 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
-import { formatDay } from "../../../shared/dateFormats";
-import { formatAmount } from "../../../shared/numbers";
 import {
   ChoiceField,
   Panel,
@@ -21,25 +21,18 @@ import {
   useSetupWrite,
 } from "../setup/SetupParts";
 import { setupCall, type SetupCall } from "../setup/setupModel";
-import {
-  answer,
-  claimFields,
-  claimSpans,
-  draftOf,
-  throughOf,
-  type FormField,
-} from "./assetFields";
+import { FieldsGrid } from "./AssetFieldsGrid";
+import type { ActProps } from "./AssetForm";
+import { OptionsRead, WriteLine } from "./AssetFormStatus";
 import { Remedy } from "./AssetList";
+import { claimFields, claimSpans, throughOf } from "./assetFields";
 import {
-  FieldsGrid,
-  OptionsRead,
   useAssetRow,
   useFieldsDraft,
   useFocusOnOpen,
   useLedgerRead,
-  WriteLine,
-  type ActProps,
-} from "./AssetForm";
+} from "./assetFormState";
+import { answer, draftOf, type FormField } from "./assetFormValues";
 import {
   CLAIM_CONFLICT,
   CLAIMS_OVERLAP,
