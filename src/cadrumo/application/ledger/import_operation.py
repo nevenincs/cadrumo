@@ -52,7 +52,7 @@ from .import_ports import LedgerImportPorts, LedgerImportReaderUnavailableError
 from .models import LedgerSourceImportCommand, LedgerSourceImportResult
 from .own_account_ports import OwnAccountRepositoryProtocol
 from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_access
 
 _FILE_NAME_MAX_LENGTH = 255
 
@@ -779,12 +779,13 @@ def resolve_ledger_import_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile read access and COMMIT only for a persisted import."""
-    if request.definition_id != LEDGER_IMPORT_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerImportRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.dry_run else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        request_type=LedgerImportRequest,
+        commits=lambda payload: not payload.dry_run,
+    )
 
 
 def build_ledger_import_registration(

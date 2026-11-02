@@ -22,6 +22,7 @@ from ..read_access import (
     resolve_ledger_commit_access,
     resolve_ledger_exact_request_access,
     resolve_ledger_read_access,
+    resolve_ledger_request_access,
     resolve_ledger_request_commit_access,
     resolve_ledger_request_read_access,
 )
@@ -242,3 +243,42 @@ def test_exact_request_access_refuses_a_foreign_payload_profile() -> None:
         _exact(_request(foreign))
 
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+_CONTEXT = _context(_registration())
+
+
+def _conditional(request: OperationRequest[BaseModel], *, commits: bool) -> ResolvedOperationAccess:
+    return resolve_ledger_request_access(
+        request,
+        _CONTEXT,
+        definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+        request_type=LedgerRemoveRequest,
+        commits=lambda payload: commits and payload.transaction_id == "a" * 64,
+    )
+
+
+def test_conditional_request_access_adds_the_commit_door_only_when_the_payload_commits() -> None:
+    request = _request(_remove_payload())
+
+    read = _conditional(request, commits=False)
+    commit = _conditional(request, commits=True)
+
+    assert read == resolve_ledger_read_access(request, _CONTEXT, profile_id=_PROFILE, periods=frozenset())
+    assert commit.policy.actions == read.policy.actions | {AccessAction.COMMIT}
+
+
+def test_conditional_request_access_refuses_before_asking_whether_the_payload_commits() -> None:
+    for refused_request in (
+        _request(_remove_payload(), definition_id="ledger.reset"),
+        _request(InvoiceRemoveRequest(profile_id=_PROFILE, invoice_id="a" * 64)),
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_ledger_request_access(
+                refused_request,
+                _CONTEXT,
+                definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+                request_type=LedgerRemoveRequest,
+                commits=lambda _payload: pytest.fail("the commit predicate ran for a refused request"),
+            )
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
