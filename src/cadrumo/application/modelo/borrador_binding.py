@@ -203,7 +203,12 @@ def _resolve_borrador_binding_values(
     eligible_bindings: dict[BindingId, BindingDefinition],
     caller_owned: set[BindingId],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Project eligible snapshot values, leaving explicit caller values in control."""
+    """Project eligible snapshot values, leaving explicit caller values in control.
+
+    A ``cross_check_only`` binding is held by the snapshot for comparison and
+    never enters this tier, so the borrador cannot fill a value that the
+    binding's own evidence leaves missing.
+    """
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
     for binding_id, raw_value in snapshot.binding_values.items():
@@ -211,9 +216,13 @@ def _resolve_borrador_binding_values(
             continue
         binding = eligible_bindings[binding_id]
         if binding.value.typed_enum is not None:
-            enum_values[binding_id] = str(raw_value).strip()
+            if binding.borrador_supplies_value:
+                enum_values[binding_id] = str(raw_value).strip()
             continue
-        decimal_values[binding_id] = _decimal_value(binding_id, raw_value)
+        # Parsed even when only compared, so a malformed stored value is refused rather than ignored.
+        value = _decimal_value(binding_id, raw_value)
+        if binding.borrador_supplies_value:
+            decimal_values[binding_id] = value
     return decimal_values, enum_values
 
 
@@ -273,7 +282,8 @@ def resolve_modelo_100_borrador_bindings(
     borrador values are never consumed implicitly. When a snapshot is
     supplied, caller values take precedence and the snapshot may only
     contribute bindings explicitly marked ``aeat_prefilled`` by the
-    registry revision passed to the service.
+    registry revision passed to the service and not declared
+    ``cross_check_only``; a snapshot may still hold those, for comparison.
 
     Returns:
         A :class:`CalculationSourceResolution` with ``owned_sources`` set to

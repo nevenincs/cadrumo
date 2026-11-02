@@ -2255,15 +2255,16 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0596" }
-fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-certificado-trabajo-retenciones"}
+fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-trabajo"}
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0597" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:818 y aeat-dr-100-2022-dictionary:894: RET2, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/RetencionesRes/RET2, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:818 y aeat-dr-100-2022-dictionary:894: RET2, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/RetencionesRes/RET2, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-capital-mobiliario" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0598" }
-fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "computed",formula = "renta-retenciones-arrendamientos-urbanos"}
+fields = { section = ["resultados", "calculo_impuesto_res", "retenciones_res"], semantic_role = "irpf_retencion_arrendamientos_inmuebles_urbanos", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "computed",formula = "renta-retenciones-arrendamientos-urbanos"}
+removed_fields = ["data_type"]
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0599" }
@@ -2283,7 +2284,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0603" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:827 y aeat-dr-100-2022-dictionary:903: RET8, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/RetencionesRes/RET8, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:827 y aeat-dr-100-2022-dictionary:903: RET8, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/RetencionesRes/RET8, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-ganancia-patrimonial" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0604" }

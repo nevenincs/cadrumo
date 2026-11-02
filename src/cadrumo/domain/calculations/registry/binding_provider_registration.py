@@ -1075,10 +1075,14 @@ def _append_aeat_prefill_diagnostic(
     registration: BindingProviderRegistration,
     diagnostics: list[str],
 ) -> None:
-    if binding.aeat_prefilled and not registration.admits_aeat_prefill:
+    # Snapshot admission alone replaces nothing: a cross_check_only binding is
+    # compared with the borrador, so only a value the borrador may supply needs
+    # a kind whose value is operator- or profile-entered.
+    if binding.borrador_supplies_value and not registration.admits_aeat_prefill:
         diagnostics.append(
             f"binding {binding.id!r}: provider {registration.kind.value!r} computes a governed value and "
-            f"cannot be marked aeat_prefilled; an AEAT borrador value must not replace it",
+            f"cannot be marked aeat_prefilled with borrador precedence; an AEAT borrador value must not "
+            f"replace it, so declare borrador_participation = 'cross_check_only'",
         )
 
 
