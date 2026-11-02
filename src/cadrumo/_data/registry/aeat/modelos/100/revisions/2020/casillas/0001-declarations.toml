@@ -4149,13 +4149,9 @@ section = ["resultados", "inmuebles_res"]
 data_type = "decimal"
 semantic_role = "irpf_suma_retenciones_capital_inmobiliario_aggregate"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "ley-35-2006:art-99", "rd-439-2007:art-100"]
-# Casilla 0599 has no binding and the operator keys it, but not because the
-# figure is unavailable. It is the retención the taxpayer SUFFERED on its own
-# activity income, deductible under the articles cited below, and the ledger does
-# hold it: Modelo 130 casilla 06 credits the same withholding every quarter from
-# the same rows. What stands in the way is structural rather than evidential --
-# a renta-income aggregation projects onto exactly one casilla per modelo, and
-# for Modelo 100 that casilla is 0171.
+# Casilla 0599 is keyed by the operator in 2020 and 2021. From the 2022 baseline,
+# where the renta-income ledger family is declared, it is bound to the
+# retención the taxpayer's issued invoices declare.
 [[revisions."2020".casillas]]
 id = "0599"
 number = "0599"
