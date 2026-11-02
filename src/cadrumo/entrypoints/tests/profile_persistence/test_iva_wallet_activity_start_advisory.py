@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
 )
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
     _BUCKET_ID,
     _TAXPAYER_NIF,
     _create_modelo_303_work_unit,
@@ -29,7 +29,7 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _work_unit_repositories,
 )
 
-from ._iva_wallet_engine_support import resolve_without_caller_inputs
+from .iva_wallet_engine_support import resolve_without_caller_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

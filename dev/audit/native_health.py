@@ -64,18 +64,30 @@ def inventory(repo_root: Path, scope: LanguageScope) -> tuple[Path, ...]:
     for directory, names, filenames in os.walk(root, onerror=fail, followlinks=False):
         parent = Path(directory)
         names[:] = [name for name in names if name not in EXCLUDED_DIRECTORIES]
-        for name in names:
-            if (parent / name).is_symlink():
-                raise OSError(f"source directory is a link: {parent / name}")
-        for name in filenames:
-            path = parent / name
-            if path.suffix in scope.suffixes:
-                if path.is_symlink():
-                    raise OSError(f"source file is a link: {path}")
-                files.append(path.relative_to(repo_root))
+        _refuse_linked_directories(parent, names)
+        files.extend(_scope_files(parent, filenames, scope, repo_root))
     if not files:
         raise OSError(f"no {scope.name} files in {scope.root}")
     return tuple(sorted(files))
+
+
+def _refuse_linked_directories(parent: Path, names: list[str]) -> None:
+    for name in names:
+        if (parent / name).is_symlink():
+            raise OSError(f"source directory is a link: {parent / name}")
+
+
+def _scope_files(parent: Path, filenames: list[str], scope: LanguageScope, repo_root: Path) -> list[Path]:
+    """Return the directory's files of the scope's suffixes, refusing a linked one."""
+    found: list[Path] = []
+    for name in filenames:
+        path = parent / name
+        if path.suffix not in scope.suffixes:
+            continue
+        if path.is_symlink():
+            raise OSError(f"source file is a link: {path}")
+        found.append(path.relative_to(repo_root))
+    return found
 
 
 def scan(repo_root: Path, scope: LanguageScope) -> DuplicationResult:

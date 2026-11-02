@@ -39,6 +39,7 @@ See Also:
 
 from __future__ import annotations
 
+import functools
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date, datetime
 
@@ -57,7 +58,7 @@ from ...domain.calculations.registry.applicability_modelo202 import derive_model
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.filing.software_identity import (
@@ -244,24 +245,30 @@ def _persist_exported_draft(
         export_layout,
     )
     if dictionary_values is not None:
-        modelo = str(work_unit.modelo)
         dictionary_values.update(
-            settlement_dictionary_values(
+            _settlement_values_for_export(
+                command,
+                approved=approved,
+                work_unit=work_unit,
                 disposition=resolved_result_disposition,
-                settlement=declared_settlement(
-                    modelo,
-                    schema_provider.get_snapshot(modelo).revision,
-                    {value.casilla_id: value.value for value in approved.values},
-                    disposition=resolved_result_disposition,
-                ),
-                instalment=command.instalment_election,
-                first_instalment_share=first_instalment_share(
-                    modelo, period_day=work_unit.period.end_date, authority=operation
-                ),
                 charge_account=export_charge_account(accounts),
                 refund_account=export_refund_account(accounts),
+                schema_provider=schema_provider,
+                operation=operation,
             )
         )
+    emit_event = functools.partial(
+        _emit_export_event,
+        command=command,
+        work_unit=work_unit,
+        iva_wallet_provenance=iva_wallet_provenance,
+        resolved_result_disposition=resolved_result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election,
+        selected_account=selected_account,
+        exported_at=exported_at,
+        bucket_event_repository=export_ports.bucket_event,
+    )
+    product_identity = software_identity if envelope_requires_product_identity(export_layout) else None
     receipt: DeclaracionExportResult | FilingExportConsumedResult
     if payload_consumer is not None:
         receipt = _consume_export_payload(
@@ -271,53 +278,22 @@ def _persist_exported_draft(
             producer_snapshot=producer_snapshot,
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election.election,
-            product_software_identity=software_identity if envelope_requires_product_identity(export_layout) else None,
+            product_software_identity=product_identity,
             schema_provider=schema_provider,
         )
-        event = _emit_export_event(
-            command=command,
-            work_unit=work_unit,
-            receipt=receipt,
-            iva_wallet_provenance=iva_wallet_provenance,
-            resolved_result_disposition=resolved_result_disposition,
-            prior_domiciliation_election=prior_domiciliation_election,
-            selected_account=selected_account,
-            exported_at=exported_at,
-            bucket_event_repository=export_ports.bucket_event,
-        )
+        event = emit_event(receipt=receipt)
     else:
-        sink = export_sink(command)
-        with sink.staged() as staged:
-            receipt = _write_export_staging(
-                staged=staged,
-                command=command,
-                approved=approved,
-                producer_snapshot=producer_snapshot,
-                dictionary_values=dictionary_values,
-                prior_domiciliation_election=prior_domiciliation_election.election,
-                product_software_identity=software_identity
-                if envelope_requires_product_identity(export_layout)
-                else None,
-                schema_provider=schema_provider,
-                mutation_writer=mutation_writer,
-            )
-            event = _emit_export_event(
-                command=command,
-                work_unit=work_unit,
-                receipt=receipt,
-                iva_wallet_provenance=iva_wallet_provenance,
-                resolved_result_disposition=resolved_result_disposition,
-                prior_domiciliation_election=prior_domiciliation_election,
-                selected_account=selected_account,
-                exported_at=exported_at,
-                bucket_event_repository=export_ports.bucket_event,
-            )
-            if mutation_writer is None:
-                sink.publish(staged)
-            else:
-                mutation_writer(lambda: sink.publish(staged))
-
-        assert_export_artifact_matches_receipt(receipt, artifact_path=command.output_path)
+        receipt, event = _stage_publish_and_record_export(
+            command=command,
+            approved=approved,
+            producer_snapshot=producer_snapshot,
+            dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election.election,
+            product_software_identity=product_identity,
+            schema_provider=schema_provider,
+            mutation_writer=mutation_writer,
+            emit_event=emit_event,
+        )
 
     return _export_result(
         command=command,
@@ -335,6 +311,72 @@ def _persist_exported_draft(
         software_identity=software_identity,
         domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
         schema_provider=schema_provider,
+    )
+
+
+def _stage_publish_and_record_export(
+    *,
+    command: ModeloExportCommand,
+    approved: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    dictionary_values: dict[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection | None,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    schema_provider: RegistrySchemaAccessor,
+    mutation_writer: Callable[[Callable[[], None]], None] | None,
+    emit_event: Callable[..., BucketEvent],
+) -> tuple[DeclaracionExportResult, BucketEvent]:
+    """Write the export to staging, record its event, then publish the staged file and check it against the receipt."""
+    sink = export_sink(command)
+    with sink.staged() as staged:
+        receipt = _write_export_staging(
+            staged=staged,
+            command=command,
+            approved=approved,
+            producer_snapshot=producer_snapshot,
+            dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election,
+            product_software_identity=product_software_identity,
+            schema_provider=schema_provider,
+            mutation_writer=mutation_writer,
+        )
+        event = emit_event(receipt=receipt)
+        if mutation_writer is None:
+            sink.publish(staged)
+        else:
+            mutation_writer(lambda: sink.publish(staged))
+
+    assert_export_artifact_matches_receipt(receipt, artifact_path=command.output_path)
+    return receipt, event
+
+
+def _settlement_values_for_export(
+    command: ModeloExportCommand,
+    *,
+    approved: ModeloDraft,
+    work_unit: WorkUnit,
+    disposition: ResultDisposition | None,
+    charge_account: ChargeAccount | None,
+    refund_account: RefundAccount | None,
+    schema_provider: RegistrySchemaAccessor,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, object]:
+    """Derive the settlement, instalment and account values an XML dictionary export carries."""
+    modelo = str(work_unit.modelo)
+    return settlement_dictionary_values(
+        disposition=disposition,
+        settlement=declared_settlement(
+            modelo,
+            schema_provider.get_snapshot(modelo).revision,
+            {value.casilla_id: value.value for value in approved.values},
+            disposition=disposition,
+        ),
+        instalment=command.instalment_election,
+        first_instalment_share=first_instalment_share(
+            modelo, period_day=work_unit.period.end_date, authority=operation
+        ),
+        charge_account=charge_account,
+        refund_account=refund_account,
     )
 
 

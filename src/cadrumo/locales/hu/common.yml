@@ -4306,6 +4306,35 @@ desktop:
       kind_label: A helyesbítés fajtája
       motive_label: A helyesbítés oka
       values_label: Helyesbített értékek
+    credits:
+      dependents: Az ezeket olvasó rovatok
+      dependents_lead: Az a rovat, amely egy érték nélküli levonást olvas, szintén
+        érték nélküli marad. Nem nulla.
+      estimate:
+        again: Becslés újra
+        ask: Becslés készítése
+        extrapolated: Az utolsó utáni negyedévek jövedelmét ebből extrapoláljuk.
+        failed: A becslés nem készült el. Próbáld újra.
+        in_estimate: 'A becslésben: {amount}'
+        lead: Az éves bevallás becslése a meglévő negyedéves bevallásaidból vetítve.
+          Nem a bevallásod kiszámítása, és semmit nem változtat rajta.
+        mark: Becslés
+        needs_region: A profilod nem tartalmazza az autonóm közösséget, ahol élsz,
+          a becsléshez pedig szükség van rá. Add meg a profilodban, és kérd újra.
+        nothing_left: Ebben a becslésben nem maradt érték nélküli levonás vagy rovat.
+        quarters: 'Felhasznált negyedéves bevallások: {count}.'
+        refused: A becslést nem lehetett elkészíteni.
+        title: Becslés a negyedéves bevallásaidból
+        unresolved_boxes: Érték nélküli rovatok
+        unresolved_credits: Érték nélküli levonások
+        words_language: 'Ezek a magyarázatok ezen a nyelven íródtak: {language}.'
+      lead: Ezeket a rovatokat a levonási nyilvántartásaid töltik ki, itt soha nem
+        írod be őket. Ha módosítani akarsz egyet, javítsd a levonási nyilvántartásaidban,
+        majd számolj újra.
+      list: Levonások
+      show: Megjelenítés az űrlapon
+      show_box: A(z) {box} rovat megjelenítése az űrlapon
+      title: A jövedelmedből levont összegek
     details:
       close: Részletek bezárása
       hide: Részletek elrejtése
@@ -4341,6 +4370,7 @@ desktop:
       label: A nyomtatvány mellett
       outline: Vázlat
     view:
+      credits: Levonások
       form: Nyomtatvány
     views:
       label: Bevallásnézetek
@@ -4534,6 +4564,36 @@ desktop:
     entries_none: Még nincs bejegyzés
     entry_required: '* minden bejegyzésben kötelező'
     field_help: A mezőről
+    household:
+      add: Személy hozzáadása
+      blocked_hidden: Ennek a csoportnak néhány értéke rejtett, ezért a személyei
+        itt nem módosíthatók.
+      cap_reached: Ez a csoport megtelt, ezért nem adhatsz hozzá több személyt.
+      declare_none: Nincs egy sem
+      edit_person: '{number}. személy szerkesztése'
+      hidden: Rejtett érték
+      lead: A bevallásodban szereplő személyek. Egy csoport, amelyre nem válaszoltál,
+        ismeretlen, ami nem azonos azzal, hogy nincs egy sem.
+      limit: '{count} személy, legfeljebb {max} közül'
+      people: 'Személyek: {count}'
+      reading: A családod beolvasása…
+      remove: Személy eltávolítása
+      remove_help: Eltávolítod ezt a személyt a családodból? A létszám vele együtt
+        frissül.
+      remove_person: '{number}. személy eltávolítása'
+      retry: Próbáld újra
+      saved: A család mentve.
+      state:
+        incomplete: Hiányos
+        none_declared: Egy sincs megadva
+        none_declared_help: Azt adtad meg, hogy nincs egy sem.
+        not_served: Itt nem érhető el
+        not_served_help: A profilod nem kínálja ezt a csoportot.
+        rows: Rögzített személyek
+        unknown: Még nincs megadva
+        unknown_help: Ehhez a csoporthoz semmi sincs rögzítve. Ez nem azonos azzal,
+          hogy nincs egy sem.
+      title: Család
     keys:
       actions: A paletta megnyitása a profilműveletekkel
       clear: Keresés törlése
@@ -9702,6 +9762,8 @@ workspace:
         past_filing_window: A benyújtási határidő lejárt, a két részletben fizetéshez
           pedig azon belül kell benyújtanod a bevallást.
         result_unknown: 'Előbb számold ki a bevallást: az eredménye dönt erről.'
+        second_instalment_nothing: Ez az összeg olyan kicsi, hogy a második részlet
+          nulla lenne, ezért egy összegben fizetendő.
         settlement_unsupported: A bevallás által rendezett összeg nem az eredményével
           azonos irányú, például ha a teljes fizetendő összeget a házastársad visszatérítésének
           terhére felfüggeszted. A hivatalos fájl ezt nem tudja rögzíteni, ezért itt
