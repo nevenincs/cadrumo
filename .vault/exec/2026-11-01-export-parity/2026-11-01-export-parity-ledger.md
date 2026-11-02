@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5f14c852a4ab6e89ff6e2defe788ae3add96a10cd7e71012cb9a595d694e5487'
+body_hash: 'sha256:a1596453b037ccfe6aff010761042efc269d0495ac17aba090f20cca9bcde9c9'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -713,6 +713,9 @@ related:
 - `S06` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 - `S06` `verify:` `just check-types (no findings in touched files)` -> `pass`
 - `S06` `by:` `implementation-high`
+- `S06` `M` `dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py`
+- `S06` `verify:` `pytest dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py` -> `pass`
+- `S06` `by:` `implementer-low`
 
 ## Notes
 
