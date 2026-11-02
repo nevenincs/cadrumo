@@ -24,7 +24,7 @@ from ..draft_construction import build_draft
 from ..export import export_draft
 from ..producer_snapshot import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ..runtime import ModeloOperatorProfile
-from .export_support import _schema_provider, _typed_producer_snapshot
+from .export_support import export_schema_provider, typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -33,7 +33,7 @@ _MARKER_POSITION = 692
 
 
 def _exported_file(tmp_path: Path, *, filing_year: int, period: str, complementaria: bool) -> bytes:
-    template = _typed_producer_snapshot(complementaria=complementaria)
+    template = typed_producer_snapshot(complementaria=complementaria)
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("131"),
         taxpayer_tax_id=template.taxpayer_tax_id,
@@ -46,7 +46,7 @@ def _exported_file(tmp_path: Path, *, filing_year: int, period: str, complementa
         charge_account=None,
         m303_filing_facts=None,
     )
-    provider = _schema_provider(filing_year=filing_year, period=period, modelos=("131",))
+    provider = export_schema_provider(filing_year=filing_year, period=period, modelos=("131",))
     draft = build_draft(
         modelo="131",
         period=Period.from_year_and_code(filing_year, period),
