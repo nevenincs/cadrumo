@@ -8,6 +8,10 @@ from typing import Final
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import MissingTranslationError, lookup_translation
 from ....core.i18n.translatable import Translatable as tr
+from ...modelo.calculation_notes import GATE_REFUSED_REASONS, what_locale_key
+
+_NOTE_LABEL_PREFIX: Final = "note_"
+"""Label keys ``note_<reason>`` word a note that withholds a saved box, by the note catalogue's own sentence."""
 
 _REVIEW_LABEL_KEYS: Final[dict[str, tr]] = {
     "overview": tr("application.storage.calc_sheets.review.labels.overview"),
@@ -156,6 +160,7 @@ _REVIEW_LABEL_KEYS: Final[dict[str, tr]] = {
     "media_type": tr("application.storage.calc_sheets.review.labels.media_type"),
     "byte_length": tr("application.storage.calc_sheets.review.labels.byte_length"),
     "reason": tr("application.storage.calc_sheets.review.labels.reason"),
+    "calculation_note": tr("application.storage.calc_sheets.review.labels.calculation_note"),
     "availability": tr("application.storage.calc_sheets.review.labels.availability"),
     "evidence_included": tr("application.storage.calc_sheets.review.labels.evidence_included"),
     "evidence_excluded": tr("application.storage.calc_sheets.review.labels.evidence_excluded"),
@@ -169,6 +174,12 @@ _REVIEW_LABEL_KEYS: Final[dict[str, tr]] = {
 }
 
 
+def _note_translation_key(reason: str) -> str:
+    if reason not in GATE_REFUSED_REASONS:
+        raise KeyError(_NOTE_LABEL_PREFIX + reason)
+    return what_locale_key(reason)
+
+
 @dataclass(frozen=True, slots=True)
 class ReviewWorkbookLabels:
     """Bind a review to one language and refuse untranslated required copy.
@@ -180,8 +191,16 @@ class ReviewWorkbookLabels:
     locale: OutputLanguage
 
     def __call__(self, key: str) -> str:
-        """Resolve one semantic renderer label through the owning catalogue."""
-        translation_key = _REVIEW_LABEL_KEYS[key]
+        """Resolve one semantic renderer label through the owning catalogue.
+
+        A ``note_<reason>`` label is the calculation-note catalogue's sentence
+        for a reason that withholds filing, so the review words it as the form does.
+        """
+        translation_key = (
+            _note_translation_key(key.removeprefix(_NOTE_LABEL_PREFIX))
+            if key.startswith(_NOTE_LABEL_PREFIX)
+            else _REVIEW_LABEL_KEYS[key]
+        )
         value = lookup_translation(translation_key, locale=self.locale.value)
         if value is None or not value.strip():
             raise MissingTranslationError(key=translation_key, locale=self.locale.value)

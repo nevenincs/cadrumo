@@ -1053,7 +1053,7 @@ ordinal = "4"
 record_identity = "DPA"
 
 [[entries]]
-export_field_id = "modelo-131-dpa-complementaria-indicator"
+export_field_id = "modelo-131-dpa-pagina-complementaria-indicator"
 kind = "computed"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]

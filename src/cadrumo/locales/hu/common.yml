@@ -782,6 +782,7 @@ desktop:
     bring_all: Frissítés az AEAT-ból
     close: AEAT-adatok bezárása
     count:
+      borrador_refused: '{count} nem használható'
       filed_aeat_only: '{count} csak az AEAT-nál van'
       filed_differing: '{count} eltér'
       unread_notifications: '{count} olvasatlan'
@@ -824,11 +825,20 @@ desktop:
       warn_unknown: Lehet, hogy már frissült. Ellenőrzöd mégis?
     results:
       borrador:
+        already_active: A(z) {name} már importálva volt. Nem változott semmi.
+        captured: '{name} importálva.'
+        captured_superseded: A(z) {name} mentve lett, de már egy újabb Borradort használsz.
         failed: 'Nem sikerült importálni: {name}.'
         import: PDF importálása
-        imported: '{name} importálva.'
         nothing_found: Nincs Borrador a(z) {name} fájlban.
+        resolved_discarded: A(z) {name} korábban importálva lett, majd elvetetted.
+          Nem változott semmi.
+        resolved_superseded: A(z) {name} korábban importálva lett, azóta egy újabb
+          váltotta fel. Nem változott semmi.
         unknown: Nem tudni, hogy a(z) {name} importálva lett-e. Előbb ellenőrizd.
+        unowned:
+          one: '{count} mező beolvasásra került, de nem lett megőrizve.'
+          other: '{count} mező beolvasásra került, de nem lett megőrizve.'
         year: Év
       census_review: Átnézés
       changed:
@@ -911,6 +921,7 @@ desktop:
     start_failed: Nem sikerült elindítani. Próbáld újra.
     start_unknown: Nem tudni, hogy elindult-e. Előbb nézd meg ezt az oldalt.
     state:
+      capture_refused: A mentett Borrador nem használható. Importáld újra.
       current: 'Frissítve: {date}'
       current_undated: Naprakész
       never_brought: Még nincs frissítve
@@ -2441,15 +2452,21 @@ desktop:
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:
+      art_104_tres_exclusion: 104.Tres. cikk szerinti kizárás
+      attachment_ids: Mellékletek
       booked_date: Könyvelési dátum
       business_pct: Üzleti arány
       counterparty_country: Partner országa
       counterparty_identification_state: Közösségi adószám
       currency: Pénznem
       deduction_fact_kind: Levonási tény
+      input_classification: Beszerzés felhasználása
       investment_asset_id: Beruházási javak
       m210_income_classification: 210-es modell jövedelme
       own_account_id: Számla
+      prorrata_reference: Arányosítási hivatkozás
+      prorrata_sector_id: Arányosítási ágazat
+      purchase_invoice_evidence_id: Beszerzési bizonylat
       recargo_amount: Egyenértékűségi pótdíj
       usage_ratio_id: Használati arány
       value_date: Értéknap
@@ -3021,7 +3038,6 @@ desktop:
         sealed: zárolt
         sealed_unread: nem tudni, zárolt-e
         transfer: átvezetés
-        unclassified: még nincs besorolva
       source_jurisdiction: Forrás szerinti joghatóság
       split:
         add_part: Rész hozzáadása
@@ -7940,6 +7956,8 @@ tui:
           össze.
         missing_invoice: A számla már nincs a katalógusban, ezért nem kapcsolható
           össze.
+        transaction_takes_no_invoice: 'Ehhez a tételhez nem kapcsolható számla: csak
+          aktív, pénzbevételi vagy pénzkiadási tételhez lehet.'
     overview:
       affected_declarations: Érintett bevallások
       areas: A Nyilvántartás területei
@@ -9098,6 +9116,7 @@ workspace:
         link_aeat: Kapcsold össze az AEAT-benyújtást
         none: Nincs teendő
         open_local_draft: Helyi piszkozat megnyitása
+        recalculate: Számold újra
         start: Elkezdés
       no_match: 'Egy bevallás sem felel meg ennek: „{query}”.'
       none_listed: Nincs bevallás a listában.

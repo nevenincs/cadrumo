@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-01'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d461e672bd5744f6cb421917d5d496117d9f922da3a73b2e3f2101c76d9c2b30'
+body_hash: 'sha256:e9ca4ce37055c388d2d588be93dbe80d5e34adace687cb61c548f2919666a452'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-research]]"
@@ -148,3 +148,11 @@ Basis: Operator rulings 2026-11-01, given in conversation. Each earlier open que
 - Signed calculation report and Google Sheets workbook: both are previews that show the note and are not refused.
 - Payer certificate or datos fiscales record: an agreeing record for the same ejercicio does not clear the cap.
 - Cross-domain coordination: authorized, for the Modelo 130 goldens and the shared screen stamp (plan Step P01.S28).
+
+## Amendment 2026-11-02: proven-zero persistence and revisions filed before the cap
+
+Authorized by the operator on 2026-11-02 ("follow your recommends; proven-zero can happen now").
+
+- The proven-zero outcome is persisted on the revision's source issues as a typed value outcome, so a reloaded form and the declarations list show that a capped value was proven zero. It stays non-blocking. Stored revisions written before this change are not rewritten and keep their identity.
+- A filed (PRESENTADO) revision written before the screen stamp existed, whose pinned revision has a capped binding and whose stored value for that binding's casilla is nonzero or unresolved, is refused at export of the local file until the period is recalculated. Filed revisions with a stamp, and filed revisions with no capped value, keep their existing behaviour. Local filing state, AEAT status and receipts are unaffected.
+- The signed calculation report stays limited to sealed revisions and applies the same screen check as export to non-filed sealed revisions, so a revision sealed before the cap is not signed without its note.

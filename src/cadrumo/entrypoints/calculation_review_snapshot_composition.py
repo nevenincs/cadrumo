@@ -92,4 +92,5 @@ def load_calculation_review_snapshot(
         revision=revision,
         work_unit=unit,
         filing_record=filing_record,
+        operation=operation,
     )

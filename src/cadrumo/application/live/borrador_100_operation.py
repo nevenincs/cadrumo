@@ -56,7 +56,12 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository, Borrador100SnapshotService
+from .borrador_100 import (
+    Borrador100Snapshot,
+    Borrador100SnapshotReading,
+    Borrador100SnapshotRepository,
+    Borrador100SnapshotService,
+)
 from .borrador_100_contracts import (
     Borrador100ImportExecutionResult,
     Borrador100ImportProjection,
@@ -70,6 +75,7 @@ from .borrador_100_contracts import (
     Borrador100SnapshotDetail,
     summarize_borrador_100,
     summarize_borrador_100_for_human,
+    summarize_refused_borrador_100_snapshots,
 )
 from .borrador_100_import import prepare_borrador_100_import
 from .borrador_100_operation_ports import Borrador100OperationPorts, Borrador100OperationPortsFactory
@@ -98,24 +104,25 @@ def _compose[T: BaseModel](
     return ports
 
 
-def _read_snapshots(
-    payload: Borrador100ReadRequest, ports: Borrador100OperationPorts
-) -> tuple[Borrador100Snapshot, ...]:
+def _read_snapshots(payload: Borrador100ReadRequest, ports: Borrador100OperationPorts) -> Borrador100SnapshotReading:
+    """Read the selected snapshots; a list or latest read reports refused snapshots beside the rest."""
     service = Borrador100SnapshotService(bucket_id=str(payload.profile_id), repository=ports.repository)
     if payload.kind == "list":
-        snapshots = service.list_snapshots(state=payload.state.as_lifecycle_state(), operation=ports.operation)
+        reading = service.read_snapshots(state=payload.state.as_lifecycle_state(), operation=ports.operation)
     elif payload.kind == "view":
         if payload.snapshot_id is None:
             raise ValueError("missing borrador snapshot selector")
-        snapshots = (service.show(payload.snapshot_id, operation=ports.operation),)
+        reading = Borrador100SnapshotReading(
+            readable=(service.show(payload.snapshot_id, operation=ports.operation),), refused=()
+        )
     else:
         if payload.filing_year is None:
             raise ValueError("missing borrador filing year selector")
-        latest = service.latest_for_year(filing_year=payload.filing_year, operation=ports.operation)
-        snapshots = () if latest is None else (latest,)
-    if any(snapshot.bucket_id != str(payload.profile_id) for snapshot in snapshots):
+        reading = service.read_latest_for_year(filing_year=payload.filing_year, operation=ports.operation)
+    stored = (*reading.readable, *(item.snapshot for item in reading.refused))
+    if any(snapshot.bucket_id != str(payload.profile_id) for snapshot in stored):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return snapshots
+    return reading
 
 
 class Borrador100ReadExecutor:
@@ -141,7 +148,9 @@ class Borrador100ReadExecutor:
 
         def read() -> Borrador100ReadExecutionResult | Borrador100QueryExecutionResult:
             ports = _compose(self._factory, request, context, profile_id=payload.profile_id)
-            snapshots = _read_snapshots(payload, ports)
+            reading = _read_snapshots(payload, ports)
+            snapshots = reading.readable
+            refused = summarize_refused_borrador_100_snapshots(reading.refused)
             selected = snapshots[0] if payload.kind != "list" and snapshots else None
             if self._query:
                 detail = (
@@ -159,6 +168,8 @@ class Borrador100ReadExecutor:
                         rows=tuple(summarize_borrador_100(row) for row in snapshots) if payload.kind == "list" else (),
                         snapshot=detail,
                         filing_year=payload.filing_year,
+                        refused_snapshots=refused,
+                        outdated_stored_snapshots=reading.outdated_stored_snapshots,
                     )
                 )
             human_detail = (
@@ -178,6 +189,8 @@ class Borrador100ReadExecutor:
                     else (),
                     snapshot=human_detail,
                     filing_year=payload.filing_year,
+                    refused_snapshots=refused,
+                    outdated_stored_snapshots=reading.outdated_stored_snapshots,
                 )
             )
 
@@ -205,6 +218,9 @@ class _TrackedBorradorRepository:
 
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return self._repository.list_snapshots()
+
+    def outdated_stored_snapshot_count(self) -> int:
+        return self._repository.outdated_stored_snapshot_count()
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         return self._repository.resolve(snapshot_id)
@@ -247,7 +263,7 @@ class Borrador100ImportExecutor:
             )
             try:
                 captured = await run_with_ledger_commit_fence(
-                    lambda: service.capture(
+                    lambda: service.capture_with_outcome(
                         filing_year=payload.filing_year,
                         period=payload.period.to_period(),
                         captured_at=now(),
@@ -269,13 +285,13 @@ class Borrador100ImportExecutor:
                 )
                 await context.events.effect(effect)
                 raise
-            if captured.bucket_id != str(payload.profile_id):
+            if captured.snapshot.bucket_id != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             effect = OperationEffect.UPDATED if tracker.confirmed_write else OperationEffect.NONE
             await context.events.effect(effect)
             projection = Borrador100ImportProjection(
                 profile_id=payload.profile_id,
-                snapshot=summarize_borrador_100_for_human(captured),
+                snapshot=summarize_borrador_100_for_human(captured.snapshot),
                 extraction_profile_id=prepared.extraction_profile_id,
                 extraction_coverage=PublicDecimal(decimal=str(prepared.extraction_coverage)),
                 artefact_kind=prepared.artefact_kind,
@@ -283,6 +299,7 @@ class Borrador100ImportExecutor:
                 blank_casillas=prepared.blank_casillas,
                 unowned_casillas=prepared.unowned_casillas,
                 warnings=prepared.warnings,
+                outcome=captured.outcome,
             )
             return await context.operands.put(Borrador100ImportExecutionResult(projection=projection), written_at=now())
 

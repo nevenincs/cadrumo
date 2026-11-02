@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-11-01'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:edade7f5098f9e51ae0493dc45fedf3810863f4f55b5ec4665cee29a9ad29fbd'
+body_hash: 'sha256:3830fd3adb332983f25f5739feaba9fcdf8e19e9d940eed1f36111f5ff71957d'
 related:
   - '[[2026-09-26-export-parity-adr]]'
   - '[[2026-09-26-export-parity-audit]]'
@@ -23,6 +23,7 @@ related:
   - '[[2026-11-01-export-parity-datos-fiscales-format-research]]'
   - '[[2026-11-01-export-parity-income-imputation-criterion-adr]]'
   - '[[2026-11-01-export-parity-income-imputation-criterion-research]]'
+  - '[[2026-11-01-export-parity-ledger]]'
   - '[[2026-11-01-export-parity-observation-filing-kind-adr]]'
   - '[[2026-11-01-export-parity-plan]]'
   - '[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]'
@@ -55,6 +56,7 @@ Auto-generated index of all documents tagged with `#export-parity`.
 ### exec
 
 - `2026-09-26-export-parity-ledger` - `export-parity` ledger
+- `2026-11-01-export-parity-ledger` - `export-parity` ledger
 
 ### plan
 

@@ -9,6 +9,8 @@ still checks itself against the row it finds.
 
 from __future__ import annotations
 
+from collections.abc import Set as AbstractSet
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Final
 from uuid import UUID
@@ -21,6 +23,7 @@ from ...domain.transactions.classification_effects import (
     fields_cleared_by_classification,
     lifecycle_actions_taken,
     takes_changes,
+    takes_classification,
     takes_expense_category,
     takes_invoice,
 )
@@ -28,12 +31,10 @@ from ...domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
     BusinessClassification,
     TransactionDirection,
-    TransactionLifecycleState,
     is_classified,
     takes_business_share,
 )
 from ...domain.transactions.models import Transaction
-from ...domain.usage_ratios.model import eligible_usage_ratio_categories
 from .actions_common import display_decimal
 from .classify_requests import CLASSIFY_FIELD_NAMES, CLASSIFY_UNCLEARABLE_FIELD_NAMES
 from .models import BULK_CLASSIFY_ALLOWED_COLUMNS
@@ -68,51 +69,31 @@ TRANSFER_TAX_FIELDS: Final[tuple[StageFieldName, ...]] = (
     "irpf_category",
     "deduction_fact_kind",
     "investment_asset_id",
-    "counterparty_identification_state",
 )
-"""What a transfer's staged work is held back for carrying.
+"""What ``ManualLedgerTransactionCommand`` refuses on a transfer, of what a cell can stage."""
 
-Wider than the writer's own refusal: ``iva_category``, ``deduction_fact_kind``,
-``investment_asset_id`` and ``counterparty_identification_state`` are accepted on
-a transfer by ``ManualLedgerTransactionCommand``. This check keeps them held back.
-"""
-
-_DRAFT_TRANSFER_TAX_FIELDS: Final[tuple[str, ...]] = (
-    "business_pct",
-    "category_id",
-    "usage_ratio_id",
-    "taxable_base",
-    "iva_rate",
-    "iva_amount",
-    "iva_category",
-    "irpf_category",
+_TRANSFER_STORED_TAX_FIELDS: Final[tuple[str, ...]] = (
     "recargo_amount",
-    "deduction_fact_kind",
-    "investment_asset_id",
-    "counterparty_identification_state",
+    "m210_income_classification",
+    "prorrata_reference",
+    "art_104_tres_exclusion",
+    "input_classification",
+    "prorrata_sector_id",
+    "purchase_invoice_evidence_id",
+    "attachment_ids",
 )
+"""What the same writer refuses on a transfer and no cell stages: only a stored row carries these."""
 
-TRANSFER_LOCKED_FIELDS: Final[tuple[StageFieldName, ...]] = (
-    "category_id",
-    "iva_category",
-    "taxable_base",
-    "iva_rate",
-    "iva_amount",
-    "irpf_category",
-    "deduction_fact_kind",
-    "investment_asset_id",
-    "counterparty_identification_state",
-)
-"""What cannot be edited on a transfer: the transfer's tax fields, less the share and its ratio."""
+_DRAFT_TRANSFER_TAX_FIELDS: Final[tuple[str, ...]] = (*TRANSFER_TAX_FIELDS, *_TRANSFER_STORED_TAX_FIELDS)
+
+TRANSFER_LOCKED_FIELDS: Final[tuple[StageFieldName, ...]] = TRANSFER_TAX_FIELDS
+"""What cannot be edited on a transfer: the writer refuses every one of them there."""
 
 _CLASSIFYING_FIELDS: Final[frozenset[str]] = frozenset(
     {*TRANSFER_TAX_FIELDS, "business_classification", "counterparty_country"}
 )
 
 DRAFT_REQUIRED_FIELDS: Final = ("booked_date", "amount", "currency", "direction", "description")
-
-# The read of a movement does not carry these two, so only a staged one is judged.
-_STAGE_ONLY_FIELDS: Final = frozenset({"deduction_fact_kind", "investment_asset_id"})
 
 
 def route_for_cell(*, field: str, clear: bool, classified: bool) -> tuple[WriteRoute | None, RouteRefusal | None]:
@@ -123,18 +104,35 @@ def route_for_cell(*, field: str, clear: bool, classified: bool) -> tuple[WriteR
     a clear: a blank cell there means unchanged.
     """
     bulk = _BULK_COLUMN_OF_FIELD.get(field, field) in BULK_CLASSIFY_ALLOWED_COLUMNS
-    classify = field in CLASSIFY_FIELD_NAMES and not (clear and field in CLASSIFY_UNCLEARABLE_FIELD_NAMES)
-    update = field in LEDGER_UPDATE_FIELD_NAMES and not (clear and field in LEDGER_UPDATE_REQUIRED_FIELD_NAMES)
-    update_only = not bulk and not classify and update
-    if update and (update_only or clear or not classified):
+    classify = _classify_takes(field, clear)
+    update = _update_takes(field, clear)
+    if _update_route_taken(bulk=bulk, classify=classify, update=update, clear=clear, classified=classified):
         return "update", None
-    if not clear and bulk and classified:
+    # The bulk never carries a clear, so only a stated value reaches it.
+    bulk_takes = not clear and bulk
+    if bulk_takes and classified:
         return "bulk", None
     if classify and classified:
         return "classify", None
-    if classify or (not clear and bulk):
+    if classify or bulk_takes:
         return None, "needs_classification"
     return None, "cannot_clear"
+
+
+def _classify_takes(field: str, clear: bool) -> bool:
+    """Return whether the classification write takes this cell."""
+    return field in CLASSIFY_FIELD_NAMES and not (clear and field in CLASSIFY_UNCLEARABLE_FIELD_NAMES)
+
+
+def _update_takes(field: str, clear: bool) -> bool:
+    """Return whether the update's field mask takes this cell."""
+    return field in LEDGER_UPDATE_FIELD_NAMES and not (clear and field in LEDGER_UPDATE_REQUIRED_FIELD_NAMES)
+
+
+def _update_route_taken(*, bulk: bool, classify: bool, update: bool, clear: bool, classified: bool) -> bool:
+    # A field only the update takes goes there whatever the classification.
+    update_only = not bulk and not classify and update
+    return update and (update_only or clear or not classified)
 
 
 def _filled(value: str | None) -> bool:
@@ -167,8 +165,10 @@ def _stored_facts(transaction: Transaction) -> dict[str, str | None]:
         "iva_category": None if transaction.iva_category is None else str(transaction.iva_category),
         "irpf_category": transaction.irpf_category,
         "notes": transaction.notes or None,
-        "deduction_fact_kind": None,
-        "investment_asset_id": None,
+        "deduction_fact_kind": None
+        if transaction.deduction_fact_kind is None
+        else str(transaction.deduction_fact_kind),
+        "investment_asset_id": transaction.investment_asset_id,
         "counterparty_country": transaction.counterparty_country,
         "counterparty_identification_state": (
             None
@@ -187,6 +187,16 @@ def _same_amount(left: str | None, right: str | None) -> bool:
         return left == right
 
 
+def _effective_date_moved(
+    staged: AbstractSet[str], before: dict[str, str | None], after: dict[str, str | None]
+) -> bool:
+    if not staged & {"booked_date", "value_date"}:
+        return False
+    effective_before = before["value_date"] or before["booked_date"]
+    effective_after = after["value_date"] or after["booked_date"]
+    return effective_after != effective_before
+
+
 def _identity_fields(
     row: LedgerStagedRow, before: dict[str, str | None], after: dict[str, str | None]
 ) -> tuple[StageFieldName, ...]:
@@ -195,13 +205,13 @@ def _identity_fields(
     found: list[StageFieldName] = []
     if "amount" in staged and not _same_amount(after["amount"], before["amount"]):
         found.append("amount")
-    if "description" in staged and after["description"] != before["description"]:
+    # The writer trims a description before deriving the id from it.
+    if "description" in staged and (after["description"] or "").strip() != (before["description"] or "").strip():
         found.append("description")
-    effective_before = before["value_date"] or before["booked_date"]
-    effective_after = after["value_date"] or after["booked_date"]
-    if staged & {"booked_date", "value_date"} and effective_after != effective_before:
+    # ``derive_transaction_id`` hashes the value date when there is one, else the booked date.
+    if _effective_date_moved(staged, before, after):
         found.append("value_date" if "value_date" in staged else "booked_date")
-    if "own_account_id" in staged:
+    if "own_account_id" in staged and (after["own_account_id"] or None) != before["own_account_id"]:
         found.append("own_account_id")
     return tuple(found)
 
@@ -231,15 +241,11 @@ def _tax_set_skip(
         return "transfer"
     if classification is BusinessClassification.PERSONAL:
         return "personal"
-    if classification not in BUSINESS_BEARING_STATES:
-        return "unclassified"
     return None
 
 
-def _routes_of_row(
-    row: LedgerStagedRow, classified: bool
-) -> tuple[tuple[LedgerStagedRoute, ...], WriteRoute | None, list[str], list[str]]:
-    """Route each cell; a clear the classification's own write performs travels with that write."""
+def _classification_carrier(row: LedgerStagedRow, classified: bool) -> tuple[WriteRoute | None, frozenset[str]]:
+    """Find the write that carries the staged classification and the clears it performs."""
     chosen = next((cell for cell in row.cells if cell.field == "business_classification"), None)
     carrier: WriteRoute | None = None
     carried = frozenset[str]()
@@ -248,6 +254,14 @@ def _routes_of_row(
         chosen_state = _classification(chosen.value)
         if carrier is not None and chosen_state is not None:
             carried = fields_cleared_by_classification(chosen_state)
+    return carrier, carried
+
+
+def _routes_of_row(
+    row: LedgerStagedRow, classified: bool
+) -> tuple[tuple[LedgerStagedRoute, ...], WriteRoute | None, list[str], list[str]]:
+    """Route each cell; a clear the classification's own write performs travels with that write."""
+    carrier, carried = _classification_carrier(row, classified)
     routes: list[LedgerStagedRoute] = []
     cannot_clear: list[str] = []
     needs_classification: list[str] = []
@@ -265,70 +279,174 @@ def _routes_of_row(
     return tuple(routes), carrier, cannot_clear, needs_classification
 
 
-def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerStagedRowAnswer:
-    """Answer one stored movement as it would be once its staged work is saved."""
+def _shares_business(classification: BusinessClassification | None) -> bool:
+    """Return whether the classification takes a business share."""
+    return classification is not None and takes_business_share(classification)
+
+
+def _unroutable_blockers(cannot_clear: list[str], needs_classification: list[str]) -> list[LedgerStagedBlocker]:
+    """Block on the cells no write takes: those that cannot be cleared and those that need a classification."""
+    blockers: list[LedgerStagedBlocker] = []
+    if cannot_clear:
+        blockers.append(LedgerStagedBlocker(kind="cannot_clear", fields=tuple(cannot_clear)))
+    if needs_classification:
+        blockers.append(LedgerStagedBlocker(kind="needs_classification", fields=tuple(needs_classification)))
+    return blockers
+
+
+def _share_staged_without_mixed(row: LedgerStagedRow, shares: bool) -> bool:
+    """Return whether a share is staged to a value on a row whose classification takes none."""
+    share_cell = next((cell for cell in row.cells if cell.field == "business_pct"), None)
+    return share_cell is not None and share_cell.value is not None and not shares
+
+
+def _share_findings(
+    row: LedgerStagedRow,
+    classification: BusinessClassification | None,
+    after: dict[str, str | None],
+    routed: set[WriteRoute | None],
+    sends_classification: bool,
+) -> tuple[list[LedgerStagedBlocker], list[LedgerStagedNote]]:
+    """What the staged state says about the business share and the classification a write resends."""
+    staged_fields = {cell.field for cell in row.cells}
+    shares = _shares_business(classification)
+    blockers: list[LedgerStagedBlocker] = []
+    notes: list[LedgerStagedNote] = []
+    if sends_classification and shares:
+        if not _filled(after["business_pct"]):
+            blockers.append(LedgerStagedBlocker(kind="mixed_needs_share"))
+        elif "business_pct" not in staged_fields:
+            notes.append(LedgerStagedNote(kind="sends_current_share", value=after["business_pct"]))
+    if _share_staged_without_mixed(row, shares):
+        blockers.append(LedgerStagedBlocker(kind="share_needs_mixed"))
+    if "bulk" in routed and "business_classification" not in staged_fields:
+        notes.append(LedgerStagedNote(kind="sends_current_classification", value=after["business_classification"]))
+    return blockers, notes
+
+
+def _transfer_with_tax(found: list[str], classification: BusinessClassification | None) -> LedgerStagedBlocker | None:
+    """Block a transfer the writer would refuse; a classification it refuses counts, listed first."""
+    if classification is not None and not takes_classification(TransactionDirection.INTERNAL_TRANSFER, classification):
+        found.insert(0, "business_classification")
+    if not found:
+        return None
+    return LedgerStagedBlocker(kind="transfer_with_tax", fields=tuple(found))
+
+
+def _stored_transfer_tax_fields(row: LedgerStagedRow, transaction: Transaction) -> list[str]:
+    """Name what the writer refuses on a transfer and only the stored row, or staged evidence, carries."""
+    found = [field for field in _TRANSFER_STORED_TAX_FIELDS if getattr(transaction, field) not in (None, ())]
+    if row.m210_staged and "m210_income_classification" not in found:
+        found.append("m210_income_classification")
+    if row.evidence_staged and "purchase_invoice_evidence_id" not in found:
+        found.append("purchase_invoice_evidence_id")
+    return found
+
+
+def _transfer_blocker(
+    row: LedgerStagedRow,
+    transaction: Transaction,
+    classification: BusinessClassification | None,
+    after: dict[str, str | None],
+) -> LedgerStagedBlocker | None:
+    # Any write revalidates the whole row, so a cell far from the tax fields is refused for them too.
+    if not row.cells and not row.m210_staged and not row.evidence_staged:
+        return None
+    found: list[str] = [field for field in TRANSFER_TAX_FIELDS if after.get(field) is not None]
+    found.extend(_stored_transfer_tax_fields(row, transaction))
+    return _transfer_with_tax(found, classification)
+
+
+def _category_on_income(
+    classification: BusinessClassification | None, after: dict[str, str | None], takes_category: bool
+) -> bool:
+    """Return whether a business row that takes no category still holds one."""
+    return (classification in BUSINESS_BEARING_STATES) and bool(after["category_id"]) and not takes_category
+
+
+def _category_settable(
+    transaction: Transaction, classification: BusinessClassification | None, takes_category: bool
+) -> bool:
+    # The classification staged travels in the same write, so the row is judged as it will be saved.
+    return takes_changes(transaction.lifecycle_state) and classification in BUSINESS_BEARING_STATES and takes_category
+
+
+@dataclass(frozen=True, slots=True)
+class _StagedState:
+    """The stored facts, the facts once the staged cells are applied, and what they classify as."""
+
+    before: dict[str, str | None]
+    after: dict[str, str | None]
+    classification: BusinessClassification | None
+    direction: TransactionDirection | None
+    classified: bool
+
+
+def _staged_state(row: LedgerStagedRow, transaction: Transaction) -> _StagedState:
+    """Apply the staged cells to the stored facts of the movement."""
     before = _stored_facts(transaction)
     after = dict(before)
     for cell in row.cells:
         after[cell.field] = cell.value
     classification = _classification(after["business_classification"])
-    direction = _direction(after["direction"])
-    classified = classification is not None and is_classified(classification)
-    has_evidence = transaction.purchase_invoice_evidence_id is not None or row.evidence_staged
-    takes_category = direction is not None and takes_expense_category(direction, has_purchase_evidence=has_evidence)
+    return _StagedState(
+        before=before,
+        after=after,
+        classification=classification,
+        direction=_direction(after["direction"]),
+        classified=classification is not None and is_classified(classification),
+    )
 
-    routes, _, cannot_clear, needs_classification = _routes_of_row(row, classified)
-    if row.m210_staged and not classified:
+
+def _row_findings(
+    row: LedgerStagedRow,
+    transaction: Transaction,
+    state: _StagedState,
+    routes: tuple[LedgerStagedRoute, ...],
+    cannot_clear: list[str],
+    needs_classification: list[str],
+) -> tuple[list[LedgerStagedBlocker], list[LedgerStagedNote], tuple[StageFieldName, ...]]:
+    """Gather what the staged state of the row would refuse, note, and change about its identity."""
+    if row.m210_staged and not state.classified:
         needs_classification.append("m210_income_classification")
-    blockers: list[LedgerStagedBlocker] = []
-    notes: list[LedgerStagedNote] = []
-    if cannot_clear:
-        blockers.append(LedgerStagedBlocker(kind="cannot_clear", fields=tuple(cannot_clear)))
-    if needs_classification:
-        blockers.append(LedgerStagedBlocker(kind="needs_classification", fields=tuple(needs_classification)))
+    # Blockers keep this order: unroutable cells, the share, then a transfer.
+    blockers = _unroutable_blockers(cannot_clear, needs_classification)
 
-    staged_fields = {cell.field for cell in row.cells}
-    routed = {route.route for route in routes}
-    sends_classification = bool(routed & {"bulk", "classify"}) or (row.m210_staged and classified)
-    if sends_classification and classification is not None and takes_business_share(classification):
-        if not _filled(after["business_pct"]):
-            blockers.append(LedgerStagedBlocker(kind="mixed_needs_share"))
-        elif "business_pct" not in staged_fields:
-            notes.append(LedgerStagedNote(kind="sends_current_share", value=after["business_pct"]))
-    share_cell = next((cell for cell in row.cells if cell.field == "business_pct"), None)
-    if (
-        share_cell is not None
-        and share_cell.value is not None
-        and not (classification is not None and takes_business_share(classification))
-    ):
-        blockers.append(LedgerStagedBlocker(kind="share_needs_mixed"))
-    if "bulk" in routed and "business_classification" not in staged_fields:
-        notes.append(LedgerStagedNote(kind="sends_current_classification", value=after["business_classification"]))
+    # A classification write resends the share, so a missing one refuses the whole row.
+    routed: set[WriteRoute | None] = {route.route for route in routes}
+    sends_classification = bool(routed & {"bulk", "classify"}) or (row.m210_staged and state.classified)
+    share_blockers, notes = _share_findings(row, state.classification, state.after, routed, sends_classification)
+    blockers.extend(share_blockers)
 
-    transfer = direction is TransactionDirection.INTERNAL_TRANSFER
-    if transfer and staged_fields & (_CLASSIFYING_FIELDS | {"direction"}):
-        found: list[str] = [field for field in TRANSFER_TAX_FIELDS if after.get(field) is not None]
-        if classification in BUSINESS_BEARING_STATES:
-            found.insert(0, "business_classification")
-        if found:
-            blockers.append(LedgerStagedBlocker(kind="transfer_with_tax", fields=tuple(found)))
+    # Notes keep the order of the share notes, then the new identity.
+    transfer = state.direction is TransactionDirection.INTERNAL_TRANSFER
+    transfer_blocker = _transfer_blocker(row, transaction, state.classification, state.after) if transfer else None
+    if transfer_blocker is not None:
+        blockers.append(transfer_blocker)
 
-    identity = _identity_fields(row, before, after)
+    identity = _identity_fields(row, state.before, state.after)
     if identity:
         notes.append(LedgerStagedNote(kind="new_identity", fields=identity))
-    # A category is set on what the row is now, not on a classification still staged.
-    settable = (
-        transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and transaction.business_classification in BUSINESS_BEARING_STATES
-        and takes_category
-    )
+    return blockers, notes, identity
+
+
+def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerStagedRowAnswer:
+    """Answer one stored movement as it would be once its staged work is saved."""
+    state = _staged_state(row, transaction)
+    classification = state.classification
+    has_evidence = transaction.purchase_invoice_evidence_id is not None or row.evidence_staged
+    direction = state.direction
+    takes_category = direction is not None and takes_expense_category(direction, has_purchase_evidence=has_evidence)
+
+    routes, _, cannot_clear, needs_classification = _routes_of_row(row, state.classified)
+    blockers, notes, identity = _row_findings(row, transaction, state, routes, cannot_clear, needs_classification)
     return LedgerStagedRowAnswer(
         transaction_id=row.transaction_id,
         found=True,
-        classified=classified,
+        classified=state.classified,
         takes_expense_category=takes_category,
-        takes_share=classification is not None and takes_business_share(classification),
-        category_settable=settable,
+        takes_share=_shares_business(classification),
+        category_settable=_category_settable(transaction, classification, takes_category),
         takes_changes=takes_changes(transaction.lifecycle_state),
         takes_invoice=takes_invoice(transaction.direction),
         evidence_advised=advises_purchase_evidence(
@@ -338,17 +456,38 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
             has_evidence=transaction.purchase_invoice_evidence_id is not None,
         ),
         lifecycle_actions=lifecycle_actions_taken(transaction.lifecycle_state, transaction.business_classification),
-        category_on_income=(classification in BUSINESS_BEARING_STATES)
-        and bool(after["category_id"])
-        and not takes_category,
-        tax_set_skip=_tax_set_skip(direction, classification),
-        transfer_locked_fields=TRANSFER_LOCKED_FIELDS if transfer else (),
+        category_on_income=_category_on_income(classification, state.after, takes_category),
+        tax_set_skip=_tax_set_skip(state.direction, classification),
+        transfer_locked_fields=TRANSFER_LOCKED_FIELDS
+        if state.direction is TransactionDirection.INTERNAL_TRANSFER
+        else (),
         classifying_fields=tuple(cell.field for cell in row.cells if cell.field in _CLASSIFYING_FIELDS),
         identity_fields=identity,
         routes=routes,
         blockers=tuple(blockers),
         notes=tuple(notes),
     )
+
+
+def _draft_share_blockers(
+    fields: dict[str, str | None], classification: BusinessClassification | None
+) -> list[LedgerStagedBlocker]:
+    """Block a draft whose business share and classification disagree."""
+    share_bearing = _shares_business(classification)
+    blockers: list[LedgerStagedBlocker] = []
+    if share_bearing and not _filled(fields.get("business_pct")):
+        blockers.append(LedgerStagedBlocker(kind="mixed_needs_share"))
+    if not share_bearing and _filled(fields.get("business_pct")):
+        blockers.append(LedgerStagedBlocker(kind="share_needs_mixed"))
+    return blockers
+
+
+def _draft_transfer_blocker(
+    fields: dict[str, str | None], classification: BusinessClassification | None
+) -> LedgerStagedBlocker | None:
+    """Block a draft transfer that names tax fields."""
+    found = [field for field in _DRAFT_TRANSFER_TAX_FIELDS if _filled(fields.get(field))]
+    return _transfer_with_tax(found, classification)
 
 
 def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
@@ -359,27 +498,22 @@ def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
     if missing:
         blockers.append(LedgerStagedBlocker(kind="draft_incomplete", fields=missing))
     classification = _classification(fields.get("business_classification"))
-    share_bearing = classification is not None and takes_business_share(classification)
-    if share_bearing and not _filled(fields.get("business_pct")):
-        blockers.append(LedgerStagedBlocker(kind="mixed_needs_share"))
-    if not share_bearing and _filled(fields.get("business_pct")):
-        blockers.append(LedgerStagedBlocker(kind="share_needs_mixed"))
+    blockers.extend(_draft_share_blockers(fields, classification))
     if _direction(fields.get("direction")) is TransactionDirection.INTERNAL_TRANSFER:
-        found: list[str] = [field for field in _DRAFT_TRANSFER_TAX_FIELDS if _filled(fields.get(field))]
-        if classification in BUSINESS_BEARING_STATES:
-            found.insert(0, "business_classification")
-        if found:
-            blockers.append(LedgerStagedBlocker(kind="transfer_with_tax", fields=tuple(found)))
+        transfer_blocker = _draft_transfer_blocker(fields, classification)
+        if transfer_blocker is not None:
+            blockers.append(transfer_blocker)
     return LedgerStagedDraftAnswer(key=draft.key, blockers=tuple(blockers))
 
 
 def _category_fit(category: str, *, operation: PinnedAuthorityOperation) -> LedgerStagedCategoryFit:
-    """Business takes any spending category; Mixed only one a share applies to."""
-    known = {str(item) for item in resolve_spending_category_catalogue(authority=operation).categories}
-    eligible = {str(item) for item in eligible_usage_ratio_categories()}
-    return LedgerStagedCategoryFit(
-        category=category, business=category in known, mixed=category in known and category in eligible
-    )
+    """The writer takes any spending category the registry declares on a Business or Mixed row.
+
+    What a category is worth on a Mixed row is the aggregation's answer, and the
+    readiness check holds one without a usage ratio.
+    """
+    known = category in {str(item) for item in resolve_spending_category_catalogue(authority=operation).categories}
+    return LedgerStagedCategoryFit(category=category, business=known, mixed=known)
 
 
 def request_digest(request: LedgerStagedCheckRequest) -> str:

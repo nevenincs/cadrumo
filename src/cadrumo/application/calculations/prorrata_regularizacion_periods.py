@@ -254,21 +254,12 @@ def _partitioned_totals(
     )
 
 
-def _operator_declared_totals(
+def _declared_expected_deduction(
     period: Period,
     declarations: tuple[ProrrataOperatorGrossDeclaration, ...],
-    *,
-    filed: Mapping[CasillaId, Decimal],
-    casilla_bindings: Mapping[CasillaId, BindingId],
     apportionment: IvaLedgerProrrataApportionment,
-) -> RegularisedPeriodTotals | RegularisedPeriodRefusal:
-    """Take one hand-entered liquidation's gross base from the operator's declarations.
-
-    The filed deducible boxes must still be the declared gross cuotas at the
-    provisional percentages the period deducted under. Each filed box is
-    rounded to cents on its own, so the filed total may differ from the
-    unrounded deduction by at most half a cent per non-zero box.
-    """
+) -> Decimal | RegularisedPeriodRefusal:
+    """Apply each declared gross cuota's provisional percentage, refusing an unknown sector."""
     sector_percentages = {sector.sector_id: sector.percentage for sector in apportionment.sector_apportionments}
     expected = Decimal("0")
     for declaration in declarations:
@@ -284,6 +275,27 @@ def _operator_declared_totals(
                 )
             )
         expected += declaration.gross_cuota * percentage / HUNDRED
+    return expected
+
+
+def _operator_declared_totals(
+    period: Period,
+    declarations: tuple[ProrrataOperatorGrossDeclaration, ...],
+    *,
+    filed: Mapping[CasillaId, Decimal],
+    casilla_bindings: Mapping[CasillaId, BindingId],
+    apportionment: IvaLedgerProrrataApportionment,
+) -> RegularisedPeriodTotals | RegularisedPeriodRefusal:
+    """Take one hand-entered liquidation's gross base from the operator's declarations.
+
+    The filed deducible boxes must still be the declared gross cuotas at the
+    provisional percentages the period deducted under. Each filed box is
+    rounded to cents on its own, so the filed total may differ from the
+    unrounded deduction by at most half a cent per non-zero box.
+    """
+    expected = _declared_expected_deduction(period, declarations, apportionment)
+    if isinstance(expected, RegularisedPeriodRefusal):
+        return expected
     filed_total = sum((filed[casilla_id] for casilla_id in casilla_bindings), Decimal("0"))
     filed_boxes = sum(1 for casilla_id in casilla_bindings if filed[casilla_id] != 0)
     if abs(filed_total - expected) > _HALF_CENT * filed_boxes:
@@ -306,6 +318,52 @@ def _operator_declared_totals(
         and any(declaration.sector_id is None for declaration in declarations),
         operator_declared=declarations,
     )
+
+
+def _missing_cuotas_refusal(
+    period: Period,
+    filed: Mapping[CasillaId, Decimal],
+    casilla_bindings: Mapping[CasillaId, BindingId],
+) -> RegularisedPeriodRefusal | None:
+    """Name the deducible boxes the filed observation does not state."""
+    absent = tuple(casilla_id for casilla_id in casilla_bindings if casilla_id not in filed)
+    if not absent:
+        return None
+    return RegularisedPeriodRefusal(
+        tr(
+            "application.calculations.prorrata_regularizacion.unresolved.source_period_cuotas_missing",
+            period=period.registry_token,
+            casillas=", ".join(absent),
+        )
+    )
+
+
+def _empty_ledger_totals(
+    period: Period,
+    declarations: tuple[ProrrataOperatorGrossDeclaration, ...],
+    *,
+    filed: Mapping[CasillaId, Decimal],
+    casilla_bindings: Mapping[CasillaId, BindingId],
+    apportionment: IvaLedgerProrrataApportionment,
+    filed_total: Decimal,
+) -> RegularisedPeriodTotals | RegularisedPeriodRefusal:
+    """Take a liquidation whose ledger holds no deducible input from the operator's declarations."""
+    if declarations:
+        return _operator_declared_totals(
+            period,
+            declarations,
+            filed=filed,
+            casilla_bindings=casilla_bindings,
+            apportionment=apportionment,
+        )
+    if filed_total != 0:
+        return RegularisedPeriodRefusal(
+            tr(
+                "application.calculations.prorrata_regularizacion.unresolved.source_period_gross_unavailable",
+                period=period.registry_token,
+            )
+        )
+    return _partitioned_totals((), filed_total=filed_total, casilla_ids=tuple(casilla_bindings), sectorized=False)
 
 
 def _ledger_operator_disagreement(
@@ -502,15 +560,9 @@ class RegularisedPeriodLedger:
         )
         filed = payload.observation.casilla_values
         casilla_bindings = _deducible_casilla_bindings(period_revision)
-        absent = tuple(casilla_id for casilla_id in casilla_bindings if casilla_id not in filed)
-        if absent:
-            return RegularisedPeriodRefusal(
-                tr(
-                    "application.calculations.prorrata_regularizacion.unresolved.source_period_cuotas_missing",
-                    period=period.registry_token,
-                    casillas=", ".join(absent),
-                )
-            )
+        missing = _missing_cuotas_refusal(period, filed, casilla_bindings)
+        if missing is not None:
+            return missing
         try:
             aggregation = self._aggregate(context, period)
             apportionment = _provisional_apportionment(
@@ -533,23 +585,13 @@ class RegularisedPeriodLedger:
             )
         filed_total = sum((filed[casilla_id] for casilla_id in casilla_bindings), Decimal("0"))
         if not _has_deducible_input(aggregation.observations):
-            if declarations:
-                return _operator_declared_totals(
-                    period,
-                    declarations,
-                    filed=filed,
-                    casilla_bindings=casilla_bindings,
-                    apportionment=apportionment,
-                )
-            if filed_total != 0:
-                return RegularisedPeriodRefusal(
-                    tr(
-                        "application.calculations.prorrata_regularizacion.unresolved.source_period_gross_unavailable",
-                        period=period.registry_token,
-                    )
-                )
-            return _partitioned_totals(
-                (), filed_total=filed_total, casilla_ids=tuple(casilla_bindings), sectorized=False
+            return _empty_ledger_totals(
+                period,
+                declarations,
+                filed=filed,
+                casilla_bindings=casilla_bindings,
+                apportionment=apportionment,
+                filed_total=filed_total,
             )
         disagreement = _ledger_operator_disagreement(period, partitions, declarations)
         if disagreement is not None:

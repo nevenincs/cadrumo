@@ -6,10 +6,11 @@ After the source mesh is merged this step reads the pinned revision's capped
 bindings, finds each one that produced a value in any channel, and emits one
 ``advisory_binding_value`` diagnostic per box the value reaches. The diagnostic
 carries the binding, the box, the cap's reason and provisions, the amount and
-the resolver's stated outcome. A proven zero withholds nothing and is held with
-the calculation's other notes rather than persisted; every other value,
-including one whose resolver stated no outcome, persists with the revision and
-withholds verify, export and local filing through the calculation-note gate.
+the resolver's stated outcome. Every such value persists with the revision and
+its stated outcome. A proven zero withholds nothing, and the reopened form still
+says the zero was proven; every other value, including one whose resolver
+stated no outcome, withholds verify, export and local filing through the
+calculation-note gate.
 """
 
 from __future__ import annotations
@@ -19,7 +20,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingValueOutcome
-from ...domain.calculations.registry.binding_grade_cap_reach import CappedBindingReach, capped_binding_reach
+from ...domain.calculations.registry.binding_grade_cap_reach import (
+    CappedBindingReach,
+    capped_binding_reach,
+    snapshot_reach_date,
+)
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.modelos.calculation_revision_sources import (
     GRADE_CAP_NOTE_SENTENCES,
@@ -108,7 +113,9 @@ def collect_advisory_binding_value_diagnostics(
     A stated outcome is carried only beside a decimal value, the one channel a
     resolver states it for; any other channel's capped value withholds.
     """
-    reach_map = capped_binding_reach(snapshot.revision, authority=operation)
+    reach_map = capped_binding_reach(
+        snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+    )
     if not reach_map:
         return ()
     bindings = revision_bindings_by_id(snapshot.revision)

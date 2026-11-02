@@ -14,7 +14,7 @@ whose close is unknown is kept apart from the dated windows.
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Generator, Mapping
+from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority_artifact import AuthorityGenerationPin
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ..calculations.registry.schema_live_verification import ProfilePredicateDefinition
-    from ..calculations.registry.temporal import RevisionSelectionMetadata
+    from ..calculations.registry.temporal import ModeloRevisionDirectory, RevisionSelectionMetadata
 
     type DeadlineWindowProjection = tuple[str, RevisionSelectionMetadata, DeadlineWindowDefinition]
     """One projected window: modelo code, its owning revision's selection metadata, and the window."""
@@ -205,6 +205,58 @@ def indexed_deadline_window_year(
     return projected
 
 
+def _window_owner(
+    directory: ModeloRevisionDirectory,
+    window: DeadlineWindowDefinition,
+) -> RevisionSelectionMetadata | None:
+    """Return the revision that owns an authored window's coordinate, or ``None`` when none does.
+
+    The window a past year's revision authors is a dated fact of law whether or
+    not the product files that year, so a year the envelope gates is answered by
+    the design the law applied to it. It still selects only an exact coordinate.
+    """
+    from ..calculations.registry.errors import NoRevisionForPeriodError
+    from ..calculations.registry.temporal import select_authored_revision_metadata, select_revision_metadata
+
+    support = directory.supported_filing_years
+    if support is None or support.admits_filing_year(window.filing_year):
+        return select_revision_metadata(
+            directory,
+            filing_year=window.filing_year,
+            period=window.period.registry_token,
+        )
+    try:
+        return select_authored_revision_metadata(
+            directory,
+            filing_year=window.filing_year,
+            period=window.period.registry_token,
+        )
+    except NoRevisionForPeriodError:
+        return None
+
+
+def _owned_directory_windows(
+    directory: ModeloRevisionDirectory,
+    year: int,
+) -> Iterator[tuple[RevisionSelectionMetadata, DeadlineWindowDefinition]]:
+    """Yield, lazily, each ``year`` window whose declaring revision the selector owns."""
+    for metadata in directory.revisions:
+        for metadata_window in metadata.deadline_windows:
+            if metadata_window.filing_year != year:
+                continue
+            selected = _window_owner(directory, metadata_window)
+            if selected is not None and selected.id == metadata.id:
+                yield metadata, metadata_window
+
+
+def _authored_period_tokens(projected: list[DeadlineWindowProjection]) -> dict[str, frozenset[str]]:
+    """Map each modelo to the period tokens its authored windows cover."""
+    authored: dict[str, set[str]] = {}
+    for modelo_id, _metadata, window in projected:
+        authored.setdefault(modelo_id, set()).add(window.period.registry_token)
+    return {modelo_id: frozenset(tokens) for modelo_id, tokens in authored.items()}
+
+
 def _project_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
@@ -221,42 +273,26 @@ def _project_deadline_windows(
     then projected from the governed filing-window rule; an authored window
     always wins because its coordinate is never projected.
     """
-    from ..calculations.registry.temporal import select_revision_metadata
-
     projected: list[DeadlineWindowProjection] = []
     for modelo_id in operation.modelo_ids():
-        directory = operation.modelo_directory(modelo_id)
-        for metadata in directory.revisions:
-            for metadata_window in metadata.deadline_windows:
-                if metadata_window.filing_year != year:
-                    continue
-                selected = select_revision_metadata(
-                    directory,
-                    filing_year=metadata_window.filing_year,
-                    period=metadata_window.period.registry_token,
+        for metadata, metadata_window in _owned_directory_windows(operation.modelo_directory(modelo_id), year):
+            if metadata.deadline_windows.count(metadata_window) != 1:
+                raise ScheduleComputationError(
+                    translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                    context={
+                        "registry_stage": "deadline_window_projection",
+                        "modelo": modelo_id,
+                        "revision": metadata.id,
+                        "filing_year": year,
+                    },
                 )
-                if selected.id != metadata.id:
-                    continue
-                if metadata.deadline_windows.count(metadata_window) != 1:
-                    raise ScheduleComputationError(
-                        translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
-                        context={
-                            "registry_stage": "deadline_window_projection",
-                            "modelo": modelo_id,
-                            "revision": metadata.id,
-                            "filing_year": year,
-                        },
-                    )
-                projected.append((modelo_id, metadata, metadata_window))
-    authored: dict[str, set[str]] = {}
-    for modelo_id, _metadata, window in projected:
-        authored.setdefault(modelo_id, set()).add(window.period.registry_token)
+            projected.append((modelo_id, metadata, metadata_window))
     rule_projected: dict[str, ProjectedFilingWindow] = {}
     close_unknown: list[CloseUnknownWindowProjection] = []
     for row in project_unauthored_filing_windows(
         operation,
         year,
-        authored={modelo_id: frozenset(tokens) for modelo_id, tokens in authored.items()},
+        authored=_authored_period_tokens(projected),
     ):
         if isinstance(row.resolution, ProjectedFilingWindow):
             projected.append((row.modelo, row.revision, row.resolution.window))
@@ -341,26 +377,16 @@ class DeadlineEngine:
         """
         reference_today = today or today_madrid()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
-        obligations: list[ModeloDeadline] = []
-        close_unknown_obligations: list[CloseUnknownModeloDeadline] = []
         with self._operation_context() as operation:
             year_index = self._deadline_window_year(year, operation=operation)
             windows = year_index.dated
-            for modelo, revision, window in windows:
-                obligation = self._obligation_for_window(
-                    profile=profile,
-                    modelo=modelo,
-                    revision=revision,
-                    window=window,
-                    reference_today=reference_today,
-                    operation=operation,
-                )
-                if obligation is not None:
-                    obligations.append(obligation)
-            for _modelo, revision, projection in year_index.close_unknown:
-                close_unknown = _close_unknown_obligation(profile=profile, revision=revision, projection=projection)
-                if close_unknown is not None:
-                    close_unknown_obligations.append(close_unknown)
+            obligations = self._obligations_for_windows(
+                profile=profile,
+                windows=windows,
+                reference_today=reference_today,
+                operation=operation,
+            )
+            close_unknown_obligations = _close_unknown_obligations(profile, year_index.close_unknown)
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period.filing_year, o.period.registry_token))
         if not obligations and not close_unknown_obligations and not windows and not year_index.close_unknown:
             raise NoDeadlineWindowsError(
@@ -378,6 +404,29 @@ class DeadlineEngine:
             close_unknown_obligations=tuple(close_unknown_obligations),
             generated_at=now(),
         )
+
+    def _obligations_for_windows(
+        self,
+        *,
+        profile: TaxpayerProfile,
+        windows: tuple[DeadlineWindowProjection, ...],
+        reference_today: date,
+        operation: PinnedAuthorityOperation,
+    ) -> list[ModeloDeadline]:
+        """Project every applicable dated window, in window order."""
+        obligations: list[ModeloDeadline] = []
+        for modelo, revision, window in windows:
+            obligation = self._obligation_for_window(
+                profile=profile,
+                modelo=modelo,
+                revision=revision,
+                window=window,
+                reference_today=reference_today,
+                operation=operation,
+            )
+            if obligation is not None:
+                obligations.append(obligation)
+        return obligations
 
     def _obligation_for_window(
         self,
@@ -670,6 +719,19 @@ def _overdue_recovery_or_none(
             exc,
         )
         return None
+
+
+def _close_unknown_obligations(
+    profile: TaxpayerProfile,
+    close_unknown: tuple[CloseUnknownWindowProjection, ...],
+) -> list[CloseUnknownModeloDeadline]:
+    """Project every applicable close-unknown window, in index order."""
+    obligations: list[CloseUnknownModeloDeadline] = []
+    for _modelo, revision, projection in close_unknown:
+        obligation = _close_unknown_obligation(profile=profile, revision=revision, projection=projection)
+        if obligation is not None:
+            obligations.append(obligation)
+    return obligations
 
 
 def _close_unknown_obligation(

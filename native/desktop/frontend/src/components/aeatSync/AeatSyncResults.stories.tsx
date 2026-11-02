@@ -5,7 +5,10 @@ import {
   aeatSyncResultsFixture,
   type AeatSyncResultsMode,
 } from "@/dev/aeatSyncResultsFixture";
-import type { AeatSyncResultsPort } from "../../shell/aeatSyncResults";
+import type {
+  AeatSyncResultsPort,
+  BorradorImportResult,
+} from "../../shell/aeatSyncResults";
 import { Results } from "./Results";
 
 // The results of reading from AEAT: one summary for each kind of data, with
@@ -16,7 +19,7 @@ import { Results } from "./Results";
 type Args = {
   mode: AeatSyncResultsMode | "loading";
   picked?: "file" | "cancelled";
-  imported?: "imported" | "nothing_found" | "failed";
+  imported?: BorradorImportResult["outcome"];
 };
 
 const noop = () => undefined;
@@ -83,7 +86,7 @@ const importPdf: NonNullable<Story["play"]> = async ({ canvasElement }) => {
 
 /** A Borrador PDF was imported. */
 export const BorradorImported: Story = {
-  args: { mode: "mixed", picked: "file", imported: "imported" },
+  args: { mode: "mixed", picked: "file", imported: "captured" },
   play: importPdf,
 };
 /** The chosen file held no Borrador. */

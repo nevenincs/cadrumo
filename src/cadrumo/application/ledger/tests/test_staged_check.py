@@ -227,7 +227,7 @@ def test_a_transfer_is_held_back_for_each_tax_field_it_carries() -> None:
     plain = check_stored_row(_row(("direction", "INTERNAL_TRANSFER")), _stored())
     assert [blocker.kind for blocker in plain.blockers] == []
     assert "category_id" in plain.transfer_locked_fields
-    assert "business_pct" not in plain.transfer_locked_fields
+    assert "business_pct" in plain.transfer_locked_fields
     assert plain.tax_set_skip == "transfer"
 
 

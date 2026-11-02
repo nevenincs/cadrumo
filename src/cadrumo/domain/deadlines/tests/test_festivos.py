@@ -24,6 +24,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_effective_to
@@ -436,8 +437,8 @@ def test_deadline_shift_is_frozen_and_immutable() -> None:
             shift.shifted = True
 
 
-def test_holiday_calendar_year_must_be_in_supported_range() -> None:
-    out_of_range_year: int = 1999
+def test_holiday_calendar_year_must_be_written_with_four_digits() -> None:
+    out_of_range_year: int = FOUR_DIGIT_YEAR_FIRST - 1
     with pytest.raises(ValidationError, match=r"year|greater than"):
         HolidayCalendar(
             year=out_of_range_year,

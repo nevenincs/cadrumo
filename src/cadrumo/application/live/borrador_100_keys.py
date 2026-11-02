@@ -25,6 +25,7 @@ from .errors import LiveApplicationInputError
 __all__ = [
     "BorradorCasillaProjection",
     "borrador_admitted_bindings",
+    "borrador_keys_not_admitted",
     "project_printed_casillas",
     "require_borrador_keys_admitted",
 ]
@@ -43,6 +44,29 @@ def borrador_admitted_bindings(revision: ModeloRevision) -> dict[BindingId, Bind
     return {binding.id: binding for binding in revision.bindings if binding.aeat_prefilled is True}
 
 
+def _sort_printed_by_owner(
+    revision: ModeloRevision,
+    admitted: Mapping[BindingId, BindingDefinition],
+    printed: Mapping[CasillaId, Decimal | str],
+) -> tuple[dict[BindingId, list[CasillaId]], list[CasillaId], list[CasillaId]]:
+    """Sort each printed casilla, in order, to its one owner, to unowned, or to ambiguous."""
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    owned_by: dict[BindingId, list[CasillaId]] = {}
+    unowned: list[CasillaId] = []
+    ambiguous: list[CasillaId] = []
+    for casilla_id in sorted(printed):
+        casilla = casillas.get(casilla_id)
+        bound = () if casilla is None else bound_casilla_binding_ids(casilla)
+        owners = [binding_id for binding_id in bound if binding_id in admitted]
+        if not owners:
+            unowned.append(casilla_id)
+        elif len(owners) > 1:
+            ambiguous.append(casilla_id)
+        else:
+            owned_by.setdefault(owners[0], []).append(casilla_id)
+    return owned_by, unowned, ambiguous
+
+
 def project_printed_casillas(
     revision: ModeloRevision,
     printed: Mapping[CasillaId, Decimal | str],
@@ -54,19 +78,7 @@ def project_printed_casillas(
             admitted owner, or one admitted binding owns several printed casillas.
     """
     admitted = borrador_admitted_bindings(revision)
-    casillas = {casilla.id: casilla for casilla in revision.casillas}
-    owned_by: dict[BindingId, list[CasillaId]] = {}
-    unowned: list[CasillaId] = []
-    ambiguous: list[CasillaId] = []
-    for casilla_id in sorted(printed):
-        casilla = casillas.get(casilla_id)
-        owners = () if casilla is None else tuple(b for b in bound_casilla_binding_ids(casilla) if b in admitted)
-        if not owners:
-            unowned.append(casilla_id)
-        elif len(owners) > 1:
-            ambiguous.append(casilla_id)
-        else:
-            owned_by.setdefault(owners[0], []).append(casilla_id)
+    owned_by, unowned, ambiguous = _sort_printed_by_owner(revision, admitted, printed)
     ambiguous.extend(casilla_id for owned in owned_by.values() if len(owned) > 1 for casilla_id in owned)
     if ambiguous:
         raise LiveApplicationInputError(
@@ -79,15 +91,20 @@ def project_printed_casillas(
     )
 
 
+def borrador_keys_not_admitted(keys: Iterable[BindingId], revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Return, sorted, the keys the pinned revision does not admit to a borrador snapshot."""
+    admitted = borrador_admitted_bindings(revision)
+    return tuple(sorted(key for key in keys if key not in admitted))
+
+
 def require_borrador_keys_admitted(keys: Iterable[BindingId], revision: ModeloRevision) -> None:
-    """Refuse stored keys the pinned revision does not admit to a borrador snapshot.
+    """Refuse keys the pinned revision does not admit to a borrador snapshot.
 
     This refuses a free casilla key and a binding id the revision no longer
     declares alike. No stored key is rewritten: such a snapshot is unusable and
     the document has to be imported again.
     """
-    admitted = borrador_admitted_bindings(revision)
-    refused = sorted(key for key in keys if key not in admitted)
+    refused = borrador_keys_not_admitted(keys, revision)
     if refused:
         raise LiveApplicationInputError(
             translated_message="application.live.borrador.errors.binding_keys_not_admitted",

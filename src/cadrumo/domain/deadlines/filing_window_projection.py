@@ -36,7 +36,6 @@ from typing import TYPE_CHECKING, Annotated, Final, Literal
 
 from pydantic import BaseModel, Field
 
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, PeriodError
 from ..calculations.registry.errors import (
@@ -246,7 +245,7 @@ class FilingWindowRuleEvidence(BaseModel):
         )
 
 
-def _resolve_mapping_fact(operation: PinnedAuthorityOperation, query: MappingFactQuery) -> ResolvedMappingFact | None:
+def resolve_mapping_fact(operation: PinnedAuthorityOperation, query: MappingFactQuery) -> ResolvedMappingFact | None:
     try:
         resolved = operation.resolve_governed_fact(query)
     except GovernedFactNotApplicableError:
@@ -266,11 +265,14 @@ def resolve_filing_window_clause(
 
     The coordinate is the end of the period on the filing-period axis, the same
     coordinate every period-keyed deadline clause is selected by. A filing year
-    outside the application's filing-year window addresses no clause.
+    the support envelope gates addresses no clause, and neither does a period
+    whose window would run past the last date the calendar can write.
     """
-    if not period.has_date_span() or not FILING_YEAR_MIN <= period.filing_year <= FILING_YEAR_MAX:
+    if not period.has_date_span() or not operation.supported_filing_years().admits_coordinate(period.filing_year):
         return None
-    resolved = _resolve_mapping_fact(
+    if period.end_date.year >= date.max.year:
+        return None
+    resolved = resolve_mapping_fact(
         operation,
         MappingFactQuery(
             fact_id=FILING_WINDOW_CLAUSE_FACT_ID,
@@ -472,7 +474,7 @@ def _project_scheduled_window(
     period_end = period.end_date
     opens_on = clause.opens_on(period_end)
     nominal = clause.nominal_close(period_end)
-    shift_fact = _resolve_mapping_fact(
+    shift_fact = resolve_mapping_fact(
         operation,
         MappingFactQuery(
             fact_id=FILING_CLOSE_SHIFT_FACT_ID, date_axis=DateAxis.SUBMISSION_DATE, effective_date=nominal
@@ -598,6 +600,56 @@ def _clause_modelos(operation: PinnedAuthorityOperation) -> tuple[str, ...]:
     )
 
 
+def _unauthored_row(
+    operation: PinnedAuthorityOperation,
+    *,
+    modelo: str,
+    filing_year: int,
+    token: str,
+) -> ProjectedWindowRow | None:
+    """Project one scheduled coordinate into a row, or ``None`` when it cannot be projected."""
+    try:
+        period = Period.from_year_and_code(filing_year, token)
+    except PeriodError:
+        return None
+    if not period.has_date_span():
+        return None
+    scheduled = _scheduled_coordinate(operation, modelo=modelo, filing_year=filing_year, token=token)
+    if scheduled is None:
+        return None
+    metadata, schedule = scheduled
+    resolution = _project_scheduled_window(operation, modelo=modelo, period=period, schedule=schedule, calendars=())
+    if resolution is None:
+        return None
+    return ProjectedWindowRow(modelo=modelo, revision=metadata, resolution=resolution)
+
+
+def _unauthored_modelo_rows(
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    filing_year: int,
+    covered: frozenset[str],
+) -> list[ProjectedWindowRow]:
+    """Project one modelo's scheduled coordinates that no authored window covers."""
+    directory = operation.modelo_directory(modelo)
+    tokens = sorted(
+        {
+            token
+            for metadata in directory.revisions
+            for schedule in metadata.filing_schedules
+            for token in schedule.periods
+        },
+    )
+    rows: list[ProjectedWindowRow] = []
+    for token in tokens:
+        if token in covered:
+            continue
+        row = _unauthored_row(operation, modelo=modelo, filing_year=filing_year, token=token)
+        if row is not None:
+            rows.append(row)
+    return rows
+
+
 def project_unauthored_filing_windows(
     operation: PinnedAuthorityOperation,
     filing_year: int,
@@ -617,34 +669,7 @@ def project_unauthored_filing_windows(
     for modelo in _clause_modelos(operation):
         if modelo not in registered:
             continue
-        directory = operation.modelo_directory(modelo)
-        tokens = sorted(
-            {
-                token
-                for metadata in directory.revisions
-                for schedule in metadata.filing_schedules
-                for token in schedule.periods
-            },
-        )
-        covered = authored.get(modelo, frozenset())
-        for token in tokens:
-            if token in covered:
-                continue
-            try:
-                period = Period.from_year_and_code(filing_year, token)
-            except PeriodError:
-                continue
-            if not period.has_date_span():
-                continue
-            scheduled = _scheduled_coordinate(operation, modelo=modelo, filing_year=filing_year, token=token)
-            if scheduled is None:
-                continue
-            metadata, schedule = scheduled
-            resolution = _project_scheduled_window(
-                operation, modelo=modelo, period=period, schedule=schedule, calendars=()
-            )
-            if resolution is not None:
-                rows.append(ProjectedWindowRow(modelo=modelo, revision=metadata, resolution=resolution))
+        rows.extend(_unauthored_modelo_rows(operation, modelo, filing_year, authored.get(modelo, frozenset())))
     return tuple(rows)
 
 

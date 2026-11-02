@@ -12,6 +12,7 @@ persistence.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -20,13 +21,12 @@ if TYPE_CHECKING:
 
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.currency.service import CurrencyNormalizationService
-from ...domain.transactions.classification_effects import fields_cleared_by_classification
+from ...domain.transactions.classification_effects import fields_cleared_by_classification, takes_changes
 from ...domain.transactions.classification_origin import (
     CLASSIFICATION_DECISION_FIELDS,
     resolved_classification_origin,
     with_classification_origin,
 )
-from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
@@ -327,7 +327,7 @@ def _manual_update_preconditions(
     transaction_id: str,
     evidence_authority: bool,
 ) -> tuple[tuple[LedgerRemovalBlocker, ...], bool]:
-    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(current.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
             context={
@@ -690,6 +690,11 @@ def _unchanged_write_takes_the_row(
     return _origin_changed(current, restated)
 
 
+def _unless_cleared[T](field: str, value: T, cleared: AbstractSet[str]) -> T | None:
+    """Return ``value``, or nothing when the classification clears ``field``."""
+    return None if field in cleared else value
+
+
 def command_from_patch(
     *,
     bucket_id: str,
@@ -730,16 +735,16 @@ def command_from_patch(
     prorrata_reference = optional_patched(patch, patch_fields, "prorrata_reference", current.prorrata_reference)
     if "business_classification" in patch_fields:
         cleared = fields_cleared_by_classification(business_classification)
-        business_pct = None if "business_pct" in cleared else business_pct
-        usage_ratio_id = None if "usage_ratio_id" in cleared else usage_ratio_id
-        category_id = None if "category_id" in cleared else category_id
-        taxable_base = None if "taxable_base" in cleared else taxable_base
-        iva_rate = None if "iva_rate" in cleared else iva_rate
-        iva_amount = None if "iva_amount" in cleared else iva_amount
-        recargo_amount = None if "recargo_amount" in cleared else recargo_amount
-        irpf_category = None if "irpf_category" in cleared else irpf_category
-        m210_income_classification = None if "m210_income_classification" in cleared else m210_income_classification
-        prorrata_reference = None if "prorrata_reference" in cleared else prorrata_reference
+        business_pct = _unless_cleared("business_pct", business_pct, cleared)
+        usage_ratio_id = _unless_cleared("usage_ratio_id", usage_ratio_id, cleared)
+        category_id = _unless_cleared("category_id", category_id, cleared)
+        taxable_base = _unless_cleared("taxable_base", taxable_base, cleared)
+        iva_rate = _unless_cleared("iva_rate", iva_rate, cleared)
+        iva_amount = _unless_cleared("iva_amount", iva_amount, cleared)
+        recargo_amount = _unless_cleared("recargo_amount", recargo_amount, cleared)
+        irpf_category = _unless_cleared("irpf_category", irpf_category, cleared)
+        m210_income_classification = _unless_cleared("m210_income_classification", m210_income_classification, cleared)
+        prorrata_reference = _unless_cleared("prorrata_reference", prorrata_reference, cleared)
     notes = required_patched(patch, patch_fields, "notes", current.notes)
     attachment_ids = required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     iva_category = optional_patched(patch, patch_fields, "iva_category", current.iva_category)

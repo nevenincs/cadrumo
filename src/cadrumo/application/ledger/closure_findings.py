@@ -51,11 +51,14 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.percentage import fraction_of_percentage
+from ...domain.invoices.figures import retention_findings
 from .invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 
 __all__ = [
     "ROUNDING_ALLOWANCE_PER_TERM",
     "closure_findings",
+    "retention_figures_disagree",
     "within_rounding_allowance",
 ]
 
@@ -124,6 +127,16 @@ def _total_closure_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | Non
     )
 
 
+def retention_figures_disagree(*, rate_points: Decimal, amount: Decimal, base: Decimal) -> bool:
+    """Return whether the invoice itself would refuse these figures together.
+
+    Asks the invoice's own check, so a reading refused at the write is a finding at
+    review, on the same one-cent tolerance. Magnitudes, because a reader keeps a
+    corrective document's negative signs and the invoice holds magnitudes.
+    """
+    return bool(retention_findings(fraction_of_percentage(rate_points), abs(amount), abs(base)))
+
+
 def _cash_closure_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | None:
     """Check ``retencion = base * rate`` for internal consistency.
 
@@ -147,11 +160,14 @@ def _cash_closure_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | None
     if draft.retencion_amount is None or draft.retencion_rate is None or draft.taxable_base is None:
         return None
 
-    expected_retencion = draft.taxable_base * draft.retencion_rate / Decimal("100")
-    difference = draft.retencion_amount - expected_retencion
-    if within_rounding_allowance(difference, term_count=2):
+    if not retention_figures_disagree(
+        rate_points=draft.retencion_rate,
+        amount=draft.retencion_amount,
+        base=draft.taxable_base,
+    ):
         return None
 
+    expected_retencion = draft.taxable_base * draft.retencion_rate / Decimal("100")
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
         field="retencion_amount",

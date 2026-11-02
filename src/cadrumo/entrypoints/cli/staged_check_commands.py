@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 
 from ...application.ledger.staged_check_contracts import (
@@ -41,6 +42,36 @@ def _request(
         raise TransactionValidationError(tr("cli.ledger.staged_check_invalid")) from exc
 
 
+def _is_clean_read(completed: RegisteredOperationCompletion[LedgerStagedCheckResult], profile_id: UUID) -> bool:
+    """Return whether the operation settled as a successful read of this profile with no effect."""
+    return (
+        completed.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        and completed.effect is OperationEffect.NONE
+        and completed.refusal_code is None
+        and completed.projection.profile_id == profile_id
+    )
+
+
+def _report_lines(answer: LedgerStagedCheckResult) -> tuple[str, ...]:
+    return (
+        *(
+            f"{item.transaction_id[:12]}\t{route.field}\t{route.route or route.refused}"
+            for item in answer.rows
+            for route in item.routes
+        ),
+        *(
+            f"{item.transaction_id[:12]}\t{blocker.kind}\t{','.join(blocker.fields)}"
+            for item in answer.rows
+            for blocker in item.blockers
+        ),
+        *(
+            f"{item.key}\t{blocker.kind}\t{','.join(blocker.fields)}"
+            for item in answer.drafts
+            for blocker in item.blockers
+        ),
+    )
+
+
 def staged_check(
     ctx: typer.Context,
     row: tuple[str, ...] = (),
@@ -60,35 +91,14 @@ def staged_check(
         timeout=120,
         allow_refusal_detail=False,
     )
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-        or completed.projection.profile_id != client.profile_id
-    ):
+    if not _is_clean_read(completed, client.profile_id):
         raise invalid_completion_error(completed)
     answer = completed.projection
     emit_envelope(
         ctx,
         command="ledger.staged-check",
         result=LedgerStagedCheckEnvelope.model_validate(answer.model_dump(mode="json", exclude={"profile_id"})),
-        lines=(
-            *(
-                f"{item.transaction_id[:12]}\t{route.field}\t{route.route or route.refused}"
-                for item in answer.rows
-                for route in item.routes
-            ),
-            *(
-                f"{item.transaction_id[:12]}\t{blocker.kind}\t{','.join(blocker.fields)}"
-                for item in answer.rows
-                for blocker in item.blockers
-            ),
-            *(
-                f"{item.key}\t{blocker.kind}\t{','.join(blocker.fields)}"
-                for item in answer.drafts
-                for blocker in item.blockers
-            ),
-        ),
+        lines=_report_lines(answer),
     )
 
 

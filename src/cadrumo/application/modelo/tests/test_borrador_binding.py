@@ -15,6 +15,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
@@ -89,6 +90,9 @@ class _InMemoryBorradorSnapshotRepository:
 
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return tuple(self._snapshots[snapshot_id] for snapshot_id in sorted(self._snapshots))
+
+    def outdated_stored_snapshot_count(self) -> int:
+        return 0
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         trimmed_snapshot_id = snapshot_id.strip()
@@ -451,6 +455,36 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
     }
     expected_fingerprint = f"sha256:{hashlib.sha256(snapshot_id.encode('utf-8')).hexdigest()}"
     assert {item.fingerprint for item in resolution.provenance} == {expected_fingerprint}
+    assert {item.terminal_origin for item in resolution.provenance} == {TerminalOriginClass.AEAT_THIRD_PARTY_DATA}
+
+
+@pytest.mark.parametrize(
+    "stored_key",
+    [
+        pytest.param("casilla.0596", id="free-casilla-key"),
+        pytest.param("renta-retencion-trabajo-retirada", id="binding-the-revision-does-not-declare"),
+    ],
+)
+def test_borrador_resolution_refuses_a_snapshot_keyed_outside_the_revision_without_reading_any_value(
+    snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
+    stored_key: str,
+) -> None:
+    snapshot_id = _save_snapshot(
+        snapshot_repository,
+        {stored_key: Decimal("700.00"), _DECIMAL_BINDING: Decimal("125.50")},
+    )
+
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
+        resolve_modelo_100_borrador_bindings(
+            _command(borrador_snapshot_id=snapshot_id),
+            registry_snapshot=_modelo_100_registry_snapshot(),
+            snapshot_repository=snapshot_repository,
+            operation=authority_operation,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.forbidden_bindings"
+    assert exc_info.value.context == {"bindings": [stored_key]}
 
 
 def test_borrador_binding_error_has_stable_service_error_code() -> None:

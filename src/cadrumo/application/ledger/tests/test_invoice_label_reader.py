@@ -397,6 +397,21 @@ def test_a_cuota_that_is_not_the_rate_of_the_base_is_left_empty(operation: Pinne
     assert DraftDiscrepancyKind.RATE_INCONSISTENT in {finding.kind for finding in reading.draft.discrepancies}
 
 
+def test_a_printed_rate_its_amount_contradicts_is_a_finding_and_the_amount_stays(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    # 15 % of 1.500,00 is 225,00, not the 210,00 printed; 1.815,00 - 210,00 = 1.605,00 payable.
+    text = _RETENTION.replace("-225,00", "-210,00").replace("Total a pagar 1.590,00", "Total a pagar 1.605,00")
+
+    reading = _read(text, operation)
+
+    assert reading.draft.retencion_rate is None
+    assert reading.draft.retencion_amount == Decimal("210.00")
+    assert (DraftDiscrepancyKind.RATE_INCONSISTENT, "retencion_amount") in {
+        (finding.kind, finding.field) for finding in reading.draft.discrepancies
+    }
+
+
 def test_a_retention_the_amount_payable_contradicts_is_left_empty(operation: PinnedAuthorityOperation) -> None:
     text = _RETENTION.replace("Total a pagar 1.590,00", "Total a pagar 1.600,00")
 

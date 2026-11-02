@@ -773,6 +773,7 @@ desktop:
     bring_all: Update from AEAT
     close: Close AEAT data
     count:
+      borrador_refused: '{count} can''t be used'
       filed_aeat_only: '{count} only at AEAT'
       filed_differing: '{count} differ'
       unread_notifications: '{count} unread'
@@ -815,11 +816,19 @@ desktop:
       warn_unknown: May already be updated. Check anyway?
     results:
       borrador:
+        already_active: '{name} was already imported. Nothing changed.'
+        captured: Imported {name}.
+        captured_superseded: Saved {name}, but a newer Borrador is already in use.
         failed: Couldn't import {name}.
         import: Import PDF
-        imported: Imported {name}.
         nothing_found: No Borrador in {name}.
+        resolved_discarded: '{name} was imported before and discarded. Nothing changed.'
+        resolved_superseded: '{name} was imported before and has since been replaced
+          by a newer one. Nothing changed.'
         unknown: Can't tell if {name} was imported. Check first.
+        unowned:
+          one: '{count} box was read but not kept.'
+          other: '{count} boxes were read but not kept.'
         year: Year
       census_review: Review
       changed:
@@ -902,6 +911,7 @@ desktop:
     start_failed: Couldn't start. Try again.
     start_unknown: Can't tell if it started. Check this page first.
     state:
+      capture_refused: The saved Borrador can't be used. Import it again.
       current: Updated {date}
       current_undated: Up to date
       never_brought: Not updated yet
@@ -2418,15 +2428,21 @@ desktop:
       without_staged: Export without them
     failed: Couldn't read the ledger.
     field:
+      art_104_tres_exclusion: Art. 104.Tres exclusion
+      attachment_ids: Attachments
       booked_date: Booked date
       business_pct: Business share
       counterparty_country: Counterparty country
       counterparty_identification_state: VAT identification
       currency: Currency
       deduction_fact_kind: Deduction fact
+      input_classification: Input use
       investment_asset_id: Investment asset
       m210_income_classification: Modelo 210 income
       own_account_id: Account
+      prorrata_reference: Prorrata reference
+      prorrata_sector_id: Prorrata sector
+      purchase_invoice_evidence_id: Purchase document
       recargo_amount: Equivalence surcharge
       usage_ratio_id: Usage ratio
       value_date: Value date
@@ -2995,7 +3011,6 @@ desktop:
         sealed: locked
         sealed_unread: not known whether locked
         transfer: transfers
-        unclassified: not classified yet
       source_jurisdiction: Source jurisdiction
       split:
         add_part: Add a part
@@ -7819,6 +7834,8 @@ tui:
           be linked.
         missing_invoice: The invoice is no longer in the catalogue, so it cannot be
           linked.
+        transaction_takes_no_invoice: 'This movement cannot take an invoice: only
+          an active movement of money in or out can.'
     overview:
       affected_declarations: Affected declarations
       areas: Areas of Records
@@ -8966,6 +8983,7 @@ workspace:
         link_aeat: Link the AEAT filing
         none: Nothing to do
         open_local_draft: Open local draft
+        recalculate: Calculate again
         start: Start it
       no_match: No declaration matches “{query}”.
       none_listed: No declarations are listed.

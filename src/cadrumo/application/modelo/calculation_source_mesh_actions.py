@@ -92,18 +92,7 @@ def resolve_bucket_source_mesh(
 
     Takes ``snapshot`` as a :class:`RegistrySnapshot`.
     """
-    if profile is None:
-        from .profile_readiness_gate import load_modelo_work_profile
-
-        profile = load_modelo_work_profile(
-            bucket_id=work_unit.bucket_id,
-            profile_decode_context=ports.operation.profile_decode_context(),
-        )
-    profile_read_ports = (
-        ports.profile_read_ports
-        if profile is None
-        else ProfileReadPorts(path_values=ModeloWorkProfilePathValues(profile=profile))
-    )
+    profile, profile_read_ports = _work_profile_and_read_ports(profile, work_unit, ports)
     resolved_transaction_repository = ports.transaction_repository
     memoized_transaction_repository = (
         transaction_repository
@@ -118,18 +107,12 @@ def resolve_bucket_source_mesh(
             asset_profile_id=work_unit.bucket_id,
         )
         iva_investment_asset_profile_id = work_unit.bucket_id
-    from ..aggregation.inventory import InventorySourceResolver
     from ..aggregation.source_mesh import (
         CalculationSourceContext,
         ModeloSourceResolver,
     )
-    from ..calculations.m303_regimen_simplificado_annual_summary import (
-        M303RegimenSimplificadoAnnualSummarySourceResolver,
-    )
     from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
-    resolved_work_unit_repository = ports.work_unit_repository
-    resolved_calculation_repository = ports.calculation_repository
     renta_catalogue_read_ports = InvoiceCatalogueReadPorts(
         invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
         transaction_reader=memoized_transaction_repository,
@@ -155,30 +138,9 @@ def resolve_bucket_source_mesh(
         _require_calculation_route_resolver(stage, resolver)
         return resolver.resolve(context)
 
-    annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = (
-        resolve_declared(
-            M303RegimenSimplificadoAnnualSummarySourceResolver(
-                registry_snapshot=snapshot,
-                work_unit_repository=resolved_work_unit_repository,
-                calculation_repository=resolved_calculation_repository,
-                filing_repository=ports.filing_repository,
-                regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
-                    taxpayer_profile_for_work(profile),
-                ),
-                operation=ports.operation,
-            ),
-            stage="conditional",
-        ),
+    annual_summary_resolutions, inventory_resolutions = _resolve_conditional_families(
+        resolve_declared, snapshot, ports, profile
     )
-    inventory_resolutions: tuple[CalculationSourceResolution, ...] = ()
-    if any(binding.source is BindingSourceKind.INVENTORY for binding in snapshot.revision.bindings):
-        inventory_resolutions = (
-            resolve_declared(
-                InventorySourceResolver(
-                    inventory_repository=ports.inventory_repository,
-                ),
-            ),
-        )
     from ..aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
     from ..aggregation.source_resolution_operations import merge_source_resolutions
 
@@ -256,6 +218,66 @@ def resolve_bucket_source_mesh(
     return add_advisory_binding_value_diagnostics(snapshot, source_resolution, operation=ports.operation)
 
 
+def _work_profile_and_read_ports(
+    profile: ModeloWorkProfile | None,
+    work_unit: WorkUnit,
+    ports: CalculationActionPorts,
+) -> tuple[ModeloWorkProfile | None, ProfileReadPorts]:
+    """Load the bucket's work profile when none was supplied and pair it with its read ports."""
+    if profile is None:
+        from .profile_readiness_gate import load_modelo_work_profile
+
+        profile = load_modelo_work_profile(
+            bucket_id=work_unit.bucket_id,
+            profile_decode_context=ports.operation.profile_decode_context(),
+        )
+    profile_read_ports = (
+        ports.profile_read_ports
+        if profile is None
+        else ProfileReadPorts(path_values=ModeloWorkProfilePathValues(profile=profile))
+    )
+    return profile, profile_read_ports
+
+
+def _resolve_conditional_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+    profile: ModeloWorkProfile | None,
+) -> tuple[tuple[CalculationSourceResolution, ...], tuple[CalculationSourceResolution, ...]]:
+    """Resolve the annual-summary and inventory families, returned in that order."""
+    from ..aggregation.inventory import InventorySourceResolver
+    from ..calculations.m303_regimen_simplificado_annual_summary import (
+        M303RegimenSimplificadoAnnualSummarySourceResolver,
+    )
+
+    annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = (
+        resolve_declared(
+            M303RegimenSimplificadoAnnualSummarySourceResolver(
+                registry_snapshot=snapshot,
+                work_unit_repository=ports.work_unit_repository,
+                calculation_repository=ports.calculation_repository,
+                filing_repository=ports.filing_repository,
+                regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+                    taxpayer_profile_for_work(profile),
+                ),
+                operation=ports.operation,
+            ),
+            stage="conditional",
+        ),
+    )
+    inventory_resolutions: tuple[CalculationSourceResolution, ...] = ()
+    if any(binding.source is BindingSourceKind.INVENTORY for binding in snapshot.revision.bindings):
+        inventory_resolutions = (
+            resolve_declared(
+                InventorySourceResolver(
+                    inventory_repository=ports.inventory_repository,
+                ),
+            ),
+        )
+    return annual_summary_resolutions, inventory_resolutions
+
+
 def _prorrata_settlement_apportionment(
     snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
@@ -281,13 +303,11 @@ def _prorrata_settlement_apportionment(
     sources = {binding.source for binding in revision.bindings}
     if not {BindingSourceKind.LEDGER_IVA_AGGREGATION, BindingSourceKind.PRORRATA_REGULARIZACION} <= sources:
         return None
-    operation = ports.operation
     if work_unit.modelo == form_for_role("iva.periodic"):
-        if not is_m303_annual_settlement_period(work_unit.period, authority=operation):
-            return None
-        percentage = stage_prorrata_definitive_percentage(
-            registry_snapshot=snapshot,
-            work_unit=work_unit,
+        return _periodic_settlement_apportionment(
+            snapshot,
+            work_unit,
+            ports=ports,
             source_resolution=source_resolution,
             casilla_inputs=casilla_inputs,
             text_casilla_inputs=text_casilla_inputs,
@@ -297,17 +317,57 @@ def _prorrata_settlement_apportionment(
             relation_values=relation_values,
             filing_period_date=filing_period_date,
         )
-        if percentage is None:
-            return None
-        return _settlement_with_sector_definitives(
-            work_unit, ports=ports, period=work_unit.period, percentage=percentage
-        )
     if work_unit.modelo != form_for_role("iva.annual_summary"):
         return None
+    return _annual_summary_settlement_apportionment(snapshot, work_unit, ports=ports)
+
+
+def _periodic_settlement_apportionment(
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    *,
+    ports: CalculationActionPorts,
+    source_resolution: CalculationSourceResolution,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+    date_binding_values: Mapping[BindingId, date] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    filing_period_date: date | None,
+) -> IvaLedgerSettlementApportionment | None:
+    """Read the definitive percentage from the settlement liquidation's own declared volumes."""
+    if not is_m303_annual_settlement_period(work_unit.period, authority=ports.operation):
+        return None
+    percentage = stage_prorrata_definitive_percentage(
+        registry_snapshot=snapshot,
+        work_unit=work_unit,
+        source_resolution=source_resolution,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        date_binding_values=date_binding_values,
+        relation_values=relation_values,
+        filing_period_date=filing_period_date,
+    )
+    if percentage is None:
+        return None
+    return _settlement_with_sector_definitives(work_unit, ports=ports, period=work_unit.period, percentage=percentage)
+
+
+def _annual_summary_settlement_apportionment(
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    *,
+    ports: CalculationActionPorts,
+) -> IvaLedgerSettlementApportionment | None:
+    """Read the definitive percentage from the filed settlement liquidation."""
+    revision = snapshot.revision
     settlement = m303_annual_settlement_observation(
         ports.observation_repository,
         filing_year=work_unit.filing_year,
-        operation=operation,
+        operation=ports.operation,
     )
     volumen_total_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.VOLUMEN_TOTAL)
     definitive_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)

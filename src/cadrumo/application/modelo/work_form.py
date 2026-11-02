@@ -121,6 +121,8 @@ def build_modelo_work_form(
     aeat_data_imported_at: datetime | None = None,
     calculation_diagnostics: tuple[CalculationSourceDiagnostic, ...] | None = None,
     element_names: Mapping[str, str] | None = None,
+    calculation_screen_outdated: bool = False,
+    calculation_filed_before_grade_cap: CasillaId | None = None,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -143,6 +145,15 @@ def build_modelo_work_form(
     raised, when this session ran it; ``None`` when it did not, in which case
     only the notes that persist with the calculation are known.
 
+    ``calculation_screen_outdated`` is the calculation-note gate's answer for
+    ``revision`` (:func:`~.calculation_note_gate.calculation_screen_outdated`):
+    when the gate would refuse it as stale, the form carries that one blocking
+    note and offers a recalculation. ``calculation_filed_before_grade_cap`` is
+    the gate's answer for a revision filed before screens existed
+    (:func:`~.calculation_note_gate.calculation_filed_before_grade_cap`): the
+    capped box whose figure keeps its export refused, so the form carries that
+    blocking note and offers a recalculation in place of the recorded state.
+
     Raises:
         ModeloWorkFormLayoutError: the layout places a casilla the revision does
             not define, places one twice, or leaves one without a placement.
@@ -153,7 +164,12 @@ def build_modelo_work_form(
         :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
             The pinned registry snapshot supplying the selected modelo revision.
     """
-    sources = collect_note_sources(revision, calculation_diagnostics)
+    sources = collect_note_sources(
+        revision,
+        calculation_diagnostics,
+        screen_outdated=calculation_screen_outdated,
+        filed_before_grade_cap=calculation_filed_before_grade_cap,
+    )
     context = WorkFormContext(
         review=review,
         snapshot=snapshot,

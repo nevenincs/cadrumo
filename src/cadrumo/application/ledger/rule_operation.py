@@ -25,7 +25,11 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.categories.spending_category_catalogue import require_spending_category, spending_category_tokens
-from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH, LedgerClassificationRule
+from ...domain.transactions.classification_rule import (
+    RULE_PATTERN_ENTRY_MAX_LENGTH,
+    LedgerClassificationRule,
+    require_new_rule_decision,
+)
 from ...domain.transactions.errors import ClassificationRuleError, TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
@@ -146,6 +150,12 @@ async def _prepare_rule_add(
             error=error,
             category_example=examples[0].value if examples else None,
         )
+        return await _publish_add_refusal(context, projection)
+
+    try:
+        require_new_rule_decision(payload.classification, category_id)
+    except ClassificationRuleError as error:
+        projection = _add_validation_projection(payload.profile_id, code="invalid_command", error=error)
         return await _publish_add_refusal(context, projection)
 
     try:

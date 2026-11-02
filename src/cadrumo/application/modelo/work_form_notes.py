@@ -11,13 +11,20 @@ from collections.abc import Iterable, Mapping
 from typing import Final
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
+from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, element_names_of
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import gate_refuses
-from .calculation_notes import CHECK_REFUSED_REASONS, durable_binding_source, note_attention
+from .calculation_notes import (
+    CALCULATION_SCREEN_OUTDATED_REASON,
+    CHECK_REFUSED_REASONS,
+    FILED_BEFORE_GRADE_CAP_REASON,
+    durable_binding_source,
+    note_attention,
+)
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import ModeloFormCalculationNote, ModeloFormCasillaAddressV1, ModeloFormField
 from .work_review import ModeloWorkReview
@@ -78,14 +85,32 @@ with the language it is worded in."""
 
 
 def collect_note_sources(
-    revision: CalculationRevision | None, diagnostics: tuple[CalculationSourceDiagnostic, ...] | None
+    revision: CalculationRevision | None,
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] | None,
+    *,
+    screen_outdated: bool = False,
+    filed_before_grade_cap: CasillaId | None = None,
 ) -> tuple[NoteSource, ...]:
     """Each latest-calculation reason with the box it names: every diagnostic when held, else the durable ones.
 
+    ``screen_outdated`` says the gate refuses ``revision`` as stale before it
+    reads any note, so the derived reason leads them. ``filed_before_grade_cap``
+    is the capped box whose figure keeps a revision filed before screens existed
+    from being exported, which leads them the same way.
+
     Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
+    stale: tuple[NoteSource, ...] = (
+        ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None),)
+        if screen_outdated and revision is not None
+        else ()
+    ) + (
+        ((FILED_BEFORE_GRADE_CAP_REASON, filed_before_grade_cap, None, None, None, None),)
+        if filed_before_grade_cap is not None and revision is not None
+        else ()
+    )
     if diagnostics is not None:
-        return tuple(
+        return stale + tuple(
             (
                 diagnostic.reason,
                 diagnostic.casilla_id,
@@ -100,10 +125,10 @@ def collect_note_sources(
         )
     if revision is None:
         return ()
-    # A persisted note is never a proven zero: those are held, not stored. Its stored message is a
-    # technical account in no language of the filer's, so the note is worded by its reason alone.
-    return tuple(
-        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, None, None)
+    # A persisted note keeps the outcome its resolver stated, so a proven zero still reads as one. Its stored
+    # message is a technical account in no language of the filer's, so the note is worded by its reason alone.
+    return stale + tuple(
+        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, issue.value_outcome, None)
         for issue in revision.source_issues
     )
 
@@ -112,6 +137,18 @@ def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[M
     """Whether a finding of the check already says what this note says, about the same box."""
     causes = _FINDINGS_OF_THE_SAME_CAUSE.get(reason, frozenset())
     return any(finding.message_locale_key in causes and finding.casilla_id == casilla_id for finding in findings)
+
+
+def _boxes_by_casilla(fields: Iterable[ModeloFormField]) -> dict[CasillaId, str | None]:
+    """The printed box of each casilla-addressed field."""
+    return {
+        field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
+    }
+
+
+def _message_in_language(worded: tuple[str, OutputLanguage] | None, language: OutputLanguage) -> str | None:
+    """The resolver's message when it is worded in the form's own language, else nothing."""
+    return worded[0] if worded is not None and worded[1] is language else None
 
 
 def project_calculation_notes(
@@ -130,12 +167,10 @@ def project_calculation_notes(
     where it accepted an attestation, so the note is left out.
     """
     checked = context.review.verification_outcome is not None
-    boxes = {
-        field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
-    }
+    boxes = _boxes_by_casilla(fields)
     notes: dict[tuple[str, str | None, tuple[str, ...]], ModeloFormCalculationNote] = {}
     for reason, casilla_id, binding_source, fact, outcome, worded in sources:
-        message = worded[0] if worded is not None and worded[1] is context.language else None
+        message = _message_in_language(worded, context.language)
         key = (reason, casilla_id, (message or "",) if fact is None else fact.identity())
         if key in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
@@ -160,9 +195,7 @@ def project_verification_issues(
     review: ModeloWorkReview, fields: Iterable[ModeloFormField]
 ) -> tuple[ModeloFormIssue, ...]:
     """The review's verification findings, blocking first, each with the box it names."""
-    boxes = {
-        field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
-    }
+    boxes = _boxes_by_casilla(fields)
     ordered = sorted(
         review.findings, key=lambda finding: finding.severity is not ModeloVerificationFindingSeverity.BLOCKING
     )

@@ -121,6 +121,7 @@ from .invoice_draft_records import (
 )
 from .invoice_label_reader import LabelReading, merge_label_reading_with_model_draft, read_invoice_fields_by_labels
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .withheld_tax_findings import withheld_tax_findings
 
 if TYPE_CHECKING:
     from ...core.period import Period
@@ -800,6 +801,7 @@ def _extract_invoice_fields_from_structured_record(
         # parser that recovers a suplido the draft drops leaves the check
         # computing a total short by exactly it -- which is the shape this
         # mapping exists to close rather than to reproduce one field along.
+        retencion_rate=parsed.retencion_rate,
         retencion_amount=parsed.retencion_amount,
         suplidos_amount=parsed.suplidos_amount,
         iva_category=parsed.iva_category,
@@ -843,6 +845,7 @@ def _extract_invoice_fields_from_structured_record(
         update={
             "discrepancies": (
                 *deterministic_findings(draft, legends=legends, operation=operation),
+                *withheld_tax_findings(parsed),
                 *facturae_invoice_class_findings(
                     declared=parsed.invoice_classification,
                     rectifies_invoice_number=parsed.rectifies_invoice_number,

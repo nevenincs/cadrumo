@@ -96,6 +96,24 @@ EXPORT_REFUSED_REASONS: Final[frozenset[str]] = frozenset({"rate_boxes_underacco
 """Reasons the export refuses the file on: an IVA total its rate boxes do not account for."""
 BLOCKING_REASONS: Final[frozenset[str]] = GATE_REFUSED_REASONS | CHECK_REFUSED_REASONS | EXPORT_REFUSED_REASONS
 """Every reason the application refuses filing on, and so the editor too."""
+CALCULATION_SCREEN_OUTDATED_REASON: Final[str] = "calculation_screen_outdated"
+"""The derived reason a stale or unstamped revision is refused with and the editor withholds filing on.
+
+It is never persisted and no resolver raises it, so it is not among the
+diagnostic reasons; its remedy is to calculate again.
+"""
+FILED_BEFORE_GRADE_CAP_REASON: Final[str] = "filed_before_grade_cap"
+"""The derived reason a revision recorded as filed before screen stamps existed is refused its export with.
+
+It applies only where the revision carries no stamp, its registry revision caps
+a binding, and the box that binding reaches holds a nonzero or absent value. Like
+:data:`CALCULATION_SCREEN_OUTDATED_REASON` it is never persisted; its remedy is
+to calculate the declaration again and record the new calculation.
+"""
+DERIVED_GATE_REASONS: Final[frozenset[str]] = frozenset(
+    {CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON}
+)
+"""The reasons the gate derives from a revision and its pinned registry rather than reading them from a note."""
 
 CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingProxyType(
     {
@@ -241,6 +259,8 @@ def note_attention(reason: str, *, box: str | None, outcome: BindingValueOutcome
     stated outcome for a capped value: a proven zero is for the filer's
     information.
     """
+    if reason in DERIVED_GATE_REASONS:
+        return _B
     if reason in PRINTED_BOX_REASONS and box is None:
         return _C
     if capped_value_proven_zero(reason, outcome):
@@ -323,12 +343,18 @@ def read_element_names(repository: ActivityAssetHistoryRepository | None) -> dic
 def read_recorded_notes(
     issues: Iterable[CalculationSourceIssue], repository: ActivityAssetHistoryRepository | None
 ) -> tuple[RecordedCalculationNote, ...]:
-    """The notes a calculation kept, in words and under the names their elements go by now."""
+    """The notes a calculation kept, in words and under the names their elements go by now.
+
+    A proven zero's fact says all there is to say: its reason's sentence speaks
+    of a figure that is held back, which a proven zero is not, so it has no detail.
+    """
     return tuple(
         note.model_copy(
             update={
                 "message": note_fact_text(note.fact, element_names=note.element_names),
-                "detail": tr(what_locale_key(note.reason), box=tr(_UNNUMBERED_BOX_LOCALE_KEY)),
+                "detail": ""
+                if note.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
+                else tr(what_locale_key(note.reason), box=tr(_UNNUMBERED_BOX_LOCALE_KEY)),
             }
         )
         for note in recorded_calculation_notes(issues, names=read_element_names(repository))
@@ -408,6 +434,8 @@ def _require_total_levels() -> None:
         raise ValueError("only an assumed box is confirmed; no calculation note waits for a confirmation")
     if not PRINTED_BOX_REASONS <= GATE_REFUSED_REASONS:
         raise ValueError("a reason that blocks only on a printed box must be one the gate refuses")
+    if DERIVED_GATE_REASONS & (reasons | set(CALCULATION_NOTE_ATTENTION) | BLOCKING_REASONS):
+        raise ValueError("a derived gate reason is never a diagnostic reason, a placed note or a persisted one")
 
 
 _require_total_levels()
@@ -417,8 +445,11 @@ __all__ = [
     "BLOCKING_REASONS",
     "CALCULATION_NOTES",
     "CALCULATION_NOTE_ATTENTION",
+    "CALCULATION_SCREEN_OUTDATED_REASON",
     "CHECK_REFUSED_REASONS",
+    "DERIVED_GATE_REASONS",
     "EXPORT_REFUSED_REASONS",
+    "FILED_BEFORE_GRADE_CAP_REASON",
     "GATE_REFUSED_REASONS",
     "PRINTED_BOX_REASONS",
     "RECORDS_REASONS",

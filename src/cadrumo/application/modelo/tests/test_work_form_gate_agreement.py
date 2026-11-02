@@ -31,12 +31,16 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from ....domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
-from ..calculation_notes import PRINTED_BOX_REASONS, note_attention
+from ..calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, PRINTED_BOX_REASONS, note_attention
 from ..calculation_screen import calculation_screen_stamp
+from ..declaration_summary import declaration_summary
+from ..declarations_list import DeclarationListGroup, DeclarationListNextStep, DeclarationListRow, next_step
+from ..declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form_findings import ModeloFormAttention
@@ -78,10 +82,20 @@ def _work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
 
 
 def _revision(
-    operation: PinnedAuthorityOperation, unit: WorkUnit, *issues: CalculationSourceIssue
+    operation: PinnedAuthorityOperation,
+    unit: WorkUnit,
+    *issues: CalculationSourceIssue,
+    stale: tuple[CalculationScreenStamp | None] | None = None,
 ) -> CalculationRevision:
-    """A revision stamped with the screen a calculation under ``operation`` runs, so only its notes decide."""
-    stamp = calculation_screen_stamp(form_snapshot(operation, "210", 2025, "0A"), operation=operation)
+    """A revision stamped with the screen a calculation under ``operation`` runs, so only its notes decide.
+
+    ``stale`` holds the stamp of a revision screened otherwise, or of one never stamped.
+    """
+    stamp = (
+        calculation_screen_stamp(form_snapshot(operation, "210", 2025, "0A"), operation=operation)
+        if stale is None
+        else stale[0]
+    )
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=unit.work_unit_id,
@@ -283,6 +297,56 @@ def test_an_unrouted_one_stop_shop_row_is_the_modelo_369_checks_and_the_gates_ad
     _agrees(operation, note)
 
 
+def _stale_stamps(operation: PinnedAuthorityOperation) -> list[CalculationScreenStamp | None]:
+    current = calculation_screen_stamp(form_snapshot(operation, "210", 2025, "0A"), operation=operation)
+    return [None, CalculationScreenStamp(contract_version=current.contract_version, digest="0" * 64)]
+
+
+@pytest.mark.parametrize("stale", [0, 1], ids=["unstamped", "other_digest"])
+@pytest.mark.parametrize("checked", [False, True], ids=["unchecked", "checked"])
+def test_a_stale_screen_offers_recalculation_where_the_gates_refuse_it(
+    operation: PinnedAuthorityOperation, stale: int, checked: bool
+) -> None:
+    """An unstamped or differently screened revision is refused by the gates, and the form offers a recalculation."""
+    unit = _work_unit(operation)
+    revision = _revision(operation, unit, stale=(_stale_stamps(operation)[stale],))
+    form = _checked_form(operation, revision)
+    if not checked:
+        form = form.model_copy(update={"verification": None})
+
+    assert not _gate_admits(unit, revision, operation)
+    (note,) = [item for item in form.calculation_notes if item.reason == CALCULATION_SCREEN_OUTDATED_REASON]
+    assert note.withholds_filing and note.attention is ModeloFormAttention.BLOCKS
+    assert form.calculation_out_of_date
+    step = form_next_step(form, verified=checked, filed=False)
+    assert step.action is ModeloFormNextAction.RECALCULATE, step
+    hold = export_hold(form, OutputLanguage.EN, verified=checked, recorded=False)
+    assert hold is not None and hold.reason is ModeloFormExportHoldReason.BLOCKS, hold
+    assert [line for line in form_issue_lines(form, OutputLanguage.EN) if line.level is ModeloFormAttention.BLOCKS]
+
+
+def test_a_current_screen_carries_no_stale_note(operation: PinnedAuthorityOperation) -> None:
+    """Teeth for the stale case: the same revision stamped as a calculation stamps it is not held for staleness."""
+    unit = _work_unit(operation)
+    form = _checked_form(operation, _revision(operation, unit))
+
+    assert not [item for item in form.calculation_notes if item.reason == CALCULATION_SCREEN_OUTDATED_REASON]
+    assert not form.calculation_out_of_date
+    assert form_next_step(form, verified=True, filed=False).action is ModeloFormNextAction.EXPORT
+
+
+def test_a_stale_screen_reaches_the_public_workbench_read(operation: PinnedAuthorityOperation) -> None:
+    """The workbench read and its public projection, which the TUI and MCP consume, offer the same recalculation."""
+    unit = _work_unit(operation)
+    form = _checked_form(operation, _revision(operation, unit, stale=(None,))).model_copy(update={"verification": None})
+    read = _read(form, _refusal("current_calculation_revision_id"), operation)
+
+    assert read.next_step is not None and read.next_step.action is ModeloFormNextAction.RECALCULATE
+    public = project_modelo_workbench_form(UUID(_BUCKET), form.work_unit_id, read)
+    assert public.next_step is not None and public.next_step.action is ModeloFormNextAction.RECALCULATE
+    assert CALCULATION_SCREEN_OUTDATED_REASON in {note.reason for note in public.form.form.calculation_notes}
+
+
 def _read(form: ModeloWorkForm, admission: ModeloEditRefusedV1, operation: PinnedAuthorityOperation):
     return ModeloWorkbenchFormReadV1(
         load=ModeloWorkFormLoadV1(form=form, verified=False, filed=False),
@@ -321,3 +385,57 @@ def test_rules_short_of_calculation_grade_halt_the_next_step_through_the_read(
     assert refused_otherwise.next_step is not None
     public = project_modelo_workbench_form(profile, form.work_unit_id, refused_otherwise).next_step
     assert public is not None and public.action is ModeloFormNextAction.FILL
+
+
+def _listed_step(
+    unit: WorkUnit, revision: CalculationRevision, operation: PinnedAuthorityOperation
+) -> DeclarationListNextStep | None:
+    declaration = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id=unit.work_unit_id,
+        modelo=unit.modelo,
+        filing_year=unit.filing_year,
+        period=unit.period,
+        state=unit.state,
+        has_current_calculation=True,
+        has_current_filing=False,
+    )
+    summary = declaration_summary(
+        declaration, revisions={revision.calculation_revision_id: revision}, verification=None, operation=operation
+    )
+    row = DeclarationListRow(
+        unit.work_unit_id,
+        "210",
+        unit.period,
+        summary.state.value,
+        DeclarationListGroup.IN_PROGRESS,
+        declaration=declaration.model_copy(update={"summary": summary}),
+    )
+    return next_step(row)
+
+
+@pytest.mark.parametrize("stale", [None, 0, 1], ids=["current", "unstamped", "other_digest"])
+@pytest.mark.parametrize("note", [None, "advisory_binding_value"], ids=["no_note", "advisory"])
+def test_the_declarations_list_and_the_form_agree_for_one_checked_revision(
+    operation: PinnedAuthorityOperation, stale: int | None, note: str | None
+) -> None:
+    unit = _work_unit(operation)
+    issues = () if note is None else (_Note(note).issue(),)
+    stamp = None if stale is None else (_stale_stamps(operation)[stale],)
+    revision = _revision(operation, unit, *issues, stale=stamp).model_copy(
+        update={"state": CalculationRevisionState.VERIFICADO_COMPLETO}
+    )
+    form = _checked_form(operation, revision)
+
+    form_step = form_next_step(form, verified=True, filed=False).action
+    listed = _listed_step(unit, revision, operation)
+
+    if stale is not None:
+        assert form_step is ModeloFormNextAction.RECALCULATE
+        assert listed is DeclarationListNextStep.RECALCULATE
+    elif note is not None:
+        assert form_step is ModeloFormNextAction.RESOLVE
+        assert listed is DeclarationListNextStep.FIX
+    else:
+        assert form_step in _FILE_ACTIONS
+        assert listed is DeclarationListNextStep.CREATE_FILE
+    assert (listed is DeclarationListNextStep.CREATE_FILE) is _gate_admits(unit, revision, operation)

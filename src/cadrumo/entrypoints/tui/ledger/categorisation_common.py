@@ -47,6 +47,14 @@ _CLASSIFICATION_LOCALE_KEYS: Final[dict[BusinessClassification, str]] = {
     BusinessClassification.REVIEWED_EXCLUDED: "tui.ledger.categorisation.classification.reviewed_excluded",
 }
 
+OPERATOR_CLASSIFICATIONS: Final[tuple[BusinessClassification, ...]] = (
+    BusinessClassification.BUSINESS,
+    BusinessClassification.PERSONAL,
+    BusinessClassification.MIXED,
+    BusinessClassification.REVIEWED_EXCLUDED,
+)
+"""The decisions an operator can record for entries in bulk or through a rule."""
+
 ACTION_MIN_COLUMN_WIDTH = 16
 """Narrowest column an action row lays a button into, so a row wraps rather than overflows."""
 

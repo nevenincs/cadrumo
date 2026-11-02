@@ -19,8 +19,9 @@ from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ....domain.modelos.work_unit import WorkUnit
-from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotService
+from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotReading, Borrador100SnapshotService
 from ...live.notification_ports import NotificationType, RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
 from ...live.verify import VerifyObservation, VerifySurface
@@ -101,6 +102,7 @@ class _BorradorRepository:
     def __init__(self) -> None:
         self.bucket_id = _BUCKET
         self._snapshots: dict[str, Borrador100Snapshot] = {}
+        self.outdated = 0
 
     def exists(self, snapshot_id: str) -> bool:
         return snapshot_id in self._snapshots
@@ -114,11 +116,14 @@ class _BorradorRepository:
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return tuple(sorted(self._snapshots.values(), key=lambda item: (item.captured_at, item.snapshot_id)))
 
+    def outdated_stored_snapshot_count(self) -> int:
+        return self.outdated
+
     def save(self, snapshot: Borrador100Snapshot) -> None:
         self._snapshots[snapshot.snapshot_id] = snapshot
 
 
-def _borrador(operation: PinnedAuthorityOperation, *captured: datetime) -> tuple[Borrador100Snapshot, ...]:
+def _borrador(operation: PinnedAuthorityOperation, *captured: datetime) -> Borrador100SnapshotReading:
     service = Borrador100SnapshotService(bucket_id=_BUCKET, repository=_BorradorRepository())
     period = Period.from_year_and_code(2023, "0A")
     for index, captured_at in enumerate(captured):
@@ -127,10 +132,10 @@ def _borrador(operation: PinnedAuthorityOperation, *captured: datetime) -> tuple
             period=period,
             captured_at=captured_at,
             source_url=f"file-import:sha256:{index:064x}",
-            binding_values={"casilla.0550": Decimal(index)},
+            binding_values={"renta-certificado-trabajo-retenciones": Decimal(index)},
             operation=operation,
         )
-    return service.list_snapshots(operation=operation)
+    return service.read_snapshots(operation=operation)
 
 
 def _no_wallet_capture() -> datetime | None:
@@ -147,7 +152,7 @@ def _ports(
     drafts: Callable[[], tuple[WorkUnit, ...]] = lambda: (),
     latest_notifications: Callable[[], PersistedNotificationsSnapshot | None] = lambda: None,
     iva_wallet_captured_at: Callable[[], datetime | None] = _no_wallet_capture,
-    borrador_snapshots: Callable[[], tuple[Borrador100Snapshot, ...]] = lambda: (),
+    borrador_snapshots: Callable[[], Borrador100SnapshotReading | None] = lambda: None,
     verify_observations: Callable[[str], tuple[VerifyObservation, ...]] = lambda _nif: (),
 ) -> AeatSyncStatusPorts:
     """Real stored values behind each port; a store a scenario does not seed answers empty."""
@@ -383,7 +388,7 @@ def test_year_choices_span_the_registry_declared_support_floor_to_horizon(
     status = _load(_ports(), authority_operation).status
 
     assert status.filed_declaration_years == status.iva_wallet_years
-    assert status.filed_declaration_years[0] == declared["floor"]
+    assert status.filed_declaration_years[0] == SupportedFilingYearsCatalogue.model_validate(declared).floor
     assert status.filed_declaration_years[-1] >= declared["horizon"]
     assert list(status.filed_declaration_years) == list(
         range(status.filed_declaration_years[0], status.filed_declaration_years[-1] + 1)

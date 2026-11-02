@@ -326,9 +326,17 @@ class SnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
         conflict while preserving the operator-facing keyword-only
         signatures on each service.
         """
+        return self._capture_with_lifecycle_status(capture)[0]
+
+    def _capture_with_lifecycle_status(self, capture: TCapture) -> tuple[TPayload, bool]:
+        """Run the lifecycle and report whether this call wrote a new snapshot.
+
+        ``False`` means the content id was already stored and the stored
+        snapshot is returned in whatever lifecycle state it holds.
+        """
         snapshot_id = self._derive_snapshot_id(capture)
         if self._repository.exists(snapshot_id):
-            return self._repository.load(snapshot_id)
+            return self._repository.load(snapshot_id), False
         candidate = self._build_active_payload(snapshot_id=snapshot_id, capture=capture)
         active_snapshot = self._latest_active_for_axis(candidate)
         if active_snapshot is not None and self._payload_captured_at(active_snapshot) > self._payload_captured_at(
@@ -337,10 +345,10 @@ class SnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
             # Late-arriving capture: demote the incoming snapshot to SUPERSEDED.
             demoted = self._demote_to_superseded(candidate, superseded_by=self._payload_snapshot_id(active_snapshot))
             self._repository.save(demoted)
-            return demoted
+            return demoted, True
         self._supersede_current_for_axis(candidate)
         self._repository.save(candidate)
-        return candidate
+        return candidate, True
 
     def list_snapshots(self) -> tuple[TPayload, ...]:
         """Execute this public contract operation."""

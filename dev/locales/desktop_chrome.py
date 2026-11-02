@@ -121,7 +121,17 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "action_unknown",
             "unavailable",
         ),
-        "desktop.aeat_sync.results.borrador.": ("imported", "nothing_found", "failed", "unknown"),
+        "desktop.aeat_sync.results.borrador.": (
+            "captured",
+            "captured_superseded",
+            "already_active",
+            "resolved_superseded",
+            "resolved_discarded",
+            "nothing_found",
+            "failed",
+            "unknown",
+        ),
+        "desktop.aeat_sync.results.borrador.unowned.": ("one", "other"),
         "desktop.aeat_sync.results.changed.": (
             "census.one",
             "census.other",

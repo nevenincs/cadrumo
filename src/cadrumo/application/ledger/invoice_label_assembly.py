@@ -8,7 +8,7 @@ from decimal import Decimal
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from .closure_findings import within_rounding_allowance
+from .closure_findings import retention_figures_disagree, within_rounding_allowance
 from .invoice_draft_records import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
@@ -367,22 +367,24 @@ def _check_retention_rate(
 ) -> tuple[PrintedValue[Decimal] | None, PrintedValue[Decimal] | None]:
     if retention is None or retention_rate is None or base is None:
         return retention, retention_rate
-    expected = base * retention_rate.value / HUNDRED
-    if within_rounding_allowance(retention.value - expected, term_count=2):
+    if not retention_figures_disagree(rate_points=retention_rate.value, amount=retention.value, base=base):
         return retention, retention_rate
+    expected = base * retention_rate.value / HUNDRED
     assembly.findings.append(
         DraftDiscrepancyFinding(
             kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
             field="retencion_amount",
             detail=(
                 f"the printed retención {retention.anchor!r} is not {retention_rate.anchor} of the "
-                f"taxable base ({expected}); both were left empty"
+                f"taxable base ({expected}); the rate was left empty"
             ),
             expected=expected,
             observed=retention.value,
         ),
     )
-    return None, None
+    # The amount stays: it is what the page says was withheld, and an answered
+    # finding keeps it the way a structured reading's disagreement does.
+    return retention, None
 
 
 def _check_payable(

@@ -31,7 +31,7 @@ from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 from typing import ClassVar
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.i18n.translatable import Translatable as tr
 from ...core.irnr import M210GrossIncomeSourceMode
@@ -317,11 +317,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         profile_decode_context: ProfileDecodeContext,
         disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
     ) -> CalculationSourceResolution:
-        declared_excess = (
-            tuple(row for row in disposal_excess if not row.agrarian and row.error is None)
-            if context.modelo == form_for_role("renta.direct_instalment")
-            else ()
-        )
+        declared_excess = _declared_disposal_excess(context, disposal_excess)
         binding_values = resolve_ledger_renta_income_aggregation_binding_values(
             context.revision,
             (*aggregation.observations, *declared_excess),
@@ -420,26 +416,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 if context.modelo == form_for_role("renta.objective_instalment")
                 else ()
             ),
-            value_outcomes={
-                binding_id: outcome
-                for binding_id, outcome in ledger_renta_withholding_value_outcomes(
-                    context.revision, aggregation.observations
-                ).items()
-                if binding_id in binding_values
-            },
-            provenance=tuple(
-                CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-                    contributor_source_kind="activity_asset_disposal_excess",
-                    contributor_binding_source=None,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=row.source_ref,
-                    parent_source_ref=None,
-                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                )
-                for row in declared_excess
-            )
+            value_outcomes=_resolved_withholding_value_outcomes(context, aggregation, binding_values),
+            provenance=_disposal_excess_provenance(declared_excess, resolver_id=self.resolver_id)
             + _provenance_for(
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
@@ -454,6 +432,52 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 ),
             ),
         )
+
+
+def _declared_disposal_excess(
+    context: CalculationSourceContext,
+    disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
+) -> tuple[ActivityAssetDisposalExcess, ...]:
+    """Keep the disposal excess a direct-estimation calculation declares as income."""
+    if context.modelo != form_for_role("renta.direct_instalment"):
+        return ()
+    return tuple(row for row in disposal_excess if not row.agrarian and row.error is None)
+
+
+def _resolved_withholding_value_outcomes(
+    context: CalculationSourceContext,
+    aggregation: RentaIncomeLedgerAggregation,
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[BindingId, BindingValueOutcome]:
+    """Carry the withholding outcomes of the bindings that resolved a value."""
+    return {
+        binding_id: outcome
+        for binding_id, outcome in ledger_renta_withholding_value_outcomes(
+            context.revision, aggregation.observations
+        ).items()
+        if binding_id in binding_values
+    }
+
+
+def _disposal_excess_provenance(
+    declared_excess: tuple[ActivityAssetDisposalExcess, ...],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Name the register disposals whose excess the income binding drew on."""
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=resolver_id,
+            resolved_binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+            contributor_source_kind="activity_asset_disposal_excess",
+            contributor_binding_source=None,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=row.source_ref,
+            parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+        )
+        for row in declared_excess
+    )
 
 
 def _ungrounded_income_consequence(facts: frozenset[str]) -> str:
@@ -621,7 +645,7 @@ def _m130_retenciones_backend_inputs(
     binding_values: Mapping[BindingId, Decimal],
 ) -> dict[CasillaId, Decimal]:
     """Redirect the selected registry binding route to its declared endpoint."""
-    route = resolve_m130_retenciones_route(authority=context.operation)
+    route = resolve_m130_retenciones_route(effective_date=context.period.end_date, authority=context.operation)
     if context.modelo != route.modelo_id:
         return {}
     value = binding_values.get(route.binding_id)

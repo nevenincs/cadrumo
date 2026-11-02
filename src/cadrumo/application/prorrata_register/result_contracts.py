@@ -138,7 +138,9 @@ def _validate_sector_declaration_execution_result(result: ProrrataOperationExecu
         raise ValueError("prorrata sector declaration result is incomplete")
 
 
-def _validate_gross_declaration_execution_result(result: ProrrataOperationExecutionResult) -> None:
+def _require_complete_gross_result(
+    result: ProrrataOperationExecutionResult,
+) -> tuple[ProrrataRegister, ProrrataOperatorGrossDeclaration]:
     register = result.register_snapshot
     declaration = result.gross_declaration
     if (
@@ -150,6 +152,11 @@ def _validate_gross_declaration_execution_result(result: ProrrataOperationExecut
         or result.count != len(register.gross_declarations)
     ):
         raise ValueError("prorrata gross declaration result is incomplete")
+    return register, declaration
+
+
+def _validate_gross_declaration_execution_result(result: ProrrataOperationExecutionResult) -> None:
+    register, declaration = _require_complete_gross_result(result)
     held = register.gross_declaration_for(declaration.period, sector_id=declaration.sector_id)
     if (result.operation_id == "declare_gross") != (held == declaration):
         raise ValueError("prorrata gross declaration result contradicts its committed register")

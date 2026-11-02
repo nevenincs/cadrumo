@@ -16,6 +16,7 @@ import pytest
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ....domain.transactions.own_accounts import (
@@ -292,8 +293,8 @@ def test_the_request_takes_exactly_the_fields_its_action_needs() -> None:
         Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove")
 
 
-@pytest.mark.parametrize("year", [1999, 2100])
-def test_a_solicitud_cannot_select_a_year_outside_the_shared_filing_window(year: int) -> None:
+@pytest.mark.parametrize("year", [FOUR_DIGIT_YEAR_FIRST - 1, FOUR_DIGIT_YEAR_LAST + 1])
+def test_a_solicitud_cannot_select_a_value_not_written_as_a_year(year: int) -> None:
     """The request cannot accept a year that its persisted period refuses."""
     with pytest.raises(pydantic.ValidationError):
         Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=year)

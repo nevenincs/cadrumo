@@ -5,40 +5,14 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:498a7950676aab340dbf217589436c56efa664a69977248199e7743fae2dec9b'
+body_hash: 'sha256:7d92950df75a8fae3e70e09ee8cbba260e8d94735b317a881f276ecee52e7060'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `export-parity` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S14` `M` `dev/locales/fstring_registry.py`
 - `S14` `M` `dev/locales/tests/test_audit.py`
@@ -183,6 +157,148 @@ related:
 - `S16` `verify:` `pytest-profile_persistence-fold-tests` -> `pass`
 - `S16` `verify:` `just-check-style-format-types` -> `pass`
 - `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/observation_seeding_support.py`
+- `S15` `A` `src/cadrumo/application/live/borrador_100_keys.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_import.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_contracts.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_operation.py`
+- `S15` `M` `src/cadrumo/application/modelo/borrador_binding.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/binding_terminal_origin.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/app_live_borrador_commands.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/app_live_borrador_results.py`
+- `S15` `M` `src/cadrumo/locales/en/cli.yml`
+- `S15` `M` `src/cadrumo/locales/es/cli.yml`
+- `S15` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S15` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S15` `M` `src/cadrumo/locales/en/application.yml`
+- `S15` `M` `src/cadrumo/locales/es/application.yml`
+- `S15` `M` `src/cadrumo/locales/ca/application.yml`
+- `S15` `M` `src/cadrumo/locales/hu/application.yml`
+- `S15` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.json`
+- `S15` `M` `docs/technical/articles/063-live-snapshots-and-filed-data-capture-operations.md`
+- `S15` `A` `src/cadrumo/application/live/tests/test_borrador_100_keys.py`
+- `S15` `M` `src/cadrumo/application/live/tests/test_borrador_100.py`
+- `S15` `M` `src/cadrumo/application/live/tests/test_borrador_100_operation.py`
+- `S15` `M` `src/cadrumo/application/modelo/tests/test_borrador_binding.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/tests/test_borrador_100_roundtrip.py`
+- `S15` `M` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/conformance_live_borrador_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py`
+- `S15` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_app_live_borrador_import.py`
+- `S15` `M` `dev/runtime_lifecycle/tests/test_installed_borrador_stdio.py`
+- `S15` `verify:` `pytest focused borrador and terminal-origin tests (621)` -> `pass`
+- `S15` `verify:` `pytest -m integration test_app_live_borrador_import.py (35)` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `just check-format` -> `pass`
+- `S15` `verify:` `just check-types` -> `pass`
+- `S15` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S15` `verify:` `python -m dev.registry.conformance valid` -> `pass`
+- `S15` `verify:` `just check-bindings` -> `pass`
+- `S15` `by:` `implementation-engineer-high`
+- `S01` `M` `.vault/adr/2026-11-01-export-parity-binding-capability-grade-adr.md`
+- `S01` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S02` `M` `.vault/adr/2026-11-01-export-parity-observation-filing-kind-adr.md`
+- `S02` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S03` `M` `.vault/adr/2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr.md`
+- `S03` `M` `.vault/adr/2026-06-10-calculation-aggregation-taxonomy-adr.md`
+- `S03` `verify:` `vaultspec-core vault check all --feature calculation-aggregation-taxonomy` -> `pass`
+- `S12` `M` `.vault/adr/2026-11-01-export-parity-suffered-withholding-schemas-adr.md`
+- `S12` `M` `.vault/reference/2026-11-01-export-parity-suffered-withholding-schemas-reference.md`
+- `S12` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S13` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S13` `M` `.vault/research/2026-11-01-export-parity-income-imputation-criterion-research.md`
+- `S13` `A` `.vault/research/2026-11-01-export-parity-withholding-legal-readings-research.md`
+- `S13` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-binding-capability-grade-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-observation-filing-kind-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-suffered-withholding-schemas-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S27` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S28` `M` `.vault/plan/2026-11-01-export-parity-plan.md`
+- `S15` `M` `src/cadrumo/application/aeat_sync/status_operation.py`
+- `S15` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S15` `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_keys.py`
+- `S15` `M` `src/cadrumo/application/live/snapshot_base.py`
+- `S15` `M` `src/cadrumo/entrypoints/aeat_sync_status_composition.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_app_live_borrador_payload_contract.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py`
+- `S15` `A` `src/cadrumo/entrypoints/tests/test_borrador_100_snapshot_lifecycle.py`
+- `S15` `verify:` `uv run --no-sync pytest -m 'unit or integration' src/cadrumo/application/live src/cadrumo/application/aeat_sync src/cadrumo/entrypoints/tui/aeat_sync` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -m integration src/cadrumo_runtime/host/tests/frontend/cli/test_app_live_borrador_import.py src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k borrador` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_app_live_borrador_payload_contract.py src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py src/cadrumo/entrypoints/tests/test_borrador_100_snapshot_lifecycle.py` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `just check-format` -> `pass`
+- `S15` `verify:` `just check-types` -> `pass`
+- `S15` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S14` `M` `dev/registry/compiler/validate_binding_grade_caps.py`
+- `S14` `M` `src/cadrumo/application/aggregation/tests/test_modelo_100_actividad_retencion_credit.py`
+- `S14` `M` `src/cadrumo/application/export/review_snapshot_loader.py`
+- `S14` `M` `src/cadrumo/application/modelo/advisory_binding_value.py`
+- `S14` `M` `src/cadrumo/application/modelo/calculation_screen.py`
+- `S14` `M` `src/cadrumo/application/modelo/tests/test_advisory_binding_value_gate.py`
+- `S14` `M` `src/cadrumo/application/modelo/tests/work_form_fixture.py`
+- `S14` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S14` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S14` `M` `src/cadrumo/application/storage/calc_sheets/review_labels.py`
+- `S14` `M` `src/cadrumo/application/storage/calc_sheets/review_workbook.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/binding_grade_cap_reach.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_m130_retenciones_gate_registration.py`
+- `S14` `M` `src/cadrumo/domain/renta/tests/test_retenciones_routing_integrity.py`
+- `S14` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_capped_retenciones.py`
+- `S14` `verify:` `focused pytest (1935 passed; 1 unrelated binding-definition failure)` -> `pass`
+- `S14` `verify:` `just check-style/check-format/check-types` -> `pass`
+- `S14` `verify:` `lint-imports 30 kept` -> `pass`
+- `S14` `verify:` `dev.registry.conformance valid; just check-bindings` -> `pass`
+- `S14` `by:` `implementation-engineer`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S05` `verify:` `pytest test_registry_scenarios.py` -> `pass`
+- `S05` `by:` `implementation-engineer`
+- `S14` `M` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S14` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_summary.py`
+- `S14` `verify:` `pytest-declarations-list+gate-agreement+tui-declarations` -> `pass`
+- `S14` `by:` `standard-executor`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_filing_kind_marker.py`
+- `S16` `M` `src/cadrumo/application/calculations/tests/test_cross_period_filing_kind_blockers.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/filing_kind_marker.py`
+- `S16` `M` `src/cadrumo/domain/modelos/filing_kind_evidence.py`
+- `S16` `M` `src/cadrumo/domain/modelos/tests/test_filing_kind_evidence.py`
+- `S16` `verify:` `pytest filing_kind tests` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_borrador_100_snapshot_lifecycle.py`
+- `S15` `verify:` `pytest borrador lifecycle+status composition` -> `pass`
+- `S15` `by:` `standard-implementer`
+- `S14` `M` `src/cadrumo/application/modelo/calculation_report_export.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_report_export.py`
+- `S14` `M` `src/cadrumo/entrypoints/calculation_review_snapshot_composition.py`
+- `S14` `M` `src/cadrumo/application/export/tests/test_review_snapshot_loader.py`
+- `S14` `M` `src/cadrumo/application/modelo/tests/test_declaration_summary_grade.py`
+- `S14` `verify:` `pytest report export, review loader, declaration summary` -> `pass`
+- `S14` `by:` `standard-implementer`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/snapshots.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S15` `verify:` `uv run --no-sync pytest borrador+live+aeat_sync+namespace registry` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `lint-imports` -> `pass`
+- `S15` `by:` `implementer`
+- `S14` `M` `src/cadrumo/application/modelo/declarations_list_projection.py`
+- `S14` `M` `src/cadrumo/domain/modelos/tests/test_calculation_source_issue_identity.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_capped_retenciones.py`
+- `S14` `verify:` `pytest proven-zero persistence, gate, form, summary, list, revision identity and stored-shape replay` -> `pass`
+- `S14` `verify:` `just check-types` -> `pass`
+- `S14` `verify:` `lint-imports` -> `pass`
+- `S14` `by:` `high-implementer`
+- `S14` `M` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S14` `verify:` `pytest filed-before-cap export refusal, form and list recalculation, gate, summary, e2e` -> `pass`
+- `S14` `verify:` `just check-style` -> `pass`
+- `S14` `verify:` `just check-format` -> `pass`
+- `S14` `verify:` `python -m dev.registry.conformance valid` -> `pass`
+- `S14` `verify:` `just check-bindings` -> `pass`
 
 ## Notes
 
@@ -194,3 +310,14 @@ related:
 - `S14` post-close regression fix: fixtures seeded unstamped revisions outside the calculation producer; dirs went 36 failed to 4 failed, the 4 outside S14 (0599 proven-zero diagnostic, 0604 fold)
 - `S05` post-close test alignment
 - `S16` post-close test alignment
+- `S15` Every target casilla of the 2022-2023 borrador profile is computed, so a real import stores no value and reports all five as unowned; installed stdio acceptance fixture updated but not run (disposable host only)
+- `S28` coordination with IVA and registry sessions happened after S16 landed; consumer-domain items forwarded to operator
+- `S15` phase-review fix
+- `S14` phase-review fix
+- `S05` phase-review fix
+- `S14` phase-review-fix
+- `S16` record amendment 2026-11-02
+- `S15` re-review fix
+- `S14` re-review fix
+- `S15` operator-approved schema bump 2026-11-02
+- `S14` operator ruling 2026-11-02

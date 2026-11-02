@@ -71,36 +71,45 @@ class ProfileProvider(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_profile_shape(self) -> ProfileProvider:
-        has_scalar = self.profile_key is not None
-        has_composite = bool(self.profile_keys)
         has_collection = self.profile_model is not None
-        shape_count = sum((has_scalar, has_composite, has_collection))
-        if shape_count != 1:
-            raise RegistryValidationError(
-                "profile selector must declare exactly one of profile_key (scalar), "
-                "profile_keys (composite), or profile_model (collection)",
-            )
-        if has_composite and self.format is None:
+        _require_single_shape(self, has_collection=has_collection)
+        if bool(self.profile_keys) and self.format is None:
             raise RegistryValidationError("profile composite selector (profile_keys) requires a format renderer")
         if self.repeating and not has_collection:
             raise RegistryValidationError("profile selector with repeating=true must declare profile_model")
         if has_collection:
-            if self.field is None:
-                raise RegistryValidationError("profile model selector must declare field")
-            # ``collection`` is only required when the profile model
-            # selector targets a repeating sub-collection
-            # (``repeating = true`` plus a named ``collection``). Scalar
-            # fields on a typed profile model (e.g. ``profile_model =
-            # "TaxResidenceProfile"`` + ``field = "ccaa"``) omit
-            # ``collection`` because the field IS at the model root.
-            if self.repeating and self.collection is None:
-                raise RegistryValidationError("profile collection selector with repeating=true must declare collection")
-        # required_when_* must be paired
-        if (self.required_when_profile_key is None) != (self.required_when_value is None):
-            raise RegistryValidationError(
-                "profile selector required_when_profile_key and required_when_value must be declared together",
-            )
+            _require_collection_fields(self)
+        _require_paired_required_when(self)
         return self
+
+
+def _require_single_shape(provider: ProfileProvider, *, has_collection: bool) -> None:
+    shape_count = sum((provider.profile_key is not None, bool(provider.profile_keys), has_collection))
+    if shape_count != 1:
+        raise RegistryValidationError(
+            "profile selector must declare exactly one of profile_key (scalar), "
+            "profile_keys (composite), or profile_model (collection)",
+        )
+
+
+def _require_collection_fields(provider: ProfileProvider) -> None:
+    if provider.field is None:
+        raise RegistryValidationError("profile model selector must declare field")
+    # ``collection`` is only required when the profile model
+    # selector targets a repeating sub-collection
+    # (``repeating = true`` plus a named ``collection``). Scalar
+    # fields on a typed profile model (e.g. ``profile_model =
+    # "TaxResidenceProfile"`` + ``field = "ccaa"``) omit
+    # ``collection`` because the field IS at the model root.
+    if provider.repeating and provider.collection is None:
+        raise RegistryValidationError("profile collection selector with repeating=true must declare collection")
+
+
+def _require_paired_required_when(provider: ProfileProvider) -> None:
+    if (provider.required_when_profile_key is None) != (provider.required_when_value is None):
+        raise RegistryValidationError(
+            "profile selector required_when_profile_key and required_when_value must be declared together",
+        )
 
 
 def validate_profile_binding(binding: BindingDefinition) -> list[str]:

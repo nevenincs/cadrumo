@@ -745,6 +745,9 @@ application:
           recargo de equivalencia must be zero.
         printed_total_differs: The printed total, %{printed}, differs from the calculated
           total, %{computed}.
+        rate_date_projected: 'The IVA rates for %{on_date} are read from the nearest
+          declarations, from %{nearest}: this date is older than the filing years
+          Cadrumo covers, so they are a projection, not grounded for filing.'
         rate_date_unresolved: The registry declares no IVA rates for %{on_date}, so
           no IVA can be worked out.
         recargo_above_iva_total: The recargo de equivalencia, %{stated}, cannot exceed
@@ -1194,6 +1197,12 @@ application:
           data.
         what_to_do: Nothing to change in your records. Report it before you rely on
           the figures.
+      filed_before_grade_cap:
+        what: This declaration was recorded before the current checks on its figures,
+          and one of its boxes holds a figure those checks hold back, so you cannot
+          export it as it stands.
+        what_to_do: Calculate the declaration again, check it and record it again;
+          the new record replaces this one.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
@@ -2080,6 +2089,15 @@ application:
       inventory_register_drift: The inventory behind this %{modelo} calculation changed
         since it was calculated (%{rows_recorded} rows recorded, %{rows_current} now,
         %{rows_changed} changed). Recalculate before relying on it.
+      invoice_fingerprint_absent: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates invoice tracking, so Cadrumo cannot say whether your
+        invoices have changed since. Calculate it again to start tracking them.
+      invoice_fingerprint_drift: Your invoices changed after modelo %{modelo} %{filing_year},
+        %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
+        %{added_count} added). Calculate it again before verifying.
+      invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
+        them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
+        cannot be shown to be current. Try again once they can be read.
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.
@@ -2512,6 +2530,7 @@ application:
           booked_date: Booking date
           business_pct: Recorded business proportion
           byte_length: Original byte length
+          calculation_note: Calculation note
           calculation_revision: Calculation revision
           calculation_state: Saved calculation state
           calculation_state_borrador: 'Draft: provisional'

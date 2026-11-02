@@ -28,10 +28,8 @@ def _is_year(value: str) -> bool:
     return len(value) == 4 and value.isascii() and value.isdigit()
 
 
-def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire: str) -> None:
-    """Refuse a perceptor record whose PENDIENTE or EJERCICIO DEVENGO contradicts the printed design."""
-    if record.id != _M193_PERCEPTOR_RECORD_ID:
-        return
+def _context_wires(record: ExportRecordDefinition, wire: str) -> tuple[str, str, str, str]:
+    """Return the year, clave, pendiente and devengo wire slices, refusing a changed or short record."""
     by_id = {field.id: field for field in record.fields}
     if any(identifier not in by_id for identifier in _M193_CONTEXT_FIELD_IDS):
         raise FilingExportValidationError(_M193_CHANGED)
@@ -40,6 +38,19 @@ def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire:
     filing_year, clave, pendiente, devengo = (
         _field_wire(wire, by_id[identifier]) for identifier in _M193_CONTEXT_FIELD_IDS
     )
+    return filing_year, clave, pendiente, devengo
+
+
+def _require_devengo_year_before_filing(devengo: str, filing_year: str) -> None:
+    if not (_is_year(devengo) and _is_year(filing_year) and int(devengo) < int(filing_year)):
+        raise FilingExportValidationError("modelo 193 devengo year must be earlier than the declaration year")
+
+
+def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire: str) -> None:
+    """Refuse a perceptor record whose PENDIENTE or EJERCICIO DEVENGO contradicts the printed design."""
+    if record.id != _M193_PERCEPTOR_RECORD_ID:
+        return
+    filing_year, clave, pendiente, devengo = _context_wires(record, wire)
     if pendiente not in {" ", _M193_PENDING_MARK}:
         raise FilingExportValidationError("modelo 193 pending mark must be blank or X")
     pending = pendiente == _M193_PENDING_MARK
@@ -48,5 +59,5 @@ def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire:
         raise FilingExportValidationError("modelo 193 pending mark and devengo year apply only to keys A, B and D")
     if pending and devengo_filled:
         raise FilingExportValidationError("modelo 193 pending row has no devengo year")
-    if devengo_filled and not (_is_year(devengo) and _is_year(filing_year) and int(devengo) < int(filing_year)):
-        raise FilingExportValidationError("modelo 193 devengo year must be earlier than the declaration year")
+    if devengo_filled:
+        _require_devengo_year_before_filing(devengo, filing_year)

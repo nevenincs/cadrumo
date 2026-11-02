@@ -98,6 +98,7 @@ from .calculation_revision_sources import (
 from .calculation_screen_stamp import CalculationScreenStamp
 from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
+from .invoice_fingerprint import InvoiceFingerprintSnapshot
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from .row_models import ModeloDetailRow
 
@@ -774,6 +775,12 @@ class CalculationRevision(BaseModel):
     # verify/file time; ``None`` for revisions without ledger evidence. Deliberately
     # NOT threaded into ``derive_calculation_revision_id``.
     ledger_filing_evidence: LedgerFilingEvidence | None = None
+    # The invoices this draft's modelo and period read when it was calculated.
+    # ``None`` means UNKNOWN: calculated before fingerprints existed, or by a
+    # modelo that reads no invoice. Outside the revision id, because it records a
+    # read rather than an input, and left out of a dump while absent, so a stored
+    # revision serializes exactly as it did before the field existed.
+    invoice_fingerprint: InvoiceFingerprintSnapshot | None = Field(default=None, repr=False)
     # Complete filing-instance facts are selected before calculation and take
     # part in the content-addressed revision identity. They are never authored
     # or replaced on an existing BORRADOR. Stated explicitly at every
@@ -1188,11 +1195,8 @@ class CalculationRevisionCatalogue(BaseModel):
         caller holding only one of the two need not convert first; any other
         type is simply absent rather than an error.
         """
-        if isinstance(key, CalculationRevision):
-            return key.calculation_revision_id in self.revisions
-        if isinstance(key, str):
-            return key in self.revisions
-        return False
+        revision_id = key.calculation_revision_id if isinstance(key, CalculationRevision) else key
+        return isinstance(revision_id, str) and revision_id in self.revisions
 
 
 class LedgerFilingCoverageError(ModeloError):

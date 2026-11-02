@@ -50,6 +50,10 @@ from .test_borrador_100 import _InMemoryBorradorRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _PERIOD = Period.from_year_and_code(2023, "0A")
 _HUMAN_SOURCE = "file-import:sha256:" + "a" * 64
+_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+# The 2023 borrador profile prints casillas 0505, 0545, 0546, 0585 and 0586. All
+# five are computed in that revision, so no admitted binding owns any of them.
+_PROFILE_CASILLAS = ("0505", "0545", "0546", "0585", "0586")
 
 
 def _read_request(*, query: bool = False, **selectors: object) -> OperationRequest[contracts.Borrador100ReadRequest]:
@@ -75,14 +79,20 @@ def _import_request(path: Path) -> OperationRequest[contracts.Borrador100ImportR
     )
 
 
-def _snapshot(operation: PinnedAuthorityOperation, *, minute: int = 0) -> Borrador100Snapshot:
+def _snapshot(
+    operation: PinnedAuthorityOperation,
+    *,
+    minute: int = 0,
+    period: Period = _PERIOD,
+    values: dict[str, Decimal | str] | None = None,
+) -> Borrador100Snapshot:
     repository = _InMemoryBorradorRepository(bucket_id=str(PROFILE_ID))
     return Borrador100SnapshotService(bucket_id=str(PROFILE_ID), repository=repository).capture(
-        filing_year=_PERIOD.filing_year,
-        period=_PERIOD,
+        filing_year=period.filing_year,
+        period=period,
         captured_at=CAPTURED_AT + timedelta(minutes=minute),
         source_url=_HUMAN_SOURCE,
-        binding_values={"casilla.0550": Decimal("0.00"), "casilla.0699": ""},
+        binding_values={_CERTIFICATE: Decimal(f"{minute}.00")} if values is None else values,
         operation=operation,
     )
 
@@ -125,7 +135,13 @@ def test_real_registration_compiles_distinct_closed_human_query_and_import_schem
 
 @pytest.mark.asyncio
 async def test_shared_canonical_view_preserves_scalars_and_withholds_query_provenance(subject: Subject) -> None:
-    snapshot = _snapshot(subject.operation)
+    # 2025 admits a decimal and a text binding to the borrador, so both scalar kinds are read back.
+    period = Period.from_year_and_code(2025, "0A")
+    snapshot = _snapshot(
+        subject.operation,
+        period=period,
+        values={_CERTIFICATE: Decimal("0.00"), "renta-profile-tax-residence-ccaa": "madrid"},
+    )
     subject.repository.seed(snapshot)
     for query in (False, True):
         request = _read_request(query=query, kind="view", snapshot_id=snapshot.snapshot_id[:16])
@@ -138,8 +154,8 @@ async def test_shared_canonical_view_preserves_scalars_and_withholds_query_prove
     assert human.snapshot.source_url == snapshot.source_url
     assert human.snapshot.binding_map() == safe.snapshot.binding_map() == dict(snapshot.binding_values)
     assert safe.snapshot.binding_values[0].value == PublicDecimal(decimal="0.00")
-    assert safe.snapshot.binding_values[1].value == ""
-    assert safe.snapshot.period.to_period() == _PERIOD
+    assert safe.snapshot.binding_values[1].value == "madrid"
+    assert safe.snapshot.period.to_period() == period
     assert _HUMAN_SOURCE not in safe.model_dump_json() and "source_url" not in safe.model_dump_json()
     assert subject.repository.writes == subject.fence.entries == 0
     assert subject.parser.calls == 0 and set(subject.events.effects) == {OperationEffect.NONE}
@@ -231,15 +247,20 @@ async def test_import_reads_once_preserves_blank_zero_warnings_and_noop_dedup(
     receipt = subject.parser.receipt
     assert receipt is not None
     assert result.source_pdf_sha256 == receipt.source_pdf_sha256
-    assert result.blank_casillas == (receipt.values[0].casilla_id,)
+    assert result.blank_casillas == (_PROFILE_CASILLAS[0],)
+    assert result.unowned_casillas == _PROFILE_CASILLAS[1:]
     assert result.warnings == receipt.warnings and result.extraction_coverage.decimal == "1"
     snapshot = subject.repository.load(result.snapshot.snapshot_id)
-    assert "casilla." + receipt.values[0].casilla_id not in snapshot.binding_values
-    assert snapshot.binding_values["casilla." + receipt.values[1].casilla_id] == Decimal("0.00")
+    assert dict(snapshot.binding_values) == {}
+    assert result.snapshot.binding_count == 0
     assert subject.events.effects[-1] is OperationEffect.UPDATED
     assert all("synthetic source" not in phase and str(path) not in phase for phase in subject.events.phases)
     path.write_bytes(b"synthetic source capture")
+    monkeypatch.setattr(module, "now", lambda: CAPTURED_AT + timedelta(days=3))
     await module.Borrador100ImportExecutor(subject.compose).execute(request, subject.context(request.definition_id))
+    again = cast(contracts.Borrador100ImportExecutionResult, subject.operands.values[-1]).projection
+    assert again.snapshot.snapshot_id == result.snapshot.snapshot_id
+    assert again.snapshot.captured_at == CAPTURED_AT
     assert subject.repository.writes == subject.fence.entries == 1
     assert subject.events.effects[-1] is OperationEffect.NONE
 

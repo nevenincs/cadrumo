@@ -160,6 +160,30 @@ def adjacent_revision_pairs(modelo: ModeloDefinition, available: Collection[str]
     )
 
 
+def _pair_transitions(
+    modelo: str,
+    shapes: Mapping[str, Mapping[str, tuple[WireShape, OfficialStatement]]],
+    earlier: str,
+    later: str,
+) -> Iterator[WireShapeTransition]:
+    for identity, (earlier_shape, earlier_type) in shapes[earlier].items():
+        if identity not in shapes[later]:
+            continue
+        later_shape, later_type = shapes[later][identity]
+        if earlier_shape == later_shape:
+            continue
+        yield WireShapeTransition(
+            modelo=modelo,
+            casilla_id=identity,
+            earlier_revision=earlier,
+            later_revision=later,
+            earlier_shape=earlier_shape,
+            later_shape=later_shape,
+            earlier_official=earlier_type,
+            later_official=later_type,
+        )
+
+
 def cross_revision_wire_shape_transitions(
     modelos_root: Path | None = None,
     adjacency: Mapping[str, Collection[tuple[str, str]]] | None = None,
@@ -182,22 +206,7 @@ def cross_revision_wire_shape_transitions(
         else:
             pairs = tuple((adjacency or {}).get(modelo_root.name, ()))
         for earlier, later in pairs:
-            for identity, (earlier_shape, earlier_type) in shapes[earlier].items():
-                if identity not in shapes[later]:
-                    continue
-                later_shape, later_type = shapes[later][identity]
-                if earlier_shape == later_shape:
-                    continue
-                yield WireShapeTransition(
-                    modelo=modelo_root.name,
-                    casilla_id=identity,
-                    earlier_revision=earlier,
-                    later_revision=later,
-                    earlier_shape=earlier_shape,
-                    later_shape=later_shape,
-                    earlier_official=earlier_type,
-                    later_official=later_type,
-                )
+            yield from _pair_transitions(modelo_root.name, shapes, earlier, later)
 
 
 def screen_authority(_authority: object = None, _modelo_ids: Sequence[str] = ()) -> Sequence[WireShapeTransition]:

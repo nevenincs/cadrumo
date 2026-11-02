@@ -77,6 +77,12 @@ def resolve_filing_window(
     taxpayer must file. The sibling deadline engine wraps the same call and
     raises with the failing stage named; this now agrees with it.
 
+    A year the support envelope gates answers the same way as any other: the
+    window a revision authors for it, or ``None``. No rule is projected for it,
+    because the product files nothing there, and the answer is never an
+    envelope refusal. The envelope decides what can be filed, not what the law
+    dated.
+
     Args:
         modelo: Agencia Estatal de Administración Tributaria (AEAT) modelo code
             (e.g. ``"130"``, ``"303"``).

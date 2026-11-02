@@ -57,6 +57,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
+from .calculation_note_gate import calculation_filed_before_grade_cap, calculation_screen_outdated
 from .calculation_notes import CALCULATION_NOTES, read_element_names
 from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
@@ -283,6 +284,15 @@ def load_modelo_work_form(
         aeat_data_imported_at=_aeat_data_imported_at(context.borrador_snapshot_id, borrador_snapshots),
         calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id),
         element_names=read_element_names(activity_assets),
+        calculation_screen_outdated=head is not None
+        and calculation_screen_outdated(
+            head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
+        ),
+        calculation_filed_before_grade_cap=None
+        if head is None
+        else calculation_filed_before_grade_cap(
+            head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
+        ),
     )
     form = form.model_copy(
         update={

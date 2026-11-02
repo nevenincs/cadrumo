@@ -63,6 +63,7 @@ from ..calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
 )
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
+from ._invoice_drift_gate import invoice_drift_findings
 from ._ledger_drift_gate import ledger_drift_findings
 from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
@@ -476,7 +477,37 @@ def _ledger_snapshot_findings(
             ),
         ),
     )
-    return drift_findings
+    return [
+        *drift_findings,
+        *invoice_drift_findings(
+            target=target,
+            work_unit=work_unit,
+            revision=operation.revision(work_unit.modelo, work_unit.revision_id),
+            ports=ledger_membership_ports.invoice_catalogue_read_ports,
+            source_refs=optional_observation_refs(target.observations, "source_refs"),
+            blocking_finding_observer=lambda finding, verdict: failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.invoice_fingerprint.current",
+                    scenario_id=(
+                        "modelo.work.verify.invoice_fingerprint.catalogue_unavailable"
+                        if verdict is None
+                        else "modelo.work.verify.invoice_fingerprint.drift_detected"
+                    ),
+                    evidence_id="modelo.work.verify.invoice_fingerprint",
+                    evidence_values={
+                        "catalogue_available": verdict is not None,
+                        "changed_invoice_ids": "" if verdict is None else "|".join(verdict.changed),
+                        "removed_invoice_ids": "" if verdict is None else "|".join(verdict.removed),
+                        "added_invoice_ids": "" if verdict is None else "|".join(verdict.added),
+                    },
+                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                ),
+            ),
+        ),
+    ]
 
 
 def collect_verification_gate_findings(

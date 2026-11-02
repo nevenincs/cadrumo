@@ -14,6 +14,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.filing_year import FourDigitYear, is_four_digit_year
 from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -67,7 +68,7 @@ class ModeloProjectOperationRequest(CredentialFreeOperationRequest):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     ccaa: _Token
     casilla_overrides: tuple[ProjectionOverride, ...] = ()
     binding_overrides: tuple[ProjectionOverride, ...] = ()
@@ -91,7 +92,7 @@ class ModeloCompareOperationRequest(CredentialFreeOperationRequest):
 
     @model_validator(mode="after")
     def _two_years(self) -> Self:
-        if len(self.years) != 2 or any(year < 1900 or year > 9999 for year in self.years):
+        if len(self.years) != 2 or not all(is_four_digit_year(year) for year in self.years):
             raise ValueError("comparison needs two filing years")
         return self
 
@@ -141,7 +142,7 @@ class ModeloProjectOperationProjection(BaseModel):
     result_version: Literal[1] = 1
     authority_generation: ContentDigest
     profile_id: UUID
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     ccaa: _Token
     quarters_filed: int = Field(ge=1, le=4)
     quarters_available: tuple[_Token, ...]
@@ -234,8 +235,8 @@ class ModeloCompareOperationProjection(BaseModel):
     authority_generation: ContentDigest
     profile_id: UUID
     modelo: _Token
-    year_a: int = Field(ge=1900, le=9999)
-    year_b: int = Field(ge=1900, le=9999)
+    year_a: FourDigitYear
+    year_b: FourDigitYear
     year_a_revision_id: _Token
     year_b_revision_id: _Token
     year_a_is_draft: bool

@@ -75,6 +75,43 @@ def complementaria_only_casilla_ids(revision: ModeloRevision) -> frozenset[Casil
     return frozenset(casilla.id for casilla in revision.casillas if casilla.complementaria_only is not None)
 
 
+def _gather_period_values(
+    requirement: RegistryFoldRequirement,
+    source_period: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+    evidence: SourceFilingKindEvidence,
+    proven_zero: list[tuple[str, CasillaId]],
+) -> list[Decimal]:
+    """Return one matched filing's source-casilla values, recording casillas proven zero."""
+    period_values: list[Decimal] = []
+    for source_casilla_id in requirement.source_casilla_ids:
+        value = casilla_values.get(source_casilla_id)
+        outcome = complementaria_only_source_outcome(
+            source_casilla_id,
+            observed_value=value,
+            filing_kind=evidence.filing_kind,
+            complementaria_only_casilla_ids=evidence.complementaria_only_casilla_ids,
+        )
+        if outcome is ComplementariaOnlySourceOutcome.CONTRADICTED:
+            raise RegistryValidationError(
+                f"relation requirement {_requirement_ids(requirement)!r} reads complementaria-only casilla "
+                f"{source_casilla_id!r} = {value} from "
+                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, whose filing kind "
+                f"is original on basis {evidence.filing_kind.basis.value!r}",
+            )
+        if outcome is ComplementariaOnlySourceOutcome.PROVEN_ZERO:
+            proven_zero.append((source_period, source_casilla_id))
+            value = Decimal("0")
+        if value is None:
+            raise RegistryValidationError(
+                f"relation requirement {_requirement_ids(requirement)!r} requires observed source casilla id "
+                f"{source_casilla_id!r} from "
+                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
+            )
+        period_values.append(value)
+    return period_values
+
+
 def gather_observed_requirement_values(
     requirement: RegistryFoldRequirement,
     observations: tuple[RegistryModeloObservation, ...],
@@ -120,32 +157,13 @@ def gather_observed_requirement_values(
             (requirement.source_modelo, requirement.filing_year, source_period),
             UNKNOWN_SOURCE_FILING_KIND,
         )
-        period_values: list[Decimal] = []
-        for source_casilla_id in requirement.source_casilla_ids:
-            value = casilla_values.get(source_casilla_id)
-            outcome = complementaria_only_source_outcome(
-                source_casilla_id,
-                observed_value=value,
-                filing_kind=evidence.filing_kind,
-                complementaria_only_casilla_ids=evidence.complementaria_only_casilla_ids,
-            )
-            if outcome is ComplementariaOnlySourceOutcome.CONTRADICTED:
-                raise RegistryValidationError(
-                    f"relation requirement {_requirement_ids(requirement)!r} reads complementaria-only casilla "
-                    f"{source_casilla_id!r} = {value} from "
-                    f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, whose filing kind "
-                    f"is original on basis {evidence.filing_kind.basis.value!r}",
-                )
-            if outcome is ComplementariaOnlySourceOutcome.PROVEN_ZERO:
-                proven_zero.append((source_period, source_casilla_id))
-                value = Decimal("0")
-            if value is None:
-                raise RegistryValidationError(
-                    f"relation requirement {_requirement_ids(requirement)!r} requires observed source casilla id "
-                    f"{source_casilla_id!r} from "
-                    f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
-                )
-            period_values.append(value)
+        period_values = _gather_period_values(
+            requirement,
+            source_period,
+            casilla_values,
+            evidence,
+            proven_zero,
+        )
         per_period.append(tuple(period_values))
     return GatheredRequirementValues(values=tuple(per_period), proven_zero=tuple(proven_zero))
 

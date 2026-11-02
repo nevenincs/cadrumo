@@ -800,6 +800,9 @@ application:
           el recargo debe ser cero.
         printed_total_differs: El total impreso, %{printed}, difiere del total calculado,
           %{computed}.
+        rate_date_projected: 'Los tipos de IVA del %{on_date} se leen de las declaraciones
+          más cercanas, desde el %{nearest}: esta fecha es anterior a los ejercicios
+          que cubre Cadrumo, así que son una proyección y no sirven de base para presentar.'
         rate_date_unresolved: El registro no declara tipos de IVA para el %{on_date},
           así que no se puede calcular el IVA.
         recargo_above_iva_total: El recargo, %{stated}, no puede superar el IVA total,
@@ -1275,6 +1278,12 @@ application:
           no en tus datos.
         what_to_do: No tienes que cambiar nada en tus registros. Avísanos antes de
           fiarte de las cifras.
+      filed_before_grade_cap:
+        what: Registraste esta declaración antes de las comprobaciones actuales de
+          sus cifras, y una de sus casillas tiene una cifra que esas comprobaciones
+          retienen, así que no puedes exportarla tal como está.
+        what_to_do: Vuelve a calcular la declaración, compruébala y regístrala otra
+          vez; el nuevo registro sustituye a este.
       inferred_retencion_excluded_from_credit:
         what: Parte de la retención de tus facturas emitidas se ha calculado a partir
           de lo que pagó el cliente, así que se ha dejado fuera de tu deducción y
@@ -2205,6 +2214,18 @@ application:
       inventory_register_drift: El inventario de este cálculo del modelo %{modelo}
         ha cambiado desde que se calculó (%{rows_recorded} filas registradas, %{rows_current}
         ahora, %{rows_changed} cambiadas). Vuelve a calcular antes de usarlo.
+      invoice_fingerprint_absent: Este cálculo del modelo %{modelo} %{filing_year},
+        %{period} es anterior al seguimiento de facturas, así que Cadrumo no puede
+        saber si tus facturas han cambiado desde entonces. Vuelve a calcularlo para
+        empezar a seguirlas.
+      invoice_fingerprint_drift: Tus facturas han cambiado después de calcular el
+        modelo %{modelo} %{filing_year}, %{period} (%{changed_count} modificadas,
+        %{removed_count} eliminadas, %{added_count} añadidas). Vuelve a calcularlo
+        antes de verificarlo.
+      invoice_fingerprint_unavailable: Cadrumo no ha podido leer tus facturas para
+        compararlas con el modelo %{modelo} %{filing_year}, %{period}, así que no
+        se puede confirmar que este cálculo esté al día. Inténtalo de nuevo cuando
+        se puedan leer.
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.
@@ -2652,6 +2673,7 @@ application:
           booked_date: Fecha contable
           business_pct: Proporción empresarial registrada
           byte_length: Tamaño original en bytes
+          calculation_note: Nota del cálculo
           calculation_revision: Revisión del cálculo
           calculation_state: Estado del cálculo guardado
           calculation_state_borrador: 'Borrador: provisional'

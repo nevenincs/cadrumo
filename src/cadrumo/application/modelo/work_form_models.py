@@ -67,6 +67,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
+from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON
 from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
@@ -191,6 +192,10 @@ NEEDS_ATTENTION: Final[frozenset[ModeloFormOrigin]] = frozenset(
 #: Origins that ask the filer for a value, which neither a filed declaration nor a page that does not apply does.
 ASKS_FOR_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+)
+#: Origins of a box a source feeds, whether the source has filled it yet or not.
+FED_BY_A_SOURCE: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
 )
 
 
@@ -1098,8 +1103,24 @@ class ModeloWorkForm(_FormModel):
 
     @property
     def calculation_out_of_date(self) -> bool:
-        """Whether the last check found the records changed after the calculation, so it must be calculated again."""
-        return any(issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues)
+        """Whether the calculation must be worked out again before it can be checked, exported or recorded.
+
+        The last check found the records changed after the calculation, or the
+        calculation was screened against other registry declarations than the
+        pinned ones, which the gate refuses until it is calculated again.
+        """
+        return any(
+            issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues
+        ) or any(note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in self.calculation_notes)
+
+    @property
+    def filed_before_grade_cap(self) -> bool:
+        """Whether the declaration was recorded before screens existed with a figure in a capped box.
+
+        Its export is refused until it is calculated again, checked and recorded
+        anew, so the form offers that recalculation in place of the recorded state.
+        """
+        return any(note.reason == FILED_BEFORE_GRADE_CAP_REASON for note in self.calculation_notes)
 
     @property
     def blocking_calculation_notes(self) -> tuple[ModeloFormCalculationNote, ...]:
@@ -1179,6 +1200,7 @@ def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
 __all__ = [
     "ABSENT_FROM_ADMISSION",
     "ASKS_FOR_A_VALUE",
+    "FED_BY_A_SOURCE",
     "NEEDS_ATTENTION",
     "ORIGIN_STANDINGS",
     "ModeloFormAddressV1",

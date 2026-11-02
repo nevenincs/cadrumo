@@ -292,6 +292,44 @@ def _is_actionable_unresolved_bound_relation(
     )
 
 
+def _grouped_source_diagnostic(
+    *,
+    source_modelo: str,
+    filing_year: int,
+    periods: tuple[str, ...],
+    members: list[tuple[RelationId, RegistryFoldRequirement]],
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    """Fold the relations reading one absent source filing into one advisory."""
+    member_relation_ids = tuple(sorted(relation_id for relation_id, _ in members))
+    binding_ids = {
+        requirement.target_bindings[0] for _, requirement in members if len(requirement.target_bindings) == 1
+    }
+    binding_id = next(iter(binding_ids)) if len(binding_ids) == 1 else None
+    period_text = ",".join(periods)
+    # Facts (the casilla ids the group reads) come first, so a long group's
+    # elision cuts into the trailing relation-id listing rather than the
+    # facts themselves; `relation_ids` is the full, un-elided,
+    # machine-readable membership regardless of what the prose keeps.
+    facts_text = ", ".join(
+        sorted({casilla_id for _, requirement in members for casilla_id in requirement.source_casilla_ids})
+    )
+    relation_ids_text = ", ".join(member_relation_ids)
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind="relation_prefill",
+        resolver_id=resolver_id,
+        binding_id=binding_id,
+        relation_id=member_relation_ids[0],
+        relation_ids=member_relation_ids,
+        message=(
+            f"modelo {source_modelo} {filing_year} periods {period_text} is missing or "
+            f"incomplete in the local store; {len(members)} relation(s) read it, needing: "
+            f"{facts_text}. Affected relations: {relation_ids_text}"
+        ),
+    )
+
+
 def unresolved_relation_diagnostics(
     *,
     unresolved_relation_ids: frozenset[RelationId],
@@ -335,33 +373,13 @@ def unresolved_relation_diagnostics(
         )
 
     for (source_modelo, filing_year, periods), members in sorted(grouped.items()):
-        member_relation_ids = tuple(sorted(relation_id for relation_id, _ in members))
-        binding_ids = {
-            requirement.target_bindings[0] for _, requirement in members if len(requirement.target_bindings) == 1
-        }
-        binding_id = next(iter(binding_ids)) if len(binding_ids) == 1 else None
-        period_text = ",".join(periods)
-        # Facts (the casilla ids the group reads) come first, so a long group's
-        # elision cuts into the trailing relation-id listing rather than the
-        # facts themselves; `relation_ids` above is the full, un-elided,
-        # machine-readable membership regardless of what the prose keeps.
-        facts_text = ", ".join(
-            sorted({casilla_id for _, requirement in members for casilla_id in requirement.source_casilla_ids})
-        )
-        relation_ids_text = ", ".join(member_relation_ids)
         diagnostics.append(
-            CalculationSourceDiagnostic(
-                reason="source_issue",
-                source_kind="relation_prefill",
+            _grouped_source_diagnostic(
+                source_modelo=source_modelo,
+                filing_year=filing_year,
+                periods=periods,
+                members=members,
                 resolver_id=resolver_id,
-                binding_id=binding_id,
-                relation_id=member_relation_ids[0],
-                relation_ids=member_relation_ids,
-                message=(
-                    f"modelo {source_modelo} {filing_year} periods {period_text} is missing or "
-                    f"incomplete in the local store; {len(members)} relation(s) read it, needing: "
-                    f"{facts_text}. Affected relations: {relation_ids_text}"
-                ),
             ),
         )
     return tuple(diagnostics)
