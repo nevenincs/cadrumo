@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:f137d6107d9d3f0bd9f2f9c02fffec05520e9e502c5375d09201b3c2c31f9be2'
+body_hash: 'sha256:57fa06c9ea98458855810562c04e322808638e5bb90c7430d46a5d3fb0f43688'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -588,6 +588,8 @@ related:
 - `S06` `verify:` `ruff check+format on test_retencion_soportada_cli.py` -> `pass`
 - `S06` `verify:` `dev.docs.sequences check --page how-to/modelo-100 --coherence` -> `pass`
 - `S06` `verify:` `check --sequence modelo-100-inspect-inputs,modelo-100-export-file` -> `pass`
+- `S06` `M` `dev/docs/tests/test_sequence_goldens.py`
+- `S06` `verify:` `pytest -m '' dev/docs/tests/test_sequence_goldens.py -k ReleaseMaskHonesty` -> `pass`
 
 ## Notes
 
