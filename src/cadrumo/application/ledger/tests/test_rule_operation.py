@@ -139,6 +139,9 @@ class _EmptyRuleRepository:
         self.list_calls += 1
         return ()
 
+    def delete(self, identifier: str) -> bool:
+        raise AssertionError(f"dry-run must not delete a rule: {identifier}")
+
 
 def _executor_ports(
     *,
@@ -627,6 +630,9 @@ class _RuleRepositoryProbe:
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return tuple(self.saved)
+
+    def delete(self, identifier: str) -> bool:
+        raise AssertionError(f"adding a rule must not delete one: {identifier}")
 
 
 def test_rule_add_save_uses_the_same_precise_writer_fence() -> None:
