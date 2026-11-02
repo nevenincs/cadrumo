@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5590818ce0de6c4ba67b0088f7606dfa44979fec487781dd673245ebdf0dd6cc'
+body_hash: 'sha256:cb3588e58b84147d6f65b1680e75f391235bcced905b6c4706397aa4ea1eb27f'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -101,6 +101,22 @@ related:
 - `S14` `verify:` `python -m dev.registry.conformance valid` -> `pass`
 - `S14` `verify:` `just check-bindings` -> `pass`
 - `S14` `by:` `implementation-engineer-high`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S05` `A` `src/cadrumo/application/aggregation/tests/test_modelo_100_actividad_retencion_credit.py`
+- `S05` `verify:` `pytest focused 0599 binding, advisory gate, registry binding tests (143)` -> `pass`
+- `S05` `verify:` `just check-style` -> `pass`
+- `S05` `verify:` `just check-format` -> `pass`
+- `S05` `verify:` `just check-types` -> `pass`
+- `S05` `verify:` `lint-imports` -> `pass`
+- `S05` `verify:` `dev.registry.conformance valid` -> `pass`
+- `S05` `verify:` `just check-bindings` -> `pass`
+- `S05` `by:` `implementer`
 
 ## Notes
 

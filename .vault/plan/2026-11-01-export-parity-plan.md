@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:09ba8558884ee59a1c68685236faba64d62d4c3d42dd38711bf8fce4e5a45f9d'
+body_hash: 'sha256:a7054e95e1f0f803b90206dedaff693a8784b831d361174601a94bd6dbd72e23'
 ---
 
 # `export-parity` plan
@@ -50,7 +50,7 @@ Draft and accept the decision records and grounding that every later Phase build
 Land the blocking advisory grade, the typed filing kind and the single borrador key contract that the evidence and reconciliation Phases rely on.
 
 - [x] `P02.S14` - Implement the per-binding capability grade and its export and verify block, applied to Modelo 130 casilla 06; `src/cadrumo/domain/calculations/registry/ and src/cadrumo/application/modelo/`.
-- [ ] `P02.S05` - Rebase and merge the Modelo 100 casilla 0599 ledger binding under the advisory grade; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `P02.S05` - Rebase and merge the Modelo 100 casilla 0599 ledger binding under the advisory grade; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P02.S16` - Capture the typed filing kind and let the 0604 fold prove casilla 18 zero for originals only; `src/cadrumo/application/live/ and src/cadrumo/domain/calculations/registry/observation_fold.py`.
 - [ ] `P02.S15` - Project borrador imports through the bound-casilla map, refuse old snapshot keys and add terminal-origin classes; `src/cadrumo/application/live/borrador_100_import.py and src/cadrumo/application/modelo/borrador_binding.py`.
 
