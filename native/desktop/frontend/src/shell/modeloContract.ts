@@ -964,7 +964,13 @@ export type DeclarationListGroup =
  * it.
  */
 export type DeclarationListNextStep =
-  "fix" | "start" | "open_local_draft" | "create_file" | "continue" | "none";
+  | "fix"
+  | "start"
+  | "open_local_draft"
+  | "create_file"
+  | "recalculate"
+  | "continue"
+  | "none";
 
 /**
  * Independent authorities retained by the calendar projection.
