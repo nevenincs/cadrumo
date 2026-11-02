@@ -38,7 +38,7 @@ from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
 from ...domain.transactions.enums import TransactionLifecycleState
-from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..actividad_asset.history import ActivityAssetHistory
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -102,6 +102,7 @@ from .renta_imputation import (
     imputation_blocking_diagnostics,
     ledger_sum_outcome,
 )
+from .renta_income_evidence import taxable_base_comparison
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .renta_ledger_models import (
     RentaLedgerAggregationIssue,
@@ -541,34 +542,46 @@ def _ledger_expense_value_outcomes(
     }
 
 
-def _received_invoice_covered_bases(transactions: TransactionCatalogue) -> dict[str, Decimal]:
-    """Sum the taxable base of the active ledger rows linked to each purchase invoice."""
-    covered: dict[str, Decimal] = {}
+def _received_invoice_rows(transactions: TransactionCatalogue) -> dict[str, list[Transaction]]:
+    """Group the active ledger rows linked to each purchase invoice."""
+    rows_by_invoice: dict[str, list[Transaction]] = {}
     for row in transactions.values():
         if row.purchase_invoice_evidence_id is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE:
-            covered[row.purchase_invoice_evidence_id] = covered.get(row.purchase_invoice_evidence_id, Decimal("0")) + (
-                row.taxable_base or Decimal("0")
-            )
-    return covered
+            rows_by_invoice.setdefault(row.purchase_invoice_evidence_id, []).append(row)
+    return rows_by_invoice
+
+
+def _accrual_coverage_gap(invoice: Invoice, rows: Sequence[Transaction]) -> str | None:
+    """Say what of an accruing received invoice its ledger rows leave unclassified, or ``None``."""
+    if not rows:
+        return f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
+    comparison = taxable_base_comparison(invoice, rows)
+    if comparison is None:
+        return (
+            f"accrual_part_paid: received invoice {invoice.invoice_number} and its ledger rows have no "
+            "common currency with a EUR value, so what they cover is not known"
+        )
+    if comparison.cash < comparison.owed:
+        return (
+            f"accrual_part_paid: received invoice {invoice.invoice_number} accrues {comparison.owed} "
+            f"but its ledger rows state {comparison.cash}; add a row for the rest"
+        )
+    return None
 
 
 def _unpaid_received_invoice_details(
     accruing: Iterable[Invoice],
-    covered: Mapping[str, Decimal],
+    rows_by_invoice: Mapping[str, Sequence[Transaction]],
     criteria: ImputationCriteria,
     year: int,
 ) -> tuple[str, ...]:
     """Describe each accruing received invoice whose ledger rows leave part of its base unplaced."""
+    if criteria.usable(year) is not ActivityImputationCriterion.DEVENGO:
+        return ()
     return tuple(
-        (
-            f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
-            if invoice.invoice_id not in covered
-            else f"accrual_part_paid: received invoice {invoice.invoice_number} accrues {invoice.base_total} "
-            f"but its ledger rows state {covered[invoice.invoice_id]}; add a row for the rest"
-        )
+        detail
         for invoice in accruing
-        if covered.get(invoice.invoice_id, Decimal("-1")) < invoice.base_total
-        and criteria.usable(year) is ActivityImputationCriterion.DEVENGO
+        if (detail := _accrual_coverage_gap(invoice, rows_by_invoice.get(invoice.invoice_id, ()))) is not None
     )
 
 
@@ -602,7 +615,7 @@ def _expense_imputation_diagnostics(
             end=period.end_date,
         )
     unpaid = _unpaid_received_invoice_details(
-        accruing, _received_invoice_covered_bases(transactions), criteria, period.filing_year
+        accruing, _received_invoice_rows(transactions), criteria, period.filing_year
     )
     return imputation_blocking_diagnostics(
         source_kind=source_kind,
