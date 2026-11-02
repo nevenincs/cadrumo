@@ -22,15 +22,16 @@ is checked on load, so a stored fact whose content was altered is refused.
 
 from __future__ import annotations
 
+import re
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Annotated, Literal, Self
+from typing import Annotated, Final, Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
-from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
@@ -66,6 +67,27 @@ class SourceDisagreementRole(StrEnum):
     CALLER = "caller"
 
 
+_MACHINE_DECIMAL_TEXT: Final = re.compile(r"-?[0-9]+(?:\.[0-9]+)?")
+"""A sign, digits and an optional fraction: the only shape ``format(amount, "f")`` writes."""
+
+
+def _is_machine_decimal_text(text: str) -> bool:
+    """Whether ``text`` is exactly the canonical text of the decimal it spells.
+
+    A stored amount is machine text, never operator input, so the operator
+    grammar's refusal of a European thousands shape does not apply: ``12.500``
+    is twelve and a half held to three places. Leading zeros, a ``+`` sign,
+    exponents and separators other than one dot are refused because they do not
+    survive the round trip through ``Decimal``.
+    """
+    if _MACHINE_DECIMAL_TEXT.fullmatch(text) is None:
+        return False
+    try:
+        return format(Decimal(text), "f") == text
+    except InvalidOperation:
+        return False
+
+
 class _DisagreementValueBase(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
@@ -77,8 +99,7 @@ class _DisagreementAmountBase(_DisagreementValueBase):
     @classmethod
     @pydantic_validation_boundary
     def _amount_is_canonical_decimal(cls, value: str) -> str:
-        parsed = try_parse_canonical_decimal(value)
-        if parsed is None or value != format(parsed, "f"):
+        if not _is_machine_decimal_text(value):
             raise ModeloValidationError("a disagreement amount must be canonical decimal text")
         return value
 
