@@ -621,6 +621,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "booked_date",
             "value_date",
             "operation_date",
+            "accrual_date",
             "currency",
             "business_pct",
             "usage_ratio_id",
