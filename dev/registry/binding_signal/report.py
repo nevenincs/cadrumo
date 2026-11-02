@@ -191,7 +191,6 @@ def _scope_payload(inputs: SignalInputs) -> dict[str, object]:
             "authority": "supported_filing_years",
             "floor": support.floor,
             "horizon": support.horizon,
-            "hard_ceiling": support.hard_ceiling,
         }
         if support is not None
         else None
