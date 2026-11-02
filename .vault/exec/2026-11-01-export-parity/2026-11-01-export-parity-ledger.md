@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8af77a6d568c810d0bb83b97d21b62c34904c79adb2a3b60109c257c5240040'
+body_hash: 'sha256:7d92950df75a8fae3e70e09ee8cbba260e8d94735b317a881f276ecee52e7060'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -286,6 +286,19 @@ related:
 - `S15` `verify:` `just check-style` -> `pass`
 - `S15` `verify:` `lint-imports` -> `pass`
 - `S15` `by:` `implementer`
+- `S14` `M` `src/cadrumo/application/modelo/declarations_list_projection.py`
+- `S14` `M` `src/cadrumo/domain/modelos/tests/test_calculation_source_issue_identity.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_capped_retenciones.py`
+- `S14` `verify:` `pytest proven-zero persistence, gate, form, summary, list, revision identity and stored-shape replay` -> `pass`
+- `S14` `verify:` `just check-types` -> `pass`
+- `S14` `verify:` `lint-imports` -> `pass`
+- `S14` `by:` `high-implementer`
+- `S14` `M` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S14` `verify:` `pytest filed-before-cap export refusal, form and list recalculation, gate, summary, e2e` -> `pass`
+- `S14` `verify:` `just check-style` -> `pass`
+- `S14` `verify:` `just check-format` -> `pass`
+- `S14` `verify:` `python -m dev.registry.conformance valid` -> `pass`
+- `S14` `verify:` `just check-bindings` -> `pass`
 
 ## Notes
 
@@ -307,3 +320,4 @@ related:
 - `S15` re-review fix
 - `S14` re-review fix
 - `S15` operator-approved schema bump 2026-11-02
+- `S14` operator ruling 2026-11-02
