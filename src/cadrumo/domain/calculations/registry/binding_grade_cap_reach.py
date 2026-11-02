@@ -78,10 +78,13 @@ def snapshot_reach_date(snapshot: RegistrySnapshot) -> date:
     """The filing-period date a snapshot's redirects are read at: the close of its period, else of its ejercicio.
 
     A snapshot without a filing period, such as a communication with no
-    period, is read at the close of its filing year.
+    period, or with one that spans no calendar dates, such as an instalment
+    clave, is read at the close of its filing year.
     """
     period = snapshot.filing_period
-    return date(snapshot.filing_year, 12, 31) if period is None else period.end_date
+    if period is None or not period.has_date_span():
+        return date(snapshot.filing_year, 12, 31)
+    return period.end_date
 
 
 def binding_output_redirects(
