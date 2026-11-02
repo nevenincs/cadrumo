@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:690e3f24dc3661209f32a7e0a368cf6a65e6c0b0df7ec032541ead8f3dafd7f2'
+body_hash: 'sha256:85f7fa116fca7f3cb6836b04613f2d92a11da7f2beac27144a630c8908f7eeb6'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -626,6 +626,16 @@ related:
 - `S06` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_profile_family_channels.py`
 - `S06` `verify:` `pytest projection suites` -> `pass`
 - `S06` `by:` `implementer`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_projection_baseline_channels.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_profile_family_channels.py`
+- `S06` `M` `src/cadrumo/locales/en/cli.yml`
+- `S06` `M` `src/cadrumo/locales/es/cli.yml`
+- `S06` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S06` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S06` `verify:` `pytest projection suites` -> `pass`
+- `S06` `verify:` `ruff check and format` -> `pass`
+- `S06` `verify:` `lint-imports` -> `pass`
+- `S06` `verify:` `dev.quality.types touched files` -> `pass`
 
 ## Notes
 
