@@ -46,6 +46,7 @@ class _InMemoryBorradorRepository:
         self.bucket_id = bucket_id
         self._snapshots: dict[str, Borrador100Snapshot] = {}
         self.outdated = 0
+        self.store_reads = 0
 
     def exists(self, snapshot_id: str) -> bool:
         return snapshot_id in self._snapshots
@@ -67,8 +68,9 @@ class _InMemoryBorradorRepository:
             )
         )
 
-    def outdated_stored_snapshot_count(self) -> int:
-        return self.outdated
+    def list_snapshots_with_outdated_count(self) -> tuple[tuple[Borrador100Snapshot, ...], int]:
+        self.store_reads += 1
+        return self.list_snapshots(), self.outdated
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         trimmed = snapshot_id.strip()
@@ -372,3 +374,18 @@ def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_
     assert repository.load(older.snapshot_id).state is SnapshotLifecycleState.SUPERSEDED
     assert repository.load(older.snapshot_id).superseded_by_snapshot_id == newer.snapshot_id
     assert service.list_snapshots() == (newer,)
+
+
+def test_borrador_reading_reads_the_store_once_and_reports_the_older_rows_store_wide() -> None:
+    repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
+    repository.outdated = 3
+    service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
+
+    with bundled_indexed_authority().operation() as operation:
+        year = service.read_snapshots(operation=operation, filing_year=2025)
+        assert repository.store_reads == 1
+        latest = service.read_latest_for_year(filing_year=1999, operation=operation)
+
+    assert repository.store_reads == 2
+    assert year.outdated_stored_snapshots == 3
+    assert latest.readable == () and latest.outdated_stored_snapshots == 3

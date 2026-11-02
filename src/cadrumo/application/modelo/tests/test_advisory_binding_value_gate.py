@@ -56,8 +56,11 @@ from ..calculation_bucket_actions import unrouted_source_issues
 from ..calculation_note_gate import (
     ModeloCalculationBlockedError,
     calculation_filed_before_grade_cap,
+    calculation_screen_outdated,
     gate_refuses,
     require_work_unit_calculation_unblocked,
+    saved_calculation_filed_before_grade_cap,
+    saved_calculation_screen_outdated,
 )
 from ..calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
@@ -528,3 +531,59 @@ def test_the_income_box_fed_by_the_same_provider_kind_stays_filing_grade(operati
             for casilla_id in entry.casilla_ids
         }
         assert casilla not in reached
+
+
+def test_review_reads_a_revision_stale_exactly_as_the_gate_does(operation: PinnedAuthorityOperation) -> None:
+    """The saved-calculation check and the gate answer the same for every stamp and state."""
+    snapshot = _snapshot(operation)
+    unit = _work_unit(snapshot)
+    current = _stamp(snapshot, operation)
+    other = CalculationScreenStamp(contract_version=current.contract_version, digest="0" * 64)
+    states = (
+        CalculationRevisionState.BORRADOR,
+        CalculationRevisionState.VERIFICADO_COMPLETO,
+        CalculationRevisionState.PRESENTADO,
+    )
+    found = {}
+    for state in states:
+        for stamp in (current, None, other):
+            revision = _revision(unit, (), stamp=stamp, state=state, casilla_values={_CAPPED_BOX: Decimal("0")})
+            saved = saved_calculation_screen_outdated(
+                revision, modelo="130", filing_year=_YEAR, period=unit.period, operation=operation
+            )
+            gated = calculation_screen_outdated(
+                revision, modelo="130", filing_year=_YEAR, period=unit.period, operation=operation
+            )
+            assert saved is gated, (state, stamp)
+            found[(state, stamp is current)] = saved
+    assert found[(CalculationRevisionState.VERIFICADO_COMPLETO, False)] is True
+    assert found[(CalculationRevisionState.VERIFICADO_COMPLETO, True)] is False
+    assert found[(CalculationRevisionState.PRESENTADO, False)] is False
+
+
+def test_a_revision_whose_snapshot_cannot_be_selected_is_stale_unless_filed(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """With no snapshot to screen against, nothing shows an unfiled revision current."""
+    unit = _work_unit(_snapshot(operation))
+    current = _stamp(_snapshot(operation), operation)
+    unfiled = _revision(unit, (), stamp=current, state=CalculationRevisionState.VERIFICADO_COMPLETO)
+    filed = _revision(unit, (), stamp=None, state=CalculationRevisionState.PRESENTADO)
+
+    def screened(revision: CalculationRevision) -> bool:
+        return saved_calculation_screen_outdated(
+            revision, modelo="999", filing_year=_YEAR, period=unit.period, operation=operation
+        )
+
+    assert screened(unfiled) is True
+    assert screened(filed) is False
+    assert (
+        saved_calculation_filed_before_grade_cap(
+            filed.model_copy(update={"casilla_values": {}}),
+            modelo="999",
+            filing_year=_YEAR,
+            period=unit.period,
+            operation=operation,
+        )
+        is True
+    )
