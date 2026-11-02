@@ -461,12 +461,13 @@ cli:
           T entregas triangulares, S servicios prestados, I servicios adquiridos,
           R transferencias de bienes en consigna, D devoluciones de bienes en consigna,
           C sustituciones del destinatario en consigna'
-        preview_help: 'Previsualiza un borrador de factura: las cifras, los avisos
-          y el veredicto que alcanzaría la operación de alta, sin guardar nada.'
-        preview_line_help: Objeto JSON repetible para una línea del borrador, con
-          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` e
-          `iva_amount` opcionales. Una cifra que omitas queda sin conocer. Úsalo en
-          lugar de --taxable-base.
+        preview_help: 'Previsualiza un borrador de factura: las cifras, los hallazgos
+          y el veredicto que alcanzaría la operación de alta, sin guardar nada. El
+          NIF de la contraparte (counterparty_nif) y las líneas del borrador (lines,
+          una matriz JSON de objetos de línea con key, description, quantity, unit_price,
+          iva_rate, subtotal e iva_amount opcionales; una cifra omitida queda desconocida;
+          úsala en lugar de --taxable-base) llegan como un objeto JSON por --secrets-stdin
+          o --secrets-fd.'
         preview_operation_date_role_help: Función guardada de la fecha de operación
           de la factura que repite una corrección.
         preview_printed_total_help: El total impreso en el documento, que se compara
@@ -662,8 +663,11 @@ cli:
         remove_stale: La regla guardada %{rule_id} se volvió a guardar el %{created_at},
           que no es la fecha que indicaste. No se ha eliminado nada; consulta el listado
           de reglas y compruébala.
-        trial_help: Prueba un patrón sin guardar con el motor de reglas e indica qué
-          movimientos de los indicados encuentra, sin guardar nada.
+        trial_help: Prueba un patrón sin guardar con el motor de reglas e indica cuáles
+          de los movimientos indicados encuentra, sin guardar nada. El patrón llega
+          como el campo description_pattern de un objeto JSON por --secrets-stdin
+          o --secrets-fd, o en una petición sin eco.
+        trial_pattern_prompt: 'Patrón que probar: '
         trial_transaction_id_help: Identificador repetible de un movimiento en el
           que probar el patrón.
     live:
@@ -3665,14 +3669,13 @@ cli:
       yes_help: Confirma la división de la transacción
     staged_check_category_help: Categoría de gasto repetible que se contrasta con
       una clasificación.
-    staged_check_draft_help: 'Objeto JSON repetible para un movimiento nuevo: `key`
-      y `fields`.'
-    staged_check_help: Responde al trabajo preparado del libro como lo tomarían las
-      escrituras, sin guardar nada.
+    staged_check_help: Responde al trabajo preparado del libro como lo aceptarían
+      los escritores, sin guardar nada. Las filas preparadas (rows, una matriz JSON
+      de objetos con transaction_id, cells y, opcionales, evidence_staged y m210_staged)
+      y los movimientos nuevos (drafts, una matriz JSON de objetos con key y fields)
+      llegan como un objeto JSON por --secrets-stdin o --secrets-fd.
     staged_check_invalid: Cada fila y borrador preparados deben ser un objeto JSON
       con la forma esperada.
-    staged_check_row_help: 'Objeto JSON repetible para un movimiento: `transaction_id`,
-      `cells` y, si procede, `evidence_staged` y `m210_staged`.'
     stash:
       help: Apartar un movimiento de tus registros en el perfil activo
       id_help: Id del movimiento a apartar

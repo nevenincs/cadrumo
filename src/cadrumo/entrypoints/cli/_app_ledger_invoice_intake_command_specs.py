@@ -3,6 +3,12 @@ from __future__ import annotations
 from dataclasses import replace
 
 from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.secret_contracts import (
+    MachineSecretFieldSpec,
+    MachineSecretSpec,
+    MachineSecretVariantSpec,
+)
+from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -107,22 +113,6 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 if option.name != "iva_rate"
             ),
             *INVOICE_LIFECYCLE_METADATA_OPTIONS,
-            OptionSpec(
-                name="counterparty_nif",
-                declarations=("--counterparty-nif",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=None,
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[0],
             OptionSpec(
                 name="printed_total",
@@ -142,22 +132,6 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
             OPTIONAL_IVA_CATEGORY_OPTION,
             *BUSINESS_PREMISES_LEASE_OPTIONS,
-            OptionSpec(
-                name="line",
-                declarations=("--line",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(()),
-                help_key=TranslationKey("cli.app.ledger.invoice.preview_line_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=True,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1],
             OptionSpec(
                 name="stored_invoice_id",
@@ -207,6 +181,8 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
         ),
         policy=_POLICY_6,
         handler=LazyBinding.available(DeferredTarget(".invoice_preview_commands", "invoice_preview", __package__)),
@@ -214,6 +190,18 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_results", "LedgerInvoicePreviewResult", __package__),
             identity="ledger.invoice.preview",
+        ),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "draft",
+                    (
+                        MachineSecretFieldSpec("counterparty_nif"),
+                        MachineSecretFieldSpec("lines"),
+                    ),
+                    DeferredTarget(".invoice_preview_commands", "InvoicePreviewSecrets", __package__),
+                ),
+            ),
         ),
     ),
     CommandSpec(

@@ -432,10 +432,11 @@ cli:
           of goods, T triangular supplies, S services supplied, I services acquired,
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         preview_help: 'Preview an invoice draft: the figures, findings and verdict
-          the add operation would reach, without saving anything.'
-        preview_line_help: Repeatable JSON object for one draft line, with optional
-          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` and
-          `iva_amount`. A figure left out stays unknown. Use it instead of --taxable-base.
+          the add operation would reach, without saving anything. The counterparty
+          tax id (counterparty_nif) and the draft lines (lines, a JSON array of line
+          objects with optional key, description, quantity, unit_price, iva_rate,
+          subtotal and iva_amount; a figure left out stays unknown; use it instead
+          of --taxable-base) arrive as one JSON object on --secrets-stdin or --secrets-fd.'
         preview_operation_date_role_help: Stored role of the operation date on the
           invoice a correction restates.
         preview_printed_total_help: The total printed on the document, compared with
@@ -620,7 +621,10 @@ cli:
           which is not the time you gave. Nothing was removed; list the rules and
           check it.
         trial_help: Try an unsaved pattern with the rule engine and say which of the
-          named movements it finds, without saving anything.
+          named movements it finds, without saving anything. The pattern arrives as
+          the description_pattern field of one JSON object on --secrets-stdin or --secrets-fd,
+          or at a no-echo prompt.
+        trial_pattern_prompt: 'Pattern to try: '
         trial_transaction_id_help: Repeatable id of a movement to try the pattern
           on.
     live:
@@ -3409,14 +3413,13 @@ cli:
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
     staged_check_category_help: Repeatable spending category to judge against a classification.
-    staged_check_draft_help: 'Repeatable JSON object for one new movement: `key` and
-      `fields`.'
     staged_check_help: Answer staged ledger work the way the writers would take it,
-      without saving anything.
+      without saving anything. The staged rows (rows, a JSON array of objects with
+      transaction_id, cells and optional evidence_staged and m210_staged) and new
+      movements (drafts, a JSON array of objects with key and fields) arrive as one
+      JSON object on --secrets-stdin or --secrets-fd.
     staged_check_invalid: Each staged row and draft must be a JSON object of the expected
       shape.
-    staged_check_row_help: 'Repeatable JSON object for one movement: `transaction_id`,
-      `cells` and optional `evidence_staged` and `m210_staged`.'
     stash:
       help: Set aside (stash) one transaction from your records in the active profile
       id_help: Id of the transaction to set aside

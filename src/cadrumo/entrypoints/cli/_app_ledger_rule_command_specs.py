@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.secret_contracts import (
+    MachineSecretFieldSpec,
+    MachineSecretSpec,
+    MachineSecretVariantSpec,
+)
+from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -238,22 +244,6 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEDGER_RULE_RATIO_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
-                name="description_pattern",
-                declarations=("--description-pattern",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.rule.description_pattern_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
                 name="transaction_id",
                 declarations=("--transaction-id",),
                 value=ValueContract(DeferredTarget("builtins", "str")),
@@ -269,6 +259,8 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
         ),
         policy=_POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".rule_trial_commands", "rule_trial", __package__)),
@@ -276,6 +268,15 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_results", "LedgerRuleTrialEnvelope", __package__),
             identity="ledger.rule.trial",
+        ),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "pattern",
+                    (MachineSecretFieldSpec("description_pattern"),),
+                    DeferredTarget(".rule_trial_commands", "RuleTrialSecrets", __package__),
+                ),
+            ),
         ),
     ),
 )

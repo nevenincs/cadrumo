@@ -459,12 +459,13 @@ cli:
           A adquisicions, T lliuraments triangulars, S serveis prestats, I serveis
           adquirits, R transferències de béns en consigna, D devolucions de béns en
           consigna, C substitucions del destinatari en consigna'
-        preview_help: 'Previsualitza un esborrany de factura: les xifres, els avisos
-          i el veredicte que assoliria l''operació d''alta, sense desar res.'
-        preview_line_help: Objecte JSON repetible per a una línia de l'esborrany,
-          amb `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal`
-          i `iva_amount` opcionals. Una xifra que ometis queda sense conèixer. Fes-lo
-          servir en lloc de --taxable-base.
+        preview_help: 'Previsualitza un esborrany de factura: les xifres, les troballes
+          i el veredicte que assoliria l''operació d''alta, sense desar res. El NIF
+          de la contrapart (counterparty_nif) i les línies de l''esborrany (lines,
+          una matriu JSON d''objectes de línia amb key, description, quantity, unit_price,
+          iva_rate, subtotal i iva_amount opcionals; una xifra omesa queda desconeguda;
+          usa-la en lloc de --taxable-base) arriben com un objecte JSON per --secrets-stdin
+          o --secrets-fd.'
         preview_operation_date_role_help: Funció desada de la data d'operació de la
           factura que repeteix una correcció.
         preview_printed_total_help: El total imprès al document, que es compara amb
@@ -660,7 +661,10 @@ cli:
           que no és la data que has indicat. No s'ha eliminat res; consulta el llistat
           de regles i comprova-la.
         trial_help: Prova un patró sense desar amb el motor de regles i indica quins
-          moviments dels indicats troba, sense desar res.
+          dels moviments indicats troba, sense desar res. El patró arriba com el camp
+          description_pattern d'un objecte JSON per --secrets-stdin o --secrets-fd,
+          o en una petició sense eco.
+        trial_pattern_prompt: 'Patró que provar: '
         trial_transaction_id_help: Identificador repetible d'un moviment on provar
           el patró.
     live:
@@ -3643,14 +3647,13 @@ cli:
       yes_help: Confirma la divisió de la transacció
     staged_check_category_help: Categoria de despesa repetible que es contrasta amb
       una classificació.
-    staged_check_draft_help: 'Objecte JSON repetible per a un moviment nou: `key`
-      i `fields`.'
-    staged_check_help: Respon a la feina preparada del llibre com la prendrien les
-      escriptures, sense desar res.
+    staged_check_help: Respon al treball preparat del llibre com l'acceptarien els
+      escriptors, sense desar res. Les files preparades (rows, una matriu JSON d'objectes
+      amb transaction_id, cells i, opcionals, evidence_staged i m210_staged) i els
+      moviments nous (drafts, una matriu JSON d'objectes amb key i fields) arriben
+      com un objecte JSON per --secrets-stdin o --secrets-fd.
     staged_check_invalid: Cada fila i esborrany preparats han de ser un objecte JSON
       amb la forma esperada.
-    staged_check_row_help: 'Objecte JSON repetible per a un moviment: `transaction_id`,
-      `cells` i, si escau, `evidence_staged` i `m210_staged`.'
     stash:
       help: Apartar un moviment dels teus registres al perfil actiu
       id_help: Id del moviment a apartar

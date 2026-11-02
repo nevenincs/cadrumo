@@ -454,12 +454,13 @@ cli:
           T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
           R vevői készlet áthelyezése, D vevői készlet visszaszállítása, C vevői készlet
           címzettcseréje'
-        preview_help: 'Számlatervezet előnézete: az összegek, az észrevételek és az
-          ítélet, amelyet a létrehozási művelet adna, bármi mentése nélkül.'
-        preview_line_help: Egy tervezeti számlasorhoz ismételhető JSON-objektum, opcionális
-          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` és
-          `iva_amount` mezőkkel. A kihagyott összeg ismeretlen marad. Használd a --taxable-base
-          helyett.
+        preview_help: 'Előnézetet ad egy számlavázlatról: azokat az összegeket, észrevételeket
+          és döntést, amelyekre a felvétel jutna, anélkül, hogy bármit mentene. A
+          partner adószáma (counterparty_nif) és a vázlat sorai (lines, sorobjektumok
+          JSON-tömbje, opcionális key, description, quantity, unit_price, iva_rate,
+          subtotal és iva_amount mezőkkel; a kihagyott összeg ismeretlen marad; a
+          --taxable-base helyett használd) egy JSON-objektumként érkeznek a --secrets-stdin
+          vagy a --secrets-fd csatornán.'
         preview_operation_date_role_help: A helyesítés által megismételt számla teljesítési
           dátumának tárolt szerepe.
         preview_printed_total_help: A dokumentumra nyomtatott végösszeg, amelyet a
@@ -656,7 +657,10 @@ cli:
           ami nem az általad megadott idő. Semmi sem törlődött; listázd a szabályokat,
           és ellenőrizd.'
         trial_help: Kipróbál egy nem mentett mintát a szabálymotorral, és megmondja,
-          a megadott tételek közül melyeket találja meg, mentés nélkül.
+          a megnevezett mozgások közül melyeket találja meg, anélkül, hogy bármit
+          mentene. A minta egy JSON-objektum description_pattern mezőjeként érkezik
+          a --secrets-stdin vagy a --secrets-fd csatornán, vagy visszhangmentes kérdésre.
+        trial_pattern_prompt: 'Kipróbálandó minta: '
         trial_transaction_id_help: Megismételhető azonosítója annak a tételnek, amelyen
           a mintát kipróbálod.
     live:
@@ -3611,14 +3615,13 @@ cli:
         N gyermek tranzakciót).
     staged_check_category_help: Ismételhető költségkategória, amelyet egy besorolással
       vetünk össze.
-    staged_check_draft_help: 'Ismételhető JSON-objektum egy új tételhez: `key` és
-      `fields`.'
-    staged_check_help: Megválaszolja az előkészített könyvelési munkát úgy, ahogy
-      az írási műveletek fogadnák, semmit sem ment.
+    staged_check_help: Megválaszolja, hogyan fogadnák az írók az előkészített főkönyvi
+      munkát, anélkül, hogy bármit mentene. Az előkészített sorok (rows, transaction_id,
+      cells és opcionális evidence_staged és m210_staged mezőjű objektumok JSON-tömbje)
+      és az új mozgások (drafts, key és fields mezőjű objektumok JSON-tömbje) egy
+      JSON-objektumként érkeznek a --secrets-stdin vagy a --secrets-fd csatornán.
     staged_check_invalid: Minden előkészített sornak és piszkozatnak a várt alakú
       JSON-objektumnak kell lennie.
-    staged_check_row_help: 'Ismételhető JSON-objektum egy tételhez: `transaction_id`,
-      `cells`, és szükség esetén `evidence_staged` és `m210_staged`.'
     stash:
       help: Egyetlen tranzakció félretétele (`stash`) a nyilvántartásban az aktív
         profilban.

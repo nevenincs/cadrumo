@@ -19,6 +19,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+from .machine_secret_pipe import machine_secret_descriptor_option
 
 pytestmark = [
     pytest.mark.integration,
@@ -35,8 +36,6 @@ _COMPLETE_DRAFT = (
     "received",
     "--counterparty-name",
     "Synthetic supplier",
-    "--counterparty-nif",
-    "A58818501",
     "--country-code",
     "ES",
     "--invoice-number",
@@ -52,12 +51,31 @@ def _line(**figures: str) -> str:
     return json.dumps({"description": "Synthetic service", "quantity": "1", "unit_price": "100.00", **figures})
 
 
-def _invoke(profile: NativeCliProfileFixture, *command: str, language: str = "en", output: str = "json") -> Result:
+_NIF = "A58818501"
+
+
+def _draft_secrets(*lines: str, nif: str | None = _NIF) -> dict[str, str]:
+    """The preview's private draft material: the counterparty tax id and the draft lines as one JSON array."""
+    return {"counterparty_nif": nif or "", "lines": json.dumps([json.loads(line) for line in lines])}
+
+
+def _invoke(
+    profile: NativeCliProfileFixture,
+    *command: str,
+    language: str = "en",
+    output: str = "json",
+    secrets: dict[str, str] | None = None,
+) -> Result:
     assert profile.label is not None
     close_active_bucket_session()
     profile_secret = json.dumps({"profile_passphrase": profile.passphrase})
+    channel = () if secrets is None else machine_secret_descriptor_option(secrets)
     result = invoke_cached_cli(
-        ["--language", language, "--format", output, "--profile", profile.label, "--profile-secrets-stdin", *command],
+        [
+            *("--language", language, "--format", output, "--profile", profile.label, "--profile-secrets-stdin"),
+            *command,
+            *channel,
+        ],
         input=profile_secret,
     )
     assert profile.passphrase not in result.output
@@ -75,8 +93,7 @@ def test_a_hundred_at_twenty_one_percent_previews_twenty_one_of_iva_and_stores_n
             "invoice",
             "preview",
             *_COMPLETE_DRAFT,
-            "--line",
-            _line(iva_rate="RATE_21"),
+            secrets=_draft_secrets(_line(iva_rate="RATE_21")),
         )
 
         assert previewed.exit_code == 0, previewed.output
@@ -116,8 +133,7 @@ def test_a_stated_cuota_that_disagrees_is_refused_with_the_backends_figure(tmp_p
             "invoice",
             "preview",
             *_COMPLETE_DRAFT,
-            "--line",
-            _line(iva_rate="RATE_21", iva_amount="20.00"),
+            secrets=_draft_secrets(_line(iva_rate="RATE_21", iva_amount="20.00")),
         )
 
         assert previewed.exit_code == 0, previewed.output
@@ -136,8 +152,7 @@ def test_a_stated_cuota_that_disagrees_is_refused_with_the_backends_figure(tmp_p
             "invoice",
             "preview",
             *_COMPLETE_DRAFT,
-            "--line",
-            _line(iva_rate="RATE_21", iva_amount="20.00"),
+            secrets=_draft_secrets(_line(iva_rate="RATE_21", iva_amount="20.00")),
             output="text",
         )
         assert worded.exit_code == 0, worded.output
@@ -152,7 +167,7 @@ def test_a_bare_draft_is_incomplete_and_invents_no_figure(tmp_path: Path) -> Non
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-invoice-preview-empty", facts=_PROFILE_FACTS)
 
-        previewed = _invoke(profile, "app", "ledger", "invoice", "preview")
+        previewed = _invoke(profile, "app", "ledger", "invoice", "preview", secrets=_draft_secrets(nif=None))
 
         assert previewed.exit_code == 0, previewed.output
         answer = unwrap_cli_result(previewed)
@@ -175,8 +190,7 @@ def test_a_rule_refusal_names_itself_and_a_correction_serves_what_is_left_to_pay
             *_COMPLETE_DRAFT,
             "--invoice-class",
             "RECTIFICATIVA",
-            "--line",
-            _line(iva_rate="RATE_21"),
+            secrets=_draft_secrets(_line(iva_rate="RATE_21")),
         )
         assert rectificativa.exit_code == 0, rectificativa.output
         refused = unwrap_cli_result(rectificativa)
@@ -198,8 +212,6 @@ def test_a_rule_refusal_names_itself_and_a_correction_serves_what_is_left_to_pay
             "issued",
             "--invoice-class",
             "ORDINARIA",
-            "--counterparty-nif",
-            "A58818501",
             "--country-code",
             "ES",
             "--invoice-date",
@@ -214,9 +226,21 @@ def test_a_rule_refusal_names_itself_and_a_correction_serves_what_is_left_to_pay
             "f" * 64,
             "--stored-grand-total",
             "1210.00",
+            secrets=_draft_secrets(),
         )
         assert corrected.exit_code == 0, corrected.output
         answer = unwrap_cli_result(corrected)
         assert (answer["verdict"], answer["verdict_scope"]) == ("would_accept", "correction_facts")
         assert answer["invoice_id"] == "f" * 64
         assert answer["totals"]["net_of_retention"] == "1140.00"
+
+
+def test_a_counterparty_tax_id_or_line_on_the_command_line_is_refused_as_an_unknown_option(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-invoice-preview-argv", facts=_PROFILE_FACTS)
+
+        for option, value in (("--counterparty-nif", _NIF), ("--line", _line())):
+            refused = _invoke(profile, "app", "ledger", "invoice", "preview", option, value)
+
+            assert refused.exit_code != 0
+            assert f"Unknown option '{option}'" in refused.output
