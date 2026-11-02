@@ -108,6 +108,7 @@ from .errors import AggregationValidationError
 from .renta_imputation import (
     ImputationCriteria,
     ImputationUnresolved,
+    expense_incurred_date,
     impute_ledger_row,
     rows_left_out_summary,
     rows_touching_window,
@@ -490,7 +491,7 @@ def aggregate_renta_gasto_ledger(
                 criteria=criteria,
             ).fractions,
         )
-    observations = _apply_statutory_cap_trims(observations, rules=rules)
+    observations = _apply_statutory_cap_trims(observations, rules=rules, transactions=transactions, invoices=invoices)
     casilla_aggregation = _gasto_casilla_aggregation(
         window.period,
         observations,
@@ -730,6 +731,8 @@ def _apply_statutory_cap_trims(
     observations: list[RentaGastoObservation],
     *,
     rules: RentaCategoryDeductionRules,
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue | None,
 ) -> list[RentaGastoObservation]:
     """Hold the cumulative-window observations that share one statutory cap to that cap together."""
     trims = statutory_cap_trims(
@@ -738,7 +741,8 @@ def _apply_statutory_cap_trims(
                 claim_id=observation.transaction_id,
                 transaction_id=observation.transaction_id,
                 category=normalize_spending_category(observation.category_id),
-                claim_date=observation.filing_date,
+                imputed_on=observation.filing_date,
+                incurred_on=expense_incurred_date(transactions.transactions[observation.transaction_id], invoices),
                 deductible_amount=observation.deductible_amount,
             )
             for observation in observations

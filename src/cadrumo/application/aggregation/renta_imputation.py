@@ -475,6 +475,22 @@ def row_accrual_date(
     return ImputationUnresolved.ACCRUAL_CONFLICT
 
 
+def expense_incurred_date(row: Transaction, invoices: InvoiceCatalogue | None) -> date:
+    """Return the day an expense row happened: the day its invoice or the operator states, else the payment's.
+
+    A daily limit (LIRPF art. 30.2.5.c, RIRPF art. 9.A.3.a) binds a day of meals, whichever
+    day the bank settled them or the imputation criterion places them. A row whose invoice
+    and statement disagree never reaches a limit under a criterion, and without one the
+    payment is the only date left.
+    """
+    invoice_id = row.purchase_invoice_evidence_id
+    invoice = None if invoices is None or invoice_id is None else invoices.get(invoice_id)
+    accrual = row_accrual_date(row, invoice, kind=InvoiceKind.RECEIVED)
+    if accrual is None or isinstance(accrual, ImputationUnresolved):
+        return row.raw.value_date or row.raw.booked_date
+    return accrual
+
+
 def impute_ledger_row(
     row: Transaction, invoice: Invoice | None, *, kind: InvoiceKind, criteria: ImputationCriteria
 ) -> date | ImputationUnresolved:

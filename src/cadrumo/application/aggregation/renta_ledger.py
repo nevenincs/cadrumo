@@ -99,7 +99,7 @@ from .errors import AggregationPeriodError
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
-from .renta_imputation import ImputationCriteria, ImputationUnresolved, impute_ledger_row
+from .renta_imputation import ImputationCriteria, ImputationUnresolved, expense_incurred_date, impute_ledger_row
 from .renta_income_diagnostics import received_rectificativa_reading
 from .renta_ledger_evidence import iva_amount_for, purchase_invoice_evidence_payload, taxable_base_for
 from .renta_ledger_models import (
@@ -857,7 +857,7 @@ def aggregate_renta_ledger_expenses(
             criteria=criteria,
         )
         observations = _net_received_corrections(observations, corrected.fractions)
-    observations = _apply_statutory_cap_trims(observations, rules=rules)
+    observations = _apply_statutory_cap_trims(observations, rules=rules, transactions=transactions, invoices=invoices)
     casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
     return RentaLedgerExpenseAggregation(
         modelo=modelo,
@@ -1105,6 +1105,8 @@ def _apply_statutory_cap_trims(
     observations: list[RentaDeductibleExpenseObservation],
     *,
     rules: RentaCategoryDeductionRules,
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue,
 ) -> list[RentaDeductibleExpenseObservation]:
     """Hold the observations that share one statutory cap to that cap together."""
     trims = statutory_cap_trims(
@@ -1113,7 +1115,8 @@ def _apply_statutory_cap_trims(
                 claim_id=observation.observation_id,
                 transaction_id=observation.transaction_id,
                 category=observation.category,
-                claim_date=observation.operation_date,
+                imputed_on=observation.filing_date,
+                incurred_on=expense_incurred_date(transactions.transactions[observation.transaction_id], invoices),
                 deductible_amount=observation.deductible_amount,
             )
             for observation in observations

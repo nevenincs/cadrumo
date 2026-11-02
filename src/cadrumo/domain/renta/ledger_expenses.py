@@ -908,14 +908,18 @@ class StatutoryCapClaim:
             :func:`statutory_cap_trims`.
         transaction_id: The ledger transaction the row comes from.
         category: The row's spending category.
-        claim_date: The date the expense was incurred on.
+        imputed_on: The date the taxpayer's imputation criterion places the row on,
+            which decides the ejercicio an annual cap counts it in.
+        incurred_on: The day the expense happened, which decides the day a daily
+            cap counts it on whenever it was paid or imputed.
         deductible_amount: The signed amount the row's own rule deducted.
     """
 
     claim_id: str
     transaction_id: str
     category: SpendingCategory
-    claim_date: date
+    imputed_on: date
+    incurred_on: date
     deductible_amount: Decimal
 
 
@@ -957,7 +961,7 @@ def statutory_cap_trims(
         limits[key] = limit
     trims: dict[str, Decimal] = {}
     for key, members in groups.items():
-        ordered = sorted(members, key=lambda member: (member.claim_date, member.claim_id))
+        ordered = sorted(members, key=lambda member: (member.imputed_on, member.claim_id))
         excess = sum((member.deductible_amount for member in ordered), Decimal("0")) - limits[key]
         for member in reversed(ordered):
             if excess <= Decimal("0"):
@@ -982,9 +986,9 @@ def _statutory_cap_group(
     one_day = context.model_copy(update={"statutory_cap_days": None})
     if rule.statutory_cap_eur_per_day is not None or any(variant.is_per_day for variant in rule.statutory_cap_variants):
         daily = _resolve_statutory_cap(rule=rule, context=one_day)
-        return None if daily is None else ((claim.category.value, claim.claim_date), daily)
+        return None if daily is None else ((claim.category.value, claim.incurred_on), daily)
     annual = _resolve_statutory_cap(rule=rule, context=context)
-    return None if annual is None else ((claim.category.value, claim.claim_date.year), annual)
+    return None if annual is None else ((claim.category.value, claim.imputed_on.year), annual)
 
 
 def _observation_id(fact: RentaDeductibleExpenseFact) -> str:
