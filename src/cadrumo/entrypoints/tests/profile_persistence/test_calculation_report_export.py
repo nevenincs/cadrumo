@@ -252,7 +252,7 @@ def test_a_sealed_revision_screened_by_an_earlier_calculation_is_refused_as_expo
     with pytest.raises(ModeloCalculationBlockedError) as refused:
         _report(repos, work_unit, stale)
 
-    assert refused.value.context["reason"] == CALCULATION_SCREEN_OUTDATED_REASON
+    assert (refused.value.context or {}).get("reason") == CALCULATION_SCREEN_OUTDATED_REASON
     assert refused.value.translated_message == calculation_screen_outdated_message_key()
     assert _report(repos, work_unit, revision).header.calculation_revision_id == revision.calculation_revision_id
 

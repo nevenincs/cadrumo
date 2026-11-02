@@ -23,10 +23,10 @@ for an admitted ``ORIGINAL``.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Self
+from typing import Final, Self, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -93,6 +93,12 @@ class FilingKindUnknownReason(StrEnum):
     NO_ADMITTED_EVIDENCE = "no_admitted_evidence"
     UNREADABLE_MARKER = "unreadable_marker"
     DISAGREEMENT = "disagreement"
+
+
+def _is_retired_page_indicator_reading(reading: object) -> bool:
+    if not isinstance(reading, Mapping):
+        return False
+    return cast("Mapping[str, object]", reading).get("source") == _RETIRED_PAGE_INDICATOR_SOURCE
 
 
 def _parse_kind(value: object) -> FilingDeclarationKind | None:
@@ -172,11 +178,8 @@ class ObservedFilingKind(BaseModel):
     def _drop_retired_page_indicator_readings(cls, value: object) -> object:
         if not isinstance(value, (list, tuple)):
             return value
-        return tuple(
-            reading
-            for reading in value
-            if not (isinstance(reading, Mapping) and reading.get("source") == _RETIRED_PAGE_INDICATOR_SOURCE)
-        )
+        stored: list[object] = list(cast("Sequence[object]", value))
+        return tuple(reading for reading in stored if not _is_retired_page_indicator_reading(reading))
 
     @field_validator("kind", mode="before")
     @classmethod
