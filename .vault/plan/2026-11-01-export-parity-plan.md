@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:c81abf96a7c06d77b5f7bbc89d5b798d4d9d4acb3e984aa850db7dfe34936f68'
+body_hash: 'sha256:8171fd905bbbd61f505b79590aaedb0910a0c4b95f835e6f3ca395d886befa1a'
 ---
 
 # `export-parity` plan
@@ -36,14 +36,14 @@ Out of scope: monthly withholding filers and monthly Modelo 123 (the tested refu
 
 Draft and accept the decision records and grounding that every later Phase builds on; no product code.
 
-- [ ] `P01.S01` - Draft the per-binding capability grade decision so an advisory value blocks verify and export but not calculation or preview; `.vault/adr/`.
-- [ ] `P01.S02` - Draft the typed original or complementaria filing-kind decision for captured observations; `.vault/adr/`.
-- [ ] `P01.S03` - Draft the aggregation-taxonomy amendment making tier divergence on filing-bound bindings a blocking finding; `.vault/adr/2026-06-10-calculation-aggregation-taxonomy-adr.md`.
-- [ ] `P01.S12` - Ground and draft the suffered-withholding, reconciliation and resolution-record schemas as a code reference and an export-parity ADR amendment; `.vault/reference/ and .vault/adr/`.
-- [ ] `P01.S13` - Ground the income imputation criterion in primary LIRPF, RIRPF, DGT and TEAC text and draft its profile-fact decision; `.vault/research/ and .vault/adr/`.
+- [x] `P01.S01` - Draft the per-binding capability grade decision so an advisory value blocks verify and export but not calculation or preview; `.vault/adr/`.
+- [x] `P01.S02` - Draft the typed original or complementaria filing-kind decision for captured observations; `.vault/adr/`.
+- [x] `P01.S03` - Draft the aggregation-taxonomy amendment making tier divergence on filing-bound bindings a blocking finding; `.vault/adr/2026-06-10-calculation-aggregation-taxonomy-adr.md`.
+- [x] `P01.S12` - Ground and draft the suffered-withholding, reconciliation and resolution-record schemas as a code reference and an export-parity ADR amendment; `.vault/reference/ and .vault/adr/`.
+- [x] `P01.S13` - Ground the income imputation criterion in primary LIRPF, RIRPF, DGT and TEAC text and draft its profile-fact decision; `.vault/research/ and .vault/adr/`.
 - [ ] `P01.S04` - Ground the AEAT datos fiscales download format against an official specimen or record design; `.vault/research/`.
 - [ ] `P01.S28` - Coordinate the tier-divergence and filing-kind effects with the IVA, registry-binding and consumer domains before P02.S16 and P04.S07; `.vault/plan/`.
-- [ ] `P01.S27` - Present the open rulings from the decision records (zero cap, casilla 06 endpoint, absent imputation fact, legal readings, cross-domain coordination) and record the operator's answers; `.vault/adr/`.
+- [x] `P01.S27` - Present the open rulings from the decision records (zero cap, casilla 06 endpoint, absent imputation fact, legal readings, cross-domain coordination) and record the operator's answers; `.vault/adr/`.
 
 ### Phase `P02` - Build the grade, filing-kind and borrador foundations
 
