@@ -1,8 +1,9 @@
 // What the Renta prototypes read of the `modelo.project` result at version 2,
 // typed from the generated contract so a change to the result's shape stops
 // them compiling. Version 2 names an unresolved credit and every total
-// computed from it by closed tokens only, and serves no words for them. The
-// prototypes draw no figure from the totals, so none is given here.
+// computed from it by closed tokens. The words beside the tokens are the
+// placeholders a prototype draws; the prototypes draw no figure from the
+// totals, so none is given here.
 
 import type { ModeloProjectOperationProjection } from "../../../shell/modeloContract";
 
@@ -36,6 +37,8 @@ export const UNRESOLVED_CREDITS: ProjectV2 = {
       source_kind: "retencion_soportada",
       reason: "unresolved_binding",
       note: "retencion_soportada_evidence_required",
+      source_words: null,
+      words: "Unresolved credit",
     },
     {
       binding_id: "renta-retencion-soportada-capital-mobiliario",
@@ -43,6 +46,8 @@ export const UNRESOLVED_CREDITS: ProjectV2 = {
       source_kind: "retencion_soportada",
       reason: "unresolved_binding",
       note: "retencion_soportada_evidence_required",
+      source_words: null,
+      words: "Unresolved credit",
     },
     {
       binding_id: "renta-retencion-soportada-ganancia-patrimonial",
@@ -50,12 +55,15 @@ export const UNRESOLVED_CREDITS: ProjectV2 = {
       source_kind: "retencion_soportada",
       reason: "unresolved_binding",
       note: "retencion_soportada_absence_contradicted",
+      source_words: null,
+      words: "Unresolved credit",
     },
   ],
   unresolved_casillas: [
     {
       casilla_id: "0609",
       reason: "unresolved_operand",
+      reason_words: "An operand has no value",
       formula_id: "renta-total-pagos-a-cuenta",
       legal_refs: [],
       source_refs: [],
@@ -63,6 +71,7 @@ export const UNRESOLVED_CREDITS: ProjectV2 = {
     {
       casilla_id: "0610",
       reason: "unresolved_operand",
+      reason_words: "An operand has no value",
       formula_id: "renta-cuota-diferencial",
       legal_refs: ["ley-35-2006:art-79"],
       source_refs: [],

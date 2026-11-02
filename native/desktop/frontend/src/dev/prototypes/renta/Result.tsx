@@ -68,7 +68,7 @@ function Elections({
             {question.words}
           </legend>
           <RadioGroup
-            defaultValue={question.default}
+            defaultValue={question.default ?? undefined}
             aria-labelledby={`${base}-${question.election}`}
           >
             {question.choices.map((choice) => (
