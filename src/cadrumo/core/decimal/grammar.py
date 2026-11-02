@@ -52,7 +52,13 @@ from __future__ import annotations
 import re
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Literal
+from typing import Final, Literal
+
+DECIMAL_TEXT_MAX_LENGTH: Final = 128
+"""The longest decimal text an operation takes."""
+
+CENT_FRACTION_DIGITS: Final = 2
+"""The fraction digits of a hand-typed euro amount."""
 
 _UNSIGNED_ANY_FRACTION = re.compile(r"^\d+(\.\d+)?$")
 _SIGNED_ANY_FRACTION = re.compile(r"^-?\d+(\.\d+)?$")
@@ -143,7 +149,8 @@ def try_parse_canonical_decimal(
 #: ``100.000`` match; ``0.333`` does not (nobody writes a thousands run whose
 #: first group is ``0``), and neither does ``1000.000`` (a lead group of four
 #: digits would itself have been grouped).
-_AMBIGUOUS_THOUSANDS_RE = re.compile(r"^[1-9][0-9]{0,2}\.[0-9]{3}$")
+AMBIGUOUS_THOUSANDS_PATTERN: Final = r"^[1-9][0-9]{0,2}\.[0-9]{3}$"
+_AMBIGUOUS_THOUSANDS_RE = re.compile(AMBIGUOUS_THOUSANDS_PATTERN)
 
 
 def european_thousands_reading_is_ambiguous(text: str) -> bool:

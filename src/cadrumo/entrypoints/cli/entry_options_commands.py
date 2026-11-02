@@ -55,7 +55,8 @@ def entry_options(ctx: typer.Context) -> None:
             + (f"\t{tr(option.label_key)}" if option.label_key is not None and option.label_key != "" else "")
             for family in result.families
             for option in family.options
-        ),
+        )
+        + tuple(f"limit\t{rule.rule}\t{rule.decimals}\t{rule.zero}" for rule in result.limits.decimal_rules),
     )
 
 

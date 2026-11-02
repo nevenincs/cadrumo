@@ -521,5 +521,45 @@
         }
       ]
     }
-  ]
+  ],
+  "limits": {
+    "decimal_text_max": 128,
+    "two_way_decimal": "^[1-9][0-9]{0,2}\\.[0-9]{3}$",
+    "decimal_rules": [
+      {
+        "rule": "amount",
+        "decimals": 2,
+        "zero": false
+      },
+      {
+        "rule": "tax_amount",
+        "decimals": 2,
+        "zero": true
+      },
+      {
+        "rule": "quantity",
+        "decimals": 6,
+        "zero": false
+      },
+      {
+        "rule": "unit_price",
+        "decimals": 6,
+        "zero": true
+      }
+    ],
+    "percent_decimals": 4,
+    "percent_points_max": "100",
+    "percent_fraction_max": "1",
+    "percent_bare_fraction_ceiling": "1",
+    "document_percent_fields": [
+      {
+        "field": "iva_rate",
+        "unit": "points"
+      },
+      {
+        "field": "retention_rate",
+        "unit": "points"
+      }
+    ]
+  }
 }

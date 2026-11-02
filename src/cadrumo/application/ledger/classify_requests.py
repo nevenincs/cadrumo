@@ -9,7 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ...core.country_code import CountryCodeAlpha2
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.unit_proportion import is_unit_proportion
@@ -61,7 +61,7 @@ CLASSIFY_UNCLEARABLE_FIELD_NAMES = frozenset({"business_classification", "notes"
 
 _ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=16)]
 
-LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 
 LedgerClassifyShortText = Annotated[str, Field(max_length=128)]
 

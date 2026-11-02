@@ -54,6 +54,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .entry_limits import LedgerEntryLimitsProjection, ledger_entry_limits
 from .invoice_label_vocabulary import CURRENCY_CODES
 from .read_access import resolve_ledger_read_access
 
@@ -110,12 +111,13 @@ class LedgerEntryOptionFamilyProjection(BaseModel):
 
 
 class LedgerEntryOptionsProjection(BaseModel):
-    """Every vocabulary a ledger entry form offers."""
+    """Every vocabulary a ledger entry form offers, and the limits it holds typed text to."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     families: tuple[LedgerEntryOptionFamilyProjection, ...]
+    limits: LedgerEntryLimitsProjection
 
 
 class LedgerEntryOptionsExecutionResult(BaseModel):
@@ -244,6 +246,7 @@ def ledger_entry_options(
         families=tuple(
             LedgerEntryOptionFamilyProjection(family=family, options=options) for family, options in families
         ),
+        limits=ledger_entry_limits(),
     )
 
 

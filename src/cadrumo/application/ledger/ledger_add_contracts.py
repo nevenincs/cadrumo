@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.country_code import CountryCodeAlpha2
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
 from ...domain.iva.prorrata import ProrrataReferenceText
@@ -24,7 +24,7 @@ MAX_LEDGER_ADD_ATTACHMENTS = 4096
 MAX_LEDGER_ADD_VALIDATION_MESSAGES = 32
 _AddText = Annotated[str, Field(max_length=4096)]
 _AddOptionalText = Annotated[str, Field(max_length=4096)] | None
-_AddDecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+_AddDecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _AddOptionalDecimalText = _AddDecimalText | None
 _AddDateText = Annotated[str, Field(min_length=1, max_length=16)]
 _AddOptionalDateText = _AddDateText | None
@@ -108,9 +108,9 @@ class LedgerAddRequest(BaseModel):
         field_name = getattr(info, "field_name", None)
         is_amount = field_name == "amount"
         # Only euro amounts are held to cents; a share or a rate keeps the fraction digits it has (0.052).
-        cents = None if field_name in {"business_pct", "iva_rate"} else 2
+        cents = None if field_name in {"business_pct", "iva_rate"} else CENT_FRACTION_DIGITS
         if try_parse_canonical_decimal(value, signed=not is_amount, max_fraction_digits=cents) is None:
-            if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=2) is not None:
+            if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=CENT_FRACTION_DIGITS) is not None:
                 raise ValueError(
                     "ledger add amount must be a non-negative magnitude; "
                     "set the flow with direction (OUTGOING / INCOMING / INTERNAL_TRANSFER), not a negative amount"

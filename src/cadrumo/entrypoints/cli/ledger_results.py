@@ -69,10 +69,39 @@ class LedgerEntryOptionFamilyPayload(OutputSchema):
     options: list[LedgerEntryOptionPayload]
 
 
+class LedgerEntryDecimalRulePayload(OutputSchema):
+    """How many decimals one kind of figure takes, and whether zero is a value."""
+
+    rule: str
+    decimals: int
+    zero: bool
+
+
+class LedgerEntryPercentFieldPayload(OutputSchema):
+    """The scale one field's rate is typed on."""
+
+    field: str
+    unit: str
+
+
+class LedgerEntryLimitsPayload(OutputSchema):
+    """Every limit a ledger entry form holds typed text to."""
+
+    decimal_text_max: int
+    two_way_decimal: str
+    decimal_rules: list[LedgerEntryDecimalRulePayload]
+    percent_decimals: int
+    percent_points_max: str
+    percent_fraction_max: str
+    percent_bare_fraction_ceiling: str
+    document_percent_fields: list[LedgerEntryPercentFieldPayload]
+
+
 class LedgerEntryOptionsResult(OutputSchema):
     """JSON envelope for ``aeat app ledger entry-options``."""
 
     families: list[LedgerEntryOptionFamilyPayload]
+    limits: LedgerEntryLimitsPayload
 
 
 class LedgerStagedRoutePayload(OutputSchema):
@@ -108,6 +137,10 @@ class LedgerStagedRowPayload(OutputSchema):
     takes_share: bool
     category_settable: bool
     category_on_income: bool
+    takes_changes: bool
+    takes_invoice: bool
+    evidence_advised: bool
+    lifecycle_actions: list[str]
     tax_set_skip: str | None
     transfer_locked_fields: list[str]
     classifying_fields: list[str]
@@ -936,8 +969,11 @@ __all__ = [
     "LedgerClassifySingleResult",
     "LedgerDetachResult",
     "LedgerEntryOptionFamilyPayload",
+    "LedgerEntryDecimalRulePayload",
+    "LedgerEntryLimitsPayload",
     "LedgerEntryOptionPayload",
     "LedgerEntryOptionsResult",
+    "LedgerEntryPercentFieldPayload",
     "LedgerExcludeResult",
     "LedgerHistoryEventPayload",
     "LedgerHistoryResult",

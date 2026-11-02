@@ -15,7 +15,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -60,7 +60,7 @@ _MAX_RESULT_BYTES = 60 * 1024
 _EvidenceIdentity = Annotated[str, Field(min_length=1, max_length=64)]
 _EvidenceText = Annotated[str, Field(max_length=16_384)]
 _InvoiceDate = Annotated[str, Field(max_length=64)]
-_DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+_DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _EvidenceEventId = Annotated[str, Field(min_length=1, max_length=64)]
 _EvidenceEventIds = Annotated[tuple[_EvidenceEventId, ...], Field(min_length=1, max_length=1)]
 _OptionalEvidenceEventIds = Annotated[tuple[_EvidenceEventId, ...], Field(max_length=1)]

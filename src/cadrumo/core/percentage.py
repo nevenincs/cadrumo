@@ -30,7 +30,19 @@ PERCENTAGE_MIN: Final[Decimal] = Decimal("0")
 #: A rate of the whole, stated as a hundred rather than as one.
 PERCENTAGE_MAX: Final[Decimal] = Decimal("100")
 
+#: The most decimals a typed percentage takes: a governed rate has two at most, a usage ratio a little more.
+PERCENTAGE_ENTRY_DECIMALS: Final[int] = 4
+
+#: Below this, a bare number may be a fraction or a small percentage, so entry refuses it unmarked.
+PERCENTAGE_BARE_FRACTION_CEILING: Final[Decimal] = Decimal("1")
+
 Percentage = Annotated[Decimal, Field(ge=PERCENTAGE_MIN, le=PERCENTAGE_MAX)]
 """A rate stated on the AEAT scale, where a hundred is the whole."""
 
-__all__ = ["PERCENTAGE_MAX", "PERCENTAGE_MIN", "Percentage"]
+__all__ = [
+    "PERCENTAGE_BARE_FRACTION_CEILING",
+    "PERCENTAGE_ENTRY_DECIMALS",
+    "PERCENTAGE_MAX",
+    "PERCENTAGE_MIN",
+    "Percentage",
+]

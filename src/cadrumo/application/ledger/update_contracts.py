@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -64,7 +64,7 @@ LedgerUpdatePatchField = Literal[
 ]
 _UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=16)]
 _UpdateText = Annotated[str, Field(max_length=4096)]
-_DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+_DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _IsoDateText = Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}$")]
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 _ValidationMessage = Annotated[str, Field(min_length=1, max_length=2048)]
@@ -115,10 +115,10 @@ class LedgerUpdatePatch(BaseModel):
         is_amount = field_name == "amount"
         # Only euro amounts are held to cents; a rate keeps the fraction digits it has (0.052).
         parsed = try_parse_canonical_decimal(
-            value, signed=not is_amount, max_fraction_digits=None if field_name == "iva_rate" else 2
+            value, signed=not is_amount, max_fraction_digits=None if field_name == "iva_rate" else CENT_FRACTION_DIGITS
         )
         if parsed is None:
-            if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=2) is not None:
+            if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=CENT_FRACTION_DIGITS) is not None:
                 raise ValueError(
                     "ledger update amount must be a non-negative magnitude; "
                     "set the flow with direction (OUTGOING / INCOMING / INTERNAL_TRANSFER), not a negative amount"
