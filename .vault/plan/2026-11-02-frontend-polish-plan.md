@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:fee89382f646c0b5da2b8c74e397d0320e706ba146ca8e7afef7f9e6cffbf90e'
+body_hash: 'sha256:9ee997bba6fe114ae86eb75b87e369c38a5c9d1245fa958e0ae3cc309fc30a99'
 ---
 
 # `frontend-polish` plan
@@ -71,7 +71,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S30` - Render palette search results only for their query and distinguish unavailable search; `native/desktop/frontend/src/components/CommandPalette.tsx, native/desktop/frontend/tests/scenarios/palette.spec.ts, dev/locales/`.
 - [ ] `S31` - Render served context-fact box numbers and regenerate canonical Modelo fixtures to match the current contract; `native/desktop/frontend/src/components/modelo/form/RecordsBlock.tsx, native/desktop/frontend/src/dev/fixtures/modelo/, native/desktop/frontend/src/shell/modeloContract.ts, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [ ] `S32` - Restore canonical frontend input generation with accepted diagnostic severity parity and lossless public export-offer projection; `src/cadrumo/application/modelo/calculation_notes.py, src/cadrumo/application/modelo/workbench_projection.py, src/cadrumo/application/modelo/tests/, native/desktop/frontend/scripts/modelo_fixtures.py, native/desktop/frontend/src/shell/modeloContract.ts`.
-- [ ] `S33` - Expose the supported local declaration PDF comparison beside receipt import, preserving backend refusals and write holds; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo.spec.ts, dev/locales/, src/cadrumo/locales/`.
+- [x] `S33` - Expose the supported local declaration PDF comparison beside receipt import, preserving backend refusals and write holds; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [ ] `S34` - Retry failed casilla help in place without changing selection or staged edits; `native/desktop/frontend/src/components/modelo/details/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [ ] `S35` - Keep delayed agent clarification and approval results within their originating conversation and request owner; `native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`.
 

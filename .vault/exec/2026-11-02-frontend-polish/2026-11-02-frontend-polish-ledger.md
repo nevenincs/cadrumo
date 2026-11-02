@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b7510ce8cd66a163828efc589c78289908f0205253b64acb6b8f88a9e8bd4345'
+body_hash: 'sha256:80cf0916fd6a38762f8dee907dc700d951174cadfb095a89ec3aec8bc3f30743'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -165,6 +165,11 @@ related:
 - `S21` `M` `dev/locales/desktop_workspace_keys.py`
 - `S21` `verify:` `Four-language reconciliation plus limited and missing-value scenarios six` -> `pass`
 - `S21` `verify:` `Canonical chrome and scoped static checks` -> `pass`
+- `S33` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S33` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S33` `M` `dev/locales/desktop_workspace_keys.py`
+- `S33` `verify:` `Declaration comparison refusal and unknown-settlement browser cases two` -> `pass`
+- `S33` `verify:` `TypeScript scoped lint formatting and canonical chrome` -> `pass`
 
 ## Notes
 
