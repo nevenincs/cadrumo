@@ -17,7 +17,6 @@ from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BY
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
-from ...core.hashing import canonical_json_bytes
 from ...core.hex import HEX_PATTERN_64
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -56,6 +55,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .review_package_collab_audit import (
@@ -415,8 +415,7 @@ class ReviewPackageRecipientRemoveExecutor:
 
 
 def _check_projection_size(projection: BaseModel) -> None:
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(projection, _RESULT_DOCUMENT_MAX_BYTES)
 
 
 def _require_success_receipt(

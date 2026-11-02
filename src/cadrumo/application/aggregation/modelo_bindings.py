@@ -28,6 +28,7 @@ source diagnostics rather than silently blanking the filed calculation.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
@@ -67,6 +68,8 @@ from ...domain.calculations.registry.ledger_renta_income_bindings import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.iva.schema import InvoiceKind
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ...domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
@@ -98,6 +101,7 @@ from .modelo_bindings_actividad_assets import (
     activity_asset_disposal_excess,
     activity_asset_disposal_excess_m131_findings,
 )
+from .renta_imputation import accruing_invoices, ledger_sum_outcome
 from .renta_income_ledger import (
     RentaIncomeLedgerAggregation,
     aggregate_renta_income_ledger_from_repositories,
@@ -416,7 +420,9 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 if context.modelo == form_for_role("renta.objective_instalment")
                 else ()
             ),
-            value_outcomes=_resolved_withholding_value_outcomes(context, aggregation, binding_values),
+            value_outcomes=_resolved_income_value_outcomes(
+                context, aggregation, binding_values, invoices=self._ports.invoice_reader.load()
+            ),
             provenance=_disposal_excess_provenance(declared_excess, resolver_id=self.resolver_id)
             + _provenance_for(
                 aggregation.observations,
@@ -444,19 +450,39 @@ def _declared_disposal_excess(
     return tuple(row for row in disposal_excess if not row.agrarian and row.error is None)
 
 
-def _resolved_withholding_value_outcomes(
+def _resolved_income_value_outcomes(
     context: CalculationSourceContext,
     aggregation: RentaIncomeLedgerAggregation,
     binding_values: Mapping[BindingId, Decimal],
+    *,
+    invoices: InvoiceCatalogue,
 ) -> dict[BindingId, BindingValueOutcome]:
-    """Carry the withholding outcomes of the bindings that resolved a value."""
-    return {
-        binding_id: outcome
-        for binding_id, outcome in ledger_renta_withholding_value_outcomes(
-            context.revision, aggregation.observations
-        ).items()
-        if binding_id in binding_values
-    }
+    """State what each resolved income-source value rests on, withholding and income alike.
+
+    An issued invoice accruing in the window with its money banked outside it
+    leaves no row here, so it counts against a zero as a row would; for a
+    withholding binding only an invoice stating a retencion does.
+    """
+    with source_context_operation(context):
+        accruing = accruing_invoices(
+            invoices.values(),
+            kind=InvoiceKind.ISSUED,
+            bucket_id=context.bucket_id,
+            start=date(aggregation.period.filing_year, 1, 1),
+            end=aggregation.period.end_date,
+        )
+    withholding = ledger_renta_withholding_value_outcomes(context.revision, aggregation.observations)
+    bearing_invoice = any(invoice.retention_amount for invoice in accruing)
+    outcomes: dict[BindingId, BindingValueOutcome] = {}
+    for binding_id, value in binding_values.items():
+        stated = withholding.get(binding_id)
+        if stated is None:
+            outcomes[binding_id] = ledger_sum_outcome(
+                value, rows_present=bool(aggregation.observations), accruing_invoice_present=bool(accruing)
+            )
+        else:
+            outcomes[binding_id] = BindingValueOutcome.FROM_BEARING_ROWS if bearing_invoice else stated
+    return outcomes
 
 
 def _disposal_excess_provenance(

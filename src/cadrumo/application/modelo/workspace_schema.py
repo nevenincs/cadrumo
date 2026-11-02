@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
@@ -22,6 +22,7 @@ from ...domain.calculations.registry.relation_prefill_bindings import RelationPr
 from ...domain.calculations.registry.schema import (
     BindingDefinition,
     FormulaDefinition,
+    RegistrySnapshot,
 )
 from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from ...domain.calculations.registry.schema_overrides import SchemaFamilyDispositionDeclaration
@@ -259,6 +260,41 @@ def relation_target_endpoints_for_binding(
     )
 
 
+def workspace_schema_identity(
+    authority: RegistrySnapshot | RegistryRevisionInspection,
+    *,
+    modelo_id: str,
+    revision_id: str,
+    casilla_ids: Iterable[str],
+    binding_ids: Iterable[str],
+) -> ModeloWorkspaceSchemaIdentityV1:
+    """Build a schema identity from an admission's declared identity sets and its own field manifest.
+
+    Both admissions reduce to bare id sets, so their fingerprints are comparable in kind
+    whichever authority object the sets were read from.
+    """
+    field_manifest_capture = ModeloWorkspaceFieldManifestPortV1(authority=authority).capture_projection_with_epoch()
+    return ModeloWorkspaceSchemaIdentityV1(
+        schema_id=f"modelo-{modelo_id}-{revision_id}".lower(),
+        schema_fingerprint=content_hash_hex(
+            {
+                "casilla_ids": sorted(casilla_ids),
+                "binding_ids": sorted(binding_ids),
+            }
+        ),
+        field_manifest_digest=field_manifest_capture.projection.manifest_digest,
+    )
+
+
+def workspace_evidence_horizon(source_ref_ids: Iterable[str]) -> ModeloWorkspaceEvidenceHorizonV1:
+    """Build the evidence horizon from an admission's retained source catalogue identities."""
+    source_refs = tuple(sorted(source_ref_ids))
+    return ModeloWorkspaceEvidenceHorizonV1(
+        source_refs=source_refs,
+        evidence_digest=content_hash_hex({"source_refs": source_refs}),
+    )
+
+
 def resolve_static_inspection_schema_identity(
     inspection: RegistryRevisionInspection,
 ) -> ModeloWorkspaceSchemaIdentityV1:
@@ -273,27 +309,18 @@ def resolve_static_inspection_schema_identity(
     contract's ``CalculationCompletenessManifest`` digest has its own field
     (``completeness_manifest_digest``) on its own type.
     """
-    field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=inspection)
-    field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
-    return ModeloWorkspaceSchemaIdentityV1(
-        schema_id=f"modelo-{inspection.modelo_id}-{inspection.revision_id}".lower(),
-        schema_fingerprint=content_hash_hex(
-            {
-                "casilla_ids": sorted(inspection.casilla_ids),
-                "binding_ids": sorted(inspection.binding_ids),
-            }
-        ),
-        field_manifest_digest=field_manifest_capture.projection.manifest_digest,
+    return workspace_schema_identity(
+        inspection,
+        modelo_id=inspection.modelo_id,
+        revision_id=inspection.revision_id,
+        casilla_ids=inspection.casilla_ids,
+        binding_ids=inspection.binding_ids,
     )
 
 
 def static_inspection_evidence_horizon(inspection: RegistryRevisionInspection) -> ModeloWorkspaceEvidenceHorizonV1:
     """Build the evidence horizon straight from the inspection's own retained source catalogue."""
-    source_refs = tuple(sorted(inspection.source_ref_ids))
-    return ModeloWorkspaceEvidenceHorizonV1(
-        source_refs=source_refs,
-        evidence_digest=content_hash_hex({"source_refs": source_refs}),
-    )
+    return workspace_evidence_horizon(inspection.source_ref_ids)
 
 
 def static_inspection_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:

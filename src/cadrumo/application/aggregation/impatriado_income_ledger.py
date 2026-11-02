@@ -363,10 +363,8 @@ def _impatriado_business_issue(
     transaction_id: str,
 ) -> ImpatriadoIncomeLedgerAggregationIssue:
     """Return the typed issue for an income row without business attribution."""
-    reason = (
-        ImpatriadoIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-        if transaction.business_classification is BusinessClassification.PERSONAL
-        else ImpatriadoIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    reason = ImpatriadoIncomeLedgerAggregationIssueReason(
+        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return ImpatriadoIncomeLedgerAggregationIssue(
         transaction_id=transaction_id,

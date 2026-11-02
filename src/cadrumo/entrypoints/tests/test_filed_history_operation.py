@@ -117,7 +117,7 @@ from ...core.operations import (
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...domain.deadlines.models import TaxpayerProfile
-from .supervised_operation_rig import run_to_terminal
+from .supervised_operation_rig import build_supervised_operation, run_to_terminal
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -451,18 +451,12 @@ def test_supervisor_refuses_a_foreign_payload_profile_before_capture(tmp_path: P
             pull=_local_pull(_DeterministicFiledHistoryDiscovery(entered=discovery_entered)),
             provider_preflight=lambda _profile_id, _operation: None,
         )
-        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
-        supervisor = OperationSupervisor(
-            authority_operation=authority_operation,
+        _, _, _, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority_operation,
             registry=_registered_filed_history_definition(definition),
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations"),
-            operands=operation_secure_reference_repository(objects=profile.repository),
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
@@ -503,20 +497,12 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             profile_resolver=lambda _operation: taxpayer,
             provider_preflight=lambda _profile_id, _operation: None,
         )
-        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
-        leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority_operation,
+        _, _, operands, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority_operation,
             registry=_registered_filed_history_definition(definition),
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
@@ -624,20 +610,12 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path, names_root:
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
             provider_preflight=lambda _profile_id, _operation: None,
         )
-        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
-        leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority_operation,
+        _, _, operands, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority_operation,
             registry=_registered_filed_history_definition(definition),
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
@@ -1172,19 +1150,12 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
             profile_resolver=lambda _operation: None,
             provider_preflight=lambda _profile_id, _operation: None,
         )
-        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority_operation,
+        _, _, _, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority_operation,
             registry=_registered_filed_history_definition(definition),
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations"),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
         )
         request = OperationRequest(
             definition_id=definition.definition_id,

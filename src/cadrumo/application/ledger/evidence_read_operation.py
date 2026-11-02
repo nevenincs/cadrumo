@@ -20,7 +20,6 @@ from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BY
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from ...core.hashing import canonical_json_bytes
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -49,6 +48,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
@@ -425,8 +425,7 @@ def _project_query_result(result: BaseModel, receipt: OperationTerminalReceipt, 
 
 def _check_result_size(result: BaseModel) -> None:
     """Refuse a public read result that cannot fit the bounded projection document."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, _RESULT_DOCUMENT_MAX_BYTES)
 
 
 class LedgerEvidenceReadExecutor:

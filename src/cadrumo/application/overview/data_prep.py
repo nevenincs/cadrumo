@@ -43,7 +43,12 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.enums import (
+    BUSINESS_BEARING_STATES,
+    BusinessClassification,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
 from ..modelo.work_selection import (
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
@@ -264,8 +269,7 @@ def _evidence_step(
     expense_rows = tuple(
         t
         for t in period_transactions
-        if t.direction is TransactionDirection.OUTGOING
-        and t.business_classification in (BusinessClassification.BUSINESS, BusinessClassification.MIXED)
+        if t.direction is TransactionDirection.OUTGOING and t.business_classification in BUSINESS_BEARING_STATES
     )
     if not expense_rows:
         return DataPrepStep(

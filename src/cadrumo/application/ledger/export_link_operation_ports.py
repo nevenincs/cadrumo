@@ -15,7 +15,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessPolicy,
 )
 
-from ...core.operations import OperationEffect
 from ...core.period import Period
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest
@@ -60,14 +59,7 @@ async def settle_export_link_failure(
     tracker: LedgerCommitAttemptTracker,
     context: OperationExecutorContext,
     *,
-    confirmed_effect: OperationEffect = OperationEffect.PARTIAL,
+    incomplete: bool = True,
 ) -> None:
     """Preserve confirmed earlier writes and admitted uncertain writer outcomes."""
-    effect = (
-        OperationEffect.UNKNOWN
-        if tracker.has_uncertain_write
-        else confirmed_effect
-        if tracker.confirmed_write
-        else OperationEffect.NONE
-    )
-    await context.events.effect(effect)
+    await context.events.effect(tracker.effect(incomplete=incomplete))

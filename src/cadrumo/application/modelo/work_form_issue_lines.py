@@ -46,7 +46,13 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
-from .calculation_notes import RECORDS_REASONS, note_fact_text, what_locale_key, what_to_do_locale_key
+from .calculation_notes import (
+    DERIVED_GATE_REASONS,
+    RECORDS_REASONS,
+    note_fact_text,
+    what_locale_key,
+    what_to_do_locale_key,
+)
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
@@ -410,6 +416,8 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         address=None if field is None else field.address,
         surface=SourceSurface.LEDGER if note.reason in RECORDS_REASONS else None,
         from_calculation=True,
+        # A revision the gate refuses before reading its notes is put right by calculating again.
+        recalculates=note.reason in DERIVED_GATE_REASONS,
     )
 
 
