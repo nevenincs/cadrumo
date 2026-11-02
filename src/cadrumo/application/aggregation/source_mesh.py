@@ -65,6 +65,7 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.source_disagreement import SourceDisagreementFact
 from ..modelo.work_profile import ModeloWorkProfile
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 
@@ -364,6 +365,8 @@ class CalculationSourceDiagnostic(BaseModel):
     out_of_window_max_filing_date: date | None = None
     value_outcome: BindingValueOutcome | None = None
     """The resolver's stated outcome for a capped value; set only on ``advisory_binding_value``."""
+    disagreement: SourceDisagreementFact | None = None
+    """Every source's value for one figure and which one the calculation used, when two sources disagree."""
 
     @model_validator(mode="before")
     @classmethod

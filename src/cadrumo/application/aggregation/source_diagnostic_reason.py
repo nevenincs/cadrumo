@@ -232,6 +232,17 @@ CalculationSourceDiagnosticReason = Literal[
     # every unrouted reason: nothing here is missing from the return, one of two
     # available figures was chosen over the other.
     "operator_override_diverges_from_computed",
+    # A higher precedence tier replaced a DIFFERENT value a lower tier held for
+    # the same filed figure: borrador over the mesh or the profile, an
+    # operator's value over a carried one, or an operator's box over a bound
+    # value. The ladder still picks the higher tier, so calculation proceeds;
+    # what this states is that a filed figure rests on a contested value, and
+    # it withholds checking, exporting and recording until the sources agree.
+    "precedence_tier_divergence",
+    # The same contest on a figure that reaches no exported box. Worth checking
+    # and never withholding anything, because no wrong figure can reach the
+    # filing through it.
+    "precedence_tier_divergence_advisory",
     # A ledger expense row withheld from a Renta expense total because the
     # activity-asset register declares that transaction as an asset's
     # acquisition. The purchase price is the amortizable base, deducted through

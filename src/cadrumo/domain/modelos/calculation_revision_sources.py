@@ -246,6 +246,10 @@ class RecordedCalculationNote(BaseModel):
     """What kind of note this is, in the same language."""
 
 
+DISAGREEMENT_REASONS: Final[frozenset[str]] = frozenset({"precedence_tier_divergence"})
+"""The persisted reasons whose issue states a :class:`SourceDisagreementFact`, and only those."""
+
+
 class CalculationSourceIssue(BaseModel):
     """One durable unresolved source condition found while calculating a revision.
 
@@ -300,7 +304,11 @@ class CalculationSourceIssue(BaseModel):
     a capped note without a stated outcome withholds. Only that reason carries an
     outcome. ``fact`` states such a note's own row, element, interval and
     amount. ``binding_source`` is ``None`` only where the condition names no
-    binding source kind.
+    binding source kind. ``precedence_tier_divergence`` is a filed figure for
+    which a higher source tier replaced a different value a lower tier held;
+    ``disagreement`` states every tier's value and which one the calculation
+    used, and it withholds filing until the sources agree. ``disagreement`` is
+    carried by exactly the reasons in :data:`DISAGREEMENT_REASONS`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -331,6 +339,7 @@ class CalculationSourceIssue(BaseModel):
         "register_owned_capital_acquisition",
         "ledger_expense_may_be_durable",
         "advisory_binding_value",
+        "precedence_tier_divergence",
     ]
     binding_source: BindingSourceKind | None
     message: str = Field(min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)
@@ -346,6 +355,13 @@ class CalculationSourceIssue(BaseModel):
     def _require_outcome_on_capped_value_only(self) -> Self:
         if self.value_outcome is not None and self.reason != "advisory_binding_value":
             raise ModeloValidationError("only a capped binding value carries a resolver-stated value outcome")
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_disagreement_on_disagreement_reasons_only(self) -> Self:
+        if (self.disagreement is not None) != (self.reason in DISAGREEMENT_REASONS):
+            raise ModeloValidationError("a source disagreement is carried by exactly the reasons that state one")
         return self
 
 
