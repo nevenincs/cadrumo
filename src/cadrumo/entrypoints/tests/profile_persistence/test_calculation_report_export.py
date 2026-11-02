@@ -29,6 +29,8 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import iso
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+from cadrumo.application.modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
 from cadrumo.application.modelo.calculation_report import (
     CalculationReportRowRole,
     CalculationReportValueState,
@@ -48,8 +50,6 @@ from cadrumo.application.modelo.calculation_report_export import (
     build_modelo_calculation_report_for_revision,
     export_modelo_calculation_report,
 )
-from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
-from cadrumo.application.modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
 from cadrumo.application.modelo.calculation_screen import calculation_screen_outdated_message_key
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
