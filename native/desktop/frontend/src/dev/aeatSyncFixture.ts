@@ -15,6 +15,8 @@ export type AeatSyncMode =
   | "inside_horizon"
   /** Each area was last brought one day past its horizon. */
   | "past_horizon"
+  /** The saved Borrador cannot be used, with the count the host serves. */
+  | "capture_refused"
   /** The status read fails. */
   | "unavailable";
 
@@ -22,6 +24,18 @@ const DAY = 24 * 60 * 60 * 1000;
 
 /** The filing years the demo host offers a Borrador import for. */
 export const DEMO_BORRADOR_YEARS: readonly number[] = [2025, 2024, 2023];
+
+function captureRefused(now: number): AeatSyncArea[] {
+  const refused: AeatSyncArea = {
+    area: "borrador",
+    state: "capture_refused",
+    captured_at: new Date(now - 4 * DAY).toISOString(),
+    last_attempt: null,
+    counts: [{ kind: "borrador_refused", value: 2 }],
+    update: "import",
+  };
+  return mixed(now).map((area) => (area.area === "borrador" ? refused : area));
+}
 
 function mixed(now: number): AeatSyncArea[] {
   const ago = (days: number) => new Date(now - days * DAY).toISOString();
@@ -156,7 +170,9 @@ export function aeatSyncFixture(
             ? never()
             : mode === "inside_horizon" || mode === "past_horizon"
               ? horizon(Date.now(), mode === "past_horizon")
-              : mixed(Date.now()),
+              : mode === "capture_refused"
+                ? captureRefused(Date.now())
+                : mixed(Date.now()),
       };
       return Promise.resolve(status);
     },

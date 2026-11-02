@@ -252,6 +252,7 @@ export function aeatSyncResultsFixture(
   say: (line: string) => void,
   picked: "file" | "cancelled" = "file",
   importResult: BorradorImportResult["outcome"] = "captured",
+  unowned = 0,
 ): AeatSyncResultsPort {
   return {
     results() {
@@ -278,7 +279,7 @@ export function aeatSyncResultsFixture(
       say(`aeatSyncResults.importBorrador ${year ?? ""}`.trim());
       return importResult === "failed"
         ? Promise.reject({ code: "unavailable" })
-        : Promise.resolve({ outcome: importResult, unowned: 0 });
+        : Promise.resolve({ outcome: importResult, unowned });
     },
   };
 }

@@ -195,6 +195,28 @@ export const ProrrataSettlement: Story = pane(
       press("button.ledger-prorrata-settle_sector")(canvasElement),
   },
 );
+/** The gross cuota declared for earlier liquidations, listed with the
+ * evidence each rests on. */
+export const ProrrataGrossList: Story = pane(
+  (props) => <ProrrataPane {...props} />,
+  { name: "Prorrata, gross declarations" },
+);
+export const ProrrataGrossDeclare: Story = pane(
+  (props) => <ProrrataPane {...props} />,
+  {
+    name: "Prorrata, declaring a gross cuota",
+    play: ({ canvasElement }) =>
+      press("button.ledger-prorrata-declare_gross")(canvasElement),
+  },
+);
+export const ProrrataGrossRemove: Story = pane(
+  (props) => <ProrrataPane {...props} />,
+  {
+    name: "Prorrata, removing a gross declaration",
+    play: ({ canvasElement }) =>
+      press("button.ledger-prorrata-gross-remove")(canvasElement),
+  },
+);
 export const CapitalGoods: Story = pane((props) => (
   <CapitalGoodsPane {...props} />
 ));

@@ -175,6 +175,17 @@ export const AeatFiling: Story = {
     );
   },
 };
+/** What the calculation noted that withholds nothing, on the row of a
+ * declaration: the first note, with every note in its tooltip. */
+export const RowNotes: Story = {
+  name: "Notes the calculation left on a row",
+  args: { shape: "list-notes" },
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(
+      await drawn(canvasElement, ".declarations-row-notes"),
+    );
+  },
+};
 export const Census: Story = {
   name: "With the census entry",
   args: { census: true },
