@@ -37,7 +37,7 @@ from typing import Literal
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
+from cadrumo.domain.calculations.registry.support_matrix import RevisionCapabilityProbe, revision_capability_probe
 
 from ..compiler.authority import compiled_bundled_authority
 from .corpus import bundled_modelo_ids
@@ -58,12 +58,50 @@ class GradeFinding:
     prerequisite: str
 
 
+type _Gap = tuple[GradeFindingKind, str]
+
+
+def _filing_gaps(probe: RevisionCapabilityProbe, *, has_layout: bool) -> list[_Gap]:
+    gaps: list[_Gap] = []
+    if not has_layout:
+        gaps.append(("under_supported", "export_layout"))
+    if probe.calc_grade and not probe.has_completeness_manifest:
+        gaps.append(("under_supported", "completeness_manifest"))
+    return gaps
+
+
+def _calculation_gaps(probe: RevisionCapabilityProbe, *, has_layout: bool) -> list[_Gap]:
+    gaps: list[_Gap] = []
+    if probe.calc_grade and not probe.has_completeness_manifest:
+        gaps.append(("under_supported", "completeness_manifest"))
+    if has_layout:
+        gaps.append(("under_declared", "export_layout"))
+    return gaps
+
+
+def _applicability_gaps(probe: RevisionCapabilityProbe, *, has_layout: bool) -> list[_Gap]:
+    gaps: list[_Gap] = []
+    if has_layout:
+        gaps.append(("under_declared", "export_layout"))
+    if probe.has_completeness_manifest:
+        gaps.append(("under_declared", "completeness_manifest"))
+    return gaps
+
+
+def _grade_gaps(grade: RegistryAuthorityGrade, probe: RevisionCapabilityProbe, *, has_layout: bool) -> tuple[_Gap, ...]:
+    """Return the (kind, prerequisite) disagreements between a grade and its probe, in report order."""
+    if grade is RegistryAuthorityGrade.FILING:
+        return tuple(_filing_gaps(probe, has_layout=has_layout))
+    if grade is RegistryAuthorityGrade.CALCULATION:
+        return tuple(_calculation_gaps(probe, has_layout=has_layout))
+    return tuple(_applicability_gaps(probe, has_layout=has_layout))
+
+
 def grade_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[GradeFinding, ...]:
     """Compare the declared grade of ``revision`` with its derived capability probe."""
     grade = revision.effective_authority_grade
     probe = revision_capability_probe(revision, modelo_id=modelo_id)
     has_layout = probe.has_fixed_width_export or probe.has_xml_dictionary_export
-    findings: list[GradeFinding] = []
 
     def finding(kind: GradeFindingKind, prerequisite: str) -> GradeFinding:
         return GradeFinding(
@@ -74,22 +112,7 @@ def grade_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[GradeFi
             prerequisite=prerequisite,
         )
 
-    if grade is RegistryAuthorityGrade.FILING:
-        if not has_layout:
-            findings.append(finding("under_supported", "export_layout"))
-        if probe.calc_grade and not probe.has_completeness_manifest:
-            findings.append(finding("under_supported", "completeness_manifest"))
-    elif grade is RegistryAuthorityGrade.CALCULATION:
-        if probe.calc_grade and not probe.has_completeness_manifest:
-            findings.append(finding("under_supported", "completeness_manifest"))
-        if has_layout:
-            findings.append(finding("under_declared", "export_layout"))
-    else:
-        if has_layout:
-            findings.append(finding("under_declared", "export_layout"))
-        if probe.has_completeness_manifest:
-            findings.append(finding("under_declared", "completeness_manifest"))
-    return tuple(findings)
+    return tuple(finding(kind, prerequisite) for kind, prerequisite in _grade_gaps(grade, probe, has_layout=has_layout))
 
 
 def screen_authority(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[GradeFinding, ...]:

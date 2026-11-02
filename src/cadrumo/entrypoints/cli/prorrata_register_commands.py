@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import Never
+from typing import Final, Never
 from uuid import UUID
 
 import typer
@@ -85,174 +86,113 @@ from .prorrata_register_results import (
     SectorDefinitionPayload,
 )
 
+_DEFAULT_REFUSAL_MESSAGE = "errors.refused.refused_profile_prorrata_register_validation"
 _SEED_LOCAL_AUTHORITY_NOTICE_CODE = "ledger.prorrata.seed.local_authority"
 _SEED_ADVISORY_NOTICE_CODE = "ledger.prorrata.seed.advisory"
 
 
-def _raise_provenance_refusal_if_present(
-    refusal: ProrrataRefusalProjection,
-    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
-    provenance: ProrrataProvisionalProvenance | None,
-    operation_id: str,
-    reason: str,
-) -> None:
-    """Raise provenance refusal if present."""
-    if reason == "validation":
-        _raise_prorrata_refusal(
-            "errors.refused.refused_profile_prorrata_register_validation",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            detail=refusal.detail,
-        )
-    if reason == "provenance_required":
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.provenance_requires_evidence",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            accepted=", ".join(refusal.accepted_provenances),
-        )
-    if reason == "provenance_not_electable":
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.provenance_not_electable",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            provenance=provenance.value if provenance is not None else "",
-            accepted=", ".join(refusal.accepted_provenances),
-        )
-    if reason == "reference_required":
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.reference_required",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            provenance=provenance.value if provenance is not None else "",
-        )
-    if reason == "reference_not_permitted":
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.reference_not_permitted",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-        )
+@dataclass(frozen=True, slots=True)
+class _RefusalRoute:
+    """The operator message of one refusal reason and where each context value comes from.
+
+    ``context`` maps a context key to the name of the refusal value that fills it.
+    A route whose value is absent from the refusal is an invalid refusal.
+    """
+
+    message: str
+    context: Mapping[str, str]
 
 
-def _raise_seed_refusal_if_present(
-    refusal: ProrrataRefusalProjection,
-    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
-    operation_id: str,
-    reason: str,
-) -> None:
-    """Raise seed refusal if present."""
-    if reason in {"seed_source_blocked", "seed_existing_blocked"}:
-        detail = " | ".join(f"[{finding.code}] {finding.message}" for finding in refusal.findings if finding.blocking)
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.seed_blocked",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            detail=detail or refusal.detail,
-        )
-    if reason == "seed_source_absent":
-        ejercicio = refusal.ejercicio
-        if ejercicio is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.seed_source_absent",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            prior_ejercicio=ejercicio - 1,
-            ejercicio=ejercicio,
-        )
-    if reason == "regulated_override_standing":
-        ejercicio = refusal.ejercicio
-        if ejercicio is None or refusal.existing_provenance is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.seed_regulated_override_standing",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            provenance=refusal.existing_provenance,
-            ejercicio=ejercicio,
-        )
+_SEED_BLOCKED = _RefusalRoute("cli.app.ledger.prorrata.seed_blocked", {"detail": "blocking_detail"})
+_PROVENANCE_ACCEPTED = {"provenance": "provenance", "accepted": "accepted"}
+_EJERCICIO = {"ejercicio": "ejercicio"}
+_SECTOR_EJERCICIO = {"ejercicio": "ejercicio", "sector_id": "sector_id"}
 
-
-def _raise_sector_refusal_if_present(
-    refusal: ProrrataRefusalProjection,
-    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
-    operation_id: str,
-    reason: str,
-) -> None:
-    """Raise sector refusal if present."""
-    if reason == "sector_prior_definitive_absent":
-        ejercicio = refusal.ejercicio
-        if ejercicio is None or refusal.sector_id is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            prior_ejercicio=ejercicio - 1,
-            ejercicio=ejercicio,
-            sector_id=refusal.sector_id,
-        )
-    if reason == "sector_settlement_entry_absent":
-        ejercicio = refusal.ejercicio
-        if ejercicio is None or refusal.sector_id is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.settle_sector_entry_absent",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            ejercicio=ejercicio,
-            sector_id=refusal.sector_id,
-        )
-
-
-def _raise_gross_refusal_if_present(
-    refusal: ProrrataRefusalProjection,
-    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
-    operation_id: str,
-    reason: str,
-) -> None:
-    """Raise the operator gross-declaration refusal the reason names, if any."""
-    if reason not in {"gross_declaration_duplicate", "gross_declaration_absent", "gross_declaration_sector_unknown"}:
-        return
-    ejercicio = refusal.ejercicio
-    if ejercicio is None:
-        raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
-    if reason == "gross_declaration_duplicate":
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.gross_duplicate",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            ejercicio=ejercicio,
-        )
-    if reason == "gross_declaration_absent":
-        _raise_prorrata_refusal(
-            "cli.app.ledger.prorrata.gross_absent",
-            operation_id=operation_id,
-            refusal=refusal,
-            completion=completion,
-            ejercicio=ejercicio,
-        )
-    if refusal.sector_id is None:
-        raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
-    _raise_prorrata_refusal(
+_REFUSAL_ROUTES: Final[Mapping[str, _RefusalRoute]] = {
+    "validation": _RefusalRoute(_DEFAULT_REFUSAL_MESSAGE, {"detail": "detail"}),
+    "provenance_required": _RefusalRoute(
+        "cli.app.ledger.prorrata.provenance_requires_evidence",
+        {"accepted": "accepted"},
+    ),
+    "provenance_not_electable": _RefusalRoute(
+        "cli.app.ledger.prorrata.provenance_not_electable",
+        _PROVENANCE_ACCEPTED,
+    ),
+    "reference_required": _RefusalRoute(
+        "cli.app.ledger.prorrata.reference_required",
+        {"provenance": "provenance"},
+    ),
+    "reference_not_permitted": _RefusalRoute("cli.app.ledger.prorrata.reference_not_permitted", {}),
+    "seed_source_blocked": _SEED_BLOCKED,
+    "seed_existing_blocked": _SEED_BLOCKED,
+    "seed_source_absent": _RefusalRoute(
+        "cli.app.ledger.prorrata.seed_source_absent",
+        {"prior_ejercicio": "prior_ejercicio", "ejercicio": "ejercicio"},
+    ),
+    "regulated_override_standing": _RefusalRoute(
+        "cli.app.ledger.prorrata.seed_regulated_override_standing",
+        {"provenance": "existing_provenance", "ejercicio": "ejercicio"},
+    ),
+    "sector_prior_definitive_absent": _RefusalRoute(
+        "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
+        {"prior_ejercicio": "prior_ejercicio", **_SECTOR_EJERCICIO},
+    ),
+    "sector_settlement_entry_absent": _RefusalRoute(
+        "cli.app.ledger.prorrata.settle_sector_entry_absent",
+        _SECTOR_EJERCICIO,
+    ),
+    "gross_declaration_duplicate": _RefusalRoute("cli.app.ledger.prorrata.gross_duplicate", _EJERCICIO),
+    "gross_declaration_absent": _RefusalRoute("cli.app.ledger.prorrata.gross_absent", _EJERCICIO),
+    "gross_declaration_sector_unknown": _RefusalRoute(
         "cli.app.ledger.prorrata.gross_sector_unknown",
-        operation_id=operation_id,
-        refusal=refusal,
-        completion=completion,
-        ejercicio=ejercicio,
-        sector_id=refusal.sector_id,
-    )
+        _SECTOR_EJERCICIO,
+    ),
+}
+
+
+def _refusal_values(
+    refusal: ProrrataRefusalProjection,
+    provenance: ProrrataProvisionalProvenance | None,
+) -> dict[str, str | int | None]:
+    """Return the named values a refusal route may place in its message context."""
+    ejercicio = refusal.ejercicio
+    blocking_detail = " | ".join(f"[{item.code}] {item.message}" for item in refusal.findings if item.blocking)
+    return {
+        "detail": refusal.detail,
+        "blocking_detail": blocking_detail or refusal.detail,
+        "accepted": ", ".join(refusal.accepted_provenances),
+        "provenance": provenance.value if provenance is not None else "",
+        "existing_provenance": refusal.existing_provenance,
+        "ejercicio": ejercicio,
+        "prior_ejercicio": ejercicio - 1 if ejercicio is not None else None,
+        "sector_id": refusal.sector_id,
+    }
+
+
+def _route_context(route: _RefusalRoute, values: Mapping[str, str | int | None]) -> dict[str, str | int]:
+    context: dict[str, str | int] = {}
+    for key, name in route.context.items():
+        value = values[name]
+        if value is None:
+            raise _invalid_refusal_error()
+        context[key] = value
+    return context
+
+
+def _unsigned_amount(text: str, *, label: str) -> PublicDecimal:
+    return PublicDecimal(decimal=str(parse_decimal_amount(text, label=label, signed=False)))
+
+
+def _provenance_value(provenance: ProrrataProvisionalProvenance | None) -> str | None:
+    return provenance.value if provenance is not None else None
+
+
+def _invalid_refusal_error() -> CliRefusedBoundaryError:
+    return CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+
+
+def _invalid_projection_error() -> CliRefusedBoundaryError:
+    return CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
 
 
 def _profile_id() -> UUID:
@@ -333,16 +273,14 @@ def _raise_refusal(
     provenance: ProrrataProvisionalProvenance | None = None,
 ) -> Never:
     operation_id = str(completion.operation_id)
-    reason = refusal.reason
-    _raise_provenance_refusal_if_present(refusal, completion, provenance, operation_id, reason)
-    _raise_seed_refusal_if_present(refusal, completion, operation_id, reason)
-    _raise_sector_refusal_if_present(refusal, completion, operation_id, reason)
-    _raise_gross_refusal_if_present(refusal, completion, operation_id, reason)
+    route = _REFUSAL_ROUTES.get(refusal.reason)
+    context = _route_context(route, _refusal_values(refusal, provenance)) if route is not None else {}
     _raise_prorrata_refusal(
-        "errors.refused.refused_profile_prorrata_register_validation",
+        route.message if route is not None else _DEFAULT_REFUSAL_MESSAGE,
         operation_id=operation_id,
         refusal=refusal,
         completion=completion,
+        **context,
     )
 
 
@@ -359,7 +297,7 @@ def _run_mutation(
     if projection.outcome == "refused":
         refusal = projection.refusal
         if refusal is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+            raise _invalid_refusal_error()
         _raise_refusal(refusal, completion=completed, provenance=provenance)
     return completed, projection
 
@@ -390,7 +328,7 @@ def _present_registered_operation[ProjectionT: BaseModel](
 
 def _entry_from_projection(projection: ProrrataMutationProjection) -> ProrrataEntryPayload:
     if projection.entry is None:
-        raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+        raise _invalid_projection_error()
     return _entry_payload(projection.entry)
 
 
@@ -451,8 +389,8 @@ def prorrata_elect_especial(
     request = ProrrataElectEspecialRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
-        percentage=PublicDecimal(decimal=str(parse_decimal_amount(percentage, label="percentage", signed=False))),
-        provenance=provenance.value if provenance is not None else None,
+        percentage=_unsigned_amount(percentage, label="percentage"),
+        provenance=_provenance_value(provenance),
         reference=reference,
         sector_id=sector,
         evidence_reference=evidence_reference,
@@ -481,8 +419,8 @@ def prorrata_elect_general(
     request = ProrrataElectGeneralRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
-        percentage=PublicDecimal(decimal=str(parse_decimal_amount(percentage, label="percentage", signed=False))),
-        provenance=provenance.value if provenance is not None else None,
+        percentage=_unsigned_amount(percentage, label="percentage"),
+        provenance=_provenance_value(provenance),
         reference=reference,
         sector_id=sector,
     )
@@ -511,8 +449,8 @@ def prorrata_revoke_especial(
     request = ProrrataRevokeEspecialRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
-        percentage=PublicDecimal(decimal=str(parse_decimal_amount(percentage, label="percentage", signed=False))),
-        provenance=provenance.value if provenance is not None else None,
+        percentage=_unsigned_amount(percentage, label="percentage"),
+        provenance=_provenance_value(provenance),
         reference=reference,
         sector_id=sector,
         evidence_reference=evidence_reference,
@@ -552,7 +490,7 @@ def prorrata_declare_sector(
     def render() -> None:
         definition = projection.sector_definition
         if definition is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+            raise _invalid_projection_error()
         sector = _sector_payload(definition)
         payload = ProrrataDeclareSectorResult(
             bucket_id=str(profile_id),
@@ -656,7 +594,7 @@ def prorrata_seed(ctx: typer.Context, ejercicio: int, sector: str | None = None)
         entry = _entry_from_projection(projection)
         seed_source = projection.seed_source
         if seed_source is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+            raise _invalid_projection_error()
         findings = [_seed_finding_payload(item) for item in projection.findings]
         payload = ProrrataSeedResult(
             bucket_id=str(profile_id),
@@ -709,7 +647,7 @@ def prorrata_seed_sector(ctx: typer.Context, ejercicio: int, sector_id: str) -> 
     def render() -> None:
         entry = _entry_from_projection(projection)
         if projection.prior_ejercicio is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+            raise _invalid_projection_error()
         payload = ProrrataSeedSectorResult(
             bucket_id=str(profile_id),
             entry=entry,
@@ -748,12 +686,8 @@ def prorrata_settle_sector(
         profile_id=profile_id,
         ejercicio=ejercicio,
         sector_id=sector_id,
-        con_derecho_volume=PublicDecimal(
-            decimal=str(parse_decimal_amount(con_derecho_volume, label="con-derecho-volume", signed=False)),
-        ),
-        sin_derecho_volume=PublicDecimal(
-            decimal=str(parse_decimal_amount(sin_derecho_volume, label="sin-derecho-volume", signed=False)),
-        ),
+        con_derecho_volume=_unsigned_amount(con_derecho_volume, label="con-derecho-volume"),
+        sin_derecho_volume=_unsigned_amount(sin_derecho_volume, label="sin-derecho-volume"),
     )
     completed, projection = _run_mutation(
         ctx,
@@ -810,7 +744,7 @@ def _present_gross_declaration(
 ) -> None:
     def render() -> None:
         if projection.gross_declaration is None:
-            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+            raise _invalid_projection_error()
         declaration = _gross_declaration_payload(projection.gross_declaration)
         payload = result_class(bucket_id=str(profile_id), declaration=declaration, count=int(projection.count or 0))
         emit_envelope(
@@ -848,7 +782,7 @@ def prorrata_declare_gross(
         ejercicio=ejercicio,
         period=period,
         sector_id=sector,
-        gross_cuota=PublicDecimal(decimal=str(parse_decimal_amount(amount, label="amount", signed=False))),
+        gross_cuota=_unsigned_amount(amount, label="amount"),
         evidence_reference=evidence,
         replace=replace,
     )
@@ -961,5 +895,5 @@ def _seed_advisories(projection: ProrrataMutationProjection) -> tuple[ProrrataFi
     """Project advisories only after excluding every blocking finding."""
     advisories = tuple(item for item in projection.findings if not item.blocking)
     if any(item.blocking for item in projection.findings):
-        raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+        raise _invalid_projection_error()
     return advisories

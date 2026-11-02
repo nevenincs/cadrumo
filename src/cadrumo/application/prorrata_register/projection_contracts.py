@@ -351,14 +351,14 @@ def _require_success_projection_completion(projection: ProrrataMutationProjectio
         raise ValueError("prorrata success projection is incomplete")
 
 
+def _require_gross_projection_payload(projection: ProrrataMutationProjection) -> None:
+    if projection.gross_declaration is None or projection.entry is not None or projection.sector_definition is not None:
+        raise ValueError("prorrata gross declaration projection has an incompatible payload")
+
+
 def _validate_mutation_projection_arm(projection: ProrrataMutationProjection) -> None:
     if projection.operation_id in GROSS_DECLARATION_OPERATION_IDS:
-        if (
-            projection.gross_declaration is None
-            or projection.entry is not None
-            or projection.sector_definition is not None
-        ):
-            raise ValueError("prorrata gross declaration projection has an incompatible payload")
+        _require_gross_projection_payload(projection)
     elif projection.gross_declaration is not None:
         raise ValueError("prorrata projection carries a gross declaration outside its operations")
     elif projection.operation_id == "declare_sector":

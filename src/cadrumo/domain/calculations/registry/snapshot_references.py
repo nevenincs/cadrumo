@@ -82,6 +82,27 @@ def _collect_deadline_schedule_refs(
             source_ids.update(condition.source_refs)
 
 
+def _collect_historical_continuity_refs(
+    revision: ModeloRevision,
+    *,
+    legal_ids: set[str],
+    source_ids: set[str],
+) -> None:
+    for evolution in revision.casilla_continuidad_evolutions:
+        legal_ids.update(evolution.legal_refs)
+        source_ids.update(evolution.source_refs)
+    for relation in revision.casilla_structural_successions:
+        legal_ids.update(relation.legal_refs)
+        source_ids.update(relation.from_source_refs)
+        source_ids.update(relation.to_source_refs)
+
+
+def _collect_grade_cap_refs(revision: ModeloRevision, *, legal_ids: set[str]) -> None:
+    for binding in revision.bindings:
+        if binding.grade_cap is not None:
+            legal_ids.update(binding.grade_cap.legal_refs)
+
+
 def collect_snapshot_ref_ids(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
@@ -110,13 +131,7 @@ def collect_snapshot_ref_ids(
         legal_ids.update(revision.completeness_manifest.legal_refs)
         source_ids.update(revision.completeness_manifest.source_refs)
     if include_historical_continuity:
-        for evolution in revision.casilla_continuidad_evolutions:
-            legal_ids.update(evolution.legal_refs)
-            source_ids.update(evolution.source_refs)
-        for relation in revision.casilla_structural_successions:
-            legal_ids.update(relation.legal_refs)
-            source_ids.update(relation.from_source_refs)
-            source_ids.update(relation.to_source_refs)
+        _collect_historical_continuity_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
     for predicate in revision.verification_predicates:
         legal_ids.update(predicate.legal_refs)
     # Applicability rules ground WHO the modelo applies to, and they were the one
@@ -150,9 +165,7 @@ def collect_snapshot_ref_ids(
         _collect_grounded_record_refs(kind_records, legal_ids=legal_ids, source_ids=source_ids)
     # A binding's grade cap cites the provisions that leave its value short of
     # filing grade; the snapshot must resolve them for the note that names them.
-    for binding in revision.bindings:
-        if binding.grade_cap is not None:
-            legal_ids.update(binding.grade_cap.legal_refs)
+    _collect_grade_cap_refs(revision, legal_ids=legal_ids)
     _collect_cross_reference_predicate_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
     _collect_export_layout_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
     _collect_deadline_schedule_refs(
