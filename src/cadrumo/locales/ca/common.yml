@@ -2073,12 +2073,21 @@ desktop:
       to_classify: '{count} per classificar'
     counterparty:
       answer: Valors actuals del llibre
+      asserted_by: El teu nom
+      asserted_by_hint: Les confirmacions noves fan servir aquest nom. Les existents
+        conserven el nom i la data originals.
+      attribution_kept: La confirmació continua figurant a nom de {name}.
       confirm: Confirma
       confirmed: Confirmada
+      conflict: Aquests valors no s'han confirmat perquè contradiuen una confirmació
+        existent. Es conserva el teu esborrany.
       country: País
       established: Establerta
+      not_applied: La confirmació retornada no conté tots els valors que has introduït.
+        Es conserva el teu esborrany.
       not_confirmed: Encara no
       note: Nota
+      proposed: El valor que proposes
       scope:
         es_canarias: Canàries
         es_ceuta_melilla: Ceuta i Melilla
@@ -2088,7 +2097,7 @@ desktop:
       scope_label: Establerta a
       source:
         document_evidence: segons documents
-        operator_assertion: confirmat per tu
+        operator_assertion: Confirmat per un operador
         profile_authority: segons el teu perfil
       state: Estat d'identificació a efectes de l'IVA
       tax_id: Identificació fiscal (NIF)
@@ -2098,8 +2107,8 @@ desktop:
       view: Consulta
       withdraw: Retira…
       withdraw_confirm: Retira la confirmació
-      withdraw_what: Retira la teva confirmació; el llibre torna a basar-se en els
-        documents.
+      withdraw_what: Retira la teva confirmació. Altres fonts poden continuar aportant
+        aquests valors.
     density:
       comfortable: Files àmplies
     describe:

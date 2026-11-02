@@ -1,4 +1,8 @@
 import type { CatalogLane } from "../../shell/localModelLanes";
+import { Alert } from "../ui/alert";
+import { Button } from "../ui/button";
+import { Icon } from "../ui/icon";
+import { Spinner } from "../ui/spinner";
 import type { LocalModelHost } from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
@@ -21,6 +25,8 @@ export function LocalAi({
   locale,
   onRemoved,
   signedOut = false,
+  status = "ready",
+  onRetry,
 }: {
   /** The keyless lanes whose model lists are shown; none says no lane on
    * this computer lists models. */
@@ -33,6 +39,8 @@ export function LocalAi({
   onRemoved?: () => void;
   /** Nobody is signed in, so there is no person's model list to show. */
   signedOut?: boolean;
+  status?: "loading" | "failed" | "ready";
+  onRetry?: () => void;
 }) {
   const t = useStrings();
   const store = useProvisioning();
@@ -75,15 +83,34 @@ export function LocalAi({
           // Linked to the program above by the rule beside it: the models are
           // what the program runs.
           <div className={row ? "ml-3 grid gap-3 border-l pl-3" : "grid gap-3"}>
-            {(lanes.length > 0 ? lanes : [null]).map((lane) => (
-              <LocalModels
-                key={lane?.id ?? "none"}
-                lane={lane}
-                host={host}
-                locale={locale}
-                onRemoved={onRemoved}
-              />
-            ))}
+            {status === "loading" ? (
+              <p
+                role="status"
+                className="flex items-center gap-2 text-sm text-muted-foreground"
+              >
+                <Spinner />
+                <span>{t("desktop.providers.local_models_loading")}</span>
+              </p>
+            ) : status === "failed" ? (
+              <Alert role="alert" icon={<Icon name="alert" />}>
+                <span>{t("desktop.providers.load_failed")}</span>
+                {onRetry && (
+                  <Button size="sm" variant="outline" onClick={onRetry}>
+                    {t("desktop.agent.retry")}
+                  </Button>
+                )}
+              </Alert>
+            ) : (
+              (lanes.length > 0 ? lanes : [null]).map((lane) => (
+                <LocalModels
+                  key={lane?.id ?? "none"}
+                  lane={lane}
+                  host={host}
+                  locale={locale}
+                  onRemoved={onRemoved}
+                />
+              ))
+            )}
           </div>
         )
       )}

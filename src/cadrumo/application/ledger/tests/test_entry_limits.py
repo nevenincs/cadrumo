@@ -174,6 +174,7 @@ _OWNERS: Final[dict[str, list[tuple[type[BaseModel], str, Callable[[int], object
     "own_account_swift_bic": [(LedgerOwnAccountRequest, "swift_bic", _text)],
     "counterparty_tax_id": [(LedgerCounterpartyRequest, "tax_identifier", _text)],
     "counterparty_note": [(LedgerCounterpartyRequest, "note", _text)],
+    "counterparty_asserted_by": [(LedgerCounterpartyRequest, "asserted_by", _text)],
     "confirm_label": [
         (LedgerEvidenceConfirmRequest, "counterparty_name", _text),
         (LedgerEvidenceConfirmRequest, "invoice_number", _text),

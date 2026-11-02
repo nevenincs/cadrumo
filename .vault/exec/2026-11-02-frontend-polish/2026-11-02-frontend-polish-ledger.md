@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b80c535918c64db1ab867f73f3bfda93b558c03e7d8f6a29ade6123011fd378b'
+body_hash: 'sha256:1a386d22ac6410f1899bca9c31aba4a0a07209b0c06a2e6caf254b5806bef606'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -102,6 +102,23 @@ related:
 - `S09` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
 - `S09` `verify:` `Profile account and authentication scenarios after dock selector correction (95)` -> `pass`
 - `S09` `verify:` `TypeScript scoped test lint and format` -> `pass`
+- `S28` `M` `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx`
+- `S28` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S28` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S28` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S28` `M` `native/desktop/frontend/src/dev/fixtures/ledgerEntryOptions.json`
+- `S28` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S28` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
+- `S28` `M` `src/cadrumo/application/ledger/entry_limits.py`
+- `S28` `M` `src/cadrumo/application/ledger/tests/test_entry_limits.py`
+- `S28` `M` `dev/locales/desktop_ledger_catalogue_keys.py`
+- `S28` `M` `src/cadrumo/locales/en/common.yml`
+- `S28` `M` `src/cadrumo/locales/es/common.yml`
+- `S28` `M` `src/cadrumo/locales/ca/common.yml`
+- `S28` `M` `src/cadrumo/locales/hu/common.yml`
+- `S28` `verify:` `Counterparty focused browser cases and failed refresh attribution` -> `pass`
+- `S28` `verify:` `TypeScript scoped ESLint formatting and canonical chrome generation` -> `pass`
+- `S28` `verify:` `Scoped Ruff checks and backend entry limits tests 47` -> `pass`
 
 ## Notes
 

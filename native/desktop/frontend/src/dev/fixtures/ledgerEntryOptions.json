@@ -617,6 +617,10 @@
         "max": 4096
       },
       {
+        "name": "counterparty_asserted_by",
+        "max": 256
+      },
+      {
         "name": "confirm_label",
         "max": 2048
       },

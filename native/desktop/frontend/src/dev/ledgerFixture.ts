@@ -134,6 +134,13 @@ const CANCEL_SETTLE_MS = 40;
 
 declare global {
   interface Window {
+    /** The active synthetic ledger port, for controlled transport delays. */
+    __fixtureLedger?: LedgerPort;
+    /** File transport hooks also reached through copied host methods. */
+    __fixtureLedgerFiles?: {
+      picked?: (picks: FilePicks) => Promise<FilePicks>;
+      forgotten?: (tokens: FileToken[]) => void;
+    };
     /** Controls for what the scenario's ledger cannot get from a person. */
     __scenarioLedger?: {
       /** Drops files with these names on the window. */
@@ -2325,8 +2332,9 @@ export function ledgerFixture(options: Options): LedgerPort {
     }
   }
 
-  return {
+  const port: LedgerPort = {
     async submit(definition, payload) {
+      window.__fixtureLedger = port;
       const outcome = await run(definition, payload);
       return outcome as LedgerOutcome<LedgerResult<typeof definition>>;
     },
@@ -2491,15 +2499,21 @@ export function ledgerFixture(options: Options): LedgerPort {
       say(`ledger pickFiles ${purpose} ${pick}`);
       await answer();
       const offered = PICKABLE[purpose];
-      return take(pick === "file" ? offered.slice(0, 1) : offered, purpose);
+      const picks = take(
+        pick === "file" ? offered.slice(0, 1) : offered,
+        purpose,
+      );
+      return window.__fixtureLedgerFiles?.picked?.(picks) ?? picks;
     },
     async saveFile(format, _filterLabel, suggestedName) {
       say(`ledger saveFile ${format}`);
       await answer();
       const name = suggestedName ?? `movimientos-2026.${format}`;
-      return name.split(".").pop() === format
-        ? take([name], "export")
-        : { files: [], refused: 1 };
+      const picks =
+        name.split(".").pop() === format
+          ? take([name], "export")
+          : { files: [], refused: 1 };
+      return window.__fixtureLedgerFiles?.picked?.(picks) ?? picks;
     },
     async revealFile(token) {
       say("ledger revealFile");
@@ -2511,6 +2525,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     },
     async forgetFiles(tokens) {
       say("ledger forgetFiles");
+      window.__fixtureLedgerFiles?.forgotten?.(tokens);
       tokens.forEach((token) => {
         files.delete(token);
         written.delete(token);
@@ -2559,6 +2574,7 @@ export function ledgerFixture(options: Options): LedgerPort {
       }
     },
   };
+  return port;
 }
 
 /** A blank imported movement the import fills in. */

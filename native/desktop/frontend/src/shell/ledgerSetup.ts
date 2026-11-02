@@ -205,6 +205,7 @@ export type LedgerCounterpartyResult = {
   recorded: boolean | null;
   withdrawn: boolean | null;
   changed: boolean;
+  conflict_context: [string, string][] | null;
 };
 
 // ---- Model diagnostics ---------------------------------------------------
@@ -957,6 +958,7 @@ export type TextLimitName =
   | "own_account_swift_bic"
   | "counterparty_tax_id"
   | "counterparty_note"
+  | "counterparty_asserted_by"
   | "confirm_label"
   | "confirm_note"
   | "own_account_label"

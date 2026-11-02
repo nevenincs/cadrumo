@@ -51,6 +51,47 @@ const ledgerTab = (target: Page, section: string) =>
     .locator(".pane-docs .pane-head")
     .getByRole("tab", { name: label(`desktop.ledger.section.${section}`) });
 
+test("documentation results disappear immediately when the query changes, before its debounce", async ({
+  page: target,
+}) => {
+  await open(target);
+  await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
+    "Stand-in documentation",
+  );
+  await search(target, "sign-in");
+  const oldResult = options(target).filter({
+    hasText: "config sign-in-status",
+  });
+  await expect(oldResult).toBeVisible();
+  await target.clock.install({ time: new Date("2026-11-02T12:00:00Z") });
+  await target.clock.pauseAt(new Date("2026-11-02T12:00:01Z"));
+  await input(target).fill("zzzz-no-matching-document");
+  await expect(oldResult).toHaveCount(0);
+  await expect(palette(target).locator(".palette-note")).toHaveText(
+    label("desktop.palette.searching"),
+  );
+  await target.clock.resume();
+  await expect(palette(target).locator(".palette-note")).toHaveText(
+    label("desktop.palette.no_results", { query: "zzzz-no-matching-document" }),
+  );
+});
+
+test("an absent documentation provider says unavailable while shell actions remain usable", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&docs=none",
+  );
+  await search(target, "zzzz-no-matching-document");
+  await expect(palette(target).locator(".palette-note")).toHaveText(
+    label("desktop.palette.unavailable"),
+  );
+  await input(target).fill("ledger/invoices");
+  await expect(
+    optionTitled(target, label("navigation.view.ledger.invoices.label")),
+  ).toBeVisible();
+});
+
 test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;

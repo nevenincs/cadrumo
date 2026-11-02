@@ -2051,12 +2051,21 @@ desktop:
       to_classify: '{count} besorolandó'
     counterparty:
       answer: A napló jelenlegi értékei
+      asserted_by: A neved
+      asserted_by_hint: Az új megerősítésekhez ezt a nevet használjuk. A meglévő megerősítések
+        megőrzik az eredeti nevet és dátumot.
+      attribution_kept: A megerősítés továbbra is {name} nevéhez tartozik.
       confirm: Megerősítés
       confirmed: Megerősítve
+      conflict: Az értékeket nem sikerült megerősíteni, mert ellentmondanak egy korábbi
+        megerősítésnek. A piszkozatod megmaradt.
       country: Ország
       established: Székhely
+      not_applied: A visszaadott megerősítés nem tartalmazza az összes megadott értéket.
+        A piszkozatod megmaradt.
       not_confirmed: Még nem
       note: Megjegyzés
+      proposed: Az általad javasolt érték
       scope:
         es_canarias: Kanári-szigetek
         es_ceuta_melilla: Ceuta és Melilla
@@ -2066,7 +2075,7 @@ desktop:
       scope_label: Székhelye
       source:
         document_evidence: dokumentum alapján
-        operator_assertion: általad megerősítve
+        operator_assertion: Egy kezelő által megerősítve
         profile_authority: a profilod alapján
       state: ÁFA-azonosító állam
       tax_id: Adóazonosító (NIF)
@@ -2076,8 +2085,8 @@ desktop:
       view: Lekérdezés
       withdraw: Visszavonás…
       withdraw_confirm: Megerősítés visszavonása
-      withdraw_what: Visszavonja a megerősítésedet; a napló újra a dokumentumokra
-        támaszkodik.
+      withdraw_what: Visszavonja a megerősítésedet. Más források továbbra is megadhatják
+        ezeket az értékeket.
     density:
       comfortable: Tágas sorok
     describe:

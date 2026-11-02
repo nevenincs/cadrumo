@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { CountryEditor } from "@/components/editors/CountryEditor";
 import { NotesEditor } from "@/components/editors/NotesEditor";
 import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { facts } from "@/shell/compose";
+import { facts, labelled } from "@/shell/compose";
 import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import type { LedgerCounterpartyResult } from "../../../shell/ledgerSetup";
 import { useTextLimit } from "../../../shell/ledgerLimits";
@@ -17,7 +18,6 @@ import {
   ChoiceField,
   FormGrid,
   Panel,
-  readLanding,
   useSetupDraft,
   useSetupWrite,
 } from "./SetupParts";
@@ -36,6 +36,22 @@ export const TERRITORIAL_SCOPES = [
 ] as const;
 
 const TWO_LETTERS = /^[A-Za-z]{2}$/;
+type Draft = {
+  scope: string;
+  state: string;
+  note: string;
+  actor: string;
+  withdrawing: boolean;
+};
+const EMPTY_DRAFT: Draft = {
+  scope: "",
+  state: "",
+  note: "",
+  actor: "",
+  withdrawing: false,
+};
+const identityOf = (taxId: string, country: string) =>
+  JSON.stringify([taxId.trim(), country || null]);
 
 /**
  * What the ledger answers for one counterparty, by its tax id: where it is
@@ -47,51 +63,108 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
   const t = useStrings();
   const taxIdLimit = useTextLimit("counterparty_tax_id");
   const noteLimit = useTextLimit("counterparty_note");
+  const actorLimit = useTextLimit("counterparty_asserted_by");
   const [taxId, setTaxId] = useState("");
-  const [viewed, setViewed] =
-    useState<SetupCall<LedgerCounterpartyResult> | null>(null);
+  const [viewed, setViewed] = useState<{
+    identity: string;
+    call: SetupCall<LedgerCounterpartyResult>;
+  } | null>(null);
   const [country, setCountry] = useState("");
-  const [scope, setScope] = useState("");
-  const [state, setState] = useState("");
-  const [note, setNote] = useState("");
-  const [withdrawing, setWithdrawing] = useState(false);
+  const identity = identityOf(taxId, country);
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const draft = drafts[identity] ?? EMPTY_DRAFT;
+  const { scope, state, note, actor, withdrawing } = draft;
+  const [conflict, setConflict] = useState<{
+    identity: string;
+    context: [string, string][];
+  } | null>(null);
+  const [writeIdentity, setWriteIdentity] = useState<string | null>(null);
+  const [notApplied, setNotApplied] = useState<string | null>(null);
+  const [attribution, setAttribution] = useState<{
+    identity: string;
+    name: string;
+  } | null>(null);
+  const setDraft = (patch: Partial<Draft>) =>
+    setDrafts((held) => ({
+      ...held,
+      [identity]: { ...(held[identity] ?? EMPTY_DRAFT), ...patch },
+    }));
+  const setScope = (scope: string) => setDraft({ scope });
+  const setState = (state: string) => setDraft({ state });
+  const setNote = (note: string) => setDraft({ note });
+  const setWithdrawing = (withdrawing: boolean) => setDraft({ withdrawing });
+  const generation = useRef(0);
+  const answerId = useId();
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [port],
+  );
+  const invalidateAnswer = () => {
+    generation.current += 1;
+    setViewed(null);
+    setAttribution(null);
+  };
+  const changeIdentity = (id: string, hint: string) => {
+    invalidateAnswer();
+    setTaxId(id);
+    setCountry(hint);
+  };
   // A form with anything typed into it that is not yet written.
-  useSetupDraft([country, scope, state, note].some(Boolean));
+  useSetupDraft(
+    Object.values(drafts).some((draft) =>
+      [draft.scope, draft.state, draft.note, draft.actor].some(Boolean),
+    ),
+  );
   const write = useSetupWrite(t("desktop.ledger.counterparty.title"));
   const taxIds = useFieldSuggestions("party_tax_id");
   const countries = useFieldSuggestions("country");
   const states = useFieldSuggestions("state");
 
   const view = async (id = taxId) => {
-    setViewed(
-      await setupCall(
-        port,
-        "ledger.counterparty",
-        { action: "view", tax_identifier: id.trim() },
-        false,
-      ),
-    );
-  };
-  const result = viewed?.kind === "done" ? viewed.result : null;
-  /** How a confirmation or a withdrawal landed: what the counterparty
-   * stands on, viewed again. */
-  const viewLanding = (
-    id: string,
-    judge: (known: LedgerCounterpartyResult["facts"]) => Landing,
-  ) =>
-    readLanding(
+    if (!id.trim() || (country !== "" && !TWO_LETTERS.test(country))) return;
+    if (id !== taxId) changeIdentity(id, country);
+    setConflict(null);
+    setNotApplied(null);
+    const mine = ++generation.current;
+    const requested = identityOf(id, country);
+    setViewed(null);
+    const call = await setupCall(
       port,
       "ledger.counterparty",
-      { action: "view", tax_identifier: id },
-      (read) => judge(read.facts),
+      {
+        action: "view",
+        tax_identifier: id.trim(),
+        country_code: country || null,
+      },
+      false,
     );
+    if (mine === generation.current) setViewed({ identity: requested, call });
+  };
+  const call = viewed?.identity === identity ? viewed.call : null;
+  const result = call?.kind === "done" ? call.result : null;
+  // VIEW serves a resolution, not exact stored facts. An absent fact cannot
+  // establish whether an uncertain confirmation or withdrawal took effect.
+  const unknownLanding = async (): Promise<Landing> => "untold";
   const countryWrong = country !== "" && !TWO_LETTERS.test(country);
   const stateWrong = state !== "" && !TWO_LETTERS.test(state);
   const canConfirm =
-    result !== null && TWO_LETTERS.test(country) && scope !== "" && !stateWrong;
+    result !== null &&
+    !countryWrong &&
+    !stateWrong &&
+    (scope !== "" || state !== "") &&
+    actor.trim() !== "" &&
+    actorLimit !== null &&
+    actor.trim().length <= actorLimit;
 
   const confirm = async () => {
-    if (!result || !canConfirm) return;
+    if (!result || !canConfirm || write.busy) return;
+    const mine = generation.current;
+    setWriteIdentity(identity);
+    setConflict(null);
+    setNotApplied(null);
+    setAttribution(null);
     const done = await write.run(
       () =>
         setupCall(
@@ -100,26 +173,60 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
           {
             action: "confirm",
             tax_identifier: result.tax_identifier,
-            country_code: country.toUpperCase(),
-            territorial_scope: scope,
+            country_code: country || null,
+            territorial_scope: scope || null,
             identification_state: state ? state.toUpperCase() : null,
             note: note.trim(),
+            asserted_by: actor.trim(),
           },
           true,
         ),
-      viewLanding(result.tax_identifier, (known) =>
-        known !== null &&
-        known.territorial_scope === scope &&
-        known.identification_state === (state ? state.toUpperCase() : null) &&
-        known.note === note.trim()
-          ? "saved"
-          : "not_saved",
-      ),
+      unknownLanding,
     );
-    if (done.kind === "done") setViewed(done);
+    if (done.kind !== "done") return;
+    if (done.result.conflict_context != null) {
+      setConflict({ identity, context: done.result.conflict_context });
+      return;
+    }
+    const saved = done.result.facts;
+    if (
+      !saved ||
+      (scope !== "" && saved.territorial_scope !== scope) ||
+      (state !== "" && saved.identification_state !== state.toUpperCase()) ||
+      saved.note !== note.trim()
+    ) {
+      setNotApplied(identity);
+      return;
+    }
+    setDrafts((held) => {
+      const current = held[identity];
+      // Typing while the write is pending belongs to the next draft.
+      if (
+        !current ||
+        current.scope !== scope ||
+        current.state !== state ||
+        current.note !== note ||
+        current.actor !== actor
+      )
+        return held;
+      const next = { ...held };
+      delete next[identity];
+      return next;
+    });
+    if (mine === generation.current) {
+      setAttribution(
+        saved.asserted_by !== actor.trim()
+          ? { identity, name: saved.asserted_by }
+          : null,
+      );
+      await view();
+    }
   };
   const withdraw = async () => {
-    if (!result) return;
+    if (!result || write.busy) return;
+    const mine = generation.current;
+    setWriteIdentity(identity);
+    setAttribution(null);
     const done = await write.run(
       () =>
         setupCall(
@@ -128,18 +235,36 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
           {
             action: "withdraw",
             tax_identifier: result.tax_identifier,
-            note: note.trim(),
+            country_code: country || null,
           },
           true,
         ),
-      viewLanding(result.tax_identifier, (known) =>
-        known === null ? "saved" : "not_saved",
-      ),
+      unknownLanding,
     );
     setWithdrawing(false);
-    if (done.kind === "done") setViewed(done);
+    if (done.kind === "done" && mine === generation.current) await view();
   };
   const answer = result?.resolution;
+  const confirmed =
+    (result?.facts !== null && result?.facts !== undefined) ||
+    answer?.territorial_source === "operator_assertion" ||
+    answer?.identification_source === "operator_assertion";
+  const targetWords =
+    result &&
+    facts(t, [
+      labelled(
+        t,
+        t("desktop.ledger.counterparty.tax_id"),
+        result.tax_identifier,
+      ),
+      result.country_code
+        ? labelled(
+            t,
+            t("desktop.ledger.counterparty.country"),
+            result.country_code,
+          )
+        : null,
+    ]);
   const sourced = (
     value: string | null | undefined,
     source: string | null | undefined,
@@ -157,7 +282,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
         className="flex flex-wrap items-end gap-2"
         onSubmit={(event) => {
           event.preventDefault();
-          if (taxId.trim()) void view();
+          if (taxId.trim() && !countryWrong) void view();
         }}
       >
         <EditorField
@@ -168,7 +293,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
             <TaxIdEditor
               id={control.id}
               value={taxId}
-              onChange={setTaxId}
+              onChange={(next) => changeIdentity(next, country)}
               invalid={control.invalid}
               describedBy={control.describedBy}
               maxLength={taxIdLimit ?? undefined}
@@ -177,22 +302,49 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
             />
           )}
         </EditorField>
+        <EditorField
+          label={t("desktop.ledger.counterparty.country")}
+          error={countryWrong ? t("desktop.ledger.form.two_letters") : null}
+          className="w-64"
+        >
+          {(control) => (
+            <CountryEditor
+              id={control.id}
+              value={country}
+              onChange={(next) => changeIdentity(taxId, next)}
+              invalid={control.invalid}
+              describedBy={control.describedBy}
+              maxLength={2}
+              {...countries}
+            />
+          )}
+        </EditorField>
         <Button
           type="submit"
           size="sm"
           variant="outline"
           className="ledger-counterparty-view"
-          aria-disabled={!taxId.trim() || undefined}
+          aria-disabled={!taxId.trim() || countryWrong || undefined}
         >
           {t("desktop.ledger.counterparty.view")}
         </Button>
       </form>
-      <CallLine call={viewed} />
+      <CallLine call={call} />
+      {attribution?.identity === identity && (
+        <p
+          role="status"
+          className="text-sm text-muted-foreground wrap-anywhere"
+        >
+          {t("desktop.ledger.counterparty.attribution_kept", {
+            name: attribution.name,
+          })}
+        </p>
+      )}
       {result && (
         <div className="ledger-counterparty-answer flex flex-col gap-3">
           <Alert icon={<Icon name="info" />}>
-            <span className="font-medium">
-              {t("desktop.ledger.counterparty.answer")}
+            <span id={answerId} className="font-medium wrap-anywhere">
+              {facts(t, [t("desktop.ledger.counterparty.answer"), targetWords])}
             </span>
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
               <dt className="text-muted-foreground">
@@ -216,37 +368,20 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                     ])
                   : t("desktop.ledger.counterparty.undetermined")}
               </dd>
-              <dt className="text-muted-foreground">
-                {t("desktop.ledger.counterparty.confirmed")}
-              </dt>
-              <dd>
-                {result.facts
-                  ? formatTime(locale, result.facts.asserted_at)
-                  : t("desktop.ledger.counterparty.not_confirmed")}
-              </dd>
+              {result.facts && (
+                <>
+                  <dt className="text-muted-foreground">
+                    {t("desktop.ledger.counterparty.confirmed")}
+                  </dt>
+                  <dd>{formatTime(locale, result.facts.asserted_at)}</dd>
+                </>
+              )}
             </dl>
             {answer?.contradiction_detail && (
               <span className="text-sm">{answer.contradiction_detail}</span>
             )}
           </Alert>
           <FormGrid>
-            <EditorField
-              label={t("desktop.ledger.counterparty.country")}
-              error={countryWrong ? t("desktop.ledger.form.two_letters") : null}
-            >
-              {(control) => (
-                <CountryEditor
-                  id={control.id}
-                  value={country}
-                  onChange={setCountry}
-                  invalid={control.invalid}
-                  describedBy={control.describedBy}
-                  maxLength={2}
-                  required
-                  {...countries}
-                />
-              )}
-            </EditorField>
             <ChoiceField
               label={t("desktop.ledger.counterparty.scope_label")}
               value={scope}
@@ -273,6 +408,22 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                 />
               )}
             </EditorField>
+            <EditorField
+              label={t("desktop.ledger.counterparty.asserted_by")}
+              hint={t("desktop.ledger.counterparty.asserted_by_hint")}
+            >
+              {(control) => (
+                <TextEditor
+                  id={control.id}
+                  value={actor}
+                  onChange={(actor) => setDraft({ actor })}
+                  invalid={control.invalid}
+                  describedBy={control.describedBy}
+                  maxLength={actorLimit ?? undefined}
+                  required
+                />
+              )}
+            </EditorField>
             <EditorField label={t("desktop.ledger.counterparty.note")}>
               {(control) => (
                 <NotesEditor
@@ -291,17 +442,19 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
               <Button
                 size="sm"
                 className="ledger-counterparty-confirm"
+                aria-describedby={answerId}
                 aria-disabled={!canConfirm || write.busy || undefined}
                 onClick={() => canConfirm && !write.busy && void confirm()}
               >
                 {t("desktop.ledger.counterparty.confirm")}
               </Button>
             </WriteHold>
-            {result.facts && (
+            {confirmed && (
               <Button
                 size="sm"
                 variant="outline"
                 aria-expanded={withdrawing}
+                aria-describedby={answerId}
                 onClick={() => setWithdrawing(!withdrawing)}
               >
                 {t("desktop.ledger.counterparty.withdraw")}
@@ -310,7 +463,12 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
           </div>
           {withdrawing && (
             <Alert tone="warning" icon={<Icon name="alert" />}>
-              <span>{t("desktop.ledger.counterparty.withdraw_what")}</span>
+              <span>
+                {facts(t, [
+                  targetWords,
+                  t("desktop.ledger.counterparty.withdraw_what"),
+                ])}
+              </span>
               <span className="flex gap-2">
                 <Button
                   size="xs"
@@ -324,6 +482,8 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                     size="xs"
                     variant="destructive"
                     className="ledger-counterparty-withdraw"
+                    aria-describedby={answerId}
+                    disabled={write.busy}
                     onClick={() => void withdraw()}
                   >
                     {t("desktop.ledger.counterparty.withdraw_confirm")}
@@ -333,11 +493,53 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
             </Alert>
           )}
           <CallLine
-            call={write.last}
+            call={writeIdentity === identity ? write.last : null}
             onReread={() => void view(result.tax_identifier)}
           />
+          {conflict?.identity === identity && (
+            <CounterpartyConflict context={conflict.context} />
+          )}
+          {notApplied === identity && (
+            <Alert tone="warning" role="alert" icon={<Icon name="alert" />}>
+              {t("desktop.ledger.counterparty.not_applied")}
+            </Alert>
+          )}
         </div>
       )}
     </Panel>
+  );
+}
+
+function CounterpartyConflict({ context }: { context: [string, string][] }) {
+  const t = useStrings();
+  const values = new Map(context);
+  return (
+    <Alert tone="warning" role="alert" icon={<Icon name="alert" />}>
+      <p>{t("desktop.ledger.counterparty.conflict")}</p>
+      {(["scope", "identification_state"] as const).map((axis) => {
+        const confirmed = values.get(`confirmed_${axis}`);
+        const proposed = values.get(`asserted_${axis}`);
+        if (!confirmed || !proposed) return null;
+        const words = (value: string) =>
+          axis === "scope" ? tokenText(t, "counterparty.scope", value) : value;
+        return (
+          <div key={axis}>
+            <p className="font-medium">
+              {t(
+                axis === "scope"
+                  ? "desktop.ledger.counterparty.scope_label"
+                  : "desktop.ledger.counterparty.state",
+              )}
+            </p>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+              <dt>{t("desktop.ledger.counterparty.confirmed")}</dt>
+              <dd className="wrap-anywhere">{words(confirmed)}</dd>
+              <dt>{t("desktop.ledger.counterparty.proposed")}</dt>
+              <dd className="wrap-anywhere">{words(proposed)}</dd>
+            </dl>
+          </div>
+        );
+      })}
+    </Alert>
   );
 }

@@ -2031,12 +2031,21 @@ desktop:
       to_classify: '{count} to classify'
     counterparty:
       answer: Current ledger values
+      asserted_by: Your name
+      asserted_by_hint: New confirmations use this name. Existing confirmations keep
+        their original name and date.
+      attribution_kept: The confirmation keeps its original attribution to {name}.
       confirm: Confirm
       confirmed: Confirmed
+      conflict: These values were not confirmed because they conflict with an existing
+        confirmation. Your draft has been kept.
       country: Country
       established: Established
+      not_applied: The returned confirmation does not contain every value you entered.
+        Your draft has been kept.
       not_confirmed: Not yet
       note: Note
+      proposed: Your proposed value
       scope:
         es_canarias: Canary Islands
         es_ceuta_melilla: Ceuta and Melilla
@@ -2046,7 +2055,7 @@ desktop:
       scope_label: Established in
       source:
         document_evidence: from documents
-        operator_assertion: confirmed by you
+        operator_assertion: Confirmed by an operator
         profile_authority: from your profile
       state: VAT-identification State
       tax_id: Tax ID (NIF)
@@ -2056,7 +2065,8 @@ desktop:
       view: Look up
       withdraw: Withdraw…
       withdraw_confirm: Withdraw the confirmation
-      withdraw_what: Withdraws your confirmation; the ledger falls back to the documents.
+      withdraw_what: Withdraws your confirmation. Other sources may still supply these
+        values.
     density:
       comfortable: Comfortable rows
     describe:

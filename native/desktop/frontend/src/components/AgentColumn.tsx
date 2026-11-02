@@ -503,13 +503,17 @@ export function AgentColumn({
   // which are listed but cannot be chosen; the catalog is read again once the
   // agent is ready.
   const starting = status?.state === "starting";
-  const readCatalog = useMemo(
-    () =>
-      reader !== null && (ready || starting) && session
-        ? () => session.providerCatalog()
-        : null,
-    [reader, ready, starting, session],
+  const [catalogRetry, setCatalogRetry] = useState(0);
+  const catalogRequest = useMemo(
+    () => ({ reader, ready, starting, session, retry: catalogRetry }),
+    [reader, ready, starting, session, catalogRetry],
   );
+  const readCatalog = useMemo(() => {
+    const { reader, ready, starting, session } = catalogRequest;
+    return reader !== null && (ready || starting) && session
+      ? () => session.providerCatalog()
+      : null;
+  }, [catalogRequest]);
   // Setup and provider settings invalidate the catalog independently.
   const [catalogAgain, setCatalogAgain] = useState(0);
   // Reads asked for while the service was busy.
@@ -1229,6 +1233,16 @@ export function AgentColumn({
                                   <LocalAi
                                     key={lane.id}
                                     lanes={listed ? [listed] : []}
+                                    status={
+                                      catalog.kind === "ready"
+                                        ? "ready"
+                                        : catalog.kind === "loading"
+                                          ? "loading"
+                                          : "failed"
+                                    }
+                                    onRetry={() =>
+                                      setCatalogRetry((count) => count + 1)
+                                    }
                                     host={localModelHost}
                                     locale={locale}
                                     onRemoved={removed}
@@ -1237,6 +1251,16 @@ export function AgentColumn({
                                   <LocalModels
                                     key={lane.id}
                                     lane={listed}
+                                    laneStatus={
+                                      catalog.kind === "ready"
+                                        ? "ready"
+                                        : catalog.kind === "loading"
+                                          ? "loading"
+                                          : "failed"
+                                    }
+                                    onRetryLane={() =>
+                                      setCatalogRetry((count) => count + 1)
+                                    }
                                     host={localModelHost}
                                     locale={locale}
                                     onRemoved={removed}
