@@ -1,6 +1,6 @@
 {
   "result_version": 3,
-  "calculation_revision_id": "ae2cb072780dd7fc70cdcce1779f2570c6fb02988d71ff3fa711fa6c5f3b87d4",
+  "calculation_revision_id": "6de98b8a7258d2e14eef1966987635940e7cf3c0f21f8caadadad1e49edf9a7c",
   "artefact": "fichero_boe",
   "export_format": "fichero-boe",
   "output_path": "modelo-165.txt",
@@ -10,7 +10,7 @@
   "evidence_status": "local_export_not_official_aeat_filing_evidence",
   "completeness": "unverified",
   "fichero_boe": {
-    "calculation_revision_id": "ae2cb072780dd7fc70cdcce1779f2570c6fb02988d71ff3fa711fa6c5f3b87d4",
+    "calculation_revision_id": "6de98b8a7258d2e14eef1966987635940e7cf3c0f21f8caadadad1e49edf9a7c",
     "work_unit_id": "7858195b3c8521c124dc8095c9bf81a2f5f07340a4cc1532f401e5a16cc2593f",
     "bucket_id": "13000000-0000-4000-8000-000000000730",
     "modelo": "165",
@@ -20,9 +20,9 @@
     "byte_size": 1000,
     "file_sha256": "7929a6c08e9f84143154905c183f5961fcdb583d322cb222452342fd51620809",
     "format": "fichero-boe",
-    "exported_at": "2026-11-02T16:23:56.940631Z",
+    "exported_at": "2026-11-02T19:12:18.471469Z",
     "actor": "operator:desktop-modelo",
-    "bucket_event_id": "e9168878d10774e556186be6ef11d18adba3c1c548bb8f770cd66ce3df47aa16",
+    "bucket_event_id": "4c3dde1f64cd5d0227f2689c863d4261d4c1406622c239c71554fae38aed48c5",
     "resolved_result_disposition": null,
     "payment_election": null,
     "refund_election": null,

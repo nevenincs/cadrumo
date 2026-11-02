@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+      "calculation_revision_id": "4dc94805cd91db5d5eae749bad548fb23c0dfa88e4efab9094ab94bd68c1f3fe",
       "language": "es",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1643,7 +1643,7 @@
         "days_overdue": 196
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-11-02T16:31:29.925392Z" },
+      "filing": { "recorded_at": "2026-11-02T19:12:55.408777Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF pago fraccionado estimación directa",
@@ -1659,7 +1659,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "6c5065df0b23ac0980f887a0f3339a0052ffff49fea8489da447eaaeebc13487",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1694,9 +1694,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "4e87e4a478c9d9929c66357a673da57983d1b131229b5b371b271ff5cc86179e",
-    "calculation_head_digest": "261c8f3e6aa0845b39e49794e7308846095203701efb1d1b684b36f42c15a613",
-    "current_calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+    "work_unit_record_digest": "9f71683da1cbc163b19830e99ac8159122070a987b44126068deb9f688432edc",
+    "calculation_head_digest": "7b9c8e124aba80d004fbb83fdbafd283b563c509b09c0a36be8964ae7037e564",
+    "current_calculation_revision_id": "4dc94805cd91db5d5eae749bad548fb23c0dfa88e4efab9094ab94bd68c1f3fe",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1999,9 +1999,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:31:42.829774Z",
-    "expires_at": "2026-11-02T16:36:42.829774Z",
-    "baseline_id": "2b3109d18fc48ea1e3d6a005dded08a2639a6c926d7bb7441c394a60092709cf"
+    "issued_at": "2026-11-02T19:13:06.209832Z",
+    "expires_at": "2026-11-02T19:18:06.209832Z",
+    "baseline_id": "3e60c9064d7c9ec6e01d703441e962e7c1d68d9385710b43685eaf8b277453c2"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2010,7 +2010,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-11-02T16:31:29.925392Z",
+    "recorded_at": "2026-11-02T19:12:55.408777Z",
     "file_created_at": null,
     "receipt_to_add": true
   },
@@ -2055,8 +2055,8 @@
     "words": "La comprobación es correcta.",
     "unapplied_words": "El cálculo guardado superó la comprobación; tus cambios no se han aplicado."
   },
-  "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
-  "verification_report_id": "ba530f77fd23b7fc8772753431ae62ad2cd34aba5e7bc9cc35c567f16d7e5d57",
+  "calculation_revision_id": "4dc94805cd91db5d5eae749bad548fb23c0dfa88e4efab9094ab94bd68c1f3fe",
+  "verification_report_id": "2b1a668677d167f88e2380102e55c65b1b6c6e9cba9e8673d591ef9b42876deb",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -2118,7 +2118,7 @@
     "file_format_words": "Fichero de la AEAT con el diseño de registro BOE de ancho fijo"
   },
   "receipt": {
-    "recorded_at": "2026-11-02T16:31:29.925392Z",
+    "recorded_at": "2026-11-02T19:12:55.408777Z",
     "verified": false,
     "verified_at": null,
     "words": "Todavía no se ha verificado ningún justificante de la AEAT para esta presentación."

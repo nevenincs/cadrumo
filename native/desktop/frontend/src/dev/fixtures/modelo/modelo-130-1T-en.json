@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
+      "calculation_revision_id": "9b3245e978c0dfe9f1fe29b7c83f6cd489a16ec6078730ce405fc5ccb4889c64",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1664,7 +1664,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "6c5065df0b23ac0980f887a0f3339a0052ffff49fea8489da447eaaeebc13487",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1699,9 +1699,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "7b2d188a1c18b19eb6621da6a2c1f03c24ec9b0e21330355956eb826bd95637c",
-    "calculation_head_digest": "7db20cfd95c26f3c8e8be15fd78540bb5b49c38c820ccac4fa6729cb43131824",
-    "current_calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
+    "work_unit_record_digest": "f36b49f299e6fad7a8183d9578ad44d5e176e97fae2274b2ecc5daf45ffa4e2c",
+    "calculation_head_digest": "8fcdae3525bfe6d3149a87f4ff2a593015bd25a9e7953263123545404b985248",
+    "current_calculation_revision_id": "9b3245e978c0dfe9f1fe29b7c83f6cd489a16ec6078730ce405fc5ccb4889c64",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2004,9 +2004,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:22:46.377960Z",
-    "expires_at": "2026-11-02T16:27:46.377960Z",
-    "baseline_id": "eb46dc87331cce7ab00a02fa2e4c39dfc9b295cee411811ae8c91a00dd961045"
+    "issued_at": "2026-11-02T19:10:47.060584Z",
+    "expires_at": "2026-11-02T19:15:47.060584Z",
+    "baseline_id": "1dcf17939601496f409bb43d195ff9433c6a0f95a3e0c0f25dc1be3c7208824a"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2097,7 +2097,7 @@
     "words": "The declaration has not been checked yet.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
+  "calculation_revision_id": "9b3245e978c0dfe9f1fe29b7c83f6cd489a16ec6078730ce405fc5ccb4889c64",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

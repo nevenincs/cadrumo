@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "92a504c5af1dd19d5d6940f7eeca728e86a2cd25fec505ecdcf4b2f8b4badeed",
+      "calculation_revision_id": "be6ae022104fa64c6d33b7699e5b11ed1a2e5d08b38854a970fa1237597cb894",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1669,8 +1669,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-02T16:33:10.439522Z",
-        "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+        "exported_at": "2026-11-02T19:14:06.734005Z",
+        "calculation_revision_id": "4dc94805cd91db5d5eae749bad548fb23c0dfa88e4efab9094ab94bd68c1f3fe",
         "current": false
       },
       "edit_closure": null,
@@ -1687,7 +1687,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "6c5065df0b23ac0980f887a0f3339a0052ffff49fea8489da447eaaeebc13487",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1722,9 +1722,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "1e43b3bf4e134a9201ce0f65ad3b681925f29f069076f27ba7d4211cc3f62518",
-    "calculation_head_digest": "073542f7307799ca16ff520a487d6d87dffa17f2b0f314fab37dea05d127208e",
-    "current_calculation_revision_id": "92a504c5af1dd19d5d6940f7eeca728e86a2cd25fec505ecdcf4b2f8b4badeed",
+    "work_unit_record_digest": "71ecb05eb4b0bed7527f76e093de045bb81567b02a6d6f15a1dbf856ced2e811",
+    "calculation_head_digest": "354a1f757f5bc37626712ae3b1c7ae8c8136a4cf02529763678533fd51530cd8",
+    "current_calculation_revision_id": "be6ae022104fa64c6d33b7699e5b11ed1a2e5d08b38854a970fa1237597cb894",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2027,9 +2027,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:34:01.674114Z",
-    "expires_at": "2026-11-02T16:39:01.674114Z",
-    "baseline_id": "9b2aa053ccdc79f6774980e06753077277cfc791fb47c06687868b2d5cb25af3"
+    "issued_at": "2026-11-02T19:14:57.654612Z",
+    "expires_at": "2026-11-02T19:19:57.654612Z",
+    "baseline_id": "c533f6df5b1af6f740a22231a0d155aedea240e23cb8551e391b6bb39378b00a"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2039,7 +2039,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-02T16:33:10.439522Z",
+    "file_created_at": "2026-11-02T19:14:06.734005Z",
     "receipt_to_add": false
   },
   "header": {
@@ -2065,7 +2065,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-02T16:33:10.439522Z",
+      "exported_at": "2026-11-02T19:14:06.734005Z",
       "created_on": "2026. nov. 2.",
       "current": false,
       "words": "A(z) 2026. nov. 2. napi fájl elavult. Hozd létre újra."
@@ -2107,8 +2107,8 @@
     "words": "Az ellenőrzés sikeres.",
     "unapplied_words": "A mentett számítás ellenőrzése sikeres; a módosításaidat nem alkalmaztuk."
   },
-  "calculation_revision_id": "92a504c5af1dd19d5d6940f7eeca728e86a2cd25fec505ecdcf4b2f8b4badeed",
-  "verification_report_id": "992c9113a6415527899ff68309f7d915eb7a823f79b480654bdc990b09b239b7",
+  "calculation_revision_id": "be6ae022104fa64c6d33b7699e5b11ed1a2e5d08b38854a970fa1237597cb894",
+  "verification_report_id": "2d7e5a071ea2adc1cc0e17c1460afaa14dae73747f685ca8b38500baf14cf764",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
