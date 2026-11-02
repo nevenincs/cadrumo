@@ -486,7 +486,10 @@ def _apply_plan_structural_requests(
                 body=structural_body,
             ),
             action="sheets.spreadsheets.batchUpdate.structural",
-            retry=RequestRetryPolicy.REPLAY_SAFE,
+            # The batch creates developer metadata, protected ranges and notes.
+            # Sheets does not de-duplicate those, so a transport retry of a
+            # batch whose first attempt committed would leave duplicates.
+            retry=RequestRetryPolicy.SINGLE_ATTEMPT,
         )
 
 
