@@ -2302,6 +2302,9 @@ application:
         nullától eltérő érték szükséges.
       selected_option_requires_zero: A kiválasztott lehetőséghez ebben a mezőben kifejezetten
         nullát kell megadni.
+      shared_casilla_cells_unadjudicated: 'A(z) %{casilla_id} mező olyan értéket tartalmaz,
+        amelyet az exportálás olyan cellákba is beírna, amelyekről még nincs megerősítve,
+        hogy ugyanazt jelentik: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: Ez a bevallás megtakarításból
         származó tőkejövedelmet (rendimientos del capital mobiliario del ahorro) tartalmaz,
         de nem szerepel benne levont forrásadó (retención). Add meg az összeget a
@@ -2509,6 +2512,9 @@ application:
           a levonási értékhatár alatti jövedelmet fizettél ki.
         settle_earlier_declaration: Előbb rendezd a korábbi időszak bevallását, majd
           számolj újra.
+        shared_box_awaits_review: 'A Cadrumo ezt a mezőt még nem tudja exportálni.
+          Ne ürítsd ki a továbblépéshez: ezt a bevallást más eszközzel add be, vagy
+          várd meg, amíg a cellákat felülvizsgálják.'
       inspection_heading: Minden rovat, rovatszám szerint
       unnamed_box: Név nélküli rovat
   operations:

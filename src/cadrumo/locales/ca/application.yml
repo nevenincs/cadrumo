@@ -2352,6 +2352,9 @@ application:
         de zero en aquest camp.
       selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit
         en aquest camp.
+      shared_casilla_cells_unadjudicated: 'La casella %{casilla_id} té un valor que
+        l''exportació escriuria també en cel·les que encara no s''ha confirmat que
+        signifiquin el mateix: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració recull
         rendiments del capital mobiliari de l'estalvi, però no hi consta cap retenció
         suportada. Introdueix l'import del certificat de retencions i ingressos a
@@ -2550,6 +2553,9 @@ application:
           exemptes o per sota del llindar de retenció.
         settle_earlier_declaration: Resol primer la declaració del període anterior
           i torna a calcular.
+        shared_box_awaits_review: 'Cadrumo encara no pot exportar aquesta casella.
+          No la buidis per continuar: presenta aquesta declaració amb una altra eina
+          o espera que se''n revisin les cel·les.'
       inspection_heading: Totes les caselles, per número de casella
       unnamed_box: Casella sense nom
   operations:
