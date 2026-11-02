@@ -30,7 +30,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.user_profile.values import UserProfileFact
 from ...actividad_asset.history import ActivityAssetHistory
 from ...actividad_asset.tests.register_support import MemoryRepository
-from ...modelo.profile_binding import resolve_profile_sourced_bindings
+from ...modelo.profile_export_binding import resolve_profile_export_values
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..renta_imputation import (
     ActivityImputationCriterion,
@@ -353,16 +353,44 @@ def test_a_part_paid_received_invoice_under_accrual_names_the_uncovered_rest(
 _CASILLA_0169_BINDING = "renta-profile-activity-cash-criterion-0169"
 
 
-def _elected(operation: PinnedAuthorityOperation, facts: tuple[object, ...], year: int) -> object:
-    snapshot = published_snapshot("100", filing_year=year, period="0A")
-    resolution = resolve_profile_sourced_bindings(
-        snapshot,
+def _elected(operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, ...], year: int) -> object:
+    revision = published_snapshot("100", filing_year=year, period="0A").revision
+    exported = resolve_profile_export_values(
+        tuple(binding for binding in revision.bindings if binding.id == _CASILLA_0169_BINDING),
         bucket_id=BUCKET_ID,
-        profile_record=_profile(operation, facts).record,
-        caller_binding_ids=frozenset(),
+        filing_year=year,
         operation=operation,
+        profile_record=_profile(operation, facts).record,
     )
-    return resolution.boolean_binding_values.get(_CASILLA_0169_BINDING)
+    return exported.get("E1ITEMP")
+
+
+@pytest.mark.parametrize("edition", [2022, 2023, 2024, 2025])
+def test_the_election_boxes_keep_their_roles_in_each_edition(edition: int) -> None:
+    roles = {
+        str(casilla.id): casilla.semantic_role
+        for casilla in published_snapshot("100", filing_year=edition, period="0A").revision.casillas
+        if str(casilla.id) in {"0169", "1443", "1487"}
+    }
+    assert roles == {
+        "0169": "irpf_ed_cobros_pagos_flag",
+        "1443": "irpf_eo_cobros_pagos_flag",
+        "1487": "irpf_eo_agr_cobros_pagos_flag",
+    }
+
+
+@pytest.mark.parametrize("criterion", [_DEVENGO, _CASH])
+def test_a_capital_subsidy_stays_unresolved_under_either_criterion(
+    operation: PinnedAuthorityOperation, criterion: str
+) -> None:
+    catalogue = resolve_concepto_ingreso_catalogue(effective_date=date(_LATER, 1, 1), authority=operation)
+    row = _paying(date(_LATER, 2, 1), "1000.00").model_copy(
+        update={"concepto_ingreso": catalogue.require("subvencion_capital")}
+    )
+    resolution = _resolve(operation, _declared((_LATER, criterion)), rows=(row,), year=_LATER)
+    assert resolution.binding_values[_INCOME_0171] == _ZERO
+    blocked = [item.message for item in resolution.diagnostics if item.binding_id == _INCOME_0171]
+    assert any("capital_subsidy_schedule_unknown" in message for message in blocked)
 
 
 @pytest.mark.parametrize("edition", [2022, 2023, 2024, 2025])

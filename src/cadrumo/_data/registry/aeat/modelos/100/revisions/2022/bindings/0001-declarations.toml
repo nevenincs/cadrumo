@@ -982,3 +982,7 @@ value = { data_type = "boolean", channel = "boolean" }
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-7"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["criterio de cobros y pagos"]
