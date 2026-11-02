@@ -70,6 +70,13 @@ _HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025: dict[CasillaId, str] = {
 }
 
 
+_TYPED_ACTIVITY_RETENCIONES_0599 = (
+    "the scenario carries no ledger rows, so the activity retenciones the ledger binding aggregates are typed "
+    "here to exercise the cuota diferencial; the ledger aggregation and its grade cap are covered by their own "
+    "resolver and gate tests"
+)
+
+
 @lru_cache(maxsize=1)
 def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
     modelo, _catalogues = bundled_modelo_components("100")
@@ -179,7 +186,10 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 "0606": Decimal("13.00"),
             },
         ),
-        hand_typed_bound_casillas=_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025,
+        hand_typed_bound_casillas={
+            **_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025,
+            "0599": _TYPED_ACTIVITY_RETENCIONES_0599,
+        },
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -633,6 +643,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
                 "0669": Decimal("150.00"),
             },
         ),
+        hand_typed_bound_casillas={"0599": _TYPED_ACTIVITY_RETENCIONES_0599},
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
