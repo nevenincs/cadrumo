@@ -23,7 +23,7 @@ from typing import Final
 from cadrumo.core.toml import load_toml
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormOutlineGroup, FormOutlineSection
 
-from .page_sections import form_heading_key
+from .heading_keys import form_heading_key
 
 __all__ = [
     "OUTLINE_GROUPS",

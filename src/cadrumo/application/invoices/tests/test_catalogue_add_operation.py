@@ -192,7 +192,7 @@ def test_an_invoice_older_than_the_filing_years_is_kept_as_a_dated_record(monkey
     assert [invoice.issued_at for invoice in ports.invoice_repository.load()] == [floor - timedelta(days=1)]
 
 
-def test_a_date_the_registry_does_not_serve_is_a_typed_refusal_and_writes_nothing(monkeypatch) -> None:
+def test_an_invoice_older_than_the_filing_years_reads_its_published_rate_and_is_kept(monkeypatch) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
@@ -214,12 +214,8 @@ def test_a_date_the_registry_does_not_serve_is_a_typed_refusal_and_writes_nothin
         )
         result = asyncio.run(InvoiceAddExecutor(lambda *, bucket_id: ports).execute(request, context))
 
-    assert isinstance(result, OperationRefusalEvidence)
-    assert result.refusal_code == INVOICE_ADD_VALIDATION_REFUSAL_CODE
-    assert context.operands.value is not None
-    assert context.operands.value.result.validation_code == "invalid_invoice"
-    assert context.events.effects == []
-    assert len(ports.invoice_repository.load()) == 0
+    assert not isinstance(result, OperationRefusalEvidence)
+    assert len(ports.invoice_repository.load()) == 1
 
 
 def test_executor_refuses_foreign_active_profile_before_phase_or_factory(monkeypatch: pytest.MonkeyPatch) -> None:

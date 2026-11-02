@@ -57,7 +57,7 @@ type = layers
 name = Every agent service source package has a declared lane
 containers = cadrumo_agent_service
 layers =
-    adapters : host : installed_client : main : providers : service : gateway_credentials : service_administration : service_scheduling : service_startup : service_support : admin : contracts : (locales)
+    adapters : host : installed_client : main : providers : service : gateway_credentials : service_administration : service_attachment_admin : service_scheduling : service_startup : service_support : admin : contracts : (locales)
 exhaustive = True
 
 [importlinter:contract:closed-dev-classification]
@@ -65,7 +65,7 @@ type = layers
 name = Every repository tooling package has a declared lane
 containers = dev
 layers =
-    _paths : acceptance : actionlint : audit : cache_root : ci : ci_reports : conftest : corpus : deploy : desktop_agent_live : desktop_household_fixture : desktop_imputation_election_fixture : desktop_profile_fixture : docs : env : exit_codes : first_party_source : identity : ingest_harness : init : locales : mcp_eval : operation_contract_manifest : packaging : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : temporary_output : test_runs : tests : tui
+    _paths : acceptance : actionlint : audit : cache_root : ci : ci_reports : conftest : corpus : deploy : desktop_agent_live : desktop_automation_stage : desktop_household_fixture : desktop_imputation_election_fixture : desktop_profile_fixture : docs : env : exit_codes : first_party_source : identity : ingest_harness : init : locales : mcp_eval : operation_contract_manifest : packaging : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : temporary_output : test_runs : tests : tui
     tool_storage
 exhaustive = True
 

@@ -205,9 +205,7 @@ test.describe("the household in the profile page", () => {
     expect(writes[0]!.expected_revision).toBeGreaterThan(0);
   });
 
-  test("declaring none states a zero, and removing the last person does too", async ({
-    page,
-  }) => {
+  test("declaring none states a zero", async ({ page }) => {
     const household = await open(page, "unknown");
     await group(household, DESCENDANTS)
       .getByRole("button", {
@@ -285,5 +283,104 @@ test.describe("the household in the profile page", () => {
         name: label("desktop.profile.household.add"),
       }),
     ).toBeEnabled();
+  });
+});
+
+// From the Modelo 100: the household's rows are drawn there from the profile,
+// and the way to correct them leads to the profile page through the form's
+// existing routing of a source's surface.
+
+const workspace = (target: Page) => target.locator(".declarations-workspace");
+
+/** Opens the filer's 2025 Modelo 100 the way the list offers it. */
+async function openRenta(target: Page, household: string) {
+  await target.goto(
+    `/scenarios.html?scenario=user-profile&latency=0&bar=off&modelo=renta&household=${household}`,
+  );
+  await target.locator("[data-rail=declarations]").click();
+  const read = await target.evaluate(async () =>
+    window.__fixtureModelo!.declarations("en"),
+  );
+  const existing = read.creation_targets.find(
+    (entry) => entry.modelo === "100" && entry.existing,
+  )!;
+  await target
+    .getByRole("button", { name: label("workspace.declarations.list.key.new") })
+    .first()
+    .click();
+  const dialog = target.getByRole("dialog");
+  await dialog.getByText(existing.modelo_title, { exact: true }).click();
+  await dialog.getByRole("radio", { name: existing.period_words! }).click();
+  await dialog
+    .getByRole("button", {
+      name: label("workspace.declarations.list.new.open_it"),
+    })
+    .click();
+  await expect(
+    workspace(target).getByRole("heading", { level: 1 }),
+  ).toBeVisible({ timeout: 30_000 });
+}
+
+test.describe("the household from the Modelo 100", () => {
+  test("the outline group that keeps boxes in the profile leads to the profile", async ({
+    page: target,
+  }) => {
+    await openRenta(target, "incomplete");
+    await target
+      .getByRole("tab", { name: label("desktop.modelo.side.outline") })
+      .click();
+    const tree = workspace(target).getByRole("tree", {
+      name: label("desktop.modelo.outline.label"),
+    });
+    const served = await target.evaluate(async () => {
+      const port = window.__fixtureModelo!;
+      const list = await port.declarations("en");
+      const unit = list.creation_targets.find(
+        (entry) => entry.modelo === "100" && entry.existing,
+      )!.existing!.work_unit_id;
+      return (await port.form(unit, "en")).form.form;
+    });
+    // Whatever the read model served as a group with a box kept in the
+    // profile has the way there; one with none has not.
+    const keeps = (group: (typeof served.outline)[number]) =>
+      served.pages
+        .flatMap((page) => page.sections)
+        .filter((section) => group.section_ids.includes(section.id))
+        .some((section) =>
+          JSON.stringify(section.blocks).includes('"surface":"profile"'),
+        );
+    const withLink = served.outline.filter(keeps);
+    expect(withLink.length).toBeGreaterThan(0);
+    expect(withLink.length).toBeLessThan(served.outline.length);
+    await expect(tree.locator("[data-outline-profile]")).toHaveCount(
+      withLink.length,
+    );
+    const household = served.outline.find((group) =>
+      group.section_ids.some((id) =>
+        id.startsWith("datosidentificativos-hijos"),
+      ),
+    )!;
+    await tree.locator(`[data-outline-profile="${household.id}"]`).click();
+    const profile = target.locator(".user-profile-page");
+    await expect(profile).toBeVisible();
+    await expect(profile.locator("[data-household]")).toBeVisible();
+  });
+
+  test("a check line that leads to the profile opens it", async ({
+    page: target,
+  }) => {
+    await openRenta(target, "incomplete");
+    await workspace(target)
+      .getByRole("tab", {
+        name: new RegExp(`^${label("workspace.modelo.step.review")}`),
+      })
+      .click();
+    await workspace(target)
+      .getByRole("button", {
+        name: label("workspace.modelo.surface.open.profile"),
+      })
+      .first()
+      .click();
+    await expect(target.locator(".user-profile-page")).toBeVisible();
   });
 });

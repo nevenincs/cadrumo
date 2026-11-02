@@ -16,8 +16,8 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 
 from .generation_constants import _GENERAL_SECTION
 from .generation_models import _Build
+from .heading_keys import _unique, form_heading_key
 from .official_text import node_slug
-from .page_sections import _unique, form_heading_key
 from .position_anchoring import _casilla_box
 
 

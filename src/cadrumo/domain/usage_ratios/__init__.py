@@ -11,7 +11,7 @@ parallel ids.
 
 Profile persistence is an encrypted ``FINANCIAL`` secure-object round trip via
 :func:`adapters.persistence.profile.usage_ratios.load_usage_ratios` /
-:func:`~adapters.persistence.profile.usage_ratios.save_usage_ratios`, keyed
+:func:`~adapters.persistence.profile.usage_ratios.save_usage_ratios_with_secure_object_writes`, keyed
 by :func:`usage_ratios_object_key` and guarded during read-modify-write by
 :func:`usage_ratio_bucket_lock`. HOME_OFFICE category values are derived from the
 bound censo through :func:`derive_home_office_ratios_from_censo` and refused on

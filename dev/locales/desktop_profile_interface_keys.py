@@ -71,6 +71,7 @@ DESKTOP_PROFILE_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.profile.household.state.unknown_help",
         "desktop.profile.household.state.not_served",
         "desktop.profile.household.state.not_served_help",
+        "desktop.profile.open_from_form",
         "desktop.profile.add",
         "desktop.profile.maximize",
         "desktop.profile.field_help",

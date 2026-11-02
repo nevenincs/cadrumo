@@ -173,7 +173,23 @@ pub fn run(
         script.clone(),
         origins.clone(),
     ));
-    let app = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // The ordinary host does not compile this plugin. Even the isolated test
+    // host starts no listener until its launcher explicitly supplies a port.
+    #[cfg(feature = "native-automation")]
+    let builder = if let Some(port) = std::env::var_os("TAURI_WEBDRIVER_PORT") {
+        let port = port
+            .to_str()
+            .and_then(|value| value.parse::<u16>().ok())
+            .filter(|port| *port != 0)
+            .ok_or_else(|| {
+                ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
+            })?;
+        builder.plugin(tauri_plugin_wdio_webdriver::init_with_port(port))
+    } else {
+        builder
+    };
+    let app = builder
         .plugin(crate::startup::plugin(diagnostics.clone()))
         .manage(startup.clone())
         .manage(registered)

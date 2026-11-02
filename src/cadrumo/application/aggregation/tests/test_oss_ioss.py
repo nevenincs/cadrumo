@@ -60,6 +60,7 @@ from ..oss_ioss import (
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
+from ..oss_ioss_wire_geometry import record_row_slots
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -82,7 +83,7 @@ def test_a_revision_missing_one_field_of_a_row_is_not_a_table_of_rows():
         }
     )
     with pytest.raises(AggregationValidationError):
-        oss_ioss_module._record_row_slots(revision, "modelo-369-exterior-t36901")
+        record_row_slots(revision, "modelo-369-exterior-t36901")
 
 
 # ---------------------------------------------------------------------------
@@ -302,6 +303,25 @@ def test_validation_accepts_candidate_matching_destination_fr_general_rate() -> 
     observation = validate_oss_ioss_observation(candidate)
     assert observation.destination_member_state == EUMemberState.from_registry("fr")
     assert observation.iva_amount == Decimal("20")
+
+
+@pytest.mark.parametrize("iva", (Decimal("19"), Decimal("16")))
+def test_validation_never_judges_a_supply_against_a_projected_destination_rate(iva: Decimal) -> None:
+    """The DE table starts in mid-2025, so an earlier supply's rate is only projected.
+
+    Neither figure is confirmed or refuted: 19 EUR would pass on the nearest edition
+    and 16 EUR would fail on it, so both stay the refusal on the registry's reach.
+    """
+    candidate = _candidate(
+        destination=EUMemberState.from_registry("de"),
+        rate_kind=IvaRateKind("general"),
+        base=Decimal("100"),
+        iva=iva,
+        transaction_date=date(2025, 6, 30),
+    )
+
+    with pytest.raises(IvaRateNotFoundError):
+        validate_oss_ioss_observation(candidate)
 
 
 def test_validation_rejects_candidate_with_iva_off_by_six_euros_on_destination_de() -> None:

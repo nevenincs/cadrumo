@@ -18,10 +18,8 @@ from ......core.secure_object_write import SecureObjectWrite
 from ......tests.log_records import delivered_records
 from ...errors import SecureObjectRevisionConflictError, StorageValidationError
 from ...namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
-from ...secure_object_namespaces import (
-    SecureObjectNamespaceDefinition,
-    StorageHierarchyRegistry,
-)
+from ...secure_object_namespaces import SecureObjectNamespaceDefinition
+from ...storage_hierarchy_registry import StorageHierarchyRegistry
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectNamespaceIntegrity, SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository

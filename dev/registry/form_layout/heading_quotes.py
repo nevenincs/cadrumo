@@ -18,9 +18,9 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 
 from .column_vocabulary import shared_column_key
 from .generation_models import _Build
+from .heading_keys import column_form_heading_key, form_heading_key
 from .official_headings import OfficialHeadingRefusedError, QuotedHeading, verify_quote
 from .official_text import node_slug
-from .page_sections import column_form_heading_key, form_heading_key
 
 
 def _quoted_column[C: (FormGridColumn, FormRepeatingColumn)](build: _Build, column: C, quote: QuotedHeading) -> C:

@@ -147,10 +147,13 @@ export function TodoRail({
   envelope,
   session,
   onPicked,
+  onOpenProfile,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
   onPicked?: () => void;
+  /** Opens the profile, where the boxes it keeps are corrected. */
+  onOpenProfile?: () => void;
 }) {
   const t = useStrings();
   const [rail, setRail] = useState<Rail>("todo");
@@ -182,6 +185,7 @@ export function TodoRail({
           <OutlineNavigator
             form={envelope.form.form}
             currentSectionId={currentSection(session)}
+            onOpenProfile={onOpenProfile}
             onJump={(sectionId) => {
               session.goSection(sectionId);
               onPicked?.();

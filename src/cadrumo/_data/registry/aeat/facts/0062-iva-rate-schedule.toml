@@ -16,8 +16,8 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 1995-01-01
-valid_to = 2009-12-23
-legal_refs = ["ley-37-1992:art-90", "ley-41-1994:art-78-primero"]
+valid_to = 2010-06-30
+legal_refs = ["ley-37-1992:art-90", "ley-41-1994:art-78-primero", "ley-26-2009:art-79-uno"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [fact.variants.payload]
@@ -36,8 +36,8 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 1995-01-01
-valid_to = 2009-12-23
-legal_refs = ["ley-37-1992:art-91", "ley-41-1994:art-78-segundo"]
+valid_to = 2010-06-30
+legal_refs = ["ley-37-1992:art-91", "ley-41-1994:art-78-segundo", "ley-26-2009:art-79-dos"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [fact.variants.payload]
@@ -48,16 +48,16 @@ entries = [
 ]
 
 [[fact.variants]]
-variant_id = "iva-rate.es.general.2012-08-31.ordinary"
+variant_id = "iva-rate.es.general.2010-07-01.ordinary"
 selectors = [
   { name = "member_state", value = "es" },
   { name = "kind", value = "general" },
   { name = "rate_role", value = "ordinary" },
 ]
 date_axis = "devengo_date"
-valid_from = 2012-08-31
+valid_from = 2010-07-01
 valid_to = 2012-08-31
-legal_refs = ["ley-37-1992:art-90"]
+legal_refs = ["ley-37-1992:art-90", "ley-26-2009:art-79-uno"]
 source_refs = ["aeat-manual-iva-2020"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -72,16 +72,16 @@ entries = [
 ]
 
 [[fact.variants]]
-variant_id = "iva-rate.es.reduced.2012-08-31.ordinary"
+variant_id = "iva-rate.es.reduced.2010-07-01.ordinary"
 selectors = [
   { name = "member_state", value = "es" },
   { name = "kind", value = "reduced" },
   { name = "rate_role", value = "ordinary" },
 ]
 date_axis = "devengo_date"
-valid_from = 2012-08-31
+valid_from = 2010-07-01
 valid_to = 2012-08-31
-legal_refs = ["ley-37-1992:art-91"]
+legal_refs = ["ley-37-1992:art-91", "ley-26-2009:art-79-dos"]
 source_refs = ["aeat-manual-iva-2020"]
 review_status = "agent_reviewed"
 ownership = "authored"

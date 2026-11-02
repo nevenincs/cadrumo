@@ -17,18 +17,19 @@ which is the remainder still to pay once the spouse compensation suspends part
 of the result, otherwise the result itself. A revision that computes no such
 box settles from the result only while nothing is suspended: a positive
 suspended part leaves a remainder it does not compute, so that settlement is
-refused as unsupported, and an unstated suspended part leaves the result unknown. The disposition is the one the
-shared resolver derived from the result, and the settled amount must agree
-with it: the official design gives no settlement block for a result to pay of
-which nothing remains to pay, so such a settlement, like one whose amount is
-unknown, is refused rather than guessed. The accounts are the charge and
+refused as unsupported. A suspended part left blank is nothing, as the
+calculation reads it. The disposition is the one the shared resolver derived
+from the result, and the settled amount must agree with it: the official
+design gives no settlement block for a result to pay of which nothing remains
+to pay, so such a settlement, like one whose amount is unknown, is refused
+rather than guessed. The accounts are the charge and
 refund own accounts the export resolved. A ``NEGATIVA`` block is written only
 by a corrective declaration, which this export does not compose, so a zero
 result states its disposition alone.
 
 A split in two instalments takes the first instalment's share from the
 registry; the cent it rounds to is Cadrumo's own, as no official source states
-one.
+one, and an amount whose second instalment would round to nothing is not split.
 
 Account numbers pass through here in memory only, into the exported file.
 """
@@ -144,10 +145,9 @@ def declared_settlement(
         return DeclaredSettlement(amount=None, refusal=SettlementRefusal.RESULT_UNKNOWN)
     suspension = declaration_settlement_suspension_casilla_id(modelo, revision)
     if suspension is not None:
+        # A box the filer left blank is read as the calculation reads it: nothing suspended.
         suspended = _decimal(casilla_values.get(suspension))
-        if suspended is None:
-            return DeclaredSettlement(amount=None, refusal=SettlementRefusal.RESULT_UNKNOWN)
-        if suspended > 0:
+        if suspended is not None and suspended > 0:
             return DeclaredSettlement(amount=None, refusal=SettlementRefusal.SETTLEMENT_UNSUPPORTED)
     if not _agrees(disposition, amount):
         return DeclaredSettlement(amount=None, refusal=SettlementRefusal.SETTLEMENT_UNSUPPORTED)

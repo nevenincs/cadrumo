@@ -17,7 +17,10 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import (
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
+from cadrumo.adapters.persistence.profile.usage_ratios import (
+    load_usage_ratios,
+    save_usage_ratios_with_secure_object_writes,
+)
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import (
@@ -310,8 +313,9 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_dwelling_lease_expenses
         TransactionCatalogue.from_transactions((lease,)),
     )
     InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.50")}),
+        (),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         objects=secure_objects,
     )

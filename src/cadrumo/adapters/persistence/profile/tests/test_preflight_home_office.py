@@ -11,7 +11,10 @@ from types import FrameType
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
+from cadrumo.adapters.persistence.profile.usage_ratios import (
+    load_usage_ratios,
+    save_usage_ratios_with_secure_object_writes,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
@@ -71,7 +74,7 @@ def _apply_home_office_censo(bucket_id: str, *, operation: PinnedAuthorityOperat
     derived = derive_home_office_ratios_from_censo(raw, year=2025, operation=operation)
     merged = dict(load_usage_ratios(bucket_id=bucket_id, operation=operation).ratios)
     merged.update(derived.ratios)
-    save_usage_ratios(UsageRatioProfile(ratios=merged), bucket_id=bucket_id)
+    save_usage_ratios_with_secure_object_writes(UsageRatioProfile(ratios=merged), (), bucket_id=bucket_id)
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -92,8 +95,9 @@ def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(
     """
     category = SpendingCategory.from_registry("suministros_home_office_internet")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
-        save_usage_ratios(
+        save_usage_ratios_with_secure_object_writes(
             UsageRatioProfile(ratios={category: Decimal("0.060")}),
+            (),
             bucket_id=profile.bucket_id,
         )
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -141,8 +145,9 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         category = SpendingCategory.from_registry("suministros_home_office_internet")
-        save_usage_ratios(
+        save_usage_ratios_with_secure_object_writes(
             UsageRatioProfile(ratios={category: Decimal("0.30")}),
+            (),
             bucket_id=profile.bucket_id,
         )
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -217,8 +222,9 @@ def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
         _apply_home_office_censo(profile.bucket_id, operation=operation)
         category = SpendingCategory.from_registry("suministros_home_office_internet")
-        save_usage_ratios(
+        save_usage_ratios_with_secure_object_writes(
             UsageRatioProfile(ratios={category: Decimal("0.30")}),
+            (),
             bucket_id=profile.bucket_id,
         )
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -276,8 +282,9 @@ def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         category = SpendingCategory.from_registry("suministros_home_office_internet")
-        save_usage_ratios(
+        save_usage_ratios_with_secure_object_writes(
             UsageRatioProfile(ratios={category: Decimal("1.00")}),
+            (),
             bucket_id=profile.bucket_id,
         )
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -325,10 +332,11 @@ def test_preflight_stays_silent_for_a_non_home_office_category(
     the ledger and train the operator to ignore it.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        save_usage_ratios(
+        save_usage_ratios_with_secure_object_writes(
             UsageRatioProfile(
                 ratios={SpendingCategory.from_registry("suministros_home_office_internet"): Decimal("1.00")}
             ),
+            (),
             bucket_id=profile.bucket_id,
         )
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)

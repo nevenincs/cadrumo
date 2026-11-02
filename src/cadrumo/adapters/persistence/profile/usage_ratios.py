@@ -45,7 +45,6 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 __all__ = [
     "load_usage_ratios",
     "load_usage_ratios_with_censo_guard",
-    "save_usage_ratios",
     "save_usage_ratios_with_secure_object_writes",
 ]
 
@@ -154,40 +153,6 @@ def _summarise_validation_errors(exc: ValidationError) -> str:
             message = message[len("Value error, ") :]
         lines.append(f"  - {location}: {message}" if location else f"  - {message}")
     return "\n".join(lines) if lines else "  - validation error"
-
-
-def save_usage_ratios(
-    profile: UsageRatioProfile,
-    *,
-    bucket_id: str,
-    objects: SecureObjectRepository | None = None,
-) -> None:
-    """Persist one bucket's usage-ratio profile in the encrypted database.
-
-    Args:
-        profile: The usage-ratio profile to persist.
-        bucket_id: Profile bucket identifier.
-        objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
-    """
-    from ..storage.runtime_repository import secure_object_repository_for_bucket
-
-    repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)
-    write = _usage_ratio_write(profile, bucket_id=bucket_id)
-    try:
-        repository.save(
-            namespace=write.namespace,
-            object_key=write.object_key,
-            classification=write.classification,
-            schema_version=write.schema_version,
-            written_at=write.written_at,
-            payload=write.payload,
-        )
-    except OSError as exc:
-        _LOGGER.error("usage-ratios database write failed", exc_info=True)
-        raise UsageRatioPersistenceError(
-            f"unable to write usage-ratio profile: {exc.__class__.__name__}: {exc}",
-        ) from exc
-    _LOGGER.info("saved %s usage ratios to secure database bucket_id=%s", len(profile.ratios), bucket_id)
 
 
 def _usage_ratio_write(profile: UsageRatioProfile, *, bucket_id: str) -> SecureObjectWrite:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -36,7 +37,7 @@ def _variant(
     *,
     valid_from: date,
     valid_to: date | None = None,
-    selectors: tuple[dict[str, object], ...] = (),
+    selectors: tuple[Mapping[str, object], ...] = (),
 ) -> dict[str, object]:
     return {
         "variant_id": variant_id,
@@ -189,9 +190,11 @@ def test_the_selector_narrows_the_claim_to_the_tracks_carrying_it() -> None:
     )
     after = _FIRST_END + timedelta(days=1)
 
-    assert _resolve(fact, after, selectors=(FactSelector(**ordinary),)).payload.value == Decimal("0.21")
+    assert _resolve(fact, after, selectors=(FactSelector(name="role", value="ordinary"),)).payload.value == Decimal(
+        "0.21"
+    )
     with pytest.raises(GovernedFactNotApplicableError):
-        _resolve(fact, after, selectors=(FactSelector(**temporary),))
+        _resolve(fact, after, selectors=(FactSelector(name="role", value="temporary"),))
 
 
 def test_an_absent_track_is_not_answered_by_another() -> None:
