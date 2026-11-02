@@ -141,9 +141,7 @@ def test_a_snapshot_whose_revision_no_longer_reconfirms_is_refused_with_that_rea
     ]
 
 
-def test_a_capture_with_an_inadmissible_key_writes_nothing(
-    tmp_path: Path, operation: PinnedAuthorityOperation
-) -> None:
+def test_a_capture_with_an_inadmissible_key_writes_nothing(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         service = _service(runtime.bucket_id)
         with pytest.raises(LiveApplicationInputError) as refused:
