@@ -43,6 +43,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import CasillaDataType
@@ -66,7 +67,6 @@ from ..operations.public_scalar import PublicDecimal
 from .borrador_100 import Borrador100PrintedObservation, Borrador100Snapshot, Borrador100SnapshotReading
 from .borrador_100_keys import borrador_admitted_bindings, printed_box_casilla
 
-_MODELO: Final = ModeloCode("100")
 _ANNUAL: Final = "0A"
 _WORDS: Final = "application.live.borrador.comparison"
 
@@ -243,6 +243,11 @@ class _SavedCalculation:
     head: CalculationRevision
 
 
+def _annual_modelo(operation: PinnedAuthorityOperation) -> ModeloCode:
+    """Return the form the registry's role routing names for the annual income tax return."""
+    return ModeloCode(form_for_role("renta.annual", authority=operation))
+
+
 def _words(group: str, token: StrEnum, language: OutputLanguage) -> Borrador100ComparisonWords:
     return Borrador100ComparisonWords(
         token=token.value, words=tr(f"{_WORDS}.{group}.{token.value}", locale=language.value)
@@ -260,7 +265,7 @@ def _saved_calculation(
     try:
         review = build_modelo_work_review(
             sources.bucket_id,
-            _MODELO,
+            _annual_modelo(operation),
             period.filing_year,
             period,
             operation=operation,
@@ -313,7 +318,7 @@ def _stale_reasons(
     if any(item.snapshot.captured_at > snapshot.captured_at for item in reading.refused):
         reasons.append(Borrador100ComparisonStaleReason.NEWER_CAPTURE_REFUSED)
     if calculation_screen_outdated(
-        saved.head, modelo=str(_MODELO), filing_year=period.filing_year, period=period, operation=operation
+        saved.head, modelo=str(_annual_modelo(operation)), filing_year=period.filing_year, period=period, operation=operation
     ):
         reasons.append(Borrador100ComparisonStaleReason.CALCULATION_OUTDATED)
     return tuple(reasons)
@@ -581,7 +586,7 @@ def compare_borrador_100_with_calculation(
     at most one readable snapshot, with every refused one beside it.
     """
     period = Period.from_year_and_code(filing_year, _ANNUAL)
-    registry = operation.snapshot(str(_MODELO), filing_year=filing_year, period=period.registry_token)
+    registry = operation.snapshot(str(_annual_modelo(operation)), filing_year=filing_year, period=period.registry_token)
     snapshot = reading.readable[0] if reading.readable else None
     saved = _saved_calculation(sources, period, operation)
     stale = (

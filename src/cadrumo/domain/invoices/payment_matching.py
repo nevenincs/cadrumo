@@ -20,6 +20,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, Literal
 
+from ...core.parsing.codes import IsoCurrencyCode
 from ..transactions.classification_effects import takes_changes, takes_invoice
 from ..transactions.models import Transaction
 from .models import Invoice
@@ -295,9 +296,9 @@ class LinkDifference:
     #: The magnitude of the movement's amount less what the invoice settles for; set for ``amount``.
     difference: Decimal | None = None
     #: The movement's currency; set for ``currency``.
-    movement_currency: str | None = None
+    movement_currency: IsoCurrencyCode | None = None
     #: The invoice's currency; set for ``currency``.
-    invoice_currency: str | None = None
+    invoice_currency: IsoCurrencyCode | None = None
     #: How many other movements already hold the invoice; set for ``linked_elsewhere``.
     count: int | None = None
 
