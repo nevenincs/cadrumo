@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -86,8 +87,23 @@ class SecureObjectDeletion(BaseModel):
     """Optional opened-baseline guard for a record removed by an identity edit."""
 
 
+class SecureObjectUnreadableKind(StrEnum):
+    """Why a stored secure object has no reader, as far as the scan can tell without decrypting it."""
+
+    OUTDATED_SCHEMA = "outdated_schema"
+    """The row was stored under an older schema version this build has no reader for; it was never opened."""
+
+    OTHER = "other"
+    """Any other refusal: classification, newer schema, lineage, decryption or upgrade failure."""
+
+
 class SecureObjectUnreadable(BaseModel):
-    """One stored secure object that cannot be decrypted under the current master key."""
+    """One stored secure object that cannot be decrypted under the current master key.
+
+    ``kind`` separates a row refused only because its storage schema is older
+    than any reader from every other refusal, so a consumer that tolerates the
+    former never tolerates a tampered or mismatched row.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -98,6 +114,7 @@ class SecureObjectUnreadable(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     reason: str = Field(min_length=1)
+    kind: SecureObjectUnreadableKind = SecureObjectUnreadableKind.OTHER
 
 
 # Shared readable/unreadable outcome for namespace scans and targeted batch reads.

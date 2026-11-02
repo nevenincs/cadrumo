@@ -20,8 +20,12 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
-from ..modelo.calculation_note_gate import blocking_calculation_issues, saved_calculation_screen_outdated
-from ..modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
+from ..modelo.calculation_note_gate import (
+    blocking_calculation_issues,
+    saved_calculation_filed_before_grade_cap,
+    saved_calculation_screen_outdated,
+)
+from ..modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON
 from .review_form_data import capture_review_form
 from .review_snapshot import (
     CalculationReviewSelection,
@@ -68,14 +72,16 @@ def build_calculation_review_snapshot(
     _assert_ledger_fingerprints(revision)
     saved_form = capture_review_form(revision)
     findings = _review_findings(revision, saved_form is not None)
-    if operation is not None and saved_calculation_screen_outdated(
-        revision,
-        modelo=str(work_unit.modelo),
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        operation=operation,
-    ):
-        findings.append(_screen_outdated_finding())
+    if operation is not None:
+        modelo, filing_year, period = str(work_unit.modelo), work_unit.filing_year, work_unit.period
+        if saved_calculation_screen_outdated(
+            revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
+        ):
+            findings.append(_screen_outdated_finding())
+        if saved_calculation_filed_before_grade_cap(
+            revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
+        ):
+            findings.append(_filed_before_grade_cap_finding())
     evidence = tuple(
         EvidenceInventoryItem(
             evidence_id=attachment_id,
@@ -334,6 +340,15 @@ def _screen_outdated_finding() -> ReviewFinding:
         detail="This saved revision was screened against other declarations than the pinned authority holds; "
         "it is shown for review, and the calculation withholds it from checking, exporting and recording "
         "until it is calculated again.",
+    )
+
+
+def _filed_before_grade_cap_finding() -> ReviewFinding:
+    return ReviewFinding(
+        code=CALCULATION_NOTE_FINDING_PREFIX + FILED_BEFORE_GRADE_CAP_REASON,
+        detail="This revision was recorded as filed before calculations were screened for grade caps, and a box "
+        "a capped binding reaches holds a figure; it is shown for review, and the calculation withholds it from "
+        "exporting until it is calculated again.",
     )
 
 

@@ -210,8 +210,9 @@ class Borrador100SnapshotReading:
     A refused snapshot is neither dropped nor counted as absent: a reading with
     no admitted snapshot and one refused snapshot is not an empty store.
     ``outdated_stored_snapshots`` counts stored rows written under an older
-    storage schema. Such a row cannot be decoded, so it is counted rather than
-    named, and it is not an empty store either.
+    storage schema across the whole Borrador 100 store, whatever the year read:
+    such a row cannot be decoded, so its year is unknowable, it is counted
+    rather than named, and it is not an empty store either.
     """
 
     readable: tuple[Borrador100Snapshot, ...]
@@ -321,11 +322,12 @@ class Borrador100SnapshotRepository(SnapshotRepository[Borrador100Snapshot], Pro
     errors belong to the outer adapter. Implementations satisfy this structural
     contract without inheriting application code. ``list_snapshots`` returns the
     snapshots stored under the current schema;
-    ``outdated_stored_snapshot_count`` counts the rows stored under an older one.
+    ``list_snapshots_with_outdated_count`` returns the same snapshots with the
+    number of rows stored under an older one, read in one pass over the store.
     """
 
-    def outdated_stored_snapshot_count(self) -> int:
-        """Return how many stored rows were written under an older storage schema."""
+    def list_snapshots_with_outdated_count(self) -> tuple[tuple[Borrador100Snapshot, ...], int]:
+        """Return the current-schema snapshots and how many older-schema rows were skipped."""
         ...
 
 
@@ -499,7 +501,15 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         filing_year: int | None,
         state: SnapshotLifecycleState | None,
     ) -> tuple[Borrador100Snapshot, ...]:
-        snapshots = super().list_snapshots()
+        return self._selected_from(super().list_snapshots(), filing_year=filing_year, state=state)
+
+    @staticmethod
+    def _selected_from(
+        snapshots: tuple[Borrador100Snapshot, ...],
+        *,
+        filing_year: int | None,
+        state: SnapshotLifecycleState | None,
+    ) -> tuple[Borrador100Snapshot, ...]:
         if filing_year is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.filing_year == filing_year)
         if state is not None:
@@ -519,7 +529,8 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         """
         readable: list[Borrador100Snapshot] = []
         refused: list[Borrador100RefusedSnapshot] = []
-        for snapshot in self._selected_snapshots(filing_year=filing_year, state=state):
+        stored, outdated = self._borrador_repository.list_snapshots_with_outdated_count()
+        for snapshot in self._selected_from(stored, filing_year=filing_year, state=state):
             reason = borrador_100_snapshot_refusal(snapshot, operation=operation)
             if reason is None:
                 readable.append(snapshot)
@@ -528,7 +539,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         return Borrador100SnapshotReading(
             readable=tuple(readable),
             refused=tuple(refused),
-            outdated_stored_snapshots=self._borrador_repository.outdated_stored_snapshot_count(),
+            outdated_stored_snapshots=outdated,
         )
 
     def show(self, snapshot_id: str, *, operation: PinnedAuthorityOperation) -> Borrador100Snapshot:

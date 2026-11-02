@@ -280,6 +280,12 @@ def m347(tmp_path: Path) -> Iterator[_M347]:
         )
 
 
+def _stored(fixture: _M347, revision_id: str) -> CalculationRevision:
+    stored = fixture.calculations.load().get(revision_id)
+    assert stored is not None
+    return stored
+
+
 def _verify_m347(fixture: _M347, revision: CalculationRevision) -> VerificationReport:
     return _verify(revision.calculation_revision_id, bucket_id=_BUCKET, objects=fixture.objects)
 
@@ -297,9 +303,9 @@ def test_m347_removal_is_reported_and_recalculating_gives_the_worked_figure(m347
     report = _verify_m347(m347, revision)
     assert _drift_counts(report) == (0, 1, 0)
     assert report.granted_verificado_completo is False
-    assert m347.calculations.load().get(revision.calculation_revision_id).state is CalculationRevisionState.BORRADOR
+    assert _stored(m347, revision.calculation_revision_id).state is CalculationRevisionState.BORRADOR
     # A finding only: the stored figure stands until the operator recalculates.
-    assert _supplier_importe(m347.calculations.load().get(revision.calculation_revision_id)) == Decimal("6050.00")
+    assert _supplier_importe(_stored(m347, revision.calculation_revision_id)) == Decimal("6050.00")
 
     recalculated = _calculate(m347.work_unit, clock=_later())
     assert _supplier_importe(recalculated) == Decimal("3025.00")
@@ -446,7 +452,7 @@ def test_old_revision_reports_no_fingerprint_and_keeps_its_identity_and_digests(
     assert with_key_dropped == dumped
 
     m347.calculations.save(upsert_calculation_revision(m347.calculations.load(), old))
-    stored = m347.calculations.load().get(old.calculation_revision_id)
+    stored = _stored(m347, old.calculation_revision_id)
     assert stored.invoice_fingerprint is None
 
     remove_catalogue_invoice(
@@ -462,14 +468,16 @@ def test_old_revision_reports_no_fingerprint_and_keeps_its_identity_and_digests(
 
 def test_fingerprint_round_trips_through_the_encrypted_store(m347: _M347) -> None:
     revision = _calculate(m347.work_unit)
-    stored = m347.calculations.load().get(revision.calculation_revision_id)
-    assert stored.invoice_fingerprint == revision.invoice_fingerprint
-    assert {row.invoice_id for row in stored.invoice_fingerprint.rows} == {
+    stored = _stored(m347, revision.calculation_revision_id)
+    fingerprint = stored.invoice_fingerprint
+    assert fingerprint is not None
+    assert fingerprint == revision.invoice_fingerprint
+    assert {row.invoice_id for row in fingerprint.rows} == {
         m347.first.invoice_id,
         m347.second.invoice_id,
     }
     # Only digests sit on the record: no figure, name or tax id.
-    dumped = stored.invoice_fingerprint.model_dump_json()
+    dumped = fingerprint.model_dump_json()
     assert _SUPPLIER not in dumped
     assert "PROVEEDOR" not in dumped
     assert "2500" not in dumped
