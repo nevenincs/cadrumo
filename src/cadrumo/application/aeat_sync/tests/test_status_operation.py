@@ -19,6 +19,7 @@ from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ....domain.modelos.work_unit import WorkUnit
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotReading, Borrador100SnapshotService
 from ...live.notification_ports import NotificationType, RemoteNotification
@@ -387,7 +388,7 @@ def test_year_choices_span_the_registry_declared_support_floor_to_horizon(
     status = _load(_ports(), authority_operation).status
 
     assert status.filed_declaration_years == status.iva_wallet_years
-    assert status.filed_declaration_years[0] == declared["floor"]
+    assert status.filed_declaration_years[0] == SupportedFilingYearsCatalogue.model_validate(declared).floor
     assert status.filed_declaration_years[-1] >= declared["horizon"]
     assert list(status.filed_declaration_years) == list(
         range(status.filed_declaration_years[0], status.filed_declaration_years[-1] + 1)

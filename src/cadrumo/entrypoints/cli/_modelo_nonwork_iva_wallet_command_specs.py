@@ -14,7 +14,7 @@ from cadrumo_client.commands.shared_contracts import (
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ._modelo_nonwork_command_spec_policies import (
     _MODEL_READ,
     _MODEL_WRITE,
@@ -39,7 +39,7 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 is_flag=False,
                 flag_value=None,
-                constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+                constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
             ),
         ),
         policy=_MODEL_READ,
@@ -70,7 +70,7 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 is_flag=False,
                 flag_value=None,
-                constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+                constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
             ),
             OptionSpec(
                 name="period",
@@ -134,7 +134,7 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 is_flag=False,
                 flag_value=None,
-                constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+                constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
             ),
             OptionSpec(
                 name="period",
@@ -209,7 +209,7 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 is_flag=False,
                 flag_value=None,
-                constraint=ParameterConstraint(minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX),
+                constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
             ),
             OptionSpec(
                 name="period",

@@ -67,7 +67,7 @@ from .....core.casilla_value_kind import CasillaValueKind
 from .....core.decimal.coercion import coerce_decimal_strict
 from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
-from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
+from .....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, FilingYear
 from .....core.identity.aeat_expediente import AeatExpedienteId
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -269,10 +269,8 @@ class FiledDeclarationAvailability(BaseModel):
     def _ejercicios_in_range(cls, value: tuple[int, ...]) -> tuple[int, ...]:
         """Reject an ejercicio outside the range every other record in this module accepts."""
         for ejercicio in value:
-            if not FILING_YEAR_MIN <= ejercicio <= FILING_YEAR_MAX:
-                error = SedeValidationError(
-                    f"ejercicio outside the supported range [{FILING_YEAR_MIN}, {FILING_YEAR_MAX}]: {ejercicio!r}"
-                )
+            if not FOUR_DIGIT_YEAR_FIRST <= ejercicio <= FOUR_DIGIT_YEAR_LAST:
+                error = SedeValidationError(f"ejercicio is not written with four digits: {ejercicio!r}")
                 raise ValueError(str(error)) from error
         return value
 

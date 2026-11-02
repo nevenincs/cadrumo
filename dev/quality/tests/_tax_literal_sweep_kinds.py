@@ -374,7 +374,7 @@ class _BoundReader(_ExpressionKinds):
                 keyword.arg == "ge"
                 and isinstance(keyword.value, ast.Name)
                 and _imports_for(self._tree, self._module).get(keyword.value.id)
-                == ("cadrumo.core.filing_year", "FILING_YEAR_MIN")
+                == ("cadrumo.core.filing_year", "FOUR_DIGIT_YEAR_FIRST")
                 for keyword in node.keywords
             )
         return False

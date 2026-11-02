@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -349,10 +349,10 @@ def iva_compensation_year_opening_balance(
 
 
 def _validate_carry_forward_as_of_year(as_of_year: int) -> None:
-    if not FILING_YEAR_MIN <= as_of_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= as_of_year <= FOUR_DIGIT_YEAR_LAST:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
-            context={"as_of_year": as_of_year, "min_year": FILING_YEAR_MIN, "max_year": FILING_YEAR_MAX},
+            context={"as_of_year": as_of_year, "min_year": FOUR_DIGIT_YEAR_FIRST, "max_year": FOUR_DIGIT_YEAR_LAST},
         )
 
 
@@ -511,10 +511,10 @@ def derive_iva_compensation_year_end_carry_partition(
 
     Returns an :class:`IvaCompensationYearEndCarryPartition`.
     """
-    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= filing_year <= FOUR_DIGIT_YEAR_LAST:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
-            context={"filing_year": filing_year, "min_year": FILING_YEAR_MIN, "max_year": FILING_YEAR_MAX},
+            context={"filing_year": filing_year, "min_year": FOUR_DIGIT_YEAR_FIRST, "max_year": FOUR_DIGIT_YEAR_LAST},
         )
     total_year_remaining = sum(
         (lot.remaining_amount for lot in report.lots if lot.source_filing_year == filing_year),

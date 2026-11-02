@@ -796,6 +796,10 @@ application:
           el recàrrec ha de ser zero.
         printed_total_differs: El total imprès, %{printed}, difereix del total calculat,
           %{computed}.
+        rate_date_projected: 'Els tipus d''IVA del %{on_date} es llegeixen de les
+          declaracions més properes, des del %{nearest}: aquesta data és anterior
+          als exercicis que cobreix Cadrumo, així que són una projecció i no serveixen
+          de base per presentar.'
         rate_date_unresolved: El registre no declara tipus d'IVA per al %{on_date},
           així que no es pot calcular l'IVA.
         recargo_above_iva_total: El recàrrec, %{stated}, no pot superar l'IVA total,
