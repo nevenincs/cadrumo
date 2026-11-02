@@ -559,6 +559,11 @@ def _evaluate_prepared_calculation(
         general_regime_claimed=m303_general_regime_claimed(
             record_to_path_values(prepared.profile.record).get("iva.m303_regime_composition")
         ),
+        observations=engine_result.observations,
+        supplied_casilla_ids=frozenset(resolved_inputs),
+        answered_binding_ids=frozenset(
+            (*prepared.channels.bindings, *prepared.channels.boolean_bindings, *settled_binding_ids)
+        ),
     )
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
     casilla_values, typed_observations = _drop_row_field_template_outputs(

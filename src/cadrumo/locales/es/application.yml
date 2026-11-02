@@ -2330,6 +2330,10 @@ application:
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.
+      iva_cuota_disagrees_with_rate: La entrada de IVA con fecha %{transaction_date}
+        registra una cuota de %{recorded_cuota} EUR, pero su base de %{base_amount}
+        EUR al tipo del %{iva_rate_percent} % da %{expected_cuota} EUR. Corrige la
+        cuota, la base o el tipo y vuelve a calcular antes de comprobar esta declaración.
       iva_import_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
         %{transaction_currency} necesita la declaración aduanera de la importación.
         Cadrumo todavía no puede registrarla, por lo que esta declaración no puede

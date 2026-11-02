@@ -480,6 +480,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.iva_selected_scope_evidence.complete",
+        "modelo.work.verify.iva_selected_scope_evidence.cuota_disagrees_with_rate",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.iva_compensation_annual_source_evidence.complete",
         "modelo.work.verify.iva_compensation_annual_source_evidence.unresolved",
     ),

@@ -2288,6 +2288,11 @@ application:
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.
+      iva_cuota_disagrees_with_rate: A(z) %{transaction_date} dátumú IVA-bejegyzés
+        %{recorded_cuota} EUR IVA-összeget rögzít, de a(z) %{base_amount} EUR alap
+        %{iva_rate_percent}%-os kulcs mellett %{expected_cuota} EUR-t ad. Javítsd
+        az IVA-összeget, az alapot vagy a kulcsot, majd számolj újra, mielőtt ellenőrzöd
+        ezt a nyilatkozatot.
       iva_import_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
         %{transaction_currency} összegű tételhez a behozatal vámáru-nyilatkozata szükséges.
         A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a bevallás nem mehet át

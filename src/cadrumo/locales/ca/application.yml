@@ -2335,6 +2335,11 @@ application:
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració
         no es pot completar.
+      iva_cuota_disagrees_with_rate: L'entrada d'IVA amb data %{transaction_date}
+        registra una quota de %{recorded_cuota} EUR, però la seva base de %{base_amount}
+        EUR al tipus del %{iva_rate_percent} % dona %{expected_cuota} EUR. Corregeix
+        la quota, la base o el tipus i torna a calcular abans de comprovar aquesta
+        declaració.
       iva_import_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
         %{transaction_currency} necessita la declaració duanera de la importació.
         Cadrumo encara no pot registrar-la, de manera que aquesta declaració no pot
