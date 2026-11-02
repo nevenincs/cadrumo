@@ -723,7 +723,9 @@ export function modeloFixture(options: Options): ModeloPort {
           }
           case "modelo.reconcile.import":
             issued(request.source_path, true);
-            return shape === "filed" ? written("reconcile-130") : unserved();
+            return shape === "filed" && request.source_kind === "justificante"
+              ? written("reconcile-130")
+              : unserved();
           case "modelo.work.metadata":
             return receiptShape ? written("metadata-130-receipt") : unserved();
           case "modelo.work.amendment_context":

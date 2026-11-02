@@ -244,6 +244,19 @@ function OpenBrowser({
         <PageDialog
           key={dialog.dialog_id}
           dialog={dialog}
+          pending={
+            view.dialogReply?.id === dialog.dialog_id
+              ? view.dialogReply.pending
+              : null
+          }
+          failed={
+            view.dialogReply?.id === dialog.dialog_id && view.dialogReply.failed
+          }
+          previousText={
+            view.dialogReply?.id === dialog.dialog_id
+              ? view.dialogReply.text
+              : undefined
+          }
           onAnswer={(accept, promptText) =>
             view.answerDialog(dialog.dialog_id, accept, promptText)
           }

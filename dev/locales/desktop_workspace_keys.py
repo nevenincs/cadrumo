@@ -39,6 +39,13 @@ def _composed_families(
         # The prototype's sentences for a withheld file, named by what clears the hold.
         "workspace.modelo.export.": ("confirm_first", "resolve_first", "verify_first"),
         "workspace.modelo.filing.copy.": filing_copies(),
+        "workspace.modelo.filing.reconciliation.": (
+            "matches", "differs", "differences", "notices", "work_value", "evidence_value",
+            "not_present", "legal_refs", "source_refs", "details", "code", "kind", "context",
+            "category.header_field", "category.total", "category.casilla",
+            "field.modelo", "field.ejercicio", "field.period", "field.tax_id",
+            "field.total_ingresar", "field.total_devolver",
+        ),
         # The save formats the filing view asks a location for.
         "workspace.modelo.filing.filter.": ("boe", "csv", "pdf", "xlsx", "xml", "zip"),
         "workspace.modelo.issues.verdict.": values(VerificationCompletenessStatus),
@@ -361,6 +368,10 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.period.annual",
         "workspace.modelo.rate.printed_by_form",
         "workspace.modelo.read_again",
+        "workspace.modelo.filing.compare_declaration_title",
+        "workspace.modelo.filing.compare_declaration_lead",
+        "workspace.modelo.filing.compare_declaration",
+        "workspace.modelo.filing.filter.declaration",
         "workspace.modelo.filing.reconciliation.matches",
         "workspace.modelo.filing.reconciliation.differs",
         "workspace.modelo.filing.reconciliation.differences",

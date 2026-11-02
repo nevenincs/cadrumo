@@ -47,6 +47,10 @@ import { useStrings } from "../../../shell/strings";
 import type { FormSession } from "../form/session";
 import { CalculationNotes } from "../workspace/CalculationNotes";
 import { useModeloOperation } from "../WriteScope";
+import {
+  ReconciliationResult,
+  type ReconciliationReport,
+} from "./ReconciliationResult";
 
 // Export and record: the official file written to a place the filer picks,
 // the filing recorded here, the AEAT's receipt added, and the other copies.
@@ -60,6 +64,7 @@ type Write =
   | "export"
   | "record"
   | "receipt"
+  | "declaration"
   | Exclude<ModeloExportArtefact, "fichero_boe">
   | "package";
 
@@ -77,7 +82,7 @@ type Notice =
   | { kind: "recorded" }
   /** It committed, and what it answered could not be read. */
   | { kind: "done" }
-  | { kind: "receipt"; matches: boolean; narrative: string }
+  | { kind: "comparison"; report: ReconciliationReport }
   /** `words` is why, as the backend served it; null when it served none. */
   | { kind: "refused"; write: Write; words: string | null }
   | { kind: "not_sent"; write: Write };
@@ -118,6 +123,7 @@ const COPY_ICON: Record<Write, IconName> = {
   export: "page",
   record: "tick",
   receipt: "paste",
+  declaration: "page",
   calculation_report_pdf: "page",
   calculation_report_csv: "sheet",
   calculation_review_xlsx: "sheet",
@@ -416,26 +422,38 @@ export function FilingView({
     );
   };
 
-  const addReceipt = async () => {
+  const importEvidence = async (sourceKind: "justificante" | "declaration") => {
     if (quiet) return;
-    const picked = await choose("receipt", () =>
-      port.pickFile("evidence", t("workspace.modelo.filing.filter.receipt")),
+    const write = sourceKind === "justificante" ? "receipt" : "declaration";
+    const picked = await choose(write, () =>
+      port.pickFile(
+        "evidence",
+        t(
+          sourceKind === "justificante"
+            ? "workspace.modelo.filing.filter.receipt"
+            : "workspace.modelo.filing.filter.declaration",
+        ),
+      ),
     );
     if (!picked) return;
     await run(
-      "receipt",
+      write,
       () =>
         port.submit("modelo.reconcile.import", {
           work_unit_id: envelope.work_unit_id,
           calculation_revision_id: calculation,
-          source_kind: "justificante",
+          source_kind: sourceKind,
           source_path: picked.token,
           actor: MODELO_ACTOR,
         }),
       (result: ModeloResult<"modelo.reconcile.import">) => ({
-        kind: "receipt",
-        matches: result.verdict === "matches",
-        narrative: result.narrative,
+        kind: "comparison",
+        report: {
+          verdict: result.verdict,
+          diffs: result.diffs,
+          advisories: result.advisories,
+          narrative: result.narrative,
+        },
       }),
       [picked.token],
     );
@@ -672,6 +690,32 @@ export function FilingView({
         </div>
       </Card>
 
+      <section
+        aria-label={t("workspace.modelo.filing.compare_declaration_title")}
+        className="flex flex-col gap-2"
+      >
+        <h3 className="text-md font-medium">
+          {t("workspace.modelo.filing.compare_declaration_title")}
+        </h3>
+        <p className="text-base text-muted-foreground">
+          {t("workspace.modelo.filing.compare_declaration_lead")}
+        </p>
+        <div>
+          <Button
+            variant="outline"
+            disabled={quiet}
+            onClick={() => void importEvidence("declaration")}
+          >
+            {busy && notice.write === "declaration" ? (
+              <Spinner />
+            ) : (
+              <Icon name="page" size="xs" />
+            )}
+            {t("workspace.modelo.filing.compare_declaration")}
+          </Button>
+        </div>
+      </section>
+
       <Card
         icon="tick"
         title={t("workspace.modelo.filing.after_filed_title")}
@@ -692,7 +736,7 @@ export function FilingView({
             variant="outline"
             disabled={!recorded || verifiedReceipt || quiet}
             onClick={() => {
-              void addReceipt();
+              void importEvidence("justificante");
             }}
           >
             {busy && notice.write === "receipt" ? (
@@ -839,22 +883,8 @@ function FilingNotice({
           {t("workspace.modelo.operation.done")}
         </Alert>
       );
-    case "receipt":
-      return (
-        <Alert
-          tone={notice.matches ? "success" : "warning"}
-          icon={<Icon name={notice.matches ? "check" : "alert"} />}
-        >
-          <span className="flex flex-col gap-1">
-            <span>
-              {notice.matches
-                ? t("workspace.modelo.filing.receipt_matches")
-                : t("workspace.modelo.filing.receipt_differs")}
-            </span>
-            <span className="text-muted-foreground">{notice.narrative}</span>
-          </span>
-        </Alert>
-      );
+    case "comparison":
+      return <ReconciliationResult report={notice.report} />;
     case "refused":
       return (
         <Alert tone="warning" icon={<Icon name="alert" />}>

@@ -878,6 +878,7 @@ desktop:
       check_again_for: 'Torna a comprovar: {name}'
       done_all: Fet
       done_problems: Fet, amb problemes
+      last_known: Últim progrés conegut
       not_started: Sense començar
       outcome:
         brought: Fet
@@ -892,6 +893,7 @@ desktop:
         refused: L'AEAT ho ha rebutjat
         session_ended: Accés caducat
         unavailable: L'AEAT no està disponible ara mateix
+      reload: Torna a carregar el progrés
       resume: Inicia la sessió de nou
       running: Actualitzant…
       stop: Atura
@@ -902,6 +904,8 @@ desktop:
       try_again: Torna-ho a provar
       try_again_for: 'Torna-ho a provar: {name}'
       unavailable: No s'ha pogut carregar el progrés
+      uncertain: Pot ser que una actualització continuï en curs. Torna a carregar
+        el progrés abans d'iniciar-ne una altra.
       waiting: En espera
       warn_cancel: Cancel·la
       warn_confirm: Comprova igualment
@@ -1085,6 +1089,7 @@ desktop:
     close: Tanca el navegador
     closing: Desant la teva sessió…
     dialog:
+      answer_failed: Cadrumo no ha pogut confirmar la teva resposta.
       cancel: Cancel·la
       leave: Surt
       leave_description: La pàgina pregunta abans que surtis. Pot ser que el que hagis
@@ -9738,6 +9743,10 @@ workspace:
       also_other_way: També si l'has presentada d'una altra manera.
       at_aeat: A l'AEAT
       check_first: Comprova primer la declaració.
+      compare_declaration: Tria una declaració en PDF…
+      compare_declaration_lead: Compara el PDF amb aquesta declaració. No s'envia
+        res a l'AEAT.
+      compare_declaration_title: Compara una declaració en PDF
       completeness_unverified: Cadrumo no ha pogut comprovar que totes les caselles
         obligatòries siguin al fitxer.
       copy:
@@ -9768,6 +9777,7 @@ workspace:
       filter:
         boe: Fitxer de presentació AEAT
         csv: Fitxer CSV
+        declaration: Declaració en PDF
         pdf: Document PDF
         receipt: Justificant de l'AEAT (PDF)
         xlsx: Llibre d'Excel
@@ -9784,6 +9794,31 @@ workspace:
       receipt_differs: El justificant no coincideix amb aquesta declaració.
       receipt_matches: El justificant coincideix amb aquesta declaració.
       receipt_missing: Encara no la confirma cap justificant.
+      reconciliation:
+        category:
+          casilla: Casella
+          header_field: Identificació de la declaració
+          total: Total
+        code: Codi
+        context: Context
+        details: Detalls del resultat
+        differences: Diferències
+        differs: S'han trobat diferències en el document importat.
+        evidence_value: Al document importat
+        field:
+          ejercicio: Exercici
+          modelo: Model
+          period: Període
+          tax_id: Identificació fiscal
+          total_devolver: Import a retornar
+          total_ingresar: Import a ingressar
+        kind: Codi de diferència
+        legal_refs: Referències legals
+        matches: No s'han trobat diferències en les comprovacions realitzades.
+        not_present: No consta
+        notices: Avisos de la comparació
+        source_refs: Referències d'origen
+        work_value: A Cadrumo
       record_as_filed: Registrar com a presentada…
       record_lead: Registra aquí que l'has presentada, perquè ho sàpiguen el teu calendari
         i les declaracions posteriors. Després afegeix el justificant de l'AEAT per

@@ -47,11 +47,11 @@ use super::{
     chunks::{AssembledImage, KIND_CHUNK, KIND_DOCUMENT, MAXIMUM_FRAME_BYTES, encode_frame},
     decoder::{Downstream, DownstreamDecoder},
     documents::{
-        CREDIT_MAX_IMAGES, ViewClipboard, ViewClipboardAction, ViewClipboardCommit,
-        ViewClipboardSelection, ViewClose, ViewClosedReason, ViewCredit, ViewDialog, ViewDownload,
-        ViewDownloadAnswer, ViewDownloadOutcome, ViewDownstream, ViewFileChooser,
-        ViewFileChooserAnswer, ViewFileChooserOutcome, ViewInput, ViewInputEvent, ViewNavigate,
-        ViewNavigateVerb, ViewNotice, ViewResize, ViewState, ViewTransferCancel,
+        CREDIT_MAX_IMAGES, TRANSFER_CREDIT_MAX_CHUNKS, ViewClipboard, ViewClipboardAction,
+        ViewClipboardCommit, ViewClipboardSelection, ViewClose, ViewClosedReason, ViewCredit,
+        ViewDialog, ViewDownload, ViewDownloadAnswer, ViewDownloadOutcome, ViewDownstream,
+        ViewFileChooser, ViewFileChooserAnswer, ViewFileChooserOutcome, ViewInput, ViewInputEvent,
+        ViewNavigate, ViewNavigateVerb, ViewNotice, ViewResize, ViewState, ViewTransferCancel,
         ViewTransferComplete, ViewTransferDirection, ViewUpload, ViewUpstream,
     },
     transfer::{SenderControl, TransferChunk, TransferReceiver, TransferSender},
@@ -62,7 +62,7 @@ use crate::runtime_client::{
     refusal::Refusal,
 };
 use std::{
-    collections::VecDeque,
+    collections::{BTreeSet, VecDeque},
     fmt, io,
     io::Read,
     sync::{
@@ -533,6 +533,10 @@ struct Core {
     owed: Condvar,
     events: EventQueue,
     downloads: Arc<TransferReceiver>,
+    /// Exact downloads accepted here whose terminal event the consumer has
+    /// not taken yet. The reader may finish them while earlier chunks wait
+    /// in the bounded event queue.
+    accepted_downloads: Mutex<BTreeSet<u32>>,
     uploads: Uploads,
 }
 
@@ -847,6 +851,7 @@ impl ViewLane {
             owed: Condvar::new(),
             events: EventQueue::default(),
             downloads: Arc::new(TransferReceiver::new(ViewTransferDirection::Download)),
+            accepted_downloads: Mutex::new(BTreeSet::new()),
             uploads: Uploads::default(),
         });
         let lane = Self {
@@ -884,7 +889,16 @@ impl ViewLane {
     /// The next event, waiting up to `timeout`; `None` if none came. After
     /// the lane ended and the queue drained, [`ViewEvent::Ended`], every time.
     pub fn recv(&self, timeout: Duration) -> Option<ViewEvent> {
-        self.core.events.recv(timeout)
+        let event = self.core.events.recv(timeout)?;
+        let finished = match &event {
+            ViewEvent::DownloadComplete(complete) => Some(complete.transfer_id),
+            ViewEvent::DownloadCancelled { transfer_id } => Some(*transfer_id),
+            _ => None,
+        };
+        if let Some(transfer_id) = finished {
+            locked(&self.core.accepted_downloads).remove(&transfer_id);
+        }
+        Some(event)
     }
 
     /// Whether the lane ended.
@@ -985,6 +999,7 @@ impl ViewLane {
             .downloads
             .expect(transfer_id, size)
             .map_err(|_| Refusal::InvalidFrame)?;
+        locked(&self.core.accepted_downloads).insert(transfer_id);
         self.core
             .send(&ViewUpstream::DownloadAnswer(ViewDownloadAnswer {
                 transfer_id,
@@ -1011,18 +1026,38 @@ impl ViewLane {
 
     /// Admits `chunks` more chunks of an accepted download. Grant as the
     /// host writes bytes out: at most 32 are outstanding, about 2 MiB.
+    /// If the reader already finished this download, credits returned while
+    /// its earlier chunks are being consumed have nothing left to grant.
+    /// They send nothing; consuming the terminal event retires that identity.
     pub fn download_credit(&self, transfer_id: u32, chunks: u8) -> Result<(), Refusal> {
-        let credit = self
-            .core
-            .downloads
-            .grant(transfer_id, chunks)
-            .map_err(|_| Refusal::InvalidFrame)?;
-        self.core.send(&ViewUpstream::TransferCredit(credit))
+        if !(1..=TRANSFER_CREDIT_MAX_CHUNKS).contains(&chunks) {
+            return Err(Refusal::InvalidFrame);
+        }
+        if self.core.is_closed() {
+            return Err(Refusal::ConnectionClosed);
+        }
+        match self.core.downloads.grant(transfer_id, chunks) {
+            Ok(credit) => self.core.send(&ViewUpstream::TransferCredit(credit)),
+            Err(violation)
+                if matches!(
+                    violation.check(),
+                    "view_transfer_closed" | "view_transfer_unknown"
+                ) && locked(&self.core.accepted_downloads).contains(&transfer_id) =>
+            {
+                if self.core.is_closed() {
+                    Err(Refusal::ConnectionClosed)
+                } else {
+                    Ok(())
+                }
+            }
+            Err(_) => Err(Refusal::InvalidFrame),
+        }
     }
 
     /// Stops receiving an accepted download. Chunks already in flight are
     /// discarded; the host discards the bytes it wrote.
     pub fn cancel_download(&self, transfer_id: u32) -> Result<(), Refusal> {
+        locked(&self.core.accepted_downloads).remove(&transfer_id);
         match self.core.downloads.cancel(transfer_id) {
             Some(cancel) => self.core.send(&ViewUpstream::TransferCancel(cancel)),
             None => Ok(()),
@@ -1745,6 +1780,79 @@ mod tests {
     }
 
     #[test]
+    fn queued_download_chunks_can_return_credit_after_the_reader_finished() {
+        for completed in [false, true] {
+            let (lane, runtime) = lane();
+            let content = pattern(0, 2 * CHUNK_BODY_BYTES + 77);
+            lane.accept_download(1, Some(content.len() as u64)).unwrap();
+            runtime.take_json();
+            lane.download_credit(1, TRANSFER_CREDIT_MAX_CHUNKS).unwrap();
+            runtime.take_json();
+            assert!(
+                lane.download_credit(1, 1).is_err(),
+                "the window remains bounded"
+            );
+            let mut sender =
+                TransferSender::new(1, Box::new(Cursor::new(content.clone()))).unwrap();
+            sender.control().grant(3).unwrap();
+            while let Some(chunk) = sender.next_chunk().unwrap() {
+                runtime.send_frame(KIND_CHUNK, &chunk.payload);
+            }
+            let complete =
+                serde_json::to_value(ViewUpstream::TransferComplete(sender.completion().unwrap()))
+                    .unwrap();
+            if completed {
+                runtime.send_json(&complete);
+            }
+            runtime.send_json(&state_document("read-ahead"));
+            // The reader has passed the last chunk (and, in one case, completion)
+            // before the consumer takes its first queued chunk.
+            {
+                let (queue, timeout) = lane.core.events.ready.wait_timeout_while(
+                    locked(&lane.core.events.state), soon(), |queue| {
+                        !queue.items.iter().any(|event| matches!(event, ViewEvent::State(state) if state.title == "read-ahead"))
+                    },
+                ).unwrap();
+                assert!(!timeout.timed_out(), "the reader reached the barrier");
+                drop(queue);
+            }
+            for invalid in [0, TRANSFER_CREDIT_MAX_CHUNKS + 1] {
+                assert!(lane.download_credit(1, invalid).is_err());
+            }
+            assert!(
+                lane.download_credit(9, 1).is_err(),
+                "another transfer is not admitted"
+            );
+            let (other_lane, _) = self::lane();
+            assert!(
+                other_lane.download_credit(1, 1).is_err(),
+                "the identity is local to its lane"
+            );
+            let mut received = Vec::new();
+            for _ in 0..3 {
+                let ViewEvent::DownloadChunk(chunk) = next_event(&lane) else {
+                    panic!("a queued chunk")
+                };
+                received.extend_from_slice(&chunk.data);
+                if !chunk.last {
+                    lane.download_credit(1, 1).unwrap();
+                }
+            }
+            assert_eq!(received, content);
+            if !completed {
+                assert!(matches!(next_event(&lane), ViewEvent::State(_)));
+                runtime.send_json(&complete);
+            }
+            assert!(matches!(next_event(&lane), ViewEvent::DownloadComplete(_)));
+            assert!(
+                lane.download_credit(1, 1).is_err(),
+                "the delivered completion retires its identity"
+            );
+            assert!(runtime.is_quiet(), "no late credit reaches the wire");
+        }
+    }
+
+    #[test]
     fn download_bytes_that_disagree_with_their_completion_end_the_lane() {
         let (lane, runtime) = lane();
         runtime.send_json(&json!({"kind": "view.download", "transfer_id": 1, "filename": "a.txt"}));
@@ -1806,6 +1914,10 @@ mod tests {
         runtime.take_json();
         runtime.take_json();
         lane.cancel_download(1).unwrap();
+        assert!(
+            lane.download_credit(1, 1).is_err(),
+            "local cancellation retires credit authority"
+        );
         assert_eq!(
             runtime.take_json(),
             json!({"kind": "view.transfer_cancel", "direction": "download", "transfer_id": 1})

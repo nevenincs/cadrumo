@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,19 +24,28 @@ const ANSWER_LIMIT = 1024;
 export function PageDialog({
   dialog,
   onAnswer,
+  pending,
+  failed,
+  previousText,
 }: {
   dialog: SedeViewDialog;
-  onAnswer: (accept: boolean, promptText?: string) => void;
+  onAnswer: (accept: boolean, promptText?: string) => Promise<void>;
+  pending: boolean | null;
+  failed: boolean;
+  previousText?: string;
 }) {
   const t = useStrings();
-  const [text, setText] = useState(dialog.default_prompt ?? "");
+  const [text, setText] = useState(previousText ?? dialog.default_prompt ?? "");
+  const answer = (accept: boolean, promptText?: string) => {
+    if (pending === null) void onAnswer(accept, promptText);
+  };
   const leaving = dialog.dialog_kind === "beforeunload";
   const asking = dialog.dialog_kind === "prompt";
   return (
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) onAnswer(false);
+        if (!open) void answer(false);
       }}
     >
       <DialogContent>
@@ -51,27 +61,42 @@ export function PageDialog({
               : dialog.message}
           </DialogDescription>
         </DialogHeader>
+        {failed && (
+          <Alert role="alert" tone="warning">
+            {t("desktop.browser.dialog.answer_failed")}
+          </Alert>
+        )}
         {asking && (
           <TextEditor
             value={text}
+            disabled={pending !== null}
             maxLength={ANSWER_LIMIT}
             aria-label={t("desktop.browser.dialog.prompt_label")}
             onChange={setText}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.nativeEvent.isComposing)
-                onAnswer(true, text);
+                void answer(true, text);
             }}
           />
         )}
         <DialogFooter>
           {dialog.dialog_kind !== "alert" && (
-            <Button variant="outline" onClick={() => onAnswer(false)}>
+            <Button
+              variant="outline"
+              disabled={pending !== null}
+              pending={pending === false}
+              onClick={() => void answer(false)}
+            >
               {leaving
                 ? t("desktop.browser.dialog.stay")
                 : t("desktop.browser.dialog.cancel")}
             </Button>
           )}
-          <Button onClick={() => onAnswer(true, asking ? text : undefined)}>
+          <Button
+            disabled={pending !== null}
+            pending={pending === true}
+            onClick={() => void answer(true, asking ? text : undefined)}
+          >
             {leaving
               ? t("desktop.browser.dialog.leave")
               : t("desktop.browser.dialog.ok")}

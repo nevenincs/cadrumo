@@ -233,18 +233,27 @@ function Summary({
   snapshot,
   busy,
   onStop,
+  uncertain,
 }: {
   t: Translate;
   snapshot: AeatSyncRunSnapshot;
   busy: boolean;
   onStop(): void;
+  uncertain: boolean;
 }) {
   const { state } = snapshot;
   const problems = aeatSyncRunProblems(snapshot);
   const { settled, total } = aeatSyncRunShare(snapshot);
   let icon: ReactNode;
   let key: string;
-  if (state === "running" || state === "paused" || state === "stopping") {
+  if (uncertain) {
+    icon = <Icon name="unknown" />;
+    key = `${KEY}last_known`;
+  } else if (
+    state === "running" ||
+    state === "paused" ||
+    state === "stopping"
+  ) {
     icon = state === "paused" ? <Icon name="pause" /> : <Spinner />;
     key =
       state === "stopping"
@@ -267,7 +276,7 @@ function Summary({
   return (
     <div
       className="flex flex-col gap-2 rounded-lg border bg-card p-3"
-      data-run={state}
+      data-run={uncertain ? "unknown" : state}
     >
       <div className="flex items-center gap-3">
         <p
@@ -327,14 +336,28 @@ export function AeatSyncRunView({
   const t = useStrings();
   const [confirming, setConfirming] = useState<number | null>(null);
   const { snapshot } = run;
+  const uncertain = run.error || run.loading;
+  const busy = run.busy || uncertain;
   return (
     <section
       aria-label={t(`${KEY}title`)}
       className="aeat-sync-progress flex w-full flex-col gap-3"
     >
       {run.error && (
-        <Alert role="alert" tone="danger" icon={<Icon name="alert" />}>
-          {t(`${KEY}unavailable`)}
+        <Alert role="alert" tone="warning" icon={<Icon name="alert" />}>
+          <div className="flex flex-col items-start gap-2">
+            <p>{t(`${KEY}unavailable`)}</p>
+            <p>{t(`${KEY}uncertain`)}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={run.loading}
+              onClick={run.refresh}
+            >
+              {run.loading && <Spinner />}
+              {t(`${KEY}reload`)}
+            </Button>
+          </div>
         </Alert>
       )}
       {run.problem && (
@@ -360,17 +383,19 @@ export function AeatSyncRunView({
           <Summary
             t={t}
             snapshot={snapshot}
-            busy={run.busy}
+            busy={busy}
+            uncertain={uncertain}
             onStop={() => void run.stop()}
           />
           {snapshot.state === "paused" &&
+            !uncertain &&
             (paused ?? (
               <Alert tone="warning" icon={<Icon name="alert" />}>
                 <AlertTitle>{t(`${KEY}paused`)}</AlertTitle>
                 <span className="mt-1">
                   <Button
                     size="sm"
-                    disabled={run.busy}
+                    disabled={busy}
                     onClick={() => void run.resume()}
                   >
                     {t(`${KEY}resume`)}
@@ -384,7 +409,7 @@ export function AeatSyncRunView({
                 key={area.area}
                 t={t}
                 area={area}
-                busy={run.busy}
+                busy={busy}
                 confirming={confirming}
                 onConfirm={setConfirming}
                 onRetry={(id, item, acknowledged) =>

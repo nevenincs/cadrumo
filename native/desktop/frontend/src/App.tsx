@@ -1,3 +1,4 @@
+import { useWorkspaceFocus, WORKSPACE_COLUMNS } from "./shell/useWorkspaceFocus";
 import { useShellShortcuts } from "./shell/useShellShortcuts";
 import settings from "virtual:operational-settings";
 import { useShellMenus } from "./shell/useShellMenus";
@@ -183,8 +184,6 @@ const failure = (status: TerminalStatus): string | undefined =>
 type Area = Exclude<Maximized, null>;
 
 /** The columns of the workspace, each shown and put away on its own. */
-const COLUMNS = ["agent", "tui", "docs"] as const;
-type Column = (typeof COLUMNS)[number];
 
 /** The workspace area that holds focus, the documentation frame included. */
 const focusedArea = (): Area | "rail" | null => {
@@ -1258,7 +1257,7 @@ export function App({ host }: { host: Host }) {
   // A column's own close: put away, and the layout restored if it was the
   // one maximized.
   const closeColumn = useCallback(
-    (column: Column) => {
+    (column: (typeof WORKSPACE_COLUMNS)[number]) => {
       if (column === "docs") {
         guarded(() => {
           showPage("docs");
@@ -1275,7 +1274,7 @@ export function App({ host }: { host: Host }) {
   // A column asked for from the rail, the palette or a shortcut: put away
   // when it is on screen, else shown with the layout restored around it.
   const toggleColumn = useCallback(
-    (column: Column) => {
+    (column: (typeof WORKSPACE_COLUMNS)[number]) => {
       const onScreen =
         column === "agent"
           ? agentVisible
@@ -1627,7 +1626,7 @@ export function App({ host }: { host: Host }) {
           toggleMaximize(
             area && area !== "rail"
               ? area
-              : (COLUMNS.find((column) =>
+              : (WORKSPACE_COLUMNS.find((column) =>
                   column === "agent"
                     ? agentVisible
                     : column === "tui"
@@ -2377,91 +2376,12 @@ export function App({ host }: { host: Host }) {
   );
 
   const tabOpen = (tab: PanelTab) => panelVisible && activePanes.includes(tab);
-  // A column hidden from under the keyboard: focus goes to the TUI while
-  // that is shown, else to the first pane, else to the agent, else to the
-  // rail, never to nothing. The bottom panel maximized over them hands
-  // focus on by itself.
-  const columnsWere = useRef<Record<Column, boolean>>({
-    agent: agentVisible,
-    tui: tuiVisible,
-    docs: firstPaneShown,
+  const panelMaximized = useWorkspaceFocus({
+    agentVisible, tuiVisible, firstPaneShown, maximized, gated,
+    tuiPhase: status.tui.phase, tab: layout.tab,
+    focusView, focusRail, signInButton, profilePage, ledgerPage, declarationsPage,
+    calendarPage, aeatSyncPage, docs, agentBody, wantsAgent,
   });
-  useEffect(() => {
-    const now = { agent: agentVisible, tui: tuiVisible, docs: firstPaneShown };
-    const gone = COLUMNS.filter(
-      (column) => columnsWere.current[column] && !now[column],
-    );
-    columnsWere.current = now;
-    // Only when one has just been hidden: a window that starts without a
-    // column moves no focus. What held focus inside it is still named as
-    // the focused element for a moment after it stops being shown.
-    const held = document.activeElement;
-    if (
-      gone.length === 0 ||
-      maximized === "panel" ||
-      (held !== null &&
-        held !== document.body &&
-        !gone.some((column) => held.closest(`.pane-${column}`) !== null))
-    )
-      return;
-    // Only where the TUI's pane holds something to focus: the way in while
-    // signed out, or a session.
-    const tuiFocusable =
-      signInButton.current !== null ||
-      (!gated && status.tui.phase !== "unavailable");
-    if (tuiVisible && tuiFocusable) focusView("tui");
-    else if (
-      firstPaneShown &&
-      (profilePage.current ??
-        ledgerPage.current ??
-        declarationsPage.current ??
-        calendarPage.current ??
-        aeatSyncPage.current ??
-        docs.current)
-    )
-      (
-        profilePage.current ??
-        ledgerPage.current ??
-        declarationsPage.current ??
-        calendarPage.current ??
-        aeatSyncPage.current ??
-        docs.current
-      )?.focus();
-    else if (agentVisible) agentBody.current?.focus();
-    else focusRail();
-  }, [
-    agentVisible,
-    tuiVisible,
-    firstPaneShown,
-    maximized,
-    gated,
-    status.tui.phase,
-    focusView,
-    focusRail,
-  ]);
-  useEffect(() => {
-    if (agentVisible && wantsAgent.current) {
-      wantsAgent.current = false;
-      agentBody.current?.focus();
-    }
-  }, [agentVisible]);
-  // The bottom panel maximized over the panes above it: focus held in one
-  // of them goes into the panel, to the view its tab shows.
-  const panelMaximized = maximized === "panel";
-  const panelWasMaximized = useRef(panelMaximized);
-  useEffect(() => {
-    const covered = !panelWasMaximized.current && panelMaximized;
-    panelWasMaximized.current = panelMaximized;
-    const held = document.activeElement;
-    if (
-      !covered ||
-      (held !== null &&
-        held !== document.body &&
-        held.closest(".main-area, .pane-agent") === null)
-    )
-      return;
-    focusView(layout.tab);
-  }, [panelMaximized, layout.tab, focusView]);
 
   // What a session's header says beside its state: how it ended, or why it
   // could not start.

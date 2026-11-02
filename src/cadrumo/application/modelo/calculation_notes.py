@@ -48,7 +48,6 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
-from ...domain.user_profile.labels import profile_field_label_key
 from ...domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
@@ -57,6 +56,7 @@ from ...domain.modelos.calculation_revision_sources import (
     element_names_of,
     recorded_calculation_notes,
 )
+from ...domain.user_profile.labels import profile_field_label_key
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
@@ -77,6 +77,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unhandled_binding_source",
         "source_domain_not_ready",
         "advisory_binding_value",
+        "precedence_tier_divergence",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
@@ -121,6 +122,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         **dict.fromkeys(BLOCKING_REASONS, _B),
         # Persisted and shown, not refused: the route it reports may lack a terminal origin by design.
         "terminal_origin_mismatch": _C,
+        "precedence_tier_divergence_advisory": _C,
         "unresolved_derived_binding": _C,
         # Something only the filer can supply.
         "source_issue": _M,

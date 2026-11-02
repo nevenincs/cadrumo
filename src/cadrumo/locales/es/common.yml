@@ -884,6 +884,7 @@ desktop:
       check_again_for: 'Comprobar de nuevo: {name}'
       done_all: Hecho
       done_problems: Hecho, con problemas
+      last_known: Último progreso conocido
       not_started: Sin empezar
       outcome:
         brought: Hecho
@@ -899,6 +900,7 @@ desktop:
         refused: La AEAT lo rechazó
         session_ended: Acceso caducado
         unavailable: La AEAT no está disponible ahora mismo
+      reload: Volver a cargar el progreso
       resume: Iniciar sesión de nuevo
       running: Actualizando…
       stop: Detener
@@ -909,6 +911,8 @@ desktop:
       try_again: Inténtalo de nuevo
       try_again_for: 'Inténtalo de nuevo: {name}'
       unavailable: No se pudo cargar el progreso
+      uncertain: Puede que una actualización siga en curso. Vuelve a cargar el progreso
+        antes de iniciar otra actualización.
       waiting: En espera
       warn_cancel: Cancelar
       warn_confirm: Comprobar igualmente
@@ -1092,6 +1096,7 @@ desktop:
     close: Cerrar el navegador
     closing: Guardando tu sesión…
     dialog:
+      answer_failed: Cadrumo no ha podido confirmar tu respuesta.
       cancel: Cancelar
       leave: Salir
       leave_description: La página pregunta antes de que salgas. Puede que no se guarde
@@ -9752,6 +9757,10 @@ workspace:
       also_other_way: También si la presentaste de otra forma.
       at_aeat: En la AEAT
       check_first: Comprueba primero la declaración.
+      compare_declaration: Elegir declaración en PDF…
+      compare_declaration_lead: Compara el PDF con esta declaración. No se envía nada
+        a la AEAT.
+      compare_declaration_title: Comparar una declaración en PDF
       completeness_unverified: Cadrumo no ha podido comprobar que todas las casillas
         obligatorias estén en el fichero.
       copy:
@@ -9782,6 +9791,7 @@ workspace:
       filter:
         boe: Fichero de presentación AEAT
         csv: Fichero CSV
+        declaration: Declaración en PDF
         pdf: Documento PDF
         receipt: Justificante de la AEAT (PDF)
         xlsx: Libro de Excel
@@ -9798,6 +9808,31 @@ workspace:
       receipt_differs: El justificante no coincide con esta declaración.
       receipt_matches: El justificante coincide con esta declaración.
       receipt_missing: Aún no la confirma ningún justificante.
+      reconciliation:
+        category:
+          casilla: Casilla
+          header_field: Identificación de la declaración
+          total: Total
+        code: Código
+        context: Contexto
+        details: Detalles del resultado
+        differences: Diferencias
+        differs: Se han encontrado diferencias en el documento importado.
+        evidence_value: En el documento importado
+        field:
+          ejercicio: Ejercicio
+          modelo: Modelo
+          period: Periodo
+          tax_id: Identificación fiscal
+          total_devolver: Importe a devolver
+          total_ingresar: Importe a ingresar
+        kind: Código de diferencia
+        legal_refs: Referencias legales
+        matches: No se han encontrado diferencias en las comprobaciones realizadas.
+        not_present: No consta
+        notices: Avisos de la comparación
+        source_refs: Referencias de origen
+        work_value: En Cadrumo
       record_as_filed: Registrar como presentada…
       record_lead: Registra aquí que la has presentado, para que lo sepan tu calendario
         y tus declaraciones posteriores. Después añade el justificante de la AEAT

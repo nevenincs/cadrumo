@@ -850,6 +850,7 @@ desktop:
       check_again_for: 'Check again: {name}'
       done_all: Done
       done_problems: Done, with problems
+      last_known: Last known progress
       not_started: Not started
       outcome:
         brought: Done
@@ -864,6 +865,7 @@ desktop:
         refused: AEAT refused
         session_ended: Sign-in timed out
         unavailable: AEAT isn't available right now
+      reload: Reload progress
       resume: Sign in again
       running: Updating…
       stop: Stop
@@ -874,6 +876,8 @@ desktop:
       try_again: Try again
       try_again_for: 'Try again: {name}'
       unavailable: Couldn't load progress
+      uncertain: An update may still be running. Reload progress before starting another
+        update.
       waiting: Waiting
       warn_cancel: Cancel
       warn_confirm: Check anyway
@@ -1049,6 +1053,7 @@ desktop:
     close: Close the browser
     closing: Saving your session…
     dialog:
+      answer_failed: Cadrumo could not confirm your answer.
       cancel: Cancel
       leave: Leave
       leave_description: The page asks before you leave it. What you entered may not
@@ -9562,6 +9567,10 @@ workspace:
       also_other_way: Also if you filed some other way.
       at_aeat: At the AEAT
       check_first: Check the declaration first.
+      compare_declaration: Choose declaration PDF…
+      compare_declaration_lead: Compare the PDF with this declaration. Nothing is
+        submitted to AEAT.
+      compare_declaration_title: Compare a declaration PDF
       completeness_unverified: Cadrumo could not check that every required box reached
         the file.
       copy:
@@ -9591,6 +9600,7 @@ workspace:
       filter:
         boe: AEAT filing file
         csv: CSV file
+        declaration: Declaration PDF
         pdf: PDF document
         receipt: AEAT receipt (PDF)
         xlsx: Excel workbook
@@ -9607,6 +9617,31 @@ workspace:
       receipt_differs: The receipt does not match this declaration.
       receipt_matches: The receipt matches this declaration.
       receipt_missing: Not confirmed by a receipt yet.
+      reconciliation:
+        category:
+          casilla: Box
+          header_field: Declaration identity
+          total: Total
+        code: Code
+        context: Context
+        details: Returned details
+        differences: Differences
+        differs: Differences found in the imported document.
+        evidence_value: In imported document
+        field:
+          ejercicio: Tax year
+          modelo: Modelo
+          period: Period
+          tax_id: Tax identifier
+          total_devolver: Refund amount
+          total_ingresar: Amount payable
+        kind: Difference code
+        legal_refs: Legal references
+        matches: No differences found in the checks performed.
+        not_present: Not present
+        notices: Comparison notices
+        source_refs: Source references
+        work_value: In Cadrumo
       record_as_filed: Record as filed…
       record_lead: Record here that you filed it, so your calendar and later declarations
         know. Then add the AEAT's receipt to confirm it.

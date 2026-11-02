@@ -19,6 +19,7 @@ use cadrumo_application::runtime_client::{
 use cadrumo_application::value::Sha256Digest;
 use cadrumo_application::view_stream::attach::view_attach;
 use cadrumo_application::view_stream::chunks::AssembledImage;
+use cadrumo_application::view_stream::chunks::CHUNK_BODY_BYTES;
 use cadrumo_application::view_stream::documents::{
     TextInput, ViewClosedReason, ViewInputEvent, ViewNavigateVerb,
 };
@@ -280,6 +281,15 @@ fn the_lane_streams_latest_images_carries_transfers_and_closes_the_view() {
     lane.accept_download(offer.transfer_id, offer.size).unwrap();
     lane.download_credit(offer.transfer_id, DOWNLOAD_WINDOW)
         .unwrap();
+    assert!(
+        offer.size.is_some_and(
+            |size| size.div_ceil(CHUNK_BODY_BYTES as u64) <= u64::from(DOWNLOAD_WINDOW)
+        )
+    );
+    // Let the real sender finish while the native reader queues its chunks.
+    // Returning credit as those queued chunks are consumed must still succeed.
+    let sent = peer.expect("downloaded");
+    assert_eq!(sent["delivered"], true);
     let mut downloaded = Vec::new();
     let complete = loop {
         match next_event(&lane) {
@@ -297,8 +307,6 @@ fn the_lane_streams_latest_images_carries_transfers_and_closes_the_view() {
     let download_sha256 = member(&ready, "download_sha256");
     assert_eq!(Sha256Digest::of(&downloaded).to_string(), download_sha256);
     assert_eq!(complete.sha256, download_sha256);
-    let sent = peer.expect("downloaded");
-    assert_eq!(sent["delivered"], true);
 
     // A file the person supplies to the page's chooser reaches the worker with its digest.
     let upload: Vec<u8> = (0..300_000u32)

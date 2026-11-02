@@ -43,6 +43,14 @@ export type SedeViewAnswer =
 
 /** What a scenario can play into the open view. */
 export type SedeViewFixtureControls = {
+  failNextDialog(): void;
+  holdNextDialog(): void;
+  releaseDialog(): void;
+  failResizes(count: number): void;
+  holdNextResize(): void;
+  releaseResize(): void;
+  resizeRequests(): readonly SedeViewSize[];
+  size(): SedeViewSize;
   dialog(kind: SedeViewDialogKind, message: string, answer?: string): void;
   download(filename: string): void;
   /** AEAT showed the person signed in as another taxpayer. */
@@ -86,6 +94,11 @@ export type SedeViewFixtureOptions = {
 };
 
 type Open = {
+  refuseDialog: boolean;
+  dialogGate: ReturnType<typeof gate> | null;
+  resizeGate: ReturnType<typeof gate> | null;
+  resizeFailures: number;
+  resizeRequests: SedeViewSize[];
   id: number;
   size: SedeViewSize;
   listener: (event: SedeViewEvent) => void;
@@ -104,6 +117,14 @@ type Open = {
   /** A scenario publishes the closing view's session itself. */
   held: boolean;
 };
+
+function gate() {
+  let release!: () => void;
+  const wait = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  return { wait, release };
+}
 
 async function draw(open: Open): Promise<ArrayBuffer> {
   const { cssWidth, cssHeight, scale } = open.size;
@@ -219,6 +240,26 @@ export function sedeViewFixture({
   };
 
   const controls = (open: Open): SedeViewFixtureControls => ({
+    failNextDialog() {
+      open.refuseDialog = true;
+    },
+    holdNextDialog() {
+      open.dialogGate = gate();
+    },
+    releaseDialog() {
+      open.dialogGate?.release();
+    },
+    failResizes(count) {
+      open.resizeFailures = count;
+    },
+    holdNextResize() {
+      open.resizeGate = gate();
+    },
+    releaseResize() {
+      open.resizeGate?.release();
+    },
+    resizeRequests: () => [...open.resizeRequests],
+    size: () => ({ ...open.size }),
     dialog(kind, message, answer) {
       open.transfers += 1;
       open.listener({
@@ -344,6 +385,17 @@ export function sedeViewFixture({
       async resize(size) {
         await live();
         say("sedeViewResize");
+        open.resizeRequests.push(size);
+        if (open.resizeGate) {
+          await open.resizeGate.wait;
+          open.resizeGate = null;
+        }
+        if (open.resizeFailures > 0) {
+          open.resizeFailures -= 1;
+          throw Object.assign(new Error("Resize unavailable"), {
+            code: "unavailable",
+          });
+        }
         open.size = size;
         void frame(open);
       },
@@ -356,6 +408,16 @@ export function sedeViewFixture({
       async dialog(dialogId, accept, promptText) {
         await live();
         say(`sedeViewDialog ${accept ? "accept" : "dismiss"}`);
+        if (open.dialogGate) {
+          await open.dialogGate.wait;
+          open.dialogGate = null;
+        }
+        if (open.refuseDialog) {
+          open.refuseDialog = false;
+          throw Object.assign(new Error("Answer unavailable"), {
+            code: "unavailable",
+          });
+        }
         open.answers.push({
           kind: "dialog",
           id: dialogId,
@@ -426,6 +488,11 @@ export function sedeViewFixture({
       say("sedeViewOpen");
       issued += 1;
       const open: Open = {
+        refuseDialog: false,
+        dialogGate: null,
+        resizeGate: null,
+        resizeFailures: 0,
+        resizeRequests: [],
         id: issued,
         size,
         listener,

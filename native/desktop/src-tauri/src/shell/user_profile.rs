@@ -1260,7 +1260,9 @@ mod tests {
         );
         let fits = prepared(json!({"kind":"descendants","rows":vec![full; needed - 2]}));
         assert!(fits.is_ok());
-        assert!(FAMILY_MEMBERS_LIMIT > MEMBERS_LIMIT);
+        const {
+            assert!(FAMILY_MEMBERS_LIMIT > MEMBERS_LIMIT);
+        }
         for edit in [
             json!({"kind":"descendants","rows":[],"extra":1}),
             json!({"kind":"descendants","rows":[{"facts":[],"extra":1}]}),

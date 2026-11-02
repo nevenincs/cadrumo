@@ -416,15 +416,16 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, tracked: &Tracked) -> Result<
             // declares, or the registered error detail with the sentence the
             // backend words for it; the relay refuses the read when there is
             // none. The window shows that sentence as served.
-            let detail = if p["terminal_condition"] == "refused" || p["terminal_condition"] == "failed" {
-                relay::result(relayed)
-                    .await
-                    .ok()
-                    .map(|document| tracked.reduced(&document["projection"]))
-                    .filter(Value::is_object)
-            } else {
-                None
-            };
+            let detail =
+                if p["terminal_condition"] == "refused" || p["terminal_condition"] == "failed" {
+                    relay::result(relayed)
+                        .await
+                        .ok()
+                        .map(|document| tracked.reduced(&document["projection"]))
+                        .filter(Value::is_object)
+                } else {
+                    None
+                };
             Outcome::Refused {
                 operation_id,
                 revision,
@@ -1251,7 +1252,8 @@ mod tests {
 
         #[tokio::test]
         async fn a_failed_stop_relays_the_served_words_of_its_error_detail_unchanged() {
-            let words = "Direct debit for this filing closed on 2026-04-15 (Orden HAC/3625/2003, art. 3).";
+            let words =
+                "Direct debit for this filing closed on 2026-04-15 (Orden HAC/3625/2003, art. 3).";
             let detail = json!({"detail_version":1,"kind":"registered_error",
                 "error_code":"REFUSED_MODELO_DOMICILIATION_PAST_CUTOFF","context":[],
                 "refusal_words":words,"refusal_words_language":"en"});

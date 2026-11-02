@@ -398,7 +398,8 @@ export type CalculationNoteSentence =
   | "advisory_imputation_period_ungrounded"
   | "advisory_value_proven_zero"
   | "retencion_soportada_evidence_required"
-  | "retencion_soportada_absence_contradicted";
+  | "retencion_soportada_absence_contradicted"
+  | "household_rows_incomplete";
 
 /**
  * Closed set of serialisations of one modelo calculation report.
@@ -523,6 +524,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "rate_boxes_underaccount_total"
     | "aggregation_activity_undeclared"
     | "operator_override_diverges_from_computed"
+    | "precedence_tier_divergence"
+    | "precedence_tier_divergence_advisory"
     | "register_owned_capital_acquisition"
     | "m193_settled_row_amounts_unresolved_authority"
     | "ledger_amortization_row_unregistered"
@@ -537,7 +540,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "activity_asset_accrual_unavailable"
     | "activity_asset_disposal_finding"
     | "activity_asset_agrarian_excluded"
-    | "activity_asset_activity_undeclared";
+    | "activity_asset_activity_undeclared"
+    | "household_rows_incomplete";
   source_kind: string;
   binding_source: BindingSourceKind | null;
   message: string;
@@ -558,6 +562,7 @@ export type CalculationSourceDiagnosticSnapshot = {
   out_of_window_min_filing_date: string | null;
   out_of_window_max_filing_date: string | null;
   value_outcome: BindingValueOutcome | null;
+  disagreement: SourceDisagreementFact | null;
 };
 
 /**
@@ -611,9 +616,16 @@ export type CalculationSourceDiagnosticSnapshot = {
  * is what the resolver stated beside that value: a proven zero persists too,
  * so a reopened declaration still shows the zero was proven, and withholds
  * nothing; a capped note without a stated outcome withholds. Only that reason
- * carries an outcome. `fact` states such a note's own row, element, interval
- * and amount. `binding_source` is `None` only where the condition names no
- * binding source kind.
+ * carries an outcome. `household_rows_incomplete` is a household group whose
+ * stated count is larger than the rows the profile records: the recorded rows
+ * are used and the group is not proven complete; it withholds nothing. `fact`
+ * states such a note's own row, element, interval and amount. `binding_source`
+ * is `None` only where the condition names no binding source kind.
+ * `precedence_tier_divergence` is a filed figure for which a higher source
+ * tier replaced a different value a lower tier held; `disagreement` states
+ * every tier's value and which one the calculation used, and it withholds
+ * filing until the sources agree. `disagreement` is carried by exactly the
+ * reasons in `DISAGREEMENT_REASONS`.
  */
 export type CalculationSourceIssue = {
   reason:
@@ -641,7 +653,9 @@ export type CalculationSourceIssue = {
     | "register_acquisition_row_missing"
     | "register_owned_capital_acquisition"
     | "ledger_expense_may_be_durable"
-    | "advisory_binding_value";
+    | "household_rows_incomplete"
+    | "advisory_binding_value"
+    | "precedence_tier_divergence";
   binding_source: BindingSourceKind | null;
   message: string;
   resolver_id: string | null;
@@ -649,6 +663,7 @@ export type CalculationSourceIssue = {
   casilla_id: CasillaId | null;
   fact: CalculationNoteFact | null;
   value_outcome: BindingValueOutcome | null;
+  disagreement: SourceDisagreementFact | null;
 };
 
 /**
@@ -1076,6 +1091,69 @@ export type DependencyRequirementSnapshot = {
 };
 
 export type DetailRowKindToken = string;
+
+/**
+ * A yes or no.
+ */
+export type DisagreementBooleanValue = {
+  kind: "boolean";
+  value: boolean;
+};
+
+/**
+ * A date.
+ */
+export type DisagreementDateValue = {
+  kind: "date";
+  value: string;
+};
+
+/**
+ * A money, decimal or integer figure.
+ */
+export type DisagreementDecimalValue = {
+  amount: string;
+  kind: "decimal";
+};
+
+/**
+ * A closed-vocabulary token.
+ */
+export type DisagreementEnumValue = {
+  kind: "enum";
+  token: string;
+};
+
+/**
+ * The value a registry relation resolved to.
+ */
+export type DisagreementRelationValue = {
+  amount: string;
+  kind: "relation";
+};
+
+/**
+ * The whole ordered row set one source states for a row channel.
+ */
+export type DisagreementRowsValue = {
+  kind: "rows";
+  rows: (
+    | DisagreementDecimalValue
+    | DisagreementEnumValue
+    | DisagreementDateValue
+    | DisagreementBooleanValue
+    | DisagreementTextValue
+    | DisagreementRelationValue
+  )[];
+};
+
+/**
+ * A free text figure.
+ */
+export type DisagreementTextValue = {
+  kind: "text";
+  value: string;
+};
 
 /**
  * One referenced record entry inside an `EvidenceBundle` manifest.
@@ -4457,29 +4535,6 @@ export type ModeloFormElectionChoice = {
 };
 
 /**
- * One election the export asks, its state, and its answers pre-set to the
- * neutral default.
- *
- * An available question carries its choices; its `default` is one of them, or
- * `None` when no answer is neutral (an account nothing designates), and the
- * export then resolves the register's designation. A question that is not
- * applicable or unavailable carries its reason and its words instead, no
- * choices and no default, and is not sent. `request_field` is the export
- * request field an answer is sent in.
- */
-export type ModeloFormElectionQuestion = {
-  election: ModeloFormElection;
-  request_field: ModeloExportRequestField;
-  words: string;
-  state: ModeloFormElectionState;
-  reason: ModeloFormElectionReason | null;
-  state_words: string | null;
-  help: string | null;
-  default: string | null;
-  choices: ModeloFormElectionChoice[];
-};
-
-/**
  * Why an election is not applicable or cannot be answered now.
  */
 export type ModeloFormElectionReason =
@@ -4490,7 +4545,8 @@ export type ModeloFormElectionReason =
   | "past_filing_window"
   | "filing_window_unknown"
   | "no_open_account"
-  | "no_spanish_account";
+  | "no_spanish_account"
+  | "settlement_unsupported";
 
 /**
  * Whether the filer can answer an election now.
@@ -4526,24 +4582,6 @@ export type ModeloFormExportHold = {
  * Why the file for the AEAT is withheld, most pressing first.
  */
 export type ModeloFormExportHoldReason = "blocks" | "confirm" | "verify";
-
-/**
- * What the declaration may export, whether the export asks elections, and the
- * file its revision writes.
- *
- * `elections` is empty exactly when `asks_elections` is false; the export then
- * carries each election's neutral default. `file_format` is `None` when the
- * revision declares no export layout.
- */
-export type ModeloFormExportOffer = {
-  artefacts: ModeloFormArtefactOption[];
-  record: ModeloFormAvailability;
-  review_package: ModeloFormReviewPackageOffer;
-  asks_elections: boolean;
-  elections: ModeloFormElectionQuestion[];
-  file_format: ExportLayoutFormat | null;
-  file_format_words: string | null;
-};
 
 /**
  * The latest file for the AEAT, and whether it no longer matches the
@@ -4591,6 +4629,11 @@ export type ModeloFormHeader = {
  */
 export type ModeloFormInspectionReason =
   "layout_absent" | "layout_for_another_revision";
+
+/**
+ * One instalment of an amount to pay in two.
+ */
+export type ModeloFormInstalment = "first" | "second";
 
 /**
  * One finding or calculation note as the check view lists it, in the form's
@@ -7097,7 +7140,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   registry_revision_id: string;
   tax_id_format: PublicSpanishTaxIdFormat;
   typing_effects: ModeloFormTypingEffect[];
-  export_offer: ModeloFormExportOffer | null;
+  export_offer: PublicModeloFormExportOffer | null;
   receipt: ModeloFormReceipt | null;
 };
 
@@ -7655,6 +7698,46 @@ export type PublicModeloFormContextFieldBlock = {
 export type PublicModeloFormEarlierFiling = {
   modelo: string;
   period: PublicPeriod;
+};
+
+/**
+ * Exact decimal text at the local-human operation boundary.
+ */
+export type PublicModeloFormElectionFigure = {
+  instalment: ModeloFormInstalment;
+  amount: string;
+  words: string;
+  advisory: boolean;
+  advisory_words: string | null;
+};
+
+/**
+ * An export election with its exact public instalment figures.
+ */
+export type PublicModeloFormElectionQuestion = {
+  election: ModeloFormElection;
+  request_field: ModeloExportRequestField;
+  words: string;
+  state: ModeloFormElectionState;
+  reason: ModeloFormElectionReason | null;
+  state_words: string | null;
+  help: string | null;
+  default: string | null;
+  choices: ModeloFormElectionChoice[];
+  figures: PublicModeloFormElectionFigure[];
+};
+
+/**
+ * Lossless public mirror of the canonical export offer.
+ */
+export type PublicModeloFormExportOffer = {
+  artefacts: ModeloFormArtefactOption[];
+  record: ModeloFormAvailability;
+  review_package: ModeloFormReviewPackageOffer;
+  asks_elections: boolean;
+  elections: PublicModeloFormElectionQuestion[];
+  file_format: ExportLayoutFormat | null;
+  file_format_words: string | null;
 };
 
 /**
@@ -8221,6 +8304,68 @@ export type ResultSummaryRole =
 export type RevisionId = string;
 
 export type SnapshotId = string;
+
+/**
+ * One source taking part in a disagreement and what it states.
+ *
+ * `source_ref` names the source without disclosing it: a payer is named by its
+ * keyed digest, never by a plaintext tax identifier. `evidence_ref` is the
+ * evidence fingerprint or snapshot id the value was read from; it locates the
+ * evidence and does not take part in the finding key.
+ */
+export type SourceDisagreementEntry = {
+  role: SourceDisagreementRole;
+  source_family: string;
+  resolver_id: string | null;
+  source_ref: string | null;
+  value:
+    | DisagreementDecimalValue
+    | DisagreementEnumValue
+    | DisagreementDateValue
+    | DisagreementBooleanValue
+    | DisagreementTextValue
+    | DisagreementRelationValue
+    | DisagreementRowsValue;
+  evidence_ref: string | null;
+};
+
+/**
+ * Two or more sources stating different values for one figure of one
+ * calculation.
+ *
+ * `key` is the figure: the casilla for a credit reconciliation, the binding,
+ * relation or casilla for a tier divergence. `reached_casillas` are the
+ * exported casillas the figure reaches. `selected_role` is the role whose
+ * value the calculation used. `inputs_digest` is the content digest of the
+ * registry declarations the comparison read, never the authority generation,
+ * which changes on every publication.
+ */
+export type SourceDisagreementFact = {
+  modelo: string;
+  filing_year: number;
+  period: string;
+  work_unit_id: string;
+  registry_revision_id: string;
+  inputs_digest: string;
+  key: string;
+  value_channel: string;
+  reached_casillas: CasillaId[];
+  sources: SourceDisagreementEntry[];
+  selected_role: SourceDisagreementRole;
+  differing_row_indices: number[];
+  finding_key: string;
+};
+
+/**
+ * The part one source plays in a disagreement.
+ */
+export type SourceDisagreementRole =
+  | "value_source"
+  | "cross_check"
+  | "profile"
+  | "backend"
+  | "borrador"
+  | "caller";
 
 /**
  * The kind of place a value comes from, as a filer thinks of it.

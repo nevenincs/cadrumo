@@ -65,11 +65,11 @@ S02 health tooling may run concurrently with S03 frontend and S04 Rust source re
 
 
 
-Current delegated lanes (user-directed autonomous execution, 2026-11-02):
-- S04 Sol medium: desktop agent supervisor and its new child modules; exclusive ownership of Rust desktop checks for this batch.
-- S03 Sol medium: invoice editor and new invoice editor modules; owns focused invoice checks only.
-- S03 Terra xhigh: review-dialog outcome/presentation extraction and its new child modules; owns focused review-dialog checks only.
-Each lane may update direct consumer imports only within its stated folder; cross-lane consumers are reported for later integration. No worker edits App.tsx, CommandPalette.tsx, shared IPC/settings, justfile, or plan metadata. Workers run their own commands to completion and return evidence; the parent does not poll their internal command handles. Shared full frontend checks and commits are deferred until the batch is stable.
+Current delegated lanes (user-directed autonomous execution):
+- S04/S05 Sol medium native lane: native application view-stream failure, desktop Rust gate failures, then sede_view decomposition. Own Rust verification for this batch, no frontend or Python changes.
+- S03 Sol medium frontend lane: ledger orchestration and read-session modules, excluding App.tsx, Modelo and AEAT surfaces under concurrent work. Own focused frontend tests.
+- S01/S02/S05 Terra xhigh tooling lane: health tooling and justfile integration, reproducible authored-module census and completed/remaining assessment. Own Python tooling tests, no product source changes.
+The parent owns App.tsx and its new shell-only modules, settings architecture, shared metadata and final integrated review. Consumer edits stay inside assigned areas; cross-lane needs are reported. Workers complete their own commands and report results independently; parent does not poll or wait on their internal commands. Preserve concurrent user work. Shared full frontend checks wait until sources stabilize, coordinated by messages without command polling.
 
 ## Verification
 

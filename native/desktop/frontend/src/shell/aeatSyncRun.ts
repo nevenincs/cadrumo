@@ -123,15 +123,27 @@ export function useAeatSyncRun(
     [port, reader, shown],
   );
   const [stored, setStored] = useState({ identity, state: EMPTY });
-  const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<AeatSyncRunProblem | null>(null);
-  const control = useRef<{ refresh(): void } | null>(null);
+  const [activity, setActivity] = useState<{
+    identity: typeof identity;
+    busy: boolean;
+    problem: AeatSyncRunProblem | null;
+  }>({ identity, busy: false, problem: null });
+  const control = useRef<{
+    identity: typeof identity;
+    refresh(): void;
+    canAct(): boolean;
+  } | null>(null);
+  const pending = useRef<object | null>(null);
   useEffect(() => {
     control.current = null;
     if (!port || reader === null || !shown) return;
     let alive = true,
       reading = false,
-      again = false;
+      again = false,
+      connecting = false,
+      reconnect = false;
+    let connection = 0;
+    let revision = 0;
     let unsubscribe: (() => void) | undefined;
     let state = EMPTY;
     const update = (patch: Partial<State>) => {
@@ -139,8 +151,8 @@ export function useAeatSyncRun(
       state = { ...state, ...patch };
       setStored({ identity, state });
     };
-    const refresh = async () => {
-      if (!alive) return;
+    const read = async () => {
+      if (!alive || !unsubscribe) return;
       if (reading) {
         again = true;
         return;
@@ -148,29 +160,64 @@ export function useAeatSyncRun(
       reading = true;
       do {
         again = false;
+        const mine = connection;
+        const requested = revision;
         try {
-          update({ snapshot: await port.progress(reader), error: false });
+          const snapshot = await port.progress(reader);
+          if (mine === connection && requested === revision)
+            update({ snapshot, error: false, loading: false });
         } catch {
-          update({ error: true });
+          if (mine === connection && requested === revision)
+            update({ error: true, loading: false });
         }
-      } while (alive && again);
+      } while (alive && again && unsubscribe);
       reading = false;
-      update({ loading: false });
     };
-    control.current = { refresh: () => void refresh() };
-    void port
-      .observe(() => void refresh())
-      .then((stop) => {
+    const connect = async () => {
+      if (!alive) return;
+      revision += 1;
+      update({ loading: true });
+      if (connecting) {
+        reconnect = true;
+        return;
+      }
+      connecting = true;
+      const mine = ++connection;
+      unsubscribe?.();
+      unsubscribe = undefined;
+      try {
+        const stop = await port.observe(() => {
+          if (mine === connection) {
+            revision += 1;
+            update({ loading: true });
+            void read();
+          }
+        });
         if (!alive) {
           stop();
           return;
         }
         unsubscribe = stop;
-        void refresh();
-      })
-      .catch(() => update({ loading: false, error: true }));
+        if (!reconnect) await read();
+      } catch {
+        update({ loading: false, error: true });
+      } finally {
+        connecting = false;
+        if (reconnect) {
+          reconnect = false;
+          void connect();
+        }
+      }
+    };
+    control.current = {
+      identity,
+      refresh: () => void connect(),
+      canAct: () => !state.loading && !state.error,
+    };
+    void connect();
     return () => {
       alive = false;
+      connection += 1;
       unsubscribe?.();
       control.current = null;
     };
@@ -178,19 +225,37 @@ export function useAeatSyncRun(
   const refresh = useCallback(() => control.current?.refresh(), []);
   const act = useCallback(
     async (call: (port: AeatSyncRunPort, profile: string) => Promise<void>) => {
-      if (!port || reader === null) return;
-      setBusy(true);
-      setProblem(null);
+      const owner = control.current;
+      if (
+        !port ||
+        reader === null ||
+        !owner ||
+        owner.identity !== identity ||
+        !owner.canAct() ||
+        pending.current === owner
+      )
+        return;
+      pending.current = owner;
+      setActivity({ identity, busy: true, problem: null });
       try {
         await call(port, reader);
       } catch (error) {
-        setProblem(aeatSyncFailure(error) === "unknown" ? "unknown" : "failed");
+        if (control.current === owner)
+          setActivity({
+            identity,
+            busy: true,
+            problem:
+              aeatSyncFailure(error) === "unknown" ? "unknown" : "failed",
+          });
       } finally {
-        setBusy(false);
-        refresh();
+        if (pending.current === owner) pending.current = null;
+        if (control.current === owner) {
+          setActivity((state) => ({ ...state, busy: false }));
+          owner.refresh();
+        }
       }
     },
-    [port, reader, refresh],
+    [identity, port, reader],
   );
   const state =
     stored.identity === identity && reader !== null && shown
@@ -198,8 +263,9 @@ export function useAeatSyncRun(
       : EMPTY;
   return {
     ...state,
-    busy,
-    problem,
+    busy: activity.identity === identity && activity.busy,
+    problem: activity.identity === identity ? activity.problem : null,
+    refresh,
     stop: useCallback(() => act((p, id) => p.stop(id)), [act]),
     retry: useCallback(
       (

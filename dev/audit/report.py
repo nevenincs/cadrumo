@@ -27,9 +27,10 @@ model:
 * **Complexity** -- reuses ``dev.audit.complexity``'s live cyclomatic,
   maintainability, and cognitive scan. Any current hotspot is RED; zero is
   GREEN. This dimension has no development-state partition.
-* **Native source inventories and token duplication** -- inventories authored
-  TypeScript, TSX, CSS and Rust, and records separate jscpd observations. A
-  partial scan is AMBER-unavailable even when it reports no clones.
+* **Native source inventories and token duplication** -- inventories
+  TypeScript, TSX, CSS and Rust and records separate jscpd observations.
+  Scanner output does not identify the complete analysed population, so these
+  dimensions are AMBER-unavailable even if the aggregate counts match.
 
 This module does not re-implement any scanner; it shells out to or imports the
 existing tools and applies one shared severity vocabulary on top. Keeping the
@@ -75,7 +76,7 @@ from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from .complexity import scan_complexity
 from .duplication import DuplicationOutcome, run_duplication_scan
-from .native_health import SCOPES, LanguageScope, inventory, scan
+from .native_health import SCOPES, LanguageScope, classify, inventory, scan
 
 _UTF_8: Final[str] = UTF_8
 
@@ -285,23 +286,21 @@ def audit_native_language(repo_root: Path, scope: LanguageScope) -> DimensionRep
     name = f"{scope.name}-duplication"
     try:
         files = inventory(repo_root, scope)
-    except OSError as exc:
+        entries = tuple(classify(repo_root, path) for path in files)
+    except (OSError, UnicodeError) as exc:
         return DimensionReport(name=name, status=Status.AMBER, headline=str(exc), available=False)
-    result = scan(repo_root, scope, files)
+    result = scan(repo_root, scope)
     details = [
         "Token matches are review leads; semantic duplication is not measured.",
         "Inventory excludes node_modules, target, dist, build, generated and .git directories.",
     ]
-    details.extend(f"inventory: {path.as_posix()}" for path in files)
+    details.extend(f"inventory [{entry.role}]: {entry.path.as_posix()}" for entry in entries)
     if result.outcome is DuplicationOutcome.UNAVAILABLE:
         return DimensionReport(name=name, status=Status.AMBER, headline=result.reason, details=details, available=False)
     details[:0] = [group.render() for group in result.raw_groups]
     headline = f"{len(files)} files inventoried; {result.files_analyzed} analysed; {result.clone_count} token clone(s)"
-    if result.files_analyzed < len(files):
-        details.insert(0, "Scanner did not analyse every inventoried file; coverage is incomplete.")
-        return DimensionReport(name=name, status=Status.AMBER, headline=headline, details=details, available=False)
-    status = Status.AMBER if result.outcome is DuplicationOutcome.CLONES else Status.GREEN
-    return DimensionReport(name=name, status=status, headline=headline, details=details)
+    details.insert(0, "Scanner reports aggregate counts, not file identities; complete coverage is unproven.")
+    return DimensionReport(name=name, status=Status.AMBER, headline=headline, details=details, available=False)
 
 
 # ---------------------------------------------------------------------------

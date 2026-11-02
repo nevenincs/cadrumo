@@ -35,13 +35,13 @@ import shlex
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 import pytest
 
 from dev._paths import REPO_ROOT
 from dev.audit.report import IMPORT_QUALITY_RECIPE, import_quality_command
-from dev.exit_codes import TOOL_MISSING
+from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
 
 from .. import suite
 from ..suite import GATES, run_gate
@@ -70,6 +70,10 @@ _CITED_RECIPE: Final[re.Pattern[str]] = re.compile(r"`just ([a-z][a-z0-9-]*)")
 _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
     {
         "check-code",
+        "check-python",
+        "check-native-code",
+        "check-frontend",
+        "check-rust",
         # Test-surface ratchets: each scan takes about two minutes, too slow for the local aggregate.
         "test-complexity-gate",
         "test-duplication-gate",
@@ -89,7 +93,7 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         # The registry family's CI aggregate, and the one the list above
         # missed while naming all six of its siblings. It is NOT unverified:
         # merge-gate.yml runs it as its own step. It is unaggregated, which is
-        # correct -- `check-code` is the LOCAL portable static-check aggregate,
+        # correct -- `check-python` is the portable static-check aggregate,
         # and putting a registry conformance sweep into every local run to
         # duplicate what the required gate already does would buy no new
         # failure mode for the time it costs.
@@ -334,6 +338,66 @@ def test_every_row_unpacks_as_a_name_and_a_command() -> None:
     rows: tuple[Sequence[object], ...] = GATES
     malformed = _malformed_rows(rows)
     assert not malformed, f"each GATES row must be (name, command): {malformed}"
+
+
+def test_process_launch_error_does_not_stop_later_gates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    marker = tmp_path / "later-gate-ran"
+    original_run = suite.subprocess.run
+
+    def run(command: tuple[str, ...], **kwargs: Any) -> Any:
+        if command[0] == "permission-denied-fixture":
+            raise PermissionError("blocked by operating system")
+        return original_run(command, **kwargs)
+
+    monkeypatch.setattr(suite.subprocess, "run", run)
+    monkeypatch.setattr(
+        suite,
+        "GATES",
+        (
+            ("denied", ("permission-denied-fixture",)),
+            ("later", (sys.executable, "-c", "import pathlib, sys; pathlib.Path(sys.argv[1]).touch()", str(marker))),
+        ),
+    )
+    assert suite.main() == TOOL_BROKEN
+    assert marker.is_file()
+
+
+def test_all_languages_run_even_after_python_and_frontend_failures(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    calls: list[tuple[str, tuple[str, ...]]] = []
+    monkeypatch.setattr(suite, "GATES", (("python-fixture", ("python-fixture",)),))
+    monkeypatch.setattr(suite, "resolve_just_executable", lambda: "just-fixture")
+
+    def run(name: str, command: tuple[str, ...]) -> suite.GateResult:
+        calls.append((name, command))
+        return suite.GateResult(name, {"python-fixture": 3, "check-frontend": 2}.get(name, 0), name)
+
+    monkeypatch.setattr(suite, "run_gate", run)
+    assert suite.main(native=True, configuration="Release") == 3
+    assert calls == [
+        ("python-fixture", ("python-fixture",)),
+        ("check-frontend", ("just-fixture", "check-frontend", "Release")),
+        ("check-rust", ("just-fixture", "check-rust", "Release")),
+    ]
+    output = capsys.readouterr().out
+    assert "FAIL  python-fixture" in output
+    assert "FAIL  check-frontend" in output
+    assert "check-rust" in output
+
+
+def test_native_gate_reports_missing_just_as_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    def missing() -> str:
+        raise RuntimeError("just unavailable")
+
+    monkeypatch.setattr(suite, "resolve_just_executable", missing)
+    results = suite.native_gate_results()
+    assert [result.name for result in results] == ["check-frontend", "check-rust"]
+    assert all(result.returncode == TOOL_MISSING and "just unavailable" in result.output for result in results)
+
+
+def test_public_code_recipe_selects_all_languages() -> None:
+    assert "dev.quality.suite --all-languages" in " ".join(_recipe_commands()["check-code"])
 
 
 def test_every_row_carries_a_name_and_a_non_empty_argv() -> None:
