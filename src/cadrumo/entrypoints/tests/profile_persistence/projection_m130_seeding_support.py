@@ -78,23 +78,23 @@ class PayerRecord:
     retencion: Decimal
 
 
-def _seed_profile(profile_id: str, *, income_categories: str) -> None:
-    facts = tuple(
-        fact
-        for fact in general_iva_profile_facts(tax_id=_TAXPAYER_TAX_ID, activity_start_date="2020-01-01")
-        if fact.path != "taxpayer_type.irpf_income_categories"
+def _seed_profile(profile_id: str, *, income_categories: str, profile_facts: tuple[UserProfileFact, ...]) -> None:
+    """Seed the complete profile; ``profile_facts`` replace a base fact of the same path."""
+    scenario_paths = {fact.path for fact in profile_facts}
+    base_facts = (
+        *general_iva_profile_facts(tax_id=_TAXPAYER_TAX_ID, activity_start_date="2020-01-01"),
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value=income_categories),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
     )
+    # The base list repeats some paths; the last occurrence is the one the original seeding stored.
+    latest_by_path = {fact.path: fact for fact in base_facts if fact.path not in scenario_paths}
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
-            facts=(
-                *facts,
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value=income_categories),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
-            ),
+            facts=(*latest_by_path.values(), *profile_facts),
             created_at=_T0,
             updated_at=_T0,
             context=_profile_creation_context_for_test(),
@@ -186,10 +186,11 @@ def run_projection(
     payer_records: tuple[PayerRecord, ...] = (),
     casilla_overrides: Mapping[str, str] | None = None,
     binding_overrides: Mapping[str, str] | None = None,
+    profile_facts: tuple[UserProfileFact, ...] = (),
 ) -> ModeloProjectServiceResult:
     """Seed one isolated profile and return the real projection service's result for it."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_profile(profile.bucket_id, income_categories=income_categories)
+        _seed_profile(profile.bucket_id, income_categories=income_categories, profile_facts=profile_facts)
         _seed_first_quarter(profile, operation)
         _seed_payer_records(profile, payer_records, operation)
         with bundled_indexed_authority().operation() as projection_operation:

@@ -1,0 +1,30 @@
+"""The Modelo 100 projection baseline never reaches the engine on a channel the profile also owns."""
+
+from __future__ import annotations
+
+import pytest
+
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+from ..projection import _verb_baseline_projection_bindings
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_PARAMETER_ENUM = "renta-profile-tax-residence-ccaa"
+
+
+@pytest.mark.parametrize("year", [2022, 2023, 2024, 2025])
+def test_the_baseline_supplies_no_profile_sourced_binding_except_the_verbs_own_ccaa(year: int) -> None:
+    with bundled_indexed_authority().operation() as operation:
+        revision = operation.snapshot("100", filing_year=year, period="0A").revision
+    profile_sourced = {binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PROFILE}
+    assert "renta-profile-family-minor-children-in-unit" in profile_sourced
+
+    decimal, enum, boolean = _verb_baseline_projection_bindings("madrid", revision)
+
+    assert profile_sourced.isdisjoint(decimal)
+    assert profile_sourced.isdisjoint(boolean)
+    assert set(enum) <= {_PARAMETER_ENUM}
+    assert enum == {_PARAMETER_ENUM: "madrid"}
+    assert not set(decimal) & set(boolean) & set(enum)

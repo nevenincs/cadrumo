@@ -99,7 +99,9 @@ planning estimate, not a draft Renta: it assumes the remaining quarters look
 like the filed ones.
 
 Refine the projection with values the quarters cannot know: personal
-circumstances or specific boxes:
+circumstances or specific boxes. `--casilla` accepts only boxes you enter
+yourself, such as casilla 0003 (cash employment pay). It refuses a calculated
+box, whose value the form derives from the others:
 
 ```{cli-sequence} filing-readiness-project-refine
 ```

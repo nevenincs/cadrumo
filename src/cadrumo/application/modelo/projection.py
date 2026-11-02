@@ -627,9 +627,18 @@ def _parse_projection_binding_overrides(
 
 def _verb_baseline_projection_bindings(
     ccaa: str,
-    declared_binding_ids: set[BindingId],
+    revision: ModeloRevision,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str], dict[BindingId, bool]]:
-    """Build the verb-supplied baseline projection bindings, filtered to declared ids."""
+    """Build the verb-supplied baseline projection bindings, filtered to what the verb owns.
+
+    The baseline supplies only bindings the registry does not source from the
+    taxpayer profile, plus the ``ccaa`` the verb itself takes as a parameter. A
+    profile-sourced binding belongs to the profile channel: a baseline copy
+    would put a stand-in value on a second channel beside the profile's typed
+    one, and would turn an absent profile fact into a supplied zero or false.
+    """
+    declared_binding_ids = {binding.id for binding in revision.bindings}
+    profile_sourced_ids = {binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PROFILE}
 
     def binding(value: str) -> BindingId:
         return _binding_id(value, surface="project modelo 100 baseline binding id")
@@ -650,9 +659,17 @@ def _verb_baseline_projection_bindings(
         binding("renta-profile-marriage-full-year"): False,
     }
     return (
-        {key: value for key, value in verb_baseline_bindings.items() if key in declared_binding_ids},
+        {
+            key: value
+            for key, value in verb_baseline_bindings.items()
+            if key in declared_binding_ids and key not in profile_sourced_ids
+        },
         {key: value for key, value in verb_baseline_enum_bindings.items() if key in declared_binding_ids},
-        {key: value for key, value in verb_baseline_boolean_bindings.items() if key in declared_binding_ids},
+        {
+            key: value
+            for key, value in verb_baseline_boolean_bindings.items()
+            if key in declared_binding_ids and key not in profile_sourced_ids
+        },
     )
 
 
@@ -683,6 +700,20 @@ def _profile_projection_bindings(
         dict(profile_result.date_binding_values),
         dict(profile_result.enum_binding_values),
         dict(profile_result.boolean_binding_values),
+    )
+
+
+def _absent_profile_binding_ids(revision: ModeloRevision, *, supplied: set[BindingId]) -> tuple[BindingId, ...]:
+    """Name each profile-sourced binding no channel supplied, so the engine reports it unresolved.
+
+    The profile is silent on a fact the taxpayer never declared. That absence is
+    not zero or false, so the dependent boxes stay unresolved instead of the
+    engine refusing the whole projection or a stand-in value filling the gap.
+    """
+    return tuple(
+        binding.id
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.PROFILE and binding.id not in supplied
     )
 
 
@@ -921,7 +952,7 @@ def project_modelo_100_from_m130(
     }
     declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
     verb_baseline_bindings, verb_baseline_enum_bindings, verb_baseline_boolean_bindings = (
-        _verb_baseline_projection_bindings(ccaa, declared_binding_ids)
+        _verb_baseline_projection_bindings(ccaa, m100_snapshot.revision)
     )
     profile_decimal_bindings, profile_date_bindings, profile_enum_bindings, profile_boolean_bindings = (
         _profile_projection_bindings(
@@ -944,6 +975,16 @@ def project_modelo_100_from_m130(
     merged_date_bindings = dict(profile_date_bindings)
     merged_boolean_bindings = {**verb_baseline_boolean_bindings, **profile_boolean_bindings}
     _apply_zero_maritime_projection_default(declared_binding_ids, merged_bindings, merged_boolean_bindings)
+    absent_profile_binding_ids = _absent_profile_binding_ids(
+        m100_snapshot.revision,
+        supplied={
+            *merged_bindings,
+            *merged_enum_bindings,
+            *merged_date_bindings,
+            *merged_boolean_bindings,
+            *credits.unresolved_binding_ids,
+        },
+    )
 
     try:
         engine_result = calculate_registry_snapshot(
@@ -953,7 +994,7 @@ def project_modelo_100_from_m130(
             binding_values=merged_bindings,
             enum_binding_values=merged_enum_bindings,
             relation_values=m100_relations,
-            unresolved_binding_ids=credits.unresolved_binding_ids,
+            unresolved_binding_ids=(*credits.unresolved_binding_ids, *absent_profile_binding_ids),
             date_binding_values=merged_date_bindings or None,
             boolean_binding_values=merged_boolean_bindings or None,
         )
