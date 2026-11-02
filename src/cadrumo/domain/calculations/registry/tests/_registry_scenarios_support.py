@@ -173,15 +173,13 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 "0592": Decimal("1.00"),
                 "0593": Decimal("2.00"),
                 "0594": Decimal("3.00"),
-                # 0596 is a bound casilla whose salary-certificate source is
-                # supplied through the binding channel below; 0597 is keyed here.
-                "0597": Decimal("5.00"),
+                # 0596, 0597 and 0603 are bound to their payer-record families,
+                # supplied through the binding channel below.
                 "0153": Decimal("6.00"),
                 "0599": Decimal("7.00"),
                 "0600": Decimal("8.00"),
                 "0601": Decimal("9.00"),
                 "0602": Decimal("10.00"),
-                "0603": Decimal("11.00"),
                 "0605": Decimal("12.00"),
                 "0606": Decimal("13.00"),
             },
@@ -199,9 +197,11 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
-            # 0596 takes the salary certificate the payee holds, through the
-            # bound source rather than a raw casilla input.
-            "renta-certificado-trabajo-retenciones": Decimal("4.00"),
+            # 0596 takes the sum of the payee's work-payer certificates, the
+            # value the source mesh resolves, rather than a raw casilla input.
+            "renta-retencion-soportada-trabajo": Decimal("4.00"),
+            "renta-retencion-soportada-capital-mobiliario": Decimal("5.00"),
+            "renta-retencion-soportada-ganancia-patrimonial": Decimal("11.00"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero.
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
@@ -613,15 +613,13 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
                 "0592": Decimal("10.00"),
                 "0593": Decimal("20.00"),
                 "0594": Decimal("30.00"),
-                # 0596 is a bound casilla supplied through the binding channel
-                # below; 0597 is keyed here.
-                "0597": Decimal("50.00"),
+                # 0596, 0597 and 0603 are bound to their payer-record families,
+                # supplied through the binding channel below.
                 "0153": Decimal("60.00"),
                 "0599": Decimal("70.00"),
                 "0600": Decimal("80.00"),
                 "0601": Decimal("90.00"),
                 "0602": Decimal("100.00"),
-                "0603": Decimal("110.00"),
                 "0605": Decimal("120.00"),
                 "0606": Decimal("130.00"),
                 # 0611 is computed from the maternity deduction the profile
@@ -655,8 +653,10 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
-            # 0596 takes the salary certificate the payee holds.
-            "renta-certificado-trabajo-retenciones": Decimal("40.00"),
+            # 0596 takes the sum of the payee's work-payer certificates.
+            "renta-retencion-soportada-trabajo": Decimal("40.00"),
+            "renta-retencion-soportada-capital-mobiliario": Decimal("50.00"),
+            "renta-retencion-soportada-ganancia-patrimonial": Decimal("110.00"),
             **dict.fromkeys(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, Decimal("100.00")),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},

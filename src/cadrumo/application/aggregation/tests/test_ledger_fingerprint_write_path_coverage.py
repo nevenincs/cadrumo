@@ -33,6 +33,7 @@ from ...ledger.actions_manual import transaction_from_command
 from ..ledger_filing_snapshot import (
     _FINGERPRINT_FIELDS_V2,
     _FINGERPRINT_FIELDS_V3,
+    _FINGERPRINT_FIELDS_V5,
     CURRENT_FINGERPRINT_FIELD_SET_VERSION,
     _fingerprint_fields,
 )
@@ -159,7 +160,7 @@ def test_the_derivation_sees_the_fields_this_guard_exists_for() -> None:
 
 
 def test_the_guard_would_have_caught_the_v2_gap() -> None:
-    """Against the V2 field set, the check names the V3 facts and the later V4 and V5 ones."""
+    """Against the V2 field set, the check names the V3 facts and the later V5 and V6 ones."""
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
@@ -176,7 +177,7 @@ def test_the_guard_would_have_caught_the_v2_gap() -> None:
 
 
 def test_the_guard_would_have_caught_the_v3_gap() -> None:
-    """The vehicle use, detached evidence and the operation date were the facts V3 could not see."""
+    """Detached evidence and the operation date were the facts V3 could not see."""
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
@@ -184,6 +185,17 @@ def test_the_guard_would_have_caught_the_v3_gap() -> None:
         excluded=INTENTIONALLY_EXCLUDED,
     )
     assert missing == ("deduction_provenance", "iva_vehicle_use", "operation_date")
+
+
+def test_the_guard_would_have_caught_the_v5_gap() -> None:
+    """The stated vehicle use was the one writable fact V5 could not see."""
+    missing = unwatched_writable_iva_fields(
+        writable=writable_transaction_fields(),
+        iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
+        field_set=_FINGERPRINT_FIELDS_V5,
+        excluded=INTENTIONALLY_EXCLUDED,
+    )
+    assert missing == ("iva_vehicle_use",)
 
 
 #: An isolated write path shaped like the real signature, with one extra writable field.

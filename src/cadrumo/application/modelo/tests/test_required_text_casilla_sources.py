@@ -114,6 +114,7 @@ def test_the_calculation_holds_what_the_filed_record_addresses(*, operation: Pin
     exported = resolve_profile_export_values(
         tuple(bindings.values()),
         bucket_id=_BUCKET,
+        filing_year=snapshot.filing_year,
         operation=operation,
         profile_record=record,
         schema=published_profile_schema(),

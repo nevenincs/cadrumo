@@ -115,6 +115,9 @@ class _TrackedRuleRepository:
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return self._repository.list_rules()
 
+    def delete(self, identifier: str) -> bool:
+        return self._repository.delete(identifier)
+
 
 async def _prepare_rule_add(
     payload: LedgerRuleAddRequest,

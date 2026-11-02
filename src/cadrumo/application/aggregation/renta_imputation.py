@@ -8,14 +8,15 @@ is proven only when neither a row nor an accruing invoice exists.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingValueOutcome
+from ...core.period import Period
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
@@ -27,8 +28,10 @@ from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnos
 from .source_resolution_operations import unresolved_binding_diagnostics
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.bindings import RegistryModeloObservation
     from ...domain.calculations.registry.ids import BindingId
     from ...domain.calculations.registry.schema import ModeloRevision
+    from ...domain.modelos.filing_record import ModeloRecordCatalogue
 
 
 def invoice_accrual_date(invoice: Invoice) -> date | None:
@@ -88,6 +91,12 @@ class ImputationUnresolved(StrEnum):
     UNCOMPUTED_ACROSS_CHANGE = "uncomputed_across_change"
     """A change of criterion would leave the row computed in no year, which art. 7.4 forbids."""
 
+    OVERPAID_INVOICE = "overpaid_invoice"
+    """The receipts linked to one invoice exceed what it leaves to be paid, so no share of it is known."""
+
+    CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN = "capital_subsidy_schedule_unknown"
+    """A capital subsidy follows its asset's amortization under either criterion, and no schedule links one."""
+
 
 _CRITERION_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
 _COMMERCIAL_ACCOUNTING_PATH: Final[str] = "irpf.codigo_comercio_accounting"
@@ -109,15 +118,27 @@ def _dated_values(facts: Iterable[UserProfileFact], path: str, year: int) -> set
 
 
 @dataclass(frozen=True, slots=True)
+class ImputationFilingHistory:
+    """What the taxpayer's annual returns state: the criterion captured from each, and when each was filed."""
+
+    stated: Mapping[int, ActivityImputationCriterion] = field(default_factory=dict)
+    filed_on: Mapping[int, date] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
 class ImputationCriteria:
     """The dated election as the profile declares it, read one ejercicio at a time.
 
     Absence and conflict both read as ``None``. Nothing here supplies accrual as
     a default: a cash election made in an earlier return is invisible to a fresh
     profile and binds for three years, so an unstated year is unknown.
+
+    ``filings`` is what the taxpayer's own returns say about those years. A filed
+    statement never fills an undeclared year: it can only contradict one.
     """
 
     facts: tuple[UserProfileFact, ...] = ()
+    filings: ImputationFilingHistory = field(default_factory=lambda: ImputationFilingHistory())
 
     def declared(self, year: int) -> ActivityImputationCriterion | None:
         """Return the single criterion stated for ``year``, or ``None`` when absent or contradictory."""
@@ -125,6 +146,13 @@ class ImputationCriteria:
         if len(values) != 1:
             return None
         return ActivityImputationCriterion(str(next(iter(values))))
+
+    def _regime_declared(self, year: int) -> bool:
+        """Whether a regime is stated for ``year``; setup writes the regime in force undated, which answers it."""
+        dated = _dated_values(self.facts, _ESTIMATION_REGIME_PATH, year)
+        if dated:
+            return len(dated) == 1
+        return any(fact.path == _ESTIMATION_REGIME_PATH and fact.valid_from is None for fact in self.facts)
 
     def _commercial_accounting(self, year: int) -> bool | None:
         values = _dated_values(self.facts, _COMMERCIAL_ACCOUNTING_PATH, year)
@@ -139,26 +167,117 @@ class ImputationCriteria:
         minimum (art. 7.2.1) conflicts unless the election lost effect (art. 7.2.2).
         """
         declared = self.declared(year)
+        if self.filed_conflict(year) is not None:
+            return False
         if declared is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return (
-                len(_dated_values(self.facts, _ESTIMATION_REGIME_PATH, year)) == 1
-                and self._commercial_accounting(year) is False
-            )
+            return self._regime_declared(year) and self._commercial_accounting(year) is False
         if declared is ActivityImputationCriterion.DEVENGO and self._commercial_accounting(year) is not True:
-            first_cash_year = year
-            while self.declared(first_cash_year - 1) is ActivityImputationCriterion.COBROS_Y_PAGOS:
-                first_cash_year -= 1
-            return first_cash_year == year or year - first_cash_year >= _MINIMUM_ELECTION_YEARS
+            first_cash_year = self._first_binding_cash_year(year)
+            return first_cash_year is None or year - first_cash_year >= _MINIMUM_ELECTION_YEARS
         return True
+
+    def _in_force(self, year: int) -> ActivityImputationCriterion | None:
+        """Return the criterion a year ran under: its filed return's when captured, else the declared one."""
+        return self.filings.stated.get(year) or self.declared(year)
+
+    def _first_binding_cash_year(self, year: int) -> int | None:
+        """Return the first year of the cash run reaching into the two years before ``year``, if any."""
+        cash = ActivityImputationCriterion.COBROS_Y_PAGOS
+        for back in range(1, _MINIMUM_ELECTION_YEARS):
+            first = year - back
+            if self._in_force(first) is cash:
+                while self._in_force(first - 1) is cash:
+                    first -= 1
+                return first
+        return None
+
+    def filed_conflict(self, year: int) -> str | None:
+        """Name the filed return that contradicts ``year``'s declaration, or the election it still binds.
+
+        RIRPF art. 7.2.1 makes the statement in the return the election itself, so a
+        profile disagreeing with that return is wrong about one of them and picks no year.
+        """
+        declared = self.declared(year)
+        if declared is None:
+            return None
+        stated = self.filings.stated.get(year)
+        if stated is not None and stated is not declared:
+            return f"the filed return of {year} states {stated.value} but the profile declares {declared.value}"
+        if declared is not ActivityImputationCriterion.DEVENGO or self._commercial_accounting(year) is True:
+            return None
+        first_cash_year = self._first_binding_cash_year(year)
+        if first_cash_year is None or year - first_cash_year >= _MINIMUM_ELECTION_YEARS:
+            return None
+        filed = sorted(
+            on_file
+            for on_file, criterion in self.filings.stated.items()
+            if criterion is ActivityImputationCriterion.COBROS_Y_PAGOS and first_cash_year <= on_file < year
+        )
+        if not filed:
+            return None
+        return (
+            f"the filed return of {filed[0]} states cobros_y_pagos, which binds through "
+            f"{first_cash_year + _MINIMUM_ELECTION_YEARS - 1} (RIRPF art. 7.2.1), but the profile declares "
+            f"{declared.value} for {year}"
+        )
 
     def usable(self, year: int) -> ActivityImputationCriterion | None:
         """Return ``year``'s criterion when it is declared and admissible."""
         return self.declared(year) if self.election_open(year) else None
 
 
-def declared_imputation_criteria(record: UserProfileRecord | None) -> ImputationCriteria:
+def declared_imputation_criteria(
+    record: UserProfileRecord | None, filings: ImputationFilingHistory | None = None
+) -> ImputationCriteria:
     """Read the dated imputation facts of the bucket's profile; no record states no year."""
-    return ImputationCriteria(facts=() if record is None else tuple(record.facts))
+    return ImputationCriteria(
+        facts=() if record is None else tuple(record.facts),
+        filings=filings if filings is not None else ImputationFilingHistory(),
+    )
+
+
+_CASH_ELECTION_CASILLAS: Final[frozenset[str]] = frozenset({"0169", "1443", "1487"})
+_ELECTION_LOOKBACK_YEARS: Final[int] = 3
+
+
+def _marked(value: Decimal | str) -> bool:
+    return value != 0 if isinstance(value, Decimal) else value.strip().upper() in {"X", "1", "TRUE", "S"}
+
+
+def imputation_filing_history(
+    *,
+    bucket_id: str,
+    year: int,
+    annual_form: str,
+    annual_period_code: str,
+    load_observation: Callable[[str, Period], RegistryModeloObservation | None],
+    filing_records: ModeloRecordCatalogue,
+) -> ImputationFilingHistory:
+    """Read what the annual returns reaching ``year`` state about the criterion and when each was filed.
+
+    A captured box that is marked states the election. An unmarked box states accrual
+    only where the capture carries it: a capture without the box says nothing either way.
+    """
+    stated: dict[int, ActivityImputationCriterion] = {}
+    filed_on: dict[int, date] = {}
+    for past in range(year - _ELECTION_LOOKBACK_YEARS, year + 1):
+        period = Period.from_year_and_code(past, annual_period_code)
+        record = filing_records.current_for(bucket_id=bucket_id, modelo=annual_form, filing_year=past, period=period)
+        if record is not None:
+            filed_on[past] = record.filed_at.date()
+        observation = load_observation(annual_form, period)
+        flags = (
+            ()
+            if observation is None
+            else tuple(row.value for row in observation.observations if str(row.casilla_id) in _CASH_ELECTION_CASILLAS)
+        )
+        if flags:
+            stated[past] = (
+                ActivityImputationCriterion.COBROS_Y_PAGOS
+                if any(_marked(flag) for flag in flags)
+                else ActivityImputationCriterion.DEVENGO
+            )
+    return ImputationFilingHistory(stated=stated, filed_on=filed_on)
 
 
 def _quarter(on: date) -> int:
@@ -277,8 +396,11 @@ def imputation_blocking_diagnostics(
     undeclared = activity_present and criteria.usable(year) is None
     if not undeclared and not unresolved_details:
         return ()
+    conflict = criteria.filed_conflict(year)
     message = (
-        f"ejercicio {year} has no usable income imputation criterion (irpf.activity_income_imputation_criterion, "
+        f"ejercicio {year} cannot be placed: {conflict}; correct the declared criterion or rectify that return"
+        if undeclared and conflict is not None
+        else f"ejercicio {year} has no usable income imputation criterion (irpf.activity_income_imputation_criterion, "
         "RIRPF art. 7); declare devengo or cobros_y_pagos dated for that year"
         if undeclared
         else f"{len(unresolved_details)} row(s) cannot be placed in an ejercicio under RIRPF art. 7: "
@@ -296,10 +418,12 @@ def imputation_blocking_diagnostics(
 __all__ = [
     "ActivityImputationCriterion",
     "ImputationCriteria",
+    "ImputationFilingHistory",
     "ImputationUnresolved",
     "accruing_invoices",
     "declared_imputation_criteria",
     "imputation_blocking_diagnostics",
+    "imputation_filing_history",
     "impute_row",
     "invoice_accrual_date",
     "ledger_sum_outcome",

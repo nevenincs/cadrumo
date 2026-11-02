@@ -152,14 +152,8 @@ _FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
     ("counterparty_identification_state", "counterparty_identification_state"),
 )
 
-# V4 adds ``iva_vehicle_use``: the statement moves a vehicle row's deducted cuota
-# (LIVA art. 95.Tres.2.ª) without moving any amount V3 watches.
-_FINGERPRINT_FIELDS_V4: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V3,
-    ("iva_vehicle_use", "iva_vehicle_use"),
-)
-
-# V5 extends V4 and adds what a calculation reads and V3 could not see: the operation date, which
+# Version 4 is unassigned: V5 follows V3 directly.
+# V5 adds what a calculation reads and V3 could not see: the operation date, which
 # picks the row's period and rate, and the evidence behind the deduction. Without
 # the provenance a row yields no input-IVA observation, so a draft holding a 21.00
 # cuota read as current after the evidence went while recalculating it refused.
@@ -167,7 +161,7 @@ _FINGERPRINT_FIELDS_V4: tuple[tuple[str, str], ...] = (
 # figures from that invoice, so attaching one now asks for a recalculation too.
 # Supplementary ``attachment_ids`` feed no calculation and stay out.
 _FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V4,
+    *_FINGERPRINT_FIELDS_V3,
     ("operation_date", "operation_date"),
     ("purchase_invoice_evidence_id", "purchase_invoice_evidence_id"),
     ("deduction_authority", "deduction_provenance.authority"),
@@ -175,16 +169,23 @@ _FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
     ("deduction_evidence_digest", "deduction_provenance.evidence_digest"),
 )
 
+# V6 adds ``iva_vehicle_use``: the statement moves a vehicle row's deducted cuota
+# (LIVA art. 95.Tres.2.ª) without moving any amount V5 watches.
+_FINGERPRINT_FIELDS_V6: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V5,
+    ("iva_vehicle_use", "iva_vehicle_use"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: _FINGERPRINT_FIELDS_V1,
     2: _FINGERPRINT_FIELDS_V2,
     3: _FINGERPRINT_FIELDS_V3,
-    4: _FINGERPRINT_FIELDS_V4,
     5: _FINGERPRINT_FIELDS_V5,
+    6: _FINGERPRINT_FIELDS_V6,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 5
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 6
 
 #: The first version whose hash sees a row's operation date.
 OPERATION_DATE_FIELD_SET_VERSION: Final = 5

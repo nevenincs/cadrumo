@@ -19,7 +19,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Literal, Protocol
 
 from ...core.errors.hierarchy import CadrumoError
@@ -69,16 +68,14 @@ type RetencionSoportadaAbsenceRefusalReason = Literal[
 ]
 """Why an attestation or its withdrawal was refused before it reached storage."""
 
-RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
-    {
-        "ejercicio_unsupported": "aggregation.retencion_soportada_absence.errors.ejercicio_unsupported",
-        "family_not_declared": "aggregation.retencion_soportada_absence.errors.family_not_declared",
-        "records_present": "aggregation.retencion_soportada_absence.errors.records_present",
-        "already_attested": "aggregation.retencion_soportada_absence.errors.already_attested",
-        "not_attested": "aggregation.retencion_soportada_absence.errors.not_attested",
-        "stale_revision": "aggregation.retencion_soportada_absence.errors.stale_revision",
-    },
-)
+RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS: Final[Mapping[str, str]] = {
+    "ejercicio_unsupported": "aggregation.retencion_soportada_absence.errors.ejercicio_unsupported",
+    "family_not_declared": "aggregation.retencion_soportada_absence.errors.family_not_declared",
+    "records_present": "aggregation.retencion_soportada_absence.errors.records_present",
+    "already_attested": "aggregation.retencion_soportada_absence.errors.already_attested",
+    "not_attested": "aggregation.retencion_soportada_absence.errors.not_attested",
+    "stale_revision": "aggregation.retencion_soportada_absence.errors.stale_revision",
+}
 """The worded message of each refusal reason, the stale revision of a guarded write included."""
 
 

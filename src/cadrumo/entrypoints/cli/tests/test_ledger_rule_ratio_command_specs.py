@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 import pytest
 
 from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
@@ -21,6 +23,9 @@ from .._app_ledger_rule_ratio_command_spec_support import (
 from .._root_command_specs import ROOT_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_STDIN_CHANNEL: Final = "stdin"
+_FD_CHANNEL: Final = "file-descriptor"
 
 _DEFAULT_CONSTRAINT = (None, None, False, True, False, True, True, False, True, False, False)
 _NO_TRANSPORT = ("none", "not_applicable", "not_applicable")
@@ -222,6 +227,7 @@ def _option(
     is_flag: bool = False,
     flag_value: object = None,
     multiple: bool = False,
+    machine_secret_channel: str | None = None,
 ) -> tuple[object, ...]:
     return (
         "option",
@@ -244,7 +250,7 @@ def _option(
         None,
         (),
         False,
-        None,
+        machine_secret_channel,
         None,
     )
 
@@ -444,14 +450,6 @@ _EXPECTED_LEAF_CONTRACTS = {
         None,
         (
             _option(
-                "description_pattern",
-                "--description-pattern",
-                "builtins:str",
-                "required",
-                None,
-                "cli.app.ledger.rule.description_pattern_help",
-            ),
-            _option(
                 "transaction_id",
                 "--transaction-id",
                 "builtins:str",
@@ -459,6 +457,26 @@ _EXPECTED_LEAF_CONTRACTS = {
                 (),
                 "cli.app.ledger.rule.trial_transaction_id_help",
                 multiple=True,
+            ),
+            _option(
+                "secrets_stdin",
+                "--secrets-stdin",
+                "builtins:bool",
+                "literal",
+                False,
+                "cli.config.custody.secrets_stdin_help",
+                is_flag=True,
+                flag_value=True,
+                machine_secret_channel=_STDIN_CHANNEL,
+            ),
+            _option(
+                "secrets_fd",
+                "--secrets-fd",
+                "builtins:int",
+                "literal",
+                None,
+                "cli.config.custody.secrets_fd_help",
+                machine_secret_channel=_FD_CHANNEL,
             ),
         ),
         _POLICY_5_CONTRACT,

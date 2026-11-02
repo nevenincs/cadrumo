@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ba8b0074a1f861d960cba870d2da989b87918a0a686ad5dc0c57f5bd57f1e484'
+body_hash: 'sha256:038a9d9400bd299871742d93fad2982cc868c1abb911e759c3d5e6d362186152'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -388,6 +388,136 @@ related:
 - `S18` `A` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
 - `S18` `verify:` `pytest test_retencion_soportada_cli+mesh+conformance` -> `pass`
 - `S18` `by:` `implementer`
+- `S29` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S29` `M` `dev/quality/metadata/import_load_targets.json`
+- `S29` `M` `src/cadrumo/adapters/persistence/profile/retencion_soportada_records.py`
+- `S29` `A` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_soportada_absence.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`
+- `S29` `A` `src/cadrumo/application/aggregation/retencion_soportada_absence_repository.py`
+- `S29` `M` `src/cadrumo/application/aggregation/retencion_soportada_repository.py`
+- `S29` `M` `src/cadrumo/application/aggregation/retencion_soportada_source.py`
+- `S29` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/__init__.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/contracts.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/executor.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/ports.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/projections.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/registered_operation.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/requests.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/results.py`
+- `S29` `M` `src/cadrumo/core/errors/registry/_application_ledger.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/tests/test_retencion_soportada_bindings.py`
+- `S29` `M` `src/cadrumo/domain/modelos/calculation_revision_sources.py`
+- `S29` `A` `src/cadrumo/domain/renta/retencion_soportada_absence.py`
+- `S29` `A` `src/cadrumo/domain/renta/retencion_soportada_applicability.py`
+- `S29` `A` `src/cadrumo/domain/renta/tests/test_retencion_soportada_absence.py`
+- `S29` `M` `src/cadrumo/entrypoints/adapter_composition_work_ports.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/_app_ledger_retencion_soportada_absence_command_specs.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/operation_ledger_retencion_soportada_absence.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/retencion_soportada_absence_commands.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/retencion_soportada_absence_results.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_absence_cli.py`
+- `S29` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S29` `A` `src/cadrumo/entrypoints/operation_composition_retencion_soportada_absence.py`
+- `S29` `A` `src/cadrumo/entrypoints/retencion_soportada_absence_composition.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S29` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_retencion_soportada_absence_m100.py`
+- `S29` `A` `src/cadrumo/entrypoints/tests/test_retencion_soportada_absence_executor.py`
+- `S29` `M` `src/cadrumo/locales/ca/application.yml`
+- `S29` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S29` `M` `src/cadrumo/locales/ca/common.yml`
+- `S29` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S29` `M` `src/cadrumo/locales/en/application.yml`
+- `S29` `M` `src/cadrumo/locales/en/cli.yml`
+- `S29` `M` `src/cadrumo/locales/en/common.yml`
+- `S29` `M` `src/cadrumo/locales/en/errors.yml`
+- `S29` `M` `src/cadrumo/locales/es/application.yml`
+- `S29` `M` `src/cadrumo/locales/es/cli.yml`
+- `S29` `M` `src/cadrumo/locales/es/common.yml`
+- `S29` `M` `src/cadrumo/locales/es/errors.yml`
+- `S29` `M` `src/cadrumo/locales/hu/application.yml`
+- `S29` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S29` `M` `src/cadrumo/locales/hu/common.yml`
+- `S29` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S29` `verify:` `pytest focused S29 suites (domain, adapter, M100 2025, executor)` -> `pass`
+- `S29` `verify:` `lint-imports` -> `pass`
+- `S29` `verify:` `just check-style` -> `pass`
+- `S29` `verify:` `just check-format` -> `pass`
+- `S29` `by:` `vaultspec-high-executor`
+- `S06` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `M` `dev/registry/compiler/validate_bindings.py`
+- `S06` `A` `dev/registry/tests/test_modelo_100_credit_borrador_participation.py`
+- `S06` `M` `dev/registry/tests/test_modelo_100_filing_surface_across_supported_years.py`
+- `S06` `M` `dev/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S06` `M` `dev/runtime_lifecycle/tests/test_installed_borrador_stdio.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S06` `A` `src/cadrumo/adapters/persistence/profile/tests/retencion_soportada_seed.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_borrador_100_repository.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_soportada_records.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/tests/test_borrador_100_roundtrip.py`
+- `S06` `M` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S06` `M` `src/cadrumo/application/aggregation/tests/test_modelo_100_actividad_retencion_credit.py`
+- `S06` `M` `src/cadrumo/application/live/borrador_100_keys.py`
+- `S06` `M` `src/cadrumo/application/live/tests/test_borrador_100.py`
+- `S06` `M` `src/cadrumo/application/live/tests/test_borrador_100_keys.py`
+- `S06` `M` `src/cadrumo/application/live/tests/test_borrador_100_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/borrador_binding.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_advisory_binding_value_gate.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_borrador_binding.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_modelo_100_bindings_list_across_supported_years.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_projection_binding_channel.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_revision_replay_inputs.py`
+- `S06` `A` `src/cadrumo/domain/calculations/registry/binding_borrador_participation.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/modelo_100_retenciones_binding_wiring_scenarios.py`
+- `S06` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_borrador_participation.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_provider_registration.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_borrador_prefilled_schema.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/conformance_live_borrador_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/proven_zero_withholding_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_borrador_binding.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_cross_period_clean_state_enforcement.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_capped_retenciones.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_quarters_to_m100_annual.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_identity_and_declaration_kind_live.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_pagos_fold_in_live.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_pagos_fraccionados_fold_in_live.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_payer_side_returns_leave_credits_unchanged_live.py`
+- `S06` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_retencion_soportada_credits_live.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_pulled_history_reaches_calculate.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_borrador_100_snapshot_lifecycle.py`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_registry_bindings_surface.py`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_requires_data_inventory.py`
+- `S06` `verify:` `pytest S06 credit, borrador, fold-in, e2e and merge set (509 tests)` -> `pass`
+- `S06` `verify:` `python -m dev.registry.conformance valid` -> `pass`
+- `S06` `verify:` `just check-bindings` -> `pass`
+- `S06` `verify:` `just check-style` -> `pass`
+- `S06` `verify:` `just check-format` -> `pass`
+- `S06` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S06` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/executor.py`
+- `S18` `verify:` `pytest retencion_soportada cli+mesh+conformance` -> `pass`
 
 ## Notes
 
@@ -415,3 +545,5 @@ related:
 - `S15` final review fix
 - `S17` Both failures pre-exist S17 and touch no S17 path: `test_exception_base_hygiene` names unrelated builtin-rooted classes, and check-types reports 2 basedpyright diagnostics in `invoice_filing_fingerprint.py.` check-locales is unavailable on an absent desktop.ledger.inspector key outside S17. The bundled registry declares no `retencion_soportada` binding yet, so production writes refuse `family_not_declared` until S06.
 - `S16` Modelo 131 complementaria export render
+- `S29` Commit 52d53539e6 was made by another committer from in-progress S29 work and also carries a non-S29 `test_borrador_binding.py` hunk; history was not rewritten. Native CLI test `test_retencion_soportada_absence_cli.py` stays red until `contract_manifest.json` is regenerated.
+- `S06` just check-types fails on 9 ty diagnostics in `test_verify_invoice_drift_gate.py` and 2 basedpyright in `invoice_filing_fingerprint.py,` both outside S06; CLI and acceptance journeys keyed on the retired 0596 binding stay open pending S18/S29 operator paths

@@ -67,7 +67,7 @@ from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summa
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadAgricolaSimplificado,
@@ -130,6 +130,7 @@ from ....application.tests.operator_scope_fakes import (
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -289,15 +290,7 @@ def _source_values(evidence: FilingInstanceEvidence) -> Mapping[CasillaId, Decim
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id=_TAX_ID,
-        iva_regime=IVARegime("SIMPLIFICADO"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        activity_start_date=date(_YEAR, 1, 1),
-    )
+    return plain_workflow_profile(tax_id=_TAX_ID, iva_regime="SIMPLIFICADO", activity_start_date=date(_YEAR, 1, 1))
 
 
 def _verification_repositories_for_test(

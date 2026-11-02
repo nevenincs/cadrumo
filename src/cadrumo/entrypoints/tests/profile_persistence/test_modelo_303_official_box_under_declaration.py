@@ -65,7 +65,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -89,6 +89,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from .general_iva_profile_facts_support import general_iva_profile_facts
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -184,14 +185,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="12345678Z",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
+    return plain_workflow_profile(tax_id="12345678Z")
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:
