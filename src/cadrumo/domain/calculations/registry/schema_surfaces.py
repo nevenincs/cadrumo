@@ -34,6 +34,7 @@ from .schema_base import (
     CasillaSignConstraintField,
     LegalRefs,
     RegistryModel,
+    SourceCitation,
     SourceRefs,
     coerce_enum_member,
 )
@@ -42,6 +43,7 @@ from .schema_scalars import DecimalValue
 
 __all__ = [
     "CalculationCompletenessCasilla",
+    "ComplementariaOnlyDeclaration",
     "CalculationCompletenessManifest",
     "CasillaAlias",
     "CasillaConstraints",
@@ -313,6 +315,31 @@ def _validate_projection_only(
         raise RegistryValidationError(f"projection-only casilla {casilla_id!r} must not declare formula")
 
 
+class ComplementariaOnlyDeclaration(RegistryModel):
+    """The official text stating that only a complementaria fills a casilla.
+
+    A casilla carrying this declaration holds the result of earlier
+    autoliquidaciones of the same ejercicio and period, which an original
+    declaration does not have. Its absence from an observed original therefore
+    reads as zero by law, while its absence from a complementaria, or from a
+    filing of unknown kind, stays unresolved. The citations quote the
+    instruction that says so, so the property is grounded where it is declared.
+    """
+
+    source_refs: SourceRefs
+    source_citations: tuple[SourceCitation, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _citations_name_declared_sources(self) -> ComplementariaOnlyDeclaration:
+        undeclared = sorted({citation.source_ref for citation in self.source_citations} - set(self.source_refs))
+        if undeclared:
+            raise RegistryValidationError(
+                f"complementaria_only citations name sources not listed in source_refs: {undeclared!r}",
+            )
+        return self
+
+
 class CasillaDefinition(RegistryModel):
     """A single AEAT casilla within a modelo revision.
 
@@ -429,6 +456,16 @@ class CasillaDefinition(RegistryModel):
             "real regulatory authority."
         ),
     )
+    complementaria_only: ComplementariaOnlyDeclaration | None = Field(
+        default=None,
+        description=(
+            "Declares that only an autoliquidación complementaria fills this casilla, "
+            "quoting the instruction that says so. A relation fold reads the casilla "
+            "as zero when it is absent from an observed filing whose kind is an "
+            "admitted original, and keeps it unresolved for any other kind. Only an "
+            "operator-entered money casilla can carry it."
+        ),
+    )
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -461,7 +498,28 @@ class CasillaDefinition(RegistryModel):
         self._validate_export_exposure()
         self._validate_singleton_role_declaration()
         self._validate_lineage_origin()
+        self._validate_complementaria_only()
         return self
+
+    def _validate_complementaria_only(self) -> None:
+        """Admit the complementaria-only declaration on a manual money casilla only.
+
+        The declaration lets an absent value read as zero, so it must sit on a
+        casilla whose value a filer enters from earlier autoliquidaciones: a
+        computed, bound or app-internal casilla has another source for its value,
+        and a non-money casilla has no zero to prove.
+        """
+        if self.complementaria_only is None:
+            return
+        if self.input_kind is not InputKind.MANUAL or self.internal_only:
+            raise RegistryValidationError(
+                f"complementaria_only casilla {self.id!r} must be an operator-entered casilla, "
+                f"not input_kind {self.input_kind.value!r}",
+            )
+        if self.data_type is not CasillaDataType.MONEY:
+            raise RegistryValidationError(
+                f"complementaria_only casilla {self.id!r} must be a money casilla, not {self.data_type.value!r}",
+            )
 
     def _validate_export_exposure(self) -> None:
         """Hold internal_only, export_refs and the exemption reason coherent.

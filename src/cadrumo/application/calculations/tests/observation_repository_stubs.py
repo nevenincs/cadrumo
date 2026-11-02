@@ -10,6 +10,7 @@ from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import RevisionId
+from ....domain.modelos.filing_kind_evidence import ObservedFilingKind
 from ..observations_repository import (
     ObservationEnvelopePayload,
     ObservationLayers,
@@ -74,6 +75,7 @@ class ObservationRepositoryStubs:
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         override: ObservationOverride | None = None,
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         del (
             observation,
@@ -86,5 +88,6 @@ class ObservationRepositoryStubs:
             result_disposition,
             prior_domiciliation_election,
             override,
+            filing_kind,
         )
         raise AssertionError("this observation repository stub does not prepare envelopes")

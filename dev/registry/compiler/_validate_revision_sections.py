@@ -57,6 +57,7 @@ from .validate_authority_grade import validate_authority_grade_section
 from .validate_below_floor_export_refs import downgrade_below_floor_export_reference_failures
 from .validate_binding_grade_caps import validate_binding_grade_cap_section
 from .validate_bindings import binding_temporal_support_failures, validate_binding_registration_section
+from .validate_complementaria_only_casillas import validate_complementaria_only_section
 from .validate_evidence import EvidenceValidator
 from .validate_export_layout_coverage import validate_export_layout_record_coverage
 from .validate_exports import validate_export_layout_section
@@ -155,6 +156,14 @@ def _validate_revision_surface_sections(
     )
     failures.extend(validate_binding_registration_section(prefix=prefix, revision=revision))
     failures.extend(validate_binding_grade_cap_section(prefix=prefix, revision=revision, legal_refs=legal_refs))
+    failures.extend(
+        validate_complementaria_only_section(
+            prefix=prefix,
+            revision=revision,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
+    )
     failures.extend(
         validate_dependency_classification_section(
             prefix=prefix,

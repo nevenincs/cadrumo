@@ -30,13 +30,15 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionState,
 )
 from ...domain.modelos.calculation_revision_aggregate import CalculationRevisionAggregateContext
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ...domain.modelos.calculation_revision_amendment import (
+    CalculationRevisionAmendmentKind,
+    filing_declaration_kind_for_amendment,
+)
 from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
 )
 from ...domain.modelos.filing_record import (
     AeatConfirmationState,
-    FilingDeclarationKind,
     FilingOrigin,
     IvaCreditSnapshot,
     IvaSettlementRefundState,
@@ -315,7 +317,7 @@ def _new_local_filing_record(
         notes=notes.strip() if (notes is not None and notes) else None,
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.ORIGINAL,
+        declaration_kind=filing_declaration_kind_for_amendment(target.amendment_identity),
         status=ModeloRecordStatus.VIGENTE,
         source_transaction_ids=target.source_transaction_ids,
         settlement=settlement,
