@@ -129,6 +129,8 @@ from .workspace_schema import (
     paginate_modelo_workspace_facet,
     parameter_schema_records,
     relation_source_endpoints_for_casilla,
+    workspace_evidence_horizon,
+    workspace_schema_identity,
 )
 
 _GRADED_SNAPSHOT_PAGINATED_FACETS = frozenset(
@@ -224,16 +226,12 @@ def resolve_graded_snapshot_schema_identity(snapshot: RegistrySnapshot) -> Model
     Returns:
         The schema identity for this graded admission.
     """
-    field_manifest_capture = ModeloWorkspaceFieldManifestPortV1(authority=snapshot).capture_projection_with_epoch()
-    return ModeloWorkspaceSchemaIdentityV1(
-        schema_id=f"modelo-{snapshot.modelo.id}-{snapshot.revision.id}".lower(),
-        schema_fingerprint=content_hash_hex(
-            {
-                "casilla_ids": sorted(casilla.id for casilla in snapshot.revision.casillas),
-                "binding_ids": sorted(binding.id for binding in snapshot.revision.bindings),
-            }
-        ),
-        field_manifest_digest=field_manifest_capture.projection.manifest_digest,
+    return workspace_schema_identity(
+        snapshot,
+        modelo_id=snapshot.modelo.id,
+        revision_id=snapshot.revision.id,
+        casilla_ids=(casilla.id for casilla in snapshot.revision.casillas),
+        binding_ids=(binding.id for binding in snapshot.revision.bindings),
     )
 
 
@@ -252,11 +250,7 @@ def graded_snapshot_evidence_horizon(snapshot: RegistrySnapshot) -> ModeloWorksp
     Returns:
         The evidence horizon this graded projection rests on.
     """
-    source_refs = tuple(sorted(snapshot.sources))
-    return ModeloWorkspaceEvidenceHorizonV1(
-        source_refs=source_refs,
-        evidence_digest=content_hash_hex({"source_refs": source_refs}),
-    )
+    return workspace_evidence_horizon(snapshot.sources)
 
 
 def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
