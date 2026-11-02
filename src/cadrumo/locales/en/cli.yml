@@ -603,6 +603,10 @@ cli:
         list_header: "priority\tclassification\tpattern\trule_id"
         list_help: List stored classification rules ordered by priority.
         priority_help: Numeric priority; lower value is evaluated first (default 100).
+        trial_help: Try an unsaved pattern with the rule engine and say which of the
+          named movements it finds, without saving anything.
+        trial_transaction_id_help: Repeatable id of a movement to try the pattern
+          on.
     live:
       app_help: Read-only AEAT live observation commands
       borrador:
@@ -3127,11 +3131,6 @@ cli:
       help: Detach attachments from a transaction in your records without deleting
         their bytes.
       id_help: Transaction id (or an unambiguous prefix).
-    staged_check_help: 'Answer staged ledger work the way the writers would take it, without saving anything.'
-    staged_check_row_help: 'Repeatable JSON object for one movement: `transaction_id`, `cells` and optional `evidence_staged` and `m210_staged`.'
-    staged_check_draft_help: 'Repeatable JSON object for one new movement: `key` and `fields`.'
-    staged_check_category_help: 'Repeatable spending category to judge against a classification.'
-    staged_check_invalid: 'Each staged row and draft must be a JSON object of the expected shape.'
     entry_options_help: Show the values a ledger entry form offers.
     errors:
       business_pct_out_of_range: Business-use share %{value} (= %{percent}) is out
@@ -3385,6 +3384,15 @@ cli:
         it to the --llm split proposer.
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
+    staged_check_category_help: Repeatable spending category to judge against a classification.
+    staged_check_draft_help: 'Repeatable JSON object for one new movement: `key` and
+      `fields`.'
+    staged_check_help: Answer staged ledger work the way the writers would take it,
+      without saving anything.
+    staged_check_invalid: Each staged row and draft must be a JSON object of the expected
+      shape.
+    staged_check_row_help: 'Repeatable JSON object for one movement: `transaction_id`,
+      `cells` and optional `evidence_staged` and `m210_staged`.'
     stash:
       help: Set aside (stash) one transaction from your records in the active profile
       id_help: Id of the transaction to set aside

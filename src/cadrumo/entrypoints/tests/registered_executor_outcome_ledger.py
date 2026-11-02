@@ -76,6 +76,7 @@ from ...application.ledger.remove_operation import LedgerRemoveOperationResult, 
 from ...application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ...application.ledger.review_operation import LedgerReviewProjection
 from ...application.ledger.split_operation import LedgerSplitOperationResult, LedgerSplitRequest
+from ...application.ledger.rule_trial_operation import LedgerRuleTrialRequest, LedgerRuleTrialResult
 from ...application.ledger.staged_check_contracts import LedgerStagedCheckRequest, LedgerStagedCheckResult
 from ...application.ledger.status_operation import LedgerStatusProjection, LedgerStatusRequest
 from ...application.ledger.update_contracts import LedgerUpdateOperationResult, LedgerUpdateRequest
@@ -560,6 +561,17 @@ def assert_ledger_preflight_outcome(ctx: ExecutorOutcome) -> None:
     assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
+def assert_ledger_rule_trial_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.rule.trial answer, which tries a pattern and stores nothing."""
+    assert isinstance(ctx.payload, LedgerRuleTrialRequest)
+    answer = ctx.resolve(LedgerRuleTrialResult)
+    assert isinstance(answer, LedgerRuleTrialResult)
+    assert answer.profile_id == ctx.profile_id
+    assert answer.outcome == "invalid_pattern"
+    assert answer.hits == ()
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
 def assert_ledger_staged_check_outcome(ctx: ExecutorOutcome) -> None:
     """Check the ledger.staged.check answer, which judges staged work and stores nothing."""
     assert isinstance(ctx.payload, LedgerStagedCheckRequest)
@@ -809,6 +821,7 @@ LEDGER_OUTCOME_ASSERTIONS: dict[str, Callable[[ExecutorOutcome], None]] = {
     INVOICE_UPDATE_OPERATION_DEFINITION_ID: assert_invoice_update_outcome,
     "ledger.preflight": assert_ledger_preflight_outcome,
     "ledger.entry-options": assert_ledger_entry_options_outcome,
+    "ledger.rule.trial": assert_ledger_rule_trial_outcome,
     "ledger.staged.check": assert_ledger_staged_check_outcome,
     "ledger.known-values": assert_ledger_known_values_outcome,
     "ledger.list": assert_ledger_list_outcome,

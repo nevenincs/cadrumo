@@ -35,6 +35,20 @@ RuleActor = Annotated[str, StringConstraints(min_length=1)]
 """Who authored the rule, as recorded on it."""
 
 
+def description_pattern_error(description_pattern: str) -> re.error | None:
+    """Return why the rule engine cannot read a pattern, or ``None`` where it can."""
+    try:
+        re.compile(description_pattern)
+    except re.error as exc:
+        return exc
+    return None
+
+
+def description_pattern_matches(description_pattern: str, description: str) -> bool:
+    """Answer the rule engine's match: anywhere in the description, ignoring case."""
+    return bool(re.search(description_pattern, description, re.IGNORECASE))
+
+
 def _compute_rule_id(
     description_pattern: str,
     classification: BusinessClassification,
@@ -67,10 +81,9 @@ class LedgerClassificationRule(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _validate_regex(cls, value: str) -> str:
-        try:
-            re.compile(value)
-        except re.error as exc:
-            raise ClassificationRuleError(f"description_pattern is not a valid regex: {exc}") from exc
+        error = description_pattern_error(value)
+        if error is not None:
+            raise ClassificationRuleError(f"description_pattern is not a valid regex: {error}") from error
         return value
 
     @classmethod
@@ -98,10 +111,12 @@ class LedgerClassificationRule(BaseModel):
 
     def matches(self, description: str) -> bool:
         """Return ``True`` when this rule's pattern matches ``description`` (case-insensitive)."""
-        return bool(re.search(self.description_pattern, description, re.IGNORECASE))
+        return description_pattern_matches(self.description_pattern, description)
 
 
 __all__ = [
     "LedgerClassificationRule",
     "_compute_rule_id",
+    "description_pattern_error",
+    "description_pattern_matches",
 ]

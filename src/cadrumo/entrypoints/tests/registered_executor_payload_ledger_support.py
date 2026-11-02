@@ -487,6 +487,13 @@ def _ledger_track(ctx: PayloadContext) -> PayloadResult:
     )
 
 
+def _ledger_rule_trial(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "description_pattern": "[unclosed", "transaction_ids": ("0" * 64,)},
+    )
+
+
 def _ledger_staged_check(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
@@ -761,6 +768,7 @@ LEDGER_BUILDERS: dict[str, PayloadBuilder] = {
     "ledger.view": _ledger_view,
     "ledger.track": _ledger_track,
     "ledger.entry-options": _ledger_entry_options,
+    "ledger.rule.trial": _ledger_rule_trial,
     "ledger.staged.check": _ledger_staged_check,
     "ledger.known-values": _ledger_known_values,
     "ledger.list": _ledger_list,

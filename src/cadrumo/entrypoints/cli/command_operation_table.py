@@ -148,6 +148,7 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("app", "ledger", "rule", "add"), "ledger.rule.add"),
     (("app", "ledger", "rule", "apply"), "ledger.rule.apply"),
     (("app", "ledger", "rule", "list"), "ledger.rule.list"),
+    (("app", "ledger", "rule", "trial"), "ledger.rule.trial"),
     (("app", "ledger", "split"), "ledger.split.manual"),
     (("app", "ledger", "split"), "ledger.split.review"),
     (("app", "ledger", "split"), "ledger.view"),

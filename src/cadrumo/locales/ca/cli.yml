@@ -643,6 +643,10 @@ cli:
           prioritat.
         priority_help: Prioritat numèrica; un valor menor s'avalua primer (per defecte
           100).
+        trial_help: Prova un patró sense desar amb el motor de regles i indica quins
+          moviments dels indicats troba, sense desar res.
+        trial_transaction_id_help: Identificador repetible d'un moviment on provar
+          el patró.
     live:
       app_help: Ordres d'observació AEAT en viu de només lectura
       borrador:
@@ -3350,11 +3354,6 @@ cli:
       help: Separa adjunts d'un moviment dels teus registres sense esborrar-ne els
         bytes.
       id_help: Id del moviment (o un prefix inequívoc).
-    staged_check_help: 'Respon a la feina preparada del llibre com la prendrien les escriptures, sense desar res.'
-    staged_check_row_help: 'Objecte JSON repetible per a un moviment: `transaction_id`, `cells` i, si escau, `evidence_staged` i `m210_staged`.'
-    staged_check_draft_help: 'Objecte JSON repetible per a un moviment nou: `key` i `fields`.'
-    staged_check_category_help: 'Categoria de despesa repetible que es contrasta amb una classificació.'
-    staged_check_invalid: 'Cada fila i esborrany preparats han de ser un objecte JSON amb la forma esperada.'
     entry_options_help: Mostra els valors que ofereix un formulari d'entrada del llibre.
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
@@ -3617,6 +3616,16 @@ cli:
       read_evidence_help: Llegeix la factura adjunta de la transacció en local i alimenta-la
         al proposant de divisió --llm.
       yes_help: Confirma la divisió de la transacció
+    staged_check_category_help: Categoria de despesa repetible que es contrasta amb
+      una classificació.
+    staged_check_draft_help: 'Objecte JSON repetible per a un moviment nou: `key`
+      i `fields`.'
+    staged_check_help: Respon a la feina preparada del llibre com la prendrien les
+      escriptures, sense desar res.
+    staged_check_invalid: Cada fila i esborrany preparats han de ser un objecte JSON
+      amb la forma esperada.
+    staged_check_row_help: 'Objecte JSON repetible per a un moviment: `transaction_id`,
+      `cells` i, si escau, `evidence_staged` i `m210_staged`.'
     stash:
       help: Apartar un moviment dels teus registres al perfil actiu
       id_help: Id del moviment a apartar

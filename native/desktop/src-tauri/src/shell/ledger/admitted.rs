@@ -157,6 +157,7 @@ const ADMITTED: [(&str, Kind); 107] = [
     ("ledger.rule.add", Write),
     ("ledger.rule.apply", Write),
     ("ledger.rule.list", Read),
+    ("ledger.rule.trial", Read),
     ("ledger.split.manual", Write),
     ("ledger.split.review", Review),
     ("ledger.staged.check", Read),

@@ -165,6 +165,14 @@ class LedgerStagedCategoryFitPayload(OutputSchema):
     mixed: bool
 
 
+class LedgerRuleTrialEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger rule trial``."""
+
+    outcome: str
+    hits: list[str]
+    pending: list[str]
+
+
 class LedgerStagedCheckEnvelope(OutputSchema):
     """JSON envelope for ``aeat app ledger staged-check``."""
 
@@ -1001,6 +1009,7 @@ __all__ = [
     "LedgerSplitResult",
     "LedgerStagedBlockerPayload",
     "LedgerStagedCategoryFitPayload",
+    "LedgerRuleTrialEnvelope",
     "LedgerStagedCheckEnvelope",
     "LedgerStagedDraftPayload",
     "LedgerStagedNotePayload",
