@@ -77,6 +77,8 @@ FILED_130_ANSWERS: tuple[tuple[str, str], ...] = (
     ("modelo-130-resultados-negativos-anteriores", "0"),
     ("modelo-130-pagos-fraccionados-anteriores", "0"),
 )
+#: The quarter's activity income booked for the calculated-only 130.
+INCOME_130 = Decimal("12000.00")
 #: The boxes whose help card the envelopes carry, by modelo.
 #: When the synthetic AEAT receipt of the filed 130 is imported.
 RECEIPT_AT = datetime(2026, 4, 21, 9, 30, tzinfo=UTC)
@@ -642,6 +644,17 @@ def _check_clean(work: Any) -> Any:
     if not checked.granted_verificado_completo:
         raise SystemExit(f"the 130's check was not complete: {checked.completeness_status}")
     return checked
+
+
+def _seed_income(work: Any) -> None:
+    """Book the quarter's activity income in the profile's ledger, so the 130's boxes carry figures.
+
+    The boxes it feeds are capped below filing grade: only a profile that is
+    calculated and never checked, exported or filed may hold it.
+    """
+    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
+
+    seed_m130_income_transaction(amount=INCOME_130, filing_year=work.work_unit.filing_year, source_key="desktop")
 
 
 def _record_filed(work: Any) -> BaseModel:
@@ -1592,6 +1605,14 @@ def write_envelopes(directory: Path) -> None:
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
         _write_correction(directory, filed, unit.current_filing_record_id)
+    # Its own profile: the quarter's income is booked and the declaration is calculated, never checked or filed.
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        _seeded(Path(tmp), facts=income) as booked,
+    ):
+        _seed_income(booked)
+        booked.recalculate()
+        _write_form(directory, booked, "modelo-130-1T-income")
     # Its own profile, on a frozen timeline: a review half an hour after the form was read, and its renewal.
     started = now()
     with (

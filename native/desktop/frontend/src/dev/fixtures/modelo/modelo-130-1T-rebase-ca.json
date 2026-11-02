@@ -1606,7 +1606,7 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-02T09:10:21.405696Z",
+        "exported_at": "2026-11-02T09:26:44.255864Z",
         "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
         "current": false
       },
@@ -1659,8 +1659,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "c5921c604605a6082dd184c9d739840c0118b9f7fb1ae5de3d2207d72ec0dd61",
-    "calculation_head_digest": "52b94eee39209d37d28ead3a60f6715f8c4c52b877c2b00ee325679dd35815c4",
+    "work_unit_record_digest": "94033abc5994124770b132528bb715c714648489e2af107c76c2c6bcba9ce9f6",
+    "calculation_head_digest": "7c8ce925449a2b747cd3c932c6fc16feec2720686ccc50191f3aba938a2da680",
     "current_calculation_revision_id": "8cfcf16d5d3c5ff2418f7be788d591fc789cb5eb297a46e548528918574929ca",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1964,9 +1964,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:10:57.370406Z",
-    "expires_at": "2026-11-02T09:15:57.370406Z",
-    "baseline_id": "1b05576f1a306fd4ca024716e1d81d5d0a57b9ff412a3c21a3767f90dcc40100"
+    "issued_at": "2026-11-02T09:27:18.292565Z",
+    "expires_at": "2026-11-02T09:32:18.292565Z",
+    "baseline_id": "d5d3c35cd633989f64b1db7941d5b41b885ca9c03c2e80d8865875b79b28e346"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1976,7 +1976,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-02T09:10:21.405696Z",
+    "file_created_at": "2026-11-02T09:26:44.255864Z",
     "receipt_to_add": false
   },
   "header": {
@@ -2002,7 +2002,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-02T09:10:21.405696Z",
+      "exported_at": "2026-11-02T09:26:44.255864Z",
       "created_on": "2 de nov. 2026",
       "current": false,
       "words": "El fitxer del 2 de nov. 2026 està desactualitzat. Torna a generar-lo."

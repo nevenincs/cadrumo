@@ -108,14 +108,8 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
         "cannot be proven to match the gate a developer can run"
     )
 
-    # The three properties this job used to assert INLINE - every workflow is
-    # read, the archive is pinned by content, and the digest is checked before
-    # the binary is executed - did not stop being required when the download
-    # moved into `dev/actionlint.py`. They moved with it, so they are asserted
-    # at their new home rather than deleted along with the shell that carried
-    # them. This repository previously kept its own copy of that download,
-    # already at a different version from vaultspec-dashboard's copy of the
-    # same thirty lines.
+    # The provisioner must read every workflow, pin the archive by content and
+    # check its digest before the binary is executed.
     from dev import actionlint
 
     assert actionlint.VERSION.replace(".", "").isdigit() and actionlint.VERSION.count(".") >= 2, (

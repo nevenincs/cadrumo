@@ -33,7 +33,7 @@ The Google-related modules are boundary helpers, not a Google Drive client. They
 
 The hardware module is a closed `AcceleratorKind` set that distinguishes a measured lack of accelerator (`NONE`) from an unknown measurement (`UNKNOWN`) and a measured NVIDIA CUDA device. It carries no memory figures and no load judgement: measured bytes live on the application's hardware profile, and whether a load fits is cadrumo-agent's answer when it loads the model. This makes unknown resource state expressible without silently turning it into evidence of absence. Accelerator kinds (`src/cadrumo/core/hardware.py`)
 
-The legacy workbook reader handles BIFF8/OLE2 `.xls` data. Since a typical reader exposes a formula cell's cached result without indicating that the cell contains a formula, this adapter walks BIFF records and marks formula coordinates with the same type marker used by the workbook policy. It validates record/worksheet structure and refuses formats it cannot represent. This preserves the caller's ability to reject spreadsheet formulas rather than trusting stale recalculated values. The coverage remains deliberately limited to the legacy format it parses. Legacy reader contract (`src/cadrumo/core/legacy_workbook.py`) Workbook and formula scan (`src/cadrumo/core/legacy_workbook.py`) Formula-cell marking (`src/cadrumo/core/legacy_workbook.py`)
+The XLS workbook reader handles BIFF8/OLE2 `.xls` data. Since a typical reader exposes a formula cell's cached result without indicating that the cell contains a formula, this adapter walks BIFF records and marks formula coordinates with the same type marker used by the workbook policy. It validates record/worksheet structure and refuses formats it cannot represent. This preserves the caller's ability to reject spreadsheet formulas rather than trusting stale recalculated values. The coverage remains deliberately limited to the legacy format it parses. Legacy reader contract (`src/cadrumo/core/xls_workbook.py`) Workbook and formula scan (`src/cadrumo/core/xls_workbook.py`) Formula-cell marking (`src/cadrumo/core/xls_workbook.py`)
 
 ## Security, provenance, and concurrency
 
@@ -76,7 +76,7 @@ The strongest local capabilities are precise typed filing destinations, validate
 - json_shapes.py (`src/cadrumo/core/json_shapes.py`) — lines 1–64
 - keyed_digest.py (`src/cadrumo/core/keyed_digest.py`) — lines 1–81
 - ledger_sort.py (`src/cadrumo/core/ledger_sort.py`) — lines 1–84
-- legacy_workbook.py (`src/cadrumo/core/legacy_workbook.py`) — lines 1–212
+- xls_workbook.py (`src/cadrumo/core/xls_workbook.py`) — lines 1–212
 - link_safety.py (`src/cadrumo/core/link_safety.py`) — lines 1–35
 - lockfile_unlink.py (`src/cadrumo/core/lockfile_unlink.py`) — lines 1–100
 - locks.py (`src/cadrumo/core/locks.py`) — lines 1–311

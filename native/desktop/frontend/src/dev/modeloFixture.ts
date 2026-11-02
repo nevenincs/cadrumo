@@ -50,7 +50,10 @@ import { hex64 } from "./fixtures/ledger";
  * and `stale` answer as `fixture` does, except that the first quarter's
  * Modelo 130 is read after its check, after it was recorded as filed
  * locally, after its AEAT receipt was verified, or after the declaration
- * changed once its file for the AEAT was made. `incomplete` lists the
+ * changed once its file for the AEAT was made. `income` reads that 130 as
+ * calculated over a ledger that books the quarter's activity income, never
+ * checked, exported or filed: its capped boxes carry figures, and the
+ * calculation's notes about them. `incomplete` lists the
  * declarations of a profile nothing was ever read from the AEAT for.
  *
  * The write shapes answer that Modelo 130's writes as the application
@@ -89,6 +92,7 @@ export const MODELO_SHAPES = [
   "filed",
   "receipt",
   "stale",
+  "income",
   "incomplete",
   "edit",
   "renewal",
@@ -348,6 +352,7 @@ export function modeloFixture(options: Options): ModeloPort {
       case "checked":
       case "filed":
       case "stale":
+      case "income":
       case "receipt":
         return `130-1T-${shape}`;
       case "check-notes":

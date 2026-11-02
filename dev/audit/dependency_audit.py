@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 """Multi-ecosystem dependency vulnerability audit gate.
 
-This is the fleet's single dependency-audit implementation; the copy in every
-repository is identical. It is the ONE audit that GATES: a published advisory
+It is the ONE audit that GATES: a published advisory
 against a pinned version is a verdict, not a lead.
 
 Why it does not simply shell out to ``uv audit``
 ------------------------------------------------
 ``uv audit`` is a preview feature that exits ``0`` even when it prints
-advisories, so three repositories in this fleet shipped a "GATE" that could not
-fail. Deriving a gate's verdict from a preview tool's text summary keeps the
-gate one release note away from breaking again, and it covers only Python --
-while these repositories also lock npm and cargo dependencies and vendor
+advisories, so a gate built on its exit code cannot fail. Deriving a gate's
+verdict from a preview tool's text summary keeps the gate one release note away
+from breaking again, and it covers only Python --
+while this repository also locks npm and cargo dependencies and vendors
 binaries.
 
 So the gate resolves the pinned coordinates itself, out of the lockfiles that
@@ -29,12 +28,10 @@ of anybody's exit code. Consequences that are deliberate:
 Exit codes
 ----------
 ``0`` clean, ``1`` findings (or an expired suppression), ``7`` the audit could
-not complete. Only ``0`` is a pass. The numbers are lane L9's fleet-wide
-contract (``dev/exit_codes.py``): ``OK``, ``FAILED``, and the "the scanner did
-not actually run" code -- used here on a GATING target because a gate that
-could not run must not be readable either as a pass or as a finding. The values
-are restated rather than imported so this file stays standalone and stdlib-only
-in every repository.
+not complete. Only ``0`` is a pass. The numbers are ``dev/exit_codes.py``'s
+``OK``, ``FAILED`` and ``TOOL_BROKEN``; the last is used on this GATING check
+because a gate that could not run must not be readable either as a pass or as
+a finding.
 
 Output
 ------
@@ -65,12 +62,12 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
+from dev.exit_codes import FAILED, OK, TOOL_BROKEN
 from dev.report_storage import report_directory
 
-#: See the module docstring: these mirror ``dev/exit_codes.py`` (lane L9).
-EXIT_OK = 0
-EXIT_FINDINGS = 1
-EXIT_BROKEN = 7
+EXIT_OK = OK
+EXIT_FINDINGS = FAILED
+EXIT_BROKEN = TOOL_BROKEN
 
 _OSV_QUERYBATCH = "https://api.osv.dev/v1/querybatch"
 _OSV_VULN = "https://api.osv.dev/v1/vulns/"
@@ -486,7 +483,7 @@ class Report:
     def as_dict(self) -> dict[str, Any]:
         """Return the JSON report body."""
         return {
-            "schema": "vaultspec.dependency-audit/1",
+            "schema": "cadrumo.dependency-audit/1",
             "generated": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
             "repository": REPO_ROOT.name,
             "surfaces": self.surfaces,
