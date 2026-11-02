@@ -615,6 +615,36 @@ cli:
         validate_help: Arányok érvényesítése az alkalmas kategóriák és korlátok szerint.
         year_help: Az az adóév, amelynek kategóriaprofiljai a törvényes arányokat
           adják. Alapértelmezés szerint az aktuális év.
+      retencion_soportada:
+        ejercicio_help: Az ejercicio (év), amelyhez a jövedelem tartozik.
+        evidence_sha256_help: Az igazolás fájljának SHA-256 értéke; payer_certificate
+          esetén kötelező.
+        group_help: Rögzítsd a kifizetőid igazolásai szerinti levonásokat.
+        importe_integro_help: A kifizető által fizetett pénzbeli jövedelem a levonás
+          előtt.
+        income_class_help: A jövedelemosztály, amelyre a kifizető levonást alkalmazott,
+          például trabajo.
+        ingreso_a_cuenta_help: A természetbeni jövedelemre a kifizető által teljesített
+          ingreso a cuenta. Teljes összegében jóváírásnak számít.
+        ingreso_a_cuenta_repercutido_help: Az ingreso a cuenta rád áthárított része.
+          Nem haladhatja meg az ingreso a cuentát.
+        invalid_input: 'Egy érték érvénytelen: ellenőrizd a kifizetői hivatkozást,
+          a revíziót és az igazolás ujjlenyomatát.'
+        list_help: Listázd egy ejercicio kifizetői rekordjait adóazonosító nélkül.
+        origin_help: 'Ki állítja az adatokat: payer_certificate vagy operator_declaration.'
+        payer_name_help: A kifizető cégneve.
+        payer_ref_help: A lista által mutatott kifizetői hivatkozás (payer_ref).
+        payer_tax_id_help: A levonást végző kifizető NIF-je.
+        record_expected_revision_help: A lista által mutatott revízió egy tárolt rekord
+          cseréjéhez. Első rekordnál hagyd el.
+        record_help: Rögzítsd vagy cseréld le egy kifizető igazolásának adatait egy
+          ejercicióra és jövedelemosztályra.
+        remove_expected_revision_help: A lista által a törlendő rekordhoz mutatott
+          revízió.
+        remove_help: Törölj egy kifizetői rekordot a lista által mutatott revízió
+          védelmében.
+        retencion_help: A kifizető által levont összeg euróban, legfeljebb két tizedesjeggyel.
+        valoracion_especie_help: A természetbeni juttatás értéke.
       rule:
         actor_help: Azonosítód, amely a szabály eredeteként kerül rögzítésre.
         add_help: Osztályozási szabály hozzáadása, amely automatikusan osztályozza

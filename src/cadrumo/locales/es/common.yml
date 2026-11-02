@@ -203,16 +203,27 @@ aggregation:
         del Modelo 100 (p.ej. 2024-0A).
   retencion_soportada:
     errors:
+      certificate_needs_fingerprint: Un certificado del pagador necesita el SHA-256
+        del archivo del certificado (--evidence-sha256). Si no tienes certificado,
+        usa el origen declaración del operador.
       ejercicio_unsupported: El ejercicio de este registro está fuera de los años
         de presentación que admite Cadrumo.
       family_not_declared: La revisión del Modelo 100 de este ejercicio no lee retenciones
         soportadas, así que el registro nunca llegaría a un cálculo.
       identity_mismatch: El registro no coincide con el pagador, la clase de renta
         o el certificado ya guardados para él.
+      not_found: No hay ningún registro de retención para ese ejercicio, clase de
+        renta y referencia de pagador.
       own_tax_id: El NIF del pagador es el tuyo; una retención que practicas tú no
         es un pago a cuenta a tu favor.
+      repercutido_exceeds_ingreso: El ingreso a cuenta que te han repercutido no puede
+        ser mayor que el ingreso a cuenta que hizo el pagador.
       stale_revision: Este registro de retención cambió desde que lo leíste; vuelve
         a leerlo antes de guardar.
+      taxpayer_tax_id_unknown: Tu perfil no declara NIF, así que no se puede descartar
+        que el pagador seas tú. Añade tu NIF al perfil primero.
+      validation: 'El registro de retención no se guardó: revisa el NIF del pagador,
+        los importes (como máximo dos decimales) y la huella del certificado.'
   retenciones:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido

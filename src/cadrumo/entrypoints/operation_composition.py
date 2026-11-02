@@ -244,6 +244,7 @@ from .operation_composition_modelo import (
     compose_modelo_work_review_operation,
     compose_modelo_workbench_operations,
 )
+from .operation_composition_retencion_soportada import compose_retencion_soportada_certificado_operations
 
 type _GroupComposer = Callable[[OperationCompositionInputs], OperationGroupBuild]
 
@@ -393,6 +394,9 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.overview.pipeline_operation": compose_overview_pipeline_operation,
     "application.overview.read_operation": compose_overview_read_operation,
     "application.prorrata_register.registered_operations": compose_prorrata_register_registered_operations,
+    "application.retencion_soportada_certificado.registered_operation": (
+        compose_retencion_soportada_certificado_operations
+    ),
     "application.review.read_registration": compose_review_read_registration,
     "application.user_profile.archive_operation": compose_user_profile_archive_operation,
     "application.user_profile.automation_operations": compose_user_profile_automation_operations,

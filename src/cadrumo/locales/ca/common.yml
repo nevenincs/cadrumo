@@ -199,16 +199,27 @@ aggregation:
         del Model 100 (p.ex. 2024-0A).
   retencion_soportada:
     errors:
+      certificate_needs_fingerprint: Un certificat del pagador necessita el SHA-256
+        del fitxer del certificat (--evidence-sha256). Si no tens certificat, fes
+        servir l'origen declaració de l'operador.
       ejercicio_unsupported: L'exercici d'aquest registre és fora dels anys de presentació
         que admet Cadrumo.
       family_not_declared: La revisió del Model 100 d'aquest exercici no llegeix retencions
         suportades, així que el registre no arribaria mai a un càlcul.
       identity_mismatch: El registre no coincideix amb el pagador, la classe de renda
         o el certificat ja desats per a ell.
+      not_found: No hi ha cap registre de retenció per a aquest exercici, classe de
+        renda i referència de pagador.
       own_tax_id: El NIF del pagador és el teu; una retenció que practiques tu no
         és un pagament a compte a favor teu.
+      repercutido_exceeds_ingreso: L'ingrés a compte que t'han repercutit no pot ser
+        més gran que l'ingrés a compte que va fer el pagador.
       stale_revision: Aquest registre de retenció ha canviat des que el vas llegir;
         torna a llegir-lo abans de desar.
+      taxpayer_tax_id_unknown: El teu perfil no declara NIF, així que no es pot descartar
+        que el pagador siguis tu. Afegeix primer el teu NIF al perfil.
+      validation: 'El registre de retenció no s''ha desat: revisa el NIF del pagador,
+        els imports (com a màxim dos decimals) i l''empremta del certificat.'
   retenciones:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès

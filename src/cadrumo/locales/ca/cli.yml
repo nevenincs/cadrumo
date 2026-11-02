@@ -619,6 +619,36 @@ cli:
         validate_help: Valida les proporcions contra categories admeses i límits
         year_help: Exercici els perfils de categoria del qual aporten les ràtios legals.
           Per defecte, l'any en curs.
+      retencion_soportada:
+        ejercicio_help: Exercici (any) al qual s'imputa la renda.
+        evidence_sha256_help: SHA-256 del fitxer del certificat; obligatori amb payer_certificate.
+        group_help: Registra les retencions que et certifiquen els teus pagadors.
+        importe_integro_help: Renda dinerària que va pagar el pagador, abans de la
+          retenció.
+        income_class_help: Classe de renda sobre la qual el pagador va retenir, per
+          exemple trabajo.
+        ingreso_a_cuenta_help: Ingrés a compte que va fer el pagador per renda en
+          espècie. Compta íntegre com a crèdit.
+        ingreso_a_cuenta_repercutido_help: Part de l'ingrés a compte que el pagador
+          et va repercutir. No pot superar l'ingrés a compte.
+        invalid_input: 'Un valor no és vàlid: revisa la referència del pagador, la
+          revisió i l''empremta del certificat.'
+        list_help: Llista els registres de pagadors d'un exercici sense cap NIF.
+        origin_help: 'Qui declara les xifres: payer_certificate o operator_declaration.'
+        payer_name_help: Raó social del pagador.
+        payer_ref_help: Referència del pagador (payer_ref) que mostra el llistat.
+        payer_tax_id_help: NIF del pagador que va practicar la retenció.
+        record_expected_revision_help: Revisió que ha mostrat el llistat, per substituir
+          un registre desat. Omet-la en el primer registre.
+        record_help: Registra o substitueix les xifres que declara el certificat d'un
+          pagador per a un exercici i una classe de renda.
+        remove_expected_revision_help: Revisió que ha mostrat el llistat per al registre
+          que vols eliminar.
+        remove_help: Elimina un registre de pagador, protegit per la revisió que ha
+          mostrat el llistat.
+        retencion_help: Retenció que va practicar el pagador, en euros amb com a màxim
+          dos decimals.
+        valoracion_especie_help: Valoració del pagament en espècie.
       rule:
         actor_help: El teu identificador, que es registra com a origen de la regla.
         add_help: Afegeix una regla de classificació que classifica automàticament
