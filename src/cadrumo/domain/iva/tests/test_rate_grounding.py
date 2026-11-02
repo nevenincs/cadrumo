@@ -149,20 +149,33 @@ class _OfficialTexts:
 # and the percentages that notice can ground.
 _RATE_CHANGE_NOTICES: dict[str, tuple[tuple[str, ...], frozenset[str]]] = {
     "ee-emta-iva-rate-change-2025": (
-        ("from 1 july 2025, the standard rate of vat in estonia is 24% instead of 22%",),
-        frozenset({"22", "24"}),
+        (
+            "from 1 july 2025, the standard rate of vat in estonia is 24% instead of 22%",
+            "taxed at 13% vat rate instead of the current 9%",
+            "press publications will rise from 5% to 9%",
+        ),
+        frozenset({"22", "24", "13", "9", "5"}),
     ),
     "fi-vero-iva-rate-change-2026": (
-        ("up to 31 december 2025, the reduced rate was 14%", "reduced vat rate 13,5%"),
-        frozenset({"14", "13.5"}),
+        (
+            "up to 31 december 2025, the reduced rate was 14%",
+            "reduced vat rate 13,5%",
+            "reduced vat rate 10%",
+            "basic vat rate (25,5%)",
+        ),
+        frozenset({"14", "13.5", "10", "25.5"}),
     ),
     "lt-vmi-iva-rate-change-2026": (
         ("iki 2025-12-31 lengvatinis 9 proc.", "nuo 2026-01-01 lengvatinis 12 proc."),
         frozenset({"9", "12"}),
     ),
     "ro-anaf-iva-rate-change-2025": (
-        ("01 august 2025 19% la 21%, iar cota redusa de tva este 11%", "de la 9% la 11%"),
-        frozenset({"19", "21", "9", "11"}),
+        (
+            "01 august 2025 19% la 21%, iar cota redusa de tva este 11%",
+            "de la 9% la 11%",
+            "se majoreaza de la 5% la 11%",
+        ),
+        frozenset({"19", "21", "9", "11", "5"}),
     ),
 }
 

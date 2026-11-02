@@ -44,7 +44,9 @@ def _correction(
 ) -> Invoice:
     return _invoice(
         _UNION, number, country=country, tier=tier, base=base, cuota=cuota, supply_date=supply_date
-    ).model_copy(update={"invoice_class": invoice_class_rectificativa(), "rectifies_invoice_number": rectifies})
+    ).model_copy(
+        update={"invoice_class": invoice_class_rectificativa(), "series": "R", "rectifies_invoice_number": rectifies}
+    )
 
 
 def _first() -> Invoice:
@@ -117,7 +119,7 @@ def test_a_consignment_within_the_ceiling_is_still_read_with_its_correction(
     period = _IMPORT.period(_SUPPLY)
     first = _invoice(_IMPORT, "F-1", country="FR", tier="general", base="150.00", cuota="30.00")
     corrected = _invoice(_IMPORT, "R-1", country="FR", tier="general", base="50.00", cuota="10.00").model_copy(
-        update={"invoice_class": invoice_class_rectificativa(), "rectifies_invoice_number": "F-1"}
+        update={"invoice_class": invoice_class_rectificativa(), "series": "R", "rectifies_invoice_number": "F-1"}
     )
     resolution = _resolve(operation, _IMPORT, (first, corrected), period=period)
     assert _row(resolution, _IMPORT, 1) == ("FR", "S", Decimal("20"), Decimal("100.00"), Decimal("20.00"))
