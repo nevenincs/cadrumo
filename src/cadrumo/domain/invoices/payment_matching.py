@@ -32,12 +32,12 @@ from .service import (
 
 #: Paid up to this many days before the invoice's date still ranks by the gap; earlier ranks after
 #: every payment made on or after issue.
-EARLY_PAYMENT_DAYS: Final = 3
+EARLY_RANK_GAP_DAYS: Final = 3
 _LATE_RANK: Final = 1000
 #: How far from an invoice's issue day the by-hand movement choice looks.
-PICK_WINDOW_DAYS: Final = 10
+PICK_HORIZON_DAYS: Final = 10
 #: A number shorter than this is not told apart from other digits in a description.
-_MIN_REFERENCE_LENGTH: Final = 4
+_SHORTEST_REFERENCE_DIGITS: Final = 4
 
 _NOT_COMPARED: Final = re.compile(r"[^A-Z0-9]+")
 
@@ -70,7 +70,7 @@ def _reference(text: str) -> str:
 def names_invoice_number(transaction: Transaction, invoice: Invoice) -> bool:
     """Return whether the description names the invoice's number, a too short one never counting."""
     number = _reference(invoice.invoice_number)
-    return len(number) >= _MIN_REFERENCE_LENGTH and number in _reference(transaction.raw.description)
+    return len(number) >= _SHORTEST_REFERENCE_DIGITS and number in _reference(transaction.raw.description)
 
 
 def days_after_issue(transaction: Transaction, invoice: Invoice) -> int:
@@ -117,7 +117,7 @@ def _pair(transaction: Transaction, invoice: Invoice) -> PaymentPair | None:
         counterparty=counterparty,
         rank=(
             0 if number else 1,
-            abs(gap) if gap >= -EARLY_PAYMENT_DAYS else _LATE_RANK - gap,
+            abs(gap) if gap >= -EARLY_RANK_GAP_DAYS else _LATE_RANK - gap,
             0 if counterparty else 1,
             abs(transaction.raw.amount - invoice_settlement(invoice)),
         ),
@@ -269,7 +269,7 @@ def movement_choices(
         and transaction.transaction_id not in staged
         and transaction.direction is invoice_settling_direction(invoice.kind)
         and transaction.raw.currency == invoice.currency
-        and abs(days_after_issue(transaction, invoice)) <= PICK_WINDOW_DAYS
+        and abs(days_after_issue(transaction, invoice)) <= PICK_HORIZON_DAYS
     ]
     found.sort(
         key=lambda transaction: (
@@ -285,8 +285,8 @@ def movement_choices(
 
 
 __all__ = [
-    "EARLY_PAYMENT_DAYS",
-    "PICK_WINDOW_DAYS",
+    "EARLY_RANK_GAP_DAYS",
+    "PICK_HORIZON_DAYS",
     "InvoiceChoice",
     "MovementChoice",
     "PaymentPair",

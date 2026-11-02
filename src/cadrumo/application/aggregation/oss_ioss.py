@@ -325,25 +325,28 @@ def _detail_binding_values(
 
 
 _MODELO_369_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
-_ROW_SHAPES: tuple[tuple[tuple[int, CasillaDataType], ...], ...] = (
+_ROW_SHAPES: tuple[tuple[CasillaDataType, ...], ...] = (
     (
-        (2, CasillaDataType.TEXT),
-        (5, CasillaDataType.DECIMAL),
-        (1, CasillaDataType.TEXT),
-        (17, CasillaDataType.MONEY),
-        (17, CasillaDataType.MONEY),
+        CasillaDataType.TEXT,
+        CasillaDataType.DECIMAL,
+        CasillaDataType.TEXT,
+        CasillaDataType.MONEY,
+        CasillaDataType.MONEY,
     ),
     (
-        (2, CasillaDataType.TEXT),
-        (15, CasillaDataType.TEXT),
-        (2, CasillaDataType.TEXT),
-        (5, CasillaDataType.DECIMAL),
-        (1, CasillaDataType.TEXT),
-        (17, CasillaDataType.MONEY),
-        (17, CasillaDataType.MONEY),
+        CasillaDataType.TEXT,
+        CasillaDataType.TEXT,
+        CasillaDataType.TEXT,
+        CasillaDataType.DECIMAL,
+        CasillaDataType.TEXT,
+        CasillaDataType.MONEY,
+        CasillaDataType.MONEY,
     ),
 )
 """The two line layouts of DR369's lists: destination first, or establishment first.
+
+Columns are told apart by data type and contiguity alone; each column's width is
+whatever the revision's own wire geometry declares.
 
 Only the first can be projected; the second names a permanent establishment or a
 dispatch state the invoice does not record, and is enumerated solely to close it.
@@ -601,14 +604,14 @@ def _record_row_slots(revision: ModeloRevision, record_id: str) -> tuple[tuple[B
 
 def _fields_match_shape(
     fields: Sequence[tuple[int, int, CasillaDataType, BindingId]],
-    shape: tuple[tuple[int, CasillaDataType], ...],
+    shape: tuple[CasillaDataType, ...],
 ) -> bool:
     """Say whether the leading fields are one contiguous line of this shape."""
     if len(fields) < len(shape):
         return False
     offset = fields[0][0]
     for (field_offset, length, data_type, _), expected in zip(fields, shape, strict=False):
-        if field_offset != offset or (length, data_type) != expected:
+        if field_offset != offset or data_type is not expected:
             return False
         offset += length
     return True
