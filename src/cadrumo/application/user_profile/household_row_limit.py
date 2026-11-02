@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormRepeatingGroupBlock
 
@@ -17,16 +18,16 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.ids import BindingId
 
-_HOUSEHOLD_MODELO: Final = "100"
 _ANNUAL_PERIOD: Final = "0A"
 
 
 def declared_household_row_limit(operation: PinnedAuthorityOperation, *, object_path: str) -> int | None:
     """Return the design's repeat limit for the group that reads ``object_path``, or ``None`` when it declares none."""
+    modelo = form_for_role("renta.annual", authority=operation)
     revision = operation.revision_for_context(
-        _HOUSEHOLD_MODELO, filing_year=operation.supported_filing_years().horizon, period=_ANNUAL_PERIOD
+        modelo, filing_year=operation.supported_filing_years().horizon, period=_ANNUAL_PERIOD
     )
-    layout = operation.form_layout(_HOUSEHOLD_MODELO, revision.id)
+    layout = operation.form_layout(modelo, revision.id)
     if layout is None:
         return None
     reading = {

@@ -294,6 +294,46 @@ def test_inventory_plurality_requires_its_canonical_evidence_type() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("field", "owner", "admitted"),
+    [
+        pytest.param(
+            "sources: tuple[SourceDisagreementEntry, ...] = Field(min_length=2)",
+            "domain/modelos/source_disagreement.py",
+            True,
+            id="two-sources-define-a-disagreement",
+        ),
+        pytest.param(
+            "sources: tuple[SourceDisagreementEntry, ...] = Field(min_length=3)",
+            "domain/modelos/source_disagreement.py",
+            False,
+            id="another-minimum",
+        ),
+        pytest.param(
+            "rows: tuple[SourceDisagreementEntry, ...] = Field(min_length=2)",
+            "domain/modelos/source_disagreement.py",
+            False,
+            id="another-field",
+        ),
+        pytest.param(
+            "sources: tuple[int, ...] = Field(min_length=2)",
+            "domain/modelos/source_disagreement.py",
+            False,
+            id="another-element-type",
+        ),
+        pytest.param(
+            "sources: tuple[SourceDisagreementEntry, ...] = Field(min_length=2)",
+            "application/example.py",
+            False,
+            id="another-owner",
+        ),
+    ],
+)
+def test_a_source_disagreement_alone_may_require_two_sources(field: str, owner: str, admitted: bool) -> None:
+    findings = sweep_source(field, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, owner=owner)
+    assert any(f.startswith("field_length:") for f in findings) is not admitted
+
+
 def test_nested_import_cannot_authorize_a_module_field_annotation() -> None:
     canonical = "from cadrumo.core.i18n.translatable import Translatable as Token\n"
     field = "value: Token = Field(max_length=12)\n"

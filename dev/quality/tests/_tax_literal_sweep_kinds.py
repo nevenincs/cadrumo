@@ -418,6 +418,8 @@ class _BoundReader(_ExpressionKinds):
         names = _expression_names(annotation) if annotation is not None else ""
         if self._owner in {"application/ledger/merge_operation.py", "application/ledger/split_operation.py"}:
             return any(token in names for token in {"TransactionId", "_TransactionPrefix", "LedgerSplitChildRequest"})
+        if self._owner == "domain/modelos/source_disagreement.py":
+            return field == "sources" and "SourceDisagreementEntry" in names
         if self._owner == "application/workflow/resume_contracts.py":
             return field == "candidates" and "WorkflowResumeCandidateSnapshot" in names
         if self._owner == "application/inventory/registered_requests.py":
