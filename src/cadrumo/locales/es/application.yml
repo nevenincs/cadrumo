@@ -474,6 +474,10 @@ application:
           el recibo de exportación.
         rendered_payload_empty: El diseño de exportación produjo un contenido de declaración
           vacío.
+        shared_casilla_cells_unadjudicated: 'No se ha generado el fichero de la declaración:
+          las casillas %{casilla_ids} tienen un valor que el diseño oficial escribiría
+          en varias celdas, y aún no se ha confirmado que esas celdas signifiquen
+          lo mismo. Escribirlo llevaría esas cifras a conceptos que no les corresponden.'
         verify_draft_snapshot_stale: La comprobación requiere un borrador construido
           con las definiciones del modelo en uso.
         xml_schema_unreadable: No se ha podido aplicar el esquema oficial de este

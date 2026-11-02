@@ -472,6 +472,10 @@ application:
           rebut d'exportació.
         rendered_payload_empty: El disseny d'exportació ha produït un contingut de
           declaració buit.
+        shared_casilla_cells_unadjudicated: 'No s''ha generat el fitxer de la declaració:
+          les caselles %{casilla_ids} tenen un valor que el disseny oficial escriuria
+          en diverses cel·les, i encara no s''ha confirmat que aquestes cel·les signifiquin
+          el mateix. Escriure''l portaria aquestes xifres a conceptes que no els corresponen.'
         verify_draft_snapshot_stale: La comprovació requereix un esborrany construït
           amb les definicions del model en ús.
         xml_schema_unreadable: No s'ha pogut aplicar l'esquema oficial d'aquest exercici

@@ -438,6 +438,10 @@ application:
         receipt_digest_mismatch: The exported file's digest does not match the export
           receipt.
         rendered_payload_empty: The export layout produced an empty declaration payload.
+        shared_casilla_cells_unadjudicated: 'The declaration file was not generated:
+          boxes %{casilla_ids} hold a value the official design would write into several
+          cells, and those cells have not been confirmed to mean the same thing. Writing
+          it would put these figures in concepts they do not belong to.'
         verify_draft_snapshot_stale: The check requires a draft built from the modelo
           definitions currently in use.
         xml_schema_unreadable: The official schema for this year could not be applied

@@ -465,6 +465,11 @@ application:
           exportnyugtával.
         rendered_payload_empty: Az exportelrendezés üres bevallástartalmat állított
           elő.
+        shared_casilla_cells_unadjudicated: 'A bevallás fájlja nem készült el: a(z)
+          %{casilla_ids} mező olyan értéket tartalmaz, amelyet a hivatalos rekordterv
+          több cellába írna, és még nincs megerősítve, hogy ezek a cellák ugyanazt
+          jelentik. A kiírás ezeket az összegeket nem hozzájuk tartozó tételekhez
+          vinné.'
         verify_draft_snapshot_stale: Az ellenőrzéshez a jelenleg használt nyomtatványdefiníciókból
           készült piszkozat szükséges.
         xml_schema_unreadable: Az adott év hivatalos sémáját nem sikerült alkalmazni
