@@ -50,6 +50,13 @@ STATES: dict[str, tuple[tuple[str, int, str], ...]] = {
 }
 
 
+def _json_object(text: str) -> dict[str, object]:
+    parsed = json.loads(text)
+    if not isinstance(parsed, dict):
+        raise SystemExit("the imputation election fixture holds objects only")
+    return parsed
+
+
 def _facts(statements: tuple[tuple[str, int, str], ...]) -> tuple[UserProfileFact, ...]:
     from cadrumo.domain.user_profile.values import UserProfileFact
 
@@ -99,7 +106,7 @@ def _read(operation: PinnedAuthorityOperation, language: str) -> dict[str, objec
     )
     result = read_imputation_election(request, authority_operation=operation)
     projection = ProfileImputationElectionReadProjection.model_validate(result.model_dump(mode="python"))
-    return json.loads(projection.model_dump_json())
+    return _json_object(projection.model_dump_json())
 
 
 def _normalised(read: dict[str, object], state: str) -> dict[str, object]:
@@ -137,7 +144,7 @@ def _refusal(operation: PinnedAuthorityOperation, language: str, name: str) -> d
             detail = build_operation_error_detail(error)
         if detail is None:
             raise SystemExit(f"{name} records no error detail") from error
-        return json.loads(detail.model_dump_json())
+        return _json_object(detail.model_dump_json())
     raise SystemExit(f"{name} was not refused")
 
 
@@ -168,7 +175,7 @@ def render_fixture(root: Path) -> str:
 
 
 def _comparable(text: str) -> Mapping[str, object]:
-    return json.loads(text)
+    return _json_object(text)
 
 
 def main() -> None:
