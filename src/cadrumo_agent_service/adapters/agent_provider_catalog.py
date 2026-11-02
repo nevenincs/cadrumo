@@ -28,7 +28,7 @@ from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, OrchestrationTimeoutError, TimeoutDeadline
 
-from ..host.controller import AgentHostError, AgentHostRefusal
+from ..host.controller import CALLER_ENDED_REFUSALS, AgentHostError, AgentHostRefusal
 from ..host.launch_environment import system_environment
 from ..host.store_lifecycle import AgentInvocationResult, AgentInvocationRunner, InvocationCancellation
 from ..providers.application.ports import (
@@ -234,7 +234,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
             finally:
                 self._release_runner(owned)
         except AgentHostError as error:
-            if error.reason in {AgentHostRefusal.CANCELLED, AgentHostRefusal.TIMEOUT}:
+            if error.reason in CALLER_ENDED_REFUSALS:
                 raise
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED) from error
         except OrchestrationTimeoutError:

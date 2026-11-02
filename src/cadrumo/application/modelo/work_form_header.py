@@ -47,7 +47,13 @@ from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from .value_presentation import format_casilla_value
 from .work_form_findings import ModeloFormAttention
-from .work_form_models import ModeloFormField, ModeloFormOrigin, ModeloFormResultDirection, ModeloWorkForm
+from .work_form_models import (
+    AMOUNTLESS_RESULT_DIRECTIONS,
+    ModeloFormField,
+    ModeloFormOrigin,
+    ModeloFormResultDirection,
+    ModeloWorkForm,
+)
 from .work_form_next_step import blocking_count, check_count, confirm_count, missing_count, result_fields
 from .work_form_wording import date_text, day_text, field_value_text, origin_words
 
@@ -496,7 +502,7 @@ def _directional_presentation(
         if box is not None and box:
             help_lines.append(tr(_SIGN_HELP_LOCALE_KEY, box=box, value=_money(value, language), locale=locale))
         return _Presentation(full, short)
-    if direction in {ModeloFormResultDirection.NEGATIVE, ModeloFormResultDirection.NIL}:
+    if direction in AMOUNTLESS_RESULT_DIRECTIONS:
         full, short = _boxed([tr(key, locale=locale)], box)
         return _Presentation(full, short)
     if direction is ModeloFormResultDirection.UNKNOWN:

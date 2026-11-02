@@ -987,6 +987,12 @@ class ModeloFormResultDirection(StrEnum):
     UNKNOWN = "unknown"
 
 
+AMOUNTLESS_RESULT_DIRECTIONS: frozenset[ModeloFormResultDirection] = frozenset(
+    {ModeloFormResultDirection.NEGATIVE, ModeloFormResultDirection.NIL}
+)
+"""The directions of a result that settles nothing, so no amount is shown beside them."""
+
+
 class ModeloFormResult(_FormModel):
     """The box that settles the declaration, its value and its direction.
 

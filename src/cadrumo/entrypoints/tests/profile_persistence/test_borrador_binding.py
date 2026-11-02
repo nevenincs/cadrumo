@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Generator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -41,7 +41,10 @@ from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from ....domain.user_profile.tests.general_regime_facts import (
+    GENERAL_REGIME_NATURAL_PERSON_FACTS,
+    RENTA_UNMARRIED_TAXPAYER_FACTS,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -166,13 +169,7 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="economic activity"),
                 *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                *RENTA_UNMARRIED_TAXPAYER_FACTS,
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),
