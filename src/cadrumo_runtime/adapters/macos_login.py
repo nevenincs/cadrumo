@@ -1,4 +1,4 @@
-"""Kernel peer audit sessions, without guessing macOS lock eligibility."""
+"""Kernel peer audit sessions with fresh, identity-bound console lock evidence."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from cadrumo.application.user_profile.access_contracts import LoginEligibility, 
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
+from .macos_console import observe_console_lock
 from .macos_process import read_macos_process
 
 
@@ -163,10 +164,11 @@ class MacosLoginBinding:
         return f"macos:{self.os_owner_id}:{self.audit_session_id}"
 
     def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        """Refuse dependent access until trusted lock/logout evidence is available.
+        """Re-observe the audit session and its exact current console membership.
 
-        No lock observer exists, so lock state is always unknown: never
-        attended evidence and never positive lock evidence.
+        A graphical audit session alone grants no unlock authority. Missing
+        native console evidence remains unknown; unattended eligibility is
+        deliberately unchanged.
 
         Args:
             credential_facilities: Independent native custody readiness facts.
@@ -183,7 +185,7 @@ class MacosLoginBinding:
             login_id=self.login_id,
             os_owner_id=self.os_owner_id,
             active=active,
-            lock_state=OsLockState.UNKNOWN,
+            lock_state=observe_console_lock(self.os_owner_id, self.audit_session_id) if active else OsLockState.UNKNOWN,
             unattended=eligibility,
             credential_facilities=credential_facilities,
         )

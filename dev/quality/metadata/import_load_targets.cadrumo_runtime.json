@@ -30,6 +30,7 @@
         "cadrumo_runtime.adapters.login",
         "cadrumo_runtime.adapters.login_policy",
         "cadrumo_runtime.adapters.macos_coalition",
+        "cadrumo_runtime.adapters.macos_console",
         "cadrumo_runtime.adapters.macos_job_print",
         "cadrumo_runtime.adapters.macos_login",
         "cadrumo_runtime.adapters.macos_process",
