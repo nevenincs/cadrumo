@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c27159ccebacc7e23e8dc39e606867864edfb7a3ba8fcaebe5773188b6f8ff50'
+body_hash: 'sha256:43e260127ffb0f83245852ef7b996d9bb3ae2a9c6eca81f10b18465899ba4d0f'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -180,6 +180,13 @@ related:
 - `S23` `M` `dev/locales/desktop_interface_keys.py`
 - `S23` `verify:` `All44 AEAT scenarios covered by full suite plus corrected cancellation and four recovery reruns` -> `pass`
 - `S23` `verify:` `TypeScript scoped ESLint formatting and canonical chrome` -> `pass`
+- `S24` `M` `native/desktop/frontend/src/components/browser/useSedeView.ts`
+- `S24` `M` `native/desktop/frontend/src/components/browser/PageDialog.tsx`
+- `S24` `M` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S24` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S24` `verify:` `Thirty Sede browser scenarios full run plus corrected refused-answer case` -> `pass`
+- `S24` `verify:` `TypeScript scoped lint formatting canonical chrome` -> `pass`
 
 ## Notes
 

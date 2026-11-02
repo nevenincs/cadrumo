@@ -192,6 +192,16 @@ PASS for S23. Initial observer/read failures have an explicit read-only recovery
 
 The full 74-case AEAT/browser run passed 72; all new AEAT recovery cases passed. Its sole AEAT failure came from newly added fixture read logging conflicting with an existing no-action assertion. Removing that unnecessary logging restored the cancellation case in 20261102T205403Z-63704, together with all four focused recovery cases. Combined evidence covers all 44 AEAT scenarios. TypeScript, scoped ESLint, formatting and canonical four-language chrome passed. Terra identified and reviewed the reconnect, preflight and cached-results action corrections. Concurrent WIP checkpoint af80a603c4 captured these source changes while the remaining frontend work was still open; it is not a claim of integrated completion.
 
+### s24-review | low | Browser answers and viewport updates retain recovery
+
+PASS for the changed frontend paths in S24. A JavaScript dialog remains mounted until its answer is accepted. Pending admission, submitted text and failure belong to the native view session, so a remounted prompt cannot admit the same pending answer. The person retries explicitly after failure; no input or answer is automatically replayed. Viewport geometry is recorded only after acceptance, with one in-flight request, the latest desired size coalesced and at most three attempts for one size. Retired sessions cannot update current geometry or prompts. Sol supplied concise inline failure wording; Terra reviewed owner lifetimes and responsive reconciliation.
+
+All 30 existing and added Sede-browser cases now have passing evidence: the full 74-case combined run passed 29 of those 30, including both new resize regressions; the final refused-answer case passed in 20261102T210330Z-45140 after its test stopped trying to navigate through the shell's existing modal navigation guard. The final test covers pending Escape/Enter, preserved text, visible failure and one explicit retry. Hidden/remounted prompt ownership was statically reviewed; that unreachable navigation route is not claimed as runtime coverage. TypeScript, scoped ESLint, formatting and canonical chrome passed. Native host window tests were not repeated for these React-only changes.
+
+### shared-integration-20261102 | medium | Checkpoints and merge state are not verification
+
+External checkpoints af80a603c4 and 2690c28ca1 captured in-progress frontend changes. The following TUI merge left the generated Modelo contract and calculation-note gate test unmerged in the index; frontend verification is held until its owner finishes. S34 help retry and S35 delayed clarification acknowledgement/rejection already have passing focused cases. S35 delayed approval and S36 responsive layout await their corrected test assertions and a stable integrated source tree. No source was reverted to make the shared merge or checks pass.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.
