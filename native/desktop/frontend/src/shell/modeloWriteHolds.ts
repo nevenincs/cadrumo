@@ -31,12 +31,15 @@ export const isCreationWriteKey = (key: string) => key.startsWith('["create",');
 export function createModeloWriteHolds() {
   let sequence = 0;
   const holds = new Map<string, ModeloWriteHold>();
+  const versions = new Map<string, number>();
   const listeners = new Set<() => void>();
   const publish = () => listeners.forEach((listener) => listener());
   const owns = (lease: ModeloWriteLease) =>
     holds.get(lease.key)?.id === lease.id;
   return {
     get: (key: string) => holds.get(key),
+    /** A completed write still invalidates reads started before admission. */
+    version: (key: string) => versions.get(key) ?? 0,
     snapshot: () => [...holds.values()],
     subscribe: (listener: () => void) => {
       listeners.add(listener);
@@ -48,6 +51,7 @@ export function createModeloWriteHolds() {
     begin(key: string): ModeloWriteLease | null {
       if (holds.has(key)) return null;
       const lease = { key, id: ++sequence };
+      versions.set(key, lease.id);
       holds.set(key, { ...lease, phase: "running" });
       publish();
       return lease;

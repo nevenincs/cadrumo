@@ -4,6 +4,7 @@ import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import type { OpenableSurface } from "../details/Details";
 import { WorkspaceScreen } from "../workspace/WorkspaceScreen";
 import type { ModeloPort } from "../../../shell/modelo";
+import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
 import type { OutputLanguage } from "../../../shell/modeloContract";
 import { DeclarationsPage, type DeclarationsMemory } from "./DeclarationsPage";
 
@@ -61,6 +62,7 @@ export function DeclarationsPane({
     onToggleMaximize(): void;
   };
 }) {
+  const ownedMemory = memory.current;
   if (workUnitId === null || reader === null)
     return (
       <DeclarationsPage
@@ -93,6 +95,7 @@ export function DeclarationsPane({
           key={workUnitId}
           port={port}
           workUnitId={workUnitId}
+          holds={modeloWritesFor(ownedMemory)}
           language={language}
           locale={locale}
           onBack={onBack}
@@ -102,7 +105,7 @@ export function DeclarationsPane({
           onLeaveGuard={guardLeave}
           // The list is read again on return only after a write.
           onWritten={() => {
-            memory.current.stale = true;
+            ownedMemory.stale = true;
           }}
         />
       </section>
