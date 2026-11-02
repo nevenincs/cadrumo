@@ -664,6 +664,14 @@ _PREVIOUS_FILING_OPS: frozenset[BindingAggregationOp] = frozenset(
         BindingAggregationOp.SUM,
         BindingAggregationOp.COPY,
         BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS,
+        BindingAggregationOp.PRIOR_NEGATIVE_RESULTS_UNDEDUCTED,
+    },
+)
+
+_PAIRED_SOURCE_OPS: frozenset[BindingAggregationOp] = frozenset(
+    {
+        BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS,
+        BindingAggregationOp.PRIOR_NEGATIVE_RESULTS_UNDEDUCTED,
     },
 )
 
@@ -674,8 +682,8 @@ def _validate_previous_filing_invariants(binding: BindingDefinition) -> None:
     A previous_filing binding aggregates one or more source casillas under one of
     the supported ops. The op must be a member of :data:`_PREVIOUS_FILING_OPS`
     (the same closed set :func:`_aggregate_previous_filing_binding` accepts at
-    resolve time); ``copy`` requires exactly one source casilla and
-    ``prior_pagos_fraccionados`` requires exactly two (per quarter pair). These
+    resolve time); ``copy`` requires exactly one source casilla and the
+    paired ops require exactly two (per quarter pair). These
     are determinable from the selector at build time, so a malformed pairing
     fails at snapshot construction rather than only on a taxpayer calculation.
 
@@ -696,10 +704,9 @@ def _validate_previous_filing_invariants(binding: BindingDefinition) -> None:
         raise RegistryValidationError(
             f"binding {binding.id!r} copy aggregation requires one source casilla",
         )
-    if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS and len(source_ids) != 2:
+    if op in _PAIRED_SOURCE_OPS and len(source_ids) != 2:
         raise RegistryValidationError(
-            f"binding {binding.id!r} prior_pagos_fraccionados aggregation requires exactly two "
-            f"source casillas (positive-part casilla then minoracion casilla); got {source_ids!r}",
+            f"binding {binding.id!r} {op.value} aggregation requires exactly two source casillas; got {source_ids!r}",
         )
 
 
@@ -788,47 +795,60 @@ def _aggregate_previous_filing_binding(
             subject=f"binding {binding.id!r}",
             copy_unit="source casilla",
         )
-    if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
-        return _aggregate_prior_pagos_fraccionados(binding, values, source_casilla_ids=source_casilla_ids)
+    if op in _PAIRED_SOURCE_OPS:
+        pairs = _per_quarter_pairs(binding, op, values, source_casilla_ids=source_casilla_ids)
+        if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
+            return _prior_pagos_fraccionados(pairs)
+        return _prior_negative_results_undeducted(pairs)
     raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op.value!r}")
 
 
-def _aggregate_prior_pagos_fraccionados(
+def _per_quarter_pairs(
     binding: BindingDefinition,
+    op: BindingAggregationOp,
     values: list[Decimal],
     *,
     source_casilla_ids: tuple[CasillaId, ...],
-) -> Decimal:
-    """Compute the AEAT Modelo 130 casilla-05 identity from per-anchor pairs.
+) -> tuple[tuple[Decimal, Decimal], ...]:
+    """Slice the flat ``[a_q1, b_q1, a_q2, b_q2, ...]`` values into one pair per anchor quarter."""
+    if len(source_casilla_ids) != 2:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} {op.value} aggregation requires exactly two source casillas; "
+            f"got {source_casilla_ids!r}",
+        )
+    if len(values) % 2 != 0:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} {op.value} aggregation expected per-quarter pairs; "
+            f"got {len(values)} values for 2 source casillas",
+        )
+    return tuple(zip(values[::2], values[1::2], strict=True))
+
+
+def _prior_pagos_fraccionados(pairs: tuple[tuple[Decimal, Decimal], ...]) -> Decimal:
+    """Compute the AEAT Modelo 130 casilla-05 identity from per-quarter pairs.
 
     casilla 05 = SUM over prior quarters q of max(0, casilla 07_q)
                  minus SUM over the same q of casilla 16_q
 
-    The flat ``values`` list carries per-anchor groups in ``source_casilla_ids``
-    order (``[07_q1, 16_q1, 07_q2, 16_q2, ...]``); the op slices that grouping,
-    applies the positive-part to the first casilla (07) PER QUARTER before
-    summing, and subtracts the sum of the second casilla (16). Both terms are
-    load-bearing: a negative prior 07 contributes 0 (not its negative value),
-    and the prior casilla-16 minoración is never dropped (per the
-    aeat-modelo-130-instructions verbatim rule).
+    Both terms are load-bearing: a negative prior 07 contributes 0 (not its
+    negative value), and the prior casilla-16 minoración is never dropped (per
+    the aeat-modelo-130-instructions verbatim rule).
     """
-    if len(source_casilla_ids) != 2:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} prior_pagos_fraccionados aggregation requires exactly two "
-            f"source casillas (positive-part casilla then minoracion casilla); got {source_casilla_ids!r}",
-        )
-    group_size = len(source_casilla_ids)
-    if len(values) % group_size != 0:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} prior_pagos_fraccionados aggregation expected per-quarter pairs; "
-            f"got {len(values)} values for {group_size} source casillas",
-        )
     zero = Decimal("0")
-    positive_part_total = zero
-    minoracion_total = zero
-    for index in range(0, len(values), group_size):
-        positive_casilla_value = values[index]
-        minoracion_casilla_value = values[index + 1]
-        positive_part_total += positive_casilla_value if positive_casilla_value > zero else zero
-        minoracion_total += minoracion_casilla_value
-    return positive_part_total - minoracion_total
+    return sum((max(zero, result) - minoracion for result, minoracion in pairs), zero)
+
+
+def _prior_negative_results_undeducted(pairs: tuple[tuple[Decimal, Decimal], ...]) -> Decimal:
+    """Compute what earlier quarters' negative results still leave to deduct.
+
+    carry = SUM over prior quarters q of max(0, -result_q)
+            minus SUM over the same q of deducted_q
+
+    The AEAT instructions name the negative results "de cualquiera de las
+    autoliquidaciones anteriores [...] del mismo ejercicio y que no hubieran sido
+    deducidos anteriormente", so every earlier quarter counts, read from what each
+    filing states. An inconsistent history is not floored here: a negative carry
+    reaches the box's own non-negative constraint rather than reading as zero.
+    """
+    zero = Decimal("0")
+    return sum((max(zero, -result) - deducted for result, deducted in pairs), zero)

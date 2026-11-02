@@ -477,7 +477,10 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         PreviousFilingProvider,
         validate_previous_filing_binding,
         channels=_MONEY_OR_COUNT_CHANNELS,
-        ops=_FOLD_OPS | frozenset({BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS}),
+        ops=_FOLD_OPS
+        | frozenset(
+            {BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS, BindingAggregationOp.PRIOR_NEGATIVE_RESULTS_UNDEDUCTED}
+        ),
         origins=frozenset({TerminalOriginClass.FILED_MODELO_CASILLA}),
         output="scalar",
         resolver_id="previous_filing",
