@@ -413,6 +413,10 @@ profile:
           label: Court-ordered child maintenance annuities paid
         ascendants:
           label: Ascendants
+        ascendiente:
+          label: Ascendant
+        ascendientes_count:
+          label: Ascendant count
         cotizaciones_ss_madre_2024:
           label: Mother's Social Security contributions (2024)
         descendants:

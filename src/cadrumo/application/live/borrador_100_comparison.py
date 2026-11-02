@@ -359,9 +359,8 @@ class _BoxSides:
     draft_reads_box: bool
 
 
-def _reason_with_borrador(
-    sides: _BoxSides, borrador: _Value, head: CalculationRevision, snapshot: Borrador100Snapshot
-) -> Borrador100ComparisonReason:
+def _uncomparable_calculation(sides: _BoxSides, borrador: _Value) -> Borrador100ComparisonReason | None:
+    """Why the calculation's side of a box the draft holds cannot be set against it, if it cannot."""
     calculated = sides.calculation
     if calculated is None:
         return Borrador100ComparisonReason.CALCULATION_HAS_NO_VALUE
@@ -369,16 +368,29 @@ def _reason_with_borrador(
         return Borrador100ComparisonReason.CALCULATION_BLOCKED
     if not _same_kind(borrador, calculated):
         return Borrador100ComparisonReason.VALUE_KINDS_DIFFER
+    return None
+
+
+def _taken_from_borrador(sides: _BoxSides, head: CalculationRevision, snapshot: Borrador100Snapshot) -> bool:
+    return head.borrador_snapshot_id == snapshot.snapshot_id and any(
+        owner in head.bindings_sourced_from_borrador for owner in sides.owners
+    )
+
+
+def _reason_with_borrador(
+    sides: _BoxSides, borrador: _Value, head: CalculationRevision, snapshot: Borrador100Snapshot
+) -> Borrador100ComparisonReason:
+    uncomparable = _uncomparable_calculation(sides, borrador)
+    if uncomparable is not None:
+        return uncomparable
     by_design = sides.row is not None and sides.row.absent_by_design
-    if borrador != calculated:
+    if borrador != sides.calculation:
         return (
             Borrador100ComparisonReason.CALCULATION_NOT_APPLICABLE
             if by_design
             else Borrador100ComparisonReason.VALUES_DIFFER
         )
-    if head.borrador_snapshot_id == snapshot.snapshot_id and any(
-        owner in head.bindings_sourced_from_borrador for owner in sides.owners
-    ):
+    if _taken_from_borrador(sides, head, snapshot):
         return Borrador100ComparisonReason.TAKEN_FROM_BORRADOR
     return Borrador100ComparisonReason.NOT_APPLICABLE_ZERO if by_design else Borrador100ComparisonReason.SAME_VALUE
 
@@ -434,6 +446,43 @@ def _compared_boxes(revision: ModeloRevision, draft_reads: frozenset[str]) -> tu
     )
 
 
+def _box_sides(
+    casilla: CasillaDefinition,
+    *,
+    admitted: Mapping[BindingId, object],
+    snapshot: Borrador100Snapshot,
+    saved: _SavedCalculation,
+    review_rows: Mapping[str, ModeloWorkReviewCasilla],
+    draft_reads: frozenset[str],
+) -> _BoxSides:
+    owners = tuple(owner for owner in bound_casilla_binding_ids(casilla) if owner in admitted)
+    row = review_rows.get(casilla.id)
+    calculated = _calculation_value(row)
+    return _BoxSides(
+        owners=owners,
+        borrador=tuple(snapshot.binding_values[owner] for owner in owners if owner in snapshot.binding_values),
+        calculation=calculated if calculated is not None else _saved_text_answer(casilla, owners, saved.head),
+        row=row,
+        draft_reads_box=casilla.id in draft_reads,
+    )
+
+
+def _comparison_row(
+    casilla: CasillaDefinition, sides: _BoxSides, reason: Borrador100ComparisonReason, language: OutputLanguage
+) -> Borrador100ComparisonRow:
+    return Borrador100ComparisonRow(
+        casilla_id=casilla.id,
+        box=printed_box_number(casilla, None),
+        label=localized_text(casilla.localization_keys, language) or unnamed_casilla_label(language),
+        borrador_value=_public_borrador(sides.borrador),
+        calculation_value=_public(sides.calculation),
+        calculation_absent_by_design=sides.row is not None and sides.row.absent_by_design,
+        difference=_difference(sides.borrador, sides.calculation),
+        classification=_words("classification", _CLASSIFICATION_OF[reason], language),
+        reason=_words("reason", reason, language),
+    )
+
+
 def _rows(
     snapshot: Borrador100Snapshot,
     saved: _SavedCalculation,
@@ -442,35 +491,20 @@ def _rows(
 ) -> tuple[Borrador100ComparisonRow, ...]:
     admitted = borrador_admitted_bindings(registry.revision)
     draft_reads = _draft_read_casillas(registry)
-    review_rows = {row.casilla_id: row for row in saved.review.casillas}
+    review_rows = {str(row.casilla_id): row for row in saved.review.casillas}
     rows: list[Borrador100ComparisonRow] = []
     for casilla in _compared_boxes(registry.revision, draft_reads):
-        owners = tuple(owner for owner in bound_casilla_binding_ids(casilla) if owner in admitted)
-        row = review_rows.get(casilla.id)
-        calculated = _calculation_value(row)
-        sides = _BoxSides(
-            owners=owners,
-            borrador=tuple(snapshot.binding_values[owner] for owner in owners if owner in snapshot.binding_values),
-            calculation=calculated if calculated is not None else _saved_text_answer(casilla, owners, saved.head),
-            row=row,
-            draft_reads_box=casilla.id in draft_reads,
+        sides = _box_sides(
+            casilla,
+            admitted=admitted,
+            snapshot=snapshot,
+            saved=saved,
+            review_rows=review_rows,
+            draft_reads=draft_reads,
         )
         reason = _box_reason(sides, saved.head, snapshot)
-        if reason is None:
-            continue
-        rows.append(
-            Borrador100ComparisonRow(
-                casilla_id=casilla.id,
-                box=printed_box_number(casilla, None),
-                label=localized_text(casilla.localization_keys, language) or unnamed_casilla_label(language),
-                borrador_value=_public_borrador(sides.borrador),
-                calculation_value=_public(sides.calculation),
-                calculation_absent_by_design=row is not None and row.absent_by_design,
-                difference=_difference(sides.borrador, sides.calculation),
-                classification=_words("classification", _CLASSIFICATION_OF[reason], language),
-                reason=_words("reason", reason, language),
-            )
-        )
+        if reason is not None:
+            rows.append(_comparison_row(casilla, sides, reason, language))
     return tuple(rows)
 
 

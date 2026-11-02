@@ -59,6 +59,7 @@ RELAY_SOURCES: tuple[Path, ...] = (
     FRONTEND.parent / "src-tauri" / "src" / "shell" / "relay.rs",
     FRONTEND.parent / "src-tauri" / "src" / "agent" / "person.rs",
     FRONTEND.parents[1] / "application" / "src" / "person_operations.rs",
+    FRONTEND.parents[1] / "application" / "src" / "person_operations" / "protocol.rs",
 )
 
 #: The declarations the envelopes read: modelo, period, and whether it is calculated first.
@@ -181,7 +182,8 @@ def relay_bound(name: str) -> int:
     constants: dict[str, str] = {}
     for source in RELAY_SOURCES:
         for constant, expression in _RUST_CONSTANT.findall(source.read_text("utf-8")):
-            constants.setdefault(constant, expression.strip())
+            # rustfmt wraps a long expression over lines, which Python cannot parse as one.
+            constants.setdefault(constant, " ".join(expression.split()))
     if name not in constants:
         raise SystemExit(f"no relay source declares {name}")
     return _usize(constants[name], constants)

@@ -411,6 +411,10 @@ profile:
           label: Anualitats per aliments a favor dels fills per decisió judicial
         ascendants:
           label: Ascendents
+        ascendiente:
+          label: Ascendent
+        ascendientes_count:
+          label: Nombre d'ascendents
         cotizaciones_ss_madre_2024:
           label: Cotitzacions a la Seguretat Social de la mare (2024)
         descendants:

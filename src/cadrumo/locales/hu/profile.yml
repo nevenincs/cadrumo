@@ -414,6 +414,10 @@ profile:
           label: Bírósági határozat alapján fizetett gyermektartásdíj
         ascendants:
           label: Felmenők
+        ascendiente:
+          label: Felmenő
+        ascendientes_count:
+          label: Felmenők száma
         cotizaciones_ss_madre_2024:
           label: Anya társadalombiztosítási járulékai (2024)
         descendants:

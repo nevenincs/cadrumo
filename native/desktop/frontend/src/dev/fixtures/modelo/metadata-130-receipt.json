@@ -10,14 +10,14 @@
     "revision_id": "2019-y-siguientes",
     "name": "130-2026-1T",
     "created_at": "2026-04-02T09:00:00Z",
-    "updated_at": "2026-11-02T09:26:04.796817Z",
+    "updated_at": "2026-11-02T16:24:26.620500Z",
     "state": "borrador",
     "discarded_at": null,
     "discarded_by": null,
     "discard_reason": null,
-    "current_calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
-    "filed_calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
-    "current_filing_record_id": "045fa643567d0176df21c462fde51bcc460374bc17a87bb99c83be2464df4a43",
+    "current_calculation_revision_id": "a207384d8019e076a2f0539ac91d8e408aba35f448177a27d75152127ceb4885",
+    "filed_calculation_revision_id": "a207384d8019e076a2f0539ac91d8e408aba35f448177a27d75152127ceb4885",
+    "current_filing_record_id": "d148673cab6b05fb54ccf8f966356699f9df2870ed5cd34f8a479994218b686f",
     "causante_ccaa": null
   }
 }

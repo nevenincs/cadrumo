@@ -208,7 +208,7 @@ def test_a_modelo_100_to_pay_within_its_period_offers_the_split_and_the_debit_ac
     }
     instalment = questions[ModeloFormElection.INSTALMENT]
     assert instalment.state is ModeloFormElectionState.AVAILABLE
-    assert instalment.request_field == "instalment_election" and instalment.help
+    assert instalment.request_field == "instalment_election" and instalment.help is not None
     assert instalment.default == PaymentInstalmentElection.SINGLE.value
     assert {choice.value for choice in instalment.choices} == {member.value for member in PaymentInstalmentElection}
     payment = questions[ModeloFormElection.PAYMENT]
@@ -263,7 +263,7 @@ def test_the_split_is_withheld_with_its_reason_where_the_law_refuses_it(
 
     instalment = questions[ModeloFormElection.INSTALMENT]
     assert instalment.state is ModeloFormElectionState.UNAVAILABLE and instalment.reason is reason
-    assert instalment.state_words and instalment.default is None and instalment.choices == ()
+    assert instalment.state_words is not None and instalment.default is None and instalment.choices == ()
     assert questions[ModeloFormElection.PAYMENT].state is ModeloFormElectionState.AVAILABLE
 
 

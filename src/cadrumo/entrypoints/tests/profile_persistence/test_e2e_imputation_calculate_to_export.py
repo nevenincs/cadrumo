@@ -35,16 +35,19 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.own_accounts import OwnAccountRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.modelo.action_errors import ModeloInstalmentElectionRefusedError
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.payment_instalment_election import PaymentInstalmentElection
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -54,6 +57,13 @@ from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.own_accounts import (
+    OwnAccountDesignation,
+    OwnAccountHolding,
+    OwnAccountRegister,
+    OwnAccountRole,
+    OwnBankAccountDetails,
+)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
@@ -103,6 +113,8 @@ _M130_NEGATIVE_CARRIED: CasillaId = validated_casilla_id("saldo-negativo-fin-per
 _M130_QUARTER_PAYMENT: CasillaId = validated_casilla_id("07")
 _CASH_ELECTION_CASILLA: CasillaId = validated_casilla_id("0169")
 _CASH_ELECTION_XML_TAG = "E1ITEMP"
+_M100_RESULT_CASILLA: CasillaId = validated_casilla_id("0670")
+_REFUND_IBAN = "ES9121000418450200051332"
 _OFFICIAL_M130_C19 = {
     "1T": Decimal("300.00"),
     "2T": Decimal("360.00"),
@@ -317,6 +329,30 @@ def _money(revision: CalculationRevision, casilla: CasillaId) -> Decimal:
     return Decimal(revision.casilla_values[casilla])
 
 
+def _register_refund_account(objects: SecureObjectRepository) -> None:
+    """Designate a Spanish own account to receive the refund, as the export's account page needs."""
+
+    def change(register: OwnAccountRegister) -> OwnAccountRegister:
+        account_id = register.next_account_id()
+        return register.with_new_account(
+            OwnBankAccountDetails(label="Devolución", holding=OwnAccountHolding.TITULAR, iban=_REFUND_IBAN)
+        ).with_designation(OwnAccountDesignation(role=OwnAccountRole.REFUND, own_account_id=account_id))
+
+    OwnAccountRepository(objects=objects).mutate(change)
+
+
+def _settlement(payload: bytes) -> dict[str, str | None]:
+    """The settlement rows the record states in ``DatosIngresoDevolucion``, by field id."""
+    root = DefusedElementTree.fromstring(payload)
+    blocks = [element for element in root.iter() if element.tag.rsplit("}", 1)[-1] == "DatosIngresoDevolucion"]
+    assert len(blocks) == 1
+    return {
+        element.tag.rsplit("}", 1)[-1]: element.text
+        for element in blocks[0].iter()
+        if len(element) == 0 and element.text is not None
+    }
+
+
 def _election_marks(payload: bytes) -> list[str | None]:
     root = DefusedElementTree.fromstring(payload)
     return [element.text for element in root.iter() if element.tag.rsplit("}", 1)[-1] == _CASH_ELECTION_XML_TAG]
@@ -385,6 +421,29 @@ def test_m100_places_stated_rows_by_the_criterion_through_export(
     assert _money(annual, _M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA) == Decimal(expenses)
     assert _money(annual, _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA) == Decimal(net)
 
+    _register_refund_account(secure_objects)
     payload = _verify_and_export(annual, secure_objects, tmp_path / f"modelo-100-{criterion}.xml")
+    with pytest.raises(ModeloInstalmentElectionRefusedError) as split:
+        _export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=annual.calculation_revision_id,
+                output_path=tmp_path / "split.xml",
+                actor="imputation-e2e",
+                instalment_election=PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_PAID,
+            ),
+            workflow_profile=_autonomaworkflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_BUCKET_ID, taxpayer_tax_id=_TAX_ID, secure_objects=secure_objects
+            ),
+        )
+    assert split.value.context is not None and split.value.context["reason"] == "nothing_to_pay"
+    assert not (tmp_path / "split.xml").exists()
     assert _election_marks(payload) == (["1"] if marks else [])
+    result = _money(annual, _M100_RESULT_CASILLA)
+    assert result < 0
+    assert _settlement(payload) == {
+        "TIPODECLARACION": "D",
+        "DEV_IMPORTE": f"{-result:.2f}",
+        "DEV_CUENTACORRIENTE": _REFUND_IBAN,
+    }
     assert _money(annual, _CASH_ELECTION_CASILLA) == Decimal(1 if marks else 0)

@@ -4363,6 +4363,13 @@ export type ModeloFormCasillaAddressV1 = {
  * `needs_input` and `default_to_confirm` count what is still to do, so a
  * declaration recorded as filed counts none of either: nothing on it can be
  * entered or confirmed any more, and changing it starts a correction.
+ *
+ * `needs_you` and `could_not_calculate` are the attention a navigator shows.
+ * `needs_you` counts every box whose standing asks the filer to act (a value
+ * to give or confirm, a box the calculation could not work out, a blocker), so
+ * it is what a section still asks of the filer. `could_not_calculate` counts
+ * the boxes among them the last calculation could not produce. A box can count
+ * in both.
  */
 export type ModeloFormCounts = {
   total: number;
@@ -4374,6 +4381,8 @@ export type ModeloFormCounts = {
   default_to_confirm: number;
   not_applicable: number;
   blocked: number;
+  needs_you: number;
+  could_not_calculate: number;
 };
 
 /**
@@ -4668,6 +4677,22 @@ export type ModeloFormOrigin =
   | "cleared"
   | "default_to_confirm"
   | "entered";
+
+/**
+ * One group of the form's navigation outline: a heading and the sections it
+ * gathers, in order.
+ *
+ * `section_ids` are `id` values, every section of the form's pages in exactly
+ * one group. `counts` roll up the boxes of those sections; `applies` is `True`
+ * when any of them applies, `False` when none does, and `None` otherwise.
+ */
+export type ModeloFormOutlineGroup = {
+  id: string;
+  heading: ModeloFormText;
+  section_ids: string[];
+  counts: ModeloFormCounts;
+  applies: boolean | null;
+};
 
 /**
  * The unit a rate is stated in.
@@ -7807,6 +7832,7 @@ export type PublicModeloFormSection = {
   official_heading: string | null;
   blocks: PublicModeloFormBlock[];
   counts: ModeloFormCounts;
+  applies: boolean | null;
 };
 
 /**
@@ -7856,6 +7882,7 @@ export type PublicModeloWorkForm = {
   inspection_reason: ModeloFormInspectionReason | null;
   seed_source: FormLayoutSeedSource | null;
   pages: PublicModeloFormPage[];
+  outline: ModeloFormOutlineGroup[];
   working_figures: PublicModeloFormField[];
   unplaced: PublicModeloFormUnplacedField[];
   result_addresses: CasillaId[];

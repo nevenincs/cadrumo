@@ -74,6 +74,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..user_profile.projections import profile_fact_index
+from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
@@ -585,7 +586,7 @@ def resolve_profile_sourced_bindings(
             Identifies profile bindings consumed by date-aware formula ops.
     """
     selection = _select_profile_bindings(snapshot)
-    if not selection.bindings:
+    if not selection.bindings and not profile_row_bindings(snapshot):
         return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
     resolved_schema = schema or operation.profile_schema()
     facts = _load_profile_facts(
@@ -615,6 +616,14 @@ def resolve_profile_sourced_bindings(
         sorted(_profile_value_channel_ids(decimal_values, enum_values, date_values, boolean_values)),
     )
     fingerprint = facts.fingerprint if sourced else None
+    rows = resolve_profile_row_values(
+        snapshot,
+        facts.fact_index,
+        bucket_id=bucket_id,
+        fingerprint=facts.fingerprint,
+        caller_binding_ids=caller_binding_ids,
+        resolver_id=_PROFILE_RESOLVER_ID,
+    )
     return CalculationSourceResolution(
         resolver_id=_PROFILE_RESOLVER_ID,
         owned_sources=_PROFILE_OWNED_SOURCES,
@@ -622,6 +631,7 @@ def resolve_profile_sourced_bindings(
         enum_binding_values=enum_values,
         date_binding_values=date_values,
         boolean_binding_values=boolean_values,
+        row_binding_values=rows.row_binding_values,
         diagnostics=_derived_binding_diagnostics(
             selection.bindings,
             facts.fact_index,
@@ -641,7 +651,8 @@ def resolve_profile_sourced_bindings(
                 fingerprint=fingerprint,
             )
             for binding_id in sourced
-        ),
+        )
+        + rows.provenance,
     )
 
 
@@ -737,7 +748,14 @@ def resolve_profile_binding_value(
     binding: BindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> UserProfileFactValue | None:
-    """Return the typed profile fact value for one profile binding, or None if absent."""
+    """Return the typed profile fact value for one profile binding, or None if absent.
+
+    A repeating binding has no scalar value: its rows travel the row-set channel
+    through :func:`resolve_profile_row_values`, and its count path is a dependency,
+    not a value it may stand in for.
+    """
+    if isinstance(binding.provider, ProfileProvider) and binding.provider.repeating:
+        return None
     if binding.id.endswith(_ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX):
         return _economic_activity_binding_value(fact_index)
     # ``profile_binding_selectors`` returns the binding's DEPENDENCY set -- every

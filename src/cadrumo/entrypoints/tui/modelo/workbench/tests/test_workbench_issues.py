@@ -39,6 +39,7 @@ from ......application.modelo.work_form_models import (
     address_key,
     section_fields,
 )
+from ......application.modelo.work_form_outline import form_outline
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
@@ -181,7 +182,13 @@ def _assumed_boxes(*section_sizes: int) -> ModeloWorkForm:
         counts=_counts(sum(section_sizes)),
     )
     return synthetic_form(needs_input=False).model_copy(
-        update={"pages": (page,), "working_figures": (), "result_addresses": (), "counts": _counts(sum(section_sizes))}
+        update={
+            "pages": (page,),
+            "outline": form_outline((), (page,), OutputLanguage.ES, filed=False),
+            "working_figures": (),
+            "result_addresses": (),
+            "counts": _counts(sum(section_sizes)),
+        }
     )
 
 

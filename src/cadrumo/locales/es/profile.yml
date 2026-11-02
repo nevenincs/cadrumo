@@ -412,6 +412,10 @@ profile:
           label: Anualidades por alimentos a favor de los hijos por decisión judicial
         ascendants:
           label: Ascendientes
+        ascendiente:
+          label: Ascendiente
+        ascendientes_count:
+          label: Número de ascendientes
         cotizaciones_ss_madre_2024:
           label: Cotizaciones a la Seguridad Social de la madre (2024)
         descendants:
