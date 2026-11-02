@@ -1218,8 +1218,14 @@ errors:
     refused_modelo_charge_account_missing: Csoportos beszedési bevallást választottak,
       de nincs rögzített terhelési számla.
     refused_modelo_domiciliation_past_cutoff: Ennél a bevallásnál a csoportos beszedés
-      {payment_cutoff_on} napon lezárult; {export_on} napon az eredményt csak más
-      módon fizetheted meg.
+      {payment_cutoff_on} napon lezárult, ezt a napot maga a benyújtási időszak rögzíti
+      ({payment_cutoff_legal_refs}); {export_on} napon az eredményt csak más módon
+      fizetheted meg.
+    refused_modelo_domiciliation_past_cutoff_derived: Ennél a bevallásnál a csoportos
+      beszedés {payment_cutoff_on} napon lezárult; ez a nap a csoportos beszedés szabályából
+      ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) származik, mert a benyújtási
+      időszak nem rögzít napot; {export_on} napon az eredményt csak más módon fizetheted
+      meg.
     refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
     refused_modelo_export_prior_domiciliation_election_required: A 111-es mezőt kitöltő
       Modelo 303 helyesbítő bevalláshoz döntés szükséges a korábbi csoportos beszedésről

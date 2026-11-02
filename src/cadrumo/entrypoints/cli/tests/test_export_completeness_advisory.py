@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....application.modelo.export_contracts import ModeloExportResult
+from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity
 from ....core.period import Period
 from ..modelo_export_commands import _export_notices
@@ -25,7 +26,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _ADVISORY_CODE = "modelo.export.completeness_unverified"
 
 
-def _result(*, completeness_unverified: bool, tmp_path: Path) -> ModeloExportResult:
+def _result(
+    *, completeness_unverified: bool = False, domiciliation_cutoff_unverified: bool = False, tmp_path: Path
+) -> ModeloExportResult:
     return ModeloExportResult(
         calculation_revision_id="a" * 64,
         work_unit_id="b" * 64,
@@ -41,6 +44,7 @@ def _result(*, completeness_unverified: bool, tmp_path: Path) -> ModeloExportRes
         actor="operator",
         bucket_event_id="event-1",
         completeness_unverified=completeness_unverified,
+        domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
     )
 
 
@@ -66,3 +70,21 @@ def test_verified_export_emits_no_coverage_advisory(tmp_path: Path) -> None:
 
     # The default (gate ran, or non-fichero-BOE transport) carries no advisory.
     assert _ADVISORY_CODE not in codes
+
+
+def test_unverified_domiciliation_cutoff_emits_warning_with_the_tui_wording(tmp_path: Path) -> None:
+    result = _result(domiciliation_cutoff_unverified=True, tmp_path=tmp_path)
+
+    with override_settings(cadrumo_output_language="en"):
+        notices = _export_notices(result)
+
+    warning = next(notice for notice in notices if notice.code == "modelo.export.domiciliation_cutoff_unverified")
+    assert warning.severity is NoticeSeverity.WARNING
+    assert warning.message.startswith("The filing window declares no direct-debit deadline")
+    assert warning.context == {"modelo": "130", "filing_year": "2026", "period": "1T"}
+
+
+def test_known_domiciliation_cutoff_emits_no_cutoff_warning(tmp_path: Path) -> None:
+    notices = _export_notices(_result(tmp_path=tmp_path))
+
+    assert "modelo.export.domiciliation_cutoff_unverified" not in {notice.code for notice in notices}

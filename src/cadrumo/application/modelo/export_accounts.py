@@ -334,15 +334,14 @@ def require_domiciliation_before_cutoff(
         "period": work_unit.period.registry_token,
         "payment_cutoff_on": cutoff.isoformat(),
         "payment_cutoff_source": resolution.source.value,
+        "payment_cutoff_legal_refs": ", ".join(resolution.legal_refs),
         "export_on": export_on.isoformat(),
     }
+    message_key = "errors.refused.refused_modelo_domiciliation_past_cutoff"
     if isinstance(resolution, DerivedPaymentCutoff):
         context["payment_cutoff_rule"] = f"{resolution.clause.variant_id}, {resolution.procedure.variant_id}"
-        context["payment_cutoff_legal_refs"] = ", ".join(resolution.legal_refs)
-    raise ModeloDomiciliationPastCutoffError(
-        translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff",
-        context=context,
-    )
+        message_key = f"{message_key}_derived"
+    raise ModeloDomiciliationPastCutoffError(translated_message=message_key, context=context)
 
 
 def _charge_account_projection(resolved: _ResolvedOwnAccount) -> ChargeAccount | None:

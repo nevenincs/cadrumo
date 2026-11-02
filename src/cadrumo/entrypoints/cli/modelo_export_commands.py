@@ -52,6 +52,19 @@ def _completeness_advisory_notice(result: ModeloExportResult) -> Notice:
     )
 
 
+def _cutoff_unverified_notice(result: ModeloExportResult) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.export.domiciliation_cutoff_unverified",
+        message=tr("tui.modelo.export.result.warning.cutoff_unverified"),
+        context={
+            "modelo": str(result.modelo),
+            "filing_year": str(result.filing_year),
+            "period": result.period.registry_token,
+        },
+    )
+
+
 def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -70,6 +83,8 @@ def _export_notices(result: ModeloExportResult) -> list[Notice]:
     notices = [_local_export_evidence_notice(result)]
     if result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
         notices.append(_development_software_identity_notice(result))
+    if result.domiciliation_cutoff_unverified:
+        notices.append(_cutoff_unverified_notice(result))
     if result.completeness_unverified:
         notices.append(_completeness_advisory_notice(result))
     notices.extend(recorded_note_notices(result.calculation_notes, code="modelo.calculation_note")[0])
