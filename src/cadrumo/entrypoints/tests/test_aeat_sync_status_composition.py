@@ -44,6 +44,8 @@ from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_path
 from ...core.time.clock import frozen_clock
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.temporal import select_authored_revision_metadata
 from ...tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ..adapter_composition_ports import build_borrador_100_snapshot_repository
 from ..aeat_sync_status_composition import compose_aeat_sync_status_ports, degrade_storage_failure
@@ -101,6 +103,34 @@ def _store_legacy_borrador(operation: PinnedAuthorityOperation, bucket_id: str) 
         bucket_id=bucket_id,
         modelo="100",
         filing_year=2023,
+        period=period,
+        registry_snapshot_ref=ref,
+        captured_at=_CAPTURED_AT,
+        source_url=source,
+        state=SnapshotLifecycleState.ACTIVE,
+        binding_values=values,
+    )
+    build_borrador_100_snapshot_repository(bucket_id=bucket_id).save(snapshot)
+    return snapshot
+
+
+def _store_borrador_below_support_floor(operation: PinnedAuthorityOperation, bucket_id: str) -> Borrador100Snapshot:
+    """Store an active borrador whose year the registry authors but its support envelope refuses."""
+    filing_year = operation.supported_filing_years().floor - 1
+    period = Period.from_year_and_code(filing_year, "0A")
+    revision_id = select_authored_revision_metadata(
+        operation.modelo_directory("100"), filing_year=filing_year, period="0A"
+    ).id
+    ref = RegistrySnapshotRef(modelo="100", revision_id=revision_id, modelo_year=filing_year, period="0A")
+    values = {"renta-certificado-trabajo-retenciones": Decimal("15.25")}
+    source = "file-import:sha256:" + "3" * 64
+    snapshot = Borrador100Snapshot(
+        snapshot_id=derive_borrador_100_snapshot_id(
+            filing_year=filing_year, period=period, registry_snapshot_ref=ref, source_url=source, binding_values=values
+        ),
+        bucket_id=bucket_id,
+        modelo="100",
+        filing_year=filing_year,
         period=period,
         registry_snapshot_ref=ref,
         captured_at=_CAPTURED_AT,
@@ -176,6 +206,26 @@ def test_a_profile_holding_only_a_legacy_borrador_reads_it_as_unavailable_not_ne
     )
     assert [item.snapshot_id for item in borrador.refused_snapshots] == [legacy.snapshot_id]
     assert _area(result, AeatSyncStatusArea.NOTIFICATIONS).state is AeatSyncAreaState.NEVER_BROUGHT
+
+
+def test_a_borrador_outside_the_support_envelope_is_named_as_refused_without_failing_the_status(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    valid_at = _CAPTURED_AT + timedelta(days=2)
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        outside = _store_borrador_below_support_floor(operation, runtime.bucket_id)
+        _capture_borrador(operation, runtime.bucket_id, captured_at=valid_at)
+        _store_filed(operation, modelo="303")
+        result = _status(operation, runtime.bucket_id, days_later=3)
+
+    borrador = _area(result, AeatSyncStatusArea.BORRADOR_100)
+    assert (borrador.state, borrador.last_brought_at) == (AeatSyncAreaState.CURRENT, valid_at)
+    assert borrador.refused_snapshots == (
+        AeatSyncRefusedSnapshotV1(
+            snapshot_id=outside.snapshot_id, reason=Borrador100SnapshotRefusalReason.COORDINATE_OUTSIDE_SUPPORT
+        ),
+    )
+    assert _area(result, AeatSyncStatusArea.IVA_WALLET).state is AeatSyncAreaState.CURRENT
 
 
 def _iva_wallet(operation: PinnedAuthorityOperation, bucket_id: str, *, days_later: int):

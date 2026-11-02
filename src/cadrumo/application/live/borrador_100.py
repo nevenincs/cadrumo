@@ -26,7 +26,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistrySnapshotError
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -112,17 +112,21 @@ class Borrador100SnapshotRefusalReason(StrEnum):
     ``REGISTRY_COORDINATE_UNCONFIRMED`` means the stored registry revision no
     longer re-confirms for its coordinate. ``BINDING_KEYS_NOT_ADMITTED`` means a
     stored key is a free casilla key or a binding the revision does not admit.
+    ``COORDINATE_OUTSIDE_SUPPORT`` means the stored filing year lies outside the
+    registry support envelope, which resolves no snapshot for it.
     Either way the snapshot is kept as stored and the document has to be
     imported again.
     """
 
     REGISTRY_COORDINATE_UNCONFIRMED = "registry_coordinate_unconfirmed"
     BINDING_KEYS_NOT_ADMITTED = "binding_keys_not_admitted"
+    COORDINATE_OUTSIDE_SUPPORT = "coordinate_outside_support"
 
 
 Borrador100SnapshotRefusalReasonValue = Literal[
     Borrador100SnapshotRefusalReason.REGISTRY_COORDINATE_UNCONFIRMED,
     Borrador100SnapshotRefusalReason.BINDING_KEYS_NOT_ADMITTED,
+    Borrador100SnapshotRefusalReason.COORDINATE_OUTSIDE_SUPPORT,
 ]
 """The same refusal reasons where a CLI payload must accept the plain token."""
 
@@ -155,11 +159,14 @@ def borrador_100_snapshot_refusal(
     """Return why the pinned authority refuses ``snapshot``, or ``None`` when it reads."""
     if revision_carry_outcome(snapshot.registry_snapshot_ref, operation=operation).refused:
         return Borrador100SnapshotRefusalReason.REGISTRY_COORDINATE_UNCONFIRMED
-    revision = operation.snapshot(
-        snapshot.modelo,
-        filing_year=snapshot.filing_year,
-        period=snapshot.period.registry_token,
-    ).revision
+    try:
+        revision = operation.snapshot(
+            snapshot.modelo,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period.registry_token,
+        ).revision
+    except FilingYearOutsideSupportEnvelopeError:
+        return Borrador100SnapshotRefusalReason.COORDINATE_OUTSIDE_SUPPORT
     if borrador_keys_not_admitted(snapshot.binding_values, revision):
         return Borrador100SnapshotRefusalReason.BINDING_KEYS_NOT_ADMITTED
     return None
