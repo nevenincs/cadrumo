@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from xml.etree.ElementTree import Element
 
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
@@ -13,6 +14,37 @@ from ...domain.calculations.registry.facts.resolution import MappingFactQuery, R
 from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.filing.errors import FilingExportValidationError
+from .errors import ModeloApplicationError
+
+#: Each family minimum the result block claims, and the occurrence that identifies whom it is claimed for.
+_FAMILY_MINIMUM_ROWS: Mapping[str, str] = {
+    "MDES": "DatosIdentificativos/Hijos/Hijo",
+    "MASC": "DatosIdentificativos/Ascendientes/Ascendiente",
+}
+_MINIMUM_BLOCK_PATH = "DatosEconomicos/Resultados/MinimoPerFamRes"
+
+
+def refuse_family_minimum_without_its_rows(document: Element) -> None:
+    """Refuse a file claiming a descendant or ascendant minimum that identifies nobody.
+
+    The schema makes the identifying block optional, so the file would validate. But the
+    filer stated those relatives and the file would drop them while keeping the amount
+    they justify, and no profile fact holds the name each occurrence requires.
+
+    Args:
+        document: The finished ``Declaracion`` element.
+
+    Raises:
+        ModeloApplicationError: A claimed minimum has no identifying occurrence.
+    """
+    for tag, row_path in _FAMILY_MINIMUM_ROWS.items():
+        amount = (document.findtext(f"{_MINIMUM_BLOCK_PATH}/{tag}") or "").strip()
+        claimed = coerce_decimal(amount) if amount else None
+        if claimed is not None and not claimed.is_zero() and document.find(row_path) is None:
+            raise ModeloApplicationError(
+                translated_message="application.filing.export.errors.xml_value_required_missing",
+                context={"box": f"/{row_path}"},
+            )
 
 
 def registry_modelo_100_xml_declarations() -> Mapping[str, str]:

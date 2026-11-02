@@ -70,7 +70,9 @@ _CHARGE_2025 = (_BASE * _MACHINERY_LINEAR_COEFFICIENT * _SERVICE_DAYS_2025 / _DA
 
 
 #: The annual declaration's own answers: the declarant, the estimación-directa
-#: modality, and the carried figures a first filing year has none of.
+#: modality, and the carried figures a first filing year has none of. The profile
+#: declares only economic-activity income, so the three suffered-withholding credit
+#: classes are proven zero by its categories and no payer record is owed.
 _M100_ANNUAL_ANSWERS = (
     "--casilla",
     "0001=declarante",
@@ -80,8 +82,6 @@ _M100_ANNUAL_ANSWERS = (
     "0166=A05",
     "--binding",
     "renta-modelo-100-estimacion-directa-es-normal=1",
-    "--binding",
-    "renta-certificado-trabajo-retenciones=0",
     "--binding",
     "renta-base-liquidable-negativa-general-anterior=0",
 )

@@ -16,7 +16,7 @@ from ....core.retencion_soportada import RetencionSoportadaClase
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.irpf_income_categories import resolve_irpf_income_category_catalogue
 from ..retencion_soportada_absence import (
-    RETENCION_SOPORTADA_ABSENCE_NOTE_MAX_LENGTH,
+    ABSENCE_ATTESTATION_NOTE_MAX_LENGTH,
     RetencionSoportadaAbsence,
     RetencionSoportadaAbsenceState,
 )
@@ -63,7 +63,7 @@ def test_an_attestation_round_trips_and_withdraws_without_losing_when_it_was_mad
     [
         {"note": ""},
         {"note": "   "},
-        {"note": "x" * (RETENCION_SOPORTADA_ABSENCE_NOTE_MAX_LENGTH + 1)},
+        {"note": "x" * (ABSENCE_ATTESTATION_NOTE_MAX_LENGTH + 1)},
         {"state": "withdrawn"},
         {"withdrawn_at": (_AT + timedelta(days=1)).isoformat()},
         {"state": "withdrawn", "withdrawn_at": (_AT - timedelta(days=1)).isoformat()},
@@ -91,7 +91,7 @@ def test_an_incoherent_attestation_is_refused(overrides: dict[str, object]) -> N
 
 
 def test_the_note_at_its_limit_is_kept() -> None:
-    note = "x" * RETENCION_SOPORTADA_ABSENCE_NOTE_MAX_LENGTH
+    note = "x" * ABSENCE_ATTESTATION_NOTE_MAX_LENGTH
     assert _attestation(note=note).note == note
 
 

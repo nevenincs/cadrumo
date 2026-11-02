@@ -324,6 +324,50 @@ def rate_table_covers_any_positive_tier(
     )
 
 
+def tier_rates_within(
+    member_state: EUMemberState,
+    kind: IvaRateKind,
+    start: date,
+    end: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[Decimal, ...]:
+    """Return the distinct ordinary rates of a tier in force during an inclusive span.
+
+    Asks what :func:`lookup_rate` answers, once for each date a variant starts
+    inside the span. Days the table does not cover contribute nothing, so an
+    empty result means no published rate rather than a rate of zero.
+
+    Args:
+        member_state: The member state whose rates are searched.
+        kind: The rate tier being interrogated.
+        start: First day of the span.
+        end: Last day of the span.
+        operation: Caller-owned pinned authority operation for the complete
+            query.
+
+    Returns:
+        The percentages in the order they came into force.
+    """
+    resolved_kind = require_iva_rate_kind(kind, effective_date=start, authority=operation)
+    starts = {
+        variant.valid_from
+        for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants
+        if variant.date_axis is DateAxis.DEVENGO_DATE
+        and variant.valid_from is not None
+        and start < variant.valid_from <= end
+        and _rate_variant_matches_member_state(variant, member_state)
+    }
+    rates: list[Decimal] = []
+    for on_date in sorted({start, *starts}):
+        if not _rate_candidate_exists(member_state, resolved_kind, on_date, operation=operation):
+            continue
+        rate = lookup_rate(member_state, resolved_kind, on_date, operation=operation).pct
+        if rate not in rates:
+            rates.append(rate)
+    return tuple(rates)
+
+
 def coexisting_tier_rates(
     member_state: EUMemberState,
     kind: IvaRateKind,
@@ -470,5 +514,6 @@ __all__ = [
     "lookup_rate",
     "rate_kinds_for_declared_rate",
     "resolve_iva_rate",
+    "tier_rates_within",
     "unique_rate_kind_for_declared_rate",
 ]

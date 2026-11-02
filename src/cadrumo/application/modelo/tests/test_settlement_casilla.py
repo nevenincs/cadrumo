@@ -129,10 +129,11 @@ def test_the_declared_type_rule_names_the_result_where_the_modelo_declares_one()
     assert selected == DeclarationResultCasillas(casilla_ids=("19",), by_declared_type=True)
 
 
-def test_the_registry_role_names_the_result_where_no_declared_type_rule_exists() -> None:
+def test_modelo_100_names_its_result_by_its_declared_type_rule() -> None:
+    """The Modelo 100 record reads "tipo de declaración" from box 0670, the box its role also names."""
     selected = declaration_result_casillas("100", _revision("100", 2023, "0A"))
 
-    assert selected == DeclarationResultCasillas(casilla_ids=("0670",), by_declared_type=False)
+    assert selected == DeclarationResultCasillas(casilla_ids=("0670",), by_declared_type=True)
 
 
 def test_an_informative_modelo_has_no_result() -> None:

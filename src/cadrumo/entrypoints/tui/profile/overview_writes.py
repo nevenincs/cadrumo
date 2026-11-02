@@ -9,15 +9,18 @@ from typing import TYPE_CHECKING, cast
 from textual.worker import Worker, WorkerState
 
 from ....core.i18n.render import tr
+from ....domain.user_profile.schema import ProfileFieldType
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.status import PinnedStatusBar
 from .client_errors import ProfileManagerCompletedViewUnavailableError, is_profile_edit_conflict
+from .edit_screens import FieldEditScreen
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from ....application.user_profile.field_help import ProfileFieldEjercicioAnswer
     from ....application.user_profile.overview import ProfileFieldView, ProfileOverview
-    from .overview import ProfileManagerScreen
+    from .overview import ProfileFieldPersist, ProfileManagerScreen
 
 
 def _stale_write_result(result: ProfileOverview, current: ProfileOverview) -> bool:
@@ -28,6 +31,15 @@ def _stale_write_result(result: ProfileOverview, current: ProfileOverview) -> bo
 
 def _needs_auth_refresh(path: str | None) -> bool:
     return path is None or path == "identity.tax_id" or path.startswith("auth.")
+
+
+def _stated_ejercicios(answer: ProfileFieldEjercicioAnswer) -> str | None:
+    """Name what each ejercicio states so far, so the operator sees the answers that stay."""
+    return (
+        ", ".join(f"{statement.ejercicio}: {statement.value}" for statement in answer.statements)
+        if answer.statements
+        else None
+    )
 
 
 class ProfileOverviewWriteMixin:
@@ -74,12 +86,57 @@ class ProfileOverviewWriteMixin:
                     baseline_digest,
                 )
                 return
+            if field.ejercicio_answer is not None:
+                self._ask_ejercicio(field, value, baseline_revision, baseline_digest)
+                return
             self._persist(field.path, value, baseline_revision, baseline_digest)
 
         return _apply
 
+    def _ask_ejercicio(
+        self: ProfileManagerScreen, field: ProfileFieldView, value: str, revision: int, digest: str
+    ) -> None:
+        """Ask which ejercicio an answer is for, then submit both as the wizard's own questions."""
+        answer = field.ejercicio_answer
+        if answer is None or self._persist_ejercicio is None:
+            self._refuse(tr("application.user_profile.errors.profile_field_needs_ejercicio", field=field.label))
+            return
+        persist = self._persist_ejercicio
+        year_field = field.model_copy(
+            update={"value": None, "choices": (), "required": True, "field_type": ProfileFieldType.STRING}
+        )
+
+        def _answered(ejercicio: str | None) -> None:
+            if ejercicio is None:
+                return
+            if not ejercicio.strip():
+                self._refuse(tr("flows.manager.edit.required_blank", field=field.label))
+                return
+            self._persist(
+                field.path,
+                value,
+                revision,
+                digest,
+                write=lambda path, written, at, baseline: persist(answer, written, ejercicio.strip(), at, baseline),
+            )
+
+        self.app.push_screen(
+            FieldEditScreen(
+                year_field,
+                prompt_key="wizard.setup.obligations.irpf-activity-income-imputation-year.prompt",
+                context=_stated_ejercicios(answer),
+            ),
+            _answered,
+        )
+
     def _persist(
-        self: ProfileManagerScreen, path: str, value: str, expected_revision: int, expected_content_digest: str
+        self: ProfileManagerScreen,
+        path: str,
+        value: str,
+        expected_revision: int,
+        expected_content_digest: str,
+        *,
+        write: ProfileFieldPersist | None = None,
     ) -> None:
         """Write one field through the injected door, off the event loop.
 
@@ -106,11 +163,12 @@ class ProfileOverviewWriteMixin:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
         write_context = copy_context()
+        door = self._persist_field if write is None else write
 
         def _write() -> ProfileOverview:
             written = cast(
                 "ProfileOverview | None",
-                write_context.run(self._persist_field, path, value, expected_revision, expected_content_digest),
+                write_context.run(door, path, value, expected_revision, expected_content_digest),
             )
             if written is None:
                 # The door declares it hands back the reloaded page, so this

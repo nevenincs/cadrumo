@@ -40,8 +40,9 @@ from ....domain.modelos.verification_report import (
 )
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ..work_form import build_modelo_work_form
+from ..work_form_declaration_facts import ModeloFormCalculationNote
 from ..work_form_findings import ModeloFormAttention
-from ..work_form_models import ModeloFormCalculationNote, ModeloFormField, ModeloFormOrigin, ModeloWorkForm, address_key
+from ..work_form_models import ModeloFormField, ModeloFormOrigin, ModeloWorkForm, address_key
 from ..work_form_service import modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 

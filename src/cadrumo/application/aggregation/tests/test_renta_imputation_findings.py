@@ -282,7 +282,7 @@ def _flag_observation(year: int, casilla: str, value: str) -> RegistryModeloObse
     )
 
 
-def test_the_filing_history_reads_the_marked_box_and_the_record_date() -> None:
+def test_the_filing_history_reads_the_marked_box_and_the_record_date(operation: PinnedAuthorityOperation) -> None:
     year = 2025
     filed = build_modelo_filing_record_for_test(modelo="100").model_copy(
         update={
@@ -302,9 +302,55 @@ def test_the_filing_history_reads_the_marked_box_and_the_record_date() -> None:
         annual_period_code="0A",
         load_observation=lambda _modelo, period: observed.get(period.filing_year),
         filing_records=ModeloRecordCatalogue(records={filed.filing_record_id: filed}),
+        authority=operation,
     )
     assert history.stated == {year - 1: _COBROS, year - 2: _ACCRUAL}
     assert history.filed_on == {year - 1: date(year, 6, 1)}
+
+
+@pytest.mark.parametrize(
+    ("box", "mark", "criterion"),
+    [
+        ("0169", "X", _COBROS),
+        ("1443", "S", _COBROS),
+        ("1487", "1", _COBROS),
+        ("1487", "TRUE", _COBROS),
+        ("0169", "N", _ACCRUAL),
+        ("1443", "", _ACCRUAL),
+    ],
+)
+def test_each_election_box_states_its_criterion_by_its_mark(
+    operation: PinnedAuthorityOperation, box: str, mark: str, criterion: ActivityImputationCriterion
+) -> None:
+    year = 2025
+    history = imputation_filing_history(
+        bucket_id=BUCKET_ID,
+        year=year,
+        annual_form="100",
+        annual_period_code="0A",
+        load_observation=lambda _modelo, period: (
+            _flag_observation(period.filing_year, box, mark) if period.filing_year == year - 1 else None
+        ),
+        filing_records=ModeloRecordCatalogue(records={}),
+        authority=operation,
+    )
+    assert history.stated == {year - 1: criterion}
+
+
+def test_a_box_that_is_not_an_election_box_states_nothing(operation: PinnedAuthorityOperation) -> None:
+    year = 2025
+    history = imputation_filing_history(
+        bucket_id=BUCKET_ID,
+        year=year,
+        annual_form="100",
+        annual_period_code="0A",
+        load_observation=lambda _modelo, period: (
+            _flag_observation(period.filing_year, "0170", "X") if period.filing_year == year - 1 else None
+        ),
+        filing_records=ModeloRecordCatalogue(records={}),
+        authority=operation,
+    )
+    assert history.stated == {}
 
 
 @pytest.mark.parametrize("edition", [2022, 2023, 2024, 2025])

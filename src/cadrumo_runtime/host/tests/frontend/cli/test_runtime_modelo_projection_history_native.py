@@ -16,7 +16,9 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
     seed_test_profile_record,
 )
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.user_profile.login_session import resolve_login_target
@@ -93,13 +95,13 @@ def test_native_modelo_history_project_compare_reuse_real_stored_revisions(
             operation=authority_operation,
         )
         with bundled_indexed_authority().operation() as calculation_operation:
-            calculated = calculate_modelo_revision(
+            calculated = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=calculation_operation),
                 actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
                 casilla_inputs={},
                 binding_values=modelo_operation_test_support.FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-            )
+            ).revision
         revision_2026 = str(calculated.calculation_revision_id)
         seed_test_profile_record(
             create_user_profile_record(

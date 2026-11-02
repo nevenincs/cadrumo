@@ -6,6 +6,11 @@ identification check) without moving any amount. A BORRADOR row stays editable,
 so an edit to either after calculation must block verify, or the draft is sealed
 on values computed under the old admission outcome. A draft anchored under
 field-set version 2 keeps being compared under version 2.
+
+The operator-stated accrual date is the V7 fact: an anchor older than version 7
+cannot see a date nothing could write when it was sealed, so the gate reports
+an anchored row that now carries one, while the field-set comparison itself
+keeps its old answer.
 """
 
 from __future__ import annotations
@@ -38,7 +43,11 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...aggregation.ledger_filing_snapshot import compute_ledger_filing_snapshot, row_fingerprint
+from ...aggregation.ledger_filing_snapshot import (
+    compute_ledger_filing_snapshot,
+    evaluate_ledger_filing_staleness,
+    row_fingerprint,
+)
 from ...aggregation.ledger_membership import LedgerSourceMembership
 from ...aggregation.tests.ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
 from .._ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
@@ -160,6 +169,19 @@ def _anchor_sealed_under_v2(contributor: Transaction) -> LedgerFilingSnapshot:
     )
 
 
+def _anchor_sealed_under(contributor: Transaction, version: int) -> LedgerFilingSnapshot:
+    live = _current_anchor(contributor)
+    return live.model_copy(
+        update={
+            "fingerprint_field_set_version": version,
+            "rows": tuple(
+                row.model_copy(update={"fingerprint": row_fingerprint(contributor, field_set_version=version)})
+                for row in live.rows
+            ),
+        },
+    )
+
+
 def _gate(draft: tuple[WorkUnit, CalculationRevision], live: Transaction) -> list[ModeloVerificationFinding]:
     work_unit, revision = draft
     repository = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET)
@@ -209,6 +231,39 @@ def test_a_v2_anchored_draft_is_still_compared_under_v2(update: dict[str, object
     before = _purchase()
     after = before.model_copy(update=update)
     assert _gate(_draft(before, _anchor_sealed_under_v2(before)), after) == []
+
+
+_STATED_ACCRUAL = date(2026, 3, 30)
+
+
+@pytest.mark.parametrize("version", [2, 5, 6])
+def test_an_accrual_date_written_after_an_older_anchor_is_reported_by_the_gate_only(version: int) -> None:
+    """The older field set stays quiet on its own; the gate names the row it could not see."""
+    before = _purchase()
+    after = before.model_copy(update={"accrual_date": _STATED_ACCRUAL})
+    anchor = _anchor_sealed_under(before, version)
+
+    assert evaluate_ledger_filing_staleness(anchor, TransactionCatalogue.from_transactions([after])).is_stale is False
+
+    (finding,) = _gate(_draft(before, anchor), after)
+    assert finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION
+    assert finding.message_locale_key == _DRIFT_KEY
+    assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    assert finding.message_facts["changed_count"] == 1
+
+
+def test_a_v6_anchored_row_without_an_accrual_date_stays_current() -> None:
+    before = _purchase()
+    assert _gate(_draft(before, _anchor_sealed_under(before, 6)), before) == []
+
+
+def test_an_accrual_date_stated_before_a_current_anchor_is_not_drift_and_a_change_is() -> None:
+    stated = _purchase().model_copy(update={"accrual_date": _STATED_ACCRUAL})
+    draft = _draft(stated, _current_anchor(stated))
+    assert _gate(draft, stated) == []
+
+    (finding,) = _gate(draft, stated.model_copy(update={"accrual_date": date(2026, 4, 2)}))
+    assert finding.message_facts["changed_count"] == 1
 
 
 def _undetermined_finding(

@@ -556,6 +556,7 @@ def _prepare_calculation_state(
         resolved.resolved_inputs,
         binding_values=resolved.supplied_bindings,
         target_period=snapshot.period,
+        boolean_binding_values=resolved.resolved_boolean_bindings,
         # A settled binding has no scalar value because its source answered
         # elsewhere -- nothing applies to the filer, or its values arrived as
         # rows -- not because the source failed: its bound casilla keeps the

@@ -20,6 +20,7 @@ StageFieldName = Literal[
     "booked_date",
     "value_date",
     "operation_date",
+    "accrual_date",
     "amount",
     "direction",
     "currency",
@@ -47,6 +48,7 @@ DraftFieldName = Literal[
     "booked_date",
     "value_date",
     "operation_date",
+    "accrual_date",
     "amount",
     "direction",
     "currency",
@@ -180,6 +182,7 @@ class LedgerStagedRowAnswer(BaseModel):
     classified: bool = False
     takes_expense_category: bool = False
     takes_share: bool = False
+    category_askable: bool = False
     category_settable: bool = False
     category_on_income: bool = False
     takes_changes: bool = False

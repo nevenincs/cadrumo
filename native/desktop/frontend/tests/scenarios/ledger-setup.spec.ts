@@ -1398,10 +1398,28 @@ test("the withholding register lists a payer's certificate under its class and r
   await expect(row).toContainText(
     label("desktop.ledger.withholding.origin.payer_certificate"),
   );
-  // No attestation can be listed yet, and the page says so.
-  await expect(target.locator(".ledger-withholding-listing-gap")).toHaveText(
-    label("desktop.ledger.withholding.absence.not_listed"),
+  // The statements of the year are listed as the backend holds them: the
+  // active one in words it served, the withdrawn one in history by its token.
+  const active = target.locator(".ledger-withholding-attested tr", {
+    hasText: "No professional fees were withheld.",
+  });
+  await expect(active).toContainText("Economic activity income");
+  await expect(active).toContainText(/Stated on/);
+  await expect(
+    active.getByRole("button", {
+      name: label("desktop.ledger.withholding.withdraw_of", {
+        class: "Economic activity income",
+      }),
+    }),
+  ).toBeVisible();
+  const past = target.locator(".ledger-withholding-history");
+  await expect(past.getByRole("heading")).toHaveText(
+    label("desktop.ledger.withholding.absence.history"),
   );
+  const history = past.locator("tr", { hasText: "No dividends were paid." });
+  await expect(history).toContainText("capital_mobiliario");
+  await expect(history).toContainText(/Withdrawn on/);
+  await expect(history.getByRole("button")).toHaveCount(0);
   await target
     .getByRole("group", { name: label("desktop.ledger.withholding.ejercicio") })
     .getByRole("button", {
@@ -1556,7 +1574,7 @@ test("a certificate is removed only once the person confirms, against the revisi
   await expect(target.locator(".setup-call-line")).toBeHidden();
 });
 
-test("an income class is stated to have no withholding and the statement is withdrawn", async ({
+test("an income class is stated to have no withholding, the statement is withdrawn into history and stated again against its revision", async ({
   page: target,
 }) => {
   await openWithholding(target);
@@ -1574,7 +1592,8 @@ test("an income class is stated to have no withholding and the statement is with
   await expect(form).toBeHidden();
   const attested = target.locator(".ledger-withholding-attested");
   const row = attested.locator("tr", { hasText: "ganancia_patrimonial" });
-  // The statement is shown as the backend returned it.
+  // The statement is listed as the backend returned it, by its token where
+  // it served no words for the class.
   await expect(row).toContainText("No sales this year.");
   await expect(row).toContainText(/Stated on/);
   const withdraw = row.getByRole("button", {
@@ -1583,20 +1602,76 @@ test("an income class is stated to have no withholding and the statement is with
     }),
   });
   await withdraw.click();
-  await expect(row).toContainText(/Withdrawn on/);
-  // A withdrawn statement offers nothing more.
+  // It leaves the active statements for the history, and offers nothing more.
   await expect(withdraw).toHaveCount(0);
+  const history = target
+    .locator(".ledger-withholding-history tr")
+    .filter({ hasText: "ganancia_patrimonial" });
+  await expect(history).toContainText("No sales this year.");
+  await expect(history).toContainText(/Withdrawn on/);
+  await expect(history.getByRole("button")).toHaveCount(0);
+  // A withdrawn statement is stated again against the revision it was left at.
+  await button(target, "desktop.ledger.withholding.action.attest").click();
+  const restate = withholdingForm(target);
+  await field(restate, "desktop.ledger.withholding.income_class").selectOption(
+    "ganancia_patrimonial",
+  );
+  await field(restate, "desktop.ledger.withholding.note").fill(
+    "Still no sales.",
+  );
+  await button(restate, "desktop.ledger.withholding.action.attest").click();
+  await expect(restate).toBeHidden();
+  const again = attested.locator("tr", { hasText: "Still no sales." });
+  await expect(again).toContainText(/Stated on/);
+  await expect(
+    target
+      .locator(".ledger-withholding-history tr")
+      .filter({ hasText: "ganancia_patrimonial" }),
+  ).toHaveCount(0);
+  await expect(target.locator(".setup-call-line")).toBeHidden();
   // A class with certificates cannot be stated to have none.
   await button(target, "desktop.ledger.withholding.action.attest").click();
-  const again = withholdingForm(target);
-  await field(again, "desktop.ledger.withholding.income_class").selectOption(
+  const refused = withholdingForm(target);
+  await field(refused, "desktop.ledger.withholding.income_class").selectOption(
     "trabajo",
   );
-  await field(again, "desktop.ledger.withholding.note").fill("None.");
-  await button(again, "desktop.ledger.withholding.action.attest").click();
+  await field(refused, "desktop.ledger.withholding.note").fill("None.");
+  await button(refused, "desktop.ledger.withholding.action.attest").click();
   await expect(target.locator(".setup-call-line")).toContainText(
     label("desktop.ledger.withholding.refusal.records_present"),
   );
+});
+
+test("a statement that is already active offers its withdrawal against the revision listed, and is refused if stated again", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  await button(target, "desktop.ledger.withholding.action.attest").click();
+  const form = withholdingForm(target);
+  await field(form, "desktop.ledger.withholding.income_class").selectOption(
+    "actividad_economica",
+  );
+  await field(form, "desktop.ledger.withholding.note").fill("Again.");
+  await button(form, "desktop.ledger.withholding.action.attest").click();
+  await expect(target.locator(".setup-call-line")).toContainText(
+    label("desktop.ledger.withholding.refusal.already_attested"),
+  );
+  // Nothing was doubled: the listed statement stands, and withdraws.
+  const row = target.locator(".ledger-withholding-attested tr", {
+    hasText: "No professional fees were withheld.",
+  });
+  await row
+    .getByRole("button", {
+      name: label("desktop.ledger.withholding.withdraw_of", {
+        class: "Economic activity income",
+      }),
+    })
+    .click();
+  await expect(
+    target
+      .locator(".ledger-withholding-history tr")
+      .filter({ hasText: "No professional fees were withheld." }),
+  ).toContainText(/Withdrawn on/);
 });
 
 test("Health for another period counts only that period's own check, and says so until it is checked", async ({

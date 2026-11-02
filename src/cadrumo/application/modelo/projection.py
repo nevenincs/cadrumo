@@ -5,8 +5,11 @@ rows from quarterly Modelo 130 work units, resolves the annual
 :class:`RegistrySnapshot`, injects the latest cumulative Modelo 130 income at
 the annual Renta input leaf, threads pagos fraccionados through the relation
 channel, overlays decimal, enum, and date profile facts from
-:func:`resolve_profile_sourced_bindings`, and runs
-:func:`calculate_registry_snapshot` without persisting the synthetic result.
+:func:`resolve_profile_sourced_bindings`, resolves the suffered-withholding
+credits through their source-mesh resolver, and runs
+:func:`calculate_registry_snapshot` without persisting the synthetic result. A
+credit with no payer record or attestation stays unresolved, and so does every
+box computed from it: both are reported, never shown as a number.
 
 The comparison path selects the best draft or verified
 :class:`CalculationRevision` for each requested year, grounds each delta row in
@@ -27,6 +30,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
@@ -34,14 +38,15 @@ from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
-from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
-from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
+from ...domain.calculations.registry.bindings import CasillaObservation, resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ...domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
@@ -58,7 +63,11 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
+from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
+from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ._calculation_source_staging import add_expected_missing_binding_diagnostics
 from ._registry_helpers import validate_casilla_input_ids
 from .calculate_input_validation import (
     ModeloCalculateBindingInputError,
@@ -67,7 +76,10 @@ from .calculate_input_validation import (
 )
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_revision_queries import list_calculation_revisions
+from .calculation_route import require_calculation_route_resolver
+from .calculation_source_guards import reject_caller_overrides_of_source_bindings
 from .profile_binding import resolve_profile_sourced_bindings
+from .profile_readiness_gate import load_modelo_work_profile
 from .work_lifecycle import list_work_units
 
 if TYPE_CHECKING:
@@ -76,6 +88,10 @@ if TYPE_CHECKING:
 _LOG = get_logger(__name__)
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
+# Suffered withholding is owned by the payer records and absence attestations,
+# so a caller figure would stand in for the evidence the calculation refuses to
+# take from a caller; the projection refuses it the same way.
+_PROJECTION_SOURCE_OWNED_KINDS: frozenset[BindingSourceKind] = frozenset({BindingSourceKind.RETENCION_SOPORTADA})
 
 
 class ModeloProjectionError(CadrumoError):
@@ -151,6 +167,46 @@ class ModeloProjectionCasillaObservation(BaseModel):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
+class ModeloProjectionUnresolvedBinding(BaseModel):
+    """One source-owned binding the projection's sources left without a value.
+
+    ``reason`` is the source diagnostic's reason token and ``note`` its closed
+    calculation-note sentence when the resolver named one (for a credit: no
+    payer evidence, or evidence contradicted by an absence attestation).
+    ``fact`` is that sentence with the values it names, kept so the words of the
+    note can be served; it is not a public field.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    binding_id: BindingId
+    casilla_id: CasillaId | None
+    source_kind: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    note: CalculationNoteSentence | None = None
+    fact: CalculationNoteFact | None = None
+
+
+UNRESOLVED_OPERAND_REASON = "unresolved_operand"
+"""The reason of a computed box omitted because an operand it reads is unresolved."""
+
+
+class ModeloProjectionUnresolvedCasilla(BaseModel):
+    """One computed box the projection could not give a value, with its formula's grounding.
+
+    ``reason`` is :data:`UNRESOLVED_OPERAND_REASON` when the box reads an
+    unresolved operand, or the engine's typed outcome reason otherwise.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    casilla_id: CasillaId
+    reason: str = Field(min_length=1)
+    formula_id: FormulaId
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+
 class ModeloProjectM130Accumulated(BaseModel):
     """Accumulated Modelo 130 source values for a Modelo 100 projection."""
 
@@ -189,6 +245,8 @@ class ModeloProjectServiceResult(BaseModel):
     m130_accumulated: ModeloProjectM130Accumulated
     casilla_observations: tuple[ModeloProjectionCasillaObservation, ...]
     m100_projection: ModeloProjectM100Projection
+    unresolved_bindings: tuple[ModeloProjectionUnresolvedBinding, ...] = ()
+    unresolved_casillas: tuple[ModeloProjectionUnresolvedCasilla, ...] = ()
 
 
 class ModeloCompareDeltaRow(BaseModel):
@@ -573,15 +631,23 @@ def _parse_projection_binding_overrides(
 
 def _verb_baseline_projection_bindings(
     ccaa: str,
-    declared_binding_ids: set[BindingId],
+    revision: ModeloRevision,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str], dict[BindingId, bool]]:
-    """Build the verb-supplied baseline projection bindings, filtered to declared ids."""
+    """Build the verb-supplied baseline projection bindings, filtered to what the verb owns.
+
+    The baseline supplies only bindings the registry does not source from the
+    taxpayer profile, plus the ``ccaa`` the verb itself takes as a parameter. A
+    profile-sourced binding belongs to the profile channel: a baseline copy
+    would put a stand-in value on a second channel beside the profile's typed
+    one, and would turn an absent profile fact into a supplied zero or false.
+    """
+    declared_binding_ids = {binding.id for binding in revision.bindings}
+    profile_sourced_ids = {binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PROFILE}
 
     def binding(value: str) -> BindingId:
         return _binding_id(value, surface="project modelo 100 baseline binding id")
 
     verb_baseline_bindings: dict[BindingId, Decimal] = {
-        binding("renta-modelo-100-estimacion-directa-es-normal"): Decimal("1"),
         binding("renta-profile-declaration-type"): Decimal("1"),
         binding("renta-profile-family-minor-children-in-unit"): Decimal("0"),
         binding("renta-profile-cotizaciones-ss-madre"): Decimal("0"),
@@ -593,12 +659,21 @@ def _verb_baseline_projection_bindings(
         binding("renta-profile-tax-residence-ccaa"): ccaa,
     }
     verb_baseline_boolean_bindings: dict[BindingId, bool] = {
+        binding("renta-modelo-100-estimacion-directa-es-normal"): True,
         binding("renta-profile-marriage-full-year"): False,
     }
     return (
-        {key: value for key, value in verb_baseline_bindings.items() if key in declared_binding_ids},
+        {
+            key: value
+            for key, value in verb_baseline_bindings.items()
+            if key in declared_binding_ids and key not in profile_sourced_ids
+        },
         {key: value for key, value in verb_baseline_enum_bindings.items() if key in declared_binding_ids},
-        {key: value for key, value in verb_baseline_boolean_bindings.items() if key in declared_binding_ids},
+        {
+            key: value
+            for key, value in verb_baseline_boolean_bindings.items()
+            if key in declared_binding_ids and key not in profile_sourced_ids
+        },
     )
 
 
@@ -632,6 +707,85 @@ def _profile_projection_bindings(
     )
 
 
+def _absent_profile_binding_ids(revision: ModeloRevision, *, supplied: set[BindingId]) -> tuple[BindingId, ...]:
+    """Name each profile-sourced binding no channel supplied, so the engine reports it unresolved.
+
+    The profile is silent on a fact the taxpayer never declared. That absence is
+    not zero or false, so the dependent boxes stay unresolved instead of the
+    engine refusing the whole projection or a stand-in value filling the gap.
+    """
+    return tuple(
+        binding.id
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.PROFILE and binding.id not in supplied
+    )
+
+
+def _raise_if_absent_profile_facts_block_projection(
+    engine_result: RegistryCalculationResult,
+    revision: ModeloRevision,
+    *,
+    absent_profile_binding_ids: tuple[BindingId, ...],
+    declaration: _ProjectionDeclaration,
+) -> None:
+    """Refuse a projection a missing profile fact blocks, naming each fact and the command that sets it.
+
+    The result schema needs the base liquidable and quota boxes, so a profile
+    fact their formulas read and the profile never declared leaves nothing
+    honest to return. The refusal names those facts instead of the box alone.
+    """
+    required = (
+        declaration.base_liquidable_general,
+        declaration.pagos_fraccionados,
+        declaration.cuota_integra_estatal,
+        declaration.cuota_integra_autonomica,
+        declaration.cuota_liquida_estatal,
+        declaration.cuota_liquida_autonomica,
+        declaration.cuota_resultante,
+    )
+    if all(casilla_id in engine_result.values for casilla_id in required):
+        return
+    observed = {observation.casilla_id for observation in engine_result.observations}
+    expression_by_target = {
+        formula.target_casilla_id: formula.expression.model_dump_json()
+        for formula in revision.formulas
+        if formula.target_casilla_id not in observed
+    }
+    # Follow only the unresolved formulas the required boxes actually read, so an
+    # unrelated undeclared fact is not blamed for the refusal.
+    pending = [casilla_id for casilla_id in required if casilla_id in expression_by_target]
+    reached: dict[CasillaId, str] = {}
+    while pending:
+        casilla_id = pending.pop()
+        if casilla_id in reached:
+            continue
+        reached[casilla_id] = expression_by_target[casilla_id]
+        pending.extend(
+            target for target in expression_by_target if target not in reached and f'"{target}"' in reached[casilla_id]
+        )
+    unresolved_expressions = list(reached.values())
+    bindings_by_id = revision_bindings_by_id(revision)
+    fact_paths: list[str] = []
+    for binding_id in absent_profile_binding_ids:
+        if not any(f'"{binding_id}"' in expression for expression in unresolved_expressions):
+            continue
+        selector = selector_as_dict(bindings_by_id[binding_id])
+        profile_key = selector.get("profile_key")
+        fact_path = profile_key if isinstance(profile_key, str) else str(binding_id)
+        if fact_path not in fact_paths:
+            fact_paths.append(fact_path)
+    if not fact_paths:
+        return
+    raise ModeloProjectionError(
+        translated_message="cli.app.modelo.project.profile_fact_missing",
+        context={
+            "profile_facts": ", ".join(fact_paths),
+            "command": "aeat config profile edit",
+            "casilla_produced": False,
+        },
+    )
+
+
 def _apply_zero_maritime_projection_default(
     declared_binding_ids: set[BindingId],
     merged_bindings: dict[BindingId, Decimal],
@@ -649,6 +803,136 @@ def _apply_zero_maritime_projection_default(
     ):
         # Either statutory path yields zero when there is no maritime income.
         merged_boolean_bindings[maritime_path] = False
+
+
+def _suffered_withholding_resolution(
+    m100_snapshot: RegistrySnapshot,
+    *,
+    year: int,
+    period: Period,
+    bucket_id: str,
+    ports: CalculationActionPorts,
+    operation: PinnedAuthorityOperation,
+) -> CalculationSourceResolution:
+    """Resolve the suffered-withholding credits as the calculation's source mesh does.
+
+    Only this family is resolved: the projection's activity income is the
+    extrapolated Modelo 130 basis, which a ledger resolution would contradict.
+    The expected-missing pass then marks every credit with no value
+    unresolved, so the engine never reads it as zero.
+    """
+    resolver = RetencionSoportadaSourceResolver(ports=ports.retencion_soportada_ports)
+    require_calculation_route_resolver("mesh", resolver)
+    context = CalculationSourceContext(
+        bucket_id=bucket_id,
+        modelo=str(m100_snapshot.modelo.id),
+        filing_year=year,
+        period=period,
+        revision=m100_snapshot.revision,
+        profile=load_modelo_work_profile(
+            bucket_id=bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ),
+        operation=operation,
+    )
+    return add_expected_missing_binding_diagnostics(m100_snapshot.revision, resolver.resolve(context))
+
+
+def _unresolved_bindings(
+    resolution: CalculationSourceResolution,
+    revision: ModeloRevision,
+) -> tuple[ModeloProjectionUnresolvedBinding, ...]:
+    """Report each unresolved binding once, by the diagnostic that names its box."""
+    bindings_by_id = revision_bindings_by_id(revision)
+    diagnostics = {
+        diagnostic.binding_id: diagnostic
+        for diagnostic in resolution.diagnostics
+        if diagnostic.reason == "unresolved_binding" and diagnostic.binding_id is not None
+    }
+    rows: list[ModeloProjectionUnresolvedBinding] = []
+    for binding_id in resolution.unresolved_binding_ids:
+        diagnostic = diagnostics.get(binding_id)
+        if diagnostic is None:
+            rows.append(
+                ModeloProjectionUnresolvedBinding(
+                    binding_id=binding_id,
+                    casilla_id=sole_bound_casilla(revision, binding_id),
+                    source_kind=str(bindings_by_id[binding_id].source),
+                    reason="unresolved_binding",
+                )
+            )
+            continue
+        rows.append(
+            ModeloProjectionUnresolvedBinding(
+                binding_id=binding_id,
+                casilla_id=diagnostic.casilla_id or sole_bound_casilla(revision, binding_id),
+                source_kind=diagnostic.source_kind,
+                reason=diagnostic.reason,
+                note=diagnostic.fact.sentence if diagnostic.fact is not None else None,
+                fact=diagnostic.fact,
+            )
+        )
+    return tuple(rows)
+
+
+def _unresolved_casillas(
+    engine_result: RegistryCalculationResult,
+    revision: ModeloRevision,
+) -> tuple[ModeloProjectionUnresolvedCasilla, ...]:
+    """Report every formula target the engine left without a value.
+
+    The engine omits a formula target that reads an unresolved operand and
+    reports a typed outcome for one it could not evaluate; every other formula
+    target carries an observation. A target in neither is therefore omitted for
+    an unresolved operand.
+    """
+    observed = {observation.casilla_id for observation in engine_result.observations}
+    outcomes = {outcome.casilla_id: outcome for outcome in engine_result.unresolved_outcomes}
+    rows = [
+        ModeloProjectionUnresolvedCasilla(
+            casilla_id=formula.target_casilla_id,
+            reason=(
+                str(outcomes[formula.target_casilla_id].reason)
+                if formula.target_casilla_id in outcomes
+                else UNRESOLVED_OPERAND_REASON
+            ),
+            formula_id=formula.id,
+            legal_refs=tuple(formula.legal_refs),
+            source_refs=tuple(formula.source_refs),
+        )
+        for formula in revision.formulas
+        if formula.target_casilla_id not in observed
+    ]
+    return tuple(sorted(rows, key=lambda row: row.casilla_id))
+
+
+def _projection_observations(
+    engine_result: RegistryCalculationResult,
+    *,
+    source_casilla_ids: frozenset[CasillaId],
+) -> tuple[ModeloProjectionCasillaObservation, ...]:
+    """Return the computed boxes and the boxes the projection's sources resolved, in engine order."""
+    return tuple(
+        ModeloProjectionCasillaObservation(
+            casilla_id=observation.casilla_id,
+            value=observation.value,
+            formula_id=observation.formula_id,
+            legal_refs=tuple(observation.legal_refs),
+            source_refs=tuple(observation.source_refs),
+        )
+        for observation in engine_result.observations
+        if isinstance(observation.value, Decimal)
+        and (observation.formula_id is not None or observation.casilla_id in source_casilla_ids)
+    )
+
+
+def _source_resolved_casilla_ids(
+    resolution: CalculationSourceResolution,
+    revision: ModeloRevision,
+) -> frozenset[CasillaId]:
+    """Return the boxes bound to a binding the projection's sources resolved."""
+    bound = (sole_bound_casilla(revision, binding_id) for binding_id in resolution.binding_values)
+    return frozenset(casilla_id for casilla_id in bound if casilla_id is not None)
 
 
 def _m100_projection_result(
@@ -702,9 +986,28 @@ def project_modelo_100_from_m130(
         binding_overrides,
         m100_snapshot.revision,
     )
+    reject_caller_overrides_of_source_bindings(
+        revision=m100_snapshot.revision,
+        owned_sources=_PROJECTION_SOURCE_OWNED_KINDS,
+        caller_binding_values=extra_bindings,
+        caller_casilla_inputs=extra_inputs,
+        caller_enum_binding_values=extra_enum_bindings,
+        subject_leaf_key="modelo.project",
+    )
+
+    credits = _suffered_withholding_resolution(
+        m100_snapshot,
+        year=year,
+        period=Period.from_year_and_code(year, declaration.target_period),
+        bucket_id=bucket_id,
+        ports=ports,
+        operation=operation,
+    )
 
     m100_inputs: dict[CasillaId, Decimal] = {
         declaration.rendimiento_neto_projected: annual.projected_rendimiento_neto,
+        # A bound box reads its binding through the input channel, as on the calculation path.
+        **resolve_available_bound_inputs_by_casilla_id(m100_snapshot.revision, credits.binding_values),
         **extra_inputs,
     }
     m100_relations: dict[RelationId, Decimal] = {
@@ -719,7 +1022,7 @@ def project_modelo_100_from_m130(
     }
     declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
     verb_baseline_bindings, verb_baseline_enum_bindings, verb_baseline_boolean_bindings = (
-        _verb_baseline_projection_bindings(ccaa, declared_binding_ids)
+        _verb_baseline_projection_bindings(ccaa, m100_snapshot.revision)
     )
     profile_decimal_bindings, profile_date_bindings, profile_enum_bindings, profile_boolean_bindings = (
         _profile_projection_bindings(
@@ -732,11 +1035,26 @@ def project_modelo_100_from_m130(
         )
     )
 
-    merged_bindings = {**verb_baseline_bindings, **profile_decimal_bindings, **extra_bindings}
+    merged_bindings = {
+        **verb_baseline_bindings,
+        **profile_decimal_bindings,
+        **credits.binding_values,
+        **extra_bindings,
+    }
     merged_enum_bindings = {**verb_baseline_enum_bindings, **profile_enum_bindings, **extra_enum_bindings}
     merged_date_bindings = dict(profile_date_bindings)
     merged_boolean_bindings = {**verb_baseline_boolean_bindings, **profile_boolean_bindings}
     _apply_zero_maritime_projection_default(declared_binding_ids, merged_bindings, merged_boolean_bindings)
+    absent_profile_binding_ids = _absent_profile_binding_ids(
+        m100_snapshot.revision,
+        supplied={
+            *merged_bindings,
+            *merged_enum_bindings,
+            *merged_date_bindings,
+            *merged_boolean_bindings,
+            *credits.unresolved_binding_ids,
+        },
+    )
 
     try:
         engine_result = calculate_registry_snapshot(
@@ -746,6 +1064,7 @@ def project_modelo_100_from_m130(
             binding_values=merged_bindings,
             enum_binding_values=merged_enum_bindings,
             relation_values=m100_relations,
+            unresolved_binding_ids=(*credits.unresolved_binding_ids, *absent_profile_binding_ids),
             date_binding_values=merged_date_bindings or None,
             boolean_binding_values=merged_boolean_bindings or None,
         )
@@ -763,6 +1082,12 @@ def project_modelo_100_from_m130(
         )
         raise
 
+    _raise_if_absent_profile_facts_block_projection(
+        engine_result,
+        m100_snapshot.revision,
+        absent_profile_binding_ids=absent_profile_binding_ids,
+        declaration=declaration,
+    )
     return ModeloProjectServiceResult(
         year=year,
         ccaa=ccaa,
@@ -778,17 +1103,13 @@ def project_modelo_100_from_m130(
             rendimiento_neto=annual.total_rendimiento_neto,
             pagos_fraccionados=annual.total_pagos_fraccionados,
         ),
-        casilla_observations=tuple(
-            ModeloProjectionCasillaObservation(
-                casilla_id=entry.target_casilla_id,
-                value=entry.value,
-                formula_id=entry.formula_id,
-                legal_refs=tuple(entry.legal_refs),
-                source_refs=tuple(entry.source_refs),
-            )
-            for entry in engine_result.entries
+        casilla_observations=_projection_observations(
+            engine_result,
+            source_casilla_ids=_source_resolved_casilla_ids(credits, m100_snapshot.revision),
         ),
         m100_projection=_m100_projection_result(engine_result.values, declaration=declaration),
+        unresolved_bindings=_unresolved_bindings(credits, m100_snapshot.revision),
+        unresolved_casillas=_unresolved_casillas(engine_result, m100_snapshot.revision),
     )
 
 
@@ -1041,6 +1362,7 @@ def compare_modelo_years(
 
 
 __all__ = [
+    "UNRESOLVED_OPERAND_REASON",
     "ModeloCompareDeltaRow",
     "ModeloCompareNeedTwoYearsError",
     "ModeloCompareNoRevisionsError",
@@ -1056,6 +1378,8 @@ __all__ = [
     "ModeloProjectServiceResult",
     "ModeloProjectionCasillaObservation",
     "ModeloProjectionError",
+    "ModeloProjectionUnresolvedBinding",
+    "ModeloProjectionUnresolvedCasilla",
     "RegistrySnapshotError",
     "RegistryValidationError",
     "compare_modelo_years",

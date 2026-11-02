@@ -20,6 +20,24 @@ desktop:
     archived_empty: No hi ha res arxivat
     archived_toggle: Arxivades ({count})
     attach_filter: Documents
+    attachment_grant_document: '{name} a {model}'
+    attachment_grant_images: Imatges de pàgines a {model}
+    attachment_grant_revoke: Revoca
+    attachment_grants_title: Permisos recordats
+    attachment_refusal:
+      acknowledgement_missing: No has permès aquesta lectura.
+      cloud_upload_not_permitted: Aquesta instal·lació no permet que els documents
+        surtin d'aquest ordinador.
+      document_removed: El fitxer s'ha eliminat.
+      file_changed_during_read: El fitxer ha canviat. Torna a afegir-lo per llegir
+        la versió nova.
+      gestor_mode: El mode gestor mai envia documents fora d'aquest ordinador.
+      grant_revoked: Aquest permís ja s'ha revocat.
+      not_signed_in: Inicia la sessió per respondre.
+      profile_not_eligible: Aquest perfil no pot enviar documents fora d'aquest ordinador.
+      reference_unknown: L'agent ja no espera aquest fitxer.
+      service_failed: No s'ha pogut registrar el permís, així que no s'ha enviat res.
+    attachment_refused: Aquest fitxer no s'ha enviat. {reason}
     attachments: Fitxers per al missatge següent
     attachments_refused: 'No acceptats: {count}'
     attachments_uploading: 'S''estan pujant: {count}'
@@ -43,12 +61,20 @@ desktop:
     condition_usage_exhausted: Has arribat al límit d'ús del proveïdor. Consulta el
       teu compte del proveïdor o tria'n un altre.
     consent_allow: Envia-ho a {provider}
+    consent_allow_remember: Permet i recorda
+    consent_allow_session: Permet durant aquesta sessió
     consent_decline: No ho enviïs
+    consent_document_text: El text llegit de {name}
     consent_items: Què s'enviaria
     consent_lead: Per respondre, {model} necessita el contingut següent. Si l'envies,
       surt d'aquest ordinador i va a {provider}.
     consent_note: No s'envia res fins que triïs. Si no l'envies, es queda en aquest
       ordinador.
+    consent_page_images: Imatges de les pàgines de {name}
+    consent_page_images_warning: Les imatges mostren tot el que hi ha a la pàgina
+      i surten d'aquest ordinador. Si les permets per més endavant, cobreixen qualsevol
+      document que llegeixi aquest model.
+    consent_recall: El que ja s'ha enviat no es pot recuperar.
     consent_title: Vols enviar això a {provider}?
     conversation_deleting: Aquesta conversa s'està eliminant, així que no admet fitxers.
     conversation_id_taken: Aquesta conversa no pot desar fitxers. Comença una conversa

@@ -461,7 +461,23 @@ def _seed_default_answers(flow: WizardFlow, canonical: dict[str, str]) -> dict[s
     return seeded
 
 
-def _persist_full_flow_answers(
+def _detach_election_values(
+    flow: WizardFlow,
+    stated: Mapping[str, str],
+    profile_values: dict[str, str],
+) -> dict[str, str]:
+    """Remove undated election copies from ``profile_values`` and return the stated ones."""
+    election_values: dict[str, str] = {}
+    for question in (question for section in flow.sections for question in section.questions):
+        if question.id in ELECTION_QUESTION_IDS and question.profile_key is not None:
+            # An undated copy of the dated election facts would drop every other ejercicio's.
+            profile_values.pop(question.profile_key, None)
+            if question.id in stated:
+                election_values[question.profile_key] = stated[question.id]
+    return election_values
+
+
+def persist_full_flow_answers(
     flow: WizardFlow,
     answers: BaseModel,
     *,
@@ -475,22 +491,16 @@ def _persist_full_flow_answers(
     from ..user_profile.projections import record_to_path_values
     from .persistence import project_answers, serialise_answers
 
-    stated = election_answers(answers)
-    election = election_changes(flow, stated)
-    profile_values = serialise_answers(flow, answers)
-    election_values: dict[str, str] = {}
-    for question in (question for section in flow.sections for question in section.questions):
-        if question.id in ELECTION_QUESTION_IDS and question.profile_key is not None:
-            # An undated copy of the dated election facts would drop every other ejercicio's.
-            profile_values.pop(question.profile_key, None)
-            if question.id in stated:
-                election_values[question.profile_key] = stated[question.id]
     profile_decode_context = operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(
         profile_id,
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
     values = record_to_path_values(record)
+    stated = election_answers(answers, stored=values)
+    election = election_changes(flow, stated)
+    profile_values = serialise_answers(flow, answers)
+    election_values = _detach_election_values(flow, stated, profile_values)
     values.update({path: value for path, value in profile_values.items() if value})
     values.update(election_values)
     require_filing_baseline(flow, project_answers(flow, values))
@@ -610,7 +620,7 @@ def _run_full_flow(
     # patch scoped to the pages the operator actually answered
     # (``supplied_question_ids``); the full serialisation here feeds the
     # filing-baseline survival check and the success payload.
-    return _persist_full_flow_answers(flow, answers, profile_id=profile_id, operation=operation)
+    return persist_full_flow_answers(flow, answers, profile_id=profile_id, operation=operation)
 
 
 def _enter_requested_output_language(kwargs: dict[str, object], language_stack: contextlib.ExitStack) -> None:
@@ -872,7 +882,7 @@ def _wizard_validation_bad(flow: WizardFlow, error: ValidationError) -> typer.Ba
     return typer.BadParameter(message)
 
 
-def _run_wizard_persistence_path(
+def run_wizard_persistence_path(
     flow: WizardFlow,
     mode: WizardPersistMode,
     canonical: dict[str, str],
@@ -956,7 +966,7 @@ def _execute_wizard_command(
     modify_descendants_message = tr("application.wizard.notices.modify_descendants_via_door")
     refuse_foral_ccaa(canonical, explicit_flags, operation=operation)
     try:
-        profile_values, record_changed = _run_wizard_persistence_path(
+        profile_values, record_changed = run_wizard_persistence_path(
             flow,
             mode,
             canonical,

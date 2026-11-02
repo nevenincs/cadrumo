@@ -160,3 +160,12 @@ def test_a_decision_field_the_fingerprint_reads_moves_it() -> None:
     for field, value in {"counterparty_country": "DE", "source_jurisdiction": "FR", "category_id": "x"}.items():
         assert field in CLASSIFICATION_DECISION_FIELDS
         assert row_fingerprint(row.model_copy(update={field: value})) != row_fingerprint(row), field
+
+
+def test_a_stated_accrual_date_is_a_decision_field_the_origin_reads() -> None:
+    """The date the operator states for Renta changes the facts a classification origin is read from."""
+    row = _row()
+    stated = row.model_copy(update={"accrual_date": date(2026, 3, 30)})
+
+    assert "accrual_date" in CLASSIFICATION_DECISION_FIELDS
+    assert classification_facts(stated) != classification_facts(row)

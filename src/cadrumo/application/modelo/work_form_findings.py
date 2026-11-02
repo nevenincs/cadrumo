@@ -144,6 +144,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.iva_import_document_unrecordable": (
             "application.modelo.work_form.finding_action.file_another_way"
         ),
+        "application.modelo.findings.iva_cuota_disagrees_with_rate": (
+            "application.modelo.work_form.finding_action.correct_and_recalculate"
+        ),
         "application.modelo.findings.iva_reagp_document_unrecordable": (
             "application.modelo.work_form.finding_action.file_another_way"
         ),
@@ -155,6 +158,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         ),
         "application.modelo.findings.cuota_less_ledger_row_base_missing": (
             "application.modelo.work_form.finding_action.add_base_to_entry"
+        ),
+        "application.modelo.findings.shared_casilla_cells_unadjudicated": (
+            "application.modelo.work_form.finding_action.shared_box_awaits_review"
         ),
         # Figures that disagree.
         "application.modelo.findings.m303_m349_intracom_reconciliation_mismatch": (

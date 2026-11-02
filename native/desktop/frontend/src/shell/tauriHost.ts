@@ -152,6 +152,23 @@ export function tauriHost(): Host {
         },
       },
     },
+    profileCompanions: {
+      household: (language) => call("user_profile_household", { language }),
+      imputationElection: (profile, taxYear, language) =>
+        call("user_profile_imputation_election", {
+          profile,
+          taxYear,
+          language,
+        }),
+    },
+    borrador: {
+      read: (profile, selector) =>
+        call("aeat_sync_borrador_read", { profile, selector }),
+      query: (profile, selector) =>
+        call("aeat_sync_borrador_query", { profile, selector }),
+      compare: (profile, year, language) =>
+        call("aeat_sync_borrador_compare", { profile, year, language }),
+    },
     aeatSync: {
       status: (language) => call("aeat_sync_status", { language }),
       observe: observeAeatSync,
@@ -657,6 +674,17 @@ function tauriAgent(call: HostCall): {
           approval: { reply_id, request_id },
           optionId,
         }).then(() => undefined),
+      attachmentCard: ({ reply_id, request_id }) =>
+        call("agent_attachment_card", { approval: { reply_id, request_id } }),
+      attachmentRelease: ({ reply_id, request_id }, optionId, scope) =>
+        call("agent_attachment_release", {
+          approval: { reply_id, request_id },
+          optionId,
+          scope,
+        }),
+      attachmentGrants: () => call("agent_attachment_grants", {}),
+      attachmentGrantRevoke: (grantId) =>
+        call("agent_attachment_grant_revoke", { grantId }),
       async observe(conversationId, listener) {
         const events = new Channel<AgentStreamEvent>();
         events.onmessage = listener;

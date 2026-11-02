@@ -422,6 +422,11 @@ cli:
         country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte. Obligatorio:
           determina el encaminamiento de ambas declaraciones informativas, por lo
           que nunca se presupone.'
+        duplicate_help: Responde qué factura guardada puede ser ya un documento, sin
+          escribir nada.
+        duplicate_invalid: El tipo de factura y los datos del documento deben tener
+          la forma esperada.
+        duplicate_kind_help: 'Sentido de la factura: issued o received.'
         euro_rate_unavailable_message: No se encontró tipo de cambio a euros para
           {currency} el {date}, así que la factura se registró sin valor en euros
           y queda fuera de los totales en euros hasta que se añada un tipo.
@@ -453,6 +458,19 @@ cli:
           por cada --line. Para la entrada estructurada sustituye a los campos escalares
           --taxable-base y --iva-rate.
         list_help: Lista las facturas del catálogo de conciliación.
+        match_help: Responde qué movimiento salda qué factura y las opciones para
+          vincular a mano, sin vincular nada.
+        match_invalid: Un vínculo preparado debe indicar el id de un movimiento y
+          el de una factura como MOVIMIENTO:FACTURA, ambos completos.
+        match_invoice_help: 'Id completo de una factura: pondera solo esa factura
+          y lista los movimientos abiertos cercanos a su día de emisión.'
+        match_judge_help: Vínculo repetible que se compara antes de hacerlo permanente,
+          como MOVIMIENTO:FACTURA; cada uno vuelve con lo que no coincide entre sus
+          dos lados.
+        match_staged_help: Vínculo preparado y sin guardar, repetible, como MOVIMIENTO:FACTURA;
+          ninguno de los dos se ofrece a otra cosa.
+        match_transaction_help: 'Id completo de un movimiento: devuelve solo su sugerencia
+          y lista las facturas a las que puede vincularse.'
         operation_date_help: Fecha en que se realizo la entrega o prestación (AAAA-MM-DD).
           Es la fecha de devengo del art. 75 LIVA que determina en que periodo se
           declara la cuota; sin ella se utiliza la fecha de factura.
@@ -463,11 +481,11 @@ cli:
           C sustituciones del destinatario en consigna'
         preview_help: 'Previsualiza un borrador de factura: las cifras, los hallazgos
           y el veredicto que alcanzaría la operación de alta, sin guardar nada. El
-          NIF de la contraparte (counterparty_nif) y las líneas del borrador (lines,
-          una matriz JSON de objetos de línea con key, description, quantity, unit_price,
-          iva_rate, subtotal e iva_amount opcionales; una cifra omitida queda desconocida;
-          úsala en lugar de --taxable-base) llegan como un objeto JSON por --secrets-stdin
-          o --secrets-fd.'
+          NIF de la contraparte (`counterparty_nif`) y las líneas del borrador (`lines`,
+          una matriz JSON de objetos de línea con `key`, `description`, `quantity`,
+          `unit_price`, `iva_rate`, `subtotal` e `iva_amount` opcionales; una cifra
+          omitida queda desconocida; úsala en lugar de --taxable-base) llegan como
+          un objeto JSON por --secrets-stdin o --secrets-fd.'
         preview_operation_date_role_help: Función guardada de la fecha de operación
           de la factura que repite una corrección.
         preview_printed_total_help: El total impreso en el documento, que se compara
@@ -638,13 +656,15 @@ cli:
         group_help: Registra las retenciones que te certifican tus pagadores.
         importe_integro_help: Renta dineraria que pagó el pagador, antes de la retención.
         income_class_help: Clase de renta sobre la que el pagador retuvo, por ejemplo
-          trabajo.
+          `trabajo`.
         ingreso_a_cuenta_help: Ingreso a cuenta que hizo el pagador por renta en especie.
           Cuenta íntegro como crédito.
         ingreso_a_cuenta_repercutido_help: Parte del ingreso a cuenta que el pagador
           te repercutió. No puede superar el ingreso a cuenta.
         invalid_input: 'Un valor no es válido: revisa la referencia del pagador, la
           revisión y la huella del certificado.'
+        list_absences_help: Lista tus declaraciones de ausencia de retención de un
+          ejercicio, vigentes y retiradas, con la revisión en que consta cada una.
         list_help: Lista los registros de pagadores de un ejercicio sin ningún NIF.
         origin_help: 'Quién declara las cifras: payer_certificate u operator_declaration.'
         payer_name_help: Razón social del pagador.
@@ -690,7 +710,7 @@ cli:
         list_help: Lista las reglas de clasificación almacenadas ordenadas por prioridad.
         pattern_overrun: El patrón no pudo terminar de buscar en las descripciones
           de este libro dentro de su límite de tiempo, así que no se ha guardado.
-          Simplifícalo, por ejemplo evitando repeticiones dentro de repeticiones.
+          Simplifica el patrón, por ejemplo evitando repeticiones dentro de repeticiones.
         priority_help: Prioridad numérica; un valor menor se evalúa primero (por defecto
           100).
         remove_created_at_help: Fecha de creación de la regla tal como aparece en
@@ -702,7 +722,7 @@ cli:
         remove_not_found: Ninguna regla guardada tiene el id %{rule_id}. No se ha
           cambiado nada.
         remove_rule_id_help: Id completo de la regla que quieres eliminar, tal como
-          lo muestra la salida JSON de rule list.
+          lo muestra la salida JSON de `rule list`.
         remove_stale: La regla guardada %{rule_id} se volvió a guardar el %{created_at},
           que no es la fecha que indicaste. No se ha eliminado nada; consulta el listado
           de reglas y compruébala.
@@ -1350,7 +1370,10 @@ cli:
         binding_help: Valor adicional para el origen de una casilla del Modelo 100,
           como KEY=VALUE. Repite la opción para indicar varios. Los orígenes de retenciones
           valen cero si no se indican.
-        casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
+        casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (p. ej.
+          0003=1150 para retribuciones dinerarias del trabajo). Solo se aceptan casillas
+          de entrada; una casilla calculada se rechaza. Repite la opción para indicar
+          varias.
         ccaa_help: Clave de la comunidad autónoma de residencia fiscal para la escala
           autonómica del Modelo 100 (p. ej. cataluna, comunidad-valenciana). Debe
           coincidir con un valor de las definiciones de los modelos.
@@ -1360,6 +1383,9 @@ cli:
         no_m130_units: No existen declaraciones del Modelo 130 en borrador para el
           ejercicio %{year}. Crea antes una con `aeat app modelo work create --modelo
           130 --year %{year} --period 1T`.
+        profile_fact_missing: 'La proyección no puede obtener las casillas de base
+          liquidable y cuota porque el perfil activo no declara: %{profile_facts}.
+          Indícalo con `%{command}` y vuelve a ejecutar la proyección.'
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -3175,6 +3201,9 @@ cli:
     add:
       account_help: Cuenta bancaria propia a la que pertenece el movimiento, por su
         id (p. ej. acc-01).
+      accrual_date_help: Fecha en que el ingreso o el gasto se devenga en la Renta
+        según el art. 14 LIRPF y el art. 7 RIRPF (AAAA-MM-DD). No cambia el periodo
+        del IVA. Si la omites no se guarda ninguna.
       actor_help: Tu nombre, registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
@@ -3362,9 +3391,9 @@ cli:
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       iva_vehicle_use_help: 'Para qué se usa el vehículo de la fila, cuando el art.
         95.Tres.2.ª LIVA lo aparta de la presunción del 50 por 100: uno de los seis
-        usos presumidos al 100 por 100 (mixed_vehicle_goods_transport, paid_passenger_transport,
-        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
-        surveillance) u outside_presumed_classes si esa regla no nombra el vehículo.'
+        usos presumidos al 100 por 100 (`mixed_vehicle_goods_transport`, `paid_passenger_transport`,
+        `paid_driver_or_pilot_training`, `manufacturer_testing_or_promotion`, `commercial_agent_travel`,
+        `surveillance`) u `outside_presumed_classes` si esa regla no nombra el vehículo.'
       llm_classified_by_label: clasificado-por
       llm_confidence_label: confianza
       llm_exclusive: --llm no puede combinarse con --classification ni --file; la
@@ -3537,6 +3566,7 @@ cli:
       kind_help: Solo este tipo de valor; repítelo para varios. Sin él, todos los
         tipos.
     labels:
+      accrual_date: Fecha de devengo en Renta
       active: Activas
       amount: Importe
       archived: Archivadas
@@ -3719,13 +3749,18 @@ cli:
       read_evidence_help: Lee la factura adjunta de la transacción en local y aliméntala
         al proponente de división --llm.
       yes_help: Confirma la división de la transacción
+    split_check_help: Responde sobre partes de división sin guardar como las aceptaría
+      quien las escribe, sin escribir nada.
+    split_check_id_help: Id completo del movimiento que se divide.
+    split_check_invalid: Cada parte debe ser un objeto JSON con la forma esperada,
+      para un id de movimiento completo.
     staged_check_category_help: Categoría de gasto repetible que se contrasta con
       una clasificación.
     staged_check_help: Responde al trabajo preparado del libro como lo aceptarían
-      los escritores, sin guardar nada. Las filas preparadas (rows, una matriz JSON
-      de objetos con transaction_id, cells y, opcionales, evidence_staged y m210_staged)
-      y los movimientos nuevos (drafts, una matriz JSON de objetos con key y fields)
-      llegan como un objeto JSON por --secrets-stdin o --secrets-fd.
+      los escritores, sin guardar nada. Las filas preparadas (`rows`, una matriz JSON
+      de objetos con `transaction_id`, `cells` y, opcionales, `evidence_staged` y
+      `m210_staged`) y los movimientos nuevos (`drafts`, una matriz JSON de objetos
+      con `key` y `fields`) llegan como un objeto JSON por --secrets-stdin o --secrets-fd.
     staged_check_invalid: Cada fila y borrador preparados deben ser un objeto JSON
       con la forma esperada.
     stash:
@@ -3741,6 +3776,8 @@ cli:
     update:
       account_help: Vincula la entrada a esta cuenta bancaria propia, por su id (p.
         ej. acc-01).
+      accrual_date_help: Nueva fecha en que el ingreso o el gasto se devenga en la
+        Renta según el art. 14 LIRPF y el art. 7 RIRPF (AAAA-MM-DD).
       amount_help: Nueva magnitud de importe no negativa de la transacción
       counterparty_help: Nueva descripción de la contraparte
       currency_help: Nuevo código de moneda ISO 4217

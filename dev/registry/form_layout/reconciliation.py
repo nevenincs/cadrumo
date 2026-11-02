@@ -165,7 +165,9 @@ def reconcile_unreferenced_export_producers(before: ModeloRevision, after: Model
 
     This proves presentation equivalence, not correctness of the export change.
     The export publisher must separately admit its source-pinned record drift.
-    A computed X-or-blank marker may become an already displayed manual casilla;
+    A computed X-or-blank marker may become an already displayed manual casilla,
+    and an unseen header slot printing a blank or one constant may become a
+    computed marker printing the same constant;
     all geometry, constraints, sources and other declarations must stay identical.
     """
     layout = _validated_producer_form(before, after)
@@ -259,12 +261,28 @@ def _reconcile_producer_field(
         _validate_marker_owner(old_field, new_field, address, before, layout, referenced)
         old_field.update(kind="casilla", casilla_id=new_field["casilla_id"], computed_key=None)
         changed += 1
+    if old_field["kind"] == "header" and new_field["kind"] == "computed":
+        _validate_header_to_marker(old_field, new_field, address, referenced)
+        old_field.update(kind="computed", computed_key=new_field["computed_key"], producer_key=None)
+        return changed + 1
     if old_field["producer_key"] == new_field["producer_key"]:
         return changed
     if address in referenced or old_field["kind"] != "header" or new_field["kind"] != "header":
         raise RegistryValidationError("producer reconciliation refuses a displayed or non-header change")
     old_field["producer_key"] = new_field["producer_key"]
     return changed + 1
+
+
+def _validate_header_to_marker(
+    old_field: dict[str, object],
+    new_field: dict[str, object],
+    address: tuple[str, str, str],
+    referenced: set[tuple[str, str, str]],
+) -> None:
+    """Admit an unseen blank-or-constant slot whose feed moves from a producer fact to a computed marker."""
+    marker = old_field["presence_marker"]
+    if address in referenced or marker is None or marker != new_field["presence_marker"]:
+        raise RegistryValidationError("producer reconciliation refuses a displayed or marker-changing feed")
 
 
 def _validate_marker_owner(

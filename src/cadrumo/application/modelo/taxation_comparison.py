@@ -47,7 +47,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
@@ -81,6 +81,9 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 # Output types
 # ---------------------------------------------------------------------------
+
+MATERIALITY_THRESHOLD: Final = ONE
+"""The difference in euros below which either filing mode is acceptable; not a tax-law limit."""
 
 _DECLARATION_TYPE_BINDING_SUFFIX = "profile-declaration-type"
 _CUOTA_RESULTANTE_ROLE = "irpf_cuota_resultante_autoliquidacion"  # casilla 0595
@@ -128,6 +131,18 @@ class TaxationRecommendation(StrEnum):
     INDIFFERENT = "indifferent"
 
 
+class TaxationRecommendationReason(StrEnum):
+    """Why the comparison recommends what it does, as a closed token.
+
+    The words for a reason, with the amounts it rests on, are served by
+    :mod:`~cadrumo.application.modelo.taxation_comparison_words`.
+    """
+
+    CONJUNTA_LOWER_RESULT = "conjunta_lower_result"
+    INDIVIDUAL_LOWER_RESULT = "individual_lower_result"
+    BELOW_MATERIALITY = "below_materiality"
+
+
 class TaxationComparisonResult(BaseModel):
     """Typed result of a conjunta-vs-individual comparison run.
 
@@ -160,7 +175,7 @@ class TaxationComparisonResult(BaseModel):
     delta_resultado: Decimal
 
     recommendation: TaxationRecommendation
-    recommendation_reason: str
+    recommendation_reason: TaxationRecommendationReason
 
     # Honesty scope: the individual branch reuses the unidad familiar's single
     # input set, so it is faithful only for a single-earner household.
@@ -320,25 +335,16 @@ def compare_taxation_modes(
     # delta > 0 → conjunta is cheaper (individual is more expensive)
     delta = individual_resultado - conjunta_resultado
 
-    threshold = ONE  # application materiality identity; not a tax-law rate or limit
+    threshold = MATERIALITY_THRESHOLD
     if delta > threshold:
         recommendation = TaxationRecommendation.CONJUNTA
-        reason = (
-            f"conjunta saves {delta:.2f} € (resultado conjunta {conjunta_resultado:.2f} € "
-            f"vs individual {individual_resultado:.2f} €)"
-        )
+        reason = TaxationRecommendationReason.CONJUNTA_LOWER_RESULT
     elif delta < -threshold:
         recommendation = TaxationRecommendation.INDIVIDUAL
-        reason = (
-            f"individual saves {-delta:.2f} € (resultado individual {individual_resultado:.2f} € "
-            f"vs conjunta {conjunta_resultado:.2f} €)"
-        )
+        reason = TaxationRecommendationReason.INDIVIDUAL_LOWER_RESULT
     else:
         recommendation = TaxationRecommendation.INDIFFERENT
-        reason = (
-            f"difference is {delta:.2f} € (below the {threshold:.0f} € materiality threshold); "
-            "either filing mode is acceptable"
-        )
+        reason = TaxationRecommendationReason.BELOW_MATERIALITY
 
     return TaxationComparisonResult(
         filing_year=snapshot.filing_year,
@@ -492,7 +498,7 @@ def compare_taxation_for_work_unit(
 
     period_date = calculation_filing_date(work_unit.period)
 
-    # Build resolved inputs the same way calculate_modelo_revision does,
+    # Build resolved inputs the same way the calculation service does,
     # using zero casilla overrides (the work unit has no explicit inputs here —
     # the comparison uses pure profile bindings).
     # ``compare_taxation_modes`` is Modelo 100 only, and no Modelo 100 revision

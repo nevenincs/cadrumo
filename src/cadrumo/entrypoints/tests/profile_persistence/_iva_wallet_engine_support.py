@@ -309,21 +309,8 @@ def workflow_profile(tax_id: str = _TAXPAYER_NIF) -> TaxpayerProfile:
 
 
 def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
-    return {
-        "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
-        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-    }
-
-
-def _negative_modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
-    values = _modelo_303_engine_inputs()
-    values["modelo-303-iva-repercutido-general-cuota"] = Decimal("0.00")
-    values["modelo-303-iva-soportado-interiores-cuota"] = Decimal("1000.00")
-    return values
+    """The operator-owned binding a Modelo 303 calculation takes; the cuotas come from the ledger."""
+    return {"modelo-303-profile-state-attribution-ratio": Decimal("100")}
 
 
 def _work_unit_and_revision_for_wallet_gate(

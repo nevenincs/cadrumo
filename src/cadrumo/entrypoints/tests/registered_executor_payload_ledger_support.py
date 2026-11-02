@@ -494,6 +494,32 @@ def _ledger_rule_trial(ctx: PayloadContext) -> PayloadResult:
     )
 
 
+def _ledger_invoice_match(ctx: PayloadContext) -> PayloadResult:
+    # A link naming records the conformance profile does not hold is judged as not found.
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "judge": [{"transaction_id": "a" * 64, "invoice_id": "b" * 64}]},
+    )
+
+
+def _ledger_invoice_duplicate(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "kind": InvoiceKind.RECEIVED, "invoice_number": "CONFORMANCE-NONE"},
+    )
+
+
+def _ledger_split_check(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(
+        ctx.profile_subject,
+        {
+            "profile_id": ctx.profile_id,
+            "transaction_id": "0" * 64,
+            "parts": ({"amount": "1", "description": "first"}, {"description": "second"}),
+        },
+    )
+
+
 def _ledger_staged_check(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
@@ -769,6 +795,9 @@ LEDGER_BUILDERS: dict[str, PayloadBuilder] = {
     "ledger.track": _ledger_track,
     "ledger.entry-options": _ledger_entry_options,
     "ledger.rule.trial": _ledger_rule_trial,
+    "ledger.invoice.duplicate": _ledger_invoice_duplicate,
+    "ledger.invoice.match": _ledger_invoice_match,
+    "ledger.split.check": _ledger_split_check,
     "ledger.staged.check": _ledger_staged_check,
     "ledger.known-values": _ledger_known_values,
     "ledger.list": _ledger_list,

@@ -18,11 +18,11 @@ from decimal import Decimal
 import pytest
 from textual.widgets import Footer, Input, Static
 
+from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormOrigin,
-    ModeloFormResultDirection,
     ModeloFormSection,
     ModeloFormText,
     ModeloFormTextDisclosure,
@@ -42,7 +42,7 @@ from ..search import search, search_entries
 from ..vocabulary import CONFIRM_MARK, DONE_MARK, HERE_MARK, ORIGIN_MARKS
 from .declaration_states import with_result
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form, with_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -60,6 +60,7 @@ def _numbered_form(boxes: tuple[str, ...]) -> ModeloWorkForm:
         official_heading=None,
         blocks=tuple(ModeloFormFieldBlock(id=f"n{field.box}", field=field) for field in fields),
         counts=page.counts,
+        applies=True,
     )
     first = page.model_copy(update={"sections": (*page.sections, section)})
     return form.model_copy(update={"pages": (first, *form.pages[1:])})
@@ -165,7 +166,7 @@ def _many_boxes() -> ModeloWorkForm:
     section = page.sections[0].model_copy(
         update={"blocks": tuple(ModeloFormFieldBlock(id=f"m{field.box}", field=field) for field in fields)}
     )
-    return form.model_copy(update={"pages": (page.model_copy(update={"sections": (section,)}), *form.pages[1:])})
+    return with_pages(form, (page.model_copy(update={"sections": (section,)}), *form.pages[1:]))
 
 
 @pytest.mark.asyncio
@@ -213,6 +214,7 @@ def test_a_section_named_like_an_identifier_is_named_by_its_boxes_or_else_its_pl
             official_heading=None,
             blocks=tuple(ModeloFormFieldBlock(id=f"f{field.box}", field=field) for field in fields),
             counts=synthetic_form().counts,
+            applies=True,
         )
 
     titles = {}

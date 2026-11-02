@@ -160,13 +160,16 @@ def test_modelo_100_scalar_profile_values_resolve_from_real_profile_facts(filing
 
 
 @pytest.mark.parametrize("filing_year", _PROFILE_BACKED_YEARS)
-def test_modelo_100_family_row_bindings_address_repeating_profile_collections(filing_year: int) -> None:
+def test_modelo_100_family_row_bindings_read_the_canonical_stored_row_objects(filing_year: int) -> None:
     snapshot = _snapshot(filing_year)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
-    for binding_id, (collection, field) in FAMILY_ROW_BINDINGS.items():
+    for binding_id, (object_path, leaf, count_path) in FAMILY_ROW_BINDINGS.items():
         selector: Any = bindings[binding_id].provider
-        assert selector.profile_model == "RentaFamilyProfile"
-        assert selector.collection == collection
-        assert selector.field == field
+        assert selector.profile_model is None
+        assert (selector.rows.object_path, selector.rows.leaf, selector.rows.count_path) == (
+            object_path,
+            leaf,
+            count_path,
+        )
         assert selector.repeating is True

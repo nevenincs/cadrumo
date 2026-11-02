@@ -18,7 +18,9 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_test_profile_record,
 )
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -193,7 +195,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_131,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={"rendimientos_integros": Decimal("900.00")},
@@ -209,7 +211,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             calculation_repository=calculation_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_147:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={"rendimientos_integros": Decimal("900.00")},
@@ -218,7 +220,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
                 detail_rows=rows,
                 ports=_calculation_ports_147,
                 clock=_CLOCK,
-            )
+            ).revision
         plazo_resolution = calculated_m210_plazo_resolution(
             work_unit=work_unit,
             revision=revision,

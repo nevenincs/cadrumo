@@ -46,14 +46,9 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from .value_presentation import format_casilla_value
+from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResultDirection
 from .work_form_findings import ModeloFormAttention
-from .work_form_models import (
-    AMOUNTLESS_RESULT_DIRECTIONS,
-    ModeloFormField,
-    ModeloFormOrigin,
-    ModeloFormResultDirection,
-    ModeloWorkForm,
-)
+from .work_form_models import ModeloFormField, ModeloFormOrigin, ModeloWorkForm
 from .work_form_next_step import blocking_count, check_count, confirm_count, missing_count, result_fields
 from .work_form_wording import date_text, day_text, field_value_text, origin_words
 

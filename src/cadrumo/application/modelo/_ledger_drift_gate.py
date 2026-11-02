@@ -44,7 +44,11 @@ from ...domain.modelos.verification_report import (
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.iva_ledger_classification import iva_mixed_use_treatment_is_undetermined
-from ..aggregation.ledger_filing_snapshot import OPERATION_DATE_FIELD_SET_VERSION, evaluate_ledger_filing_staleness
+from ..aggregation.ledger_filing_snapshot import (
+    ACCRUAL_DATE_FIELD_SET_VERSION,
+    OPERATION_DATE_FIELD_SET_VERSION,
+    evaluate_ledger_filing_staleness,
+)
 from ..aggregation.ledger_membership import (
     LedgerSourceMembership,
     consumed_inventory_rows,
@@ -234,7 +238,10 @@ def _transaction_drift_findings(
         return [finding]
     catalogue = tx_repo.load()
     verdict = evaluate_ledger_filing_staleness(anchor, catalogue)
-    newly_dated = _operation_dated_since_older_anchor(anchor, catalogue)
+    newly_dated = (
+        *_operation_dated_since_older_anchor(anchor, catalogue),
+        *_accrual_dated_since_older_anchor(anchor, catalogue),
+    )
     if newly_dated:
         verdict = verdict.model_copy(
             update={"is_stale": True, "changed": tuple(sorted({*verdict.changed, *newly_dated}))},
@@ -270,6 +277,26 @@ def _operation_dated_since_older_anchor(
             if transaction.transaction_id in anchored
             and transaction.operation_date is not None
             and is_iva_cash_accounting_none(transaction.cash_accounting_treatment)
+        )
+    )
+
+
+def _accrual_dated_since_older_anchor(
+    anchor: LedgerFilingSnapshot,
+    catalogue: TransactionCatalogue,
+) -> tuple[str, ...]:
+    """Name anchored rows carrying an accrual date a pre-version-7 anchor cannot see.
+
+    The accrual date is independent of the IVA regime, so no regime filter applies.
+    """
+    if anchor.fingerprint_field_set_version >= ACCRUAL_DATE_FIELD_SET_VERSION:
+        return ()
+    anchored = {row.transaction_id for row in anchor.rows}
+    return tuple(
+        sorted(
+            transaction.transaction_id
+            for transaction in catalogue.values()
+            if transaction.transaction_id in anchored and transaction.accrual_date is not None
         )
     )
 

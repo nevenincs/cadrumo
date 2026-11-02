@@ -58,6 +58,9 @@ def enrollment_review_digest(record: EnrollmentRecord) -> ContentDigest:
         if scope[name] is not None:
             scope[name] = sorted(scope[name], key=canonical_json_bytes)
     proposal["scope"] = scope
+    if proposal.get("label") is None:
+        # A request made without a name keeps the digest it had before keys could be named.
+        proposal.pop("label", None)
     return sha256_hex(
         canonical_json_bytes(
             {

@@ -26,7 +26,8 @@ from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.retencion_facts import load_retencion_actividades_rates
 from ...actividad_asset.tests.register_support import MemoryRepository
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
-from ..renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
+from ..renta_income_ledger import aggregate_renta_income_ledger
+from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
 from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
 from .renta_income_aggregation_support import (

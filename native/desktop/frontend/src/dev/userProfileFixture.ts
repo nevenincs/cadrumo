@@ -246,6 +246,23 @@ export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
             ? "••••"
             : edit.value
           : null;
+      } else if (edit.kind === "ejercicio_answer") {
+        const [stated, year] = edit.values;
+        const target = data.sections
+          .flatMap((section) => section.fields)
+          .find(
+            (field) =>
+              field.ejercicio_answer?.question_id === stated?.question_id,
+          );
+        if (!target?.ejercicio_answer || !stated || !year)
+          throw { code: "refused" };
+        const ejercicio = Number(year.value);
+        target.ejercicio_answer.statements = [
+          ...target.ejercicio_answer.statements.filter(
+            (item) => item.ejercicio !== ejercicio,
+          ),
+          { ejercicio, value: stated.value },
+        ].sort((a, b) => a.ejercicio - b.ejercicio);
       } else if (edit.kind === "auth_method") {
         const provider = fieldOf("auth.provider")!;
         if (
@@ -257,7 +274,13 @@ export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
         fieldOf("auth.clave_movil_route")!.value = edit.clave_movil_route;
         if (edit.certificate !== null) certificate = PICKED.name;
       } else if (edit.kind === "complete") data.setup_state = "complete";
-      else {
+      else if (
+        edit.kind === "descendants" ||
+        edit.kind === "imputation_election"
+      ) {
+        // The profile fixture serves no household or election to edit.
+        throw { code: "refused" };
+      } else {
         const section = data.sections.find(
           (item) => item.key === edit.section_key,
         )!;

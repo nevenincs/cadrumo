@@ -84,6 +84,7 @@ def prepare_ledger_add_command(
         booked_date=booked_date,
         value_date=value_date,
         operation_date=(require_iso8601_date(payload.operation_date) if payload.operation_date is not None else None),
+        accrual_date=(require_iso8601_date(payload.accrual_date) if payload.accrual_date is not None else None),
         amount=amount,
         currency=payload.currency,
         direction=direction,

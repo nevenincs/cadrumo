@@ -17,27 +17,30 @@ from ...domain.calculations.registry.schema_form_layouts import FormPageConditio
 from .calculation_report import CalculationReportRowRole
 from .caller_context import caller_context_of
 from .work_form_counts import count_work_form_fields
+from .work_form_declaration_facts import (
+    ModeloFormAeatData,
+    ModeloFormDeadline,
+    ModeloFormEditClosure,
+    ModeloFormFiling,
+    ModeloFormResult,
+)
 from .work_form_field_projection import project_casilla_field
 from .work_form_field_state import casilla_field_role
 from .work_form_localization import localized_heading
 from .work_form_models import (
-    ModeloFormAeatData,
     ModeloFormCasillaAddressV1,
-    ModeloFormDeadline,
     ModeloFormEditability,
-    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormFiling,
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
     ModeloFormPage,
-    ModeloFormResult,
     ModeloFormSection,
     ModeloWorkForm,
     revised_field,
 )
 from .work_form_notes import NoteSource, project_calculation_notes, project_verification_issues
+from .work_form_outline import form_outline
 from .work_form_result import settlement_result
 
 _INSPECTION_PAGE_ID: Final[str] = "inspection"
@@ -126,6 +129,7 @@ def build_inspection_only_form(
         official_heading=None,
         blocks=blocks,
         counts=count_work_form_fields(fields, filed=context.filed),
+        applies=True,
     )
     page = ModeloFormPage(
         id=_INSPECTION_PAGE_ID,
@@ -148,6 +152,7 @@ def build_inspection_only_form(
         layout_provenance=ModeloFormLayoutProvenance.INSPECTION_ONLY,
         inspection_reason=reason,
         pages=(page,),
+        outline=form_outline((), (page,), context.language, filed=context.filed),
         result_addresses=result_casilla_ids(context),
         counts=count_work_form_fields(fields, filed=context.filed),
         progress=review.progress,

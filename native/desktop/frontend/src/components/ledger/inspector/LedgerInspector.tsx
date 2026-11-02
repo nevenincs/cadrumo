@@ -210,6 +210,7 @@ export function LedgerInspector({
       )}
       {splitting && (
         <SplitDialog
+          port={port}
           row={splitting}
           locale={locale}
           onStage={onStage}

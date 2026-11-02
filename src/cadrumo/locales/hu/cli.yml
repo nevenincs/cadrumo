@@ -413,6 +413,11 @@ cli:
           és a kataszteri azonosító mezővel rögzítheted az ingatlan adatait.
         country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
           adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
+        duplicate_help: Megválaszolja, melyik tárolt számla lehet már a dokumentum,
+          és nem ír semmit.
+        duplicate_invalid: A számla típusának és a dokumentum adatainak a várt alakúnak
+          kell lenniük.
+        duplicate_kind_help: 'A számla iránya: issued vagy received.'
         euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
           {date} napra, ezért a számla euróérték nélkül került rögzítésre, és kimarad
           az eurós összesítésekből, amíg árfolyam nem kerül hozzá.
@@ -445,6 +450,20 @@ cli:
           egy objektumot adj meg. Strukturált bemenetnél a skaláris --taxable-base
           és --iva-rate opció helyett használd.
         list_help: Az egyeztetési katalógus számláinak listázása.
+        match_help: Megválaszolja, melyik tétel melyik számlát egyenlíti ki, és milyen
+          választási lehetőségek vannak kézi összekapcsolásra, de semmit sem kapcsol
+          össze.
+        match_invalid: Az előkészített kapcsolatnak TÉTEL:SZÁMLA alakban meg kell
+          neveznie egy tétel és egy számla teljes azonosítóját.
+        match_invoice_help: 'Egy számla teljes azonosítója: csak azt a számlát mérlegeli,
+          és felsorolja a kiállítási napjához közeli nyitott tételeket.'
+        match_judge_help: Ismételhető kapcsolat, amelyet a véglegessé tétel előtt
+          összevet, TÉTEL:SZÁMLA alakban; mindegyikhez visszaadja, miben nem egyezik
+          a két oldala.
+        match_staged_help: Ismételhető, előkészített, nem mentett kapcsolat TÉTEL:SZÁMLA
+          alakban; egyik sem kínálható fel másnak.
+        match_transaction_help: 'Egy tétel teljes azonosítója: csak annak javaslatát
+          adja vissza, és felsorolja azokat a számlákat, amelyekhez kapcsolható.'
         operation_date_help: A teljesítés (termékértékesítés vagy szolgáltatásnyújtás)
           időpontja (YYYY-MM-DD). Ez a LIVA 75. cikke szerinti adófizetési kötelezettség
           keletkezésének napja, amely meghatározza, melyik időszakban kell az adót
@@ -456,11 +475,11 @@ cli:
           címzettcseréje'
         preview_help: 'Előnézetet ad egy számlavázlatról: azokat az összegeket, észrevételeket
           és döntést, amelyekre a felvétel jutna, anélkül, hogy bármit mentene. A
-          partner adószáma (counterparty_nif) és a vázlat sorai (lines, sorobjektumok
-          JSON-tömbje, opcionális key, description, quantity, unit_price, iva_rate,
-          subtotal és iva_amount mezőkkel; a kihagyott összeg ismeretlen marad; a
-          --taxable-base helyett használd) egy JSON-objektumként érkeznek a --secrets-stdin
-          vagy a --secrets-fd csatornán.'
+          partner adószáma (`counterparty_nif`) és a vázlat sorai (`lines`, sorobjektumok
+          JSON-tömbje, opcionális `key`, `description`, `quantity`, `unit_price`,
+          `iva_rate`, `subtotal` és `iva_amount` mezőkkel; a kihagyott összeg ismeretlen
+          marad; a --taxable-base helyett használd) egy JSON-objektumként érkeznek
+          a --secrets-stdin vagy a --secrets-fd csatornán.'
         preview_operation_date_role_help: A helyesítés által megismételt számla teljesítési
           dátumának tárolt szerepe.
         preview_printed_total_help: A dokumentumra nyomtatott végösszeg, amelyet a
@@ -626,21 +645,24 @@ cli:
         attest_absence_help: Kijelented, hogy egy adóévben egyetlen kifizető sem vont
           le adóelőleget egy jövedelemosztályra. Ez a saját nyilatkozatod, nem a kifizető
           igazolása.
-        ejercicio_help: Az ejercicio (év), amelyhez a jövedelem tartozik.
+        ejercicio_help: Az adóév (`ejercicio`), amelyhez a jövedelem tartozik.
         evidence_sha256_help: Az igazolás fájljának SHA-256 értéke; payer_certificate
           esetén kötelező.
         group_help: Rögzítsd a kifizetőid igazolásai szerinti levonásokat.
         importe_integro_help: A kifizető által fizetett pénzbeli jövedelem a levonás
           előtt.
         income_class_help: A jövedelemosztály, amelyre a kifizető levonást alkalmazott,
-          például trabajo.
+          például `trabajo`.
         ingreso_a_cuenta_help: A természetbeni jövedelemre a kifizető által teljesített
           ingreso a cuenta. Teljes összegében jóváírásnak számít.
         ingreso_a_cuenta_repercutido_help: Az ingreso a cuenta rád áthárított része.
-          Nem haladhatja meg az ingreso a cuentát.
+          Nem lehet több, mint maga az ingreso a cuenta.
         invalid_input: 'Egy érték érvénytelen: ellenőrizd a kifizetői hivatkozást,
           a revíziót és az igazolás ujjlenyomatát.'
-        list_help: Listázd egy ejercicio kifizetői rekordjait adóazonosító nélkül.
+        list_absences_help: Listázd a kiválasztott adóév retenciómentességi nyilatkozataidat,
+          az érvényeseket és a visszavontakat is, azzal a változattal, amelyen mindegyik
+          tárolva van.
+        list_help: Listázd egy adóév kifizetői rekordjait adóazonosító nélkül.
         origin_help: 'Ki állítja az adatokat: payer_certificate vagy operator_declaration.'
         payer_name_help: A kifizető cégneve.
         payer_ref_help: A lista által mutatott kifizetői hivatkozás (payer_ref).
@@ -648,7 +670,7 @@ cli:
         record_expected_revision_help: A lista által mutatott revízió egy tárolt rekord
           cseréjéhez. Első rekordnál hagyd el.
         record_help: Rögzítsd vagy cseréld le egy kifizető igazolásának adatait egy
-          ejercicióra és jövedelemosztályra.
+          adóévre és jövedelemosztályra.
         remove_expected_revision_help: A lista által a törlendő rekordhoz mutatott
           revízió.
         remove_help: Törölj egy kifizetői rekordot a lista által mutatott revízió
@@ -694,8 +716,8 @@ cli:
           a mintája nem kereshető.
         remove_not_found: Nincs mentett szabály a(z) %{rule_id} azonosítóval. Semmi
           sem változott.
-        remove_rule_id_help: A törlendő szabály teljes azonosítója, ahogy a rule list
-          JSON-kimenete mutatja.
+        remove_rule_id_help: A törlendő szabály teljes azonosítója, ahogy a `rule
+          list` JSON-kimenete mutatja.
         remove_stale: 'A(z) %{rule_id} mentett szabályt újra elmentették ekkor: %{created_at},
           ami nem az általad megadott idő. Semmi sem törlődött; listázd a szabályokat,
           és ellenőrizd.'
@@ -1318,7 +1340,9 @@ cli:
         binding_help: További érték egy Modelo 100 rovatforráshoz KEY=VALUE formában.
           Több értékhez ismételd meg. A levonási források megadás hiányában nulla
           értékűek.
-        casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
+        casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (pl. 0003=1150 a munkából
+          származó pénzbeli jövedelemhez). Csak beviteli mezők fogadhatók el; a számított
+          mezőt a parancs elutasítja. Több értékhez ismételd meg.
         ccaa_help: Az adóügyi illetőség szerinti autonóm közösség kulcsa a Modelo
           100 autonóm közösségi adótáblájához (pl. cataluna, comunidad-valenciana).
           Egyeznie kell a nyomtatványdefiníciókban felsorolt egyik értékkel.
@@ -1328,6 +1352,9 @@ cli:
         no_m130_units: Nincs Modelo 130 piszkozat bevallás a(z) %{year} adóévre. Előbb
           hozd létre az `aeat app modelo work create --modelo 130 --year %{year} --period
           1T` paranccsal.
+        profile_fact_missing: 'A vetítés nem tudja előállítani az adóalap- és adórovatokat,
+          mert az aktív profil nem tartalmazza: %{profile_facts}. Add meg a(z) `%{command}`
+          paranccsal, majd futtasd újra a vetítést.'
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
         összesítés).
@@ -3124,6 +3151,9 @@ cli:
     add:
       account_help: A saját bankszámla, amelyhez a mozgás tartozik, azonosítója szerint
         (pl. acc-01).
+      accrual_date_help: Az a nap, amikor a bevétel vagy a költség a személyi jövedelemadóban
+        elszámolandó (LIRPF 14. cikk, RIRPF 7. cikk; ÉÉÉÉ-HH-NN). Nem módosítja az
+        áfaidőszakot. Ha kihagyod, nem rögzítünk dátumot.
       actor_help: A neved, amelyet a bucket-eseményen rögzítünk.
       amount_help: Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).
       art_104_tres_exclusion_help: Az általad megadott LIVA art. 104.Tres nevezői
@@ -3308,10 +3338,10 @@ cli:
       iva_rate_help: IVA-kulcs tizedes törtként, pl. 0,21.
       iva_vehicle_use_help: 'Mire használják a sor járművét, ha a LIVA 95.Tres.2.ª
         cikke kiveszi az 50 százalékos vélelem alól: a hat, 100 százalékosnak vélelmezett
-        használat egyike (mixed_vehicle_goods_transport, paid_passenger_transport,
-        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
-        surveillance), vagy outside_presumed_classes, ha a szabály nem nevezi meg
-        a járművet.'
+        használat egyike (`mixed_vehicle_goods_transport`, `paid_passenger_transport`,
+        `paid_driver_or_pilot_training`, `manufacturer_testing_or_promotion`, `commercial_agent_travel`,
+        `surveillance`), vagy `outside_presumed_classes`, ha a szabály nem nevezi
+        meg a járművet.'
       llm_classified_by_label: osztályozta
       llm_confidence_label: bizonyosság
       llm_exclusive: --llm nem kombinálható a --classification vagy --file kapcsolóval;
@@ -3477,6 +3507,7 @@ cli:
         a legfrissebbekkel kezdve.
       kind_help: Csak ez az értéktípus; többhöz ismételd meg. Nélküle minden típus.
     labels:
+      accrual_date: IRPF szerinti elszámolás dátuma
       active: Aktív
       amount: Összeg
       archived: Archivált
@@ -3666,13 +3697,18 @@ cli:
         át a --llm felosztásjavaslónak.
       yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
         N gyermek tranzakciót).
+    split_check_help: Megválaszolja a nem mentett felosztási részeket úgy, ahogy a
+      felosztás írója elfogadná őket, és nem ír semmit.
+    split_check_id_help: A felosztandó tétel teljes azonosítója.
+    split_check_invalid: Minden résznek a várt alakú JSON-objektumnak kell lennie,
+      teljes tételazonosítóval.
     staged_check_category_help: Ismételhető költségkategória, amelyet egy besorolással
       vetünk össze.
     staged_check_help: Megválaszolja, hogyan fogadnák az írók az előkészített főkönyvi
-      munkát, anélkül, hogy bármit mentene. Az előkészített sorok (rows, transaction_id,
-      cells és opcionális evidence_staged és m210_staged mezőjű objektumok JSON-tömbje)
-      és az új mozgások (drafts, key és fields mezőjű objektumok JSON-tömbje) egy
-      JSON-objektumként érkeznek a --secrets-stdin vagy a --secrets-fd csatornán.
+      munkát, anélkül, hogy bármit mentene. Az előkészített sorok (`rows`, `transaction_id`,
+      `cells` és opcionális `evidence_staged` és `m210_staged` mezőjű objektumok JSON-tömbje)
+      és az új mozgások (`drafts`, `key` és `fields` mezőjű objektumok JSON-tömbje)
+      egy JSON-objektumként érkeznek a --secrets-stdin vagy a --secrets-fd csatornán.
     staged_check_invalid: Minden előkészített sornak és piszkozatnak a várt alakú
       JSON-objektumnak kell lennie.
     stash:
@@ -3689,6 +3725,8 @@ cli:
     update:
       account_help: A bejegyzés hozzárendelése ehhez a saját bankszámlához, azonosítója
         szerint (pl. acc-01).
+      accrual_date_help: A bevétel vagy a költség új elszámolási napja a személyi
+        jövedelemadóban (LIRPF 14. cikk, RIRPF 7. cikk; ÉÉÉÉ-HH-NN).
       amount_help: Új nem negatív összegmagnitúdó (teljes csere).
       counterparty_help: Új szerződő fél leírása.
       currency_help: Új háromjegyű ISO 4217 pénznemkód.

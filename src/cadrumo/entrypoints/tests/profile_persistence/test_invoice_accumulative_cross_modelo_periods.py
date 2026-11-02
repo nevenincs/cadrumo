@@ -542,6 +542,7 @@ def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> 
             "ledger_oss_aggregation",
             "collectible_invoice",
             "payable_invoice",
+            "retencion_soportada",
         )
     }
     values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
@@ -645,3 +646,9 @@ def test_one_invoice_life_lands_in_one_period_on_both_modelo_pairs(
     # base total, not a re-summed engine figure.
     assert Decimal(annual_100.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == _EXPECTED_ANNUAL_BASE
     assert Decimal(annual_100.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_ANNUAL_BASE
+
+    # No payer record, and a profile declaring only activity income: a proven zero, not a caller's.
+    for credit in ("0596", "0597", "0603"):
+        assert Decimal(annual_100.casilla_values[validated_casilla_id(credit, surface="test casilla id")]) == Decimal(
+            "0"
+        )

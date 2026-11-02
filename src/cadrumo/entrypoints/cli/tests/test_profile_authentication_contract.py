@@ -94,8 +94,10 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
         "config.profile.archive.import",
         "ledger.account.add",
         "ledger.account.update",
+        "ledger.invoice.duplicate",
         "ledger.invoice.preview",
         "ledger.rule.trial",
+        "ledger.split-check",
         "ledger.staged-check",
         "modelo.m360.declare",
     }

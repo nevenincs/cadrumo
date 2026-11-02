@@ -33,11 +33,12 @@ from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindin
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
 )
 from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
 from ...domain.transactions.enums import TransactionLifecycleState
-from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..actividad_asset.history import ActivityAssetHistory
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -78,6 +79,8 @@ from .activity_asset_ledger_reconciliation import (
 )
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_actividad_assets import (
+    ActivityAssetExpenseObservation,
+    ActivityAssetProjection,
     activity_asset_disposal_provenance,
     activity_asset_provenance,
     m100_activity_asset_projection,
@@ -85,20 +88,27 @@ from .modelo_bindings_actividad_assets import (
 )
 from .renta_gasto_ledger import (
     RentaGastoLedgerAggregation,
+    RentaGastoLedgerAggregationIssue,
     RentaGastoLedgerAggregationIssueReason,
     RentaGastoObservation,
     aggregate_renta_gasto_ledger_from_repositories,
 )
 from .renta_imputation import (
     ActivityImputationCriterion,
+    ImputationCriteria,
     ImputationFilingHistory,
     accruing_invoices,
     declared_imputation_criteria,
     imputation_blocking_diagnostics,
     ledger_sum_outcome,
 )
+from .renta_income_evidence import taxable_base_comparison
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
-from .renta_ledger_models import RentaLedgerAggregationIssueReason, RentaLedgerExpenseAggregation
+from .renta_ledger_models import (
+    RentaLedgerAggregationIssue,
+    RentaLedgerAggregationIssueReason,
+    RentaLedgerExpenseAggregation,
+)
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -279,6 +289,103 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             ),
         )
 
+    def _diagnostics(
+        self,
+        context: CalculationSourceContext,
+        *,
+        aggregation: RentaLedgerExpenseAggregation,
+        split: _RegisterSplit[
+            RentaLedgerAggregationIssue, RentaDeductibleExpenseObservation, ActivityAssetExpenseObservation
+        ],
+        asset_history: ActivityAssetHistory,
+        asset_projection: ActivityAssetProjection,
+        classification: LedgerExpenseRegisterClassification,
+        refused: tuple[UnregisteredAmortizationRow, ...],
+        may_be_durable: tuple[CalculationSourceDiagnostic, ...],
+        unrouted: Sequence[RentaGastosEstimacionDirectaObservationProtocol],
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        return (
+            source_issue_diagnostics(
+                split.issues,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+                held_back_reasons=frozenset(
+                    {
+                        RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
+                        RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
+                    }
+                ),
+                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
+                suppressed_reasons=frozenset({RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
+            )
+            + _expense_imputation_diagnostics(
+                context,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+                binding_ids=resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
+                    context.revision, split.all_observations
+                ),
+                unresolved=tuple(
+                    issue.detail
+                    for issue in split.issues
+                    if issue.reason is RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED
+                ),
+                rows_present=bool(split.ledger_observations),
+                period=aggregation.period,
+                invoices=self._ports.invoice_reader.load(),
+                transactions=self._ports.transaction_reader.load(),
+                filings=self._imputation_filings(context) if self._imputation_filings is not None else None,
+            )
+            + source_issue_diagnostics(
+                aggregation.advisories,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + register_owned_acquisition_diagnostics(
+                split.register_owned,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + unregistered_amortization_row_diagnostics(
+                (*classification.unregistered, *refused),
+                resolver_id=self.resolver_id,
+            )
+            + asset_projection.diagnostics
+            + activity_asset_ledger_findings(
+                asset_history.revisions,
+                ledger=self._ports.transaction_reader,
+                tax_year=aggregation.period.filing_year,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + may_be_durable
+            + _m100_unrouted_diagnostics(context, unrouted, resolver_id=self.resolver_id)
+        )
+
+    def _provenance(
+        self,
+        split: _RegisterSplit[
+            RentaLedgerAggregationIssue, RentaDeductibleExpenseObservation, ActivityAssetExpenseObservation
+        ],
+        asset_projection: ActivityAssetProjection,
+    ) -> tuple[CalculationSourceProvenance, ...]:
+        return (
+            _flattened_provenance_for(
+                split.ledger_observations,
+                _renta_observation_provenance,
+            )
+            + activity_asset_provenance(
+                split.asset_observations,
+                resolver_id=self.resolver_id,
+                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+            )
+            + activity_asset_disposal_provenance(
+                asset_projection,
+                resolver_id=self.resolver_id,
+                resolved_binding_source=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
+            )
+        )
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the ledger Renta gastos estimación directa aggregation binding for ``context``.
 
@@ -345,8 +452,8 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             asset_observations=asset_projection.observations,
             tax_year=aggregation.period.filing_year,
         )
-        register_owned, issues = split.register_owned, split.issues
-        ledger_observations, asset_observations = split.ledger_observations, split.asset_observations
+        issues = split.issues
+        ledger_observations = split.ledger_observations
         all_observations = split.all_observations
         unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(context.revision, all_observations)
         element_types, element_types_inapplicable = resolve_activity_asset_disposal_element_type_values(
@@ -386,75 +493,18 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 invoices=self._ports.invoice_reader.load(),
             ),
             source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
-            diagnostics=source_issue_diagnostics(
-                issues,
-                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
-                resolver_id=self.resolver_id,
-                held_back_reasons=frozenset(
-                    {
-                        RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
-                        RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
-                    }
-                ),
-                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
-                suppressed_reasons=frozenset({RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
-            )
-            + _expense_imputation_diagnostics(
+            diagnostics=self._diagnostics(
                 context,
-                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
-                resolver_id=self.resolver_id,
-                binding_ids=resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
-                    context.revision, all_observations
-                ),
-                unresolved=tuple(
-                    issue.detail
-                    for issue in issues
-                    if issue.reason is RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED
-                ),
-                rows_present=bool(ledger_observations),
-                period=aggregation.period,
-                invoices=self._ports.invoice_reader.load(),
-                transactions=self._ports.transaction_reader.load(),
-                filings=self._imputation_filings(context) if self._imputation_filings is not None else None,
-            )
-            + source_issue_diagnostics(
-                aggregation.advisories,
-                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + register_owned_acquisition_diagnostics(
-                register_owned,
-                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + unregistered_amortization_row_diagnostics(
-                (*classification.unregistered, *refused),
-                resolver_id=self.resolver_id,
-            )
-            + asset_projection.diagnostics
-            + activity_asset_ledger_findings(
-                asset_history.revisions,
-                ledger=self._ports.transaction_reader,
-                tax_year=aggregation.period.filing_year,
-                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + may_be_durable
-            + _m100_unrouted_diagnostics(context, unrouted, resolver_id=self.resolver_id),
-            provenance=_flattened_provenance_for(
-                ledger_observations,
-                _renta_observation_provenance,
-            )
-            + activity_asset_provenance(
-                asset_observations,
-                resolver_id=self.resolver_id,
-                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-            )
-            + activity_asset_disposal_provenance(
-                asset_projection,
-                resolver_id=self.resolver_id,
-                resolved_binding_source=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
+                aggregation=aggregation,
+                split=split,
+                asset_history=asset_history,
+                asset_projection=asset_projection,
+                classification=classification,
+                refused=refused,
+                may_be_durable=may_be_durable,
+                unrouted=unrouted,
             ),
+            provenance=self._provenance(split, asset_projection),
         )
 
 
@@ -492,6 +542,49 @@ def _ledger_expense_value_outcomes(
     }
 
 
+def _received_invoice_rows(transactions: TransactionCatalogue) -> dict[str, list[Transaction]]:
+    """Group the active ledger rows linked to each purchase invoice."""
+    rows_by_invoice: dict[str, list[Transaction]] = {}
+    for row in transactions.values():
+        if row.purchase_invoice_evidence_id is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE:
+            rows_by_invoice.setdefault(row.purchase_invoice_evidence_id, []).append(row)
+    return rows_by_invoice
+
+
+def _accrual_coverage_gap(invoice: Invoice, rows: Sequence[Transaction]) -> str | None:
+    """Say what of an accruing received invoice its ledger rows leave unclassified, or ``None``."""
+    if not rows:
+        return f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
+    comparison = taxable_base_comparison(invoice, rows)
+    if comparison is None:
+        return (
+            f"accrual_part_paid: received invoice {invoice.invoice_number} and its ledger rows have no "
+            "common currency with a EUR value, so what they cover is not known"
+        )
+    if comparison.cash < comparison.owed:
+        return (
+            f"accrual_part_paid: received invoice {invoice.invoice_number} accrues {comparison.owed} "
+            f"but its ledger rows state {comparison.cash}; add a row for the rest"
+        )
+    return None
+
+
+def _unpaid_received_invoice_details(
+    accruing: Iterable[Invoice],
+    rows_by_invoice: Mapping[str, Sequence[Transaction]],
+    criteria: ImputationCriteria,
+    year: int,
+) -> tuple[str, ...]:
+    """Describe each accruing received invoice whose ledger rows leave part of its base unplaced."""
+    if criteria.usable(year) is not ActivityImputationCriterion.DEVENGO:
+        return ()
+    return tuple(
+        detail
+        for invoice in accruing
+        if (detail := _accrual_coverage_gap(invoice, rows_by_invoice.get(invoice.invoice_id, ()))) is not None
+    )
+
+
 def _expense_imputation_diagnostics(
     context: CalculationSourceContext,
     *,
@@ -521,22 +614,8 @@ def _expense_imputation_diagnostics(
             start=date(period.filing_year, 1, 1),
             end=period.end_date,
         )
-    covered: dict[str, Decimal] = {}
-    for row in transactions.values():
-        if row.purchase_invoice_evidence_id is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE:
-            covered[row.purchase_invoice_evidence_id] = covered.get(row.purchase_invoice_evidence_id, Decimal("0")) + (
-                row.taxable_base or Decimal("0")
-            )
-    unpaid = tuple(
-        (
-            f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
-            if invoice.invoice_id not in covered
-            else f"accrual_part_paid: received invoice {invoice.invoice_number} accrues {invoice.base_total} "
-            f"but its ledger rows state {covered[invoice.invoice_id]}; add a row for the rest"
-        )
-        for invoice in accruing
-        if covered.get(invoice.invoice_id, Decimal("-1")) < invoice.base_total
-        and criteria.usable(period.filing_year) is ActivityImputationCriterion.DEVENGO
+    unpaid = _unpaid_received_invoice_details(
+        accruing, _received_invoice_rows(transactions), criteria, period.filing_year
     )
     return imputation_blocking_diagnostics(
         source_kind=source_kind,
@@ -676,6 +755,105 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
             resolver_id=self.resolver_id,
         )
 
+    def _diagnostics(
+        self,
+        context: CalculationSourceContext,
+        *,
+        aggregation: RentaGastoLedgerAggregation,
+        split: _RegisterSplit[RentaGastoLedgerAggregationIssue, RentaGastoObservation, ActivityAssetExpenseObservation],
+        period: Period,
+        invoices: InvoiceCatalogue,
+        asset_history: ActivityAssetHistory,
+        asset_projection: ActivityAssetProjection,
+        classification: LedgerExpenseRegisterClassification,
+        refused: tuple[UnregisteredAmortizationRow, ...],
+        may_be_durable: tuple[CalculationSourceDiagnostic, ...],
+        unrouted: Sequence[RentaGastosPagoFraccionadoObservationProtocol],
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        return (
+            out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + source_issue_diagnostics(
+                split.issues,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+                held_back_reasons=frozenset(
+                    {
+                        RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
+                        RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+                        RentaGastoLedgerAggregationIssueReason.MISSING_CATEGORY,
+                        RentaGastoLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
+                    }
+                ),
+                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
+                suppressed_reasons=frozenset({RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
+            )
+            + _expense_imputation_diagnostics(
+                context,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+                binding_ids=resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
+                    context.revision, split.all_observations
+                ),
+                unresolved=tuple(
+                    issue.detail
+                    for issue in split.issues
+                    if issue.reason is RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED
+                ),
+                rows_present=bool(split.ledger_observations),
+                period=period,
+                invoices=invoices,
+                transactions=self._transaction_repository.load(),
+                filings=self._imputation_filings(context) if self._imputation_filings is not None else None,
+            )
+            + source_issue_diagnostics(
+                aggregation.advisories,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + register_owned_acquisition_diagnostics(
+                split.register_owned,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + unregistered_amortization_row_diagnostics(
+                (*classification.unregistered, *refused),
+                resolver_id=self.resolver_id,
+            )
+            + asset_projection.diagnostics
+            + activity_asset_ledger_findings(
+                asset_history.revisions,
+                ledger=self._transaction_repository,
+                tax_year=period.filing_year,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + may_be_durable
+            + _m130_unrouted_diagnostics(context, unrouted, resolver_id=self.resolver_id)
+        )
+
+    def _provenance(
+        self,
+        split: _RegisterSplit[RentaGastoLedgerAggregationIssue, RentaGastoObservation, ActivityAssetExpenseObservation],
+        asset_projection: ActivityAssetProjection,
+    ) -> tuple[CalculationSourceProvenance, ...]:
+        return (
+            _m130_ledger_provenance(split.ledger_observations, resolver_id=self.resolver_id)
+            + activity_asset_provenance(
+                split.asset_observations,
+                resolver_id=self.resolver_id,
+                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+            )
+            + activity_asset_disposal_provenance(
+                asset_projection,
+                resolver_id=self.resolver_id,
+                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+            )
+        )
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve Renta expense observations for one calculation context."""
         if not revision_has_binding_source(context.revision, "ledger_renta_gastos_pago_fraccionado_aggregation"):
@@ -762,8 +940,8 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
             asset_observations=asset_projection.observations,
             tax_year=aggregation_period.filing_year,
         )
-        register_owned, issues = split.register_owned, split.issues
-        ledger_observations, asset_observations = split.ledger_observations, split.asset_observations
+        issues = split.issues
+        ledger_observations = split.ledger_observations
         all_observations = split.all_observations
         unrouted = unsupported_ledger_renta_gastos_pago_fraccionado_observations(context.revision, all_observations)
         return CalculationSourceResolution(
@@ -783,79 +961,20 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 invoices=invoices,
             ),
             source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
-            diagnostics=out_of_window_summary_diagnostics(
-                aggregation.out_of_window_summary,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + source_issue_diagnostics(
-                issues,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-                held_back_reasons=frozenset(
-                    {
-                        RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
-                        RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-                        RentaGastoLedgerAggregationIssueReason.MISSING_CATEGORY,
-                        RentaGastoLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
-                    }
-                ),
-                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
-                suppressed_reasons=frozenset({RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
-            )
-            + _expense_imputation_diagnostics(
+            diagnostics=self._diagnostics(
                 context,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-                binding_ids=resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
-                    context.revision, all_observations
-                ),
-                unresolved=tuple(
-                    issue.detail
-                    for issue in issues
-                    if issue.reason is RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED
-                ),
-                rows_present=bool(ledger_observations),
+                aggregation=aggregation,
+                split=split,
                 period=aggregation_period,
                 invoices=invoices,
-                transactions=self._transaction_repository.load(),
-                filings=self._imputation_filings(context) if self._imputation_filings is not None else None,
-            )
-            + source_issue_diagnostics(
-                aggregation.advisories,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + register_owned_acquisition_diagnostics(
-                register_owned,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + unregistered_amortization_row_diagnostics(
-                (*classification.unregistered, *refused),
-                resolver_id=self.resolver_id,
-            )
-            + asset_projection.diagnostics
-            + activity_asset_ledger_findings(
-                asset_history.revisions,
-                ledger=self._transaction_repository,
-                tax_year=aggregation_period.filing_year,
-                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                resolver_id=self.resolver_id,
-            )
-            + may_be_durable
-            + _m130_unrouted_diagnostics(context, unrouted, resolver_id=self.resolver_id),
-            provenance=_m130_ledger_provenance(ledger_observations, resolver_id=self.resolver_id)
-            + activity_asset_provenance(
-                asset_observations,
-                resolver_id=self.resolver_id,
-                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
-            )
-            + activity_asset_disposal_provenance(
-                asset_projection,
-                resolver_id=self.resolver_id,
-                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+                asset_history=asset_history,
+                asset_projection=asset_projection,
+                classification=classification,
+                refused=refused,
+                may_be_durable=may_be_durable,
+                unrouted=unrouted,
             ),
+            provenance=self._provenance(split, asset_projection),
         )
 
 

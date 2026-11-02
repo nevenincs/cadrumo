@@ -36,9 +36,9 @@ from cadrumo.application.aggregation.oss_ioss import (
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
 )
+from cadrumo.application.aggregation.tests.oss_rate_change_support import rate_change_inside_a_quarter
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -199,7 +199,6 @@ _M369_CUOTA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.union.cuota-tot
 # Casilla bound to the DE-services OSS binding (used by the carve-out test).
 _M369_DE_SERVICES_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.services-cuota")
 _M369_FR_SERVICES_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.fr.services-cuota")
-_M369_DE_GOODS_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.goods-distance-cuota")
 
 
 def workflow_profile() -> TaxpayerProfile:
@@ -256,9 +255,9 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
     assert resolution.binding_values[_M369_DE_SERVICES_BINDING] == Decimal("19.00")
     assert resolution.binding_values[_M369_FR_SERVICES_BINDING] == Decimal("40.00")
     assert resolution.binding_values[_M369_DE_GOODS_BINDING] == Decimal("57.00")
-    assert aggregated == dict(resolution.binding_values)
-    # The source is claimed; the resolver raises nothing and emits no diagnostics.
-    assert resolution.diagnostics == ()
+    assert aggregated == {binding_id: resolution.binding_values[binding_id] for binding_id in aggregated}
+    # Services take rows; goods have no table until their state of dispatch is known.
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["unrouted_observation"]
     assert BindingSourceKind.LEDGER_OSS_AGGREGATION in resolution.owned_sources
 
 
@@ -527,6 +526,140 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     _assert_exterior_correction_pages(layout, parsed, wire)
 
 
+def test_m369_exterior_quarter_with_a_rate_change_files_one_row_per_rate(
+    m369_objects: SecureObjectRepository,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Two rows of one country and code differ only by percentage, from calculation to bytes."""
+    change = rate_change_inside_a_quarter(operation)
+    amounts = (
+        (change.last_day_before, change.pct_before, Decimal("100.00")),
+        (change.first_day_after, change.pct_after, Decimal("200.00")),
+    )
+    wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=m369_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
+    invoice_repo.save(
+        build_invoice_catalogue(
+            tuple(
+                _m369_invoice(
+                    invoice_number=f"OSS-EXT-CHANGE-{index}",
+                    issued_at=supply_date,
+                    operation_date=supply_date,
+                    counterparty_name="Synthetic Exterior Consumer",
+                    counterparty_tax_id=f"{change.member_state.upper()}1234567{index}",
+                    counterparty_country=change.member_state.upper(),
+                    transaction_kind=TransactionKind("external_scheme_services"),
+                    base_amount=base,
+                    iva_amount=base * pct / Decimal("100"),
+                    regime=OssIossRegime("external_scheme"),
+                )
+                for index, (supply_date, pct, base) in enumerate(amounts)
+            ),
+        ),
+    )
+    work_unit = create_work_unit(
+        bucket_id=_M369_BUCKET,
+        modelo="369",
+        filing_year=change.period.filing_year,
+        period=change.period,
+        revision_id="esquema-exterior",
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
+        ),
+        clock=_T0,
+        operation=operation,
+    )
+    with calculation_ports_for_test(
+        bucket_id=_M369_BUCKET,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as calculation_ports:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=calculation_ports,
+            binding_values={
+                "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0"),
+            },
+            enum_binding_values={
+                key: value
+                for key, value in _EXTERIOR_DECLARANT_BINDINGS.items()
+                if key != "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad"
+            },
+            clock=_T1,
+        )
+
+    prefix = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-"
+    values = result.revision.binding_overrides
+    persisted = {
+        Decimal(values[f"{prefix}tipo-de-iva-{row}"]): (
+            Decimal(values[f"{prefix}base-imponible-{row}"]),
+            Decimal(values[f"{prefix}cuota-iva-{row}"]),
+        )
+        for row in (1, 2)
+    }
+    assert persisted == {pct: (base, base * pct / Decimal("100")) for _, pct, base in amounts}
+    assert result.revision.source_issues == ()
+
+    with bundled_indexed_authority().operation() as verification_operation:
+        report = verify_modelo_revision_with_preconditions(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="m369-exterior-reviewer",
+            workflow_profile=workflow_profile(),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=verification_operation,
+        ).report
+    assert report.granted_verificado_completo is True, [
+        (finding.message_locale_key, finding.message_facts) for finding in report.findings
+    ]
+
+    output_path = tmp_path / "modelo-369-rate-change.txt"
+    with bundled_indexed_authority().operation() as export_operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=result.revision.calculation_revision_id,
+                output_path=output_path,
+                actor="m369-exterior-exporter",
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_M369_BUCKET,
+                secure_objects=m369_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+            ),
+            operation=export_operation,
+        )
+    layout = (
+        published_authority_operation()
+        .snapshot(
+            "369",
+            filing_year=change.period.filing_year,
+            period=change.period.registry_token,
+            revision_id="esquema-exterior",
+        )
+        .revision.export_layouts[0]
+    )
+    parsed = {field.binding_id: field.value for field in parse_export_payload(layout, output_path.read_bytes()).fields}
+    assert {
+        (
+            parsed[f"{prefix}codigo-de-pais-em-de-consumo-{row}"],
+            parsed[f"{prefix}tipo-iva-{row}"],
+            parsed[f"{prefix}tipo-de-iva-{row}"],
+        )
+        for row in (1, 2)
+    } == {(change.member_state.upper(), "S", pct) for _, pct, _ in amounts}
+
+
 @pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind("super_reduced"), IvaRateKind("zero")))
 def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_vocabulary(
     unsupported_rate_kind: IvaRateKind,
@@ -546,13 +679,13 @@ def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_voca
                 "iva_amount": Decimal("0"),
             }
         )
-        oss_ioss_module._exterior_detail_binding_values(
+        oss_ioss_module._detail_binding_values(
             _revision("369", "esquema-exterior"),
             (observation,),
             operation=operation,
         )
 
-    assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"
+    assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.detail_rate_kind_unsupported"
     assert exc_info.value.context is not None
     assert exc_info.value.context["rate_kind"] == unsupported_rate_kind.value
 
@@ -574,7 +707,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
         cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)
         tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=runtime.repository)
         ambient_invoice_repo = InvoiceCatalogueRepository(objects=runtime.repository)
-        invoice_repo = InvoiceCatalogueRepository(objects=injected_objects)
+        invoice_repo = InvoiceCatalogueRepository(bucket_id=_M369_BUCKET, objects=injected_objects)
         invoice_repo.save(
             build_invoice_catalogue(
                 (
@@ -597,16 +730,6 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                         transaction_kind=TransactionKind("oss_union_services"),
                         base_amount=Decimal("200.00"),
                         iva_amount=Decimal("40.00"),
-                    ),
-                    _m369_invoice(
-                        invoice_number="OSS-DE-GOODS-001",
-                        issued_at=date(2026, 2, 17),
-                        counterparty_name="DE Consumer Goods",
-                        counterparty_tax_id="DE987654321",
-                        counterparty_country="DE",
-                        transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
-                        base_amount=Decimal("300.00"),
-                        iva_amount=Decimal("57.00"),
                     ),
                 ),
             ),
@@ -645,9 +768,8 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
         component_cuotas = (
             Decimal(casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]),
             Decimal(casilla_values[_M369_FR_SERVICES_BINDING_CASILLA]),
-            Decimal(casilla_values[_M369_DE_GOODS_BINDING_CASILLA]),
         )
-        assert component_cuotas == (Decimal("19.00"), Decimal("40.00"), Decimal("57.00"))
+        assert component_cuotas == (Decimal("19.00"), Decimal("40.00"))
         assert Decimal(casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == sum(component_cuotas, Decimal("0"))
         assert not any(
             diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
@@ -933,9 +1055,8 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
             invoice_repository=invoice_repo,
         ) as _calculation_ports_772,
     ):
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={},
             ports=_calculation_ports_772,
             **retired_keyword,
         )

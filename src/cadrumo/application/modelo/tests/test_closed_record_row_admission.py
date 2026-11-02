@@ -102,4 +102,5 @@ def test_unclaimed_manual_enum_remains_editable() -> None:
         caller_binding_values={},
         caller_casilla_inputs={},
         caller_enum_binding_values={manual.id: "DE"},
+        subject_leaf_key="modelo.work.calculate",
     )

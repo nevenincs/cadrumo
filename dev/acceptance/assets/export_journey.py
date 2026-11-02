@@ -282,8 +282,6 @@ def _calculate_export_m100(
                 "0166=A05",
                 "--binding",
                 "renta-modelo-100-estimacion-directa-es-normal=1",
-                "--binding",
-                "renta-certificado-trabajo-retenciones=0",
                 "--by",
                 "assets-acceptance",
             )

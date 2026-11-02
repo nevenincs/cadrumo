@@ -128,6 +128,8 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "google_drive_config",
     "provider_settings",
     "model_role_selections",
+    "attachment_disclosure_grants",
+    "attachment_release_ledger",
     "llm_cache",
     "llm_usage",
     "llm_run_telemetry",
@@ -594,7 +596,14 @@ def test_auth_session_cache_namespace_registration_coverage_is_present() -> None
 
 
 _LOCAL_ONLY_NAMESPACE_KEYS = frozenset(
-    {"provider_settings", "model_role_selections", "google_oauth_token", "google_oauth_metadata"}
+    {
+        "provider_settings",
+        "model_role_selections",
+        "attachment_disclosure_grants",
+        "attachment_release_ledger",
+        "google_oauth_token",
+        "google_oauth_metadata",
+    }
 )
 """Production namespaces that must never reach a remote mirror.
 

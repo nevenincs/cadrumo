@@ -99,7 +99,7 @@ _MANUAL_PROVIDER_NAME = "manual-ledger"
 #: listed here must default to ``None``, so omitting it when absent loses nothing
 #: a present value would say.
 _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
-    {"investment_asset_id", "iva_vehicle_use", "operation_date", "own_account_id"}
+    {"accrual_date", "investment_asset_id", "iva_vehicle_use", "operation_date", "own_account_id"}
 )
 
 
@@ -481,6 +481,7 @@ def transaction_from_command(
         "raw": raw,
         "direction": command.direction,
         "operation_date": command.operation_date,
+        "accrual_date": command.accrual_date,
         "business_classification": command.business_classification,
         "business_pct": command.business_pct,
         "category_id": command.category_id,

@@ -197,15 +197,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.borrador_snapshot.active",
         "modelo.work.calculate.borrador_snapshot.inactive",
     ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.source_inputs.unowned",
-        "modelo.work.calculate.source_inputs.binding_override_rejected",
-    ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.source_inputs.unowned",
-        "modelo.work.calculate.source_inputs.casilla_override_rejected",
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.source_inputs.unowned",
+            f"{leaf}.source_inputs.{kind}_override_rejected",
+        )
+        for leaf in ("modelo.work.calculate", "modelo.project")
+        for kind in ("binding", "casilla")
     ),
     _profile(
         "modelo.work.calculate",
@@ -481,6 +480,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.iva_selected_scope_evidence.complete",
+        "modelo.work.verify.iva_selected_scope_evidence.cuota_disagrees_with_rate",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.iva_compensation_annual_source_evidence.complete",
         "modelo.work.verify.iva_compensation_annual_source_evidence.unresolved",
     ),
@@ -539,6 +543,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.invoice_fingerprint.current",
         "modelo.work.verify.invoice_fingerprint.catalogue_unavailable",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.shared_casilla_cells.adjudicated",
+        "modelo.work.verify.shared_casilla_cells.unadjudicated",
     ),
     _profile(
         "modelo.work.verify",

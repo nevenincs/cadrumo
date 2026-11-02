@@ -5,12 +5,13 @@
 // values; this decides what would be staged and what is refused, in the
 // product's one grammar.
 
-import type { CatalogueInvoice, LedgerRow } from "../../../shell/ledger";
+import type {
+  LedgerInvoiceMatchMismatch,
+  LedgerRow,
+} from "../../../shell/ledger";
 import {
   AMOUNT_RULE,
   TAX_AMOUNT_RULE,
-  canonicalDecimal,
-  compareDecimal,
   copyAmount,
   copyPercent,
   parseDecimal,
@@ -43,6 +44,7 @@ import {
   type StagedValue,
 } from "../../../shell/ledgerStage";
 import {
+  isIdentityField,
   DECIDED_CLASSIFICATIONS,
   DIRECTIONS,
   DRAFT_REQUIRED_FIELDS,
@@ -110,14 +112,6 @@ export const typedPoints = (said: string): string =>
  * has served none. */
 export const textLimitOf = (field: StageField | DraftField): number | null =>
   textLimit(TEXT_LIMITS[field as StageField] ?? "entry_text");
-
-/** The columns whose change gives a movement a new id. */
-export const IDENTITY_COLUMNS: ReadonlySet<ColumnId> = new Set([
-  "date",
-  "description",
-  "amount",
-  "account",
-]);
 
 /** The choice that binds a movement to no own account: a clear of it. */
 export const NO_ACCOUNT = "none:account";
@@ -693,7 +687,7 @@ export function planPaste(
     if (placed === "blank") blanks += 1;
     if (placed === "staged") {
       changes += 1;
-      if (IDENTITY_COLUMNS.has(column)) touchesIdentity = true;
+      if (field && isIdentityField(field)) touchesIdentity = true;
     }
   }
   const rows = new Set(targets.map((target) => target.key)).size;
@@ -907,76 +901,9 @@ export function askedConflicts(
 
 // ---- Permanent links -----------------------------------------------------------
 
-/** Why a staged link may join the wrong pair: the review asks for a second
- * tick for any of them. */
-export type LinkMismatch =
-  | { kind: "amount"; difference: string }
-  /** The movement is in one currency and the invoice in another. */
-  | { kind: "currency"; movement: string; invoice: string }
-  | { kind: "counterparty" }
-  | { kind: "linked_elsewhere"; count: number };
-
-function exact(text: string): { units: bigint; scale: number } | null {
-  const found = /^(\d+)(?:\.(\d+))?$/.exec(text.trim());
-  if (!found) return null;
-  const fraction = found[2] ?? "";
-  return { units: BigInt(`${found[1]}${fraction}`), scale: fraction.length };
-}
-/** The magnitude of `left` minus `right`, in canonical spelling. */
-export function decimalDistance(left: string, right: string): string | null {
-  const a = exact(left);
-  const b = exact(right);
-  if (!a || !b) return null;
-  const scale = Math.max(a.scale, b.scale);
-  const units =
-    a.units * 10n ** BigInt(scale - a.scale) -
-    b.units * 10n ** BigInt(scale - b.scale);
-  const magnitude = (units < 0n ? -units : units)
-    .toString()
-    .padStart(scale + 1, "0");
-  const whole = magnitude.slice(0, magnitude.length - scale);
-  const fraction = magnitude.slice(magnitude.length - scale);
-  return canonicalDecimal(fraction ? `${whole}.${fraction}` : whole);
-}
-
-const LEGAL_FORMS = /\b(s\.?l\.?u?|s\.?a\.?|s\.?coop|sll|slp|cb|scp)\b\.?/g;
-const party = (text: string) =>
-  fold(text)
-    .replace(LEGAL_FORMS, " ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-
-export function linkMismatches(
-  row: LedgerRow,
-  invoice: CatalogueInvoice,
-): LinkMismatch[] {
-  const found: LinkMismatch[] = [];
-  const total = invoice.grand_total.decimal;
-  const movementCurrency = row.transaction.currency.trim().toUpperCase();
-  const invoiceCurrency = invoice.currency.trim().toUpperCase();
-  // Amounts in two currencies have no difference to state.
-  if (movementCurrency !== invoiceCurrency)
-    found.push({
-      kind: "currency",
-      movement: movementCurrency,
-      invoice: invoiceCurrency,
-    });
-  else if (compareDecimal(row.transaction.amount, total) !== 0) {
-    const difference = decimalDistance(row.transaction.amount, total);
-    if (difference !== null) found.push({ kind: "amount", difference });
-  }
-  const mine = party(
-    row.transaction.counterparty || row.transaction.description,
-  );
-  const theirs = party(invoice.counterparty_name);
-  if (mine && theirs && !mine.includes(theirs) && !theirs.includes(mine))
-    found.push({ kind: "counterparty" });
-  const elsewhere = invoice.linked_transaction_ids.filter(
-    (id) => id !== row.transaction.transaction_id,
-  ).length;
-  if (elsewhere > 0) found.push({ kind: "linked_elsewhere", count: elsewhere });
-  return found;
-}
+/** Why a staged link may join the wrong pair, as the ledger states it: the
+ * review asks for a second tick for any of them. */
+export type LinkMismatch = LedgerInvoiceMatchMismatch;
 
 // ---- Ticks and outcomes ------------------------------------------------------
 
@@ -985,11 +912,16 @@ export type LinkTicks = Record<string, { sure: boolean; differ: boolean }>;
 /** Whether every permanent link to be sent is ticked, and a second time
  * where its two sides differ. */
 export function linksReady(
-  links: readonly { id: string; mismatches: readonly LinkMismatch[] }[],
+  links: readonly {
+    id: string;
+    /** What the ledger found against the link; null until it has said. */
+    mismatches: readonly LinkMismatch[] | null;
+  }[],
   ticks: LinkTicks,
 ): boolean {
   return links.every(
     (link) =>
+      link.mismatches !== null &&
       ticks[link.id]?.sure === true &&
       (link.mismatches.length === 0 || ticks[link.id]?.differ === true),
   );
@@ -1024,6 +956,7 @@ export function draftRow(draft: Draft): LedgerRow {
       booked_date: fields.booked_date ?? "",
       value_date: fields.value_date ?? null,
       operation_date: fields.operation_date ?? null,
+      accrual_date: fields.accrual_date ?? null,
       amount: fields.amount ?? "",
       currency: fields.currency ?? "",
       direction: fields.direction ?? "",

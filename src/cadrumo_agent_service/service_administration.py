@@ -12,8 +12,10 @@ from typing import Any
 
 from pydantic import SecretStr
 
+from cadrumo.core.config import load_settings
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
+from .adapters.agent_attachment_gateway import GatewayAttachments
 from .adapters.agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns
 from .adapters.agent_process import WindowsAgentInvocationRunner
 from .adapters.agent_programs import (
@@ -36,18 +38,39 @@ from .host.store_lifecycle import (
     InvocationCancellation,
 )
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
+from .providers.application.attachment_releases import (
+    AttachmentReleases,
+    DisclosureRefusalCode,
+    ReleaseScope,
+)
 from .providers.application.contracts import LocalModelListResult, ProviderSettingsRefusal
 from .providers.application.local_model_list import LocalModelListService
 from .providers.application.model_runs import ModelRunService
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
+from .providers.persistence.attachment_disclosures import SecureAttachmentDisclosureStore
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
     ADMIN_READ_SECONDS,
     LIFECYCLE_ADMISSION_SECONDS,
 )
+
+
+def _disclosure_bar() -> DisclosureRefusalCode | None:
+    """Name the first bar to an off-host attachment release.
+
+    The service holds no door to the exact profile's cloud eligibility, which only
+    the runtime can read, so a deployment that opted in is still refused here
+    rather than assumed eligible.
+    """
+    settings = load_settings()
+    if settings.cadrumo_evidence_gestor_mode:
+        return DisclosureRefusalCode.GESTOR_MODE
+    if not settings.cadrumo_evidence_cloud_upload_permitted:
+        return DisclosureRefusalCode.CLOUD_UPLOAD_NOT_PERMITTED
+    return DisclosureRefusalCode.PROFILE_NOT_ELIGIBLE
 
 
 class AgentServiceAdministration(ABC):
@@ -99,6 +122,15 @@ class AgentServiceAdministration(ABC):
             gateway=HostedBackgroundRuns(
                 endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
             ),
+        )
+        self._attachment_releases = AttachmentReleases(
+            gateway=GatewayAttachments(
+                endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
+            ),
+            store=SecureAttachmentDisclosureStore(client=client),
+            off_host=self._lane_reads_off_host,
+            eligibility=_disclosure_bar,
+            session=self._disclosure_session,
         )
         self._login_status = AgentProviderAuthStatusProbe(
             context=self._login_context, cancellation=self._read_cancellation
@@ -163,8 +195,15 @@ class AgentServiceAdministration(ABC):
         attempt_id: str | None = None,
         model: str | None = None,
         secret: bytearray | None = None,
+        run_id: str | None = None,
+        permission_request_id: str | None = None,
+        scope: str | None = None,
+        grant_id: str | None = None,
+        conversation_id: str | None = None,
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
+        if action.startswith("attachment_"):
+            return self._attachment_admin(action, run_id, permission_request_id, scope, grant_id, conversation_id)
         if action == "connect_submit_code":
             return self._submit_sign_in_code(attempt_id, secret)
         if action in {"connect_status", "connect_cancel"}:
@@ -205,6 +244,49 @@ class AgentServiceAdministration(ABC):
             return self._admin(action, **arguments)
         finally:
             self._guard.release()
+
+    def _attachment_admin(
+        self,
+        action: str,
+        run_id: str | None,
+        request_id: str | None,
+        scope: str | None,
+        grant_id: str | None,
+        conversation_id: str | None,
+    ) -> dict[str, Any]:
+        """Answer the person's attachment decisions; none of these touches the agent tree's lifecycle."""
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        releases = self._attachment_releases
+        if action == "attachment_grants":
+            return releases.grants()
+        if action == "attachment_grant_revoke" and grant_id is not None:
+            return releases.revoke(grant_id)
+        if action == "attachment_conversation_forget" and conversation_id is not None:
+            return releases.forget_conversation(conversation_id)
+        if run_id is None or request_id is None:
+            return {"kind": "refused", "code": "invalid_request"}
+        if action == "attachment_card":
+            return releases.card(run_id, request_id)
+        if action == "attachment_release":
+            return releases.release(run_id, request_id, None if scope is None else ReleaseScope(scope))
+        return {"kind": "refused", "code": "invalid_request"}
+
+    def _disclosure_session(self) -> object | None:
+        """Identify the signed-in agent session; sign-out, lock, expiry and agent stop each change it."""
+        controller = self._controller
+        if self.client.lease is None or controller is None:
+            return None
+        generations = self._credentials.current_generations()
+        return None if generations is None else (generations.sign_in, Identity(controller))
+
+    def _lane_reads_off_host(self, provider: str, transport: str) -> bool:
+        """Read the lane's typed flag; a lane the catalogue does not name is treated as leaving."""
+        try:
+            entry = self._catalog.catalog().entry(f"{provider}_{transport}")
+        except ProviderCatalogUnavailableError:
+            return True
+        return True if entry is None else entry.reads_off_host
 
     def _observe_sign_in(self, attempt_id: str | None, *, cancel: bool) -> dict[str, Any]:
         """Observe the existing owner without waiting for gateway startup or reaping.

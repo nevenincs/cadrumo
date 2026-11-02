@@ -595,6 +595,39 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         ),
     ),
     _expected_command(
+        "app_ledger_split_check",
+        "app_ledger",
+        "split-check",
+        "leaf",
+        "cli.ledger.split_check_help",
+        "none",
+        "cadrumo.entrypoints.cli.split_check_commands:split_check",
+        _expected_result_schema(
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerSplitCheckEnvelope", "ledger.split-check"
+        ),
+        parameters=(
+            _expected_argument("transaction_id", "cli.ledger.split_check_id_help"),
+            _expected_option(
+                "secrets_stdin",
+                "--secrets-stdin",
+                "cli.config.custody.secrets_stdin_help",
+                annotation="builtins:bool",
+                default=_FALSE_DEFAULT,
+                is_flag=True,
+                flag_value=True,
+                machine_secret_channel=_STDIN_CHANNEL,
+            ),
+            _expected_option(
+                "secrets_fd",
+                "--secrets-fd",
+                "cli.config.custody.secrets_fd_help",
+                annotation="builtins:int",
+                default=_NONE_DEFAULT,
+                machine_secret_channel=_FD_CHANNEL,
+            ),
+        ),
+    ),
+    _expected_command(
         "app_ledger_staged_check",
         "app_ledger",
         "staged-check",
@@ -958,6 +991,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
             _expected_option("booked_date", "--date", "cli.ledger.update.date_help"),
             _expected_option("value_date", "--value-date", "cli.ledger.update.value_date_help"),
             _expected_option("operation_date", "--operation-date", "cli.ledger.update.operation_date_help"),
+            _expected_option("accrual_date", "--accrual-date", "cli.ledger.update.accrual_date_help"),
             _expected_option("amount", "--amount", "cli.ledger.update.amount_help"),
             _expected_option(
                 "direction",

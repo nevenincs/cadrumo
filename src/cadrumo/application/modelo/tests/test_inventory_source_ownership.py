@@ -101,6 +101,7 @@ def test_declared_inventory_binding_refuses_equal_and_different_caller_values(va
             owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
             caller_binding_values={"inventory-0181": value},
             caller_casilla_inputs={},
+            subject_leaf_key="modelo.work.calculate",
         )
 
     assert exc_info.value.context == {"rejected_binding_ids": ["inventory-0181"]}
@@ -115,6 +116,7 @@ def test_declared_inventory_refuses_partial_and_complete_casilla_overrides(targe
             owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
             caller_binding_values={},
             caller_casilla_inputs=values,
+            subject_leaf_key="modelo.work.calculate",
         )
 
     assert exc_info.value.context == {"casillas": sorted(values)}
@@ -142,6 +144,7 @@ def test_undeclared_inventory_leaves_manual_casilla_available_and_policy_is_repl
         owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
         caller_binding_values={},
         caller_casilla_inputs=first,
+        subject_leaf_key="modelo.work.calculate",
     )
     assert first == second == manual
 

@@ -188,6 +188,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         booked_date=raw.booked_date.isoformat(),
         value_date=_optional_iso_date(raw.value_date),
         operation_date=_optional_iso_date(transaction.operation_date),
+        accrual_date=_optional_iso_date(transaction.accrual_date),
         amount=display_decimal(raw.amount),
         currency=raw.currency,
         direction=transaction.direction.value,

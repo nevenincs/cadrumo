@@ -311,8 +311,8 @@ wizard:
           LIS modality; below it both modalities are available. Optional.
       irpf-activity-income-imputation-criterion:
         help: 'RIRPF art. 7 criterion for activity income and expenses in the tax
-          year given by --irpf-activity-income-imputation-year: devengo (the usual
-          answer) or cobros_y_pagos (cash; binds for three years; not with Código
+          year given by --irpf-activity-income-imputation-year: `devengo` (the usual
+          answer) or `cobros_y_pagos` (cash; binds for three years; not with Código
           de Comercio accounting).'
       irpf-activity-income-imputation-year:
         help: Four-digit tax year (ejercicio) the imputation criterion and the Código

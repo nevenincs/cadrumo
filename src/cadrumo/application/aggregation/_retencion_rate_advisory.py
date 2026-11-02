@@ -105,7 +105,7 @@ from ...domain.transactions.retencion_facts import (
     rirpf_art95_retencion_legal_refs,
     statutory_activity_retencion_rates,
 )
-from .renta_income_ledger import RentaIncomeObservation
+from .renta_income_models import RentaIncomeObservation
 from .retenciones import RetencionObservation, registry_work_income_retencion_treatments
 from .source_mesh import CalculationSourceDiagnostic
 

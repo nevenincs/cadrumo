@@ -39,6 +39,7 @@ from ...application.modelo.export_projection import ModeloIvaWalletDecisionPubli
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -314,6 +315,38 @@ class CasillaObservationPayload(OutputSchema):
     source_refs: SourceRefs
 
 
+class UnresolvedBindingPayload(OutputSchema):
+    """One source-owned binding a projection left without a value.
+
+    ``casilla_id`` is the box it fills; ``reason`` and ``note`` are untranslated
+    tokens naming why (for a credit, no payer evidence or contradicted evidence);
+    ``words`` says the same in the projection's ``words_language`` and
+    ``source_words`` names the source in a few words.
+    """
+
+    binding_id: str
+    casilla_id: str | None
+    source_kind: str
+    reason: str
+    note: str | None
+    source_words: str | None
+    words: NonEmptyStr
+
+
+class UnresolvedCasillaPayload(OutputSchema):
+    """One computed box a projection could not give a value, with its formula's grounding.
+
+    ``reason_words`` says why in the projection's ``words_language``.
+    """
+
+    casilla_id: CasillaId
+    reason: str
+    reason_words: NonEmptyStr
+    formula_id: FormulaId
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+
 class M130AccumulatedPayload(OutputSchema):
     """M130 summary inputs that feed :class:`ModeloProjectResult`.
 
@@ -360,6 +393,9 @@ class ModeloProjectResult(OutputSchema):
     m130_accumulated: M130AccumulatedPayload
     casilla_observations: list[CasillaObservationPayload]
     m100_projection: M100ProjectionPayload
+    unresolved_bindings: list[UnresolvedBindingPayload]
+    unresolved_casillas: list[UnresolvedCasillaPayload]
+    words_language: OutputLanguage
 
 
 class ModeloReadinessMissingRequirementPayload(OutputSchema):

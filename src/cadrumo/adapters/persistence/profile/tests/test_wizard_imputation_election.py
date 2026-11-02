@@ -21,13 +21,18 @@ from cadrumo.application.aggregation.renta_imputation import (
     ActivityImputationCriterion,
     declared_imputation_criteria,
 )
-from cadrumo.application.user_profile.edit_baseline import ProfileRecordConflictError
+from cadrumo.application.user_profile.capsule_record import ProfileRecordConflictError
+from cadrumo.application.user_profile.fact_write import (
+    ProfileFactWriteDoor,
+    apply_manager_profile_field_mutation,
+    apply_profile_fact_changes,
+)
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.wizard.catalogue import build_setup_flow
-from cadrumo.application.wizard.commands import _persist_full_flow_answers, _run_wizard_persistence_path
+from cadrumo.application.wizard.commands import persist_full_flow_answers, run_wizard_persistence_path
 from cadrumo.application.wizard.errors import WizardMissingFlagError, WizardValidationError
 from cadrumo.application.wizard.imputation_election import (
     ACCOUNTING_PROFILE_PATH,
@@ -41,7 +46,8 @@ from cadrumo.application.wizard.patch_edit import apply_profile_patch
 from cadrumo.application.wizard.persistence import project_answers
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.user_profile.values import UserProfileRecord
+from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
+from cadrumo.domain.user_profile.values import UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -120,7 +126,7 @@ def _facts_at(record: UserProfileRecord, path: str) -> list[tuple[date | None, d
 
 def test_a_non_interactive_run_leaves_the_election_absent(world: _World) -> None:
     before = world.record()
-    values, _changed = _run_wizard_persistence_path(
+    values, _changed = run_wizard_persistence_path(
         world.flow,
         "edit",
         {},
@@ -144,7 +150,7 @@ def test_a_non_interactive_run_leaves_the_election_absent(world: _World) -> None
 def test_the_quiet_edit_route_writes_the_flags_it_was_given_as_dated_facts(world: _World) -> None:
     explicit = _election(world, _FIRST, "cobros_y_pagos", accounting="false")
 
-    values, changed = _run_wizard_persistence_path(
+    values, changed = run_wizard_persistence_path(
         world.flow,
         "edit",
         dict(explicit),
@@ -279,7 +285,7 @@ def test_a_full_flow_run_dates_the_answer_and_preserves_what_it_did_not_state(wo
     answers = _answers_without_election(world)
 
     # A run that states nothing about the election keeps every ejercicio.
-    _persist_full_flow_answers(world.flow, answers, profile_id=world.profile_id, operation=world.operation)
+    persist_full_flow_answers(world.flow, answers, profile_id=world.profile_id, operation=world.operation)
     assert world.criteria().declared(_FIRST) is ActivityImputationCriterion.COBROS_Y_PAGOS
 
     stated = answers.model_copy(
@@ -289,7 +295,7 @@ def test_a_full_flow_run_dates_the_answer_and_preserves_what_it_did_not_state(wo
             "irpf_codigo_comercio_accounting": "",
         }
     )
-    values = _persist_full_flow_answers(world.flow, stated, profile_id=world.profile_id, operation=world.operation)
+    values = persist_full_flow_answers(world.flow, stated, profile_id=world.profile_id, operation=world.operation)
 
     criteria = world.criteria()
     assert criteria.declared(_FIRST) is ActivityImputationCriterion.COBROS_Y_PAGOS
@@ -304,7 +310,7 @@ def test_a_full_flow_answer_without_its_ejercicio_is_refused_and_writes_nothing(
     before = world.record()
 
     with pytest.raises(WizardMissingFlagError):
-        _persist_full_flow_answers(world.flow, stated, profile_id=world.profile_id, operation=world.operation)
+        persist_full_flow_answers(world.flow, stated, profile_id=world.profile_id, operation=world.operation)
 
     assert world.record().content_digest == before.content_digest
 
@@ -363,3 +369,90 @@ def _answers_without_election(world: _World) -> BaseModel:
     values.pop(CRITERION_PROFILE_PATH, None)
     values.pop(ACCOUNTING_PROFILE_PATH, None)
     return project_answers(world.flow, values)
+
+
+def _edit_field(world: _World, path: str, value: str) -> UserProfileRecord:
+    current = world.record()
+    return apply_manager_profile_field_mutation(
+        profile_id=world.profile_id,
+        path=path,
+        value=value,
+        expected_revision=current.record_revision,
+        expected_content_digest=current.content_digest,
+        profile_decode_context=world.operation.profile_decode_context(),
+    )
+
+
+@pytest.mark.parametrize("path", [CRITERION_PROFILE_PATH, ACCOUNTING_PROFILE_PATH])
+@pytest.mark.parametrize("value", ["devengo", "true", ""])
+def test_a_single_field_edit_cannot_replace_an_ejercicio_stated_path(world: _World, path: str, value: str) -> None:
+    world.patch(_election(world, _FIRST, "cobros_y_pagos", accounting="false"))
+    before = world.record()
+
+    with pytest.raises(ProfileSchemaValidationError):
+        _edit_field(world, path, value)
+
+    assert world.record().content_digest == before.content_digest
+    assert world.criteria().declared(_FIRST) is ActivityImputationCriterion.COBROS_Y_PAGOS
+
+
+def test_a_single_field_edit_of_another_path_keeps_every_ejercicio(world: _World) -> None:
+    world.patch(_election(world, _FIRST, "cobros_y_pagos", accounting="false"))
+    world.patch(_election(world, _SECOND, "cobros_y_pagos", accounting="false"))
+    before = {path: _facts_at(world.record(), path) for path in (CRITERION_PROFILE_PATH, ACCOUNTING_PROFILE_PATH)}
+
+    _edit_field(world, _REGIME_PATH, "directa_simplificada")
+
+    assert {path: _facts_at(world.record(), path) for path in before} == before
+    assert world.criteria().usable(_FIRST) is ActivityImputationCriterion.COBROS_Y_PAGOS
+    assert world.criteria().usable(_SECOND) is ActivityImputationCriterion.COBROS_Y_PAGOS
+
+
+def test_a_stale_single_field_edit_is_refused_and_writes_nothing(world: _World) -> None:
+    stale = world.record()
+    world.patch(_election(world, _FIRST, "devengo"))
+    current = world.record()
+
+    with pytest.raises(ProfileRecordConflictError):
+        apply_manager_profile_field_mutation(
+            profile_id=world.profile_id,
+            path=_REGIME_PATH,
+            value="objetiva",
+            expected_revision=stale.record_revision,
+            expected_content_digest=stale.content_digest,
+            profile_decode_context=world.operation.profile_decode_context(),
+        )
+
+    assert world.record().content_digest == current.content_digest
+
+
+def test_any_dated_path_keeps_its_windows_and_refuses_an_undated_change_they_would_shadow(world: _World) -> None:
+    window = {"valid_from": date(_FIRST, 1, 1), "valid_to": date(_FIRST, 12, 31)}
+    dated = UserProfileFact.model_validate({"path": _REGIME_PATH, "value": "objetiva", **window})
+    apply_profile_fact_changes(
+        profile_id=world.profile_id,
+        changes=(dated,),
+        door=ProfileFactWriteDoor.PATCH,
+        profile_decode_context=world.operation.profile_decode_context(),
+    )
+    before = world.record()
+
+    with pytest.raises(ProfileSchemaValidationError):
+        _edit_field(world, _REGIME_PATH, "directa_simplificada")
+    assert world.record().content_digest == before.content_digest
+
+    # Restating the value in force, as a whole setup run does, publishes nothing.
+    assert _edit_field(world, _REGIME_PATH, "objetiva").content_digest == before.content_digest
+    assert (date(_FIRST, 1, 1), date(_FIRST, 12, 31), "objetiva") in _facts_at(world.record(), _REGIME_PATH)
+
+
+def test_a_whole_setup_run_seeded_from_the_profile_keeps_every_stored_election(world: _World) -> None:
+    world.patch(_election(world, _FIRST, "cobros_y_pagos", accounting="false"))
+    world.patch(_election(world, _SECOND, "devengo"))
+    paths = (CRITERION_PROFILE_PATH, ACCOUNTING_PROFILE_PATH)
+    before = {path: _facts_at(world.record(), path) for path in paths}
+
+    answers = project_answers(world.flow, record_to_path_values(world.record()))
+    persist_full_flow_answers(world.flow, answers, profile_id=world.profile_id, operation=world.operation)
+
+    assert {path: _facts_at(world.record(), path) for path in paths} == before

@@ -74,6 +74,29 @@ export const IMPORT_ISSUES = [
 ] as const;
 export type ImportIssue = (typeof IMPORT_ISSUES)[number];
 
+/** Why a period's check says a movement is not ready. */
+export const READINESS_REASONS = [
+  "missing_business_classification",
+  "missing_category",
+  "missing_taxable_base",
+  "missing_iva_amount",
+  "missing_iva_rate",
+  "missing_eur_tax_substrate",
+  "missing_counterparty_identification_state",
+  "domestic_identification_on_intra_community_transaction",
+  "eu_member_state_on_export_transaction",
+  "missing_counterparty_establishment_on_export",
+  "inadmissible_deduction_classification",
+  "missing_proportionality_reference",
+  "unsupported_currency",
+  "unsupported_period",
+  "censo_ratio_mismatch",
+  "missing_home_office_afectacion",
+  "anomaly_non_declarable_iva_category",
+  "anomaly_non_declarable_recargo_equivalencia",
+] as const;
+export type LedgerPreflightReason = (typeof READINESS_REASONS)[number];
+
 /** The income classes a payer's withholding certificate is recorded under. */
 export const WITHHOLDING_INCOME_CLASSES = [
   "trabajo",
@@ -171,6 +194,71 @@ export const M210_INCOME_DIRECTIONS = ["INCOMING"] as const;
 export const takesM210Income = (id: string): boolean =>
   (M210_INCOME_DIRECTIONS as readonly string[]).includes(id);
 
+/** The directions a movement can be the purchase of a capital good in. */
+export const CAPITAL_GOOD_ACQUISITION_DIRECTIONS = ["OUTGOING"] as const;
+export const takesCapitalGoodAcquisition = (id: string): boolean =>
+  (CAPITAL_GOOD_ACQUISITION_DIRECTIONS as readonly string[]).includes(id);
+
+/** The direction a movement settles an invoice of each kind in. */
+export const SETTLING_DIRECTION: Readonly<Record<string, string>> = {
+  issued: "INCOMING",
+  received: "OUTGOING",
+};
+
+/** How far a movement's amount may be from what an invoice settles for and still be offered. */
+export const INVOICE_MATCH_TOLERANCE = "0.01";
+
+/** The facts a movement's id is worked out from, so a change to one gives it a new id. */
+export const IDENTITY_FIELDS = [
+  "amount",
+  "booked_date",
+  "description",
+  "own_account_id",
+  "value_date",
+] as const;
+export const isIdentityField = (id: string): boolean =>
+  (IDENTITY_FIELDS as readonly string[]).includes(id);
+
+/** The fields of a stored invoice whose correction waits on the ledger's answer. */
+export const CORRECTION_JUDGED_FIELDS = [
+  "counterparty_country",
+  "invoice_class",
+  "iva_category",
+  "operation_date",
+  "rectifies_invoice_number",
+  "retention_amount",
+  "retention_rate",
+  "series",
+] as const;
+export const isCorrectionJudged = (id: string): boolean =>
+  (CORRECTION_JUDGED_FIELDS as readonly string[]).includes(id);
+
+/** The field a readiness reason is put right in, for the reasons that name one. */
+export const READINESS_REASON_FIELD: Readonly<Record<string, string>> = {
+  missing_category: "category_id",
+  missing_taxable_base: "taxable_base",
+  missing_iva_amount: "iva_amount",
+  missing_iva_rate: "iva_rate",
+  missing_counterparty_identification_state:
+    "counterparty_identification_state",
+  missing_proportionality_reference: "business_pct",
+  inadmissible_deduction_classification: "business_classification",
+  domestic_identification_on_intra_community_transaction: "iva_category",
+  eu_member_state_on_export_transaction: "iva_category",
+  missing_counterparty_establishment_on_export: "iva_category",
+  anomaly_non_declarable_iva_category: "iva_category",
+  anomaly_non_declarable_recargo_equivalencia: "iva_category",
+};
+
+/** The readiness reasons the product's own IVA derivation can answer. */
+export const IVA_DERIVABLE_REASONS = [
+  "missing_iva_amount",
+  "missing_iva_rate",
+  "missing_taxable_base",
+] as const;
+export const isIvaDerivableReason = (id: string): boolean =>
+  (IVA_DERIVABLE_REASONS as readonly string[]).includes(id);
+
 /** What a movement may be classified as, for the directions that do not take every classification. */
 export const CLASSIFICATIONS_OF_DIRECTION: Readonly<
   Record<string, readonly string[]>
@@ -196,6 +284,7 @@ export const FIELDS_LOCKED_BY_DIRECTION: Readonly<
   Record<string, readonly string[]>
 > = {
   INTERNAL_TRANSFER: [
+    "accrual_date",
     "business_pct",
     "category_id",
     "deduction_fact_kind",
@@ -326,6 +415,7 @@ export const LEDGER_UPDATE_FIELDS = [
   "booked_date",
   "value_date",
   "operation_date",
+  "accrual_date",
   "amount",
   "direction",
   "currency",

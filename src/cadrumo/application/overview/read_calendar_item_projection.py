@@ -155,7 +155,6 @@ class OverviewCalendarEntrySnapshot(BaseModel):
     holiday_refs: tuple[str, ...]
     jurisdictions: tuple[HolidayJurisdiction, ...]
     holiday_coverage: DeadlineHolidayCoverage
-    holiday_territory: str | None
     payment_cutoff_on: date | None
     evaluated_on: date
     days_overdue: NonNegativeInt | None

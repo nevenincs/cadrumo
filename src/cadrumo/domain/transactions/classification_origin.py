@@ -26,6 +26,7 @@ _MOVEMENT_FIELDS: Final = frozenset({"booked_date", "value_date", "amount", "cur
 CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "direction",
     "operation_date",
+    "accrual_date",
     "source_jurisdiction",
     "business_classification",
     "business_pct",

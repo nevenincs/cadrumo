@@ -12,7 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.i18n.render import tr as render_tr
-from ...core.money.rounding import CENT, round_to_cents
+from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -62,6 +62,7 @@ from ...domain.transactions.models import Transaction
 from ._shared_issue_reasons import business_state_issue_reason
 from .currency_predicates import is_non_eur_without_conversion
 from .invoice_kind import invoice_kind_for_direction
+from .iva_cuota_disagreement import cuota_disagreement
 from .iva_ledger import (
     IvaLedgerAggregationIssue,
     IvaLedgerAggregationIssueReason,
@@ -957,31 +958,36 @@ def iva_transaction_gate_issue(
     return None
 
 
+def _eur_figure(amount: Decimal) -> str:
+    """An amount as the operator reads it: two decimals and the currency, whatever scale it was stored at."""
+    return f"{round_to_cents(amount):.2f} EUR"
+
+
+def _percent_figure(rate: Decimal) -> str:
+    """A fractional tipo as a percentage without trailing zeros, ``0.21`` as ``21%`` and ``0.055`` as ``5.5%``."""
+    percent = (rate * 100).normalize()
+    return f"{percent:f}%"
+
+
 def _cuota_disagrees_with_rate_issue(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
     """Refuse a row whose declared cuota is not its base at its declared tipo.
 
     Runs after category classification, so a category's own refusal (a cuota
     that is zero by law, a combination that describes no operation) names the
-    real fault first. Recargo de equivalencia is left out: its own tipo is not
-    carried on the row, only its amount, so only the IVA cuota is recomputed.
+    real fault first.
     """
-    taxable_base = transaction.taxable_base
-    iva_amount = transaction.iva_amount
-    iva_rate = transaction.iva_rate
-    if taxable_base is None or iva_amount is None or iva_rate is None:
-        return None
-    expected_cuota = (taxable_base * iva_rate).quantize(Decimal("0.0001"))
-    if abs(iva_amount - expected_cuota) <= CENT:
+    disagreement = cuota_disagreement(transaction)
+    if disagreement is None:
         return None
     return IvaLedgerAggregationIssue(
         transaction_id=transaction.transaction_id,
         reason=IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
         detail=render_tr(
             "aggregation.iva_ledger.errors.cuota_disagrees_with_rate",
-            base=str(taxable_base),
-            rate=str(iva_rate),
-            declared=str(iva_amount),
-            expected=str(round_to_cents(expected_cuota)),
+            base=_eur_figure(disagreement.base),
+            rate=_percent_figure(disagreement.rate),
+            declared=_eur_figure(disagreement.declared),
+            expected=_eur_figure(disagreement.expected),
         ),
     )
 

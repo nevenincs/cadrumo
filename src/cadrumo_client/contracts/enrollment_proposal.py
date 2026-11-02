@@ -7,12 +7,13 @@ runtime decides whether to grant it.
 
 from __future__ import annotations
 
+import unicodedata
 from datetime import timedelta
 from enum import StrEnum
-from typing import Final
+from typing import Annotated, Final
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator
+from pydantic import AfterValidator, BaseModel, StringConstraints, model_validator
 
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
@@ -23,6 +24,24 @@ _GRANT_DEFAULT_VALIDITY_DAYS: Final = 365
 
 GRANT_DEFAULT_VALIDITY: Final = timedelta(days=_GRANT_DEFAULT_VALIDITY_DAYS)
 """How long a proposed grant lasts when its proposer names no shorter validity."""
+
+
+GRANT_LABEL_MAXIMUM_LENGTH: Final = 64
+"""The longest name a person can give a key at issue."""
+
+
+def _require_printable_label(value: str) -> str:
+    if any(unicodedata.category(character).startswith("C") for character in value):
+        raise ValueError("a key label holds printable characters only")
+    return value
+
+
+type GrantLabel = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=GRANT_LABEL_MAXIMUM_LENGTH),
+    AfterValidator(_require_printable_label),
+]
+"""A person's non-secret name for a key; it names the key in the inventory and authenticates nothing."""
 
 
 class EnrollmentKind(StrEnum):
@@ -51,9 +70,12 @@ class EnrollmentProposal(BaseModel):
     allow_os_lock: bool
     target_grant_id: UUID | None = None
     target_key_id: UUID | None = None
+    label: GrantLabel | None = None
 
     @model_validator(mode="after")
     def _targets(self) -> EnrollmentProposal:
+        if self.label is not None and self.kind is not EnrollmentKind.ENROLL:
+            raise ValueError("a key is named only when it is issued")
         if (self.kind is EnrollmentKind.ENROLL) != (self.target_grant_id is None):
             raise ValueError("grant target does not match enrollment kind")
         if (self.kind is EnrollmentKind.ROTATE) != (self.target_key_id is not None):

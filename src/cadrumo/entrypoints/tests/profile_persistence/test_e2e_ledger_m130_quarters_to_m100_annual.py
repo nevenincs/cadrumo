@@ -45,6 +45,7 @@ the *wiring*, leaving the rate's legal currency to the registry grounding gate.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -458,8 +459,13 @@ def _import_official_m130_result_observation(
     *,
     period: str,
     c19_value: Decimal,
+    observed_also: Mapping[CasillaId, Decimal] | None = None,
 ) -> None:
-    """Persist the autonoma's filed M130 result as AEAT-attested local evidence."""
+    """Persist the autonoma's filed M130 result as AEAT-attested local evidence.
+
+    ``observed_also`` are further figures of the same return, for a caller whose next
+    quarter reads them.
+    """
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
@@ -481,7 +487,11 @@ def _import_official_m130_result_observation(
             clock=_FILE_AT,
         )
     # An original autoliquidación: no earlier filing of the quarter, so casilla 18 is zero.
-    casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value, _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0")}
+    casilla_values = {
+        _M130_RESULTADO_FINAL_CASILLA: c19_value,
+        _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+        **(observed_also or {}),
+    }
     # The reference id IS the justificante CSV, and a codigo seguro de
     # verificacion is uppercase alphanumeric: the model pins
     # ``^[A-Z0-9]{8,32}$``. The readable hyphenated spelling this replaced
@@ -623,11 +633,17 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return values
 
 
+# The activity key an exported direct-estimation block requires and the operator states.
+M100_ACTIVITY_KEY_CASILLA: CasillaId = validated_casilla_id("0166")
+M100_ACTIVITY_KEY = "A05"
+
+
 def _calculate_m100_annual(
     secure_objects: SecureObjectRepository,
     *,
     casilla_inputs: dict[CasillaId, Decimal] | None = None,
     binding_values: dict[BindingId, Decimal] | None = None,
+    text_casilla_inputs: dict[CasillaId, str] | None = None,
 ) -> CalculationRevision:
     """Run the live M100/2024/0A annual calc, leaving the pagos relations to fold."""
     _seed_taxpayer_profile()
@@ -653,6 +669,7 @@ def _calculate_m100_annual(
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
         binding_values={**_m100_non_relation_zero_bindings(), **(binding_values or {})},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -796,6 +813,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     annual = _calculate_m100_annual(
         secure_objects,
         casilla_inputs={validated_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
+        text_casilla_inputs={M100_ACTIVITY_KEY_CASILLA: M100_ACTIVITY_KEY},
     )
 
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")

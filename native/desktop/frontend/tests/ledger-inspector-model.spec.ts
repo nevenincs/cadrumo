@@ -1,5 +1,3 @@
-import { servedLimits } from "./support/servedLimits";
-import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
 import type {
   LedgerLlmSuggestion,
@@ -8,7 +6,6 @@ import type {
 } from "../src/shell/ledger";
 import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import {
-  checkSplit,
   commonValue,
   completeCohort,
   currentSection,
@@ -19,7 +16,6 @@ import {
   quarterMove,
   selectionCounts,
   setForAll,
-  splitRemainder,
   suggestionWrites,
 } from "../src/components/ledger/inspector/inspectorModel";
 import { sameInspectorContext } from "../src/components/ledger/inspector/inspectorContext";
@@ -306,133 +302,6 @@ test("a merge needs every active part of the split, and nothing else", () => {
     completeCohort([hexId("x"), hexId("y"), hexId("p")], cohort, rows),
   ).toBe(false);
   expect(completeCohort([hexId("x")], [hexId("x")], rows)).toBe(false);
-});
-
-test("a split's last part takes what the others leave, in its shortest form", () => {
-  expect(splitRemainder("59.99", ["20"])).toBe("39.99");
-  expect(splitRemainder("100", ["40.5", "9.5"])).toBe("50");
-  expect(splitRemainder("10.20", ["10.10"])).toBe("0.1");
-  expect(splitRemainder("10", ["10"])).toBeNull();
-  expect(splitRemainder("10", ["11"])).toBeNull();
-  expect(splitRemainder("10", ["1.000"])).toBeNull();
-  expect(splitRemainder("10", [""])).toBeNull();
-});
-
-test("a split part's description is refused over the length the ledger serves, and while it serves none", () => {
-  const parts = (description: string) => [
-    { amount: "1", description },
-    { amount: "2", description: "otra" },
-  ];
-  holdLedgerLimits({
-    ...servedLimits,
-    text_limits: [
-      { name: "split_parts", max: 3 },
-      { name: "split_part_description", max: 5 },
-    ],
-  });
-  try {
-    expect(checkSplit("3", parts("12345"))).toMatchObject({ ok: true });
-    expect(checkSplit("3", parts("áéíóú"))).toMatchObject({ ok: true });
-    expect(checkSplit("3", parts("  12345  "))).toMatchObject({ ok: true });
-    expect(checkSplit("3", parts("123456"))).toEqual({
-      ok: false,
-      problem: { kind: "description_long", index: 0, max: 5 },
-    });
-    holdLedgerLimits({
-      ...servedLimits,
-      text_limits: [{ name: "split_parts", max: 3 }],
-    });
-    expect(checkSplit("3", parts("a"))).toEqual({
-      ok: false,
-      problem: { kind: "limits_unavailable" },
-    });
-  } finally {
-    holdLedgerLimits(servedLimits);
-  }
-});
-
-test("a split takes no more parts than the ledger serves, and none while it serves nothing", () => {
-  const parts = (count: number) =>
-    Array.from({ length: count }, (_, at) => ({
-      amount: "1",
-      description: `parte ${at}`,
-    }));
-  holdLedgerLimits({
-    ...servedLimits,
-    text_limits: [
-      { name: "split_parts", max: 3 },
-      { name: "split_part_description", max: 64 },
-    ],
-  });
-  try {
-    expect(checkSplit("3", parts(3))).toMatchObject({ ok: true });
-    expect(checkSplit("4", parts(4))).toEqual({
-      ok: false,
-      problem: { kind: "count" },
-    });
-    holdLedgerLimits(null);
-    expect(checkSplit("3", parts(3))).toEqual({
-      ok: false,
-      problem: { kind: "limits_unavailable" },
-    });
-  } finally {
-    holdLedgerLimits(servedLimits);
-  }
-});
-
-test("a split is refused unless its parts add up exactly and differ", () => {
-  expect(
-    checkSplit("59.99", [
-      { amount: "20.00", description: " Licencia " },
-      { amount: "39.99", description: "Soporte" },
-    ]),
-  ).toEqual({
-    ok: true,
-    children: [
-      { amount: "20", description: "Licencia" },
-      { amount: "39.99", description: "Soporte" },
-    ],
-  });
-  expect(checkSplit("10", [{ amount: "10", description: "a" }])).toEqual({
-    ok: false,
-    problem: { kind: "count" },
-  });
-  expect(
-    checkSplit("10", [
-      { amount: "6", description: "a" },
-      { amount: "5", description: "b" },
-    ]),
-  ).toEqual({
-    ok: false,
-    problem: { kind: "sum", difference: "1", over: true },
-  });
-  expect(
-    checkSplit("10", [
-      { amount: "5", description: "a" },
-      { amount: "4.5", description: "b" },
-    ]),
-  ).toEqual({
-    ok: false,
-    problem: { kind: "sum", difference: "0.5", over: false },
-  });
-  expect(
-    checkSplit("10", [
-      { amount: "5", description: "a" },
-      { amount: "5", description: "a" },
-    ]),
-  ).toEqual({ ok: false, problem: { kind: "duplicate", index: 1 } });
-  expect(
-    checkSplit("10", [
-      { amount: "5", description: "a" },
-      { amount: "5", description: "  " },
-    ]),
-  ).toEqual({ ok: false, problem: { kind: "description", index: 1 } });
-  expect(
-    checkSplit("10", [
-      { amount: "0", description: "a" },
-      { amount: "10", description: "b" },
-    ]),
-  ).toEqual({ ok: false, problem: { kind: "amount", index: 0 } });
 });
 
 const suggestion = (

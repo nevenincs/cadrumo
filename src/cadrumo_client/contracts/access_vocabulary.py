@@ -98,6 +98,21 @@ class AccessScope(BaseModel):
     allow_network: bool = True
 
 
+class GrantUse(StrEnum):
+    """What a grant's key is for, read from what its scope releases and to whom."""
+
+    AGENT = "agent"
+    """Its scope releases results to a destination, so a client presenting the key reads values back."""
+    OTHER = "other"
+    """Its scope releases nothing to a destination."""
+
+
+def grant_use(scope: AccessScope) -> GrantUse:
+    """Classify a grant by its scope alone, so every projection of the grant agrees."""
+    releases = bool(scope.disclosures or scope.disclosure_categories)
+    return GrantUse.AGENT if releases else GrantUse.OTHER
+
+
 DISCLOSURE_PAGE_ENTRIES = 100
 """The most disclosure entries one page read releases; a frame holds them with room to spare."""
 

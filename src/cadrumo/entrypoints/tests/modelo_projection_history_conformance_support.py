@@ -10,7 +10,9 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from ...application.bucket_event_projection import BucketEventProjection
-from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ...application.modelo.history import assemble_modelo_lifecycle_history
 from ...application.modelo.history_timeline_operation import (
     ModeloHistoryTimelineProjection,
@@ -63,7 +65,7 @@ def _seed_2026_revision(profile_id: UUID, *, operation: PinnedAuthorityOperation
         operation=operation,
     )
     with bundled_indexed_authority().operation() as calculation_operation:
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=bucket_id, operation=calculation_operation),
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,

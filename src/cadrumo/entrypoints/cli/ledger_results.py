@@ -144,6 +144,7 @@ class LedgerStagedRowPayload(OutputSchema):
     classified: bool
     takes_expense_category: bool
     takes_share: bool
+    category_askable: bool
     category_settable: bool
     category_on_income: bool
     takes_changes: bool
@@ -180,6 +181,101 @@ class LedgerRuleTrialEnvelope(OutputSchema):
     outcome: str
     hits: list[str]
     pending: list[str]
+
+
+class LedgerInvoiceDuplicateEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice duplicate``."""
+
+    invoice_id: str | None
+    basis: str | None
+
+
+class LedgerInvoiceMatchPairPayload(OutputSchema):
+    """One movement and one invoice that settle each other, and the evidence the pair stands on."""
+
+    transaction_id: str
+    invoice_id: str
+    number: bool
+    gap: int
+    counterparty: bool
+
+
+class LedgerInvoiceMatchSuggestionPayload(LedgerInvoiceMatchPairPayload):
+    """A movement's best invoice, with what competes with it."""
+
+    ambiguous: bool
+    ties: list[LedgerInvoiceMatchPairPayload]
+    others: list[LedgerInvoiceMatchPairPayload]
+
+
+class LedgerInvoiceMatchInvoiceChoicePayload(OutputSchema):
+    """An invoice a movement may be linked to by hand."""
+
+    invoice_id: str
+    settles: bool
+    staged_for: str | None
+    linked: int
+
+
+class LedgerInvoiceMatchMovementChoicePayload(OutputSchema):
+    """A movement an invoice may be linked to by hand."""
+
+    transaction_id: str
+    settles: bool
+
+
+class LedgerInvoiceMatchMismatchPayload(OutputSchema):
+    """One way a judged movement and invoice do not agree; the fields besides ``kind`` are the kind's own."""
+
+    kind: str
+    difference: str | None
+    movement: str | None
+    invoice: str | None
+    count: int | None
+
+
+class LedgerInvoiceMatchJudgementPayload(OutputSchema):
+    """What stands against one named link."""
+
+    transaction_id: str
+    invoice_id: str
+    found: bool
+    mismatches: list[LedgerInvoiceMatchMismatchPayload]
+
+
+class LedgerInvoiceMatchEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice match``."""
+
+    suggestions: list[LedgerInvoiceMatchSuggestionPayload]
+    window_days: int
+    invoice_choices: list[LedgerInvoiceMatchInvoiceChoicePayload] | None
+    movement_choices: list[LedgerInvoiceMatchMovementChoicePayload] | None
+    judgements: list[LedgerInvoiceMatchJudgementPayload]
+
+
+class LedgerSplitCheckProblemPayload(OutputSchema):
+    """The first thing the split writer would refuse in the parts asked about."""
+
+    kind: str
+    index: int | None
+    max: int | None
+    difference: str | None
+    over: bool | None
+
+
+class LedgerSplitCheckChildPayload(OutputSchema):
+    """One part as the split writer takes it."""
+
+    amount: str
+    description: str
+
+
+class LedgerSplitCheckEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger split-check``."""
+
+    remainder: str | None
+    problem: LedgerSplitCheckProblemPayload | None
+    children: list[LedgerSplitCheckChildPayload]
 
 
 class LedgerStagedCheckEnvelope(OutputSchema):
@@ -328,6 +424,7 @@ class TransactionPayload(OutputSchema):
     booked_date: IsoDateText
     value_date: str | None = None
     operation_date: str | None = None
+    accrual_date: str | None = None
     amount: NonEmptyStr
     currency: IsoCurrencyCode
     direction: NonEmptyStr
@@ -669,6 +766,7 @@ class LedgerListRowPayload(OutputSchema):
     booked_date: str
     value_date: str | None = None
     operation_date: str | None = None
+    accrual_date: str | None = None
     amount: str
     currency: IsoCurrencyCode
     direction: str
@@ -997,6 +1095,14 @@ __all__ = [
     "LedgerExcludeResult",
     "LedgerHistoryEventPayload",
     "LedgerHistoryResult",
+    "LedgerInvoiceDuplicateEnvelope",
+    "LedgerInvoiceMatchEnvelope",
+    "LedgerInvoiceMatchInvoiceChoicePayload",
+    "LedgerInvoiceMatchJudgementPayload",
+    "LedgerInvoiceMatchMismatchPayload",
+    "LedgerInvoiceMatchMovementChoicePayload",
+    "LedgerInvoiceMatchPairPayload",
+    "LedgerInvoiceMatchSuggestionPayload",
     "LedgerInvoicePreviewFactPayload",
     "LedgerInvoicePreviewFigurePayload",
     "LedgerInvoicePreviewFindingPayload",
@@ -1017,6 +1123,9 @@ __all__ = [
     "LedgerReviewResult",
     "LedgerReviewRowPayload",
     "LedgerRuleTrialEnvelope",
+    "LedgerSplitCheckChildPayload",
+    "LedgerSplitCheckEnvelope",
+    "LedgerSplitCheckProblemPayload",
     "LedgerSplitChildIdPayload",
     "LedgerSplitChildProposalPayload",
     "LedgerSplitResult",

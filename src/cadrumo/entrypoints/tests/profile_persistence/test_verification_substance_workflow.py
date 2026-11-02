@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -18,11 +18,14 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.auth.operator_scope_ports import OperatorScopePorts
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.data_inventory import DataInventoryChecklist, data_inventory_checklist
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -82,13 +85,13 @@ def _calculate_modelo_revision(
 ) -> CalculationRevision:
     """Run calculation through the real encrypted application composition."""
     with bundled_indexed_authority().operation() as operation:
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             casilla_inputs=casilla_inputs,
             binding_values=binding_values,
             clock=clock,
-        )
+        ).revision
 
 
 def _verify_modelo_revision(
@@ -229,14 +232,16 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
             clock=_T0,
         )
 
-    # Modest operator inputs so C14 stays small + positive.
-    # C01 (ingresos) is bound via ledger_renta_income_aggregation, but the
-    # ledger binding's smuggling guard only applies to previous_filing
-    # sources; supplying C01 directly is the supported manual-entry path
-    # mirrored by the M131 sibling test below.
+    # Modest activity income so C14 stays small + positive. C01 (ingresos) and
+    # C02 (gastos) are ledger-owned, so the income is a real ledger row.
+    seed_m130_income_transaction(
+        amount=Decimal("10000"),
+        filing_year=2026,
+        source_key="substance-c15-cap-income",
+        value_date=date(2026, 4, 5),
+        bucket_id=_PROFILE_ID,
+    )
     casilla_inputs: dict[CasillaId, Decimal] = {
-        _CASILLA_01: Decimal("10000"),
-        _CASILLA_02: Decimal("0"),
         _CASILLA_05: Decimal("0"),
         _CASILLA_06: Decimal("0"),
         _CASILLA_08: Decimal("0"),
@@ -348,13 +353,12 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
             clock=_T0,
         )
 
-    # 04, 06, 07, 13 are computed casillas on the M131 2026 revision;
-    # only the operator-input (manual) casillas may appear in inputs.
+    # 04, 06, 07, 13 are computed casillas on the M131 2026 revision and 05 is
+    # source-owned; only the operator-input (manual) casillas may appear in inputs.
     casilla_inputs: dict[CasillaId, Decimal] = {
         _CASILLA_01: Decimal("100"),
         _CASILLA_02: Decimal("50"),
         _CASILLA_03: Decimal("0"),
-        _CASILLA_05: Decimal("0"),
         _CASILLA_08: Decimal("0"),
         _CASILLA_09: Decimal("0"),
         _CASILLA_12: Decimal("0"),
@@ -425,9 +429,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
         )
 
     casilla_inputs: dict[CasillaId, Decimal] = {
-        _CASILLA_02: Decimal("1000"),
         _CASILLA_05: Decimal("0"),
-        _CASILLA_06: Decimal("0"),
         _CASILLA_08: Decimal("0"),
         _CASILLA_10: Decimal("0"),
         _CASILLA_16: Decimal("0"),

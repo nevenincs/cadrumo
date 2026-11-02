@@ -17,7 +17,9 @@ from cadrumo.application.calculations.binding_prefill import BindingPrefillRepor
 from cadrumo.application.calculations.iva_compensation_history import seed_iva_compensation_period
 from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -43,6 +45,10 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _work_unit_repositories_with_modelo_303_work_unit,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    M303_LEDGER_CUOTA,
+    seed_m303_period_cuotas,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -66,7 +72,8 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_60,
         ):
-            calculate_modelo_revision(
+            seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -124,12 +131,12 @@ def test_in_scope_period_rejects_supplied_first_period_zero_decision(
                         bucket_event_repository=event_repo,
                     ) as _calculation_ports_108,
                 ):
-                    calculate_modelo_revision(
+                    seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
+                    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                         work_unit.work_unit_id,
                         actor="operator",
                         casilla_inputs={},
                         binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                        backend_binding_values=_modelo_303_engine_inputs(),
                         iva_compensation_decision=supplied_decision,
                         filing_period_date=date(2026, 6, 30),
                         ports=_calculation_ports_108,
@@ -158,18 +165,18 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_138:
-                first_revision = calculate_modelo_revision(
+                seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
+                first_revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                     work_unit.work_unit_id,
                     actor="operator",
                     casilla_inputs={},
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                    backend_binding_values=_modelo_303_engine_inputs(),
                     iva_compensation_decision=None,
                     filing_instance_evidence=_filing_instance_evidence(work_unit.period, operation=operation),
                     filing_period_date=date(2026, 3, 31),
                     ports=_calculation_ports_138,
                     clock=_DECIDED_AT,
-                )
+                ).revision
             assert first_revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
             first_decision = IvaWalletDecisionRepository().load_decision(
                 taxpayer_nif,
@@ -201,12 +208,12 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                     bucket_event_repository=event_repo,
                 ) as _calculation_ports_175,
             ):
-                calculate_modelo_revision(
+                seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
+                calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                     work_unit.work_unit_id,
                     actor="operator",
                     casilla_inputs={},
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                    backend_binding_values=_modelo_303_engine_inputs(),
                     iva_compensation_decision=None,
                     filing_instance_evidence=_filing_instance_evidence(work_unit.period, operation=operation),
                     filing_period_date=date(2026, 3, 31),
@@ -251,7 +258,7 @@ def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_221:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -266,7 +273,7 @@ def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-seed-boundaries", operation=operation
                 ),
-            )
+            ).revision
 
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("0")
         assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0.00")
@@ -313,7 +320,7 @@ def test_explicit_nonzero_binding_conflicts_with_prior_zero_seed(
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_273,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},

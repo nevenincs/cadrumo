@@ -11,6 +11,7 @@ from typing import NoReturn, Protocol
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
@@ -34,6 +35,7 @@ from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..filing.producer_snapshot import AmendmentEvidence
+from ._amendment_kind_resolution import assert_amendment_kind_permitted
 
 
 class AmendmentExportCommand(Protocol):
@@ -75,6 +77,8 @@ def resolve_persisted_amendment_export_evidence(
         if command.amendment_evidence is not None:
             _raise(command, "typed amendment evidence was supplied for a non-amendment revision")
         return None
+    with validating_governed_facts(operation):
+        assert_amendment_kind_permitted(modelo=str(work_unit.modelo), period=work_unit.period, amendment_kind=identity.kind)
     records = filing_repository.load()
     target = _target(command, identity=identity, work_unit=work_unit, records=records)
     justificantes, receipt = _receipt(

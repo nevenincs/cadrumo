@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "RETENCION_SOPORTADA_ABSENCE_KEY_PREFIX",
-    "RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS",
+    "RETENCION_SOPORTADA_ABSENCE_MESSAGE_LOCALE_KEYS",
     "RetencionSoportadaAbsenceReader",
     "RetencionSoportadaAbsenceRefusalReason",
     "RetencionSoportadaAbsenceRefusedError",
@@ -68,7 +68,7 @@ type RetencionSoportadaAbsenceRefusalReason = Literal[
 ]
 """Why an attestation or its withdrawal was refused before it reached storage."""
 
-RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS: Final[Mapping[str, str]] = {
+RETENCION_SOPORTADA_ABSENCE_MESSAGE_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "ejercicio_unsupported": "aggregation.retencion_soportada_absence.errors.ejercicio_unsupported",
     "family_not_declared": "aggregation.retencion_soportada_absence.errors.family_not_declared",
     "records_present": "aggregation.retencion_soportada_absence.errors.records_present",
@@ -88,7 +88,7 @@ class RetencionSoportadaAbsenceRefusedError(CadrumoError):
         super().__init__(
             f"suffered-withholding absence attestation refused: {reason}",
             context={"reason": reason, "ejercicio": str(ejercicio)},
-            translated_message=RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS[reason],
+            translated_message=RETENCION_SOPORTADA_ABSENCE_MESSAGE_LOCALE_KEYS[reason],
         )
 
 
@@ -109,6 +109,13 @@ class RetencionSoportadaAbsenceRepository(RetencionSoportadaAbsenceReader, Proto
         """Return the stored attestation at ``identity`` and the exact revision it was read at.
 
         An absent row returns ``None`` beside the absent-row revision sentinel.
+        """
+        ...
+
+    def list_revisioned(self, ejercicio: int) -> tuple[tuple[RetencionSoportadaAbsence, str], ...]:
+        """Return every attestation of ``ejercicio``, active or withdrawn, beside the revision it was read at.
+
+        Rows are ordered by object key.
         """
         ...
 

@@ -25,8 +25,9 @@ from .calculation_notes import (
     durable_binding_source,
     note_attention,
 )
+from .work_form_declaration_facts import ModeloFormCalculationNote
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
-from .work_form_models import ModeloFormCalculationNote, ModeloFormCasillaAddressV1, ModeloFormField
+from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormField
 from .work_review import ModeloWorkReview
 
 _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
@@ -44,6 +45,7 @@ _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
             "application.modelo.findings.iva_selected_scope_evidence_failure",
             "application.modelo.findings.iva_intra_eu_self_assessment_unrecordable",
             "application.modelo.findings.iva_import_document_unrecordable",
+            "application.modelo.findings.iva_cuota_disagrees_with_rate",
             "application.modelo.findings.iva_reagp_document_unrecordable",
             "application.modelo.findings.iva_rectification_document_unrecordable",
         }

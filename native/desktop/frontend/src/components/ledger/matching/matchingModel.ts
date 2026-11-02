@@ -1,108 +1,18 @@
-// Which invoice settles which movement, as the Ledger page suggests it. A
-// suggestion is a proposal the person links, and a link is permanent, so
-// each movement shows one best invoice and each invoice is offered to one
-// movement. A candidate follows the product's own rule: an invoice no
-// movement is linked to and a movement linked to no invoice, an issued
-// invoice against money in and a received one against money out, in the
-// same currency, and a movement amount that settles the invoice's total less
-// its retención to the cent. Candidates rank by the invoice number found in
-// the description, then the shortest issue-to-payment gap, then the
-// counterparty, then the amount. Equal candidates are ambiguous: the person
-// chooses. Nothing here reads or writes the ledger.
+// How the Ledger page shows the ledger's proposals of which invoice settles
+// which movement. The ledger weighs flow, currency and amount, ranks the
+// candidates and says which tie (`ledger.invoice.match`); the window looks
+// the movements and invoices it holds up by id and shows each pair with the
+// evidence it stands on. A suggestion is a proposal the person links, and a
+// link is permanent. Nothing here decides which pair is best.
 
 import type {
   CatalogueInvoice,
   LedgerCheckResult,
+  LedgerInvoiceMatchPair,
+  LedgerInvoiceMatchResult,
   LedgerRow,
 } from "../../../shell/ledger";
-import { takesChanges, takesInvoice } from "../../../shell/ledgerContract";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
-
-/** How far apart, in cents, a movement and an invoice may be and still
- * settle: the product's own tolerance. */
-const TOLERANCE_UNITS = 10_000n; // one cent at six decimals
-const SCALE = 6;
-/** Paid this many days before the invoice's date still ranks by the gap;
- * earlier than that ranks after every payment made after issue. */
-const EARLY_DAYS = 3;
-const LATE_RANK = 1000;
-
-/** A decimal text as units of a millionth, or null for anything else. */
-function units(text: string): bigint | null {
-  const found = /^(\d+)(?:\.(\d{1,6}))?$/.exec(text.trim());
-  if (!found) return null;
-  const fraction = (found[2] ?? "").padEnd(SCALE, "0");
-  return BigInt(found[1]!) * 10n ** BigInt(SCALE) + BigInt(fraction);
-}
-/** Units back to decimal text, to the cent. */
-function centsText(value: bigint): string {
-  const negative = value < 0n;
-  const magnitude = negative ? -value : value;
-  const cents = (magnitude + 5_000n) / 10_000n;
-  const whole = cents / 100n;
-  const fraction = (cents % 100n).toString().padStart(2, "0");
-  return `${negative ? "-" : ""}${whole}.${fraction}`;
-}
-
-/** What an invoice settles in money: its total less what was withheld. */
-export function settlement(invoice: CatalogueInvoice): string | null {
-  const total = units(invoice.grand_total.decimal);
-  if (total === null) return null;
-  const withheld = invoice.retention_amount
-    ? units(invoice.retention_amount.decimal)
-    : 0n;
-  if (withheld === null) return null;
-  return centsText(total - withheld);
-}
-
-/** The movement direction an invoice of `kind` is paid in. */
-export const flowOf = (invoice: CatalogueInvoice) =>
-  invoice.kind === "issued" ? "INCOMING" : "OUTGOING";
-
-const DAY_MS = 86_400_000;
-/** Whole days from `from` to `to`, both calendar days. */
-export function daysBetween(from: string, to: string): number {
-  return Math.round(
-    (Date.parse(`${to.slice(0, 10)}T12:00:00Z`) -
-      Date.parse(`${from.slice(0, 10)}T12:00:00Z`)) /
-      DAY_MS,
-  );
-}
-
-const LEGAL_FORMS = /\b(s\.?l\.?u?|s\.?a\.?u?|s\.?coop|sll|slp|cb|scp)\b\.?/g;
-/** A party's name folded for comparison: no accents, case, punctuation or
- * legal form. */
-export function partyName(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(LEGAL_FORMS, " ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-/** Whether two names overlap, one inside the other, as the product
- * compares counterparties. */
-export function sameParty(left: string, right: string): boolean {
-  const a = partyName(left);
-  const b = partyName(right);
-  return a !== "" && b !== "" && (a.includes(b) || b.includes(a));
-}
-
-const reference = (text: string) =>
-  text.toUpperCase().replace(/[^A-Z0-9]+/g, "");
-/** Whether a movement's description names the invoice's number. A number
- * too short to tell apart from other digits never counts. */
-export function numberInDescription(
-  row: LedgerRow,
-  invoice: CatalogueInvoice,
-): boolean {
-  const number = reference(invoice.invoice_number);
-  return (
-    number.length >= 4 &&
-    reference(row.transaction.description).includes(number)
-  );
-}
 
 /** The evidence a pair stands on, shown as chips. */
 export type MatchChip =
@@ -115,15 +25,13 @@ export type MatchChip =
 export type MatchPair = {
   row: LedgerRow;
   invoice: CatalogueInvoice;
-  /** What the invoice settles, to the cent. */
+  /** What the invoice settles, as the ledger states it. */
   settles: string;
   number: boolean;
   /** Days from the invoice's date to the movement's. */
   gap: number;
   counterparty: boolean;
   chips: MatchChip[];
-  /** The ranking key: lower ranks first. */
-  rank: readonly [number, number, number, bigint];
 };
 
 /** A movement's best invoice, with what competes with it. */
@@ -140,26 +48,9 @@ export type MatchSuggestion = MatchPair & {
 export type Reconciliation = {
   /** The best suggestion of each movement that has one, by movement id. */
   best: Map<string, MatchSuggestion>;
-  /** Every candidate pair, best first. */
-  pairs: MatchPair[];
   /** The suggestions, newest movement first. */
   list: MatchSuggestion[];
 };
-
-function compareRank(left: MatchPair, right: MatchPair): number {
-  for (let at = 0; at < 3; at += 1) {
-    const a = left.rank[at] as number;
-    const b = right.rank[at] as number;
-    if (a !== b) return a - b;
-  }
-  return left.rank[3] === right.rank[3]
-    ? 0
-    : left.rank[3] < right.rank[3]
-      ? -1
-      : 1;
-}
-const sameRank = (left: MatchPair, right: MatchPair) =>
-  compareRank(left, right) === 0;
 
 /** The movements and invoices staged links already take. */
 export function stagedLinks(actions: readonly StagedAction[]): {
@@ -176,139 +67,60 @@ export function stagedLinks(actions: readonly StagedAction[]): {
   return { rows, invoices };
 }
 
-/** Whether a movement can take a link at all. */
-export const linkable = (row: LedgerRow) =>
-  takesChanges(row.transaction.lifecycle_state) &&
-  takesInvoice(row.transaction.direction);
-
-/** Whether `row` settles `invoice` by flow, currency and amount. */
-export function settles(row: LedgerRow, invoice: CatalogueInvoice): boolean {
-  if (row.transaction.direction !== flowOf(invoice)) return false;
-  if (row.transaction.currency !== invoice.currency) return false;
-  const owed = settlement(invoice);
-  const paid = units(row.transaction.amount);
-  const due = owed === null ? null : units(owed);
-  if (paid === null || due === null) return false;
-  const distance = paid > due ? paid - due : due - paid;
-  return distance <= TOLERANCE_UNITS;
-}
-
-function pairOf(row: LedgerRow, invoice: CatalogueInvoice): MatchPair | null {
-  if (!settles(row, invoice)) return null;
-  const owed = settlement(invoice)!;
-  const distance = units(row.transaction.amount)! - units(owed)!;
-  const number = numberInDescription(row, invoice);
-  const gap = daysBetween(invoice.issued_at, row.transaction.date);
-  const counterparty = sameParty(
-    row.transaction.counterparty,
-    invoice.counterparty_name,
-  );
-  const chips: MatchChip[] = [];
-  if (number) chips.push({ kind: "number" });
-  chips.push({ kind: "gap", days: gap });
-  if (counterparty) chips.push({ kind: "counterparty" });
-  chips.push({ kind: "amount" });
-  return {
-    row,
-    invoice,
-    settles: owed,
-    number,
-    gap,
-    counterparty,
-    chips,
-    rank: [
-      number ? 0 : 1,
-      gap >= -EARLY_DAYS ? Math.abs(gap) : LATE_RANK - gap,
-      counterparty ? 0 : 1,
-      distance < 0n ? -distance : distance,
-    ],
-  };
-}
-
-/**
- * The suggestions for `rows` against `invoices`, one best invoice per
- * movement and one movement per invoice. A movement or an invoice a staged
- * link already takes is offered to nothing else.
- */
-export function reconcile(
+/** The pairs of a served answer, as the window shows them: each side looked
+ * up among the records the window holds, a pair with a side it does not hold
+ * left out. */
+export function remapMatches(
+  result: Pick<LedgerInvoiceMatchResult, "suggestions">,
   rows: readonly LedgerRow[],
   invoices: readonly CatalogueInvoice[],
-  actions: readonly StagedAction[] = [],
 ): Reconciliation {
-  const staged = stagedLinks(actions);
-  const open = rows.filter(
-    (row) =>
-      linkable(row) &&
-      row.transaction.invoice_id === null &&
-      !staged.rows.has(row.transaction.transaction_id),
+  const rowById = new Map(
+    rows.map((row) => [row.transaction.transaction_id, row]),
   );
-  const unmatched = invoices.filter(
-    (invoice) =>
-      invoice.linked_transaction_ids.length === 0 &&
-      !staged.invoices.has(invoice.invoice_id),
+  const invoiceById = new Map(
+    invoices.map((invoice) => [invoice.invoice_id, invoice]),
   );
-  const pairs: MatchPair[] = [];
-  for (const invoice of unmatched)
-    for (const row of open) {
-      const pair = pairOf(row, invoice);
-      if (pair) pairs.push(pair);
-    }
-  pairs.sort(
-    (left, right) =>
-      compareRank(left, right) ||
-      (left.invoice.invoice_id < right.invoice.invoice_id ? -1 : 1) ||
-      (left.row.transaction.transaction_id <
-      right.row.transaction.transaction_id
-        ? -1
-        : 1),
-  );
-  const usedRows = new Set<string>();
-  const usedInvoices = new Set<string>();
-  const best = new Map<string, MatchSuggestion>();
-  const rowId = (pair: MatchPair) => pair.row.transaction.transaction_id;
-  const invoiceId = (pair: MatchPair) => pair.invoice.invoice_id;
-  for (const pair of pairs) {
-    if (usedRows.has(rowId(pair)) || usedInvoices.has(invoiceId(pair)))
-      continue;
-    const ties = pairs.filter(
-      (other) =>
-        other !== pair &&
-        (rowId(other) === rowId(pair) ||
-          invoiceId(other) === invoiceId(pair)) &&
-        !usedRows.has(rowId(other)) &&
-        !usedInvoices.has(invoiceId(other)) &&
-        sameRank(other, pair),
-    );
-    usedRows.add(rowId(pair));
-    usedInvoices.add(invoiceId(pair));
-    best.set(rowId(pair), {
-      ...pair,
-      ambiguous: ties.length > 0,
-      ties,
-      others: pairs.filter(
-        (other) => other !== pair && rowId(other) === rowId(pair),
-      ),
-    });
-  }
-  // A movement that ties for another's invoice points at the same choice.
-  for (const suggestion of [...best.values()])
-    for (const tie of suggestion.ties) {
-      if (best.has(rowId(tie))) continue;
-      best.set(rowId(tie), {
-        ...tie,
-        ambiguous: true,
-        ties: [suggestion],
-        others: pairs.filter(
-          (other) => other !== tie && rowId(other) === rowId(tie),
-        ),
-      });
-    }
-  const list = [...best.values()].sort(
-    (left, right) =>
-      right.row.transaction.date.localeCompare(left.row.transaction.date) ||
-      (rowId(left) < rowId(right) ? -1 : 1),
-  );
-  return { best, pairs, list };
+  const pairOf = (served: LedgerInvoiceMatchPair): MatchPair | null => {
+    const row = rowById.get(served.transaction_id);
+    const invoice = invoiceById.get(served.invoice_id);
+    if (!row || !invoice) return null;
+    const chips: MatchChip[] = [];
+    if (served.number) chips.push({ kind: "number" });
+    chips.push({ kind: "gap", days: served.gap });
+    if (served.counterparty) chips.push({ kind: "counterparty" });
+    chips.push({ kind: "amount" });
+    return {
+      row,
+      invoice,
+      settles: invoice.settlement_amount.decimal,
+      number: served.number,
+      gap: served.gap,
+      counterparty: served.counterparty,
+      chips,
+    };
+  };
+  const known = (served: readonly LedgerInvoiceMatchPair[]) =>
+    served.flatMap((each) => pairOf(each) ?? []);
+  const list = result.suggestions.flatMap((served): MatchSuggestion[] => {
+    const pair = pairOf(served);
+    return pair
+      ? [
+          {
+            ...pair,
+            ambiguous: served.ambiguous,
+            ties: known(served.ties),
+            others: known(served.others),
+          },
+        ]
+      : [];
+  });
+  return {
+    best: new Map(
+      list.map((each) => [each.row.transaction.transaction_id, each]),
+    ),
+    list,
+  };
 }
 
 /** The invoices tied for a movement's choice: its own candidates that rank
@@ -359,37 +171,35 @@ export type PickerOption = {
    * several movements, as partial payments do. */
   linked: number;
 };
-/** The invoices a movement may be linked to by hand, by whether they
- * settle its amount, newest first. */
-export function linkPicker(
-  row: LedgerRow,
+/** The invoices the ledger offers a movement for a link by hand, as the
+ * window holds them: those that settle its amount, and the rest. */
+export function remapInvoiceChoices(
+  choices: NonNullable<LedgerInvoiceMatchResult["invoice_choices"]>,
   invoices: readonly CatalogueInvoice[],
-  actions: readonly StagedAction[] = [],
 ): { settles: PickerOption[]; other: PickerOption[] } {
-  const staged = stagedLinks(actions);
-  const id = row.transaction.transaction_id;
-  const options = invoices
-    .filter((invoice) => row.transaction.direction === flowOf(invoice))
-    .map((invoice): PickerOption => ({
-      invoice,
-      stagedFor:
-        staged.invoices.get(invoice.invoice_id) !== id
-          ? (staged.invoices.get(invoice.invoice_id) ?? null)
-          : null,
-      linked: invoice.linked_transaction_ids.filter((linked) => linked !== id)
-        .length,
-    }))
-    .sort((left, right) =>
-      right.invoice.issued_at.localeCompare(left.invoice.issued_at),
-    );
+  const invoiceById = new Map(
+    invoices.map((invoice) => [invoice.invoice_id, invoice]),
+  );
+  const options = choices.flatMap((choice) => {
+    const invoice = invoiceById.get(choice.invoice_id);
+    return invoice
+      ? [
+          {
+            settles: choice.settles,
+            option: {
+              invoice,
+              stagedFor: choice.staged_for,
+              linked: choice.linked,
+            } satisfies PickerOption,
+          },
+        ]
+      : [];
+  });
   return {
-    settles: options.filter((option) => settles(row, option.invoice)),
-    other: options.filter((option) => !settles(row, option.invoice)),
+    settles: options.filter((each) => each.settles).map((each) => each.option),
+    other: options.filter((each) => !each.settles).map((each) => each.option),
   };
 }
-
-/** How far from an invoice's issue day the movement picker looks. */
-export const PICK_WINDOW_DAYS = 10;
 
 /** One movement the picker offers an invoice. */
 export type MovementOption = {
@@ -397,57 +207,19 @@ export type MovementOption = {
   /** The movement settles the invoice by flow, currency and amount. */
   settles: boolean;
 };
-/** The movements an invoice no movement settles may be linked to by hand:
- * the open movements of its flow and currency paid within
- * `PICK_WINDOW_DAYS` of its issue day, those that settle its amount first,
- * then by how near their amount is, then by how near their day. A movement
- * a link already takes, or a staged one, is not offered. */
-export function movementPicker(
-  invoice: CatalogueInvoice,
+/** The movements the ledger offers an invoice for a link by hand, as the
+ * window holds them. */
+export function remapMovementChoices(
+  choices: NonNullable<LedgerInvoiceMatchResult["movement_choices"]>,
   rows: readonly LedgerRow[],
-  actions: readonly StagedAction[] = [],
 ): MovementOption[] {
-  const staged = stagedLinks(actions);
-  const owed = settlement(invoice);
-  const due = owed === null ? null : units(owed);
-  const distance = (row: LedgerRow) => {
-    const paid = units(row.transaction.amount);
-    if (paid === null || due === null) return null;
-    return paid > due ? paid - due : due - paid;
-  };
-  return rows
-    .filter(
-      (row) =>
-        linkable(row) &&
-        row.transaction.invoice_id === null &&
-        !staged.rows.has(row.transaction.transaction_id) &&
-        row.transaction.direction === flowOf(invoice) &&
-        row.transaction.currency === invoice.currency &&
-        Math.abs(daysBetween(invoice.issued_at, row.transaction.date)) <=
-          PICK_WINDOW_DAYS,
-    )
-    .map((row) => ({ row, settles: settles(row, invoice) }))
-    .sort((left, right) => {
-      if (left.settles !== right.settles) return left.settles ? -1 : 1;
-      const near = (option: MovementOption) => distance(option.row);
-      const a = near(left);
-      const b = near(right);
-      if (a !== b) {
-        if (a === null) return 1;
-        if (b === null) return -1;
-        return a < b ? -1 : 1;
-      }
-      return (
-        Math.abs(daysBetween(invoice.issued_at, left.row.transaction.date)) -
-          Math.abs(
-            daysBetween(invoice.issued_at, right.row.transaction.date),
-          ) ||
-        (left.row.transaction.transaction_id <
-        right.row.transaction.transaction_id
-          ? -1
-          : 1)
-      );
-    });
+  const rowById = new Map(
+    rows.map((row) => [row.transaction.transaction_id, row]),
+  );
+  return choices.flatMap((choice) => {
+    const row = rowById.get(choice.transaction_id);
+    return row ? [{ row, settles: choice.settles }] : [];
+  });
 }
 
 // ---- Links the two catalogues disagree about ---------------------------------

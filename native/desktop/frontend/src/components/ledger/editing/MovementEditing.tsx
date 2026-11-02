@@ -64,7 +64,6 @@ import {
 import {
   DRAFT_REQUIRED,
   EDIT_KINDS,
-  IDENTITY_COLUMNS,
   clearRefusal,
   columnField,
   copyCell,
@@ -476,9 +475,7 @@ export function useMovementEditing(input: MovementEditingInput) {
         const before = effectiveFacts(row, undefined);
         const after = effectiveFacts(row, changes);
         const answer = checked.current?.rows.get(key);
-        const identity =
-          IDENTITY_COLUMNS.has(column) &&
-          (answer?.identity_fields.length ?? 0) > 0;
+        const identity = !!answer?.identity_fields.includes(field);
         const refusal = own
           ? answer?.routes.find((route) => route.field === field)?.refused
           : null;

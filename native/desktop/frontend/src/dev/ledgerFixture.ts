@@ -8,7 +8,10 @@
 // with the digest of the review the page read. What it answers is design and
 // test evidence only. Its call lines name a definition, never a value.
 
+import { answerInvoiceDuplicate } from "./ledgerDuplicateFixture";
 import { answerRuleTrial } from "./ledgerRuleTrialFixture";
+import { answerInvoiceMatch } from "./ledgerInvoiceMatchFixture";
+import { answerSplitCheck } from "./ledgerSplitCheckFixture";
 import { isClassification, isDirection } from "../shell/ledgerContract";
 import {
   isLedgerDefinition,
@@ -32,6 +35,9 @@ import {
   type LedgerSortField,
   type LedgerTransaction,
   type PublicPeriod,
+  type LedgerInvoiceDuplicateRequest,
+  type LedgerInvoiceMatchRequest,
+  type LedgerSplitCheckRequest,
   type LedgerStagedCheckRequest,
 } from "../shell/ledger";
 import {
@@ -969,7 +975,8 @@ export function ledgerFixture(options: Options): LedgerPort {
       } else if (
         field === "booked_date" ||
         field === "value_date" ||
-        field === "operation_date"
+        field === "operation_date" ||
+        field === "accrual_date"
       ) {
         if (value !== null && !DATE.test(value))
           return refused("The date is not a calendar day.");
@@ -1242,6 +1249,7 @@ export function ledgerFixture(options: Options): LedgerPort {
       booked_date: booked,
       value_date: text(request.value_date),
       operation_date: text(request.operation_date),
+      accrual_date: text(request.accrual_date),
       amount: money(cents(amount)),
       currency: text(request.currency) ?? "EUR",
       direction,
@@ -1980,6 +1988,30 @@ export function ledgerFixture(options: Options): LedgerPort {
       if (!answer) throw new Error("unrecorded rule trial");
       return answer as unknown as JsonObject;
     },
+    "ledger.invoice.duplicate": (request) =>
+      answerInvoiceDuplicate(
+        request as unknown as LedgerInvoiceDuplicateRequest,
+        ledger.invoices,
+        LEDGER_FIXTURE_PROFILE_ID,
+      ) as unknown as JsonObject,
+    "ledger.invoice.match": (request) =>
+      answerInvoiceMatch(
+        request as unknown as LedgerInvoiceMatchRequest,
+        ledger.movements,
+        ledger.invoices,
+        LEDGER_FIXTURE_PROFILE_ID,
+      ) as unknown as JsonObject,
+    "ledger.split.check": (request) => {
+      const movement = ledger.movements.find(
+        (each) => each.transaction.transaction_id === request.transaction_id,
+      );
+      if (!movement) throw new Error("no such movement to split");
+      return answerSplitCheck(
+        movement.transaction.amount,
+        request.parts as LedgerSplitCheckRequest["parts"],
+        LEDGER_FIXTURE_PROFILE_ID,
+      ) as unknown as JsonObject;
+    },
     "ledger.staged.check": (request) => {
       const answer = answerStagedCheck(
         request as unknown as LedgerStagedCheckRequest,
@@ -2585,6 +2617,7 @@ function fixtureTemplate(): LedgerTransaction {
     booked_date: "",
     value_date: null,
     operation_date: null,
+    accrual_date: null,
     amount: "0.00",
     currency: "EUR",
     direction: "OUTGOING",

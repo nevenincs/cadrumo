@@ -15,10 +15,7 @@ from ....core.time.clock import today_madrid
 from ...iva.classification import TransactionKind, require_transaction_kind
 from ...iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...iva.schema import EUMemberState, InvoiceKind, IvaRateKind
-from ._ledger_binding_resolution import (
-    resolve_ledger_family_binding_values,
-    unsupported_ledger_family_observations,
-)
+from ._ledger_binding_resolution import resolve_ledger_family_binding_values
 from .errors import RegistryValidationError
 from .eu_member_state_catalogue import require_eu_member_state, require_registry_declared_eu_member_state
 from .governed_fact_scope import governed_facts_in_scope, require_governed_fact_authority
@@ -246,45 +243,6 @@ def resolve_ledger_oss_aggregation_binding_values(
         provider_model=LedgerOssProvider,
         build_matcher=_oss_build_matcher,
         aggregate=_oss_aggregate,
-    )
-
-
-def _oss_is_declarable(observation: OssIossLedgerObservation) -> bool:
-    return observation.base_amount != Decimal("0") or observation.iva_amount != Decimal("0")
-
-
-def unsupported_ledger_oss_observations(
-    revision: ModeloRevision,
-    observations: Iterable[OssIossLedgerObservation],
-) -> tuple[OssIossLedgerObservation, ...]:
-    """Return the :class:`OssIossLedgerObservation` rows no binding on ``revision`` can consume.
-
-    Delegates the screen to :func:`unsupported_ledger_family_observations` —
-    see that function for the shared fail-closed contract (why an unmatched
-    observation is a modelling gap, not a legitimate zero). This family's
-    own contribution is narrow: the compound regime/destination/rate/
-    direction/transaction-kind match predicate (reused from the resolver's
-    ``_oss_build_matcher``, so the ``transaction_kinds`` set is built once
-    per binding rather than once per (observation, binding) pair) and a
-    false-fire guard excluding an observation carrying neither base nor IVA
-    (both zero). No ``extra_exclusion``.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose OSS bindings define the
-            supported classification tuples.
-        observations: Validated OSS/IOSS observations to screen.
-
-    Returns:
-        Tuple of observations whose non-zero base/cuota is selected by no
-        ``ledger_oss_aggregation`` binding.
-    """
-    return unsupported_ledger_family_observations(
-        revision,
-        observations,
-        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-        provider_model=LedgerOssProvider,
-        build_matcher=_oss_build_matcher,
-        is_declarable=_oss_is_declarable,
     )
 
 

@@ -420,6 +420,11 @@ cli:
         country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
           determina l''encaminament de totes dues informatives, per això mai no es
           dóna per suposat.'
+        duplicate_help: Respon quina factura desada pot ser ja un document, sense
+          escriure res.
+        duplicate_invalid: El tipus de factura i les dades del document han de tenir
+          la forma esperada.
+        duplicate_kind_help: 'Sentit de la factura: issued o received.'
         euro_rate_unavailable_message: No s'ha trobat cap tipus de canvi a euros per
           a {currency} el {date}, així que la factura s'ha registrat sense valor en
           euros i queda fora dels totals en euros fins que s'hi afegeixi un tipus.
@@ -451,6 +456,19 @@ cli:
           per cada --line. Per a l'entrada estructurada substitueix els camps escalars
           --taxable-base i --iva-rate.
         list_help: Llista les factures del catàleg de conciliació.
+        match_help: Respon quin moviment salda quina factura i les opcions per vincular
+          a mà, sense vincular res.
+        match_invalid: Un vincle preparat ha d'indicar l'id d'un moviment i el d'una
+          factura com MOVIMENT:FACTURA, tots dos complets.
+        match_invoice_help: 'Id complet d''una factura: pondera només aquesta factura
+          i llista els moviments oberts propers al seu dia d''emissió.'
+        match_judge_help: Vincle repetible que es compara abans de fer-lo permanent,
+          com MOVIMENT:FACTURA; cadascun torna amb allò que no coincideix entre els
+          seus dos costats.
+        match_staged_help: Vincle preparat i sense desar, repetible, com MOVIMENT:FACTURA;
+          cap dels dos s'ofereix a una altra cosa.
+        match_transaction_help: 'Id complet d''un moviment: retorna només el seu suggeriment
+          i llista les factures a les quals es pot vincular.'
         operation_date_help: Data en que es va fer el lliurament o la prestació (AAAA-MM-DD).
           Es la data de meritació de l'art. 75 LIVA que determina en quin període
           es declara la quota; sense aquesta s'utilitza la data de factura.
@@ -461,11 +479,11 @@ cli:
           consigna, C substitucions del destinatari en consigna'
         preview_help: 'Previsualitza un esborrany de factura: les xifres, les troballes
           i el veredicte que assoliria l''operació d''alta, sense desar res. El NIF
-          de la contrapart (counterparty_nif) i les línies de l''esborrany (lines,
-          una matriu JSON d''objectes de línia amb key, description, quantity, unit_price,
-          iva_rate, subtotal i iva_amount opcionals; una xifra omesa queda desconeguda;
-          usa-la en lloc de --taxable-base) arriben com un objecte JSON per --secrets-stdin
-          o --secrets-fd.'
+          de la contrapart (`counterparty_nif`) i les línies de l''esborrany (`lines`,
+          una matriu JSON d''objectes de línia amb `key`, `description`, `quantity`,
+          `unit_price`, `iva_rate`, `subtotal` i `iva_amount` opcionals; una xifra
+          omesa queda desconeguda; usa-la en lloc de --taxable-base) arriben com un
+          objecte JSON per --secrets-stdin o --secrets-fd.'
         preview_operation_date_role_help: Funció desada de la data d'operació de la
           factura que repeteix una correcció.
         preview_printed_total_help: El total imprès al document, que es compara amb
@@ -636,13 +654,15 @@ cli:
         importe_integro_help: Renda dinerària que va pagar el pagador, abans de la
           retenció.
         income_class_help: Classe de renda sobre la qual el pagador va retenir, per
-          exemple trabajo.
+          exemple `trabajo`.
         ingreso_a_cuenta_help: Ingrés a compte que va fer el pagador per renda en
           espècie. Compta íntegre com a crèdit.
         ingreso_a_cuenta_repercutido_help: Part de l'ingrés a compte que el pagador
           et va repercutir. No pot superar l'ingrés a compte.
         invalid_input: 'Un valor no és vàlid: revisa la referència del pagador, la
           revisió i l''empremta del certificat.'
+        list_absences_help: Llista les teves declaracions d'absència de retenció d'un
+          exercici, vigents i retirades, amb la revisió en què consta cadascuna.
         list_help: Llista els registres de pagadors d'un exercici sense cap NIF.
         origin_help: 'Qui declara les xifres: payer_certificate o operator_declaration.'
         payer_name_help: Raó social del pagador.
@@ -698,7 +718,7 @@ cli:
           patró de la qual no es pot cercar.
         remove_not_found: Cap regla desada té l'id %{rule_id}. No s'ha canviat res.
         remove_rule_id_help: Id complet de la regla que vols eliminar, tal com el
-          mostra la sortida JSON de rule list.
+          mostra la sortida JSON de `rule list`.
         remove_stale: La regla desada %{rule_id} es va tornar a desar el %{created_at},
           que no és la data que has indicat. No s'ha eliminat res; consulta el llistat
           de regles i comprova-la.
@@ -1335,7 +1355,9 @@ cli:
         binding_help: Valor addicional per a l'origen d'una casella del Modelo 100,
           com a KEY=VALUE. Repeteix l'opció per indicar-ne diversos. Els orígens de
           retencions valen zero si no s'indiquen.
-        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (repetible).
+        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (p. ex. 0003=1150
+          per a retribucions dineràries del treball). Només s'accepten caselles d'entrada;
+          una casella calculada es rebutja. Repeteix l'opció per indicar-ne diverses.
         ccaa_help: Clau de la comunitat autònoma de residència fiscal per a l'escala
           autonòmica del Modelo 100 (p. ex. cataluna, comunidad-valenciana). Ha de
           coincidir amb un valor de les definicions dels models.
@@ -1345,6 +1367,9 @@ cli:
         no_m130_units: No hi ha declaracions del Modelo 130 en esborrany per a l'exercici
           %{year}. Crea'n una abans amb `aeat app modelo work create --modelo 130
           --year %{year} --period 1T`.
+        profile_fact_missing: 'La projecció no pot obtenir les caselles de base liquidable
+          i quota perquè el perfil actiu no declara: %{profile_facts}. Indica-ho amb
+          `%{command}` i torna a executar la projecció.'
         year_help: Any fiscal per a la projecció.
       project_help: Executar projeccions agregades de models (p. ex. agregació anual
         del Model 130).
@@ -3154,6 +3179,9 @@ cli:
     add:
       account_help: Compte bancari propi al qual pertany el moviment, pel seu id (p.
         ex. acc-01).
+      accrual_date_help: Data en què l'ingrés o la despesa es merita a la Renda segons
+        l'art. 14 LIRPF i l'art. 7 RIRPF (AAAA-MM-DD). No canvia el període de l'IVA.
+        Si l'omets no es desa cap data.
       actor_help: El teu nom, registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
         p. ex. 1200.50).
@@ -3339,9 +3367,10 @@ cli:
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       iva_vehicle_use_help: 'Per a què s''usa el vehicle de la fila, quan l''art.
         95.Tres.2.ª LIVA l''aparta de la presumpció del 50 per 100: un dels sis usos
-        presumits al 100 per 100 (mixed_vehicle_goods_transport, paid_passenger_transport,
-        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
-        surveillance) o outside_presumed_classes si aquesta regla no anomena el vehicle.'
+        presumits al 100 per 100 (`mixed_vehicle_goods_transport`, `paid_passenger_transport`,
+        `paid_driver_or_pilot_training`, `manufacturer_testing_or_promotion`, `commercial_agent_travel`,
+        `surveillance`) o `outside_presumed_classes` si aquesta regla no anomena el
+        vehicle.'
       llm_classified_by_label: classificat-per
       llm_confidence_label: confiança
       llm_exclusive: --llm no es pot combinar amb --classification ni --file; la via
@@ -3514,6 +3543,7 @@ cli:
       kind_help: Només aquest tipus de valor; repeteix-lo per a diversos. Sense això,
         tots els tipus.
     labels:
+      accrual_date: Data de meritació a la Renda
       active: Actives
       amount: Import
       archived: Arxivades
@@ -3696,13 +3726,18 @@ cli:
       read_evidence_help: Llegeix la factura adjunta de la transacció en local i alimenta-la
         al proposant de divisió --llm.
       yes_help: Confirma la divisió de la transacció
+    split_check_help: Respon sobre parts de divisió sense desar tal com les acceptaria
+      qui les escriu, sense escriure res.
+    split_check_id_help: Id complet del moviment que es divideix.
+    split_check_invalid: Cada part ha de ser un objecte JSON amb la forma esperada,
+      per a un id de moviment complet.
     staged_check_category_help: Categoria de despesa repetible que es contrasta amb
       una classificació.
     staged_check_help: Respon al treball preparat del llibre com l'acceptarien els
-      escriptors, sense desar res. Les files preparades (rows, una matriu JSON d'objectes
-      amb transaction_id, cells i, opcionals, evidence_staged i m210_staged) i els
-      moviments nous (drafts, una matriu JSON d'objectes amb key i fields) arriben
-      com un objecte JSON per --secrets-stdin o --secrets-fd.
+      escriptors, sense desar res. Les files preparades (`rows`, una matriu JSON d'objectes
+      amb `transaction_id`, `cells` i, opcionals, `evidence_staged` i `m210_staged`)
+      i els moviments nous (`drafts`, una matriu JSON d'objectes amb `key` i `fields`)
+      arriben com un objecte JSON per --secrets-stdin o --secrets-fd.
     staged_check_invalid: Cada fila i esborrany preparats han de ser un objecte JSON
       amb la forma esperada.
     stash:
@@ -3718,6 +3753,8 @@ cli:
     update:
       account_help: Vincula l'entrada a aquest compte bancari propi, pel seu id (p.
         ex. acc-01).
+      accrual_date_help: Nova data en què l'ingrés o la despesa es merita a la Renda
+        segons l'art. 14 LIRPF i l'art. 7 RIRPF (AAAA-MM-DD).
       amount_help: Nova magnitud d'import no negativa de la transacció
       counterparty_help: Nova descripció de la contrapart
       currency_help: Nou codi de moneda ISO 4217

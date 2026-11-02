@@ -23,13 +23,14 @@ from ......application.modelo.work_form_models import (
     ModeloFormValueSource,
     ModeloWorkForm,
 )
+from ......application.modelo.work_form_outline import form_outline
 from ......application.modelo.work_review import ModeloWorkProgress
 from ......core.aggregation import BindingSourceKind
 from ......core.external_constants import OutputLanguage
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
-from .workbench_fixture import fed_by, form_counts, form_field, form_section, form_text
+from .workbench_fixture import fed_by, form_counts, form_field, form_section, form_text, with_pages
 
 LAST_QUARTER_PAGE = "p2"
 """The page only the last quarter fills in."""
@@ -121,6 +122,7 @@ def sectioned_form(*, last_quarter_applies: bool | None = False) -> ModeloWorkFo
         language=OutputLanguage.ES,
         layout_provenance=ModeloFormLayoutProvenance.REVIEWED,
         pages=pages,
+        outline=form_outline((), pages, OutputLanguage.ES, filed=False),
         working_figures=(),
         result_addresses=(),
         counts=form_counts(every),
@@ -134,7 +136,7 @@ def long_section_form(boxes: int) -> ModeloWorkForm:
     """One page holding one section of ``boxes`` assumed values, box 30 onwards, longer than a short list shows."""
     assumed = [_assumed(f"{30 + index:02d}", "1.00") for index in range(boxes)]
     page = _page("p1", "Liquidación", (form_section("p1.manual", "Casillas manuales", assumed),), assumed)
-    return sectioned_form().model_copy(update={"pages": (page,), "counts": form_counts(assumed)})
+    return with_pages(sectioned_form(), (page,), counts=form_counts(assumed))
 
 
 __all__ = ["LAST_QUARTER_PAGE", "long_section_form", "sectioned_form"]

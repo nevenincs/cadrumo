@@ -70,6 +70,7 @@ TRANSFER_TAX_FIELDS: Final[tuple[StageFieldName, ...]] = (
     "deduction_fact_kind",
     "investment_asset_id",
     "operation_date",
+    "accrual_date",
 )
 """What ``ManualLedgerTransactionCommand`` refuses on a transfer, of what a cell can stage."""
 
@@ -91,7 +92,7 @@ TRANSFER_LOCKED_FIELDS: Final[tuple[StageFieldName, ...]] = TRANSFER_TAX_FIELDS
 """What cannot be edited on a transfer: the writer refuses every one of them there."""
 
 _CLASSIFYING_FIELDS: Final[frozenset[str]] = frozenset(
-    {*TRANSFER_TAX_FIELDS, "business_classification", "counterparty_country"} - {"operation_date"}
+    {*TRANSFER_TAX_FIELDS, "business_classification", "counterparty_country"} - {"operation_date", "accrual_date"}
 )
 
 DRAFT_REQUIRED_FIELDS: Final = ("booked_date", "amount", "currency", "direction", "description")
@@ -150,6 +151,7 @@ def _stored_facts(transaction: Transaction) -> dict[str, str | None]:
         "booked_date": raw.booked_date.isoformat(),
         "value_date": None if raw.value_date is None else raw.value_date.isoformat(),
         "operation_date": None if transaction.operation_date is None else transaction.operation_date.isoformat(),
+        "accrual_date": None if transaction.accrual_date is None else transaction.accrual_date.isoformat(),
         "amount": display_decimal(raw.amount),
         "direction": transaction.direction.value,
         "currency": raw.currency,
@@ -328,11 +330,15 @@ def _category_on_income(
     return (classification in BUSINESS_BEARING_STATES) and bool(after["category_id"]) and not takes_category
 
 
+def _category_askable(transaction: Transaction, classification: BusinessClassification | None) -> bool:
+    # The classification staged travels in the same write, so the row is judged as it will be saved.
+    return takes_changes(transaction.lifecycle_state) and classification in BUSINESS_BEARING_STATES
+
+
 def _category_settable(
     transaction: Transaction, classification: BusinessClassification | None, takes_category: bool
 ) -> bool:
-    # The classification staged travels in the same write, so the row is judged as it will be saved.
-    return takes_changes(transaction.lifecycle_state) and classification in BUSINESS_BEARING_STATES and takes_category
+    return _category_askable(transaction, classification) and takes_category
 
 
 @dataclass(frozen=True, slots=True)
@@ -410,6 +416,7 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
         classified=state.classified,
         takes_expense_category=takes_category,
         takes_share=_shares_business(classification),
+        category_askable=_category_askable(transaction, classification),
         category_settable=_category_settable(transaction, classification, takes_category),
         takes_changes=takes_changes(transaction.lifecycle_state),
         takes_invoice=takes_invoice(transaction.direction),

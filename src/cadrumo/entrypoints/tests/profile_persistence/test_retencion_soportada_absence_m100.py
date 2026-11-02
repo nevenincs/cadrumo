@@ -164,19 +164,22 @@ def _attest_absent(objects: SecureObjectRepository, operation: PinnedAuthorityOp
         )
 
 
-def _calculate(objects: SecureObjectRepository, operation: PinnedAuthorityOperation) -> CalculationRevision:
+def _calculate(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation, *, with_payer: bool = True
+) -> CalculationRevision:
     work_unit_repository = WorkUnitCatalogueRepository(objects=objects)
     calculation_repository = CalculationRevisionCatalogueRepository(objects=objects)
     bucket_event_repository = BucketEventHistoryRepository(objects=objects)
-    seed_payer_certificate(
-        operation=operation,
-        taxpayer_tax_id=_TAXPAYER,
-        ejercicio=_YEAR,
-        payer_tax_id=_PAYER,
-        income_class=RetencionSoportadaClase.TRABAJO,
-        retencion=Decimal("1200.00"),
-        ingreso_a_cuenta=Decimal("300.00"),
-    )
+    if with_payer:
+        seed_payer_certificate(
+            operation=operation,
+            taxpayer_tax_id=_TAXPAYER,
+            ejercicio=_YEAR,
+            payer_tax_id=_PAYER,
+            income_class=RetencionSoportadaClase.TRABAJO,
+            retencion=Decimal("1200.00"),
+            ingreso_a_cuenta=Decimal("300.00"),
+        )
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",
@@ -249,3 +252,21 @@ def test_a_declared_class_with_no_payer_and_no_attestation_blocks_instead_of_rea
     assert "0597" not in revision.casilla_values
     assert "0603" not in revision.casilla_values
     assert _credit_blockers(revision) == [("unresolved_binding", "0597"), ("unresolved_binding", "0603")]
+
+
+def test_declared_work_income_with_no_payer_record_and_no_attestation_leaves_0596_unresolved(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
+) -> None:
+    """Work income the profile declares, with no payer certificate, cannot read as a zero credit.
+
+    The profile declares trabajo, so the work-income credit 0596 has a payer to come from; with no
+    payer record and no absence attestation nothing proves it zero, and the box stays out of the
+    result with a blocking issue. Capital mobiliario and ganancias are not declared, so they read zero.
+    """
+    _seed_profile("trabajo,actividad_economica")
+    revision = _calculate(objects, operation, with_payer=False)
+
+    assert "0596" not in revision.casilla_values
+    assert revision.casilla_values["0597"] == Decimal("0")
+    assert revision.casilla_values["0603"] == Decimal("0")
+    assert _credit_blockers(revision) == [("unresolved_binding", "0596")]

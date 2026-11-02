@@ -3,7 +3,8 @@
 ``test_modelo_720_prior_year_baseline_fidelity.py`` exercises the advisory
 function directly, with all three observations hand-constructed. This module
 proves the advisory reaches an operator: it drives
-:func:`calculate_modelo_revision` (real registry engine, real persistence) and
+:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics` (real
+registry engine, the enrolled foreign-asset resolver, real persistence) and
 then :func:`verify_modelo_revision_with_preconditions` (real gate assembly) and asserts the finding
 appears in the persisted :class:`VerificationReport`.
 
@@ -39,7 +40,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -69,26 +70,40 @@ __all__ = ["register_wizard_catalogue"]
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.foreign_asset_authoring import declare_foreign_asset, register_asset
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.foreign_asset_redeclaration import modelo_720_prior_baseline_observation
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.foreign_asset_obligation import M720AssetClassCode
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ....domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
 from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.foreign_assets.register import (
+    ForeignAssetDeclarationEntry,
+    ForeignAssetRegisterEntry,
+    M720AssetIdentifier,
+    M720DeclarantCondition,
+    M720IdentifierScheme,
+)
+from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -126,9 +141,10 @@ _INMUEBLES_N = Decimal("0.00")
 _CUENTAS_N1 = Decimal("85000.00")
 _VALORES_N1 = Decimal("65000.00")
 
-#: Official Modelo 720 position-102 clave for a foreign account and a security.
-_ACCOUNT_CLAVE = "C"
-_SECURITY_CLAVE = "V"
+_CUENTAS_ASSET_REF = "m720a_" + "c3" * 16
+_VALORES_ASSET_REF = "m720a_" + "d4" * 16
+_CUENTAS_IBAN = "LU280019400644750000"
+_VALORES_ISIN = "DE0007164600"
 
 _REDECLARATION_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 
@@ -167,6 +183,71 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
         yield
 
 
+def _register_and_declare_the_assets() -> None:
+    """Register the account and the security, with the taxpayer their sole titular."""
+    register = ForeignAssetRegisterRepository(bucket_id=_BUCKET_ID)
+    for asset_ref, asset_class, country, identifier in (
+        (
+            _CUENTAS_ASSET_REF,
+            M720AssetClassCode.CUENTA,
+            "LU",
+            M720AssetIdentifier(scheme=M720IdentifierScheme.IBAN, value=_CUENTAS_IBAN),
+        ),
+        (
+            _VALORES_ASSET_REF,
+            M720AssetClassCode.VALOR,
+            "DE",
+            M720AssetIdentifier(scheme=M720IdentifierScheme.ISIN, value=_VALORES_ISIN),
+        ),
+    ):
+        register_asset(
+            register,
+            ForeignAssetRegisterEntry(
+                asset_ref=asset_ref,
+                asset_class=asset_class,
+                subclave=1,
+                country_code=country,
+                identifier=identifier,
+                description="synthetic foreign asset",
+                held_since=date(2015, 1, 1),
+            ),
+        )
+        declare_foreign_asset(
+            register,
+            ForeignAssetDeclarationEntry(
+                asset_ref=asset_ref, condition=M720DeclarantCondition.TITULAR, participation_pct=Decimal("100.00")
+            ),
+        )
+
+
+def _worksheet_rows() -> tuple[Modelo720RowObservation, ...]:
+    """Year N+1 per-asset worksheet rows, held in euros at 31 December."""
+    return (
+        Modelo720RowObservation(
+            source_id="detalle:per_foreign_asset:cuentas-lu",
+            asset_ref=_CUENTAS_ASSET_REF,
+            asset_class_code=M720AssetClassCode.CUENTA,
+            country_code="LU",
+            currency_code="EUR",
+            asset_identifier=_CUENTAS_IBAN,
+            acquisition_date=date(2019, 4, 1),
+            valuation_amount=_CUENTAS_N1,
+            valuation_event=M720ValuationEvent.YEAR_END,
+        ),
+        Modelo720RowObservation(
+            source_id="detalle:per_foreign_asset:valores-de",
+            asset_ref=_VALORES_ASSET_REF,
+            asset_class_code=M720AssetClassCode.VALOR,
+            country_code="DE",
+            currency_code="EUR",
+            asset_identifier=_VALORES_ISIN,
+            acquisition_date=date(2020, 9, 15),
+            valuation_amount=_VALORES_N1,
+            valuation_event=M720ValuationEvent.YEAR_END,
+        ),
+    )
+
+
 def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
@@ -183,6 +264,7 @@ def _calculate_and_verify(
 ) -> tuple[CalculationRevision, VerificationReport]:
     """Run the real year-N+1 M720 pipeline over a real persisted year-N baseline."""
     with _secure_backend(tmp_path):
+        _register_and_declare_the_assets()
         observation_repository = CalculationObservationRepository()
         save_stamped_observation(
             observation_repository,
@@ -234,19 +316,14 @@ def _calculate_and_verify(
             calculation_repository=calculation_repository,
             bucket_event_repository=event_repository,
         ) as _calculation_ports_249:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs=casilla_inputs,
-                row_binding_values={
-                    ("modelo-720-asset-row-class", 1): _ACCOUNT_CLAVE,
-                    ("modelo-720-asset-row-valuation", 1): _CUENTAS_N1,
-                    ("modelo-720-asset-row-class", 2): _SECURITY_CLAVE,
-                    ("modelo-720-asset-row-valuation", 2): _VALORES_N1,
-                },
+                foreign_asset_row_observations=_worksheet_rows(),
                 ports=_calculation_ports_249,
                 clock=_CLOCK_N_PLUS_1,
-            )
+            ).revision
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,

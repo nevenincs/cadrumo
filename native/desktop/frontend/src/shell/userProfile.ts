@@ -13,6 +13,13 @@ export type ProfileField = {
   help: string[] | null;
   about: string;
   row_index: string | null;
+  /** Set on a detail stated per ejercicio: the wizard questions that answer
+   * it, and what each ejercicio states so far. */
+  ejercicio_answer?: {
+    question_id: string;
+    year_question_id: string;
+    statements: { ejercicio: number; value: string }[];
+  } | null;
 };
 export type ProfileSection = {
   key: string;
@@ -35,6 +42,10 @@ export type UserProfile = {
 export type ProfileEdit =
   | { kind: "field"; path: string; value: string }
   | {
+      kind: "ejercicio_answer";
+      values: { question_id: string; value: string }[];
+    }
+  | {
       kind: "add_row";
       section_key: string;
       values: { field_key: string; value: string }[];
@@ -48,6 +59,22 @@ export type ProfileEdit =
     }
   | { kind: "remove_row"; section_key: string; row_key: string }
   | { kind: "complete" }
+  /** The whole stated family at once: every descendant and the count are
+   * replaced with exactly these people, so a person left out is removed.
+   * Each fact is under a key of the product's family vocabulary. */
+  | {
+      kind: "descendants";
+      rows: { facts: { field_key: string; value: string }[] }[];
+    }
+  /** What one ejercicio's imputation election states. Each answer is the
+   * token a served choice carries: an empty token clears the ejercicio's
+   * statement and null leaves what the profile states. */
+  | {
+      kind: "imputation_election";
+      tax_year: number;
+      criterion: string | null;
+      codigo_comercio_accounting: string | null;
+    }
   /** The sign-in method, the host's only way to change `auth.provider` and
    * `auth.clave_movil_route`. `certificate` is a picker token, never a path. */
   | {

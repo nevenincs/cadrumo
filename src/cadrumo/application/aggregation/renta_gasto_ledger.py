@@ -107,8 +107,7 @@ from .errors import AggregationValidationError
 from .renta_imputation import (
     ImputationCriteria,
     ImputationUnresolved,
-    impute_row,
-    linked_accrual_date,
+    impute_ledger_row,
     rows_left_out_summary,
     rows_touching_window,
 )
@@ -539,22 +538,12 @@ def _classify_gasto_transaction(
 
     filing_date = _imputed_gasto_date(transaction, criteria=criteria, invoices=invoices)
     if isinstance(filing_date, ImputationUnresolved):
-        cash = transaction.raw.value_date or transaction.raw.booked_date
-        if not cumulative_start <= cash <= cumulative_end:
-            return RentaGastoLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-                detail=f"payment of {cash} is outside the cumulative gasto window",
-            )
-        # RIRPF art. 110.1.a computes the payment on the annual rendimiento neto, and the annual
-        # pipeline judges the category first: the row needs its category whichever year it lands in.
-        refusal = _category_refusal(transaction, rules=rules)
-        if refusal is not None:
-            return refusal
-        return RentaGastoLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
-            detail=f"{filing_date.value}: payment of {cash} cannot be placed in an ejercicio",
+        return _unplaced_gasto_issue(
+            transaction,
+            filing_date,
+            cumulative_start=cumulative_start,
+            cumulative_end=cumulative_end,
+            rules=rules,
         )
     if criteria is not None and not cumulative_start <= filing_date <= cumulative_end:
         return None
@@ -568,21 +557,7 @@ def _classify_gasto_transaction(
     if gate_issue is not None:
         return gate_issue
 
-    # Both taxable_base and iva_amount are denominated in the row's NATIVE
-    # currency (see domain.transactions.tests.test_gross_invariant), so a
-    # converted foreign-currency row must go through the EUR-equivalent
-    # accessors -- summing them raw would fold a native-currency figure into
-    # a EUR-denominated target total.
-    eur_base = effective_eur_taxable_base(transaction)
-    # taxable_base is non-None here (the MISSING_TAXABLE_BASE guard above
-    # returned for the None case), so the EUR-equivalent accessor cannot
-    # return None either -- it is None only when its input is.
-    if eur_base is None:
-        msg = (
-            f"transaction {transaction_id} cleared the missing-taxable-base gate but resolves no "
-            "EUR-equivalent base imponible for the Renta gasto casilla"
-        )
-        raise ValueError(msg)
+    eur_base = _eur_taxable_base_after_gate(transaction)
     eur_iva_amount = effective_eur_iva_amount(transaction)
 
     evaluated = _category_rule_deductible_amount(
@@ -601,6 +576,55 @@ def _classify_gasto_transaction(
         filing_date=filing_date,
         category_id=transaction.category_id,
     )
+
+
+def _unplaced_gasto_issue(
+    transaction: Transaction,
+    unresolved: ImputationUnresolved,
+    *,
+    cumulative_start: date,
+    cumulative_end: date,
+    rules: RentaCategoryDeductionRules,
+) -> RentaGastoLedgerAggregationIssue:
+    """Return the issue for a row no ejercicio can place: outside the window, category-refused, or unplaced."""
+    transaction_id = transaction.transaction_id
+    cash = transaction.raw.value_date or transaction.raw.booked_date
+    if not cumulative_start <= cash <= cumulative_end:
+        return RentaGastoLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            detail=f"payment of {cash} is outside the cumulative gasto window",
+        )
+    # RIRPF art. 110.1.a computes the payment on the annual rendimiento neto, and the annual
+    # pipeline judges the category first: the row needs its category whichever year it lands in.
+    refusal = _category_refusal(transaction, rules=rules)
+    if refusal is not None:
+        return refusal
+    return RentaGastoLedgerAggregationIssue(
+        transaction_id=transaction_id,
+        reason=RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
+        detail=f"{unresolved.value}: payment of {cash} cannot be placed in an ejercicio",
+    )
+
+
+def _eur_taxable_base_after_gate(transaction: Transaction) -> Decimal:
+    """Return the EUR-equivalent taxable base of a row that cleared the missing-taxable-base gate."""
+    # Both taxable_base and iva_amount are denominated in the row's NATIVE
+    # currency (see domain.transactions.tests.test_gross_invariant), so a
+    # converted foreign-currency row must go through the EUR-equivalent
+    # accessors -- summing them raw would fold a native-currency figure into
+    # a EUR-denominated target total.
+    eur_base = effective_eur_taxable_base(transaction)
+    # taxable_base is non-None here (the MISSING_TAXABLE_BASE guard above
+    # returned for the None case), so the EUR-equivalent accessor cannot
+    # return None either -- it is None only when its input is.
+    if eur_base is None:
+        msg = (
+            f"transaction {transaction.transaction_id} cleared the missing-taxable-base gate but resolves no "
+            "EUR-equivalent base imponible for the Renta gasto casilla"
+        )
+        raise ValueError(msg)
+    return eur_base
 
 
 def _category_refusal(
@@ -727,7 +751,7 @@ def _imputed_gasto_date(
         return cash
     evidence_id = transaction.purchase_invoice_evidence_id
     invoice = None if invoices is None or evidence_id is None else invoices.get(evidence_id)
-    return impute_row(cash, linked_accrual_date(invoice, kind=InvoiceKind.RECEIVED), criteria)
+    return impute_ledger_row(transaction, invoice, kind=InvoiceKind.RECEIVED, criteria=criteria)
 
 
 def _gasto_gate_issue(

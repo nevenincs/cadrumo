@@ -569,7 +569,7 @@ class ExportFieldDefinition(RegistryModel):
     minimum_year: FourDigitYear | None = None
     """An official lower bound on a four-digit filing-year value."""
     presence_marker: str | None = Field(default=None, min_length=1)
-    """The constant a mandatory slot prints when its boolean fact holds.
+    """The constant a mandatory slot prints when its boolean fact or computed marker holds.
 
     The design declares such a slot with exactly two contents, a blank or this
     constant (DR369 prints ``[blanco | constante "C"]``). The blank is the slot's

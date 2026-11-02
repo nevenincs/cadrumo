@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -26,7 +27,9 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.period import Period
@@ -103,11 +106,17 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
 
 
 def _non_ccaa_decimal_binding_values(snapshot: RegistrySnapshot) -> dict[BindingId, Decimal]:
-    """Supply non-CCAA, non-profile bindings through the Decimal channel."""
+    """Supply the operator-entered bindings other than CCAA through the Decimal channel.
+
+    Profile- and bucket-sourced bindings are resolved by the calculation itself.
+    """
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.id != _CCAA_BINDING and binding.source != "profile"
+        if binding.id != _CCAA_BINDING
+        and binding.source != "profile"
+        and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
+        and binding.provider.kind != "retencion_soportada"
     }
 
 
@@ -139,7 +148,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_144:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -147,7 +156,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
                 relation_values=_zero_relation_values(snapshot),
                 ports=_calculation_ports_144,
                 clock=_CLOCK,
-            )
+            ).revision
         assert "0512" in revision.casilla_values
         assert revision.binding_overrides[_CCAA_BINDING] == "madrid"
 
@@ -170,7 +179,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
             clock=_CLOCK,
             operation=operation,
         )
-        decimal_bindings = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}
+        decimal_bindings = {**_non_ccaa_decimal_binding_values(snapshot), _CCAA_BINDING: Decimal("0")}
         with (
             pytest.raises(ModeloError),
             calculation_ports_for_test(
@@ -180,7 +189,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_181,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -216,7 +225,7 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_215:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -224,7 +233,7 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
                 relation_values=_zero_relation_values(snapshot),
                 ports=_calculation_ports_215,
                 clock=_CLOCK,
-            )
+            ).revision
         assert Decimal(revision.binding_overrides[_ESTIMACION_BINDING]) == Decimal("0")
 
 
@@ -255,7 +264,7 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_251,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},

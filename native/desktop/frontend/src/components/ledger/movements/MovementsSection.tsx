@@ -49,7 +49,6 @@ import {
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
 import {
-  isBusinessBearing,
   isUndecided,
   takesChanges,
   takesClassification,
@@ -1113,21 +1112,15 @@ export function MovementsSection({
     classifyAvailability(kind, classifyTarget(), byId);
 
   async function askCategory(ids: string[]) {
-    const takes = ids.filter((id) => {
-      const row = byId.get(id);
-      return (
-        !!row &&
-        takesChanges(row.transaction.lifecycle_state) &&
-        isBusinessBearing(row.transaction.business_classification)
-      );
-    });
-    if (takes.length === 0) {
-      setToast(t("desktop.ledger.classify.category_needs_classification"));
+    const named = ids.filter((id) => byId.has(id));
+    const check = named.length > 0 ? await askCheck(named) : null;
+    if (named.length > 0 && !check) {
+      setToast(t("desktop.ledger.apply.read_failed"));
       return;
     }
-    const check = await askCheck(takes);
-    if (!check) {
-      setToast(t("desktop.ledger.apply.read_failed"));
+    const takes = named.filter((id) => check?.rows.get(id)?.category_askable);
+    if (!check || takes.length === 0) {
+      setToast(t("desktop.ledger.classify.category_needs_classification"));
       return;
     }
     setAsking({

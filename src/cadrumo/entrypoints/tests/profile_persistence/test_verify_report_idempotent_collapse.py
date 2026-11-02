@@ -19,7 +19,9 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
@@ -96,12 +98,12 @@ def _seed_nongranting_revision(repos: Repos, *, operation: PinnedAuthorityOperat
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_95:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=supplied,
             ports=_calculation_ports_95,
             clock=T1,
-        )
+        ).revision
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -162,7 +164,8 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
         assert len(stored) == 1
         assert stored[0].verification_report_id == first.verification_report_id
         assert stored[0].run_at == T3
-        assert stored[0].completeness_status is VerificationCompletenessStatus.INCOMPLETE
+        # The absent per-perceptor withholding detail blocks beside the missing casilla.
+        assert stored[0].completeness_status is VerificationCompletenessStatus.BLOCKED
 
 
 def test_distinct_outcome_verify_produces_a_distinct_report(

@@ -35,10 +35,12 @@ from ......application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
+    ModeloFormStanding,
     ModeloFormText,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
+from ......application.modelo.work_form_outline import form_outline
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_form_snapshot
 from ......application.modelo.work_review import (
     ModeloWorkProgress,
@@ -128,13 +130,20 @@ def form_counts(fields: list[ModeloFormField]) -> ModeloFormCounts:
         default_to_confirm=count(ModeloFormOrigin.DEFAULT_TO_CONFIRM),
         not_applicable=count(ModeloFormOrigin.NOT_APPLICABLE),
         blocked=sum(1 for item in fields if item.blockers),
+        needs_you=sum(1 for item in fields if item.standing is ModeloFormStanding.NEEDS_YOU),
+        could_not_calculate=count(ModeloFormOrigin.CALCULATION_FAILED),
     )
 
 
 def form_section(section_id: str, heading: str, fields: list[ModeloFormField]) -> ModeloFormSection:
     blocks = tuple(ModeloFormFieldBlock(id=f"f{item.box}", field=item) for item in fields)
     return ModeloFormSection(
-        id=section_id, heading=form_text(heading), official_heading=None, blocks=blocks, counts=form_counts(fields)
+        id=section_id,
+        heading=form_text(heading),
+        official_heading=None,
+        blocks=blocks,
+        counts=form_counts(fields),
+        applies=True,
     )
 
 
@@ -287,6 +296,7 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         official_heading=None,
         blocks=(grid,),
         counts=form_counts([base, quota]),
+        applies=True,
     )
     second_section = form_section("p2.s1", "III. Total liquidación", [withholding, result])
     pages = (
@@ -320,6 +330,7 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         language=OutputLanguage.ES,
         layout_provenance=ModeloFormLayoutProvenance.GENERATED,
         pages=pages,
+        outline=form_outline((), pages, OutputLanguage.ES, filed=False),
         working_figures=(working,),
         result_addresses=("19",),
         counts=form_counts(every),
@@ -327,6 +338,12 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         operator_entries_known=True,
         edit_admitted=True,
     )
+
+
+def with_pages(form: ModeloWorkForm, pages: tuple[ModeloFormPage, ...], **update: object) -> ModeloWorkForm:
+    """The form showing ``pages`` instead, its outline grouping their sections page by page."""
+    outline = form_outline((), pages, form.language, filed=False)
+    return form.model_copy(update={**update, "pages": pages, "outline": outline})
 
 
 @dataclass

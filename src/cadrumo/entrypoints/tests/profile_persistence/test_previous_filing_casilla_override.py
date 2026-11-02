@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -13,9 +13,15 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
+    seed_m130_expense_transaction,
+    seed_m130_income_transaction,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -45,11 +51,11 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             **kwargs,
-        )
+        ).revision
 
 
 _CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
@@ -98,6 +104,21 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
                 context=profile_creation_context_for_test(),
             ),
         )
+        # Year-to-date activity through 3T: casillas 01 and 02 are sourced from these ledger rows.
+        seed_m130_income_transaction(
+            amount=Decimal("30000"),
+            filing_year=2026,
+            source_key="override-ytd-income",
+            value_date=date(2026, 7, 5),
+            bucket_id=_PROFILE_ID,
+        )
+        seed_m130_expense_transaction(
+            amount=Decimal("12000"),
+            filing_year=2026,
+            source_key="override-ytd-expense",
+            value_date=date(2026, 7, 5),
+            bucket_id=_PROFILE_ID,
+        )
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         bv = BucketEventHistoryRepository(objects=objects)
@@ -130,8 +151,6 @@ def _work_unit_3t(repos: _Repos, *, operation: PinnedAuthorityOperation):
 
 def _common_inputs() -> dict[CasillaId, Decimal]:
     return {
-        _M130_INCOME_CASILLA: Decimal("30000"),
-        _M130_EXPENSE_CASILLA: Decimal("12000"),
         _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
         _M130_WITHHELD_CASILLA: Decimal("0"),
         _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),

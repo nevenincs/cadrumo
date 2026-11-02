@@ -215,6 +215,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "user-profile.view", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
         RegisteredExecutorConformanceCase(
+            "user-profile.imputation-election.read", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        RegisteredExecutorConformanceCase(
+            "user-profile.imputation-election.set", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        RegisteredExecutorConformanceCase(
             "workbench.generation",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
@@ -746,6 +752,24 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("ledger.rule.trial",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.invoice.duplicate",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.duplicate",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.invoice.match",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.match",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.split.check",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.split.check",),
         ),
         RegisteredExecutorConformanceCase(
             "ledger.staged.check",

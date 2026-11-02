@@ -179,6 +179,7 @@ def ledger_update_field_matches(
         "booked_date",
         "value_date",
         "operation_date",
+        "accrual_date",
         "amount",
         "direction",
         "description",

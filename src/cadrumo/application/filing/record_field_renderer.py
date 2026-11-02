@@ -302,7 +302,9 @@ def _field_value(
         case CasillaFieldKind.DRAFT:
             return _draft_value(field, draft)
         case CasillaFieldKind.COMPUTED:
-            return _computed_field_value(field, draft, producer_snapshot, render_context)
+            computed = _computed_field_value(field, draft, producer_snapshot, render_context)
+            # The blank is the slot's populated negative answer, not a missing byte.
+            return " " if computed is None and field.presence_marker is not None else computed
         case _:
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
 

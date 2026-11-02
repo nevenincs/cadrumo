@@ -10,20 +10,28 @@ export type ConsentItem = { id: string; label: string };
  * The question asked before private content goes to an external provider.
  * It names the provider, the model and every item that would be sent, and
  * sending takes a deliberate press of its own: nothing is chosen for the
- * person, and nothing is sent while the question stands.
+ * person, and nothing is sent while the question stands. Offering the wider
+ * answers is the caller's: an answer without its handler is not shown.
  */
 export function ConsentPrompt({
   providerName,
   modelName,
   contentItems,
+  warning,
   onAllow,
+  onAllowSession,
+  onAllowRemember,
   onDecline,
 }: {
   providerName: string;
   modelName: string;
   /** What would be sent, each item worded in full by the caller. */
   contentItems: readonly ConsentItem[];
+  /** What this question adds to what would be sent, in the caller's words. */
+  warning?: string;
   onAllow?: () => void;
+  onAllowSession?: () => void;
+  onAllowRemember?: () => void;
   onDecline?: () => void;
 }) {
   const t = useStrings();
@@ -61,13 +69,32 @@ export function ConsentPrompt({
           ))}
         </ul>
       </div>
+      {warning && <p className="text-sm text-foreground">{warning}</p>}
       <p className="text-xs text-muted-foreground">
-        {t("desktop.agent.consent_note")}
+        {t("desktop.agent.consent_note")} {t("desktop.agent.consent_recall")}
       </p>
       <div className="flex flex-wrap justify-end gap-2">
         <AgentTextAction variant="outline" size="sm" onAction={onDecline}>
           {t("desktop.agent.consent_decline")}
         </AgentTextAction>
+        {onAllowRemember && (
+          <AgentTextAction
+            variant="outline"
+            size="sm"
+            onAction={onAllowRemember}
+          >
+            {t("desktop.agent.consent_allow_remember")}
+          </AgentTextAction>
+        )}
+        {onAllowSession && (
+          <AgentTextAction
+            variant="outline"
+            size="sm"
+            onAction={onAllowSession}
+          >
+            {t("desktop.agent.consent_allow_session")}
+          </AgentTextAction>
+        )}
         <AgentTextAction variant="primary" size="sm" onAction={onAllow}>
           {t("desktop.agent.consent_allow", { provider: providerName })}
         </AgentTextAction>

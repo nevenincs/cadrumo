@@ -25,8 +25,6 @@ from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_date as _parse_date_canonical
 from ...core.period import Period
-from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-from ..calculations.registry.ccaa_catalogue import require_ccaa
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.irpf_income_categories import (
     irpf_income_category_actividad_economica_token,
@@ -43,16 +41,14 @@ from ..calculations.registry.m303_schema_vocabulary import (
     m303_tax_territory_choices,
     require_m303_regime_composition,
     require_m303_tax_territory,
-    resolve_m303_tax_territory_catalogue,
 )
-from ..calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country, require_fiscal_residency
+from ..calculations.registry.renta_codes_catalogue import require_fiscal_residency
 from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ..contribuyente.entity_type import EntityType, LegalEntityForm, entity_type_natural_person_token
 from ..contribuyente.renta_codes import FiscalResidency
 from ..user_profile.quarter_sets import parse_quarter_set
 from ..user_profile.setup_answers import SetupAnswers
 from .errors import ProfileError
-from .festivos import CalendarCCAA
 from .models import (
     CrossPeriodGroupMemberRoster,
     IrpfActivityKind,
@@ -203,10 +199,6 @@ class _ProfileRelationshipFields(TypedDict):
     enrollment: ModeloEnrollment
 
 
-class _ProfileAddressFields(TypedDict):
-    holiday_territory: CalendarCCAA | None
-
-
 class _ProfileActivityFields(TypedDict):
     activity_start_date: date | None
     activity_end_date: date | None
@@ -271,7 +263,6 @@ def _build_taxpayer_profile(
         **_objective_estimation_fields(canonical),
         **_resolve_profile_obligation_fields(typed),
         **_resolve_profile_relationship_fields(canonical, typed),
-        **_resolve_profile_address_fields(canonical, typed),
         **_resolve_profile_activity_fields(canonical),
         **_resolve_profile_establishment_fields(canonical),
         **_resolve_profile_regime_fields(canonical, typed),
@@ -365,38 +356,6 @@ def _resolve_profile_relationship_fields(
             public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
         ),
     }
-
-
-def _resolve_profile_address_fields(canonical: Mapping[str, str], typed: SetupAnswers) -> _ProfileAddressFields:
-    """Resolve the holiday territory that extends this taxpayer's deadlines."""
-    return {"holiday_territory": _resolve_holiday_territory(canonical, typed)}
-
-
-def _resolve_holiday_territory(canonical: Mapping[str, str], typed: SetupAnswers) -> CalendarCCAA | None:
-    """Return the autonomous community whose holidays extend this taxpayer's deadlines.
-
-    Only a resident natural person's explicitly stored common-regime residence
-    establishes it: a natural person's fiscal domicile is the habitual
-    residence (LGT art. 48.2.a), and that residence's non-working days extend
-    a deadline (Ley 39/2015 art. 30.6).  Residence and fiscal residency are
-    read from stored values, not typed answers, because the typed answers
-    substitute catalogue defaults for missing facts.  Legal
-    entities, non-residents and foral taxpayers are left unresolved rather
-    than assigned a territory their fiscal domicile has not established.
-    """
-    declared = canonical.get("tax_residence.ccaa", "").strip()
-    if not declared or typed.entity_type != entity_type_natural_person_token():
-        return None
-    residency = canonical.get("taxpayer_type.fiscal_residency", "").strip()
-    if not residency or fiscal_residency_requires_country(residency):
-        return None
-    scope = typed.tax_residence_jurisdiction_scope.strip()
-    try:
-        if scope and resolve_m303_tax_territory_catalogue().definition(scope).is_foral:
-            return None
-        return resolve_calendar_ccaa_catalogue().territory_for_tax_residence(str(require_ccaa(declared)))
-    except RegistryValidationError as exc:
-        raise ProfileError(f"tax_residence.ccaa {declared!r} has no deadline-calendar territory") from exc
 
 
 def _resolve_profile_activity_fields(canonical: Mapping[str, str]) -> _ProfileActivityFields:

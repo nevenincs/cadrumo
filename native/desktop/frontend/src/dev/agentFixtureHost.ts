@@ -1542,6 +1542,13 @@ export function fixtureAgent({
       on.then(answer);
       return {};
     },
+    // The fixture's lanes stay on this computer, so its reads need no grant.
+    attachmentCard: () => Promise.resolve({ kind: "not_required" as const }),
+    attachmentRelease: () => Promise.resolve({ kind: "not_required" as const }),
+    attachmentGrants: () =>
+      Promise.resolve({ kind: "grants" as const, grants: [] }),
+    attachmentGrantRevoke: () =>
+      Promise.resolve({ kind: "refused" as const, code: "grant_revoked" }),
     async decideApproval(approval, optionId) {
       say(`agentDecideApproval ${approval.request_id} ${optionId}`);
       await check();

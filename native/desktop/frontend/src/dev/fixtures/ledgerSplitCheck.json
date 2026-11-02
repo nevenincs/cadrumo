@@ -1,0 +1,332 @@
+{
+  "answers": [
+    {
+      "parent_amount": "59.99",
+      "parts": [
+        {
+          "amount": "",
+          "description": "Licencia"
+        },
+        {
+          "amount": null,
+          "description": "Soporte"
+        }
+      ],
+      "answer": {
+        "remainder": null,
+        "problem": {
+          "kind": "amount",
+          "index": 0,
+          "max": null,
+          "difference": null,
+          "over": null
+        },
+        "children": []
+      }
+    },
+    {
+      "parent_amount": "59.99",
+      "parts": [
+        {
+          "amount": "20",
+          "description": "Licencia"
+        },
+        {
+          "amount": null,
+          "description": "Soporte"
+        }
+      ],
+      "answer": {
+        "remainder": "39.99",
+        "problem": null,
+        "children": [
+          {
+            "amount": "20",
+            "description": "Licencia"
+          },
+          {
+            "amount": "39.99",
+            "description": "Soporte"
+          }
+        ]
+      }
+    },
+    {
+      "parent_amount": "59.99",
+      "parts": [
+        {
+          "amount": "20",
+          "description": "same"
+        },
+        {
+          "amount": null,
+          "description": "same"
+        }
+      ],
+      "answer": {
+        "remainder": "39.99",
+        "problem": null,
+        "children": [
+          {
+            "amount": "20",
+            "description": "same"
+          },
+          {
+            "amount": "39.99",
+            "description": "same"
+          }
+        ]
+      }
+    },
+    {
+      "parent_amount": "100",
+      "parts": [
+        {
+          "amount": "40.5",
+          "description": "a"
+        },
+        {
+          "amount": "9.5",
+          "description": "b"
+        },
+        {
+          "amount": null,
+          "description": "c"
+        }
+      ],
+      "answer": {
+        "remainder": "50",
+        "problem": null,
+        "children": [
+          {
+            "amount": "40.5",
+            "description": "a"
+          },
+          {
+            "amount": "9.5",
+            "description": "b"
+          },
+          {
+            "amount": "50",
+            "description": "c"
+          }
+        ]
+      }
+    },
+    {
+      "parent_amount": "10.20",
+      "parts": [
+        {
+          "amount": "10.10",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "b"
+        }
+      ],
+      "answer": {
+        "remainder": "0.1",
+        "problem": null,
+        "children": [
+          {
+            "amount": "10.1",
+            "description": "a"
+          },
+          {
+            "amount": "0.1",
+            "description": "b"
+          }
+        ]
+      }
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "10",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "b"
+        }
+      ],
+      "answer": {
+        "remainder": null,
+        "problem": {
+          "kind": "amount",
+          "index": 1,
+          "max": null,
+          "difference": null,
+          "over": null
+        },
+        "children": []
+      }
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "11",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "b"
+        }
+      ],
+      "answer": {
+        "remainder": null,
+        "problem": {
+          "kind": "sum",
+          "index": null,
+          "max": null,
+          "difference": "1",
+          "over": true
+        },
+        "children": []
+      }
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "1.000",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "b"
+        }
+      ],
+      "answer": {
+        "remainder": null,
+        "problem": {
+          "kind": "amount",
+          "index": 0,
+          "max": null,
+          "difference": null,
+          "over": null
+        },
+        "children": []
+      }
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "5",
+          "description": "a"
+        },
+        {
+          "amount": "4.5",
+          "description": "b"
+        }
+      ],
+      "answer": {
+        "remainder": null,
+        "problem": {
+          "kind": "sum",
+          "index": null,
+          "max": null,
+          "difference": "0.5",
+          "over": false
+        },
+        "children": []
+      }
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "6",
+          "description": "a"
+        },
+        {
+          "amount": "5",
+          "description": "b"
+        }
+      ],
+      "answer": {
+        "remainder": null,
+        "problem": {
+          "kind": "sum",
+          "index": null,
+          "max": null,
+          "difference": "1",
+          "over": true
+        },
+        "children": []
+      }
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "0",
+          "description": "a"
+        },
+        {
+          "amount": "10",
+          "description": "b"
+        }
+      ],
+      "answer": {
+        "remainder": null,
+        "problem": {
+          "kind": "amount",
+          "index": 0,
+          "max": null,
+          "difference": null,
+          "over": null
+        },
+        "children": []
+      }
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "5",
+          "description": "a"
+        },
+        {
+          "amount": null,
+          "description": "  "
+        }
+      ],
+      "answer": {
+        "remainder": "5",
+        "problem": {
+          "kind": "description",
+          "index": 1,
+          "max": null,
+          "difference": null,
+          "over": null
+        },
+        "children": []
+      }
+    },
+    {
+      "parent_amount": "10",
+      "parts": [
+        {
+          "amount": "10",
+          "description": "a"
+        }
+      ],
+      "answer": {
+        "remainder": null,
+        "problem": {
+          "kind": "count",
+          "index": null,
+          "max": 128,
+          "difference": null,
+          "over": null
+        },
+        "children": []
+      }
+    }
+  ]
+}

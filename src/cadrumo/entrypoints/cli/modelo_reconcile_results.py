@@ -19,7 +19,7 @@ from datetime import datetime
 
 from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_records import ModeloReconciliationDiffKind, ModeloReconciliationVerdict
-from ...application.modelo.taxation_comparison import TaxationRecommendation
+from ...application.modelo.taxation_comparison import TaxationRecommendation, TaxationRecommendationReason
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -118,7 +118,8 @@ class WorkCompareTaxationResult(OutputSchema):
     individual_resultado: DecimalWireText
     delta_resultado: DecimalWireText
     recommendation: TaxationRecommendation
-    recommendation_reason: NonEmptyStr
+    recommendation_reason: TaxationRecommendationReason
+    recommendation_reason_words: NonEmptyStr
 
     # Scope of the individual branch, not an incidental diagnostic: it states
     # which households the figure above is valid for, so a machine consumer

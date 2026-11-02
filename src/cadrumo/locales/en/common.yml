@@ -153,22 +153,34 @@ aggregation:
       unsupported_period: Unsupported modelo period for totals from your records.
   oss_ioss:
     errors:
-      exterior_country_code_undeclared: The member state of consumption has no declared
-        Modelo 369 country code, so its services cannot be declared on this modelo.
-      exterior_detail_not_representable: The external-scheme layout cannot represent
-        every row or all its fields. Review the detail before continuing.
-      exterior_rate_kind_unsupported: The one-stop-shop external scheme only accepts
-        services at the standard or reduced rate of the member state of consumption.
-        The supplied observation declares another rate kind, which cannot be aggregated
-        under this scheme.
-      invoice_line_currency_unconverted: An OSS/IOSS invoice line is denominated in
-        a foreign currency with no resolved euro rate, so it cannot be declared on
-        this modelo.
+      consignment_exceeds_ceiling: 'A consignment exceeds this regime''s limit: its
+        intrinsic value may not pass the ceiling set by law. Check the invoice or
+        declare it outside the import scheme.'
+      detail_consumption_state_excluded: Union-scheme services cannot be declared
+        for the member state of identification, because the scheme only covers services
+        supplied in a member state where you are not established.
+      detail_country_code_undeclared: The member state of consumption has no declared
+        Modelo 369 country code, so its operations cannot be declared on this modelo.
+      detail_not_representable: The Modelo 369 layout cannot represent every row or
+        all its fields. Review the detail before continuing.
+      detail_rate_kind_unsupported: A Modelo 369 row only accepts the standard or
+        reduced rate of the member state of consumption. The supplied observation
+        declares another rate kind, which cannot be written on a row.
+      detail_rows_exceed_page: This period needs more rows than one Modelo 369 page
+        holds, and continuation pages cannot be prepared here yet. Nothing has been
+        exported, so no row is left out.
+      invoice_line_currency_unconverted: An OSS/IOSS invoice line is in a foreign
+        currency and the ECB published no rate for the period's last day or the day
+        after, so it cannot be declared on this modelo.
       invoice_line_rate_kind_unclassifiable: An OSS/IOSS invoice line carries an IVA
         rate that cannot be classified into a rate tier, so its cuota cannot be declared
         on this modelo.
       iva_amount_mismatches_destination_rate: The persisted IVA amount disagrees with
         the destination member state rate beyond the one-cent tolerance.
+      rate_change_devengo_undeclared: An OSS/IOSS invoice has no operation date, and
+        the rate of the member state of consumption changed during this period, so
+        its issue date cannot show which rate applies. Record the operation date on
+        the invoice.
   per_modelo:
     errors:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
@@ -187,6 +199,21 @@ aggregation:
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
   retencion_soportada:
+    clase:
+      actividad_economica: Economic activity income
+      arrendamiento_inmueble_urbano: 'Income from real estate capital: urban property
+        rental'
+      arrendamiento_inmueble_urbano_actividad: 'Economic activity income: urban property
+        rental'
+      atribucion_actividad_economica: 'Attributed income: economic activities'
+      atribucion_capital_inmobiliario: 'Attributed income: real estate capital'
+      atribucion_capital_mobiliario: 'Attributed income: movable capital'
+      atribucion_ganancia_patrimonial: 'Attributed income: capital gains'
+      capital_mobiliario: Income from movable capital
+      ganancia_patrimonial: Capital gains
+      imputacion_aie_ute: Income imputed from AIE and UTE
+      imputacion_derechos_imagen: Income imputed from the assignment of image rights
+      trabajo: Employment income
     errors:
       certificate_needs_fingerprint: A payer certificate needs the SHA-256 of the
         certificate file (--evidence-sha256). Use the operator declaration origin
@@ -1371,6 +1398,7 @@ desktop:
         differ: I know they differ
         linked_elsewhere: 'Invoice also linked · movements: {count}'
         sure: Link these · permanent
+        unjudged: The ledger has not compared this link yet
         unread: Invoice could not be read
       mine: Keep mine
       mismatch:
@@ -2159,6 +2187,9 @@ desktop:
       currency_not_read: 'Not on the document: say which'
       derived: Made from a read off this computer
       duplicate: 'Already in the catalogue: {number}'
+      duplicate_check_failed: The ledger did not say whether this reading is already
+        in the catalogue, so it can't be confirmed yet.
+      duplicate_check_retry: Ask again
       entered_by_you: Entered by you
       field:
         counterparty_name: Counterparty
@@ -2198,6 +2229,7 @@ desktop:
         country: Give the country in two letters
         currency: Say the currency
         duplicate: It may already be in the catalogue
+        duplicate_unread: Waiting for the ledger to check the catalogue
         findings: Answer every question first
       in_review: In review
       keep: Keep it
@@ -2507,6 +2539,7 @@ desktop:
       without_staged: Export without them
     failed: Couldn't read the ledger.
     field:
+      accrual_date: Accrual date (Renta)
       art_104_tres_exclusion: Art. 104.Tres exclusion
       attachment_ids: Attachments
       booked_date: Booked date
@@ -3096,13 +3129,17 @@ desktop:
         add_part: Add a part
         amount: Part {part} needs an amount above zero.
         category_needed: Choose a category for part {part}.
+        check_failed: The ledger did not answer about these parts, so the split can't
+          be added yet.
+        check_retry: Ask again
         choose_category: Choose a category
         count: A split has 2 to {max} parts.
         description: The parts add up to {amount}. The last part takes what is left.
         description_long: Part {part} takes a description of at most {max} characters.
         description_needed: Part {part} needs a description.
-        duplicate: 'Part {part} is the same as another: change its amount or description.'
+        gone: This movement is no longer in the ledger.
         mixed_hint: Partly used for work? Use Mixed with a share instead.
+        not_active: Only an active movement can be split.
         over: The parts are {amount} over the movement.
         part_amount: Part {part} amount
         part_category: Category of part {part}
@@ -4088,8 +4125,7 @@ desktop:
       partial: Grouping and totals wait for the whole window.
     withholding:
       absence:
-        not_listed: Statements made earlier cannot be listed yet. Those you make or
-          withdraw in this window are shown here.
+        history: Withdrawn statements
         title: No withholding
         what: State that no payer withheld on an income class this year.
       action:
@@ -4432,6 +4468,9 @@ desktop:
       details, and open the field again. Your draft has not been saved.
     dismiss: Dismiss
     edit_field: Edit {field}
+    ejercicio: Tax year
+    ejercicio_help: The year this answer states. Other years keep theirs.
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: No details match these filters. Try another search or section.
     entries_count: 'Entries: {count}'
     entries_none: No entries yet
@@ -4529,35 +4568,6 @@ desktop:
     search: Search
     settings: Settings
     tui: Workspace
-  renta:
-    proto:
-      election:
-        save: Save the answer
-        year: Tax year
-      excerpt: This prototype holds only some sections of the real declaration. Choose
-        another section to see it here.
-      family:
-        boxes: Boxes these facts feed
-        edit: Change it in your profile
-        empty: Not given
-        profile: From your profile
-      gap:
-        body: The backend does not serve this yet, so the window shows nothing in
-          its place.
-        operation: 'Needs: {operation}'
-        title: Not served yet
-      nav:
-        boxes: 'Boxes: {count}'
-        failed: 'Could not calculate: {count}'
-        needs_you: 'Needs you: {count}'
-        only_attention: Only what needs you
-        proposed: Proposed outline
-        served: As served today
-        technical: 'Technical heading: the layout has no reviewed heading here yet'
-        title: Sections
-      result:
-        composed: Figure worded by the backend's own header builder, not calculated
-        example: Shape already served for another declaration
   session:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
@@ -7225,6 +7235,7 @@ tui:
         created: 'Added: {entry}. Review status: {status}.'
         edit_again: Edit again
         field:
+          accrual_date: Accrual date for Renta (YYYY-MM-DD)
           amount: Amount, without a sign
           art_104_tres_exclusion: Art. 104.Tres exclusion
           booked_date: Booked date (YYYY-MM-DD)
@@ -8221,6 +8232,7 @@ tui:
       totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Entry detail
       transaction_field:
+        accrual_date: Accrual date for Renta (YYYY-MM-DD, optional)
         amount: Amount (without sign)
         booked_date: Booking date (YYYY-MM-DD)
         counterparty: Counterparty (optional)
@@ -8510,6 +8522,18 @@ tui:
         calculation_review_xlsx: Saved calculation review (XLSX)
         fichero_boe: Fichero BOE for presentation at AEAT
         label: Document to export
+      instalment_election:
+        conditions: Paying in two instalments adds no interest or surcharge. The return
+          must be filed within its filing period, and a corrective return cannot be
+          paid this way. The 60% is paid when you file; if it is not paid on time,
+          the whole amount falls due. When the first instalment is direct-debited
+          too, the second is charged to the same account.
+        label: 'Result to pay: at once or in two instalments'
+        single: Pay it all at once
+        two_instalments_second_debited: 'Two instalments: 60% when you file, the other
+          40% by direct debit'
+        two_instalments_second_paid: 'Two instalments: 60% when you file, the other
+          40% paid by you with Modelo 102'
       payment_election:
         cuenta_corriente: Tax current account (cuenta corriente tributaria)
         domiciliacion: Direct debit
@@ -8605,6 +8629,47 @@ tui:
       stale_context: The selected declaration changed while the form was open. Nothing
         was calculated; choose Calculate again.
       title: Modelo 303 filing facts
+    m360_solicitud:
+      account_kind:
+        own_account: One of my own accounts (solicitante)
+        representante: The representante's account
+      action:
+        declare: Declare a solicitud
+        remove: Remove a solicitud
+      column:
+        account: Account
+        cause: Cause
+        destination: Destination
+        holder: Holder
+        year: Year
+      detail: '%{year} · destination %{destination} · %{cause} · holder %{holder}
+        · representante %{representante} · account %{account}'
+      done_declare: Solicitud declared.
+      done_remove: Solicitud removed.
+      empty: No Modelo 360 solicitud is declared yet.
+      field:
+        account_kind: Refund account
+        action: Action
+        bank_address: Bank address (optional)
+        bank_city: Bank city (optional)
+        bank_country_code: Bank country code (optional)
+        bank_name: Bank name (optional)
+        facts_path: Facts file (JSON)
+        filing_year: Filing year
+        iban: Representante IBAN
+        own_account_id: Own account id
+        swift_bic: Representante SWIFT-BIC
+      list: Declared solicitudes
+      prompt: Every Modelo 360 solicitud you have declared, by filing year. Choose
+        to declare or remove one, review it, then confirm. The facts come from a file
+        you name; the account is one of your own accounts or a representante's account.
+      source: 'Facts read from: %{path}'
+      source_invalid: 'The file %{path} is not valid solicitud facts: %{count} problems
+        were found.'
+      source_unreadable: The file %{path} could not be read.
+      title: Modelo 360 solicitudes
+      tool: Modelo 360 solicitudes (VAT refund)
+      unchanged: 'Nothing changed: the register already held this.'
     next_line: 'Next: {action} [{key}]'
     search:
       prompt: Search every page by box number or by words. Enter goes to the box.
@@ -9099,11 +9164,9 @@ workspace:
       vigente: Current recorded filing
     holiday_coverage:
       calendar_unavailable: Holidays not checked
-      national_only: Regional holidays not checked
-      territory_unverified: Regional holidays not confirmed
     hub:
-      holidays_national_only: Deadlines count national holidays; regional ones are
-        not checked.
+      holidays_unchecked: Some deadlines could not be checked against the holiday
+        calendar.
     lifecycle:
       amended: Correction started
       calculated: Calculation completed
@@ -9463,8 +9526,22 @@ workspace:
       save_next: Keep and go to next
       unreadable: This value could not be read.
     export:
+      account_choice: '%{label} (%{account})'
       confirm_first: 'Confirm the assumed values before creating the file or recording
         the filing (to confirm: {count}).'
+      election:
+        amendment: A corrective return cannot be paid in two instalments.
+        filing_window_unknown: The filing period of this declaration is not known,
+          so paying in two instalments cannot be offered.
+        no_open_account: None of your own bank accounts is open. Add one to your own
+          accounts to receive the refund.
+        no_spanish_account: None of your open own bank accounts is Spanish, which
+          a direct debit needs. Add one to your own accounts.
+        nothing_to_pay: The result is not an amount to pay, so this does not apply.
+        nothing_to_refund: The result is not a refund, so this does not apply.
+        past_filing_window: The filing period has ended, and paying in two instalments
+          needs the return filed within it.
+        result_unknown: 'Calculate the declaration first: its result decides this.'
       file_format:
         fixed_width: AEAT file in the fixed-width BOE design
         xml_dictionary: AEAT XML file
@@ -10105,27 +10182,3 @@ workspace:
       not_applicable: n/a
       not_known_yet: Not known yet
     was: was {value}
-  renta:
-    election:
-      proposed: Proposed answer
-      stated: Stated for {year}
-      title: Imputation criterion for your activity
-      undeclared: Not stated yet. The activity boxes that depend on it stay unresolved
-        until you state it.
-    outline:
-      activities: Economic activities
-      annexes: Annexes and additional information
-      bases: Taxable bases
-      capital_gains: Capital gains and losses
-      credits: Withholding and payments on account
-      employment: Employment income
-      family: Family unit
-      identification: Identification and family situation
-      liability: Tax liability and deductions
-      minimums: Personal and family minimum
-      movable_capital: Income from movable capital
-      other: Other inputs
-      real_estate: Real estate income and imputed income
-      result: Result of the return
-    result:
-      settlement: How it is paid or refunded

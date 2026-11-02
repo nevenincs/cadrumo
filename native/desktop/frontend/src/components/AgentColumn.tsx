@@ -75,6 +75,8 @@ import type { OpenMenu } from "./ContextMenu";
 import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
+import { AttachmentGrants } from "./agent/AttachmentGrants";
+import { AttachmentReadPrompt } from "./agent/AttachmentReadPrompt";
 import { Composer, type ComposerReferences } from "./agent/Composer";
 import { documentSource } from "./agent/DocumentMentions";
 import { HistoryList } from "./agent/HistoryList";
@@ -1343,6 +1345,9 @@ export function AgentColumn({
                 selectedIds={staging
                   .namedFor(conversationId)
                   .map((document) => document.name)}
+                footer={
+                  session ? <AttachmentGrants session={session} /> : undefined
+                }
                 onClose={() => change({ panel: "none" })}
                 onAddFiles={attach ? () => void attach() : undefined}
                 onRefresh={documents.refresh}
@@ -1470,22 +1475,48 @@ export function AgentColumn({
                 {t("desktop.agent.aeat_setup_check")}
               </Button>
             )}
-          {live.approvals.map((approval) => (
-            <ApprovalPrompt
-              key={approval.request_id}
-              source={approval.source}
-              toolCall={approval.tool_call}
-              toolServer={approval.tool_server}
-              toolKind={approval.tool_kind}
-              description={approval.description}
-              options={approval.options}
-              onDecide={
-                answering
-                  ? (optionId) => void decide(approval, optionId)
-                  : undefined
-              }
-            />
-          ))}
+          {live.approvals.map((approval) => {
+            const prompt = (
+              <ApprovalPrompt
+                key={approval.request_id}
+                source={approval.source}
+                toolCall={approval.tool_call}
+                toolServer={approval.tool_server}
+                toolKind={approval.tool_kind}
+                description={approval.description}
+                options={approval.options}
+                onDecide={
+                  answering
+                    ? (optionId) => void decide(approval, optionId)
+                    : undefined
+                }
+              />
+            );
+            if (
+              !session ||
+              approval.tool_call !== "read_attachment" ||
+              approval.tool_server
+            )
+              return prompt;
+            const refuse = approval.options.find(
+              (option) => option.kind === "reject_once",
+            )?.option_id;
+            return (
+              <AttachmentReadPrompt
+                key={approval.request_id}
+                session={session}
+                approval={approval}
+                disabled={!answering}
+                onSettled={() => live.resolved(approval.request_id)}
+                onDecline={
+                  answering && refuse
+                    ? () => void decide(approval, refuse)
+                    : undefined
+                }
+                plain={prompt}
+              />
+            );
+          })}
           {questionnaire && (
             <QuestionsPrompt
               key={questionnaire.request_id}

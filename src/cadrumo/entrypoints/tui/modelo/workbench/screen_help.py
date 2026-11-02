@@ -102,7 +102,7 @@ class WorkbenchHelpMixin:
             if shifted is not None:
                 lines.append(shifted)
             if not self.recorded and form.deadline is not None:
-                lines.append(holiday_coverage_statement(form.deadline.holiday_coverage, None))
+                lines.append(holiday_coverage_statement(form.deadline.holiday_coverage))
             lines.append(tr("workspace.modelo.help.keys", keys=self._all_keys_text()))
         band.update(blocks_marked("\n".join(self._band_lines(band, lines))))
 

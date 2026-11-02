@@ -106,6 +106,7 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
             "description",
             "value_date",
             "operation_date",
+            "accrual_date",
             "currency",
             "counterparty",
             "business_classification",
@@ -162,12 +163,12 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
         )
     )
     restore, stash, status = (specs[key] for key in ("app_ledger_restore", "app_ledger_stash", "app_ledger_status"))
-    assert add.parameters[10] is allocate.parameters[2] is _LEDGER_ADD_CATEGORY_ID_OPTION
-    assert add.parameters[22] is allocate.parameters[3] is _LEDGER_USAGE_RATIO_ID_OPTION
+    assert add.parameters[11] is allocate.parameters[2] is _LEDGER_ADD_CATEGORY_ID_OPTION
+    assert add.parameters[23] is allocate.parameters[3] is _LEDGER_USAGE_RATIO_ID_OPTION
     assert all(
         parameter is _LEDGER_ACTOR_OPTION
         for parameter in (
-            add.parameters[30],
+            add.parameters[31],
             allocate.parameters[5],
             archive.parameters[3],
             attach.parameters[3],
@@ -189,11 +190,11 @@ def test_domain_specific_scalar_options_remain_distinct() -> None:
     assert rule["app_ledger_rule_add"].parameters[2] is not _LEDGER_ADD_CATEGORY_ID_OPTION
     assert rule["app_ledger_rule_add"].parameters[-1] is not _LEDGER_ACTOR_OPTION
     assert (
-        foundation["app_ledger_add"].parameters[10] is not inventory["app_ledger_inventory_movement_add"].parameters[7]
+        foundation["app_ledger_add"].parameters[11] is not inventory["app_ledger_inventory_movement_add"].parameters[7]
     )
     assert rule["app_ledger_rule_add"].parameters[2].help_key != _LEDGER_ADD_CATEGORY_ID_OPTION.help_key
     assert rule["app_ledger_rule_add"].parameters[-1].help_key != _LEDGER_ACTOR_OPTION.help_key
     assert (
-        foundation["app_ledger_add"].parameters[10].help_key
+        foundation["app_ledger_add"].parameters[11].help_key
         != inventory["app_ledger_inventory_movement_add"].parameters[7].help_key
     )

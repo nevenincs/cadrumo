@@ -42,6 +42,7 @@ from .actions_common import (
     remove_transaction,
     replace_transaction,
     require_actor,
+    require_recordable_reason,
     require_source_command,
     require_transaction,
     resolve_bucket_event_repository,
@@ -238,6 +239,7 @@ def mark_transaction_reviewed_excluded(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger review exclusion")
+    require_recordable_reason(reason, operation="ledger review exclusion")
     trimmed_source_command = require_source_command(source_command, operation="ledger review exclusion")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
@@ -336,6 +338,7 @@ def remove_manual_transaction(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger removal")
+    require_recordable_reason(reason, operation="ledger removal")
     trimmed_source_command = require_source_command(source_command, operation="ledger removal")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
@@ -645,6 +648,7 @@ def reset_ledger_catalogue(
         raise ValueError("max_receipt_items must be positive when provided")
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger reset")
+    require_recordable_reason(reason, operation="ledger reset")
     trimmed_source_command = require_source_command(source_command, operation="ledger reset")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
@@ -805,6 +809,7 @@ def _transition_manual_transaction_lifecycle(
 ) -> ManualLedgerTransactionResult:
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger lifecycle")
+    require_recordable_reason(reason, operation="ledger lifecycle")
     trimmed_source_command = require_source_command(source_command, operation="ledger lifecycle")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)

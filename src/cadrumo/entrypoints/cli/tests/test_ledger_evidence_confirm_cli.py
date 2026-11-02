@@ -101,6 +101,7 @@ def _projection() -> LedgerEvidenceConfirmProjection:
         iva_total_eur=None,
         grand_total_eur=None,
         referencia_catastral=None,
+        settlement_amount=_public_decimal("121.00"),
     )
     return LedgerEvidenceConfirmProjection(
         profile_id=_PROFILE,

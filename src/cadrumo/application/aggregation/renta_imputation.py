@@ -16,6 +16,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingValueOutcome
+from ...core.parsing.utils import parse_bool
 from ...core.period import Period
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
 from ...domain.invoices.catalogue import InvoiceCatalogue
@@ -28,6 +29,7 @@ from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnos
 from .source_resolution_operations import unresolved_binding_diagnostics
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.bindings import RegistryModeloObservation
     from ...domain.calculations.registry.ids import BindingId
     from ...domain.calculations.registry.schema import ModeloRevision
@@ -94,8 +96,14 @@ class ImputationUnresolved(StrEnum):
     OVERPAID_INVOICE = "overpaid_invoice"
     """The receipts linked to one invoice exceed what it leaves to be paid, so no share of it is known."""
 
+    ACCRUAL_CONFLICT = "accrual_conflict"
+    """The accrual date stated on the row disagrees with the one its invoice documents."""
+
     CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN = "capital_subsidy_schedule_unknown"
     """A capital subsidy follows its asset's amortization under either criterion, and no schedule links one."""
+
+    EUR_VALUE_UNKNOWN = "eur_value_unknown"
+    """A foreign invoice accrues with no rate stamped on it, so what it adds to the box is not known."""
 
 
 _CRITERION_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
@@ -203,6 +211,10 @@ class ImputationCriteria:
         stated = self.filings.stated.get(year)
         if stated is not None and stated is not declared:
             return f"the filed return of {year} states {stated.value} but the profile declares {declared.value}"
+        return self._binding_cash_conflict(year, declared)
+
+    def _binding_cash_conflict(self, year: int, declared: ActivityImputationCriterion) -> str | None:
+        """Name the filed cash return whose three-year election still binds a declared accrual ``year``."""
         if declared is not ActivityImputationCriterion.DEVENGO or self._commercial_accounting(year) is True:
             return None
         first_cash_year = self._first_binding_cash_year(year)
@@ -236,12 +248,24 @@ def declared_imputation_criteria(
     )
 
 
-_CASH_ELECTION_CASILLAS: Final[frozenset[str]] = frozenset({"0169", "1443", "1487"})
+_CASH_ELECTION_ROLES: Final[frozenset[str]] = frozenset(
+    {"irpf_ed_cobros_pagos_flag", "irpf_eo_cobros_pagos_flag", "irpf_eo_agr_cobros_pagos_flag"}
+)
+"""The semantic roles of the cash-election boxes: estimacion directa, objetiva and its agricultural block.
+
+A box is named by its role in the revision that edition declares, never by its number."""
+
 _ELECTION_LOOKBACK_YEARS: Final[int] = 3
+
+_RECORD_DESIGN_FLAG_MARK: Final[str] = "X"
+"""The mark a record design prints in a checked box; any other affirmative is a yes/no word."""
 
 
 def _marked(value: Decimal | str) -> bool:
-    return value != 0 if isinstance(value, Decimal) else value.strip().upper() in {"X", "1", "TRUE", "S"}
+    if isinstance(value, Decimal):
+        return value != 0
+    token = value.strip()
+    return token.upper() == _RECORD_DESIGN_FLAG_MARK or parse_bool(token) is True
 
 
 def imputation_filing_history(
@@ -252,12 +276,16 @@ def imputation_filing_history(
     annual_period_code: str,
     load_observation: Callable[[str, Period], RegistryModeloObservation | None],
     filing_records: ModeloRecordCatalogue,
+    authority: PinnedAuthorityOperation,
 ) -> ImputationFilingHistory:
     """Read what the annual returns reaching ``year`` state about the criterion and when each was filed.
 
     A captured box that is marked states the election. An unmarked box states accrual
     only where the capture carries it: a capture without the box says nothing either way.
+    The boxes are the ones the pinned authority's revision for each past year gives the
+    cash-election roles.
     """
+    supported_years = authority.supported_filing_years().years
     stated: dict[int, ActivityImputationCriterion] = {}
     filed_on: dict[int, date] = {}
     for past in range(year - _ELECTION_LOOKBACK_YEARS, year + 1):
@@ -266,11 +294,11 @@ def imputation_filing_history(
         if record is not None:
             filed_on[past] = record.filed_at.date()
         observation = load_observation(annual_form, period)
-        flags = (
-            ()
-            if observation is None
-            else tuple(row.value for row in observation.observations if str(row.casilla_id) in _CASH_ELECTION_CASILLAS)
-        )
+        flags: tuple[Decimal | str, ...] = ()
+        if observation is not None and past in supported_years:
+            revision = authority.revision_for_context(annual_form, filing_year=past, period=annual_period_code)
+            boxes = {str(box.id) for box in revision.casillas if str(box.semantic_role) in _CASH_ELECTION_ROLES}
+            flags = tuple(row.value for row in observation.observations if str(row.casilla_id) in boxes)
         if flags:
             stated[past] = (
                 ActivityImputationCriterion.COBROS_Y_PAGOS
@@ -282,6 +310,44 @@ def imputation_filing_history(
 
 def _quarter(on: date) -> int:
     return (on.month - 1) // 3
+
+
+def _impute_without_accrual(cash: date, at_cash: ActivityImputationCriterion | None) -> date | ImputationUnresolved:
+    if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
+        return cash
+    if at_cash is ActivityImputationCriterion.DEVENGO:
+        return ImputationUnresolved.ACCRUAL_UNKNOWN
+    return ImputationUnresolved.CRITERION_UNDECLARED
+
+
+def _impute_within_year(
+    cash: date, accrual: date, at_cash: ActivityImputationCriterion | None
+) -> date | ImputationUnresolved:
+    if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
+        return cash
+    if at_cash is ActivityImputationCriterion.DEVENGO:
+        return accrual
+    return cash if _quarter(cash) == _quarter(accrual) else ImputationUnresolved.CRITERION_UNDECLARED
+
+
+def _impute_accrued_before_cash(
+    cash: date,
+    accrual: date,
+    criteria: ImputationCriteria,
+    at_cash: ActivityImputationCriterion,
+    at_accrual: ActivityImputationCriterion,
+) -> date | ImputationUnresolved:
+    if at_accrual is ActivityImputationCriterion.DEVENGO:
+        return accrual
+    if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
+        return cash
+    for year in range(accrual.year + 1, cash.year + 1):
+        between = criteria.usable(year)
+        if between is None:
+            return ImputationUnresolved.CRITERION_UNDECLARED
+        if between is ActivityImputationCriterion.DEVENGO:
+            return date(year, 1, 1)
+    return ImputationUnresolved.UNCOMPUTED_ACROSS_CHANGE
 
 
 def impute_row(cash: date, accrual: date | None, criteria: ImputationCriteria) -> date | ImputationUnresolved:
@@ -297,32 +363,14 @@ def impute_row(cash: date, accrual: date | None, criteria: ImputationCriteria) -
     if not criteria.election_open(cash.year):
         return ImputationUnresolved.ELECTION_NOT_OPEN
     if accrual is None:
-        if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return cash
-        if at_cash is ActivityImputationCriterion.DEVENGO:
-            return ImputationUnresolved.ACCRUAL_UNKNOWN
-        return ImputationUnresolved.CRITERION_UNDECLARED
+        return _impute_without_accrual(cash, at_cash)
     if accrual.year == cash.year:
-        if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return cash
-        if at_cash is ActivityImputationCriterion.DEVENGO:
-            return accrual
-        return cash if _quarter(cash) == _quarter(accrual) else ImputationUnresolved.CRITERION_UNDECLARED
+        return _impute_within_year(cash, accrual, at_cash)
     at_accrual = criteria.usable(accrual.year)
     if at_cash is None or at_accrual is None:
         return ImputationUnresolved.CRITERION_UNDECLARED
     if accrual < cash:
-        if at_accrual is ActivityImputationCriterion.DEVENGO:
-            return accrual
-        if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return cash
-        for year in range(accrual.year + 1, cash.year + 1):
-            between = criteria.usable(year)
-            if between is None:
-                return ImputationUnresolved.CRITERION_UNDECLARED
-            if between is ActivityImputationCriterion.DEVENGO:
-                return date(year, 1, 1)
-        return ImputationUnresolved.UNCOMPUTED_ACROSS_CHANGE
+        return _impute_accrued_before_cash(cash, accrual, criteria, at_cash, at_accrual)
     if at_cash is ActivityImputationCriterion.COBROS_Y_PAGOS:
         return cash
     if at_accrual is ActivityImputationCriterion.DEVENGO:
@@ -333,6 +381,36 @@ def impute_row(cash: date, accrual: date | None, criteria: ImputationCriteria) -
 def linked_accrual_date(invoice: Invoice | None, *, kind: InvoiceKind) -> date | None:
     """Return the accrual of the invoice a row links to, when it links to one of ``kind``."""
     return invoice_accrual_date(invoice) if invoice is not None and invoice.kind is kind else None
+
+
+def row_accrual_date(
+    row: Transaction, invoice: Invoice | None, *, kind: InvoiceKind
+) -> date | ImputationUnresolved | None:
+    """Return the date a row accrues on from its invoice or its stated date, ``None`` when neither gives one.
+
+    The stated date is the operator's own statement for a row no document places,
+    and it is never read from the row's IVA ``operation_date``: LIVA art. 75 moves
+    the IVA at an advance while the income or expense accrues on delivery. When a
+    linked invoice documents a different date neither is preferred, because the
+    disagreement is the operator's to settle.
+    """
+    linked = linked_accrual_date(invoice, kind=kind)
+    stated = row.accrual_date
+    if stated is None:
+        return linked
+    if linked is None or linked == stated:
+        return stated
+    return ImputationUnresolved.ACCRUAL_CONFLICT
+
+
+def impute_ledger_row(
+    row: Transaction, invoice: Invoice | None, *, kind: InvoiceKind, criteria: ImputationCriteria
+) -> date | ImputationUnresolved:
+    """Place one ledger row by what it and its invoice state about its accrual."""
+    accrual = row_accrual_date(row, invoice, kind=kind)
+    if isinstance(accrual, ImputationUnresolved):
+        return accrual
+    return impute_row(row.raw.value_date or row.raw.booked_date, accrual, criteria)
 
 
 def rows_touching_window(
@@ -346,12 +424,15 @@ def rows_touching_window(
 ) -> TransactionCatalogue:
     """Keep the rows banked in the window or linked to an invoice accruing in it.
 
-    Only these can land in the window, so other years' rows raise no refusal here.
+    A date stated on the row counts as its invoice's does. Only these can land in
+    the window, so other years' rows raise no refusal here.
     """
 
     def touches(row: Transaction) -> bool:
         cash = row.raw.value_date or row.raw.booked_date
         if start <= cash <= end:
+            return True
+        if row.accrual_date is not None and start <= row.accrual_date <= end:
             return True
         invoice_id = invoice_id_of(row)
         accrual = linked_accrual_date(None if invoice_id is None else invoices.get(invoice_id), kind=kind)
@@ -424,10 +505,12 @@ __all__ = [
     "declared_imputation_criteria",
     "imputation_blocking_diagnostics",
     "imputation_filing_history",
+    "impute_ledger_row",
     "impute_row",
     "invoice_accrual_date",
     "ledger_sum_outcome",
     "linked_accrual_date",
+    "row_accrual_date",
     "rows_left_out_summary",
     "rows_touching_window",
 ]

@@ -395,6 +395,11 @@ cli:
           options to record the premises details.
         country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
           it routes both information returns, so it is never assumed.'
+        duplicate_help: Answer which stored invoice a document may already be, without
+          writing anything.
+        duplicate_invalid: The invoice kind and the document's facts must have the
+          expected shape.
+        duplicate_kind_help: 'Invoice direction: issued or received.'
         euro_rate_unavailable_message: No euro exchange rate for {currency} on {date}
           was found, so this invoice was recorded without a euro value and is left
           out of euro totals until a rate is added.
@@ -423,6 +428,18 @@ cli:
         line_help: Repeatable JSON object for one invoice line; pass one object per
           --line. For structured input it replaces scalar --taxable-base and --iva-rate.
         list_help: List reconciliation catalogue invoices.
+        match_help: Answer which movement settles which invoice, and the choices for
+          a link by hand, without linking anything.
+        match_invalid: A staged link must name a movement id and an invoice id as
+          MOVEMENT:INVOICE, each in full.
+        match_invoice_help: 'Full id of one invoice: weigh only that invoice and list
+          the open movements near its issue day.'
+        match_judge_help: Repeatable link to compare before it is made permanent,
+          as MOVEMENT:INVOICE; each comes back with where its two sides do not agree.
+        match_staged_help: Repeatable link staged and not saved, as MOVEMENT:INVOICE;
+          neither is offered to anything else.
+        match_transaction_help: 'Full id of one movement: return only its suggestion
+          and list the invoices it may be linked to.'
         operation_date_help: Date the goods were delivered or the service was supplied
           (YYYY-MM-DD). This is the LIVA art. 75 tax accrual date that decides which
           period declares the VAT amount; without it the invoice date stands in for
@@ -433,10 +450,11 @@ cli:
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         preview_help: 'Preview an invoice draft: the figures, findings and verdict
           the add operation would reach, without saving anything. The counterparty
-          tax id (counterparty_nif) and the draft lines (lines, a JSON array of line
-          objects with optional key, description, quantity, unit_price, iva_rate,
-          subtotal and iva_amount; a figure left out stays unknown; use it instead
-          of --taxable-base) arrive as one JSON object on --secrets-stdin or --secrets-fd.'
+          tax id (`counterparty_nif`) and the draft lines (`lines`, a JSON array of
+          line objects with optional `key`, `description`, `quantity`, `unit_price`,
+          `iva_rate`, `subtotal` and `iva_amount`; a figure left out stays unknown;
+          use it instead of --taxable-base) arrive as one JSON object on --secrets-stdin
+          or --secrets-fd.'
         preview_operation_date_role_help: Stored role of the operation date on the
           invoice a correction restates.
         preview_printed_total_help: The total printed on the document, compared with
@@ -593,17 +611,19 @@ cli:
           you are replacing. Leave it out for a first attestation.
         attest_absence_help: Attest that no payer withheld on an income class in an
           ejercicio. This is your own statement, not a payer certificate.
-        ejercicio_help: Ejercicio (year) the income is imputed to.
+        ejercicio_help: Tax year (`ejercicio`) the income is imputed to.
         evidence_sha256_help: SHA-256 of the certificate file; required for payer_certificate.
         group_help: Record the withholding your payers' certificates report.
         importe_integro_help: Money income the payer paid, before withholding.
-        income_class_help: Income class the payer withheld on, for example trabajo.
+        income_class_help: Income class the payer withheld on, for example `trabajo`.
         ingreso_a_cuenta_help: Ingreso a cuenta the payer made on income in kind.
           It counts in full as a credit.
         ingreso_a_cuenta_repercutido_help: Part of the ingreso a cuenta the payer
           passed on to you. It cannot exceed the ingreso a cuenta.
         invalid_input: 'A value is not valid: check the payer reference, the revision
           and the certificate fingerprint.'
+        list_absences_help: List your absence attestations for one ejercicio, active
+          and withdrawn, with the revision each is stored at.
         list_help: List the stored payer records of an ejercicio without any tax ID.
         origin_help: 'Who states the figures: payer_certificate or operator_declaration.'
         payer_name_help: Legal name of the payer.
@@ -617,7 +637,8 @@ cli:
           remove.
         remove_help: Remove one stored payer record, guarded by the revision a list
           showed.
-        retencion_help: Retención the payer practised, in euros with at most two decimals.
+        retencion_help: Withholding the payer practised, in euros with at most two
+          decimals.
         valoracion_especie_help: Valuation of the payment in kind.
         withdraw_absence_expected_revision_help: Revision the attestation was stored
           at.
@@ -654,7 +675,7 @@ cli:
           pattern cannot be searched.
         remove_not_found: No stored rule has the id %{rule_id}. Nothing was changed.
         remove_rule_id_help: Full id of the rule to remove, as shown by the JSON output
-          of rule list.
+          of `rule list`.
         remove_stale: The stored rule %{rule_id} was saved again at %{created_at},
           which is not the time you gave. Nothing was removed; list the rules and
           check it.
@@ -1253,7 +1274,8 @@ cli:
         binding_help: Additional value for a Modelo 100 box source, as KEY=VALUE.
           Repeat for multiple. Withholding sources default to zero when not supplied.
         casilla_help: Additional M100 casilla override as CASILLA_ID=DECIMAL (e.g.
-          0513=1150 for age supplement). Repeat for multiple overrides.
+          0003=1150 for cash employment pay). Only entry boxes are accepted; a computed
+          box is refused. Repeat for multiple overrides.
         ccaa_help: Autonomous community tax residence key for the Modelo 100 autonomic
           scale (e.g. cataluna, comunidad-valenciana). Must match a value listed in
           the modelo definitions.
@@ -1263,6 +1285,9 @@ cli:
         no_m130_units: No Modelo 130 draft declarations exist for filing year %{year}.
           Run `aeat app modelo work create --modelo 130 --year %{year} --period 1T`
           first.
+        profile_fact_missing: 'The projection cannot produce the base liquidable and
+          quota boxes because the active profile does not declare: %{profile_facts}.
+          Set the fact with `%{command}` and run the projection again.'
         year_help: Filing year (e.g. 2024).
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
@@ -2935,6 +2960,9 @@ cli:
       plan_minimum_incomplete: incomplete
     add:
       account_help: Own bank account the movement belongs to, by its id (e.g. acc-01).
+      accrual_date_help: Date the income or expense accrues for Renta under LIRPF
+        art. 14 and RIRPF art. 7 (YYYY-MM-DD). It never moves the IVA period. Leave
+        it out and none is recorded.
       actor_help: Your name, recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
       art_104_tres_exclusion_help: LIVA art. 104.Tres denominator exclusion that you
@@ -3115,10 +3143,10 @@ cli:
       iva_rate_help: IVA rate as a decimal, for example 0.21
       iva_vehicle_use_help: 'What the row''s vehicle is used for, where LIVA art.
         95.Tres.2.ª treats it apart from the 50 per cent presumption: one of the six
-        uses presumed 100 per cent (mixed_vehicle_goods_transport, paid_passenger_transport,
-        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
-        surveillance) or outside_presumed_classes for a vehicle that rule does not
-        name.'
+        uses presumed 100 per cent (`mixed_vehicle_goods_transport`, `paid_passenger_transport`,
+        `paid_driver_or_pilot_training`, `manufacturer_testing_or_promotion`, `commercial_agent_travel`,
+        `surveillance`) or `outside_presumed_classes` for a vehicle that rule does
+        not name.'
       llm_classified_by_label: classified-by
       llm_confidence_label: confidence
       llm_exclusive: --llm cannot be combined with --classification or --file; the
@@ -3279,6 +3307,7 @@ cli:
       kind_help: Only this kind of value; repeat it for several. Without it, every
         kind.
     labels:
+      accrual_date: Accrual date
       active: Active
       amount: Amount
       archived: Archived
@@ -3460,12 +3489,17 @@ cli:
         it to the --llm split proposer.
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
+    split_check_help: Answer unsaved split parts the way the split writer would take
+      them, without writing anything.
+    split_check_id_help: Full id of the movement to split.
+    split_check_invalid: Each split part must be a JSON object of the expected shape,
+      for a full movement id.
     staged_check_category_help: Repeatable spending category to judge against a classification.
     staged_check_help: Answer staged ledger work the way the writers would take it,
-      without saving anything. The staged rows (rows, a JSON array of objects with
-      transaction_id, cells and optional evidence_staged and m210_staged) and new
-      movements (drafts, a JSON array of objects with key and fields) arrive as one
-      JSON object on --secrets-stdin or --secrets-fd.
+      without saving anything. The staged rows (`rows`, a JSON array of objects with
+      `transaction_id`, `cells` and optional `evidence_staged` and `m210_staged`)
+      and new movements (`drafts`, a JSON array of objects with `key` and `fields`)
+      arrive as one JSON object on --secrets-stdin or --secrets-fd.
     staged_check_invalid: Each staged row and draft must be a JSON object of the expected
       shape.
     stash:
@@ -3480,6 +3514,8 @@ cli:
       transaction_id_help: Id of the transaction to inspect
     update:
       account_help: Bind the entry to this own bank account, by its id (e.g. acc-01).
+      accrual_date_help: New date the income or expense accrues for Renta under LIRPF
+        art. 14 and RIRPF art. 7 (YYYY-MM-DD).
       amount_help: New non-negative amount magnitude (full replace)
       counterparty_help: New counterparty descriptor
       currency_help: New three-letter ISO 4217 currency code

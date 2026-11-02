@@ -153,6 +153,7 @@ def _snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueIn
         base_total_eur=amount(snapshot.base_total_eur),
         iva_total_eur=amount(snapshot.iva_total_eur),
         grand_total_eur=amount(snapshot.grand_total_eur),
+        settlement_amount=Decimal(snapshot.settlement_amount.decimal),
     )
 
 

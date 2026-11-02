@@ -12,6 +12,7 @@ import type {
   LedgerRow,
   LedgerStatusResult,
 } from "../../../shell/ledger";
+import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
@@ -20,7 +21,7 @@ import { seriesAndNumber } from "../invoices/invoiceModel";
 import { needsInvoice } from "../movements/movementsModel";
 import {
   inconsistencies,
-  reconcile,
+  remapMatches,
   stageLink,
   stagedLinks,
   tiedInvoices,
@@ -431,9 +432,21 @@ export function MatchQueue({
   }, [toast]);
   const actions = stage.content.actions;
   const invoices = facts.invoices.value;
+  const question = useMemo(
+    () => ({
+      staged: [...stagedLinks(actions).rows].map(
+        ([transaction_id, invoice_id]) => ({ transaction_id, invoice_id }),
+      ),
+    }),
+    [actions],
+  );
+  const matches = useInvoiceMatches(port, question, generation);
   const found = useMemo(
-    () => (rows && invoices ? reconcile(rows, invoices, actions) : null),
-    [rows, invoices, actions],
+    () =>
+      rows && invoices && matches.kind === "answer"
+        ? remapMatches(matches.result, rows, invoices)
+        : null,
+    [rows, invoices, matches],
   );
   const oneSided = useMemo(
     () =>
@@ -452,6 +465,17 @@ export function MatchQueue({
   let list;
   if (facts.invoices.phase === "failed")
     list = <FailedRead t={t} facts={facts.invoices} onRetry={reread} />;
+  else if (matches.kind === "failed")
+    list = (
+      <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
+        <AlertTitle>{t("desktop.ledger.matching.read_failed")}</AlertTitle>
+        <AlertDescription className="flex flex-wrap items-center gap-2">
+          <Button size="xs" variant="outline" onClick={matches.retry}>
+            {t("desktop.ledger.retry")}
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
   else if (found === null)
     list = (
       <EmptyState

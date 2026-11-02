@@ -8,11 +8,8 @@ from rich.cells import cell_len
 from textual.widgets import OptionList, Static
 from textual.widgets.option_list import Option
 
-from .....application.modelo.work_form_models import (
-    ModeloFormLayoutProvenance,
-    ModeloFormResultDirection,
-    ModeloWorkForm,
-)
+from .....application.modelo.work_form_declaration_facts import ModeloFormResultDirection
+from .....application.modelo.work_form_models import ModeloFormLayoutProvenance, ModeloWorkForm
 from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....core.i18n.render import tr
 from .casilla_list import CasillaList

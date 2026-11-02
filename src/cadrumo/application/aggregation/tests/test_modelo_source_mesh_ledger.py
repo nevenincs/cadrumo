@@ -657,20 +657,19 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
         ),
     )
 
-    assert resolution.binding_values == aggregated
+    assert {binding_id: resolution.binding_values[binding_id] for binding_id in aggregated} == aggregated
     assert resolution.source_transaction_ids == ("oss-ledger-1",)
     assert resolution.diagnostics == ()
     assert tuple(item.source_ref for item in resolution.provenance) == ("transaction:oss-ledger-1",)
 
 
 def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -> None:
-    """A non-zero OSS line routed to no binding surfaces a non-blocking advisory.
+    """A non-zero OSS line with no table on the revision surfaces an advisory.
 
-    The esquema-union revision binds DE/FR union services and DE goods-distance;
-    no binding selects an IT destination. An IT-destination candidate matches no
-    binding; its base/cuota would otherwise silently vanish from the M369 form,
-    so the resolver MUST emit an ``unrouted_observation`` advisory rather than
-    dropping it (no-silent-under-declaration).
+    A goods line needs its state of dispatch to choose between the return's goods
+    tables, and an invoice does not record one. Its base and cuota would otherwise
+    silently vanish from the M369, so the resolver MUST emit an
+    ``unrouted_observation`` advisory rather than drop it (no-silent-under-declaration).
     """
     revision = _revision("369", "esquema-union")
     candidates = (
@@ -681,7 +680,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
             destination_member_state=EUMemberState.from_registry("it"),
             rate_kind=IvaRateKind("general"),
             invoice_direction=IvaInvoiceKind.ISSUED,
-            transaction_kind=TransactionKind("oss_union_services"),
+            transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("22.00"),
         ),
@@ -707,7 +706,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
         and diagnostic.source_kind == "ledger_oss_aggregation"
         and "oss-it-unrouted" in diagnostic.message
     ]
-    assert len(unrouted) == 1, "an IT-destination OSS line routed to no binding must surface one advisory"
+    assert len(unrouted) == 1, "an IT-destination goods line with no table must surface one advisory"
     # The advisory is non-blocking: the resolution still resolves the (zero) DE
     # binding value and records the candidate so calculate succeeds.
     assert resolution.binding_values.get("modelo-369-union-de-services-21pct") == Decimal("0")

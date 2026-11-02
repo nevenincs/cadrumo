@@ -14,7 +14,9 @@ from cadrumo.application.modelo.action_errors import (
     CalculationRevisionStateError,
     ModeloWorkflowGateError,
 )
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision, list_filing_records
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
@@ -39,8 +41,6 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    M130_EXPENSE_CASILLA,
-    M130_INCOME_CASILLA,
     T1,
     T2,
     T3,
@@ -85,13 +85,13 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_70:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_70,
             clock=T1,
-        )
+        ).revision
     with (
         pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED") as raised,
         bundled_indexed_authority().operation() as operation,
@@ -136,13 +136,13 @@ def test_file_creates_filing_record_and_advances_pointers(
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_112:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_112,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -260,13 +260,13 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_194:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_194,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -347,16 +347,18 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_278:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values={
                 **DEFAULT_130_BINDING_VALUES,
                 "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+                # No 1T or 2T return was made, so the operator enters the prior pagos fraccionados by hand.
+                "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
             },
             ports=_calculation_ports_278,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -426,13 +428,13 @@ def test_file_records_overdue_modelo_130_as_late_local_filing(repos: Repos, fili
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_345:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_345,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -494,13 +496,13 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_410:
         # First filing: revision-1, filed at T3.
-        revision_one = calculate_modelo_revision(
+        revision_one = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_410,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -531,17 +533,13 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_450:
         # Second filing: revision-2 with corrected inputs, filed at T5.
-        revision_two = calculate_modelo_revision(
+        revision_two = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={
-                **DEFAULT_130_BASELINE_INPUTS,
-                M130_INCOME_CASILLA: Decimal("1200"),
-                M130_EXPENSE_CASILLA: Decimal("100"),
-            },
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_450,
             clock=T4,
-        )
+        ).revision
     verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,
@@ -646,13 +644,13 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_557:
-        revision_one = calculate_modelo_revision(
+        revision_one = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_557,
             clock=T1,
-        )
+        ).revision
     verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -682,13 +680,13 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_592:
-        revision_two = calculate_modelo_revision(
+        revision_two = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1200")},
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_592,
             clock=T4,
-        )
+        ).revision
     verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,

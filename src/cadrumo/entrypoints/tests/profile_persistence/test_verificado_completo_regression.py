@@ -55,7 +55,9 @@ from ....adapters.persistence.storage.operator_scope import build_operator_scope
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
@@ -329,7 +331,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
         ) as _calculation_ports_348:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 casilla_inputs={
                     _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
@@ -345,7 +347,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
                 },
                 ports=_calculation_ports_348,
                 clock=_T1,
-            )
+            ).revision
 
         report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
@@ -389,8 +391,6 @@ def test_verify_grants_when_required_casillas_supplied_m130(
         )
 
         casilla_inputs: dict[CasillaId, Decimal] = {
-            _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("3000"),
             _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
             _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
             _M130_RETENCIONES_CASILLA: Decimal("0"),
@@ -408,7 +408,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
         ) as _calculation_ports_413:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 casilla_inputs=casilla_inputs,
                 binding_values={
@@ -417,7 +417,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
                 },
                 ports=_calculation_ports_413,
                 clock=_T1,
-            )
+            ).revision
         observation_repo = _seed_clean_cross_period_sources_for_m130(
             work_unit,
             work_unit_repository=wu_repo,
@@ -490,11 +490,9 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
         ) as _calculation_ports_498:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 casilla_inputs={
-                    _M130_INGRESOS_CASILLA: Decimal("10000"),
-                    _M130_GASTOS_CASILLA: Decimal("3000"),
                     _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
                     _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
                     _M130_RETENCIONES_CASILLA: Decimal("0"),
@@ -508,7 +506,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
                 },
                 ports=_calculation_ports_498,
                 clock=_T1,
-            )
+            ).revision
 
         catalogue = cr_repo.load()
         original = catalogue.get(revision.calculation_revision_id)

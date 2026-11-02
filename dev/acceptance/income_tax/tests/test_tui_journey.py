@@ -409,7 +409,7 @@ def test_a_verified_declaration_with_a_current_file_records_the_filing_with_f8()
     """
     from datetime import UTC, datetime
 
-    from cadrumo.application.modelo.work_form_models import ModeloFormExport
+    from cadrumo.application.modelo.work_form_declaration_facts import ModeloFormExport
     from cadrumo.core.config import override_settings
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen

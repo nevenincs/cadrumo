@@ -47,14 +47,13 @@ from ...application.modelo.operation_shared import (
 )
 from ...application.modelo.source_policy import SourceFamily
 from ...application.modelo.work_form import build_modelo_work_form
+from ...application.modelo.work_form_declaration_facts import ModeloFormEditClosure, ModeloFormResultDirection
 from ...application.modelo.work_form_models import (
     ModeloFormBindingAddressV1,
     ModeloFormEditability,
-    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormLayoutProvenance,
     ModeloFormOrigin,
-    ModeloFormResultDirection,
     ModeloWorkForm,
     address_key,
 )

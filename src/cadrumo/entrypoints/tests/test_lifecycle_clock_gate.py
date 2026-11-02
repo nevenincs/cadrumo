@@ -19,7 +19,9 @@ from cadrumo.adapters.persistence.profile.tests.published_authority_support impo
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -257,13 +259,13 @@ def _lifecycle_ports(bucket: _Bucket) -> WorkLifecyclePorts:
 
 
 def _calculate_at(bucket: _Bucket, *, clock: datetime, operation: PinnedAuthorityOperation) -> CalculationRevisionId:
-    revision = calculate_modelo_revision(
+    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         bucket.work_unit.work_unit_id,
         ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         actor="test",
         casilla_inputs={},
         clock=clock,
-    )
+    ).revision
     return revision.calculation_revision_id
 
 

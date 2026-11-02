@@ -80,7 +80,7 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
 from ..calculations.observations_repository import (
     PriorDomiciliationElectionProjection,
 )
-from ..filing.export import export_draft
+from ..filing.export import export_draft, refuse_incomplete_xml_export
 from ..filing.export_verification import (
     DeclaracionExportResult,
     FilingExportConsumedResult,
@@ -93,6 +93,7 @@ from ..filing.producer_snapshot import (
     FilingProducerSnapshot,
 )
 from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
+from ..filing.shared_owner_refusal import is_shared_owner_refusal
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
@@ -106,10 +107,13 @@ from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .export_accounts import (
     build_export_producer_snapshot,
+    export_charge_account,
     export_completeness_unverified,
+    export_refund_account,
     m303_nota_three_requires_refund_account,
     refund_account_country,
     require_domiciliation_before_cutoff,
+    require_instalment_election_admissible,
     require_m360_solicitud_for_export,
     resolve_export_accounts,
     selected_account_reference,
@@ -139,6 +143,7 @@ from .export_preparation import (
     requireprior_domiciliation_marker_layout,
     resolve_work_unit_period,
 )
+from .export_settlement import declared_result_amount, settlement_dictionary_values
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
@@ -200,6 +205,15 @@ def _persist_exported_draft(
         exported_at=exported_at,
         operation=operation,
     )
+    require_instalment_election_admissible(
+        command,
+        work_unit=work_unit,
+        revision=revision,
+        resolved_result_disposition=resolved_result_disposition,
+        accounts=accounts,
+        exported_at=exported_at,
+        operation=operation,
+    )
     producer_snapshot = build_export_producer_snapshot(
         command=command,
         work_unit=work_unit,
@@ -228,6 +242,18 @@ def _persist_exported_draft(
         export_subview,
         export_layout,
     )
+    if dictionary_values is not None:
+        dictionary_values.update(
+            settlement_dictionary_values(
+                disposition=resolved_result_disposition,
+                result_amount=declared_result_amount(
+                    str(work_unit.modelo), {value.casilla_id: value.value for value in approved.values}
+                ),
+                instalment=command.instalment_election,
+                charge_account=export_charge_account(accounts),
+                refund_account=export_refund_account(accounts),
+            )
+        )
     receipt: DeclaracionExportResult | FilingExportConsumedResult
     if payload_consumer is not None:
         receipt = _consume_export_payload(
@@ -258,6 +284,7 @@ def _persist_exported_draft(
                 staged=staged,
                 command=command,
                 approved=approved,
+                export_layout=export_layout,
                 producer_snapshot=producer_snapshot,
                 dictionary_values=dictionary_values,
                 prior_domiciliation_election=prior_domiciliation_election.election,
@@ -401,6 +428,7 @@ def _write_export_staging(
     staged: StagedPublication,
     command: ModeloExportCommand,
     approved: ModeloDraft,
+    export_layout: ExportLayoutDefinition | None,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
@@ -409,7 +437,7 @@ def _write_export_staging(
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> DeclaracionExportResult:
     try:
-        return export_draft(
+        receipt = export_draft(
             approved,
             output_path=staged.path,
             producer_snapshot=producer_snapshot,
@@ -419,6 +447,10 @@ def _write_export_staging(
             schema_provider=schema_provider,
             mutation_writer=mutation_writer,
         )
+        refuse_incomplete_xml_export(
+            export_layout, draft=approved, payload=staged.path.read_bytes(), schema_provider=schema_provider
+        )
+        return receipt
     except FilingExportError as exc:
         # Surface the underlying FilingExportError cause in the typed context
         # (aeat-cli-contract: structured provenance
@@ -457,7 +489,7 @@ def _consume_export_payload(
 
 def _export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError:
     """Keep a refused box's own message; the generic one would read as a disk problem."""
-    if is_xml_value_refusal(exc):
+    if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(
             translated_message=exc.translated_message,
             context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
@@ -530,6 +562,8 @@ def _emit_export_event(
         ResultDisposition.CUENTA_CORRIENTE_INGRESO,
     }:
         event_payload["payment_election"] = command.payment_election.value
+        if command.instalment_election.splits:
+            event_payload["instalment_election"] = command.instalment_election.value
     if resolved_result_disposition in {
         ResultDisposition.COMPENSACION,
         ResultDisposition.DEVOLUCION,
