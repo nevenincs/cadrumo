@@ -210,6 +210,18 @@ Agent clarification and approval requests now have synchronous admission and an 
 
 All 35 agent-prompt scenarios pass in 20261102T211516Z-51332, including delayed clarification acknowledgement, delayed rejection and an old approval completing while another conversation's decision remains pending. The same batch passed the help-retry case and all nine existing Modelo workspace cases; its only failure was S36's test selector matching both workspace and outline tabpanels. Scoped TypeScript, ESLint and formatting passed before the final tiny selector corrections. A source comparison from 09eab4b79d through the completed corrective merge found no changes in these implementation/test areas, so those results remain applicable. Broader source integration and all-surface validation remain S17 work.
 
+### s36-review | low | One Details panel survives responsive layout changes
+
+PASS for S36. Workspace mounts one Details instance and uses CSS grid placement at wide container sizes. Form, help and staged-action scrolling remain independent. The focused scenario passed in 20261102T214014Z-58260 at viewport widths 600, 1000, 1200 and 1600: one mounted help panel, no additional help reads, reachable staged actions and no workspace horizontal overflow. The 600px and 1600px captures were inspected. Terra reviewed the structure and Sol supplied the responsive placement brief. Scoped ESLint and TypeScript passed after the selector correction; formatting was applied through the configured formatter.
+
+### integration-follow-up | medium | Final source handoff and remaining generation boundary
+
+Corrective merge f5ead5cf98 includes TUI snapshot 3be7987f95 and the previously omitted root changes. Its owner explicitly ended merges and checks. Canonical authority publication succeeded with identity 4096352c94e1913bdfbcbffa2d938e62ace06bc0ea6e64353f1b6ef519242257. Contract generation succeeds. Envelope generation next exposed a real conflict in the synthetic clean-filing setup: it supplied a 13000 prior-income override alongside different seeded filed evidence. The clean helper now omits that redundant override while retaining the separate Renta fixture's explicit answer; regeneration remains in progress. The precedence gate is preserved.
+
+### remaining-recovery-and-wallet-findings | medium | Newly established gaps remain open
+
+Terra retired the speculative ledger cash/opening-balance gap: the identified balances ground imported statement page chains, with no separate ledger operation established. The admitted IVA wallet balance/seed/correct/override operations are a distinct tax-credit capability with no current UI consumer; S39 follows Sol's bounded inline section and existing authority/currentness rules. S37 addresses swallowed browser input refusal without replay or payload retention. S38 adds explicit log subscription recovery; native subscriptions replay a sequenced backlog, requiring deduplication while preserving retained rows and filters. S37-S39 are not yet verified complete.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

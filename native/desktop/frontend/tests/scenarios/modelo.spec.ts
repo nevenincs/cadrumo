@@ -443,7 +443,9 @@ test("one details panel survives responsive changes without rereading its help",
     await target.setViewportSize({ width, height: width === 600 ? 700 : 900 });
     await expect(details).toHaveCount(1);
     await expect(details).toBeVisible();
-    const panel = target.locator(".declarations-workspace [role=tabpanel]");
+    const panel = target.locator(
+      ".declarations-workspace [role=tabpanel][data-details]",
+    );
     await expect(
       panel.getByRole("button", {
         name: label("workspace.modelo.next_button.apply"),

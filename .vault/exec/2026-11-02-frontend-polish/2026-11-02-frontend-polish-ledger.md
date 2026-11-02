@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:9034063b57566658b15b8f38fe5654922eecd0b4f0c229b941145ebfeb7adbc8'
+body_hash: 'sha256:aa3b7d6f998d4a51e823fae9bc982947cc08f4ed49ab43dce2f22bfc1753546b'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -196,6 +196,10 @@ related:
 - `S35` `M` `native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`
 - `S35` `verify:` `All35 agent-prompt scenarios including delayed acknowledgements rejection and newer pending decision` -> `pass`
 - `S35` `verify:` `TypeScript scoped ESLint and formatting` -> `pass`
+- `S36` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx`
+- `S36` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S36` `verify:` `responsive Details scenario 20261102T214014Z-58260` -> `pass`
+- `S36` `verify:` `scoped ESLint and TypeScript` -> `pass`
 
 ## Notes
 
