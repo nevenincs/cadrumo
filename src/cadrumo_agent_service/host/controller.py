@@ -77,6 +77,10 @@ class AgentHostRefusal(StrEnum):
     STORES_UNPREPARED = "stores_unprepared"
 
 
+CALLER_ENDED_REFUSALS: frozenset[AgentHostRefusal] = frozenset({AgentHostRefusal.CANCELLED, AgentHostRefusal.TIMEOUT})
+"""The refusals that end an agent call because its caller cancelled or ran out of time, not because the agent failed."""
+
+
 class AgentHostError(RuntimeError):
     """A typed refusal; it carries no credential, path or process detail.
 

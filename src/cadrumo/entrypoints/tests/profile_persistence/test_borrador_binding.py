@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Generator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -41,7 +41,10 @@ from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from ....domain.user_profile.tests.general_regime_facts import (
+    GENERAL_REGIME_NATURAL_PERSON_FACTS,
+    RENTA_UNMARRIED_TAXPAYER_FACTS,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -166,13 +169,7 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="economic activity"),
                 *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                *RENTA_UNMARRIED_TAXPAYER_FACTS,
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),
@@ -181,20 +178,15 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
     )
 
 
-def test_calculate_modelo_revision_consumes_borrador_snapshot_through_application_service(
-    service_repositories: tuple[
-        WorkUnitCatalogueRepository,
-        CalculationRevisionCatalogueRepository,
-        BucketEventHistoryRepository,
-        Borrador100SnapshotRepository,
-        SecureObjectRepository,
-    ],
+def _seed_work_unit_and_borrador_snapshot(
+    objects: SecureObjectRepository,
     *,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+    snapshot_repository: Borrador100SnapshotRepository,
     operation: PinnedAuthorityOperation,
-) -> None:
-    work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
-        service_repositories
-    )
+) -> tuple[str, str]:
+    """Seed the profile, create the 2025 renta work unit and save a snapshot sourcing both bindings."""
     _seed_profile_with_birth_date(objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -214,6 +206,30 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
             _ENUM_BINDING: "madrid",
         },
     )
+    return work_unit.work_unit_id, snapshot_id
+
+
+def test_calculate_modelo_revision_consumes_borrador_snapshot_through_application_service(
+    service_repositories: tuple[
+        WorkUnitCatalogueRepository,
+        CalculationRevisionCatalogueRepository,
+        BucketEventHistoryRepository,
+        Borrador100SnapshotRepository,
+        SecureObjectRepository,
+    ],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
+        service_repositories
+    )
+    work_unit_id, snapshot_id = _seed_work_unit_and_borrador_snapshot(
+        objects,
+        work_unit_repository=work_unit_repository,
+        bucket_event_repository=bucket_event_repository,
+        snapshot_repository=snapshot_repository,
+        operation=operation,
+    )
 
     relation_values = _zero_relation_values()
     with calculation_ports_for_test(
@@ -224,7 +240,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         borrador_snapshot_repository=snapshot_repository,
     ) as _calculation_ports_221:
         revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
+            work_unit_id,
             actor="operator-A",
             casilla_inputs={},
             binding_values=_non_borrador_decimal_binding_values(),
@@ -284,24 +300,12 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
     )
-    _seed_profile_with_birth_date(objects)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
-        revision_id="2025",
-        ports=WorkLifecyclePorts(
-            work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
-        ),
+    work_unit_id, snapshot_id = _seed_work_unit_and_borrador_snapshot(
+        objects,
+        work_unit_repository=work_unit_repository,
+        bucket_event_repository=bucket_event_repository,
+        snapshot_repository=snapshot_repository,
         operation=operation,
-    )
-    snapshot_id = _save_snapshot(
-        snapshot_repository,
-        {
-            _DECIMAL_BINDING: Decimal("125.50"),
-            _ENUM_BINDING: "madrid",
-        },
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -311,7 +315,7 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
         borrador_snapshot_repository=snapshot_repository,
     ) as _calculation_ports_303:
         revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
+            work_unit_id,
             actor="operator-A",
             casilla_inputs={},
             binding_values=_non_borrador_decimal_binding_values(),

@@ -40,6 +40,7 @@ from ...iva.errors import IvaRateNotFoundError
 from ...iva.lookup import rate_table_covers, rate_table_covers_any_positive_tier
 from ...iva.schema import EUMemberState, IvaRateKind
 from ..enums import IvaRate, iva_rate_percentage
+from ..figures import FigureFindingCode, rate_refusal_finding, rate_refusal_is_coverage_gap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -128,6 +129,35 @@ def test_a_covered_date_still_refuses_a_rate_that_truly_was_not_in_force() -> No
     assert context["rate_in_force"] is False
     assert context["iva_rate_slot"] == IvaRate.from_registry("RATE_2").name
     assert context["on_date"] == _COVERED.isoformat()
+
+
+def test_a_refusal_on_a_covered_date_is_a_legality_finding_quoting_its_cause() -> None:
+    """The stored-read path passes the cause; its finding keeps the legal claim and code."""
+    rate = IvaRate.from_registry("RATE_2")
+    with pytest.raises(IvaRateNotFoundError) as caught:
+        iva_rate_percentage(rate, _COVERED)
+    assert rate_refusal_is_coverage_gap(caught.value) is False
+
+    finding = rate_refusal_finding(rate, _COVERED, coverage_gap=False, cause=caught.value)
+
+    assert finding.code is FigureFindingCode.LINE_RATE_NOT_IN_FORCE
+    assert finding.message == f"line rate RATE_2 was not in force on 2024-06-01: {caught.value}"
+    assert dict(finding.values) == {"slot": str(rate), "on_date": "2024-06-01"}
+
+
+def test_a_coverage_gap_finding_makes_no_claim_about_the_law() -> None:
+    """The preview path passes no cause; either way a gap never says "not in force"."""
+    rate = IvaRate.from_registry("RATE_21")
+    gap = IvaRateNotFoundError(
+        translated_message=_COVERAGE_GAP_KEY,
+        context={"rate_registry_covers_date": False},
+    )
+    assert rate_refusal_is_coverage_gap(gap) is True
+
+    finding = rate_refusal_finding(rate, _COVERED, coverage_gap=True)
+
+    assert finding.code is FigureFindingCode.LINE_RATE_COVERAGE_GAP
+    assert finding.message == "line rate RATE_21 is not covered by the rate registry on 2024-06-01"
 
 
 def test_a_covered_date_resolves_normally() -> None:

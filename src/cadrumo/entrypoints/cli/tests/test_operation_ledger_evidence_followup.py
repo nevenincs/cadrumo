@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
@@ -12,9 +11,7 @@ import typer
 from pydantic import BaseModel
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
-from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.evidence_followup_contracts import (
@@ -40,8 +37,7 @@ from ....application.ledger.evidence_followup_contracts import (
 )
 from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
-from ....application.operations.models import OperationId
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import OperationEffect
 from ....domain.attachments.enums import AttachmentSource
 from .. import operation_ledger_evidence_followup as bridge
 from ..ledger_business_payloads import (
@@ -50,6 +46,7 @@ from ..ledger_business_payloads import (
     EvidenceConsentListResult,
     EvidenceReviewListResult,
 )
+from .operation_bridge_support import bind_exact_profile_read
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -174,36 +171,16 @@ def _bind(
     projection: BaseModel,
     submitted: list[BaseModel],
 ) -> None:
-    client = cast(FrontendClient, SimpleNamespace(profile_id=profile_id))
-    monkeypatch.setattr(bridge, "active_bucket_id_or_refuse", lambda: str(profile_id))
-
-    def bound_client(_ctx: typer.Context, *, expected_profile_id: UUID) -> FrontendClient:
-        assert expected_profile_id == profile_id
-        return client
-
-    monkeypatch.setattr(bridge, "require_profile_client", bound_client)
-
-    def submit(
-        actual_client: FrontendClient,
-        request: BaseModel,
-        **kwargs: object,
-    ) -> RegisteredOperationCompletion[BaseModel]:
-        submitted.append(request)
-        assert actual_client is client
-        assert kwargs["definition_id"] == definition_id
-        assert kwargs["subject_ref"] == profile_operation_subject(str(profile_id))
-        assert kwargs["result_type"] is type(projection)
-        assert kwargs["request_version"] == 1
-        assert kwargs["result_version"] == _RESULT_VERSIONS[definition_id]
-        assert kwargs["timeout"] == 120
-        return RegisteredOperationCompletion(
-            operation_id=cast("OperationId", _OPERATION_ID),
-            projection=projection,
-            effect=OperationEffect.NONE,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-        )
-
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
+    bind_exact_profile_read(
+        monkeypatch,
+        bridge=bridge,
+        definition_id=definition_id,
+        profile_id=profile_id,
+        projection=projection,
+        submitted=submitted,
+        result_version=_RESULT_VERSIONS[definition_id],
+        operation_id=_OPERATION_ID,
+    )
 
 
 @pytest.mark.parametrize(

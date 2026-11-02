@@ -16,6 +16,13 @@ from .workspace import (
 )
 
 
+def reconciliation_source_state(*, has_diffs: bool, has_advisories: bool) -> AeatSyncSourceState:
+    """Name the AEAT-side state a stored comparison leaves: a diff conflicts, an advisory leaves it incomplete."""
+    if has_diffs:
+        return AeatSyncSourceState.CONFLICT
+    return AeatSyncSourceState.INCOMPLETE if has_advisories else AeatSyncSourceState.PRESENT
+
+
 def reconciliation_rows(
     *,
     bucket_id: str,
@@ -39,11 +46,9 @@ def reconciliation_rows(
                     record.registry_snapshot_ref.modelo_year, record.registry_snapshot_ref.period
                 ),
                 local_state=AeatSyncSourceState.PRESENT,
-                aeat_state=AeatSyncSourceState.CONFLICT
-                if record.diffs
-                else AeatSyncSourceState.INCOMPLETE
-                if record.advisories
-                else AeatSyncSourceState.PRESENT,
+                aeat_state=reconciliation_source_state(
+                    has_diffs=bool(record.diffs), has_advisories=bool(record.advisories)
+                ),
                 local_observed_at=record.reconciled_at,
                 aeat_observed_at=record.reconciled_at,
                 discrepancy_kind=AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE

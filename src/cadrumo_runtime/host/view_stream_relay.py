@@ -94,7 +94,13 @@ from cadrumo_client.transport.view_stream import (
 
 from ..adapters.worker_transport import WorkerChannel
 from .view_stream_frames import read_window_frame, validate_image_chunk, validate_worker_transfer
-from .view_stream_state import PendingViewAttach, ViewAttachGrant, ViewWindowLeg, ViewWorkerLeg
+from .view_stream_state import (
+    PendingViewAttach,
+    ViewAttachGrant,
+    ViewWindowLeg,
+    ViewWorkerLeg,
+    close_view_leg_quietly,
+)
 
 _LOGGER = get_logger(__name__)
 
@@ -124,13 +130,6 @@ _WORKER_KINDS = frozenset({DOCUMENT_FRAME_KIND, VIEW_CHUNK_FRAME_KIND})
 
 def _violation(check: str) -> RefusalError:
     return RefusalError(RefusalCode.INVALID_FRAME, check=check)
-
-
-def _close_quietly(channel: ByteChannel) -> None:
-    try:
-        channel.close()
-    except Exception as error:
-        diagnostic_event(_LOGGER, "view_leg_close_failed", fields={"error_type": type(error).__name__}, level=30)
 
 
 def _token_key(token: bytes) -> bytes:
@@ -172,11 +171,11 @@ class ViewStreamRelay:
         """Adopt an admitted worker leg and start relaying from it; its window has no credit yet."""
         with self._guard:
             if self._closed:
-                _close_quietly(channel)
+                close_view_leg_quietly(channel)
                 raise RefusalError(RefusalCode.DRAINING)
             if any(worker.profile_id == profile_id and not worker.ended for worker in self._workers.values()):
                 # A worker holds one view at a time; another bound leg of this profile is stale.
-                _close_quietly(channel)
+                close_view_leg_quietly(channel)
                 raise ProfileAccessRefusedError(AccessDenialCode.SUBJECT_BUSY)
             worker = ViewWorkerLeg(profile_id=profile_id, bind=bind, channel=channel)
             self._workers[bind.operation_id] = worker
@@ -361,7 +360,7 @@ class ViewStreamRelay:
         if window is not None:
             self._unbind_window(window, reason)
         worker.stopping.set()
-        _close_quietly(worker.channel)
+        close_view_leg_quietly(worker.channel)
         diagnostic_event(_LOGGER, "view_unbound", fields={"reason": reason.value}, level=10)
 
     def _unbind_window(self, leg: ViewWindowLeg, reason: ViewClosedReason | None) -> None:
@@ -377,7 +376,7 @@ class ViewStreamRelay:
         leg.stopping.set()
         if reason is not None:
             self._tell_window(leg, reason)
-        _close_quietly(leg.channel)
+        close_view_leg_quietly(leg.channel)
 
     def _tell_window(self, leg: ViewWindowLeg, reason: ViewClosedReason) -> None:
         """Write ``view.closed`` once the window's writer is between frames, never inside an image's chunk run.

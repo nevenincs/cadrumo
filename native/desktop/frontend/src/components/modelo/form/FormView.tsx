@@ -33,6 +33,7 @@ import type {
   SourceSurface,
 } from "../../../shell/modeloContract";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { boxNotes } from "./boxNotes";
 import { calm } from "./FieldRow";
 import { FormContext, type FormContextValue } from "./formContext";
 import { SectionView, type DrawnSection, type Shown } from "./SectionView";
@@ -200,6 +201,10 @@ export function FormView({
   const t = useStrings();
   const form = envelope.form.form;
   const pages = useMemo(() => drawnPages(form, t), [form, t]);
+  const notes = useMemo(
+    () => boxNotes(envelope.issue_lines),
+    [envelope.issue_lines],
+  );
   const page =
     pages.find((candidate) => candidate.id === session.pageId) ?? pages[0];
   const [mine, setMine] = useState(false);
@@ -390,6 +395,7 @@ export function FormView({
     setEditing,
     onDone,
     onOpenSurface,
+    notes,
     translated: form.language !== "es",
   };
 

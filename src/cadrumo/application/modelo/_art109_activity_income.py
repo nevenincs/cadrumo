@@ -38,7 +38,12 @@ from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.enums import (
+    BUSINESS_BEARING_STATES,
+    BusinessClassification,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -52,16 +57,6 @@ if TYPE_CHECKING:
 # Registry-owned ratio, activity entity sets, category applicability, and source
 # references remain in canonical versioned registry/facts TOML.  The selected
 # declarations are resolved below; evidence folding mechanics remain local.
-
-_PROVEN_ACTIVITY_STATES = frozenset({BusinessClassification.BUSINESS, BusinessClassification.MIXED})
-_UNRESOLVED_ACTIVITY_STATES = frozenset(
-    {
-        BusinessClassification.NOT_YET_PROCESSED,
-        BusinessClassification.PROCESSED_UNCLASSIFIED,
-        BusinessClassification.SKIPPED_BY_RULE,
-        BusinessClassification.FAILED_VALIDATION,
-    },
-)
 
 
 def _is_art109_ratio_parameter(parameter: ParameterDefinition) -> bool:
@@ -341,10 +336,8 @@ def _classify_current_period_row(transaction: Transaction, *, period: Period) ->
         return _RowKind.ACTIVITY_INCOME
     if transaction.business_classification is BusinessClassification.PERSONAL:
         return _RowKind.IGNORE
-    if transaction.business_classification in _PROVEN_ACTIVITY_STATES:
+    if transaction.business_classification in BUSINESS_BEARING_STATES:
         return _RowKind.ACTIVITY_INCOME
-    if transaction.business_classification in _UNRESOLVED_ACTIVITY_STATES:
-        return _RowKind.INSUFFICIENT
     return _RowKind.INSUFFICIENT
 
 

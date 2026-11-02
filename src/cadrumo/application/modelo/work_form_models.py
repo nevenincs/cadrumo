@@ -193,6 +193,16 @@ NEEDS_ATTENTION: Final[frozenset[ModeloFormOrigin]] = frozenset(
 ASKS_FOR_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
 )
+#: Origins whose words say there is no value, whatever the field still holds.
+ORIGINS_WITHOUT_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {
+        ModeloFormOrigin.NOT_APPLICABLE,
+        ModeloFormOrigin.NOT_CALCULATED_YET,
+        ModeloFormOrigin.CALCULATION_FAILED,
+        ModeloFormOrigin.NOT_IMPORTED_YET,
+        ModeloFormOrigin.CLEARED,
+    }
+)
 #: Origins of a box a source feeds, whether the source has filled it yet or not.
 FED_BY_A_SOURCE: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
@@ -987,6 +997,12 @@ class ModeloFormResultDirection(StrEnum):
     UNKNOWN = "unknown"
 
 
+AMOUNTLESS_RESULT_DIRECTIONS: frozenset[ModeloFormResultDirection] = frozenset(
+    {ModeloFormResultDirection.NEGATIVE, ModeloFormResultDirection.NIL}
+)
+"""The directions of a result that settles nothing, so no amount is shown beside them."""
+
+
 class ModeloFormResult(_FormModel):
     """The box that settles the declaration, its value and its direction.
 
@@ -1199,9 +1215,11 @@ def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
 
 __all__ = [
     "ABSENT_FROM_ADMISSION",
+    "AMOUNTLESS_RESULT_DIRECTIONS",
     "ASKS_FOR_A_VALUE",
     "FED_BY_A_SOURCE",
     "NEEDS_ATTENTION",
+    "ORIGINS_WITHOUT_A_VALUE",
     "ORIGIN_STANDINGS",
     "ModeloFormAddressV1",
     "ModeloFormAeatData",

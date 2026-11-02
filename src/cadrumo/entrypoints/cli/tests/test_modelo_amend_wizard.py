@@ -32,6 +32,7 @@ import json
 from contextlib import ExitStack
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import NamedTuple
 from uuid import UUID
 
 import pytest
@@ -70,6 +71,7 @@ from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.query_reports import ModeloCasillaRow
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -357,6 +359,40 @@ def _import_external_m303_baseline(
     return record.filing_record_id
 
 
+class _AmendableBaseline(NamedTuple):
+    """The work unit, its worker context and the casillas its filed figures let a correction restate."""
+
+    unit: WorkUnit
+    context: ModeloWorkAmendmentContextProjection
+    baseline_values: dict[str, Decimal]
+    amendable: tuple[ModeloCasillaRow, ...]
+
+
+def _amendable_baseline(work_unit_id: str, *, bucket_id: str) -> _AmendableBaseline:
+    """Resolve the unit's AEAT-attested baseline and its amendable rows; call inside an open profile session."""
+    unit = load_work_unit_by_id(work_unit_id=work_unit_id)
+    assert unit.current_filing_record_id is not None
+    with bundled_indexed_authority().operation() as operation:
+        baseline = persisted_filing_record(
+            unit.current_filing_record_id,
+            ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
+        )
+        baseline_revision = get_calculation_revision(
+            baseline.calculation_revision_id,
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+        )
+        context = _context_projection(
+            baseline=baseline,
+            unit=unit,
+            baseline_revision=baseline_revision,
+            operation=operation,
+        )
+    baseline_values = filed_casilla_values(context.calculation)
+    return _AmendableBaseline(
+        unit, context, baseline_values, amendable_casilla_rows(context.casilla_rows, baseline_values)
+    )
+
+
 def _scripted_amend(
     work_unit_id: str,
     *,
@@ -381,25 +417,9 @@ def _scripted_amend(
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
-        assert unit.current_filing_record_id is not None
-        with bundled_indexed_authority().operation() as operation:
-            baseline = persisted_filing_record(
-                unit.current_filing_record_id,
-                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
-            )
-            baseline_revision = get_calculation_revision(
-                baseline.calculation_revision_id,
-                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
-            )
-            context = _context_projection(
-                baseline=baseline,
-                unit=unit,
-                baseline_revision=baseline_revision,
-                operation=operation,
-            )
-        baseline_values = filed_casilla_values(context.calculation)
-        amendable = amendable_casilla_rows(context.casilla_rows, baseline_values)
+        baseline = _amendable_baseline(work_unit_id, bucket_id=bucket_id)
+        unit, context = baseline.unit, baseline.context
+        baseline_values, amendable = baseline.baseline_values, baseline.amendable
         by_number = {row.number: row for row in amendable}
         selected_ids = [by_number[number].casilla_id for number in change_numbers]
         _ACTIVE_RUNS[run_id] = {}
@@ -494,25 +514,9 @@ def _permitted_kind_choice_values(
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
-        assert unit.current_filing_record_id is not None
-        with bundled_indexed_authority().operation() as operation:
-            baseline = persisted_filing_record(
-                unit.current_filing_record_id,
-                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
-            )
-            baseline_revision = get_calculation_revision(
-                baseline.calculation_revision_id,
-                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
-            )
-            context = _context_projection(
-                baseline=baseline,
-                unit=unit,
-                baseline_revision=baseline_revision,
-                operation=operation,
-            )
-        baseline_values = filed_casilla_values(context.calculation)
-        amendable = amendable_casilla_rows(context.casilla_rows, baseline_values)
+        baseline = _amendable_baseline(work_unit_id, bucket_id=bucket_id)
+        context = baseline.context
+        baseline_values, amendable = baseline.baseline_values, baseline.amendable
         by_number = {row.number: row for row in amendable}
         selected = tuple(by_number[number] for number in change_numbers)
         _ACTIVE_RUNS[run_id] = {}
@@ -882,25 +886,9 @@ def test_amend_wizard_blank_selection_yields_no_corrections(seed_profile: Profil
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
-        assert unit.current_filing_record_id is not None
-        with bundled_indexed_authority().operation() as operation:
-            baseline = persisted_filing_record(
-                unit.current_filing_record_id,
-                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
-            )
-            baseline_revision = get_calculation_revision(
-                baseline.calculation_revision_id,
-                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
-            )
-            context = _context_projection(
-                baseline=baseline,
-                unit=unit,
-                baseline_revision=baseline_revision,
-                operation=operation,
-            )
-        baseline_values = filed_casilla_values(context.calculation)
-        amendable = amendable_casilla_rows(context.casilla_rows, baseline_values)
+        baseline = _amendable_baseline(work_unit_id, bucket_id=bucket_id)
+        unit = baseline.unit
+        baseline_values, amendable = baseline.baseline_values, baseline.amendable
         _ACTIVE_RUNS[run_id] = {}
         try:
             definition = _selection_definition(

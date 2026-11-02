@@ -22,6 +22,7 @@ from ._ledger_binding_resolution import (
     UnroutedLedgerQuantity,
     cash_received_total,
     casilla_target_matcher,
+    income_amount_is_declarable,
     ingresos_integros_total,
     resolve_ledger_family_binding_values,
     unrouted_ledger_family_quantities,
@@ -292,13 +293,6 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     )
 
 
-def _renta_income_is_declarable(observation: RentaIncomeObservationProtocol) -> bool:
-    declarable = observation.gross_amount
-    if observation.taxable_base_amount is not None:
-        declarable = max(declarable, observation.taxable_base_amount)
-    return declarable != Decimal("0")
-
-
 def unsupported_ledger_renta_income_observations(
     revision: ModeloRevision,
     observations: Iterable[RentaIncomeObservationProtocol],
@@ -329,7 +323,7 @@ def unsupported_ledger_renta_income_observations(
         source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         provider_model=LedgerRentaIncomeProvider,
         build_matcher=casilla_target_matcher,
-        is_declarable=_renta_income_is_declarable,
+        is_declarable=income_amount_is_declarable,
     )
 
 

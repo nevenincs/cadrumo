@@ -35,6 +35,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import (
     cash_received_total,
     casilla_target_matcher,
+    income_amount_is_declarable,
     ingresos_integros_total,
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
@@ -263,13 +264,6 @@ def resolve_ledger_impatriado_income_aggregation_binding_values(
     )
 
 
-def _impatriado_income_is_declarable(observation: ImpatriadoIncomeObservationProtocol) -> bool:
-    declarable = observation.gross_amount
-    if observation.taxable_base_amount is not None:
-        declarable = max(declarable, observation.taxable_base_amount)
-    return declarable != Decimal("0")
-
-
 def unsupported_ledger_impatriado_income_observations(
     revision: ModeloRevision,
     observations: Iterable[ImpatriadoIncomeObservationProtocol],
@@ -296,7 +290,7 @@ def unsupported_ledger_impatriado_income_observations(
         source_kind=BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
         provider_model=LedgerImpatriadoIncomeProvider,
         build_matcher=casilla_target_matcher,
-        is_declarable=_impatriado_income_is_declarable,
+        is_declarable=income_amount_is_declarable,
     )
 
 

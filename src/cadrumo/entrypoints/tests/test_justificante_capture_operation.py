@@ -6,7 +6,7 @@ import asyncio
 import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -17,10 +17,8 @@ import pytest
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
 )
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live import justificante as justificante_module
@@ -59,7 +57,6 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ...application.operations.supervisor import OperationSupervisor
 from ...core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -73,7 +70,7 @@ from ...tests.aeat_literal_fixtures import (
     CSV_CONSULTATION_URL_FIXTURE,
 )
 from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowserResources
-from .supervised_operation_rig import run_to_terminal
+from .supervised_operation_rig import build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -500,20 +497,12 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
         assert admitted.request.profile_id == profile_id
         assert AccessAction.COMMIT in admitted.policy.actions
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
+        journal, _, operands, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
             execution_authority=execution_authority,
         )
         operation_id = "3" * 64 if refuse_guard is None else "4" * 64

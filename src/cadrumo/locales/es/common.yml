@@ -1165,6 +1165,8 @@ desktop:
     close: Cerrar declaraciones
     loading: Leyendo tus declaraciones…
     maximize: Maximizar declaraciones
+    notes:
+      label: Lo que ha anotado el último cálculo
     position: Declaración {row} de {count}
     read_failed: Cadrumo no ha podido leer tus declaraciones.
     retry: Volver a intentarlo
@@ -3506,6 +3508,7 @@ desktop:
     prorrata:
       accepted: 'Se acepta: {provenances}.'
       action:
+        declare_gross: Declarar una cuota bruta
         declare_sector: Declarar un sector
         elect_especial: Optar por la especial
         elect_general: Optar por la general
@@ -3530,6 +3533,7 @@ desktop:
       evidence: Referencia del justificante
       evidence_hint: El documento de la opción o de su revocación
       form:
+        declare_gross: Declarar la cuota deducible bruta de una liquidación de {ejercicio}
         declare_sector: Declarar un sector diferenciado
         elect_especial: Optar por la prorrata especial en {ejercicio}
         elect_general: Optar por la prorrata general en {ejercicio}
@@ -3537,6 +3541,26 @@ desktop:
         seed: Tomar {ejercicio} del año anterior
         seed_sector: Tomar la prorrata provisional de un sector en {ejercicio}
         settle_sector: Liquidar la prorrata definitiva de un sector en {ejercicio}
+      gross:
+        column:
+          evidence: Documento
+          gross_cuota: Cuota bruta
+          period: Periodo
+        empty: No hay ninguna cuota bruta declarada para ningún periodo de liquidación.
+        evidence: Documento justificativo
+        evidence_hint: Referencia a tu propio documento que respalda el importe.
+        gross_cuota: Cuota deducible bruta
+        gross_cuota_hint: Antes de la prorrata, en euros con hasta dos decimales.
+        period: Periodo de liquidación
+        remove: Eliminar
+        remove_confirm: Eliminar la declaración
+        remove_of: Eliminar la cuota bruta declarada para {liquidation}
+        remove_what: ¿Eliminar la cuota bruta que declaraste para {liquidation}?
+        replace: Sustituir la cuota bruta ya declarada para el mismo periodo y sector
+        title: Cuota deducible bruta de liquidaciones anteriores
+        what: La cuota deducible bruta, antes de la prorrata, de una liquidación anterior
+          que introdujiste a mano, para un periodo del que el libro no tiene ninguna
+          cuota soportada.
       kind:
         definitiva: Definitiva
         provisional: Provisional
@@ -4111,6 +4135,8 @@ desktop:
     none_unread: Ninguno sin leer en la última sincronización
     unread: '{count} sin leer'
   modelo:
+    box_notes:
+      label: Lo que el cálculo ha anotado sobre esta casilla
     correction:
       kind_label: Tipo de corrección
       motive_label: Motivo de la rectificación
