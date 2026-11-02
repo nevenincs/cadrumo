@@ -21,16 +21,20 @@ from cadrumo.adapters.persistence.profile.tests.published_authority_support impo
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
 from cadrumo.application.filing.runtime import build_runtime_schema_provider
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
+from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from cadrumo.domain.modelos.errors import ModeloExportError
+from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.general_iva_profile_facts_support import (
@@ -42,9 +46,13 @@ from cadrumo.entrypoints.tests.profile_persistence.test_e2e_imputation_calculate
     _CASH,
     _DEVENGO,
     _OFFICIAL_M130_C19,
+    _OPERATOR_SCOPE_PORTS,
+    _autonomaworkflow_profile,
     _persist_ledger,
     _register_refund_account,
     _verify_and_export,
+    modelo_export_ports_for_test,
+    ready_clave_settings,
 )
 from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters_to_m100_annual import (
     _BUCKET_ID,
@@ -53,9 +61,11 @@ from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters
     _TAX_ID,
     _YEAR,
     _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+    _export_modelo_revision,
     _import_official_m130_result_observation,
     _m100_non_relation_zero_bindings,
     _seed_prior_year_m100,
+    _verify_modelo_revision,
 )
 from dev.registry.record_design_xsd_support import bundled_modelo_100_xsds, record_design_schema_violations
 
@@ -213,23 +223,126 @@ def test_the_oracle_read_the_real_schema_and_fails_on_a_planted_missing_element(
     assert "TACT" in violations[0]
 
 
-def test_income_with_no_stated_activity_key_refuses_by_its_box_and_writes_nothing(
+_REQUIRED_CONTENT_FINDING = "application.modelo.findings.xml_required_content_missing"
+
+
+class _CollectingPayloadConsumer:
+    """Stand in for the review package, which archives the bytes it is handed."""
+
+    def __init__(self) -> None:
+        self.payloads: list[FilingExportValidatedPayload] = []
+
+    def consume_validated_payload(self, payload: FilingExportValidatedPayload) -> None:
+        self.payloads.append(payload)
+
+
+def _refused_by_verification(revision: CalculationRevision) -> tuple[ModeloVerificationFinding, ...]:
+    """Verify on the real path and return the content findings of a report that must not grant."""
+    report = _verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="schema-acceptance",
+        workflow_profile=_autonomaworkflow_profile(),
+        settings=ready_clave_settings(_TAX_ID),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+    assert report.granted_verificado_completo is False
+    findings: tuple[ModeloVerificationFinding, ...] = tuple(report.findings)
+    return tuple(finding for finding in findings if finding.message_locale_key == _REQUIRED_CONTENT_FINDING)
+
+
+def _sealed(revision: CalculationRevision, objects: SecureObjectRepository) -> None:
+    """Hold a revision sealed before this check existed, which export must still judge on its own."""
+    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    with bundled_indexed_authority().operation() as operation:
+        catalogue = repository.load(operation=operation)
+    sealed = revision.model_copy(
+        update={
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+            "verified_at": _T0,
+            "verified_by": "schema-acceptance",
+        }
+    )
+    repository.save(
+        catalogue.model_copy(
+            update={"revisions": {**catalogue.revisions, revision.calculation_revision_id: sealed}},
+        )
+    )
+
+
+def _export(
+    revision: CalculationRevision,
+    objects: SecureObjectRepository,
+    output: Path,
+    *,
+    payload_consumer: _CollectingPayloadConsumer | None = None,
+) -> None:
+    _export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=revision.calculation_revision_id, output_path=output, actor="schema-acceptance"
+        ),
+        workflow_profile=_autonomaworkflow_profile(),
+        export_ports=modelo_export_ports_for_test(
+            bucket_id=_BUCKET_ID, taxpayer_tax_id=_TAX_ID, secure_objects=objects
+        ),
+        payload_consumer=payload_consumer,
+    )
+
+
+def test_income_with_no_stated_activity_key_blocks_verification_and_the_export_refuses_the_same_box(
     secure_objects: SecureObjectRepository, tmp_path: Path
 ) -> None:
     _seed_filer(criterion=_DEVENGO)
     revision = _calculate(secure_objects, activity_key=None)
     output = tmp_path / "modelo-100.xml"
 
+    (finding,) = _refused_by_verification(revision)
+    assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    assert finding.casilla_id == _box("TACT")
+    assert finding.message_facts["box"] == str(_box("TACT"))
+
+    _sealed(revision, secure_objects)
     with pytest.raises(ModeloExportError) as refused:
-        _verify_and_export(revision, secure_objects, output)
+        _export(revision, secure_objects, output)
 
     assert str(refused.value.translated_message).endswith("xml_value_required_missing")
-    assert (refused.value.context or {})["box"] == str(_box("TACT"))
+    assert (refused.value.context or {})["box"] == finding.message_facts["box"]
     assert not output.exists()
 
 
+def test_a_review_package_payload_is_refused_before_it_is_handed_over(
+    secure_objects: SecureObjectRepository, tmp_path: Path
+) -> None:
+    _seed_filer(criterion=_DEVENGO)
+    revision = _calculate(secure_objects, activity_key=None)
+    _sealed(revision, secure_objects)
+    consumer = _CollectingPayloadConsumer()
+
+    with pytest.raises(ModeloExportError) as refused:
+        _export(revision, secure_objects, tmp_path / "package.zip", payload_consumer=consumer)
+
+    assert str(refused.value.translated_message).endswith("xml_value_required_missing")
+    assert (refused.value.context or {})["box"] == str(_box("TACT"))
+    assert consumer.payloads == []
+    events = BucketEventHistoryRepository(objects=secure_objects).load()
+    assert BucketEventType.MODELO_EXPORTED not in {event.event_type for event in events.events.values()}
+
+
+def test_a_complete_return_reaches_the_review_package_consumer(
+    secure_objects: SecureObjectRepository, tmp_path: Path
+) -> None:
+    _seed_filer(criterion=_DEVENGO)
+    revision = _calculate(secure_objects, activity_key=_ACTIVITY_KEY)
+    _sealed(revision, secure_objects)
+    consumer = _CollectingPayloadConsumer()
+
+    _export(revision, secure_objects, tmp_path / "package.zip", payload_consumer=consumer)
+
+    (delivered,) = consumer.payloads
+    assert record_design_schema_violations(delivered.payload, xsd=_edition_xsd(_YEAR)) == ()
+
+
 @pytest.mark.parametrize("minor_children", [False, True])
-def test_a_claimed_descendant_minimum_with_no_identifying_row_refuses_rather_than_dropping_them(
+def test_a_claimed_descendant_minimum_with_no_identifying_row_blocks_verification_and_refuses_export(
     secure_objects: SecureObjectRepository, tmp_path: Path, minor_children: bool
 ) -> None:
     _seed_filer(criterion=_DEVENGO, family=_family_facts(minor_children=minor_children))
@@ -237,9 +350,13 @@ def test_a_claimed_descendant_minimum_with_no_identifying_row_refuses_rather_tha
     assert Decimal(revision.casilla_values[_box("MDES")]) > 0
     output = tmp_path / "modelo-100.xml"
 
+    (finding,) = _refused_by_verification(revision)
+    assert "Hijo" in str(finding.message_facts["box"])
+
+    _sealed(revision, secure_objects)
     with pytest.raises(ModeloExportError) as refused:
-        _verify_and_export(revision, secure_objects, output)
+        _export(revision, secure_objects, output)
 
     assert str(refused.value.translated_message).endswith("xml_value_required_missing")
-    assert "Hijo" in str((refused.value.context or {})["box"])
+    assert (refused.value.context or {})["box"] == finding.message_facts["box"]
     assert not output.exists()

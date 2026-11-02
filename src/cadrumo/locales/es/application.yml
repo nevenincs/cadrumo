@@ -2479,6 +2479,13 @@ application:
         para todos los periodos que no hubo retenciones. Registra las percepciones
         de cada perceptor en el detalle de este modelo, o confirma cada periodo en
         tu perfil.'
+      xml_required_content_missing: El esquema oficial exige la casilla %{box} y no
+        tiene valor, así que la exportación rechazaría esta declaración.
+      xml_return_not_rendered: No se puede generar el fichero de la declaración a
+        partir de este cálculo, así que la exportación lo rechazaría. Revisa tus datos
+        identificativos y las cifras de la declaración.
+      xml_value_refused: La casilla %{box} tiene un valor que el esquema oficial no
+        admite, así que la exportación rechazaría esta declaración.
     help:
       constraint:
         at_least: Como mínimo {minimum}.
@@ -2646,6 +2653,7 @@ application:
           el detalle de este modelo, o confirma cada periodo en tu perfil.
         enter_payee_payments: Introduce las percepciones de cada perceptor en el detalle
           de este modelo y vuelve a comprobar.
+        enter_required_statement: Rellena esta casilla y vuelve a calcular.
         enter_withholding_certificate: Introduce la retención que figura en el certificado
           de retenciones e ingresos a cuenta de tu pagador y vuelve a calcular.
         file_another_way: Cadrumo todavía no puede preparar esta declaración para

@@ -62,8 +62,10 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.situacion_familiar_m145_catalogue import (
     require_situacion_familiar_m145,
 )
+from ...domain.filing.errors import FilingExportError
 from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from ..filing.shared_owner_refusal import refuse_written_shared_owners
 from ._ports import FicheroBoeRecordRenderer
 from .m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
@@ -887,6 +889,13 @@ def export_m145_communication_record(
             f"Modelo 145 export layout {layout.id!r} declares mixed encodings: {sorted(encodings)!r}",
             context={"export_layout_id": layout.id, "encodings": tuple(sorted(encodings)), "reason": "encodings"},
         )
+    try:
+        refuse_written_shared_owners(layout, registry_snapshot=snapshot, casilla_values=dict(record.field_values))
+    except FilingExportError as exc:
+        raise M145CommunicationRecordExportError(
+            f"Modelo 145 export layout {layout.id!r} would write one box into unrelated cells",
+            context={"export_layout_id": layout.id, "reason": "shared_casilla_cells_unadjudicated"},
+        ) from exc
     payload = b"".join(
         _render_m145_export_record(record_definition, record, renderer=renderer) for record_definition in records
     )

@@ -31,6 +31,7 @@ import re
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import cast
 from xml.etree.ElementTree import Element
 
 from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry
@@ -138,6 +139,26 @@ def is_xml_value_refusal(error: BaseException) -> bool:
     """
     translated_message = getattr(error, "translated_message", None)
     return isinstance(translated_message, str) and translated_message.startswith(_VALUE_REFUSAL_PREFIX)
+
+
+def is_xml_required_content_refusal(error: BaseException) -> bool:
+    """Say whether ``error`` refuses a declaration for lacking content its schema requires."""
+    translated_message = getattr(error, "translated_message", None)
+    return isinstance(translated_message, str) and translated_message == _REQUIRED_MISSING
+
+
+def refused_xml_boxes(error: BaseException) -> tuple[str, ...]:
+    """Return every box a value or required-content refusal names, in the order it lists them.
+
+    Verification reads a refusal through this rather than walking the document again,
+    so the two cannot come to different answers about the same declaration.
+    """
+    context = getattr(error, "context", None)
+    if not isinstance(context, Mapping):
+        return ()
+    typed_context = cast("Mapping[str, object]", context)
+    listed = typed_context.get("refused_boxes", typed_context.get("box"))
+    return tuple(str(listed).split(", ")) if listed is not None else ()
 
 
 def xsd_declared_children(node: Element[str]) -> list[Element[str]]:
@@ -635,10 +656,12 @@ __all__ = [
     "XSD_NS",
     "XmlValueSchema",
     "canonical_xml_text",
+    "is_xml_required_content_refusal",
     "is_xml_value_refusal",
     "prune_childless_negative_blocks",
     "refuse_xml_missing_required_content",
     "refuse_xml_values_outside_schema",
+    "refused_xml_boxes",
     "xml_value_schema",
     "xsd_declared_children",
 ]

@@ -761,7 +761,10 @@ def test_verify_accepts_autonoma_m100_with_official_m130_observations(
     for period, c19_value in _AUTONOMA_M130_C19_BY_PERIOD.items():
         _import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
 
-    annual = _calculate_m100_annual(secure_objects)
+    annual = _calculate_m100_annual(
+        secure_objects,
+        text_casilla_inputs={M100_ACTIVITY_KEY_CASILLA: M100_ACTIVITY_KEY},
+    )
 
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA]) == Decimal("2400.00")

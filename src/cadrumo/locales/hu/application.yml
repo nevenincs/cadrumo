@@ -2437,6 +2437,13 @@ application:
         meg minden időszakra, hogy nem történt levonás. Rögzítsd a kedvezményezettenkénti
         kifizetéseket a nyomtatvány részletezésében, vagy erősítsd meg az egyes időszakokat
         a profilodban.'
+      xml_required_content_missing: A hivatalos séma megköveteli a(z) %{box} rovatot,
+        de nincs értéke, ezért az exportálás elutasítaná ezt a bevallást.
+      xml_return_not_rendered: Ebből a számításból nem készíthető el a bevallás fájlja,
+        ezért az exportálás elutasítaná. Ellenőrizd az azonosító adataidat és a bevallás
+        összegeit.
+      xml_value_refused: A(z) %{box} rovat olyan értéket tartalmaz, amelyet a hivatalos
+        séma nem enged meg, ezért az exportálás elutasítaná ezt a bevallást.
     help:
       constraint:
         at_least: Legalább {minimum}.
@@ -2605,6 +2612,7 @@ application:
           profilodban.
         enter_payee_payments: Rögzítsd a kedvezményezettenkénti kifizetéseket a nyomtatvány
           részletezésében, majd ellenőrizd újra.
+        enter_required_statement: Töltsd ki ezt a rovatot, majd számolj újra.
         enter_withholding_certificate: Írd be a kifizetőd igazolásán (certificado
           de retenciones e ingresos a cuenta) szereplő levont adót (retención), majd
           számolj újra.

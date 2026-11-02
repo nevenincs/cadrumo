@@ -162,6 +162,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.shared_casilla_cells_unadjudicated": (
             "application.modelo.work_form.finding_action.shared_box_awaits_review"
         ),
+        "application.modelo.findings.xml_required_content_missing": (
+            "application.modelo.work_form.finding_action.enter_required_statement"
+        ),
         # Figures that disagree.
         "application.modelo.findings.m303_m349_intracom_reconciliation_mismatch": (
             "application.modelo.work_form.finding_action.compare_figures"

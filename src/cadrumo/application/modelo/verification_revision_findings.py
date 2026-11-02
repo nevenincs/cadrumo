@@ -34,6 +34,7 @@ from .art20_advisory import art20_reduccion_advisory_finding
 from .art52_advisory import art52_reduccion_advisory_finding
 from .dt12_advisory import dt12_reduccion_advisory_finding
 from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
+from .export_content_findings import append_export_content_findings
 from .preconditions import ModeloPreconditionFailure
 from .shared_casilla_cells_findings import append_shared_casilla_cells_findings
 from .verification_finding_contracts import (
@@ -416,6 +417,15 @@ def collect_revision_verification_findings(
     append_shared_casilla_cells_findings(
         target=target,
         snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_export_content_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        profile=profile,
+        operation=operation,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
     )

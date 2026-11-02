@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....application.modelo import m145_communication_records
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationExportResult,
@@ -35,6 +36,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
+from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
@@ -212,6 +214,66 @@ def test_export_m145_communication_record_matches_canonical_encoder_for_money_an
         field_values=record.field_values,
     )
     assert result.payload == canonical_body
+
+
+def _with_a_shared_box(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+    """Repeat one box in a second record of a revision declaring a segment, the shape no bundled edition has."""
+    revision = snapshot.revision
+    layout = revision.export_layouts[0]
+    record = layout.records[0]
+    shared = next(field for field in record.fields if field.casilla_id == "perceptor.nombre")
+    repeated = record.model_copy(
+        update={
+            "id": f"{record.id}-planted",
+            "order": record.order + 1,
+            "fields": (shared.model_copy(update={"id": f"{shared.id}-planted"}),),
+        }
+    )
+    segmented = next(casilla for casilla in revision.casillas if casilla.id == "perceptor.nif")
+    return snapshot.model_copy(
+        update={
+            "revision": revision.model_copy(
+                update={
+                    "export_layouts": (layout.model_copy(update={"records": (record, repeated)}),),
+                    "casillas": tuple(
+                        casilla.model_copy(update={"segmento": "planted"}) if casilla is segmented else casilla
+                        for casilla in revision.casillas
+                    ),
+                }
+            )
+        }
+    )
+
+
+def test_export_m145_communication_record_refuses_a_box_written_into_unrelated_cells(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    real_snapshot = m145_communication_records._snapshot_for_scope
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+        monkeypatch.setattr(
+            m145_communication_records,
+            "_snapshot_for_scope",
+            lambda **scope: _with_a_shared_box(real_snapshot(**scope)),
+        )
+        with pytest.raises(M145CommunicationRecordExportError) as caught:
+            export_m145_communication_record(
+                record.communication_record_id[:12],
+                bucket_id=runtime.bucket_id,
+                renderer=RegistryFixedWidthRecordRenderer(),
+                ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+                operation=operation,
+            )
+
+    assert (caught.value.context or {})["reason"] == "shared_casilla_cells_unadjudicated"
 
 
 def test_export_m145_communication_record_refuses_invalid_record(

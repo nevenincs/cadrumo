@@ -551,6 +551,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.xml_return_content.accepted",
+        "modelo.work.verify.xml_return_content.refused",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.m210.agrupacion.valid",
         "modelo.work.verify.m210.agrupacion.invalid",
     ),
