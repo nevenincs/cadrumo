@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:40f8058518db13cc725b97e96741e4c7c8b65fc2c4fce56c922cc567b5da2d69'
+body_hash: 'sha256:04725e3711eed585572d6e55148636101b84ada6dea6debc28c9496c21d303eb'
 ---
 
 # `frontend-polish` plan
@@ -53,7 +53,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
 - [ ] `S10` - Complete remaining ledger workflow review across movements, invoices, documents, assets, registers and transfers; `native/desktop/frontend/src/components/ledger/`.
 - [x] `S19` - Keep declaration creation outcome holds across selection and navigation, and require authoritative completion plus a successful list refresh; `native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/src/components/modelo/WriteHoldNotice.tsx, native/desktop/frontend/src/components/modelo/declarations/, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts, native/desktop/frontend/tests/live/modelo-write-holds.unit.ts, dev/locales/desktop_workspace_keys.py, src/cadrumo/locales/`.
-- [ ] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/workspace/, native/desktop/frontend/src/components/modelo/filing/, native/desktop/frontend/tests/scenarios/modelo*.spec.ts`.
+- [ ] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/tests/scenarios/modelo*.spec.ts, native/desktop/frontend/tests/live/modelo-write-holds.unit.ts`.
 - [ ] `S21` - Expose returned reconciliation differences and advisory limitations using the Sol design brief and localized labels; `native/desktop/frontend/src/components/modelo/filing/, native/desktop/frontend/src/dev/, dev/locales/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [ ] `S11` - Complete modelo workflow review from declaration selection through editing, review, calculation, export and reconciliation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modelo.ts`.
 - [ ] `S23` - Keep AEAT progress uncertainty visible before the first snapshot and after a failed observation of completed work; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/shell/aeatSyncRun.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.

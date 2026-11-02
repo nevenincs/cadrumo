@@ -245,7 +245,7 @@ export function FilingView({
     alive.current = true;
     return () => {
       alive.current = false;
-      ++generation.current;
+      generation.current += 1;
     };
   }, [port, envelope, pending, holds, target]);
   const busy = notice?.kind === "busy";

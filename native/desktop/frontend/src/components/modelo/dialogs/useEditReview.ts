@@ -198,7 +198,7 @@ export function useEditReview({
     alive.current = true;
     return () => {
       alive.current = false;
-      ++checks.current;
+      checks.current += 1;
     };
   }, [holds, target, port]);
   useLayoutEffect(() => {
@@ -246,7 +246,7 @@ export function useEditReview({
         )
           return Promise.resolve(null);
         moved.current = true;
-        const current = () =>
+        const stillCurrent = () =>
           alive.current &&
           ticket === checks.current &&
           !holds.get(target) &&
@@ -256,9 +256,9 @@ export function useEditReview({
           stale,
           language,
           (next) => {
-            if (current()) setRenewed(next);
+            if (stillCurrent()) setRenewed(next);
           },
-          () => (current() ? onReread() : Promise.resolve(false)),
+          () => (stillCurrent() ? onReread() : Promise.resolve(false)),
         );
         renewing.current = running;
         void running.finally(() => {
@@ -306,11 +306,32 @@ export function useEditReview({
   });
   const editsKey = [...session.staged.keys()].join("\u0000");
   const baselineId = baseline?.baseline_id ?? null;
+  const previousCheck = useRef<{
+    open: boolean;
+    blocked: boolean;
+    editsKey: string;
+    baselineId: string | null;
+  } | null>(null);
   useEffect(() => {
+    const before = previousCheck.current;
+    previousCheck.current = { open, blocked, editsKey, baselineId };
+    const sameInputs =
+      before?.open === open &&
+      before.editsKey === editsKey &&
+      before.baselineId === baselineId;
+    if (sameInputs && before.blocked === blocked) return;
     // Nothing staged, as after an apply, has nothing to check.
     if (!open || blocked || editsKey === "") return;
+    // A definitive apply answer stays visible. Releasing its transient
+    // running hold is not a request to replace it with another preflight.
+    if (
+      sameInputs &&
+      before.blocked &&
+      (phase.kind === "not_applied" || phase.kind === "applied")
+    )
+      return;
     void latest.current();
-  }, [open, blocked, editsKey, baselineId]);
+  }, [open, blocked, editsKey, baselineId, phase.kind]);
 
   // A refused apply may name a source its box needs first; the worker holds
   // it for this window only, so it is read once, here, and stands while the
