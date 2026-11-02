@@ -162,6 +162,44 @@ def calculation_screen_outdated(
     return _screen_outdated(revision, snapshot, operation)
 
 
+def _refuse_outdated_screen(revision: CalculationRevision, *, action: str) -> ModeloCalculationBlockedError:
+    return ModeloCalculationBlockedError(
+        translated_message=calculation_screen_outdated_message_key(),
+        context={
+            "action": action,
+            "calculation_revision_id": revision.calculation_revision_id,
+            "reason": CALCULATION_SCREEN_OUTDATED_REASON,
+            "reasons": CALCULATION_SCREEN_OUTDATED_REASON,
+        },
+    )
+
+
+def require_work_unit_calculation_screen_current(
+    *, work_unit: WorkUnit, revision: CalculationRevision, action: str, operation: PinnedAuthorityOperation
+) -> None:
+    """Refuse ``action`` on ``work_unit`` while its ``revision`` is stale, without reading its notes.
+
+    The staleness is the one :func:`calculation_screen_outdated` answers: an
+    absent or differing screen stamp refuses, and a revision already recorded
+    as filed is never stale.
+
+    Raises:
+        ModeloCalculationBlockedError: The revision is stale.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
+    """
+    if calculation_screen_outdated(
+        revision,
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        operation=operation,
+    ):
+        raise _refuse_outdated_screen(revision, action=action)
+
+
 def require_work_unit_calculation_unblocked(
     *, work_unit: WorkUnit, revision: CalculationRevision, action: str, operation: PinnedAuthorityOperation
 ) -> None:
@@ -189,15 +227,7 @@ def require_work_unit_calculation_unblocked(
         )
     )
     if snapshot is not None and _screen_outdated(revision, snapshot, operation):
-        raise ModeloCalculationBlockedError(
-            translated_message=calculation_screen_outdated_message_key(),
-            context={
-                "action": action,
-                "calculation_revision_id": revision.calculation_revision_id,
-                "reason": CALCULATION_SCREEN_OUTDATED_REASON,
-                "reasons": CALCULATION_SCREEN_OUTDATED_REASON,
-            },
-        )
+        raise _refuse_outdated_screen(revision, action=action)
     if not blocking_calculation_issues(revision):
         return
     if snapshot is None:
@@ -213,5 +243,6 @@ __all__ = [
     "calculation_screen_outdated",
     "gate_refuses",
     "require_no_blocking_calculation_notes",
+    "require_work_unit_calculation_screen_current",
     "require_work_unit_calculation_unblocked",
 ]

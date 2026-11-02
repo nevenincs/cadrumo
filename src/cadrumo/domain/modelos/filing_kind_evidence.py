@@ -11,8 +11,9 @@ fichero parsed against the pinned record design, whose "Declaración
 complementaria" byte has the closed value domain blank or ``X``.
 ``LOCAL_REVISION`` is the kind of a revision Cadrumo itself filed locally; it is
 a local assertion and never filing grade by itself. Everything else -- the
-register request type, the declaration PDF and a page-level indicator whose
-meaning the design leaves open -- is recorded as a reading and admits nothing.
+register request type and the declaration PDF -- is recorded as a reading and
+admits nothing. A page-level indicator marks a continuation page and is not
+filing-kind evidence of any grade.
 Unknown is basis ``NONE`` with no kind, never a default ``ORIGINAL``.
 
 The shared predicate :func:`complementaria_only_source_outcome` is the one place
@@ -22,7 +23,7 @@ for an admitted ``ORIGINAL``.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from enum import StrEnum
 from typing import Final, Self
@@ -63,16 +64,18 @@ class FilingKindReadingSource(StrEnum):
     Attributes:
         SUBMITTED_FILE_MARKER: The submitted fichero's declaration-level
             complementaria byte; the only reading that can become a basis.
-        SUBMITTED_FILE_PAGE_INDICATOR: A page-level "Indicador de página
-            complementaria" whose meaning the record design does not settle.
-            Recorded, never admitted.
         REGISTER_TIPO_SOLICITUD: The register row's request type naming exactly
             one correction kind. Recorded, never admitted.
     """
 
     SUBMITTED_FILE_MARKER = "submitted_file_marker"
-    SUBMITTED_FILE_PAGE_INDICATOR = "submitted_file_page_indicator"
     REGISTER_TIPO_SOLICITUD = "register_tipo_solicitud"
+
+
+#: Source token of the page-position reading that earlier captures stored. The
+#: page indicator marks a continuation page, not a filing kind, so stored
+#: readings carrying it are ignored when an observation loads.
+_RETIRED_PAGE_INDICATOR_SOURCE: Final = "submitted_file_page_indicator"
 
 
 class FilingKindUnknownReason(StrEnum):
@@ -137,18 +140,12 @@ class SubmittedFileFilingKindMarker(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     declaration_marker: FilingKindReading
-    page_indicators: tuple[FilingKindReading, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _sources_match_roles(self) -> Self:
         if self.declaration_marker.source is not FilingKindReadingSource.SUBMITTED_FILE_MARKER:
             raise ValueError("a submitted-file declaration marker must be read from the marker position")
-        if any(
-            indicator.source is not FilingKindReadingSource.SUBMITTED_FILE_PAGE_INDICATOR
-            for indicator in self.page_indicators
-        ):
-            raise ValueError("submitted-file page indicators must be read from a page-indicator position")
         return self
 
 
@@ -168,6 +165,18 @@ class ObservedFilingKind(BaseModel):
     source_locator: str | None = Field(default=None, min_length=1, max_length=512)
     unknown_reason: FilingKindUnknownReason | None = None
     readings: tuple[FilingKindReading, ...] = ()
+
+    @field_validator("readings", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _drop_retired_page_indicator_readings(cls, value: object) -> object:
+        if not isinstance(value, (list, tuple)):
+            return value
+        return tuple(
+            reading
+            for reading in value
+            if not (isinstance(reading, Mapping) and reading.get("source") == _RETIRED_PAGE_INDICATOR_SOURCE)
+        )
 
     @field_validator("kind", mode="before")
     @classmethod
@@ -227,13 +236,6 @@ _DECLARATION_MARKER_KINDS: Final[dict[str, FilingDeclarationKind]] = {
     "X": FilingDeclarationKind.COMPLEMENTARIA,
 }
 
-#: Record-design content of the page-level indicator: "Blanco (No complementaria)
-#: o "C" (Complementaria)".
-_PAGE_INDICATOR_KINDS: Final[dict[str, FilingDeclarationKind]] = {
-    "": FilingDeclarationKind.ORIGINAL,
-    "C": FilingDeclarationKind.COMPLEMENTARIA,
-}
-
 
 def submitted_file_marker_reading(token: str, *, source_locator: str) -> FilingKindReading:
     """Read the declaration-level complementaria byte of a submitted fichero."""
@@ -241,17 +243,6 @@ def submitted_file_marker_reading(token: str, *, source_locator: str) -> FilingK
     return FilingKindReading(
         source=FilingKindReadingSource.SUBMITTED_FILE_MARKER,
         kind=_DECLARATION_MARKER_KINDS.get(stripped),
-        token=stripped,
-        source_locator=source_locator,
-    )
-
-
-def submitted_file_page_indicator_reading(token: str, *, source_locator: str) -> FilingKindReading:
-    """Read one page-level complementaria indicator of a submitted fichero."""
-    stripped = token.strip()
-    return FilingKindReading(
-        source=FilingKindReadingSource.SUBMITTED_FILE_PAGE_INDICATOR,
-        kind=_PAGE_INDICATOR_KINDS.get(stripped),
         token=stripped,
         source_locator=source_locator,
     )
@@ -300,7 +291,7 @@ def observed_filing_kind_from_capture(
     unadmitted = () if register_reading is None else (register_reading,)
     if marker is None:
         return _unknown(FilingKindUnknownReason.NO_ADMITTED_EVIDENCE, unadmitted)
-    readings = (marker.declaration_marker, *marker.page_indicators, *unadmitted)
+    readings = (marker.declaration_marker, *unadmitted)
     kind = marker.declaration_marker.kind
     if kind is None:
         return _unknown(FilingKindUnknownReason.UNREADABLE_MARKER, readings)
@@ -387,5 +378,4 @@ __all__ = [
     "observed_filing_kind_from_capture",
     "register_tipo_solicitud_reading",
     "submitted_file_marker_reading",
-    "submitted_file_page_indicator_reading",
 ]

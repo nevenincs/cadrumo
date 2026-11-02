@@ -9141,6 +9141,7 @@ workspace:
         link_aeat: Vincula la presentació de l'AEAT
         none: Res pendent
         open_local_draft: Obre l'esborrany local
+        recalculate: Torna a calcular
         start: Començar-la
       no_match: Cap declaració no coincideix amb «{query}».
       none_listed: No hi ha declaracions a la llista.

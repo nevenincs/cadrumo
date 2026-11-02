@@ -73,7 +73,6 @@ from .....domain.iva_compensation.filed_derivation import (
 from .....domain.modelos.filing_kind_evidence import (
     SubmittedFileFilingKindMarker,
     submitted_file_marker_reading,
-    submitted_file_page_indicator_reading,
 )
 from .errors import SedeParseError, SedeValidationError
 from .schema import (
@@ -359,9 +358,6 @@ def observed_filing_kind_marker_from_submitted_file(
     ``None`` means the marker was not read: the payload did not parse against
     the pinned layout, or the layout declares no single declaration-level marker.
 
-    Page-level indicators on records other than the marker's are kept as
-    unadmitted readings, one per occurrence.
-
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
@@ -378,7 +374,6 @@ def observed_filing_kind_marker_from_submitted_file(
         return None
     bindings_by_id = revision_bindings_by_id(snapshot.revision)
     markers: list[ParsedExportFieldValue] = []
-    indicators: list[ParsedExportFieldValue] = []
     for field_value in parsed.fields:
         definition = resolved.fields_by_id.get(field_value.field_id)
         if definition is None:
@@ -386,18 +381,11 @@ def observed_filing_kind_marker_from_submitted_file(
         role = filing_kind_marker_role(definition, bindings_by_id=bindings_by_id)
         if role is FilingKindMarkerRole.DECLARATION_MARKER:
             markers.append(field_value)
-        elif role is FilingKindMarkerRole.PAGE_INDICATOR:
-            indicators.append(field_value)
     if len(markers) != 1:
         return None
     (marker,) = markers
     return SubmittedFileFilingKindMarker(
         declaration_marker=submitted_file_marker_reading(marker.raw, source_locator=marker.source_locator),
-        page_indicators=tuple(
-            submitted_file_page_indicator_reading(indicator.raw, source_locator=indicator.source_locator)
-            for indicator in indicators
-            if indicator.record_id != marker.record_id
-        ),
     )
 
 

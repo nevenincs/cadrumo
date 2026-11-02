@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b7196334e73d66d94c507a7c20b2b7d5ed9e121109bfefe4dab0ec05d5f324c6'
+body_hash: 'sha256:6b865344ec21fabcd7b478d824a084ea975469c0a1aabae05a3812686942d110'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -235,6 +235,35 @@ related:
 - `S15` `verify:` `just check-types` -> `pass`
 - `S15` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 - `S15` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S14` `M` `dev/registry/compiler/validate_binding_grade_caps.py`
+- `S14` `M` `src/cadrumo/application/aggregation/tests/test_modelo_100_actividad_retencion_credit.py`
+- `S14` `M` `src/cadrumo/application/export/review_snapshot_loader.py`
+- `S14` `M` `src/cadrumo/application/modelo/advisory_binding_value.py`
+- `S14` `M` `src/cadrumo/application/modelo/calculation_screen.py`
+- `S14` `M` `src/cadrumo/application/modelo/tests/test_advisory_binding_value_gate.py`
+- `S14` `M` `src/cadrumo/application/modelo/tests/work_form_fixture.py`
+- `S14` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S14` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S14` `M` `src/cadrumo/application/storage/calc_sheets/review_labels.py`
+- `S14` `M` `src/cadrumo/application/storage/calc_sheets/review_workbook.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/binding_grade_cap_reach.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_m130_retenciones_gate_registration.py`
+- `S14` `M` `src/cadrumo/domain/renta/tests/test_retenciones_routing_integrity.py`
+- `S14` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_capped_retenciones.py`
+- `S14` `verify:` `focused pytest (1935 passed; 1 unrelated binding-definition failure)` -> `pass`
+- `S14` `verify:` `just check-style/check-format/check-types` -> `pass`
+- `S14` `verify:` `lint-imports 30 kept` -> `pass`
+- `S14` `verify:` `dev.registry.conformance valid; just check-bindings` -> `pass`
+- `S14` `by:` `implementation-engineer`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S05` `verify:` `pytest test_registry_scenarios.py` -> `pass`
+- `S05` `by:` `implementation-engineer`
+- `S14` `M` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S14` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_summary.py`
+- `S14` `verify:` `pytest-declarations-list+gate-agreement+tui-declarations` -> `pass`
+- `S14` `by:` `standard-executor`
 
 ## Notes
 
@@ -249,3 +278,6 @@ related:
 - `S15` Every target casilla of the 2022-2023 borrador profile is computed, so a real import stores no value and reports all five as unowned; installed stdio acceptance fixture updated but not run (disposable host only)
 - `S28` coordination with IVA and registry sessions happened after S16 landed; consumer-domain items forwarded to operator
 - `S15` phase-review fix
+- `S14` phase-review fix
+- `S05` phase-review fix
+- `S14` phase-review-fix

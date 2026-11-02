@@ -9156,6 +9156,7 @@ workspace:
         link_aeat: Vincular la presentación de la AEAT
         none: Nada pendiente
         open_local_draft: Abrir el borrador local
+        recalculate: Vuelve a calcular
         start: Empezarla
       no_match: Ninguna declaración coincide con «{query}».
       none_listed: No hay declaraciones en la lista.

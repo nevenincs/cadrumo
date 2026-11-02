@@ -218,6 +218,7 @@ class DeclarationListNextStep(StrEnum):
     START = "start"
     OPEN_LOCAL_DRAFT = "open_local_draft"
     CREATE_FILE = "create_file"
+    RECALCULATE = "recalculate"
     CONTINUE = "continue"
     NONE = "none"
 
@@ -226,6 +227,7 @@ _LOCAL_STEPS: Final[frozenset[DeclarationListNextStep]] = frozenset(
     {
         DeclarationListNextStep.OPEN_LOCAL_DRAFT,
         DeclarationListNextStep.CREATE_FILE,
+        DeclarationListNextStep.RECALCULATE,
         DeclarationListNextStep.CONTINUE,
         DeclarationListNextStep.NONE,
     }
@@ -273,7 +275,13 @@ def _local_step(row: DeclarationListRow) -> DeclarationListNextStep:
 
 
 def next_step(row: DeclarationListRow) -> DeclarationListNextStep | None:
-    """The step the row offers: fixing what blocks it, starting a due return, or opening its local work."""
+    """The step the row offers: fixing what blocks it, starting a due return, or opening its local work.
+
+    A calculation the note gate refuses as stale is calculated again first, as the form's next step is.
+    """
+    summary = None if row.declaration is None else row.declaration.summary
+    if summary is not None and summary.calculation_outdated and row.state not in _CLOSED_STATES:
+        return DeclarationListNextStep.RECALCULATE
     if row.state == "blocked":
         return DeclarationListNextStep.FIX
     if row.state == "not_started":
