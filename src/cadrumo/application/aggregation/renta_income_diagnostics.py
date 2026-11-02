@@ -12,7 +12,6 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from types import MappingProxyType
 from typing import NamedTuple
 
 from ...core.aggregation import LedgerWithholdingDerivation
@@ -184,7 +183,7 @@ class RectificativaReading(NamedTuple):
 class ReceivedRectificativaReading(NamedTuple):
     """What the received corrections of a window take off each invoice they name."""
 
-    fractions: Mapping[str, Decimal] = MappingProxyType({})
+    fractions: Mapping[str, Decimal]
     """The share of each corrected invoice the window's corrections remove, keyed by its id."""
     netted: tuple[Invoice, ...] = ()
     refused: tuple[str, ...] = ()
@@ -295,6 +294,7 @@ def rectificativa_reading(
     usable = criteria.usable(window_end.year)
     if usable is ActivityImputationCriterion.COBROS_Y_PAGOS:
         return RectificativaReading(
+            fractions={},
             refused=_cash_refund_refusals(
                 invoices,
                 transactions,
@@ -302,7 +302,7 @@ def rectificativa_reading(
                 bucket_id=bucket_id,
                 window_start=window_start,
                 window_end=window_end,
-            )
+            ),
         )
     if usable is not ActivityImputationCriterion.DEVENGO:
         return RectificativaReading()
@@ -345,6 +345,7 @@ def received_rectificativa_reading(
     usable = criteria.usable(window_end.year)
     if usable is ActivityImputationCriterion.COBROS_Y_PAGOS:
         return ReceivedRectificativaReading(
+            fractions={},
             refused=_cash_refund_refusals(
                 invoices,
                 transactions,
@@ -352,10 +353,10 @@ def received_rectificativa_reading(
                 bucket_id=bucket_id,
                 window_start=window_start,
                 window_end=window_end,
-            )
+            ),
         )
     if usable is not ActivityImputationCriterion.DEVENGO:
-        return ReceivedRectificativaReading()
+        return ReceivedRectificativaReading({})
     read = _read_corrections(
         invoices,
         kind=InvoiceKind.RECEIVED,

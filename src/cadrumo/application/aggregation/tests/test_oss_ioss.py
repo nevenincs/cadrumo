@@ -323,6 +323,7 @@ def test_a_figure_differing_from_the_projected_destination_rate_is_a_coverage_ga
     """16 EUR is not refuted by a rate that is only projected, so it stays a refusal on the registry's reach."""
     with pytest.raises(IvaRateNotFoundError) as refused:
         validate_oss_ioss_observation(_projected_de_candidate(Decimal("16")))
+    assert refused.value.context is not None
     assert refused.value.context["rate_registry_covers_date"] is False
 
 

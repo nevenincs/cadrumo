@@ -966,11 +966,11 @@ def _receipt_unresolved(
     # Under accrual a correction reduces the year's income, so money coming in on one has no reading.
     if is_rectificativa(invoice):
         return ImputationUnresolved.RECTIFICATIVA_WITH_RECEIPT
-    # A shared receipt of an invoice whose figures cannot be shared out stands for nothing known.
+    # A shared receipt of an invoice whose figures cannot be shared out, or a lone receipt
+    # above the invoice, stands for nothing known: cash past the invoice is not its income.
     if (
-        len(invoice.linked_transaction_ids) != 1
-        and renta_income_evidence.part_payment_share(invoice, transaction) is None
-    ):
+        len(invoice.linked_transaction_ids) != 1 or renta_income_evidence.receipt_overpays_invoice(invoice, transaction)
+    ) and renta_income_evidence.part_payment_share(invoice, transaction) is None:
         return ImputationUnresolved.ACCRUAL_UNKNOWN
     return None
 
@@ -993,32 +993,9 @@ def _imputed_income_date_or_issue(
         on is not None and cumulative_start <= on <= cumulative_end
         for on in (cash, accrual, transaction.accrual_date, entry)
     )
-    imputed = impute_ledger_row(transaction, invoice, kind=InvoiceKind.ISSUED, criteria=criteria)
-    # A capital subsidy follows its asset's amortization under either criterion, and no
-    # ledger row carries a schedule: AEAT Manual Renta, ch. 6, citing STS 398/2022.
-    if str(transaction.concepto_ingreso) == _CAPITAL_SUBSIDY_CONCEPT:
-        imputed = ImputationUnresolved.CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN
-    # Under accrual a correction reduces the year's income, so money coming in on one has no reading.
-    elif (
-        invoice is not None
-        and accrual is not None
-        and is_rectificativa(invoice)
-        and criteria.usable(accrual.year) is ActivityImputationCriterion.DEVENGO
-    ):
-        imputed = ImputationUnresolved.RECTIFICATIVA_WITH_RECEIPT
-    # A shared receipt of an invoice whose figures cannot be shared out, or a lone receipt
-    # above the invoice, stands for nothing known: cash past the invoice is not its income.
-    elif (
-        invoice is not None
-        and accrual is not None
-        and (
-            len(invoice.linked_transaction_ids) != 1
-            or renta_income_evidence.receipt_overpays_invoice(invoice, transaction)
-        )
-        and criteria.usable(accrual.year) is ActivityImputationCriterion.DEVENGO
-        and renta_income_evidence.part_payment_share(invoice, transaction) is None
-    ):
-        imputed = ImputationUnresolved.ACCRUAL_UNKNOWN
+    imputed = _receipt_unresolved(transaction, invoice, accrual, criteria) or impute_ledger_row(
+        transaction, invoice, kind=InvoiceKind.ISSUED, criteria=criteria
+    )
     if isinstance(imputed, ImputationUnresolved):
         if not in_window:
             return None

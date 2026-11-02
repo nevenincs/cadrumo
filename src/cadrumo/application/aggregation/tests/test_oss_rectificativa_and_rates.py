@@ -265,4 +265,5 @@ def test_a_figure_differing_from_a_projected_rate_is_a_coverage_gap_not_a_mismat
             ),
             period=_UNION.period(uncovered),
         )
+    assert refused.value.context is not None
     assert refused.value.context["rate_registry_covers_date"] is False
