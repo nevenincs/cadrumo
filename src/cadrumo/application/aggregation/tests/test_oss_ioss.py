@@ -304,6 +304,25 @@ def test_validation_accepts_candidate_matching_destination_fr_general_rate() -> 
     assert observation.iva_amount == Decimal("20")
 
 
+@pytest.mark.parametrize("iva", (Decimal("19"), Decimal("16")))
+def test_validation_never_judges_a_supply_against_a_projected_destination_rate(iva: Decimal) -> None:
+    """The DE table starts in mid-2025, so an earlier supply's rate is only projected.
+
+    Neither figure is confirmed or refuted: 19 EUR would pass on the nearest edition
+    and 16 EUR would fail on it, so both stay the refusal on the registry's reach.
+    """
+    candidate = _candidate(
+        destination=EUMemberState.from_registry("de"),
+        rate_kind=IvaRateKind("general"),
+        base=Decimal("100"),
+        iva=iva,
+        transaction_date=date(2025, 6, 30),
+    )
+
+    with pytest.raises(IvaRateNotFoundError):
+        validate_oss_ioss_observation(candidate)
+
+
 def test_validation_rejects_candidate_with_iva_off_by_six_euros_on_destination_de() -> None:
     """A line declaring 25 EUR IVA on base 100 EUR for destination DE
     is inconsistent with DE's 19 % general rate. The wrapper rejects
