@@ -473,10 +473,118 @@ def test_an_unverified_territory_is_unavailable_rather_than_national_only(operat
     assert resolved.reason is PaymentCutoffUnavailableReason.TERRITORY_UNVERIFIED
 
 
-def test_a_modelo_without_a_declared_clause_has_no_cutoff(operation: PinnedAuthorityOperation) -> None:
-    window = _window("303", 2026, "4T", operation).model_copy(update={"payment_cutoff_on": None})
+# ---------------------------------------------------------------------------
+# Other Anexo II modelos.
+#
+# Modelos 111, 115, 117, 123, 126 and 128: "Obligación trimestral de
+# presentación: Desde el día 1 hasta el 15 de los meses de abril, julio, octubre
+# y enero", and monthly from the 1st to the 15th of every filing month; filing
+# closes on the 20th (RD 439/2007 art. 108.1). Modelos 130 and 131: day 15 of
+# April, July and October and day 25 of January; filing closes on the 20th and,
+# for the fourth quarter, on 30 January (RD 439/2007 art. 111.1).
+# ---------------------------------------------------------------------------
 
-    resolved = resolve_payment_cutoff("130", window, operation=operation)
+
+@pytest.mark.parametrize("modelo", ("111", "115", "117", "123", "126", "128"))
+@pytest.mark.parametrize(
+    ("year", "code", "expected"),
+    (
+        # Wednesday 15 April 2026; filing closes Monday 20 April, so nothing
+        # extends and 16, 17 and 20 April leave the margin.
+        (2026, "1T", date(2026, 4, 15)),
+        # Thursday 15 January 2026; filing closes Tuesday 20 January.
+        (2025, "4T", date(2026, 1, 15)),
+    ),
+    ids=("1t-2026", "4t-2025"),
+)
+def test_a_quarterly_withholding_modelo_derives_day_15_of_the_filing_month(
+    modelo: str,
+    year: int,
+    code: str,
+    expected: date,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    derived = derive_payment_cutoff(modelo, _window(modelo, year, code, operation), operation=operation)
+
+    assert isinstance(derived, DerivedPaymentCutoff), (modelo, derived)
+    assert derived.cutoff_on == expected
+    assert derived.extension_days == 0
+    assert derived.clause.variant_id == f"domiciliation-cutoff-clause:{modelo}:quarterly"
+    assert "orden-eha-1658-2009:anexo-ii" in derived.legal_refs
+    assert "rd-439-2007:art-108" in derived.legal_refs
+
+
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    (
+        # Anexo day Sunday 15 February 2026; filing closes Friday 20 February.
+        # AEAT's practice takes the latest business day leaving three business
+        # days: Tuesday 17 (18, 19 and 20). The 2026 calendar prints 17.
+        ("01", date(2026, 2, 17)),
+        # Nominal close Saturday 20 June 2026 moves to Monday 22, two days, so
+        # the Anexo day moves from 15 to Wednesday 17 June, which leaves 18, 19
+        # and 22. The 2026 calendar prints 17.
+        ("05", date(2026, 6, 17)),
+    ),
+    ids=("01-weekend-anexo-day", "05-extended-close"),
+)
+def test_a_monthly_modelo_111_derives_from_day_15_of_the_following_month(
+    code: str,
+    expected: date,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    derived = derive_payment_cutoff("111", _window("111", 2026, code, operation), operation=operation)
+
+    assert isinstance(derived, DerivedPaymentCutoff), derived
+    assert derived.cutoff_on == expected
+    assert derived.clause.variant_id == "domiciliation-cutoff-clause:111:monthly"
+
+
+def test_a_monthly_modelo_111_period_12_cuts_off_on_15_january(operation: PinnedAuthorityOperation) -> None:
+    # Period 12 of 2025 is filed in January 2026, whose Anexo day is Thursday 15
+    # January; filing closes Tuesday 20 January.
+    derived = derive_payment_cutoff("111", _window("111", 2025, "12", operation), operation=operation)
+
+    assert isinstance(derived, DerivedPaymentCutoff), derived
+    assert derived.anexo_on == date(2026, 1, 15)
+    assert derived.cutoff_on == date(2026, 1, 15)
+
+
+@pytest.mark.parametrize("modelo", ("130", "131"))
+@pytest.mark.parametrize(
+    ("year", "code", "expected_anexo", "expected"),
+    (
+        # Wednesday 15 July 2026; filing closes Monday 20 July.
+        (2026, "2T", date(2026, 7, 15), date(2026, 7, 15)),
+        # Anexo day Sunday 25 January 2026; filing closes Friday 30 January.
+        # AEAT's practice takes Tuesday 27, which leaves 28, 29 and 30; the 2026
+        # calendar prints "4T 25: 1 al 27 de enero" for both modelos.
+        (2025, "4T", date(2026, 1, 25), date(2026, 1, 27)),
+    ),
+    ids=("2t-2026", "4t-2025"),
+)
+def test_a_pago_fraccionado_modelo_derives_the_303_quarterly_days(
+    modelo: str,
+    year: int,
+    code: str,
+    expected_anexo: date,
+    expected: date,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    derived = derive_payment_cutoff(modelo, _window(modelo, year, code, operation), operation=operation)
+
+    assert isinstance(derived, DerivedPaymentCutoff), (modelo, derived)
+    assert derived.anexo_on == expected_anexo
+    assert derived.cutoff_on == expected
+    assert "rd-439-2007:art-111" in derived.legal_refs
+    assert _DOMICILIATION_CALENDAR_SOURCE in derived.source_refs
+
+
+def test_a_modelo_without_a_declared_clause_has_no_cutoff(operation: PinnedAuthorityOperation) -> None:
+    # Anexo II lists Modelo 216, but the registry declares no clause for it.
+    window = _window("216", 2026, "1T", operation).model_copy(update={"payment_cutoff_on": None})
+
+    resolved = resolve_payment_cutoff("216", window, operation=operation)
 
     assert isinstance(resolved, UnavailablePaymentCutoff)
     assert resolved.reason is PaymentCutoffUnavailableReason.NO_CLAUSE
