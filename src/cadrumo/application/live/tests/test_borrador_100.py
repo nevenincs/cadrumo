@@ -14,7 +14,10 @@ from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..borrador_100 import (
+    Borrador100RefusedSnapshot,
     Borrador100Snapshot,
+    Borrador100SnapshotReading,
+    Borrador100SnapshotRefusalReason,
     Borrador100SnapshotService,
     BorradorSnapshotNotFoundError,
     derive_borrador_100_snapshot_id,
@@ -177,25 +180,75 @@ def test_borrador_100_snapshot_identity_ignores_the_capture_instant_and_follows_
 def test_borrador_reads_refuse_a_stored_key_the_pinned_revision_does_not_admit(stored_key: str) -> None:
     repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
-    stored = service.capture(
+    values = {stored_key: Decimal("15.25")}
+    with bundled_indexed_authority().operation() as pinned:
+        ref = pinned.snapshot("100", filing_year=2025, period="0A").snapshot_ref
+    stored = Borrador100Snapshot(
+        snapshot_id=derive_borrador_100_snapshot_id(
+            filing_year=2025,
+            period=_PERIOD,
+            registry_snapshot_ref=ref,
+            source_url=_SOURCE,
+            binding_values=values,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo="100",
         filing_year=2025,
         period=_PERIOD,
+        registry_snapshot_ref=ref,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
-        binding_values={stored_key: Decimal("15.25")},
+        state=SnapshotLifecycleState.ACTIVE,
+        binding_values=values,
     )
+    repository.save(stored)
 
     with bundled_indexed_authority().operation() as operation:
         for read in (
             lambda: service.show(stored.snapshot_id, operation=operation),
             lambda: service.list_snapshots(operation=operation),
-            lambda: service.latest_for_year(filing_year=2025, operation=operation),
         ):
             with pytest.raises(LiveApplicationInputError) as refused:
                 read()
             assert refused.value.translated_message == "application.live.borrador.errors.binding_keys_not_admitted"
             assert refused.value.context == {"bindings": stored_key}
-    assert repository.load(stored.snapshot_id).binding_values == {stored_key: Decimal("15.25")}
+        expected = Borrador100SnapshotReading(
+            readable=(),
+            refused=(
+                Borrador100RefusedSnapshot(
+                    snapshot=stored, reason=Borrador100SnapshotRefusalReason.BINDING_KEYS_NOT_ADMITTED
+                ),
+            ),
+        )
+        assert service.read_snapshots(operation=operation) == expected
+        assert service.read_latest_for_year(filing_year=2025, operation=operation) == expected
+    assert repository.load(stored.snapshot_id).binding_values == values
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        pytest.param("casilla.0596", id="free-casilla-key"),
+        pytest.param("renta-retencion-trabajo-retirada", id="binding-the-revision-does-not-declare"),
+        pytest.param("renta-profile-minimo-descendientes-estatal", id="binding-not-admitted-to-the-borrador"),
+    ],
+)
+def test_borrador_capture_refuses_a_key_the_pinned_revision_does_not_admit_before_any_write(key: str) -> None:
+    repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
+    service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
+
+    with pytest.raises(LiveApplicationInputError) as refused:
+        service.capture(
+            filing_year=2025,
+            period=_PERIOD,
+            captured_at=_CAPTURED_AT,
+            source_url=_SOURCE,
+            binding_values={"renta-certificado-trabajo-retenciones": Decimal("1.00"), key: Decimal("15.25")},
+        )
+
+    assert refused.value.translated_message == "application.live.borrador.errors.binding_keys_not_admitted"
+    assert refused.value.context == {"bindings": key}
+    assert repository.list_snapshots() == ()
 
 
 def test_borrador_show_refuses_persisted_registry_revision_divergence() -> None:

@@ -6,7 +6,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from ...application.live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotService
+from ...application.live.borrador_100 import (
+    Borrador100Snapshot,
+    Borrador100SnapshotRefusalReason,
+    Borrador100SnapshotService,
+    derive_borrador_100_snapshot_id,
+)
 from ...application.live.borrador_100_contracts import (
     Borrador100ImportProjection,
     Borrador100ImportRequest,
@@ -14,6 +19,7 @@ from ...application.live.borrador_100_contracts import (
     Borrador100QuerySummary,
     Borrador100ReadProjection,
     Borrador100ReadRequest,
+    Borrador100RefusedSnapshotSummary,
     Borrador100SnapshotDetail,
 )
 from ...application.live.borrador_100_operation import (
@@ -83,6 +89,29 @@ def _seed_superseded_pair(context: ConformanceFamilyContext, year: int) -> Borra
     return active
 
 
+def _seed_legacy_snapshot(context: ConformanceFamilyContext, year: int) -> Borrador100Snapshot:
+    """Store an active snapshot keyed by a free casilla id, as the earlier key contract wrote it."""
+    period = Period.from_year_and_code(year, _ANNUAL)
+    ref = context.operation.snapshot("100", filing_year=year, period=_ANNUAL).snapshot_ref
+    values = {"casilla.0596": Decimal("15.25")}
+    snapshot = Borrador100Snapshot(
+        snapshot_id=derive_borrador_100_snapshot_id(
+            filing_year=year, period=period, registry_snapshot_ref=ref, source_url=_SOURCE_URL, binding_values=values
+        ),
+        bucket_id=str(context.profile_id),
+        modelo="100",
+        filing_year=year,
+        period=period,
+        registry_snapshot_ref=ref,
+        captured_at=_FIRST_CAPTURED_AT,
+        source_url=_SOURCE_URL,
+        state=SnapshotLifecycleState.ACTIVE,
+        binding_values=values,
+    )
+    build_borrador_100_snapshot_repository(bucket_id=str(context.profile_id)).save(snapshot)
+    return snapshot
+
+
 def _prepare_read(context: ConformanceFamilyContext) -> ConformancePreparation:
     year = _filing_year()
     active = _seed_superseded_pair(context, year)
@@ -108,8 +137,10 @@ def _prepare_read(context: ConformanceFamilyContext) -> ConformancePreparation:
 
 
 def _prepare_query(context: ConformanceFamilyContext) -> ConformancePreparation:
+    """List the active snapshots: the valid one is a row, the legacy one is named as refused."""
     year = _filing_year()
     active = _seed_superseded_pair(context, year)
+    legacy = _seed_legacy_snapshot(context, year - 1)
     return ConformancePreparation(
         subject_ref=profile_operation_subject(str(context.profile_id)),
         request=Borrador100ReadRequest(profile_id=context.profile_id, kind="list"),
@@ -124,6 +155,16 @@ def _prepare_query(context: ConformanceFamilyContext) -> ConformancePreparation:
                     captured_at=_SECOND_CAPTURED_AT,
                     binding_count=1,
                     state=SnapshotLifecycleState.ACTIVE,
+                ),
+            ),
+            refused_snapshots=(
+                Borrador100RefusedSnapshotSummary(
+                    snapshot_id=legacy.snapshot_id,
+                    filing_year=year - 1,
+                    period=PublicPeriod(filing_year=year - 1, code=_ANNUAL),
+                    captured_at=_FIRST_CAPTURED_AT,
+                    state=SnapshotLifecycleState.ACTIVE,
+                    reason=Borrador100SnapshotRefusalReason.BINDING_KEYS_NOT_ADMITTED,
                 ),
             ),
         ),

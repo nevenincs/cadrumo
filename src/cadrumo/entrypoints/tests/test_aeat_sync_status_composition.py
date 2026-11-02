@@ -1,8 +1,9 @@
-"""The composed AEAT sync status dates the IVA wallet area from what its capture stores."""
+"""The composed AEAT sync status dates each area from what its stored captures hold."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -22,7 +23,18 @@ from ...adapters.persistence.storage.errors import (
 )
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.aeat_sync.status_operation import load_aeat_sync_status
-from ...application.aeat_sync.workspace import AeatSyncAreaState, AeatSyncStatusArea
+from ...application.aeat_sync.workspace import (
+    AeatSyncAreaState,
+    AeatSyncRefusedSnapshotV1,
+    AeatSyncStatusArea,
+)
+from ...application.live.borrador_100 import (
+    Borrador100Snapshot,
+    Borrador100SnapshotRefusalReason,
+    Borrador100SnapshotService,
+    derive_borrador_100_snapshot_id,
+)
+from ...application.live.snapshot_base import SnapshotLifecycleState
 from ...application.persistence_errors import PersistenceDegradationError
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.config import load_settings
@@ -33,6 +45,7 @@ from ...core.storage_taxonomy_locations import storage_path
 from ...core.time.clock import frozen_clock
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
+from ..adapter_composition_ports import build_borrador_100_snapshot_repository
 from ..aeat_sync_status_composition import compose_aeat_sync_status_ports, degrade_storage_failure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -73,6 +86,96 @@ def _store_filed(operation: PinnedAuthorityOperation, *, modelo: str) -> None:
         ),
         operation=operation,
     )
+
+
+def _store_legacy_borrador(operation: PinnedAuthorityOperation, bucket_id: str) -> Borrador100Snapshot:
+    """Store an active 2023 borrador keyed by a free casilla id, as the earlier key contract did."""
+    period = Period.from_year_and_code(2023, "0A")
+    ref = operation.snapshot("100", filing_year=2023, period="0A").snapshot_ref
+    values = {"casilla.0596": Decimal("15.25")}
+    source = "file-import:sha256:" + "1" * 64
+    snapshot = Borrador100Snapshot(
+        snapshot_id=derive_borrador_100_snapshot_id(
+            filing_year=2023, period=period, registry_snapshot_ref=ref, source_url=source, binding_values=values
+        ),
+        bucket_id=bucket_id,
+        modelo="100",
+        filing_year=2023,
+        period=period,
+        registry_snapshot_ref=ref,
+        captured_at=_CAPTURED_AT,
+        source_url=source,
+        state=SnapshotLifecycleState.ACTIVE,
+        binding_values=values,
+    )
+    build_borrador_100_snapshot_repository(bucket_id=bucket_id).save(snapshot)
+    return snapshot
+
+
+def _capture_borrador(operation: PinnedAuthorityOperation, bucket_id: str, *, captured_at: datetime) -> str:
+    """Capture an admitted 2025 borrador through the canonical service."""
+    service = Borrador100SnapshotService(
+        bucket_id=bucket_id, repository=build_borrador_100_snapshot_repository(bucket_id=bucket_id)
+    )
+    return service.capture(
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "0A"),
+        captured_at=captured_at,
+        source_url="file-import:sha256:" + "2" * 64,
+        binding_values={"renta-certificado-trabajo-retenciones": Decimal("100.00")},
+        operation=operation,
+    ).snapshot_id
+
+
+def _status(operation: PinnedAuthorityOperation, bucket_id: str, *, days_later: int):
+    return load_aeat_sync_status(
+        compose_aeat_sync_status_ports(load_settings(), bucket_id, operation),
+        bucket_id=bucket_id,
+        observed_at=_CAPTURED_AT + timedelta(days=days_later),
+        operation=operation,
+    )
+
+
+def _area(result, area: AeatSyncStatusArea):
+    return next(item for item in result.status.areas if item.area is area)
+
+
+def test_a_legacy_borrador_is_named_as_refused_while_the_valid_one_and_other_areas_still_read(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    valid_at = _CAPTURED_AT + timedelta(days=2)
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        legacy = _store_legacy_borrador(operation, runtime.bucket_id)
+        _capture_borrador(operation, runtime.bucket_id, captured_at=valid_at)
+        _store_filed(operation, modelo="303")
+        result = _status(operation, runtime.bucket_id, days_later=3)
+
+    borrador = _area(result, AeatSyncStatusArea.BORRADOR_100)
+    assert (borrador.state, borrador.last_brought_at, borrador.refusal) == (AeatSyncAreaState.CURRENT, valid_at, None)
+    assert borrador.refused_snapshots == (
+        AeatSyncRefusedSnapshotV1(
+            snapshot_id=legacy.snapshot_id, reason=Borrador100SnapshotRefusalReason.BINDING_KEYS_NOT_ADMITTED
+        ),
+    )
+    wallet = _area(result, AeatSyncStatusArea.IVA_WALLET)
+    assert (wallet.state, wallet.last_brought_at) == (AeatSyncAreaState.CURRENT, _CAPTURED_AT)
+
+
+def test_a_profile_holding_only_a_legacy_borrador_reads_it_as_unavailable_not_never_brought(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        legacy = _store_legacy_borrador(operation, runtime.bucket_id)
+        result = _status(operation, runtime.bucket_id, days_later=1)
+
+    borrador = _area(result, AeatSyncStatusArea.BORRADOR_100)
+    assert (borrador.state, borrador.last_brought_at, borrador.refusal) == (
+        AeatSyncAreaState.UNAVAILABLE,
+        None,
+        "aeat_sync.status.capture_refused",
+    )
+    assert [item.snapshot_id for item in borrador.refused_snapshots] == [legacy.snapshot_id]
+    assert _area(result, AeatSyncStatusArea.NOTIFICATIONS).state is AeatSyncAreaState.NEVER_BROUGHT
 
 
 def _iva_wallet(operation: PinnedAuthorityOperation, bucket_id: str, *, days_later: int):

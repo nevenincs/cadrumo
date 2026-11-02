@@ -54,6 +54,7 @@ from .workspace import (
     AeatSyncJustificanteState,
     AeatSyncLocalFilingState,
     AeatSyncOverviewArea,
+    AeatSyncRefusedSnapshotV1,
     AeatSyncSourceState,
     AeatSyncStatusArea,
     AeatSyncStatusV1,
@@ -93,6 +94,8 @@ _AEAT_SOURCES: Final[frozenset[AeatSyncWorkspaceSource]] = frozenset(
 )
 
 _NEVER_PULLED: Final[str] = "workbench.aeat_sync.never_pulled"
+_CAPTURE_REFUSED: Final[NamespacedId] = "aeat_sync.status.capture_refused"
+"""Every stored capture of the area was refused, so none can date it."""
 _READER_NOT_COMPOSED: Final[str] = "workbench.aeat_sync.local_reader_not_composed"
 """A local authority exists, but this session did not compose its reader.
 
@@ -807,6 +810,7 @@ class AeatSyncStatusSources:
     notifications: AeatSyncNotificationsCapture | None = None
     iva_wallet_captured_at: UtcInstant | None = None
     borrador_imported_at: UtcInstant | None = None
+    borrador_refused: tuple[AeatSyncRefusedSnapshotV1, ...] = ()
     identity_checked_at: UtcInstant | None = None
     unreadable: Mapping[AeatSyncStatusArea, NamespacedId] = field(default_factory=lambda: MappingProxyType({}))
 
@@ -820,6 +824,7 @@ def _area_status(
     attempt: AeatSyncAreaAttempt | None = None,
     unread_notification_count: int | None = None,
     filed_rows: tuple[AeatSyncFiledRowV1, ...] | None = None,
+    refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...] = (),
 ) -> AeatSyncAreaStatusV1:
     """Judge one area against its backend-owned horizon.
 
@@ -837,6 +842,15 @@ def _area_status(
             refusal=refusal,
             last_attempt_at=last_attempt_at,
             last_attempt_succeeded=last_attempt_succeeded,
+        )
+    if captured_at is None and refused_snapshots:
+        return AeatSyncAreaStatusV1(
+            area=area,
+            state=AeatSyncAreaState.UNAVAILABLE,
+            refusal=_CAPTURE_REFUSED,
+            last_attempt_at=last_attempt_at,
+            last_attempt_succeeded=last_attempt_succeeded,
+            refused_snapshots=refused_snapshots,
         )
     if captured_at is None:
         return AeatSyncAreaStatusV1(
@@ -856,6 +870,7 @@ def _area_status(
         unread_notification_count=unread_notification_count,
         filed_periods=None if filed_rows is None else _filed_period_counts(filed_rows),
         filed_rows=filed_rows,
+        refused_snapshots=refused_snapshots,
     )
 
 
@@ -1026,7 +1041,13 @@ def read_aeat_sync_status(
             ),
             judge(AeatSyncStatusArea.IVA_WALLET, sources.iva_wallet_captured_at),
             _filed_area_status(sources, observed_at=observed_at),
-            judge(AeatSyncStatusArea.BORRADOR_100, sources.borrador_imported_at),
+            _area_status(
+                AeatSyncStatusArea.BORRADOR_100,
+                observed_at=observed_at,
+                captured_at=sources.borrador_imported_at,
+                refusal=sources.unreadable.get(AeatSyncStatusArea.BORRADOR_100),
+                refused_snapshots=sources.borrador_refused,
+            ),
         ),
         filed_declaration_years=filed_declaration_years,
         iva_wallet_years=iva_wallet_years,

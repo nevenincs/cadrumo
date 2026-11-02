@@ -89,7 +89,9 @@ def _invoke(profile: NativeCliProfileFixture, *command: str, json_output: bool =
     return result
 
 
-def _import(profile: NativeCliProfileFixture, pdf: Path, *, filing_year: int = _FIXTURE_YEAR) -> Result:
+def _import(
+    profile: NativeCliProfileFixture, pdf: Path, *, filing_year: int = _FIXTURE_YEAR, json_output: bool = True
+) -> Result:
     return _invoke(
         profile,
         "app",
@@ -101,6 +103,7 @@ def _import(profile: NativeCliProfileFixture, pdf: Path, *, filing_year: int = _
         str(pdf),
         "--filing-year",
         str(filing_year),
+        json_output=json_output,
     )
 
 
@@ -129,6 +132,7 @@ def _assert_first_import(profile: NativeCliProfileFixture) -> dict[str, Any]:
     assert payload["binding_count"] == 0
     assert payload["blank_casillas"] == []
     assert payload["unowned_casillas"] == list(_PROFILE_TARGET_CASILLAS)
+    assert (payload["state"], payload["outcome"]) == ("active", "captured")
     digest = hashlib.sha256(_FIXTURE_PDF.read_bytes()).hexdigest()
     assert payload["source_pdf_sha256"] == digest
     assert payload["source_url"] == f"file-import:sha256:{digest}"
@@ -144,6 +148,7 @@ def _assert_reimport_resolves_to_the_stored_snapshot(profile: NativeCliProfileFi
     again_payload = _json(again)
     assert again_payload["snapshot_id"] == payload["snapshot_id"]
     assert again_payload["captured_at"] == payload["captured_at"]
+    assert (again_payload["state"], again_payload["outcome"]) == ("active", "already_active")
     all_rows = _json(_invoke(profile, "app", "live", "borrador", "100", "list", "--state", "all"))["rows"]
     assert [row["snapshot_id"] for row in all_rows] == [payload["snapshot_id"]]
 
@@ -183,6 +188,22 @@ def _assert_replacement_supersedes(profile: NativeCliProfileFixture, snapshot_id
     )["rows"]
     assert discarded_rows == []
     return replacement_id
+
+
+def _assert_reimport_of_superseded_names_it(
+    profile: NativeCliProfileFixture, snapshot_id: object, replacement_id: object
+) -> None:
+    """Re-importing the superseded document says so and leaves the replacement active."""
+    again = _import(profile, _FIXTURE_PDF)
+    assert again.exit_code == 0, again.output
+    again_payload = _json(again)
+    assert again_payload["snapshot_id"] == snapshot_id
+    assert (again_payload["state"], again_payload["outcome"]) == ("superseded", "resolved_superseded")
+    text = _import(profile, _FIXTURE_PDF, json_output=False)
+    assert text.exit_code == 0, text.output
+    assert "outcome\tresolved_superseded" in text.output
+    active_rows = _json(_invoke(profile, "app", "live", "borrador", "100", "list"))["rows"]
+    assert [row["snapshot_id"] for row in active_rows] == [replacement_id]
 
 
 def _assert_view_and_latest(
@@ -233,6 +254,7 @@ def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> N
         snapshot_id = payload["snapshot_id"]
         _assert_reimport_resolves_to_the_stored_snapshot(profile, payload)
         replacement_id = _assert_replacement_supersedes(profile, snapshot_id, tmp_path)
+        _assert_reimport_of_superseded_names_it(profile, snapshot_id, replacement_id)
         _assert_view_and_latest(profile, payload, snapshot_id, replacement_id)
 
 

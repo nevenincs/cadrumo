@@ -7,8 +7,10 @@ from pydantic import ValidationError
 
 from ....tests.aeat_literal_fixtures import BORRADOR_PAYLOAD_WWW2_ORIGIN_FIXTURE
 from ..app_live_borrador_results import (
+    Borrador100ImportResult,
     Borrador100LatestResult,
     Borrador100ListResult,
+    Borrador100RefusedSnapshotPayload,
     Borrador100SnapshotSummaryPayload,
     Borrador100ViewResult,
 )
@@ -90,6 +92,7 @@ def test_borrador_latest_preserves_empty_and_active_snapshot_branches() -> None:
         "source_url": None,
         "binding_count": None,
         "state": None,
+        "refused": [],
     }
     assert populated.state == "active"
     for malformed in (
@@ -99,3 +102,62 @@ def test_borrador_latest_preserves_empty_and_active_snapshot_branches() -> None:
     ):
         with pytest.raises(ValidationError):
             Borrador100LatestResult.model_validate(malformed)
+
+
+def _refused_payload(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "snapshot_id": "b" * 64,
+        "filing_year": 2024,
+        "period": "2024 0A",
+        "captured_at": "2025-03-15T10:00:00+00:00",
+        "state": "active",
+        "reason": "binding_keys_not_admitted",
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_a_refused_snapshot_is_reported_beside_the_rows_and_not_counted_as_one() -> None:
+    """A listing names a refused snapshot with its reason; a latest read holding only one is not empty."""
+    listing = Borrador100ListResult.model_validate(
+        {"bucket_id": _BUCKET_ID, "count": 1, "rows": [_snapshot_payload()], "refused": [_refused_payload()]}
+    )
+    latest = Borrador100LatestResult.model_validate(
+        {"bucket_id": _BUCKET_ID, "filing_year": 2024, "snapshot_id": None, "refused": [_refused_payload()]}
+    )
+
+    assert listing.count == 1
+    assert [(item.snapshot_id, item.reason) for item in listing.refused] == [("b" * 64, "binding_keys_not_admitted")]
+    assert latest.snapshot_id is None
+    assert latest.model_dump(mode="json")["refused"] == [_refused_payload()]
+    for field, value in (("reason", "unknown_reason"), ("snapshot_id", "short"), ("period", "2024-0A")):
+        with pytest.raises(ValidationError):
+            Borrador100RefusedSnapshotPayload.model_validate(_refused_payload(**{field: value}))
+
+
+def _import_payload(**overrides: object) -> dict[str, object]:
+    payload = _snapshot_payload(
+        bucket_id=_BUCKET_ID,
+        extraction_profile_id="modelo-100-borrador-pdf",
+        extraction_coverage="1",
+        artefact_kind="BORRADOR",
+        source_pdf_sha256="c" * 64,
+        state="superseded",
+        outcome="resolved_superseded",
+    )
+    payload.update(overrides)
+    return payload
+
+
+def test_the_import_result_names_what_the_import_did() -> None:
+    """A re-import that resolved to a superseded snapshot says so; an unknown outcome is refused."""
+    result = Borrador100ImportResult.model_validate(_import_payload())
+
+    assert (result.state, result.outcome) == ("superseded", "resolved_superseded")
+    assert result.unowned_casillas == []
+    with pytest.raises(ValidationError):
+        Borrador100ImportResult.model_validate(_import_payload(outcome="reactivated"))
+    without_outcome = _import_payload()
+    del without_outcome["outcome"]
+    with pytest.raises(ValidationError):
+        Borrador100ImportResult.model_validate(without_outcome)
