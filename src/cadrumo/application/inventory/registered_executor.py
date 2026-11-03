@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol, cast, get_args
 from uuid import UUID
@@ -45,6 +45,7 @@ from .service import (
 if TYPE_CHECKING:
     pass
 
+from .refusal_words import served_refusal_words
 from .registered_execution_result import (
     InventoryOperationExecutionResult,
     InventoryOperationRefusalDetail,
@@ -628,12 +629,8 @@ def _refusal_for_error(
     if identity is None:
         return None
     reason, code = identity
-    detail = _request_refusal_detail(request, reason=reason, code=code)
-    if not isinstance(error, CadrumoError):
-        return detail
-    return detail.model_copy(
-        update={"reason_facts": {key: str(value) for key, value in (error.context or {}).items()}},
-    )
+    facts = {key: str(value) for key, value in (error.context or {}).items()} if isinstance(error, CadrumoError) else {}
+    return _request_refusal_detail(request, reason=reason, code=code, facts=facts)
 
 
 def _refusal_identity_for_error(error: Exception) -> tuple[InventoryRefusalReason, InventoryRefusalCode] | None:
@@ -670,12 +667,13 @@ def _request_refusal_detail(
     *,
     reason: InventoryRefusalReason,
     code: InventoryRefusalCode,
+    facts: Mapping[str, str] | None = None,
 ) -> InventoryOperationRefusalDetail:
     actividad_id = getattr(request, "actividad_id", None)
     year = getattr(request, "year", None)
     movement_id = getattr(request, "movement_id", None)
     valuation_method = getattr(request, "valuation_method", None)
-    return InventoryOperationRefusalDetail(
+    detail = InventoryOperationRefusalDetail(
         code=code,
         reason=reason,
         actividad_id=actividad_id if isinstance(actividad_id, str) else None,
@@ -683,7 +681,22 @@ def _request_refusal_detail(
         movement_id=movement_id if isinstance(movement_id, str) else None,
         valuation_method=valuation_method if isinstance(valuation_method, str) else None,
         reason_key=inventory_refusal_key(reason),
+        reason_facts=dict(facts or {}),
     )
+    return _with_served_words(detail)
+
+
+def _with_served_words(detail: InventoryOperationRefusalDetail) -> InventoryOperationRefusalDetail:
+    """``detail`` with the sentence served for its reason, filled from the request scope and the facts carried."""
+    scope = {
+        "actividad_id": detail.actividad_id,
+        "year": None if detail.year is None else str(detail.year),
+        "movement_id": detail.movement_id,
+        "valuation_method": detail.valuation_method,
+    }
+    context = {name: value for name, value in scope.items() if value is not None} | detail.reason_facts
+    words, language = served_refusal_words(detail.reason, error_code=detail.code, facts=context)
+    return detail.model_copy(update={"refusal_words": words, "refusal_words_language": language})
 
 
 async def _record_precommit_validation_refusal(
@@ -707,6 +720,7 @@ async def _record_precommit_validation_refusal(
         movement_id=getattr(request, "movement_id", None),
         reason_key=inventory_refusal_key(reason),
     )
+    refusal = _with_served_words(refusal)
 
     async def persist_refusal() -> OperationRefusalEvidence:
         async with context.cancellation.irreversible_section():

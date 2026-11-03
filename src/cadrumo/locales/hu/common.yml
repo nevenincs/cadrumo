@@ -8672,21 +8672,6 @@ tui:
           a mezőit, nézd át, majd erősítsd meg. Az értékelést és az eladott áruk beszerzési
           értékét maga a nyilvántartás számolja. A beszerzési költséget és a záróértéket
           az általad megadott fájlból olvassuk be.
-        refusal:
-          activity_conflict: 'A nyilvántartás elutasította a kérést: arra a tevékenységre
-            és évre már van készlet.'
-          activity_not_found: 'A nyilvántartás elutasította a kérést: arra a tevékenységre
-            és évre nincs készlet.'
-          closing_authority_conflict: 'A nyilvántartás elutasította a záróértéket:
-            arra az évre már másik van rögzítve.'
-          closing_authority_invalid: 'A nyilvántartás elutasította a záróértéket:
-            nem egyezik a megnevezett készlettel.'
-          duplicate_movement_id: 'A nyilvántartás elutasította a mozgást: már rögzítve
-            van.'
-          invalid_valuation_method: 'A nyilvántartás elutasította a kérést: ezt az
-            értékelési módszert nem fogadja el.'
-          inventory_validation: 'A nyilvántartás elutasította a kérést: nem felel
-            meg a készlet ellenőrzésének.'
         result:
           closing: '%{actividad} %{year} záróértéke rögzítve. Változott: %{changed}.'
           fingerprint: 'Rekord ujjlenyomata: %{fingerprint}'

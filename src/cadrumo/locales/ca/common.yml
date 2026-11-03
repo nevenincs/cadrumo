@@ -8712,20 +8712,6 @@ tui:
           camps, revisa-la i confirma-la. Les valoracions i el cost de les vendes
           són xifres del registre mateix. Els costos de compra i els valors de tancament
           es llegeixen del fitxer que indiquis.
-        refusal:
-          activity_conflict: 'El registre ha rebutjat la petició: ja existeix un inventari
-            per a aquesta activitat i any.'
-          activity_not_found: 'El registre ha rebutjat la petició: no existeix cap
-            inventari per a aquesta activitat i any.'
-          closing_authority_conflict: 'El registre ha rebutjat el valor de tancament:
-            ja n''hi ha un altre de registrat per a aquest any.'
-          closing_authority_invalid: 'El registre ha rebutjat el valor de tancament:
-            no coincideix amb l''inventari que indica.'
-          duplicate_movement_id: 'El registre ha rebutjat el moviment: ja està registrat.'
-          invalid_valuation_method: 'El registre ha rebutjat la petició: no admet
-            aquest mètode de valoració.'
-          inventory_validation: 'El registre ha rebutjat la petició: no supera la
-            validació de l''inventari.'
         result:
           closing: 'Valor de tancament de %{actividad} %{year} registrat. Ha canviat:
             %{changed}.'

@@ -8539,21 +8539,6 @@ tui:
           review it, then confirm. Valuations and costs of goods sold are the register's
           own figures. Purchase costs and closing values are read from the file you
           name.
-        refusal:
-          activity_conflict: 'The register refused the request: an inventory already
-            exists for that activity and year.'
-          activity_not_found: 'The register refused the request: no inventory exists
-            for that activity and year.'
-          closing_authority_conflict: 'The register refused the closing value: a different
-            one is already recorded for that year.'
-          closing_authority_invalid: 'The register refused the closing value: it does
-            not match the inventory it names.'
-          duplicate_movement_id: 'The register refused the movement: it is already
-            recorded.'
-          invalid_valuation_method: 'The register refused the request: the valuation
-            method is not one it accepts.'
-          inventory_validation: 'The register refused the request: it does not pass
-            the inventory''s validation.'
         result:
           closing: 'Closing value for %{actividad} %{year} recorded. Changed: %{changed}.'
           fingerprint: 'Record fingerprint: %{fingerprint}'

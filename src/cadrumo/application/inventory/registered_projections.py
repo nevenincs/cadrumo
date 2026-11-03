@@ -9,6 +9,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...domain.contribuyente.inventory.records import (
@@ -22,6 +23,7 @@ from ...domain.contribuyente.inventory.records import (
     MovementRecord,
     ValuationMethod,
 )
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.public_scalar import PublicDecimal
 
 if TYPE_CHECKING:
@@ -344,6 +346,15 @@ class InventoryRefusalProjection(BaseModel):
     valuation_method: str | None = None
     reason_key: str | None = None
     reason_facts: tuple[InventoryReasonFact, ...] = ()
+    #: The finished sentence a frontend shows for the refusal and the language it is in.
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> InventoryRefusalProjection:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
 
 class InventoryListProjection(BaseModel):

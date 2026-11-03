@@ -42,6 +42,7 @@ from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .refusal_words import served_refusal_words
 from .registered_projections import InventoryRefusalProjection
 from .registered_requests import INVENTORY_SERVICE_INPUT_REFUSAL_CODE
 
@@ -136,6 +137,9 @@ class InventoryEvidenceAddExecutor:
                 ports, admitted = await asyncio.to_thread(preflight)
             except PurchaseInvoiceEvidenceInputError:
                 # The file's path stays out of the refusal; the operator chose it and knows it.
+                words, language = served_refusal_words(
+                    "evidence_file_not_admitted", error_code=INVENTORY_SERVICE_INPUT_REFUSAL_CODE, facts={}
+                )
                 detail_ref = await context.operands.put(
                     InventoryEvidenceAddExecutionResult(
                         result=InventoryEvidenceAddProjection(
@@ -145,6 +149,8 @@ class InventoryEvidenceAddExecutor:
                                 code=INVENTORY_SERVICE_INPUT_REFUSAL_CODE,
                                 reason="evidence_file_not_admitted",
                                 reason_key=inventory_refusal_key("evidence_file_not_admitted"),
+                                refusal_words=words,
+                                refusal_words_language=language,
                             ),
                         )
                     ),

@@ -139,15 +139,6 @@ _KIND_LOCALE_KEYS: Final[dict[str, str]] = {
     "cogs": "tui.ledger.registers.inventory.kind.cogs",
     "count": "tui.ledger.registers.inventory.kind.count",
 }
-_REFUSAL_LOCALE_KEYS: Final[dict[str, str]] = {
-    "activity_conflict": "tui.ledger.registers.inventory.refusal.activity_conflict",
-    "activity_not_found": "tui.ledger.registers.inventory.refusal.activity_not_found",
-    "invalid_valuation_method": "tui.ledger.registers.inventory.refusal.invalid_valuation_method",
-    "duplicate_movement_id": "tui.ledger.registers.inventory.refusal.duplicate_movement_id",
-    "inventory_validation": "tui.ledger.registers.inventory.refusal.inventory_validation",
-    "closing_authority_conflict": "tui.ledger.registers.inventory.refusal.closing_authority_conflict",
-    "closing_authority_invalid": "tui.ledger.registers.inventory.refusal.closing_authority_invalid",
-}
 _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "action": "tui.ledger.registers.inventory.field.action",
     "actividad_id": "tui.ledger.registers.inventory.field.actividad_id",
@@ -319,11 +310,7 @@ def inventory_refusal_text(refusal: InventoryRefusalProjection) -> str:
         )
         if value is not None
     ]
-    own_key = _REFUSAL_LOCALE_KEYS.get(refusal.reason)
-    if own_key is not None:
-        return "\n".join((tr(own_key), *named))
-    facts = {fact.key: fact.value for fact in refusal.reason_facts}
-    return "\n".join((tr(refusal.reason_key or refusal.code, **facts), *named))
+    return "\n".join((refusal.refusal_words or refusal.code, *named))
 
 
 def _ledger_line(ledger: InventoryLedgerProjection) -> str:

@@ -17,7 +17,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from .....application.bienes_inversion.refusal_words import served_refusal_words
+from .....application.bienes_inversion.refusal_words import served_refusal_words as capital_goods_refusal_words
 from .....application.bienes_inversion.registered_requests import (
     BienesInversionDeclareRequest,
     BienesInversionListRequest,
@@ -29,6 +29,7 @@ from .....application.bienes_inversion.registered_result_contracts import (
     BienInversionDisposalProjection,
     BienInversionRecordProjection,
 )
+from .....application.inventory.refusal_words import served_refusal_words
 from .....application.inventory.registered_evidence_operation import (
     InventoryEvidenceAddProjection,
     InventoryEvidenceAddRequest,
@@ -447,7 +448,7 @@ class MemoryCapitalGoodsDoor:
         if self.expired:
             raise AccountSessionExpiredError()
         if any(record.identifier == request.identifier for record in self.records):
-            words, language = served_refusal_words(
+            words, language = capital_goods_refusal_words(
                 "duplicate_identifier",
                 error_code="REFUSED_PROFILE_BIENES_INVERSION_VALIDATION",
                 identifier=request.identifier,
@@ -551,11 +552,17 @@ class MemoryInventoryDoor:
 
     @staticmethod
     def _not_found(actividad_id: str, year: int) -> InventoryRefusalProjection:
+        facts = {"actividad_id": actividad_id, "year": str(year)}
+        words, language = served_refusal_words(
+            "activity_not_found", error_code="REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND", facts=facts
+        )
         return InventoryRefusalProjection(
             code="REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND",
             reason="activity_not_found",
             actividad_id=actividad_id,
             year=year,
+            refusal_words=words,
+            refusal_words_language=language,
         )
 
     async def inspect(self, request: InventoryInspectRequest) -> InventoryInspectProjection:
@@ -586,11 +593,17 @@ class MemoryInventoryDoor:
             )
         if isinstance(request, InventoryRetireRequest):
             if row.retired:
+                retired_facts = {"actividad_id": request.actividad_id, "year": str(request.year)}
+                retired_words, retired_language = served_refusal_words(
+                    "inventory_already_retired", error_code="REFUSED_INVENTORY_SERVICE_INPUT", facts=retired_facts
+                )
                 return InventoryLedgerChangeProjection(
                     outcome="refused",
                     profile_id=request.profile_id,
                     refusal=InventoryRefusalProjection(
                         code="REFUSED_INVENTORY_SERVICE_INPUT",
+                        refusal_words=retired_words,
+                        refusal_words_language=retired_language,
                         reason="inventory_already_retired",
                         actividad_id=request.actividad_id,
                         year=request.year,
@@ -618,6 +631,11 @@ class MemoryInventoryDoor:
         """Create one inventory, refusing a second one for the same activity and year."""
         self._check(request)
         if self._row(request.actividad_id, request.year) is not None:
+            conflict_words, conflict_language = served_refusal_words(
+                "activity_conflict",
+                error_code="REFUSED_INVENTORY_ACTIVIDAD_CONFLICT",
+                facts={"actividad_id": request.actividad_id, "year": str(request.year)},
+            )
             return InventoryCreateProjection(
                 outcome="refused",
                 profile_id=request.profile_id,
@@ -626,6 +644,8 @@ class MemoryInventoryDoor:
                     reason="activity_conflict",
                     actividad_id=request.actividad_id,
                     year=request.year,
+                    refusal_words=conflict_words,
+                    refusal_words_language=conflict_language,
                 ),
             )
         row = InventoryListRowProjection(

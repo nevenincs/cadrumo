@@ -211,7 +211,7 @@ async def test_a_movement_for_an_absent_inventory_shows_the_registered_refusal()
             )
             await _review_and_confirm(pilot, screen)
             refusal = _text(screen, "#ledger-refusal")
-            assert tr("tui.ledger.registers.inventory.refusal.activity_not_found") in refusal
+            assert tr("application.inventory.service.errors.activity_not_found", year="2026") in refusal
             assert isinstance(screen.staged, InventoryMovementAddRequest)
             assert _keys(screen) == []
 
@@ -231,7 +231,9 @@ async def test_a_second_inventory_for_the_same_activity_and_year_is_refused() ->
             assert screen.query_one("#inventory-actividad", Input).value == "act-01"
             assert screen.query_one("#inventory-year", Input).value == "2026"
             await _review_and_confirm(pilot, screen)
-            assert tr("tui.ledger.registers.inventory.refusal.activity_conflict") in _text(screen, "#ledger-refusal")
+            assert tr("application.inventory.service.errors.activity_conflict", year="2026") in _text(
+                screen, "#ledger-refusal"
+            )
             assert len(door.rows) == 1
 
 

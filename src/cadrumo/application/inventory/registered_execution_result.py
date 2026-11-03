@@ -7,7 +7,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from .service import (
     InventoryActividadSummary,
     InventoryLedgerResult,
@@ -38,6 +40,14 @@ class InventoryOperationRefusalDetail(BaseModel):
     valuation_method: str | None = None
     reason_key: str | None = None
     reason_facts: dict[str, str] = Field(default_factory=dict)
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> InventoryOperationRefusalDetail:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
 
 class InventoryOperationExecutionResult(BaseModel):

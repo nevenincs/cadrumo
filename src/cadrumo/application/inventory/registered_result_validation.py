@@ -148,6 +148,8 @@ def validate_refusal_receipt(
         reason_facts=tuple(
             InventoryReasonFact(key=key, value=value) for key, value in sorted(refusal.reason_facts.items())
         ),
+        refusal_words=refusal.refusal_words,
+        refusal_words_language=refusal.refusal_words_language,
     )
 
 
