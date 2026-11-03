@@ -975,6 +975,19 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             ("modelo.work.wizard_attempt",),
         ),
         RegisteredExecutorConformanceCase(
+            "modelo.work.disagreements", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        *(
+            # The seeded calculation holds no disagreement, so no finding id names one.
+            RegisteredExecutorConformanceCase(
+                definition_id,
+                OperationTerminalCondition.REFUSED,
+                OperationEffect.NONE,
+                expected_refusal_ref="REFUSED_CREDIT_RESOLUTION",
+            )
+            for definition_id in ("modelo.work.accept_disagreement", "modelo.work.revoke_disagreement")
+        ),
+        RegisteredExecutorConformanceCase(
             "modelo.work.verify", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(

@@ -697,6 +697,33 @@ def _modelo_work_verify(ctx: PayloadContext) -> PayloadResult:
     )
 
 
+def _credit_resolution_request(ctx: PayloadContext, **fields: object) -> PayloadResult:
+    """A request about a seeded calculation, which holds no disagreement for the finding id it names."""
+    revision_id = modelo_operation_test_support.seeded_modelo_calculation_revision(
+        ctx.profile_id, operation=ctx.operation
+    )
+    revision = CalculationRevisionCatalogueRepository().load().get(revision_id)
+    assert revision is not None
+    return ctx.request(
+        revision.work_unit_id,
+        {"profile_id": ctx.profile_id, "calculation_revision_id": revision_id, **fields},
+    )
+
+
+def _modelo_work_disagreements(ctx: PayloadContext) -> PayloadResult:
+    return _credit_resolution_request(ctx)
+
+
+def _modelo_work_accept_disagreement(ctx: PayloadContext) -> PayloadResult:
+    return _credit_resolution_request(
+        ctx, finding_id="0" * 16, reason="accepted by the registered-executor conformance matrix"
+    )
+
+
+def _modelo_work_revoke_disagreement(ctx: PayloadContext) -> PayloadResult:
+    return _credit_resolution_request(ctx, finding_id="0" * 16, expected_revision_id="0" * 64)
+
+
 def _modelo_work_discard(ctx: PayloadContext) -> PayloadResult:
     # The baseline is the operator's EXACT APPROVAL, so it carries the
     # unit's state as observed rather than as re-read: name and
@@ -769,4 +796,7 @@ MODELO_BUILDERS: dict[str, PayloadBuilder] = {
     "modelo.work.wizard_attempt": _modelo_work_wizard_attempt,
     "modelo.work.verify": _modelo_work_verify,
     "modelo.work.discard": _modelo_work_discard,
+    "modelo.work.disagreements": _modelo_work_disagreements,
+    "modelo.work.accept_disagreement": _modelo_work_accept_disagreement,
+    "modelo.work.revoke_disagreement": _modelo_work_revoke_disagreement,
 }
