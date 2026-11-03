@@ -26,10 +26,12 @@ const fact = (root: Locator, key: string, language: Language = "en") =>
     .locator("..")
     .locator("dd");
 
-async function openWallet(
+async function openWalletForm(
   page: Page,
   language: Language = "en",
   shape = "wallet",
+  modelo = "303",
+  offersIvaWallet?: boolean,
 ) {
   await seedLayout(page, {
     layout: {
@@ -47,16 +49,45 @@ async function openWallet(
     name: label("workspace.declarations.destination.overview", {}, language),
   });
   await expect(grid.getByRole("row").nth(1)).toBeVisible({ timeout: 15_000 });
+  if (offersIvaWallet !== undefined) {
+    await page.evaluate((offers) => {
+      const port = window.__fixtureModelo!;
+      const form = port.form;
+      port.form = async (...args) => {
+        const answer = await form(...args);
+        return {
+          ...answer,
+          form: {
+            ...answer.form,
+            form: { ...answer.form.form, offers_iva_wallet: offers },
+          },
+        };
+      };
+    }, offersIvaWallet);
+  }
   await page
     .getByRole("searchbox", {
       name: label("desktop.declarations.search.label", {}, language),
     })
-    .fill("303");
+    .fill(modelo);
   await grid
     .getByRole("row")
-    .filter({ has: page.getByRole("gridcell", { name: "303", exact: true }) })
+    .filter({ has: page.getByRole("gridcell", { name: modelo, exact: true }) })
     .first()
     .dblclick();
+  await expect(
+    page.getByRole("tab", {
+      name: new RegExp(`^${label("desktop.modelo.view.form", {}, language)}`),
+    }),
+  ).toBeVisible();
+}
+
+async function openWallet(
+  page: Page,
+  language: Language = "en",
+  shape = "wallet",
+) {
+  await openWalletForm(page, language, shape);
   await page
     .getByRole("tab", {
       name: label("desktop.modelo.view.iva_wallet", {}, language),
@@ -153,6 +184,29 @@ for (const language of ["en", "es", "ca", "hu"] as const) {
     ).toBeVisible();
     if (language === "en")
       await page.screenshot({ path: info.outputPath("wallet-balance.png") });
+  });
+}
+
+for (const [modelo, offers] of [
+  ["303", false],
+  ["130", true],
+] as const) {
+  test(`served wallet capability ${offers} controls entry for modelo ${modelo}`, async ({
+    page,
+  }) => {
+    await openWalletForm(page, "en", "fixture", modelo, offers);
+    const tab = page.getByRole("tab", {
+      name: label("desktop.modelo.view.iva_wallet"),
+      exact: true,
+    });
+    if (offers) {
+      await expect(tab).toBeVisible();
+      await tab.click();
+      await expect(wallet(page)).toBeVisible();
+    } else {
+      await expect(tab).toHaveCount(0);
+      await expect(wallet(page)).toHaveCount(0);
+    }
   });
 }
 

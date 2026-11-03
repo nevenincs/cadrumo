@@ -11,10 +11,9 @@ import {
 import { useModeloBlockingWriteHold } from "../WriteHoldNotice";
 import { runOperation } from "../dialogs/operationRun";
 
-/** Entry point for the profile's IVA register; the runtime admits each action.
- * Source readings describe calculated fields, not available register operations. */
+/** The backend offers the profile's IVA register and admits each action. */
 export const hasIvaWallet = (envelope: ModeloWorkbenchFormProjectionV1) =>
-  envelope.form.form.modelo === "303";
+  envelope.form.form.offers_iva_wallet;
 
 type BalanceRead =
   | { phase: "held" }
