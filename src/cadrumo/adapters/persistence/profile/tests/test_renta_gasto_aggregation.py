@@ -76,7 +76,11 @@ def _save_priced_gasto_row(secure_objects: SecureObjectRepository, provider_id: 
 
 
 def _save_general_prorrata_entry(secure_objects: SecureObjectRepository) -> None:
-    """Register the 2025 GENERAL prorrata at a 70 percent provisional share."""
+    """Register the 2025 GENERAL prorrata at a 70 percent provisional share, settled at the same share.
+
+    The annual return prices expenses only at the definitive percentage, so the settlement is what
+    lets it resolve the share the instalments already use.
+    """
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
@@ -84,6 +88,9 @@ def _save_general_prorrata_entry(secure_objects: SecureObjectRepository) -> None
             especial_transition=None,
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+            definitive_percentage=Decimal("70"),
+            definitive_volume_con_derecho=Decimal("7000"),
+            definitive_volume_sin_derecho=Decimal("3000"),
             source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         ),
     )
