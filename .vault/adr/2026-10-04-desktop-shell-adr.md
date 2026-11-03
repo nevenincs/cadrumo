@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:000081136c319b356a9f62dc4497a0c1d25e877671560314c37d18a5e34eb583'
+body_hash: 'sha256:346cb3958c5a6efeaead78a3bbd13546aeaf4a4a718ecafb30a7554c8a68efe0'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -395,6 +395,10 @@ Accepted by the user on 2026-10-27, who ruled that the frontend is not to contai
 - **One owner for all frontends.** A value the window needs is served through the same operation or contract the CLI and TUI use. Where none exists yet, the backend gains it before the window drops its copy; the window does not keep a copy while waiting.
 
 Evidence: the inventory in `2026-10-27-profile-field-remap-plan` (Steps S07 to S10), including `native/desktop/frontend/src/shell/ledgerVocabulary.ts`, `native/desktop/frontend/src/shell/ledgerCommands.ts`, `native/desktop/frontend/src/shell/ledgerPlan.ts`, `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts` and `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
+
+### Amendment 2026-11-03: tax wording is served, not remapped
+
+Accepted by the operator on 2026-11-03, who ruled that the frontend never hardcodes tax facts or wording and that the CLI, TUI and desktop derive from the backend. This narrows the "Remap only" bullet above: the window may map served codes to its own layout and icons, but no longer to localized wording with tax meaning. Words, facts, flags and capabilities are served on each operation's records; generic chrome with no tax meaning stays in the generated catalogue. The commitments, field naming and deletion protocol are in `2026-11-03-backend-served-surface-adr`.
 
 ### Amendment 2026-10-31: dates and numbers follow the language
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:982d94bf58bd1217d7b8c16797419414a408bf1c8bc4fbb30cf5feb1d4b0a322'
+body_hash: 'sha256:20c308fbf46c153d1da1d51883802ec954e5d0c6502f373ac3629e831a087f9b'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -1223,6 +1223,20 @@ related:
 - `S11` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
 - `S11` `verify:` `focused tests per fix (drift detection, CLI calculate, 279 asset/target, work form 14, form workbook 46, computed-casilla enrolment twins, workbook demo -k 131, dict naming, label)` -> `pass`
 - `S11` `verify:` `publish-authority --if-stale and registry_status --check` -> `pass`
+- `S20` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_credit_resolution_generation_live.py`
+- `S20` `A` `src/cadrumo/entrypoints/tests/profile_persistence/credit_resolution_generation_support.py`
+- `S20` `verify:` `pytest src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_credit_resolution_generation_live.py` -> `pass`
+- `S20` `by:` `sonnet-executor`
+- `S26` `A` `src/cadrumo/entrypoints/tests/profile_persistence/renta_persona_support.py`
+- `S26` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_personas_end_to_end.py`
+- `S26` `M` `dev/acceptance/income_tax/cli_journey.py`
+- `S26` `M` `dev/acceptance/installed_cli.py`
+- `S26` `M` `dev/acceptance/income_tax/tests/test_cli_journey.py`
+- `S26` `A` `dev/acceptance/income_tax/personas.py`
+- `S26` `A` `dev/acceptance/income_tax/persona_journey.py`
+- `S26` `A` `dev/acceptance/income_tax/tests/test_personas.py`
+- `S26` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests/profile_persistence/test_renta_personas_end_to_end.py dev/acceptance/income_tax/tests/test_personas.py` -> `pass`
+- `S26` `by:` `sonnet-executor`
 
 ## Notes
 
@@ -1275,3 +1289,4 @@ related:
 - `S18` P03 review rulings (operator 2026-11-03), recorded as ADR D Amendment 2026-11-03 (e28d00bbbf): `PROFILE_FIELD` admitted as a terminal origin; certificate bytes are held in attachment custody, with refusals `certificate_not_in_custody,` `certificate_file_unreadable` and `certificate_fingerprint_mismatch` (01a28ab372); a same-evidence correction keeps the lineage (18aa70a39f). 01a28ab372 also carries S20 cli.yml help hunks. The desktop half (ledgerSetup.ts, WithholdingPane.tsx) is pending with the tui frontend session.
 - `S20` Operations `modelo.work.accept_disagreement,` `revoke_disagreement` and disagreements; signed-report `credit_resolutions` section omitted when empty, attesting the acceptances at production time. Open follow-up: no authority-publication survival test yet (stopped by the operator merge order). Two filed-before-screens report tests fail with DID NOT RAISE, cause unconfirmed.
 - `S11` Campaign follow-up fixes from the 2026-11-03 triage of renta-lane failures on tui: the renta-income target lookup excludes agrarian-quarter providers with one definition (4d3ff4c124), M131 box 11 enrolled in `reconcile_when_present` with authored labels (10a7f1cda8), and stale tests realigned. Still open: `test_record_design_modelo_131` offset 692 (98c4cf97f7); ty, lint-imports and `grade_earned` not rerun.
+- `S26` Not closeable: verify COMPLETE and export are proven at service level for all personas but through the CLI for the employee only; open defects are M130 casilla 02 omitting gastos de dificil justificacion under directa simplificada, the 2025 activity inventory chain leaving 0177/0181/0182 unresolved, and an unexamined 2024 CLI autonomo 2T input-required failure
