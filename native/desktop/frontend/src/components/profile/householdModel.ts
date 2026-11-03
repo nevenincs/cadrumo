@@ -2,6 +2,7 @@ import type {
   HouseholdGroup,
   HouseholdLeaf,
   HouseholdPersonEdit,
+  HouseholdQuestion,
   HouseholdRow,
 } from "../../shell/profileHousehold";
 import type { ProfileEdit, ProfileField } from "../../shell/userProfile";
@@ -74,6 +75,27 @@ export function replacement(
   else people.splice(index, 1);
   return { kind, rows: people };
 }
+
+/** The edit that states a household question's answer: the token of a served
+ * choice, or null to take the statement back so the profile states nothing
+ * again. Anything that is not a choice the product served is not sent. */
+export function answerEdit(
+  question: HouseholdQuestion,
+  value: string | null,
+): ProfileEdit | null {
+  if (
+    value !== null &&
+    !question.choices.some((choice) => choice.value === value)
+  )
+    return null;
+  return { kind: "field", path: question.path, value: value ?? "" };
+}
+
+/** The choice the profile states for a question, or null when it states
+ * nothing. */
+export const statedChoice = (question: HouseholdQuestion) =>
+  question.choices.find((choice) => choice.value === question.saved_value) ??
+  null;
 
 /** The group stated to have no people. */
 export const declaredNone = (group: HouseholdGroup): ProfileEdit | null => {

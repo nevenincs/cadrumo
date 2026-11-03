@@ -171,6 +171,10 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         "--family-minor-children-in-unit/--no-family-minor-children-in-unit",
         help=tr("wizard.setup.flags.family-minor-children-in-unit.help"),
     ),
+    "family-convive-con-otro-progenitor": typer.Option(
+        "--family-convive-con-otro-progenitor/--no-family-convive-con-otro-progenitor",
+        help=tr("wizard.setup.flags.family-convive-con-otro-progenitor.help"),
+    ),
     "iva-regime": typer.Option(
         "--iva-regime",
         click_type=_choice(IVA_REGIME_CHOICE_VALUES, case_sensitive=False),

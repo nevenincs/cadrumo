@@ -263,6 +263,14 @@ wizard:
     familia:
       title: Situación familiar
     family:
+      family-convive-con-otro-progenitor:
+        help: El artículo 84.2.4.º de la Ley del IRPF excluye la reducción por tributación
+          conjunta de la unidad familiar monoparental cuando el contribuyente convive
+          con el padre o la madre de alguno de los hijos que forman parte de ella.
+          Déjalo sin responder si no lo sabes; entonces Cadrumo no puede calcular
+          esa reducción.
+        prompt: ¿Convives con el padre o la madre de alguno de los hijos de tu unidad
+          familiar?
       family-descendants-eu-eea-deduction:
         prompt: Descendientes UE/EEE en deducción de unidad familiar
       family-minor-children-in-unit:
@@ -303,6 +311,9 @@ wizard:
         help: Presupuesto administración pública superior a 6.000.000
       entity-type:
         help: Persona física, persona jurídica o entidad en atribución de rentas
+      family-convive-con-otro-progenitor:
+        help: 'Unidad monoparental: si convives con el padre o la madre de un hijo
+          de la unidad (artículo 84.2.4.º LIRPF)'
       family-descendants-eu-eea-deduction:
         help: Descendientes UE/EEE en deducción de unidad familiar
       family-minor-children-in-unit:

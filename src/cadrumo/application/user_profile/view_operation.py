@@ -25,6 +25,7 @@ from ...domain.user_profile.values import ProfileSetupState
 from ..operations.models import CredentialFreeOperationRequest
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..workflow.profile_health import ProfileHealthStatus
+from .family_question import ProfileViewFamilyQuestionItem
 from .family_rows import ProfileViewFamilyGroupItem, ProfileViewFamilyRowItem
 from .overview import ProfileFieldView
 from .question_view import ProfileViewQuestionItem
@@ -63,7 +64,8 @@ class ProfileViewOperationRequest(CredentialFreeOperationRequest):
         description="facts reads saved taxpayer values; questions pairs saved setup answers with canonical prompts, "
         "help and choices (no defaults). questions covers scalar setup fields, not all profile facts or tax duties. "
         "status describes basic setup readiness only. preferences reads only the saved output language. "
-        "family_rows reads the stored descendant and ascendant rows with their wording. "
+        "family_rows reads the stored descendant and ascendant rows with their wording, and the household questions "
+        "setup asks of this profile with the answer each one states. "
         "Read actual facts before asking the user."
     )
     cursor: NonNegativeInt = 0
@@ -322,6 +324,7 @@ type ProfileViewItem = Annotated[
     | ProfileViewQuestionItem
     | ProfileViewFamilyGroupItem
     | ProfileViewFamilyRowItem
+    | ProfileViewFamilyQuestionItem
     | ProfileViewNoticeItem,
     Field(discriminator="kind"),
 ]
@@ -349,7 +352,7 @@ def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
         ProfileViewPageKind.READINESS_ISSUES: {"issue"},
         ProfileViewPageKind.OVERVIEW: {"section", "field", "missing", "notice"},
         ProfileViewPageKind.STATUS: {"status"},
-        ProfileViewPageKind.FAMILY_ROWS: {"family_group", "family_row"},
+        ProfileViewPageKind.FAMILY_ROWS: {"family_group", "family_row", "family_question"},
     }[result.page_kind]
     if any(item.kind not in allowed for item in result.items):
         raise ValueError("profile view page contains another stream's item")

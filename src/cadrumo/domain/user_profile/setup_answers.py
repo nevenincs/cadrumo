@@ -220,6 +220,8 @@ class SetupAnswers(BaseModel):
     # ── family ───────────────────────────────────────────────────────────
     family_descendants_eu_eea_deduction: bool = False
     family_minor_children_in_unit: bool = False
+    family_convive_con_otro_progenitor: OptionalWizardBool = ""
+    """Three-state fact of a single-parent unit: ``True``, ``False`` or blank when unanswered (Art. 84.2.4º LIRPF)."""
     situacion_familiar: OptionalSituacionFamiliar = ""
     """Art. 82 LIRPF family situation governing conjunta eligibility."""
     unidad_familiar_descendientes_exclusivos: OptionalWizardBool = ""
@@ -349,6 +351,12 @@ class SetupAnswers(BaseModel):
     @pydantic_validation_boundary
     def _parse_optional_payer_fact_bool(cls, value: object) -> OptionalWizardBool:
         return _parse_optional_bool_token(value, field_name="payer applicability fact")
+
+    @field_validator("family_convive_con_otro_progenitor", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_optional_cohabitation_bool(cls, value: object) -> OptionalWizardBool:
+        return _parse_optional_bool_token(value, field_name="family_convive_con_otro_progenitor")
 
     @field_validator("irpf_codigo_comercio_accounting", mode="before")
     @classmethod

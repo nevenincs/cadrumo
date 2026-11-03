@@ -5,9 +5,11 @@ the desktop's edits use (``replace_profile_descendants`` and ``replace_profile_a
 then read as the ``family_rows`` page stream of ``user-profile.view`` in every language. The
 masked state reads the same function against a copy of the schema that declares the stored
 descendant object secret, because the shipped schema masks none of the household. The
-refusals are the registered error details an ascendants or descendants replacement settles
-with. No stored user profile is read; run after publishing a changed profile schema, wizard
-wording or design.
+single-parent states state the family situation, and the answer to whether the parent lives
+with the child's other parent, through the profile fact writer, so the question the stream
+serves beside the groups is read in each of its states. The refusals are the registered
+error details an ascendants or descendants replacement settles with. No stored user
+profile is read; run after publishing a changed profile schema, wizard wording or design.
 """
 
 from __future__ import annotations
@@ -54,9 +56,14 @@ class Household:
     descendants: int | None
     ascendants: int | None
     stated: dict[str, str] = field(default_factory=dict)
+    #: Profile facts stated beside the household, as (path, value).
+    facts: tuple[tuple[str, str], ...] = ()
     #: The shipped schema masks no household fact, so this state reads against a copy that does.
     secret: bool = False
 
+
+_SINGLE_PARENT: tuple[tuple[str, str], ...] = (("renta_family.situacion_familiar", "soltero"),)
+_COHABITATION_PATH = "renta_family.convive_con_otro_progenitor"
 
 STATES: dict[str, Household] = {
     "unknown": Household(None, None),
@@ -65,6 +72,10 @@ STATES: dict[str, Household] = {
     "incomplete": Household(1, 1, stated={"descendants": "3", "ascendants": "2"}),
     "at_cap": Household(15, 4),
     "masked": Household(2, 1, secret=True),
+    "married": Household(None, None, facts=(("renta_family.situacion_familiar", "casado"),)),
+    "single_parent_unstated": Household(None, None, facts=_SINGLE_PARENT),
+    "single_parent_lives_with": Household(None, None, facts=(*_SINGLE_PARENT, (_COHABITATION_PATH, "true"))),
+    "single_parent_apart": Household(None, None, facts=(*_SINGLE_PARENT, (_COHABITATION_PATH, "false"))),
 }
 
 
@@ -151,6 +162,14 @@ def _write(operation: PinnedAuthorityOperation, shape: Household) -> None:
             expected_revision=current.record_revision,
             expected_content_digest=current.content_digest,
             operation=operation,
+        )
+    if shape.facts:
+        apply_profile_fact_changes(
+            profile_id=_BUCKET_ID,
+            changes=tuple(UserProfileFact(path=path, value=value) for path, value in shape.facts),
+            door=ProfileFactWriteDoor.MANAGER_FIELD,
+            expected_record=_record(operation),
+            profile_decode_context=operation.profile_decode_context(),
         )
     if shape.stated:
         apply_profile_fact_changes(

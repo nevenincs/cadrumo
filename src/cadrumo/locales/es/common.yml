@@ -4638,6 +4638,9 @@ desktop:
         es desconocido, que no es lo mismo que ninguno.
       limit: '{count} de un máximo de {max} personas'
       people: 'Personas: {count}'
+      question:
+        clear: Retirar la respuesta
+        unknown_help: Todavía no has indicado nada, y eso no es lo mismo que «no».
       reading: Leyendo tu familia…
       remove: Quitar persona
       remove_help: ¿Quitar a esta persona de tu familia? El recuento se actualiza

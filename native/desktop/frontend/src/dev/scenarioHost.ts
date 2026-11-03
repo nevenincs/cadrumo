@@ -718,8 +718,7 @@ export function scenarioHost(
     change: (change) =>
       change.edit.kind === "imputation_election"
         ? election.change(change)
-        : change.edit.kind === "descendants" ||
-            change.edit.kind === "ascendants"
+        : household.takes(change.edit)
           ? household.change(change)
           : profile.change(change),
   };

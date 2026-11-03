@@ -3,11 +3,16 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import type {
   HouseholdGroup,
   HouseholdGroupState,
   HouseholdPersonEdit,
+  HouseholdQuestion,
   HouseholdRow,
   ProfileHousehold,
   ProfileCompanionPort,
@@ -15,12 +20,14 @@ import type {
 import { useStrings } from "../../shell/strings";
 import type { ProfileChange, UserProfilePort } from "../../shell/userProfile";
 import {
+  answerEdit,
   atCap,
   blockedWrite,
   declaredNone,
   factWords,
   orderedRows,
   replacement,
+  statedChoice,
 } from "./householdModel";
 import {
   HouseholdPersonDialog,
@@ -33,7 +40,9 @@ import {
 // sets. Nothing here knows what a descendant or an ascendant is owed. A group
 // nobody has answered is unknown, never empty; a hidden value stays hidden;
 // every edit is the product's whole-set replacement against the revision the
-// household was read at.
+// household was read at. A question the product asks of the household is drawn
+// apart from the groups: its answer is stated, or not stated, and not stated is
+// never drawn as a "no".
 
 /** How each stated state of a group is marked. A state is a stated token of
  * the product, and each keeps a mark and words of its own. */
@@ -320,6 +329,85 @@ function Group({
   );
 }
 
+/** A question the product asks of this household now, with the answer the
+ * profile states. A stated answer is marked in the product's words for it;
+ * nothing stated has a mark of its own and no choice selected. */
+function Question({
+  question,
+  disabled,
+  onAnswer,
+}: {
+  question: HouseholdQuestion;
+  disabled: boolean;
+  onAnswer(value: string | null): void;
+}) {
+  const t = useStrings();
+  const heading = useId();
+  const stated = statedChoice(question);
+  return (
+    <section
+      aria-labelledby={heading}
+      data-household-question={question.question_id}
+      data-household-answer={stated?.value ?? "unknown"}
+      className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3"
+    >
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h4 id={heading} className="text-base font-medium text-foreground">
+          {question.prompt}
+        </h4>
+        <span className="flex items-center gap-1.5 text-sm">
+          <Icon
+            name={stated ? "check" : "unknown"}
+            size="xs"
+            className={stated ? "text-success" : "text-faint"}
+          />
+          <span data-household-mark="" className="text-foreground">
+            {stated
+              ? stated.label
+              : t("desktop.profile.household.state.unknown")}
+          </span>
+        </span>
+      </div>
+      {question.help && (
+        <p className="text-sm text-muted-foreground">{question.help}</p>
+      )}
+      {!stated && (
+        <p className="text-sm text-muted-foreground">
+          {t("desktop.profile.household.question.unknown_help")}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <SegmentedControl
+          aria-labelledby={heading}
+          value={stated?.value ?? ""}
+          disabled={disabled}
+          onValueChange={onAnswer}
+        >
+          {question.choices.map((choice) => (
+            <SegmentedControlItem
+              key={choice.value}
+              value={choice.value}
+              data-household-choice={choice.value}
+            >
+              {choice.label}
+            </SegmentedControlItem>
+          ))}
+        </SegmentedControl>
+        {stated && (
+          <Button
+            size="xs"
+            variant="ghost"
+            disabled={disabled}
+            onClick={() => onAnswer(null)}
+          >
+            {t("desktop.profile.household.question.clear")}
+          </Button>
+        )}
+      </div>
+    </section>
+  );
+}
+
 /**
  * The household element. It reads the household through the profile's
  * companion read and writes through the profile's one write door, naming the
@@ -502,6 +590,16 @@ export function Household({
             />
           ))}
         </div>
+        {household.questions.map((question) => (
+          <Question
+            key={question.question_id}
+            question={question}
+            disabled={closed}
+            onAnswer={(value) =>
+              void write(household, answerEdit(question, value))
+            }
+          />
+        ))}
         {open && (
           <HouseholdPersonDialog
             group={open.group}

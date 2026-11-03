@@ -4637,6 +4637,9 @@ desktop:
         és desconegut, que no és el mateix que cap.
       limit: '{count} d''un màxim de {max} persones'
       people: 'Persones: {count}'
+      question:
+        clear: Retirar la resposta
+        unknown_help: Encara no has indicat res, i això no és el mateix que «no».
       reading: Llegint la teva família…
       remove: Treu la persona
       remove_help: Vols treure aquesta persona de la teva família? El recompte s'actualitza

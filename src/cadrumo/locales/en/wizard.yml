@@ -256,6 +256,13 @@ wizard:
     familia:
       title: Family situation
     family:
+      family-convive-con-otro-progenitor:
+        help: Article 84.2.4 of the personal income tax law (LIRPF) denies the joint-taxation
+          reduction of a single-parent family unit when the taxpayer lives with the
+          father or mother of any child in the unit. Leave this unanswered if you
+          do not know; Cadrumo then cannot work out that reduction.
+        prompt: Do you live with the father or mother of any child in your family
+          unit?
       family-descendants-eu-eea-deduction:
         prompt: EU/EEA descendants in family-unit deduction
       family-minor-children-in-unit:
@@ -294,6 +301,9 @@ wizard:
         help: Public administration budget over 6,000,000
       entity-type:
         help: Natural person, legal entity, or attribution entity
+      family-convive-con-otro-progenitor:
+        help: 'Single-parent unit: whether you live with the father or mother of a
+          child in the unit (article 84.2.4 LIRPF)'
       family-descendants-eu-eea-deduction:
         help: EU/EEA descendants in family-unit deduction
       family-minor-children-in-unit:

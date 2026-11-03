@@ -3,6 +3,7 @@ import type {
   HouseholdFact,
   HouseholdGroup,
   HouseholdLeaf,
+  HouseholdQuestion,
   ProfileCompanionPort,
   ProfileHousehold,
 } from "../shell/profileHousehold";
@@ -13,9 +14,10 @@ import type { ProfileChange } from "../shell/userProfile";
 // details of the refusals an ascendants or descendants replacement settled
 // with. Regenerate with dev.desktop_household_fixture; never invent fields
 // here. The fixture assembles the stream the way the host does (groups
-// followed by their rows, a hidden value replaced by its mask), keeps what a
-// replacement states and answers the next read with it, so a story or a
-// scenario sees a write land.
+// followed by their rows, a hidden value replaced by its mask, then the
+// questions the product asks of the household), keeps what a replacement or an
+// answer states and answers the next read with it, so a story or a scenario
+// sees a write land.
 
 export type HouseholdScenario = keyof typeof fixtures.reads;
 
@@ -54,7 +56,8 @@ type Item =
       group_key: string;
       row_index: string;
       facts: HouseholdFact[];
-    };
+    }
+  | ({ kind: "family_question" } & HouseholdQuestion);
 
 type Stored = {
   group: Omit<HouseholdGroup, "rows">;
@@ -64,6 +67,10 @@ type Stored = {
 export type HouseholdFixture = {
   reads: Pick<ProfileCompanionPort, "household">;
   change(change: ProfileChange): Promise<void>;
+  /** Whether an edit is one of the household's: a replacement of a group, or
+   * an answer to a question the household is asked. Any other edit of the
+   * profile is not the household's to take. */
+  takes(edit: ProfileChange["edit"]): boolean;
   /** The changes the fixture took, in order. */
   writes(): ProfileChange[];
   /** Reads answered so far. */
@@ -80,9 +87,30 @@ function itemsOf(scenario: HouseholdScenario, language: string): Item[] {
   return structuredClone(byLanguage[language] ?? byLanguage.en!);
 }
 
+function questionsOf(
+  scenario: HouseholdScenario,
+  language: string,
+): HouseholdQuestion[] {
+  return itemsOf(scenario, language).flatMap((item) =>
+    item.kind === "family_question"
+      ? [
+          {
+            question_id: item.question_id,
+            path: item.path,
+            prompt: item.prompt,
+            help: item.help,
+            saved_value: item.saved_value,
+            choices: item.choices,
+          },
+        ]
+      : [],
+  );
+}
+
 function assemble(items: Item[]): Stored[] {
   const groups: Stored[] = [];
   for (const item of items) {
+    if (item.kind === "family_question") continue;
     if (item.kind === "family_group") {
       groups.push({
         group: {
@@ -135,6 +163,13 @@ export function householdFixture(
       },
     ]),
   );
+  // The answer each question states now; a write replaces it.
+  const answers = new Map(
+    questionsOf(scenario, language).map((question) => [
+      question.path,
+      question.saved_value,
+    ]),
+  );
   let revision = start.record_revision;
   const taken: ProfileChange[] = [];
   let reads = 0;
@@ -162,6 +197,10 @@ export function householdFixture(
         })),
       };
     }),
+    questions: questionsOf(scenario, asked).map((question) => ({
+      ...question,
+      saved_value: answers.get(question.path) ?? null,
+    })),
     pages: 1,
   });
 
@@ -183,13 +222,33 @@ export function householdFixture(
         };
       }
       const edit = change.edit;
-      if (edit.kind !== "descendants" && edit.kind !== "ascendants")
-        throw { code: "refused" };
       if (
         change.expected_revision !== revision ||
         change.expected_content_digest !== digest()
       )
         throw { code: "conflict" };
+      if (edit.kind === "field") {
+        // An answer to a question the product asks: one of its served
+        // choices, or the empty token that takes the statement back.
+        const asked = questionsOf(scenario, language).find(
+          (question) => question.path === edit.path,
+        );
+        if (
+          !asked ||
+          (edit.value !== "" &&
+            !asked.choices.some((choice) => choice.value === edit.value))
+        )
+          throw { code: "refused" };
+        answers.set(asked.path, edit.value === "" ? null : edit.value);
+        revision += 1;
+        if (lost) {
+          lost = false;
+          throw { code: "unknown" };
+        }
+        return;
+      }
+      if (edit.kind !== "descendants" && edit.kind !== "ascendants")
+        throw { code: "refused" };
       const key =
         edit.kind === "descendants"
           ? "renta_family.descendiente"
@@ -239,6 +298,10 @@ export function householdFixture(
         throw { code: "unknown" };
       }
     },
+    takes: (edit) =>
+      edit.kind === "descendants" ||
+      edit.kind === "ascendants" ||
+      (edit.kind === "field" && answers.has(edit.path)),
     writes: () => taken,
     readCount: () => reads,
     refuseNext(next) {

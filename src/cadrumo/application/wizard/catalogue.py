@@ -441,6 +441,20 @@ def _family_visibility(
     return _joint_declaration, _married, _premio_loteria_declared, _non_resident_irpf, _eu_eea_resident
 
 
+def _single_parent_unit(operation: PinnedAuthorityOperation) -> WizardVisibility:
+    """Visible under every family situation the registry maps to the Art. 82.1.2ª single-parent unit."""
+    from ...domain.calculations.registry.situacion_familiar_catalogue import resolve_situacion_familiar_catalogue
+
+    catalogue = resolve_situacion_familiar_catalogue(authority=operation)
+    return WizardVisibility(
+        any_of=tuple(
+            WizardCondition(question_id="situacion-familiar", equals=definition.token.value)
+            for definition in catalogue.definitions
+            if definition.monoparental_required
+        ),
+    )
+
+
 def _iva_regime_tokens_under(operation: PinnedAuthorityOperation) -> Sequence[_RegistryToken]:
     """Read the IVA regime choices, resolving the default through the same pinned operation."""
     from ...domain.calculations.registry.iva_regime_vocabulary import (
@@ -567,6 +581,7 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
         _married,
         _natural_person,
         _non_resident_irpf,
+        _single_parent_unit(operation),
         wizard_declaration_type_choices,
         wizard_disability_grade_choices,
         wizard_marital_status_choices,

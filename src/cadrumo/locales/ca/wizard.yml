@@ -265,6 +265,13 @@ wizard:
     familia:
       title: Situació familiar
     family:
+      family-convive-con-otro-progenitor:
+        help: L'article 84.2.4 de la Llei de l'IRPF exclou la reducció per tributació
+          conjunta de la unitat familiar monoparental quan el contribuent conviu amb
+          el pare o la mare d'algun dels fills que en formen part. Deixa-ho sense
+          respondre si no ho saps; llavors Cadrumo no pot calcular aquesta reducció.
+        prompt: Convius amb el pare o la mare d'algun dels fills de la teva unitat
+          familiar?
       family-descendants-eu-eea-deduction:
         prompt: Descendents UE/EEE en deducció d'unitat familiar
       family-minor-children-in-unit:
@@ -304,6 +311,9 @@ wizard:
         help: Pressupost administració pública superior a 6.000.000
       entity-type:
         help: Persona física, persona jurídica o entitat en atribució de rendes
+      family-convive-con-otro-progenitor:
+        help: 'Unitat monoparental: si convius amb el pare o la mare d''un fill de
+          la unitat (article 84.2.4 LIRPF)'
       family-descendants-eu-eea-deduction:
         help: Descendents UE/EEE en deducció d'unitat familiar
       family-minor-children-in-unit:

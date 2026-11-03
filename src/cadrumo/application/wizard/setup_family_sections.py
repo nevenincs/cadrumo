@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ...core.i18n.translatable import Translatable as tr
-from .models import WizardChoice, WizardCondition, WizardQuestion, WizardSection, WizardWidget
+from .models import WizardChoice, WizardCondition, WizardQuestion, WizardSection, WizardVisibility, WizardWidget
 from .setup_questions import confirmation_question
 
 
@@ -13,6 +13,7 @@ def build_family_section(
     _married: WizardCondition,
     _natural_person: WizardCondition,
     _non_resident_irpf: WizardCondition,
+    _single_parent_unit: WizardVisibility,
     wizard_declaration_type_choices: tuple[WizardChoice, ...],
     wizard_disability_grade_choices: tuple[WizardChoice, ...],
     wizard_marital_status_choices: tuple[WizardChoice, ...],
@@ -129,6 +130,21 @@ def build_family_section(
                 "renta_family.minor_children_in_unit",
                 suffix="family",
                 visible_when=_natural_person,
+            ),
+            WizardQuestion(
+                # Art. 84.2.4º LIRPF: the joint-taxation reduction of a single-parent
+                # unit does not apply while the taxpayer lives with the father or
+                # mother of a child in the unit. Asked only of that modality, and
+                # carrying no default: an unanswered question stays absent, so the
+                # fact reads as unstated rather than as a "no".
+                id="family-convive-con-otro-progenitor",
+                profile_key="renta_family.convive_con_otro_progenitor",
+                widget=WizardWidget.CONFIRM,
+                prompt=tr("wizard.setup.family.family-convive-con-otro-progenitor.prompt"),
+                help=tr("wizard.setup.family.family-convive-con-otro-progenitor.help"),
+                required=False,
+                visible_when=_single_parent_unit,
+                answer_type=bool,
             ),
         ),
     )

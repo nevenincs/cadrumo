@@ -4562,6 +4562,9 @@ desktop:
         which is not the same as none.
       limit: '{count} of at most {max} people'
       people: 'People: {count}'
+      question:
+        clear: Withdraw the answer
+        unknown_help: Nothing is stated yet, which is not the same as no.
       reading: Reading your household…
       remove: Remove person
       remove_help: Remove this person from your household? The count is updated with

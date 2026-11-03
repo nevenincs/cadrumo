@@ -447,3 +447,71 @@ def test_uncalculated_return_refuses(profile_factory) -> None:
     work_unit_id = profile.create_work()
 
     assert _refused(profile, work_unit_id).refusal is TaxationComparisonRefusal.NOT_CALCULATED
+
+
+def _state_cohabitation(profile: _Profile, answer: str, *, through: str) -> None:
+    """State whether the single parent lives with the child's other parent, as a person does.
+
+    ``through`` names the door: the wizard's revision-bound patch or the desktop's
+    one-field writer. Both are given the revision and digest the profile was read at.
+    """
+    from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
+    from ....application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ....application.wizard.catalogue import build_setup_flow
+    from ....application.wizard.patch_edit import apply_profile_patch
+
+    context = profile.operation.profile_decode_context()
+    read = ProfileRecordRepository.for_current_session(_BUCKET_ID, profile_decode_context=context).load(_BUCKET_ID)
+    if through == "wizard":
+        apply_profile_patch(
+            flow=build_setup_flow(profile.operation),
+            profile_id=_BUCKET_ID,
+            expected_revision=read.record_revision,
+            expected_content_digest=read.content_digest,
+            supplied={"family-convive-con-otro-progenitor": answer},
+            colegio_concertado=None,
+            operation=profile.operation,
+        )
+    else:
+        apply_manager_profile_field_mutation(
+            profile_id=_BUCKET_ID,
+            path="renta_family.convive_con_otro_progenitor",
+            value=answer,
+            expected_revision=read.record_revision,
+            expected_content_digest=read.content_digest,
+            profile_decode_context=context,
+        )
+
+
+@pytest.mark.parametrize("door", ["wizard", "desktop"])
+def test_stating_the_cohabitation_lets_a_single_parent_compare(profile_factory, door: str) -> None:
+    """Stating the fact through either door resolves box 0461, so the comparison stops refusing on it.
+
+    Art. 84.2.4º LIRPF: the 2,150 EUR reduction does not apply while the single
+    parent lives with the father or mother of a child in the unit, so living
+    together leaves a higher joint result than living apart. Withdrawing the
+    answer returns the refusal: not stated is not "no".
+    """
+    profile = profile_factory(_single_parent_facts(convive_con_otro_progenitor=None))
+    _credited(profile)
+    work_unit_id = profile.create_work()
+
+    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    assert "0461" in _refused(profile, work_unit_id).casilla_ids
+
+    _state_cohabitation(profile, "false", through=door)
+    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    apart = profile.compare(work_unit_id)
+
+    _state_cohabitation(profile, "true", through=door)
+    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    together = profile.compare(work_unit_id)
+
+    assert Decimal(together.conjunta_resultado) > Decimal(apart.conjunta_resultado)
+    assert together.individual_resultado == apart.individual_resultado
+
+    _state_cohabitation(profile, "", through="desktop")
+    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    refusal = _refused(profile, work_unit_id)
+    assert refusal.refusal is TaxationComparisonRefusal.UNRESOLVED_BOXES
+    assert "0461" in refusal.casilla_ids

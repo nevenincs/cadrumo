@@ -2,10 +2,10 @@
 //! stream of `user-profile.view`: each group of people with the leaves its
 //! rows can state and the rows stored, in the product's words. Only a
 //! complete stream pinned to one profile revision is released, and an item
-//! outside the two kinds the stream serves, an unknown member or a row that
+//! outside the three kinds the stream serves, an unknown member or a row that
 //! does not belong to the group before it is refused. The host holds no
-//! family rule: which leaves exist, their words and their answer sets are
-//! the product's.
+//! family rule: which leaves exist, which questions are asked now, their
+//! words and their answer sets are the product's.
 use super::wire::{Page, Pin};
 use super::{Failure, PROFILE_READ_LIMIT, ProfileHost, Result, protocol};
 use serde::{Deserialize, Serialize};
@@ -61,6 +61,10 @@ struct Fact {
     masked: bool,
 }
 
+/// The answers a question can state. A question the profile states nothing
+/// for carries none, which is neither of the two.
+const STATED_ANSWERS: [&str; 2] = ["true", "false"];
+
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Item {
@@ -79,6 +83,27 @@ enum Item {
         row_index: String,
         facts: Vec<Fact>,
     },
+    FamilyQuestion {
+        question_id: String,
+        path: String,
+        prompt: String,
+        help: Option<String>,
+        saved_value: Option<String>,
+        choices: Vec<Choice>,
+    },
+}
+
+/// A household question the product asks of this profile now, with the answer
+/// the profile states for it. A profile that states nothing has no
+/// `saved_value`; the window draws that apart from a stated "no".
+#[derive(Debug, Serialize)]
+pub struct Question {
+    question_id: String,
+    path: String,
+    prompt: String,
+    help: Option<String>,
+    saved_value: Option<String>,
+    choices: Vec<Choice>,
 }
 
 #[derive(Debug, Serialize)]
@@ -109,6 +134,7 @@ pub struct Household {
     record_revision: u64,
     content_digest: String,
     groups: Vec<Group>,
+    questions: Vec<Question>,
     pages: usize,
 }
 
@@ -124,6 +150,7 @@ pub struct Family {
     profile_id: String,
     pin: Pin,
     groups: Vec<Group>,
+    questions: Vec<Question>,
     keys: BTreeSet<String>,
 }
 impl Family {
@@ -132,6 +159,7 @@ impl Family {
             pin: Pin::new(PAGE_KIND, profile_id.clone()),
             profile_id,
             groups: vec![],
+            questions: vec![],
             keys: BTreeSet::new(),
         }
     }
@@ -206,6 +234,39 @@ impl Family {
                     }
                     group.rows.push(Row { row_index, facts });
                 }
+                Item::FamilyQuestion {
+                    question_id,
+                    path,
+                    prompt,
+                    help,
+                    saved_value,
+                    choices,
+                } => {
+                    let answers: BTreeSet<_> = choices.iter().map(|choice| &choice.value).collect();
+                    if question_id.is_empty()
+                        || path.is_empty()
+                        || prompt.is_empty()
+                        || self
+                            .questions
+                            .iter()
+                            .any(|question| question.question_id == question_id)
+                        || choices.is_empty()
+                        || answers.len() != choices.len()
+                        || saved_value.as_ref().is_some_and(|stated| {
+                            !STATED_ANSWERS.contains(&stated.as_str()) || !answers.contains(stated)
+                        })
+                    {
+                        return Err(protocol());
+                    }
+                    self.questions.push(Question {
+                        question_id,
+                        path,
+                        prompt,
+                        help,
+                        saved_value,
+                        choices,
+                    });
+                }
                 Item::FamilyGroup { .. } => return Err(protocol()),
             }
         }
@@ -234,6 +295,7 @@ impl Family {
             record_revision: self.pin.record_revision(),
             content_digest: self.pin.content_digest(),
             groups: self.groups,
+            questions: self.questions,
             pages: self.pin.pages(),
         })
     }
@@ -299,6 +361,12 @@ mod tests {
     fn not_served() -> Value {
         json!({"kind":"family_group","group_key":"renta_family.ascendiente","label":"Ascendants",
             "state":"not_served","stated_count":null,"row_count":0,"incomplete_words":null,"leaves":[]})
+    }
+    fn question(saved: Value) -> Value {
+        json!({"kind":"family_question","question_id":"family-convive-con-otro-progenitor",
+            "path":"renta_family.convive_con_otro_progenitor","prompt":"Do you live with them?",
+            "help":null,"saved_value":saved,
+            "choices":[{"value":"true","label":"Yes"},{"value":"false","label":"No"}]})
     }
     fn page(items: Vec<Value>, cursor: usize, total: usize) -> Value {
         let next = cursor + items.len();
@@ -415,7 +483,57 @@ mod tests {
     }
 
     #[test]
-    fn only_the_two_item_kinds_of_the_stream_are_taken() {
+    fn a_question_keeps_the_answer_the_profile_states_and_never_makes_one_up() {
+        for (saved, expected) in [
+            (json!("true"), json!("true")),
+            (json!("false"), json!("false")),
+            (Value::Null, Value::Null),
+        ] {
+            let shown =
+                serde_json::to_value(read(vec![group("unknown", 0), question(saved)]).unwrap())
+                    .unwrap();
+            assert_eq!(shown["questions"].as_array().unwrap().len(), 1);
+            assert_eq!(shown["questions"][0]["saved_value"], expected);
+            assert_eq!(shown["questions"][0]["choices"][1]["label"], "No");
+        }
+        // A household with no question to ask carries none, not an empty answer.
+        let shown = serde_json::to_value(read(vec![group("unknown", 0)]).unwrap()).unwrap();
+        assert_eq!(shown["questions"], json!([]));
+    }
+
+    #[test]
+    fn a_question_that_states_an_answer_outside_its_choices_is_refused() {
+        for saved in [json!("yes"), json!(""), json!("TRUE"), json!(true)] {
+            assert!(read(vec![group("unknown", 0), question(saved)]).is_err());
+        }
+        let mut offered = question(json!("true"));
+        offered["choices"] = json!([{"value":"false","label":"No"}]);
+        assert!(read(vec![group("unknown", 0), offered]).is_err());
+        let mut bare = question(Value::Null);
+        bare["choices"] = json!([]);
+        assert!(read(vec![group("unknown", 0), bare]).is_err());
+        let mut repeated = question(Value::Null);
+        repeated["choices"] =
+            json!([{"value":"true","label":"Yes"},{"value":"true","label":"Yes"}]);
+        assert!(read(vec![group("unknown", 0), repeated]).is_err());
+        let mut unnamed = question(Value::Null);
+        unnamed["prompt"] = "".into();
+        assert!(read(vec![group("unknown", 0), unnamed]).is_err());
+        let mut extra = question(Value::Null);
+        extra["advice"] = "x".into();
+        assert!(read(vec![group("unknown", 0), extra]).is_err());
+        assert!(
+            read(vec![
+                group("unknown", 0),
+                question(Value::Null),
+                question(Value::Null)
+            ])
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn only_the_three_item_kinds_of_the_stream_are_taken() {
         for foreign in [
             json!({"kind":"section","key":"identity","title":"T","summary":"","repeatable":false}),
             json!({"kind":"field","section_key":"identity","field":{}}),

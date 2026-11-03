@@ -8,8 +8,11 @@ import { label } from "../support/strings";
 // replacement, not wording of the window.
 
 type Item = {
-  kind: "family_group" | "family_row";
+  kind: "family_group" | "family_row" | "family_question";
   group_key: string;
+  prompt?: string;
+  saved_value?: string | null;
+  choices?: { value: string; label: string }[];
   label?: string;
   state?: string;
   incomplete_words?: string | null;
@@ -32,6 +35,14 @@ const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 type Language = (typeof LANGUAGES)[number];
 const DESCENDANTS = "renta_family.descendiente";
 const ASCENDANTS = "renta_family.ascendiente";
+
+const PATH = "renta_family.convive_con_otro_progenitor";
+
+/** The question the product served for a scenario, in a language. */
+const questionOf = (scenario: string, language: Language) =>
+  served.reads[scenario]!.items[language]!.find(
+    (item) => item.kind === "family_question",
+  )!;
 
 const groupsOf = (scenario: string, language: Language) =>
   served.reads[scenario]!.items[language]!.filter(
@@ -60,6 +71,9 @@ async function open(
 
 const group = (household: Locator, key: string) =>
   household.locator(`[data-household-group="${key}"]`);
+
+const question = (household: Locator) =>
+  household.locator("[data-household-question]");
 
 test.describe("the household in the profile page", () => {
   for (const language of LANGUAGES) {
@@ -316,6 +330,82 @@ test.describe("the household in the profile page", () => {
         name: label("desktop.profile.household.add"),
       }),
     ).toBeEnabled();
+  });
+
+  for (const language of LANGUAGES) {
+    test(`a single parent is asked, and not stated is told apart from no (${language})`, async ({
+      page,
+    }) => {
+      for (const [scenario, answer] of [
+        ["single_parent_unstated", "unknown"],
+        ["single_parent_lives_with", "true"],
+        ["single_parent_apart", "false"],
+      ] as const) {
+        const household = await open(page, scenario, language);
+        const asked = question(household);
+        await expect(asked).toHaveCount(1);
+        await expect(asked).toHaveAttribute("data-household-answer", answer);
+        const served = questionOf(scenario, language);
+        // The words are the product's own, not the window's.
+        await expect(asked.getByRole("heading")).toHaveText(served.prompt!);
+        const stated = served.choices!.find(
+          (choice) => choice.value === answer,
+        );
+        await expect(asked.locator("[data-household-mark]")).toHaveText(
+          stated
+            ? stated.label
+            : label("desktop.profile.household.state.unknown", {}, language),
+        );
+        for (const choice of served.choices!)
+          await expect(
+            asked.getByRole("radio", { name: choice.label }),
+          ).toHaveAttribute(
+            "aria-checked",
+            choice.value === answer ? "true" : "false",
+          );
+      }
+    });
+  }
+
+  test("a married unit is not asked the single-parent question", async ({
+    page,
+  }) => {
+    const household = await open(page, "married");
+    await expect(question(household)).toHaveCount(0);
+    await expect(group(household, DESCENDANTS)).toBeVisible();
+  });
+
+  test("the answer is written to the profile fact against the revision read, and taken back", async ({
+    page,
+  }) => {
+    const household = await open(page, "single_parent_unstated");
+    const asked = question(household);
+    const choices = questionOf("single_parent_unstated", "en").choices!;
+    const yes = choices.find((choice) => choice.value === "true")!;
+    await asked.getByRole("radio", { name: yes.label }).click();
+    await expect(asked).toHaveAttribute("data-household-answer", "true");
+    await asked
+      .getByRole("button", {
+        name: label("desktop.profile.household.question.clear"),
+      })
+      .click();
+    await expect(asked).toHaveAttribute("data-household-answer", "unknown");
+    const writes = await page.evaluate(() =>
+      window.__scenarioHousehold!.writes(),
+    );
+    expect(writes.map((write) => write.edit)).toEqual([
+      { kind: "field", path: PATH, value: "true" },
+      { kind: "field", path: PATH, value: "" },
+    ]);
+    // Each answer names the revision the household was read at, and the next
+    // one the revision the first moved it to.
+    expect(writes[0]!.expected_revision).toBeGreaterThan(0);
+    expect(writes[1]!.expected_revision).toBe(writes[0]!.expected_revision + 1);
+    // The groups stated nothing in the meantime.
+    await expect(group(household, DESCENDANTS)).toHaveAttribute(
+      "data-household-state",
+      "unknown",
+    );
   });
 });
 

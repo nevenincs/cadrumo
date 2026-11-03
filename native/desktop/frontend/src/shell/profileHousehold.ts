@@ -64,6 +64,21 @@ export type HouseholdGroup = {
   rows: HouseholdRow[];
 };
 
+/** A question the product asks of this household now, in its own words, with
+ * the answer the profile states. `saved_value` is the token of a served
+ * choice, or null when the profile states nothing: not stated is neither of
+ * the choices and is never drawn as one. A question the product does not ask
+ * of this household is not served. */
+export type HouseholdQuestion = {
+  question_id: string;
+  /** The stored fact the answer is written to. */
+  path: string;
+  prompt: string;
+  help: string | null;
+  saved_value: string | null;
+  choices: { value: string; label: string }[];
+};
+
 /** The household at the revision it was read at, which an edit of it names
  * as its baseline. */
 export type ProfileHousehold = {
@@ -71,6 +86,7 @@ export type ProfileHousehold = {
   record_revision: number;
   content_digest: string;
   groups: HouseholdGroup[];
+  questions: HouseholdQuestion[];
   pages: number;
 };
 

@@ -4607,6 +4607,9 @@ desktop:
         ismeretlen, ami nem azonos azzal, hogy nincs egy sem.
       limit: '{count} személy, legfeljebb {max} közül'
       people: 'Személyek: {count}'
+      question:
+        clear: Válasz visszavonása
+        unknown_help: Még nem adtál meg semmit, és ez nem ugyanaz, mint a „nem”.
       reading: A családod beolvasása…
       remove: Személy eltávolítása
       remove_help: Eltávolítod ezt a személyt a családodból? A létszám vele együtt

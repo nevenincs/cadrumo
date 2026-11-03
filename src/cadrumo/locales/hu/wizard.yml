@@ -276,6 +276,14 @@ wizard:
     familia:
       title: Családi helyzet
     family:
+      family-convive-con-otro-progenitor:
+        help: Az szja-törvény (LIRPF) 84. cikkének 2. bekezdés 4. pontja kizárja a
+          közös adózás szerinti csökkentést az egyszülős családi egységnél, ha az
+          adózó az egységhez tartozó valamelyik gyermek apjával vagy anyjával él együtt.
+          Ha nem tudod, hagyd megválaszolatlanul; ilyenkor a Cadrumo nem tudja kiszámolni
+          ezt a csökkentést.
+        prompt: Együtt élsz a családi egységedhez tartozó valamelyik gyermek apjával
+          vagy anyjával?
       family-descendants-eu-eea-deduction:
         prompt: EU/EEE leszármazottak a családi egység levonásban
       family-minor-children-in-unit:
@@ -317,6 +325,9 @@ wizard:
         help: Közigazgatási költségvetés meghaladja a 6 000 000-t
       entity-type:
         help: Természetes személy, jogi személy vagy jövedelem-hozzárendelési szervezet
+      family-convive-con-otro-progenitor:
+        help: 'Egyszülős egység: együtt élsz-e a családi egységhez tartozó gyermek
+          apjával vagy anyjával (LIRPF 84. cikk 2.4)'
       family-descendants-eu-eea-deduction:
         help: EU/EEE leszármazottak a családi egység levonásban
       family-minor-children-in-unit:

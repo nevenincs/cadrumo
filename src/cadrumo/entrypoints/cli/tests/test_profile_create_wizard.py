@@ -106,6 +106,7 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "enrollment-large-company",
         "enrollment-public-administration-budget-gt-6000000",
         "entity-type",
+        "family-convive-con-otro-progenitor",
         "family-descendants-eu-eea-deduction",
         "family-minor-children-in-unit",
         "fiscal-residency",

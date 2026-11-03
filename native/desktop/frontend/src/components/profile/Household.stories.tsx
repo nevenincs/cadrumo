@@ -33,6 +33,22 @@ function servedLabel(
   return groups[group]!.leaves!.find((entry) => entry.leaf === leaf)!.label;
 }
 
+/** The question the product served for a scenario, in a language. */
+function servedQuestion(scenario: HouseholdScenario, locale: string) {
+  const byLanguage = fixtures.reads[scenario].items as unknown as Record<
+    string,
+    {
+      kind: string;
+      prompt?: string;
+      saved_value?: string | null;
+      choices?: { value: string; label: string }[];
+    }[]
+  >;
+  return (byLanguage[locale] ?? byLanguage.en!).find(
+    (item) => item.kind === "family_question",
+  )!;
+}
+
 const language = (globals: Record<string, unknown>) =>
   String(globals.locale ?? "en");
 
@@ -306,5 +322,134 @@ export const UnknownOutcome: Story = {
       name: t("desktop.profile.household.add"),
     }))
       expect(button).toBeDisabled();
+  },
+};
+
+/** Waits for the household to be read and returns the question it is asked. */
+async function asked(canvasElement: HTMLElement) {
+  await groups(canvasElement);
+  return canvasElement.querySelector<HTMLElement>("[data-household-question]");
+}
+
+const PATH = "renta_family.convive_con_otro_progenitor";
+
+export const QuestionUnknown: Story = {
+  name: "Question unknown: a single parent has not said, which is not no",
+  render: (_, { globals }) => (
+    <Element scenario="single_parent_unstated" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const t = translator(locale);
+    const question = (await asked(canvasElement))!;
+    expect(question).toHaveAttribute("data-household-answer", "unknown");
+    const served = servedQuestion("single_parent_unstated", locale);
+    expect(within(question).getByRole("heading").textContent).toBe(
+      served.prompt,
+    );
+    expect(question.querySelector("[data-household-mark]")!.textContent).toBe(
+      t("desktop.profile.household.state.unknown"),
+    );
+    // Neither answer is chosen, and nothing is offered to take back.
+    for (const choice of within(question).getAllByRole("radio"))
+      expect(choice).toHaveAttribute("aria-checked", "false");
+    expect(
+      within(question).queryByRole("button", {
+        name: t("desktop.profile.household.question.clear"),
+      }),
+    ).toBeNull();
+    expect(
+      within(question).getByText(
+        t("desktop.profile.household.question.unknown_help"),
+      ),
+    ).toBeTruthy();
+  },
+};
+
+export const QuestionYes: Story = {
+  name: "Question yes: the answer states they live together",
+  render: (_, { globals }) => (
+    <Element scenario="single_parent_lives_with" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const question = (await asked(canvasElement))!;
+    expect(question).toHaveAttribute("data-household-answer", "true");
+    const served = servedQuestion("single_parent_lives_with", locale);
+    const yes = served.choices!.find((choice) => choice.value === "true")!;
+    expect(question.querySelector("[data-household-mark]")!.textContent).toBe(
+      yes.label,
+    );
+    expect(
+      within(question).getByRole("radio", { name: yes.label }),
+    ).toHaveAttribute("aria-checked", "true");
+  },
+};
+
+export const QuestionNo: Story = {
+  name: "Question no: the answer states they do not, drawn apart from unknown",
+  render: (_, { globals }) => (
+    <Element scenario="single_parent_apart" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const t = translator(locale);
+    const question = (await asked(canvasElement))!;
+    expect(question).toHaveAttribute("data-household-answer", "false");
+    const served = servedQuestion("single_parent_apart", locale);
+    const no = served.choices!.find((choice) => choice.value === "false")!;
+    const mark = question.querySelector("[data-household-mark]")!.textContent;
+    expect(mark).toBe(no.label);
+    expect(mark).not.toBe(t("desktop.profile.household.state.unknown"));
+    expect(
+      within(question).getByRole("radio", { name: no.label }),
+    ).toHaveAttribute("aria-checked", "true");
+  },
+};
+
+export const QuestionNotAsked: Story = {
+  name: "Question not asked: a married unit is not served the single-parent question",
+  render: (_, { globals }) => (
+    <Element scenario="married" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement }) => {
+    await groups(canvasElement);
+    expect(canvasElement.querySelector("[data-household-question]")).toBeNull();
+  },
+};
+
+export const QuestionAnswered: Story = {
+  name: "Answering: the answer is written to the profile fact and can be taken back",
+  render: (_, { globals }) => (
+    <Element scenario="single_parent_unstated" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const t = translator(locale);
+    const question = (await asked(canvasElement))!;
+    const served = servedQuestion("single_parent_unstated", locale);
+    const yes = served.choices!.find((choice) => choice.value === "true")!;
+    await userEvent.click(
+      within(question).getByRole("radio", { name: yes.label }),
+    );
+    await waitFor(() =>
+      expect(question).toHaveAttribute("data-household-answer", "true"),
+    );
+    await userEvent.click(
+      within(question).getByRole("button", {
+        name: t("desktop.profile.household.question.clear"),
+      }),
+    );
+    await waitFor(() =>
+      expect(question).toHaveAttribute("data-household-answer", "unknown"),
+    );
+    // Each write named the fact and the token of a served choice, or the
+    // empty token that takes the statement back.
+    expect(
+      window.__scenarioHousehold!.writes().map((write) => write.edit),
+    ).toEqual([
+      { kind: "field", path: PATH, value: "true" },
+      { kind: "field", path: PATH, value: "" },
+    ]);
   },
 };
