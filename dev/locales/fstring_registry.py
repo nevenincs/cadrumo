@@ -278,6 +278,7 @@ def _runtime_registrations(
     """Enumerate runtime refusal, action and terminal-condition copy."""
     from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaRefusalReason
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
+    from cadrumo.application.prorrata_register.projection_contracts import ProrrataRefusalReason
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
     from cadrumo.core.errors.error_codes import ErrorCategory
@@ -356,6 +357,13 @@ def _runtime_registrations(
             for prefix in ("tui.root.account", "tui.root.account_key", "tui.root.account_help")
         ),
         m303_carry_error_registration(),
+        FStringKeyRegistration(
+            # Bounded enumeration: the prorrata register serves one sentence per refusal reason,
+            # keyed by the closed ProrrataRefusalReason literal (prorrata_register/refusal_words.py).
+            description="application.prorrata_register.served.* (ProrrataRefusalReason)",
+            key_factory=lambda v: f"application.prorrata_register.served.{v}",
+            values=tuple(cast("tuple[str, ...]", get_args(ProrrataRefusalReason.__value__))),
+        ),
         FStringKeyRegistration(
             # Bounded enumeration: the write refusal derives its message key from the
             # closed reason the repository raises it with.
