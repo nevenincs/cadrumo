@@ -258,6 +258,27 @@ def _load_inventory_ledgers(
             ),
         )
     ledgers = tuple(sorted((item for item in selected if not item.is_retired), key=lambda item: item.actividad_id))
+    # The closing value is the operator's decision for the year, so a book that
+    # has none yet is unfinished rather than inconsistent: the existencias
+    # finales are unknown until it is recorded, and only then can the variation
+    # of casillas 0177 and 0182 be derived.
+    if any(item.closing_authority_record is None for item in ledgers):
+        return CalculationSourceResolution(
+            resolver_id=resolver_id,
+            owned_sources=owned_sources,
+            unresolved_binding_ids=binding_ids,
+            diagnostics=(
+                _diagnostic(
+                    reason="source_domain_not_ready",
+                    state="closing_value_not_recorded",
+                    message=f"a {filing_year} inventory activity ledger has no recorded closing value",
+                    remedy=(
+                        "Record the year's closing value of each activity's inventory, the existencias finales "
+                        "valued at acquisition price, so the stock variation can be derived."
+                    ),
+                ),
+            ),
+        )
     if not ledgers:
         return CalculationSourceResolution(
             resolver_id=resolver_id,
