@@ -16,7 +16,7 @@ related:
   - '[[2026-11-02-desktop-renta-renta-family-canonical-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:93593965d52dcb6a7d708013382cafdf762a93c896c1ddb93ccbe60f47aedd2c'
+body_hash: 'sha256:9b4501fc58b5e7949b1081ca32eb2ff46b5f6847fb3824380617caaba4052659'
 ---
 
 # `desktop-renta` plan
@@ -78,6 +78,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S40` - [Sonnet high] declare in the registry which declaration owns each household row object's repeat limit, so the profile writer reads the limit directly instead of scanning every modelo's annual revision; `src/cadrumo/application/user_profile/household_row_limit.py`.
 - [x] `P01.S41` - [Opus medium] place box 0500 before the art. 50.3 compensation as the AEAT design does, compute 1391 from the chain instead of a manual input, and find whether 448b84d73d broke test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses on box 0171, fixing the cause if so; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
 - [x] `P01.S42` - [Sonnet high] make modelo edit admission refuse an override the work form serves no field or answer for (such as Modelo 720 baselines and the 131 and 720 row-field bindings), so the writable surface and the served form agree; `src/cadrumo/application/modelo/edit_admission.py`.
+- [x] `P01.S43` - [Sonnet high] resolve the renta-ledger and counterpart declarations through the registry's canonical temporal selection so a filing year without an authored edition projects to the nearest one instead of raising 'no registry revision in force'; `src/cadrumo/application/aggregation/renta_ledger.py`.
 
 ### Phase `P02` - contracts and fixtures
 

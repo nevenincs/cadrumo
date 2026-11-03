@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce1a6ee908fe76226b99d74fd5c188db35eb142139ae268c58b8d211bd24a680'
+body_hash: 'sha256:bc1e466f4fdcf12bf7b7b1cd02a2f3d3a59048cc574f00d3ab8389614fe48843'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -653,6 +653,26 @@ related:
 - `S38` `verify:` `lint-imports` -> `pass`
 - `S38` `verify:` `pytest dev/registry/tests modelo 100` -> `fail`
 - `S38` `by:` `vaultspec-standard-executor`
+- `S43` `M` `src/cadrumo/application/aggregation/renta_ledger.py`
+- `S43` `M` `src/cadrumo/application/aggregation/counterpart.py`
+- `S43` `M` `src/cadrumo/application/invoices/catalogue_creation.py`
+- `S43` `M` `src/cadrumo/domain/modelos/calculation_revision_amendment.py`
+- `S43` `M` `src/cadrumo/application/calculations/revision_carry_gate.py`
+- `S43` `M` `src/cadrumo/application/modelo/profile_derived_facts.py`
+- `S43` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S43` `M` `src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`
+- `S43` `A` `src/cadrumo/application/aggregation/tests/test_projected_year_declarations.py`
+- `S43` `A` `src/cadrumo/application/calculations/tests/test_revision_carry_gate_projection.py`
+- `S43` `M` `src/cadrumo/domain/calculations/registry/tests/authored_editions.py`
+- `S43` `M` `src/cadrumo/application/modelo/tests/test_autonomic_deduccion_injection.py`
+- `S43` `M` `src/cadrumo/application/modelo/tests/test_work_form_comparison_flags.py`
+- `S43` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S43` `verify:` `ruff` -> `pass`
+- `S43` `verify:` `ty` -> `pass`
+- `S43` `verify:` `lint-imports` -> `pass`
+- `S43` `verify:` `pytest projected-year, comparison, carry gate, Madrid deduction suites` -> `pass`
+- `S43` `verify:` `pytest wide aggregation/calculations/modelo run` -> `fail`
+- `S43` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -704,3 +724,4 @@ related:
 - `S42` Commit 63bdd87985: one row-filled derivation shared by admission and the form; new reason `not_read_by_calculation.` Import gate unavailable because the tree changed mid-run; dev/locales failures include export settlement and election keys and a non-literal `message_locale_key,` to resolve in S20
 - `S41` Hunks swept into WIP commit 3ab1f97ff4 plus a948bba8b4. 0500 is the base before compensation from 2022, 1391 = max(0, -0500), unobserved prior boxes refuse with typed `errors.calc.previous_filing_casillas_unobserved.` 0171 test failure dates from 0f570046bf (no stated imputation criterion), not 448b84d73d. Open for S20: registry formula parity on renta-resultado-ingresar-o-devolver 2024/2025 and `casilla_record_order` 1997-2148, window guard failure unidentified
 - `S38` WIP checkpoint a950a0438d then 6aa82fb235. TIPOTRIBUTACION design identical 2022-2025 so the role sits on the 2022 base only; redundant 2024/2025 overrides removed. `compares_taxation` served 2022-2025; 2020/2021 below support floor. The registry failure is `test_every_relation_prefill_binding_has_a_typed_source_coordinate` on 130/131 pagos-fraccionados bindings 2020-2025, outside S38's diff, carried to S20.
+- `S43` Commit 2441755ff6. Every `contains_date` gate replaced by `select_revision_metadata_for_year;` revision carry gate projects within the support span; Madrid deduction gate compares the snapshot's authored year. A 2026 Modelo 100 calculates end to end. Wide run 9988 passed, 83 failed: 81 trace to the Modelo 130 art. 32.1 split and `box_number` length from the renta-withholding merge 24e2cef114, plus `minimo_descendientes` and 2025 prorrata tests, none touching S43 paths. Supported-filing-years floor 2022 left as declared.
