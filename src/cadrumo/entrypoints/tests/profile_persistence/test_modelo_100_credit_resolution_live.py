@@ -31,6 +31,7 @@ from ....application.modelo.calculation_note_gate import (
 )
 from ....application.modelo.calculation_notes import note_attention
 from ....application.modelo.credit_resolution import (
+    applied_resolution_notes,
     credit_resolution_for_finding,
     credit_resolutions_for_work,
     find_finding,
@@ -353,3 +354,41 @@ def test_the_reason_and_the_amounts_of_a_resolution_never_reach_the_disk_in_plai
     on_disk = b"".join(path.read_bytes() for path in tmp_path.rglob("*") if path.is_file())
     assert _REASON.encode(UTF_8_ENCODING) not in on_disk
     assert record.finding_key.encode(UTF_8_ENCODING) not in on_disk
+
+
+def test_every_applied_resolution_is_listed_with_its_box_sources_amounts_and_reason(
+    harness: CreditLiveHarness,
+) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    _accept(harness, revision, TRABAJO_CASILLA)
+    trabajo = _disagreement(revision, TRABAJO_CASILLA)
+
+    notes = applied_resolution_notes(
+        revision, load_credit_resolutions(harness.resolutions, modelo="100", filing_year=YEAR, period="0A")
+    )
+
+    # Only the accepted disagreement is listed; the capital one is still open.
+    (note,) = notes
+    assert note.reason == "credit_resolution_applied"
+    assert dict(note.fact.values) == {
+        "box": str(TRABAJO_CASILLA),
+        "accepted": "1950.00",
+        "sources": "value_source=1950.00; cross_check=1800.00",
+        "finding": _finding_id(trabajo),
+        "reason": _REASON,
+    }
+    assert note_attention(note.reason, box=None) is ModeloFormAttention.INFO
+    for text in (note.message, note.detail):
+        assert text
+    assert "1950.00" in note.message and "1800.00" in note.message and _REASON in note.message
+    # Once taken back the acceptance lists nothing.
+    revoke_credit_resolution(
+        _identity(trabajo),
+        at=_AT + timedelta(days=1),
+        by_session=_SESSION,
+        repository=harness.resolutions,
+        expected_revision_id=harness.resolutions.load_revisioned(_identity(trabajo))[1],
+    )
+    assert not applied_resolution_notes(
+        revision, load_credit_resolutions(harness.resolutions, modelo="100", filing_year=YEAR, period="0A")
+    )

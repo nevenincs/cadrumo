@@ -5,6 +5,8 @@ Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
 
 from __future__ import annotations
 
+from typing import Final
+
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -23,6 +25,12 @@ from ..operations.access_resolution import (
 )
 from ..operations.models import OperationRequest
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .credit_resolution_contracts import (
+    MODELO_CREDIT_RESOLUTION_ACCEPT_OPERATION_DEFINITION_ID,
+    MODELO_CREDIT_RESOLUTION_LIST_OPERATION_DEFINITION_ID,
+    MODELO_CREDIT_RESOLUTION_REVOKE_OPERATION_DEFINITION_ID,
+    CreditResolutionRequest,
+)
 from .operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
@@ -43,6 +51,18 @@ from .work_export_contracts import ModeloExportRequest
 from .work_filing_contracts import ModeloWorkFileRequest
 from .work_verification_contracts import ModeloWorkVerifyRequest
 
+_CREDIT_RESOLUTION_DEFINITION_IDS: Final = frozenset(
+    {
+        MODELO_CREDIT_RESOLUTION_ACCEPT_OPERATION_DEFINITION_ID,
+        MODELO_CREDIT_RESOLUTION_REVOKE_OPERATION_DEFINITION_ID,
+        MODELO_CREDIT_RESOLUTION_LIST_OPERATION_DEFINITION_ID,
+    }
+)
+_READ_ONLY_DEFINITION_IDS: Final = frozenset(
+    {MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID, MODELO_CREDIT_RESOLUTION_LIST_OPERATION_DEFINITION_ID}
+)
+"""The revision operations that read and never commit, so they hold the read-only admission."""
+
 
 def compose_modelo_revision_access(factory: VerificationRepositoryBundleFactory) -> OperationAccessResolver:
     """Bind exact revision and work-unit reads without inferring scope from IDs."""
@@ -52,7 +72,7 @@ def compose_modelo_revision_access(factory: VerificationRepositoryBundleFactory)
         return bind_replayed_or_fresh_single_period_access(
             context,
             LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS
-            if request.definition_id == MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID
+            if request.definition_id in _READ_ONLY_DEFINITION_IDS
             else COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
             definition_id=request.definition_id,
             fresh_period=lambda operation: _persisted_revision_period(
@@ -82,6 +102,9 @@ def _revision_target(
     if target is not None:
         return target
     target = _revision_snapshot_target(request, context)
+    if target is not None:
+        return target
+    target = _credit_resolution_target(request, context)
     if target is not None:
         return target
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -139,6 +162,17 @@ def _revision_snapshot_target(
     if request.definition_id == MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID and isinstance(
         payload, ModeloWorkRevisionSnapshotRequest
     ):
+        if payload.profile_id != context.profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        return None, payload.calculation_revision_id
+    return None
+
+
+def _credit_resolution_target(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> tuple[str | None, str | None] | None:
+    payload = request.payload
+    if request.definition_id in _CREDIT_RESOLUTION_DEFINITION_IDS and isinstance(payload, CreditResolutionRequest):
         if payload.profile_id != context.profile_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return None, payload.calculation_revision_id

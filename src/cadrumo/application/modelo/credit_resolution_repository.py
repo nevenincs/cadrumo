@@ -20,6 +20,8 @@ The write refuses, before anything is stored:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Final, Literal, Protocol
 
 from ...core.errors.hierarchy import CadrumoError
@@ -30,6 +32,7 @@ from ..aggregation.observation_key_component import validate_observation_key_com
 
 __all__ = [
     "CREDIT_RESOLUTION_KEY_PREFIX",
+    "CREDIT_RESOLUTION_MESSAGE_LOCALE_KEYS",
     "CreditResolutionPersistenceError",
     "CreditResolutionReader",
     "CreditResolutionRefusalReason",
@@ -79,12 +82,16 @@ type CreditResolutionRefusalReason = Literal[
 ]
 """Why a resolution or its revocation was refused before it reached storage."""
 
-_REFUSAL_LOCALE_KEYS: Final[dict[str, str]] = {
-    "already_resolved": "application.modelo.credit_resolution.errors.already_resolved",
-    "not_resolved": "application.modelo.credit_resolution.errors.not_resolved",
-    "unknown_finding": "application.modelo.credit_resolution.errors.unknown_finding",
-    "calculation_not_current": "application.modelo.credit_resolution.errors.calculation_not_current",
-}
+CREDIT_RESOLUTION_MESSAGE_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "already_resolved": "application.modelo.credit_resolution.errors.already_resolved",
+        "not_resolved": "application.modelo.credit_resolution.errors.not_resolved",
+        "unknown_finding": "application.modelo.credit_resolution.errors.unknown_finding",
+        "calculation_not_current": "application.modelo.credit_resolution.errors.calculation_not_current",
+        "stale_revision": "application.modelo.credit_resolution.errors.stale_revision",
+    }
+)
+"""The worded message of each refusal reason, the stale revision of a guarded write included."""
 
 
 class CreditResolutionRefusedError(CadrumoError):
@@ -96,7 +103,7 @@ class CreditResolutionRefusedError(CadrumoError):
         super().__init__(
             f"credit resolution refused: {reason}",
             context={"reason": reason},
-            translated_message=_REFUSAL_LOCALE_KEYS[reason],
+            translated_message=CREDIT_RESOLUTION_MESSAGE_LOCALE_KEYS[reason],
         )
 
 

@@ -570,6 +570,33 @@ def compose_modelo_revision_snapshot_operation(inputs: OperationCompositionInput
     )
 
 
+def compose_modelo_credit_resolution_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the operator's acceptance, revocation and listing of disputed Modelo figures."""
+    from ..application.modelo.credit_resolution_operation import (
+        build_credit_resolution_accept_definition,
+        build_credit_resolution_list_definition,
+        build_credit_resolution_list_registration,
+        build_credit_resolution_mutation_registration,
+        build_credit_resolution_revoke_definition,
+    )
+    from ..application.modelo.revision_operation_access import compose_modelo_revision_access
+
+    bundle = inputs.verification_bundle()
+    access = compose_modelo_revision_access(bundle)
+    reader = inputs.execution_caller_reader
+    accept = build_credit_resolution_accept_definition(bundle, execution_caller_reader=reader)
+    revoke = build_credit_resolution_revoke_definition(bundle, execution_caller_reader=reader)
+    listing = build_credit_resolution_list_definition(bundle, execution_caller_reader=reader)
+    return built(
+        (accept, revoke, listing),
+        (
+            build_credit_resolution_mutation_registration(accept, access_resolver=access),
+            build_credit_resolution_mutation_registration(revoke, access_resolver=access),
+            build_credit_resolution_list_registration(listing, access_resolver=access),
+        ),
+    )
+
+
 def compose_modelo_filing_selection_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose modelo filing selection operation."""
     from ..application.modelo.filing_selection_operation import (

@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 from ...core.filing_year import FilingYear
+from ...core.i18n.render import tr
 from ...core.time.utc import UtcInstant
 from ...domain.modelos.calculation_revision_sources import (
     CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT,
@@ -32,11 +33,23 @@ from ...domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
     CalculationSourceIssue,
+    RecordedCalculationNote,
 )
 from ...domain.modelos.credit_resolution import CreditResolutionRecord
+from ...domain.modelos.source_disagreement import (
+    DisagreementBooleanValue,
+    DisagreementDateValue,
+    DisagreementDecimalValue,
+    DisagreementEnumValue,
+    DisagreementRelationValue,
+    DisagreementRowsValue,
+    DisagreementTextValue,
+    DisagreementValue,
+)
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH, SourceDisagreementResolutions
+from .calculation_notes import note_fact_text, what_locale_key
 from .credit_resolution_repository import (
     CreditResolutionPersistenceError,
     CreditResolutionReader,
@@ -48,12 +61,15 @@ if TYPE_CHECKING:
     from ...domain.modelos.work_unit import WorkUnit
 
 __all__ = [
+    "CREDIT_RESOLUTION_APPLIED_REASON",
     "CREDIT_RESOLUTION_STALE_REASON",
     "CreditResolutionLookup",
     "applied_credit_resolutions",
+    "applied_resolution_notes",
     "credit_resolution_degradation_diagnostics",
     "credit_resolution_for_finding",
     "credit_resolutions_for_work",
+    "disagreement_value_text",
     "find_finding",
     "load_credit_resolutions",
     "stale_resolution_issues",
@@ -61,6 +77,9 @@ __all__ = [
 
 CREDIT_RESOLUTION_STALE_REASON: Final = "credit_resolution_stale"
 """The persisted reason of a figure whose accepted disagreement has since changed."""
+
+CREDIT_RESOLUTION_APPLIED_REASON: Final = "credit_resolution_applied"
+"""The reason of the note that restates an acceptance covering a disagreement of the calculation."""
 
 _HEX_DIGITS: Final = frozenset("0123456789abcdef")
 
@@ -217,3 +236,56 @@ def _stale_issue(disagreement: CalculationSourceIssue) -> CalculationSourceIssue
             CalculationNoteSentence.CREDIT_RESOLUTION_STALE, box=disagreement.casilla_id or figure
         ),
     )
+
+
+def disagreement_value_text(value: DisagreementValue) -> str:
+    """State one source's value as plain text, in its own type's canonical form."""
+    match value:
+        case DisagreementDecimalValue() | DisagreementRelationValue():
+            return value.amount
+        case DisagreementEnumValue():
+            return value.token
+        case DisagreementDateValue():
+            return value.value.isoformat()
+        case DisagreementBooleanValue():
+            return "true" if value.value else "false"
+        case DisagreementTextValue():
+            return value.value
+        case DisagreementRowsValue():
+            return ",".join(disagreement_value_text(row) for row in value.rows)
+
+
+def applied_resolution_notes(
+    revision: CalculationRevision, lookup: CreditResolutionLookup
+) -> tuple[RecordedCalculationNote, ...]:
+    """One note, in words, for each acceptance that covers a disagreement ``revision`` persisted.
+
+    Each note states the box, the value accepted, what every source stated, the
+    finding id and the operator's reason, so a check, an export or a report that
+    restates the calculation's notes says what the operator answered. The notes
+    are derived from the stored resolutions and are never persisted with the
+    calculation.
+    """
+    notes: list[RecordedCalculationNote] = []
+    for record in applied_credit_resolutions(revision, lookup):
+        fact = record.disagreement
+        accepted = next(source for source in fact.sources if source.role is record.accepted_role)
+        note_fact = CalculationNoteFact.of(
+            CalculationNoteSentence.CREDIT_RESOLUTION_APPLIED,
+            box=fact.reached_casillas[0] if fact.reached_casillas else fact.key,
+            accepted=disagreement_value_text(accepted.value),
+            sources="; ".join(
+                f"{source.role.value}={disagreement_value_text(source.value)}" for source in fact.sources
+            ),
+            finding=record.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH],
+            reason=record.reason,
+        )
+        notes.append(
+            RecordedCalculationNote(
+                reason=CREDIT_RESOLUTION_APPLIED_REASON,
+                fact=note_fact,
+                message=note_fact_text(note_fact),
+                detail=tr(what_locale_key(CREDIT_RESOLUTION_APPLIED_REASON)),
+            )
+        )
+    return tuple(notes)

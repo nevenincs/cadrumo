@@ -569,3 +569,19 @@ def test_the_refusal_names_the_finding_to_answer_and_says_when_the_resolutions_c
     assert unreadable_refusal.value.context is not None
     assert unreadable_refusal.value.context["finding_ids"] == finding_id
     assert unreadable_refusal.value.context["resolutions_unreadable"] == "true"
+
+
+@pytest.mark.parametrize("reason", sorted(DISAGREEMENT_REASONS))
+def test_the_check_lists_a_disagreement_with_the_finding_id_an_acceptance_answers_to(
+    operation: PinnedAuthorityOperation, reason: str
+) -> None:
+    unit = _work_unit(operation)
+    issue = _Note(reason).issue()
+    assert issue.disagreement is not None
+    finding_id = issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+    form = _checked_form(operation, _revision(operation, unit, issue))
+
+    (line,) = [line for line in form_issue_lines(form, OutputLanguage.EN) if reason in line.technical]
+
+    assert finding_id in line.technical
+    assert "accept-disagreement" in line.action

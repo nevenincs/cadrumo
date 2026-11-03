@@ -1230,6 +1230,11 @@ application:
           so the figure stands but is not cross-checked.
         what_to_do: If that source should hold this withholding, add it and recalculate;
           otherwise there is nothing to do.
+      credit_resolution_applied:
+        what: You accepted the amount in use for a disagreement between sources, so
+          it no longer holds this declaration. The acceptance changes no figure.
+        what_to_do: 'Nothing to do. If a source is corrected later, calculate again:
+          an acceptance covers only the amounts it was made against.'
       credit_resolution_stale:
         what: You accepted an earlier disagreement of this figure, but its sources
           now state other amounts, so that acceptance no longer applies.
@@ -1238,8 +1243,10 @@ application:
       credit_source_disagreement:
         what: Two sources state different amounts for the same withholding credit,
           so Cadrumo cannot check, export or record the declaration with it.
-        what_to_do: Compare the amount with each payer's certificate, correct the
-          source that is wrong, and recalculate.
+        what_to_do: 'Compare the amount with each payer''s certificate, correct the
+          source that is wrong, and recalculate. If you have checked that the amount
+          in use is right, accept it with its finding id: `aeat app modelo work accept-disagreement
+          <finding id> --reason <why>`.'
       deferred_binding_source:
         what: Cadrumo does not fill in one figure of this declaration automatically
           yet.
@@ -1393,8 +1400,10 @@ application:
       precedence_tier_divergence:
         what: Two sources hold different values for a figure that reaches box {box},
           and Cadrumo used the one that takes precedence.
-        what_to_do: Compare the sources and correct the one that is wrong, then calculate
-          again. Checking, exporting and recording wait until they agree.
+        what_to_do: 'Compare the sources and correct the one that is wrong, then calculate
+          again. Checking, exporting and recording wait until they agree, or until
+          you accept the value in use with its finding id: `aeat app modelo work accept-disagreement
+          <finding id> --reason <why>`.'
       precedence_tier_divergence_advisory:
         what: Two sources hold different values for a working figure, and Cadrumo
           used the one that takes precedence.
@@ -1561,6 +1570,8 @@ application:
         and box {box} declares only what is recorded.'
       credit_cross_check_absent: 'Box {box}: there is nothing in {cross_check} to
         compare, so this figure is not cross-checked.'
+      credit_resolution_applied: 'Box {box}: you accepted {accepted} although the
+        sources state {sources} (finding {finding}). Your reason: {reason}'
       credit_resolution_stale: 'Box {box}: you accepted an earlier disagreement of
         this figure, but its sources now state other amounts, so the acceptance no
         longer applies.'

@@ -177,6 +177,8 @@ class CalculationNoteSentence(StrEnum):
     """A declared cross-check source of a credit casilla holds nothing to compare."""
     CREDIT_RESOLUTION_STALE = "credit_resolution_stale"
     """A figure the operator accepted is now disputed in another way than the one accepted."""
+    CREDIT_RESOLUTION_APPLIED = "credit_resolution_applied"
+    """The operator accepted the value in use for a disagreement this calculation persisted."""
     HOUSEHOLD_ROWS_INCOMPLETE = "household_rows_incomplete"
     """A household group states more people than the profile records."""
 

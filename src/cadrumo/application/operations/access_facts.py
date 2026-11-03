@@ -140,6 +140,7 @@ _LOCAL_READS: Final = (
     "modelo.work.amendment_context",
     "modelo.work.compare_taxation",
     "modelo.work.dependencies",
+    "modelo.work.disagreements",
     "modelo.work.filing_record",
     "modelo.work.history",
     "modelo.work.list",
@@ -296,12 +297,14 @@ _LOCAL_WRITES: Final = (
     "modelo.review_package.import_feedback",
     "modelo.review_package.sign",
     "modelo.spreadsheet.export",
+    "modelo.work.accept_disagreement",
     "modelo.work.amend",
     "modelo.work.create",
     "modelo.work.discard",
     "modelo.work.file",
     "modelo.work.m303_attestation",
     "modelo.work.rename",
+    "modelo.work.revoke_disagreement",
     # Verification reads and writes the profile's own store; its provider step
     # builds local objects only and opens no browser or session.
     "modelo.work.verify",

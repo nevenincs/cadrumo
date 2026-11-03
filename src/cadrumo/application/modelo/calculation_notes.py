@@ -128,6 +128,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "credit_cross_check_absent": _C,
         # An accepted disagreement that no longer applies: the figure is disputed afresh.
         "credit_resolution_stale": _C,
+        # An accepted disagreement, restated for the filer's information.
+        "credit_resolution_applied": _I,
         "unresolved_derived_binding": _C,
         # Something only the filer can supply.
         "source_issue": _M,
