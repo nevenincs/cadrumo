@@ -21,7 +21,7 @@ related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:70168b4645783eb51671d5080797621c71054afbb8aec8204fcb520b4b4b9706'
+body_hash: 'sha256:970d13f5233cb022a85e7cad2ab7a14aa89bf7397c50f885a5b2c99182a43be6'
 ---
 
 # `frontend-polish` plan
@@ -85,6 +85,8 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S39` - Expose served IVA wallet balances and explicit managed operations with profile-scoped outcome holds; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/scripts/modelo_fixtures.py, native/desktop/frontend/tests/scenarios/modelo*.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [x] `S40` - Show identical filing block explanations once while retaining action-specific refusal and accessible associations; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [x] `S41` - Reduce repeated locale-key payload in bundled chrome while preserving canonical catalogue semantics; `native/desktop/frontend/vite.config.ts, native/desktop/frontend/dev/chrome-catalogue.ts, native/desktop/frontend/tests/live/chrome-catalogue.unit.ts`.
+- [x] `S42` - Keep confirmation focus on its delayed matching link only while the person remains at the confirmed result; `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx, native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`.
+- [ ] `S43` - Fit docked ledger minimum widths through split geometry without overwriting the chosen layout; `native/desktop/frontend/src/shell/docking.ts, native/desktop/frontend/src/components/docking/DockWorkspace.tsx, native/desktop/frontend/src/App.tsx, native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts, native/desktop/frontend/tests/scenarios/docking.spec.ts, native/desktop/frontend/tests/live/docking.unit.ts`.
 
 ## Parallelization
 

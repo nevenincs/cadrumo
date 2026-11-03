@@ -298,7 +298,14 @@ The three direct unit cases pass: exact canonical catalogue round-trip and order
 
 Within the same pre-S39 product-build cohort, Node gzip totals for all emitted JavaScript fell from 1,063,818 to 951,984 bytes: 111,834 bytes (10.5%) removed without removing strings. CSS remained 22,366 bytes. The retained product artifact confirms 704,131 bytes for the main chunk, 247,115 for the catalogue-bearing chunk and 738 for startup. This is emitted-payload evidence, not a claim about the later wallet cohort's total bytes or native startup speed. S16 remains open: the overall JavaScript/CSS budgets still fail, the corrected calendar timer needs remeasurement, and further main-chunk reductions require actual module attribution rather than guessing from xterm/WebGL identifiers.
 
+### S42 delayed confirmation focus, 2026-11-03
+
+PASS for the bounded focus repair. The ledger integration run `20261103T001922Z-56856` completed 175 cases with 171 passes and four failures. The document-confirmation failure was a real race: the effect focused the confirmed result before its asynchronous matching link existed. A stable callback ref now focuses the arriving link only while that same result still owns focus. It neither steals focus after the person moves nor changes the confirmation or matching write.
+
+TypeScript and scoped ESLint/Prettier pass. Run `20261103T003007Z-26936` passes the existing confirmation/Enter-to-stage case and both explicit deferred-match cases (remain at result; move focus elsewhere). Terra's bounded review finds no blocker. That six-case run passed five and failed one; it is not a wholly passing run. The editing-row failure was corrected by searching for the virtualized row before editing, and the obsolete pane-title assertion now checks the owning dock tab. The remaining geometry test confirms the dock can compress the ledger scrolling band behind its pinned columns; S43 owns that separate repair. S10 remains open.
+
 ## Recommendations
+
 
 
 

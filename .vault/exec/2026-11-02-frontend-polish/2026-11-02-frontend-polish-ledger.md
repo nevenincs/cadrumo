@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd5ee2a8e0c9f5edaa6b2a32716e5ccabc6d4ee8b5ab582e89f19e9e8927d469'
+body_hash: 'sha256:0f15cc68645f9c5a3a29ef92898ba3808d154275402b06db5ad888aa84348669'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -269,6 +269,11 @@ related:
 - `S41` `verify:` `four-language built-scenario regression` -> `pass`
 - `S41` `verify:` `same-cohort gzip payload reduction111834bytes` -> `pass`
 - `S41` `verify:` `Terra bounded encoding review` -> `pass`
+- `S42` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S42` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S42` `verify:` `three confirmation focus browser cases 20261103T003007Z-26936` -> `pass`
+- `S42` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
+- `S42` `verify:` `Terra bounded focus review` -> `pass`
 
 ## Notes
 
