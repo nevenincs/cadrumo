@@ -1,6 +1,7 @@
 # Reconcile-when-present enrolment of the Ley 35/2006 art. 50.3 compensation
-# chain: the compensation 0501, the remainders 1384, 1387 and 1390 and the
-# internal working figures behind the per-row maximum. Each is reconciled when a
+# chain: the compensation 0501, the remainders 1384, 1387 and 1390, this year's
+# own negative base 1391 and the internal working figures behind the per-row
+# maximum. Each is reconciled when a
 # filing prints it and stays out of the coverage denominator (min_coverage =
 # 0), so a return with nothing to compensate keeps its verdict.
 [[revisions."2022".verification_expectations]]
@@ -11,6 +12,7 @@ reconcile_when_present_casilla_ids = [
     "1384",
     "1387",
     "1390",
+    "1391",
     "base-liq-neg-general-base-positiva-compensable",
     "base-liq-neg-general-em4-aplicada-maxima",
     "base-liq-neg-general-em3-aplicada-maxima",
