@@ -18,7 +18,7 @@ from .....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, F
 from .....core.period import Period
 from ....iva.lookup import resolve_iva_rate
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ..errors import FilingYearOutsideSupportEnvelopeError, GovernedFactNotApplicableError, RegistryValidationError
+from ..errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from ..eu_member_state_catalogue import require_eu_member_state
 from ..facts.resolution import MappingFactQuery, ResolvedMappingFact, reading_dated_facts_below_support
 from ..facts.variants import FactSelector
@@ -107,8 +107,11 @@ def test_a_declared_legal_start_is_not_projected_across() -> None:
         assert isinstance(resolved, ResolvedMappingFact)
         assert _pct(resolved) == "21"
         assert resolved.projection_direction is TemporalProjectionDirection.BACKWARD
-        with pytest.raises(GovernedFactNotApplicableError):
-            operation.resolve_governed_fact(general_rate_query(date(2012, 8, 31)))
+        # The day before, the 18 % that Ley 26/2009 art. 79 set from 2010-07-01 still applied: the 21 % is not
+        # stretched back across its legal start while the registry authors the rate it replaced.
+        before_start = operation.resolve_governed_fact(general_rate_query(date(2012, 8, 31)))
+        assert isinstance(before_start, ResolvedMappingFact)
+        assert _pct(before_start) == "18"
 
 
 def test_a_filing_year_coordinate_stays_gated_inside_the_scope(operation: PinnedAuthorityOperation) -> None:

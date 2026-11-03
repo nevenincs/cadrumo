@@ -26,7 +26,12 @@ from typing import Final, Protocol
 from weakref import ReferenceType, ref
 
 from ....core.errors.hierarchy import InternalInvariantError
-from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
+from .facts.resolution import (
+    GovernedFactQuery,
+    ResolvedGovernedFact,
+    dated_facts_read_below_support,
+    resolve_governed_fact,
+)
 from .facts.schema import GovernedFactCatalogue
 from .schema_references import TemporalSupportEnvelope
 
@@ -144,7 +149,8 @@ def cache_governed_projection[**P, R](
                     f"{getattr(function, '__qualname__', type(function).__name__)} requires an explicit "
                     "generation-pinned governed-fact scope"
                 )
-            key = (id(owner), args, tuple(sorted(kwargs.items())))
+            # A projection built inside the below-support scope must not answer a read outside it.
+            key = (id(owner), dated_facts_read_below_support(), args, tuple(sorted(kwargs.items())))
             with lock:
                 cached = cache.get(key)
                 if cached is not None and cached[0]() is owner:

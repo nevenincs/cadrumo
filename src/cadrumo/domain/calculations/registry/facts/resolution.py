@@ -66,6 +66,7 @@ __all__ = [
     "ResolvedOverrideFact",
     "ResolvedScalarFact",
     "ScalarFactQuery",
+    "dated_facts_read_below_support",
     "optional_unique_mapping_tokens",
     "required_mapping_entry",
     "resolve_governed_fact",
@@ -77,7 +78,8 @@ __all__ = [
 _READING_DATED_FACTS_BELOW_SUPPORT: ContextVar[bool] = ContextVar("reading_dated_facts_below_support", default=False)
 
 
-def _reading_dated_facts_below_support() -> bool:
+def dated_facts_read_below_support() -> bool:
+    """Say whether the reads made now may reach below the support floor, as the open scope allows."""
     return _READING_DATED_FACTS_BELOW_SUPPORT.get()
 
 
@@ -110,7 +112,7 @@ class _FactQuery(RegistryModel):
     selectors: tuple[FactSelector, ...] = ()
     filing_year: FilingYear | None = None
     period: RegistrySelectorPeriodCode | None = None
-    reaches_below_support: bool = Field(default_factory=_reading_dated_facts_below_support)
+    reaches_below_support: bool = Field(default_factory=dated_facts_read_below_support)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
