@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:a7b0b055ee44605b58718854beedf4be971b50ce67e54e46a3374c196aa68f9c'
+body_hash: 'sha256:7b7cc65cbd452a5d1bd59dd5c62c4ceaf105e9cd3b0368249a37528c23d57a64'
 ---
 
 # `export-parity` plan
@@ -69,7 +69,7 @@ Compare every credit casilla against its declared cross-check sources at cent pr
 
 - [x] `P04.S19` - Declare per-casilla value and cross-check sources and emit blocking reconciliation findings through verify, the CLI handoff and the report, excluding the 0599 against Modelo 130 cross-check; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
 - [ ] `P04.S20` - Add the operator resolution record keyed to the disputed amounts; `src/cadrumo/application/modelo/ and src/cadrumo/adapters/persistence/`.
-- [ ] `P04.S07` - Make the precedence overlay report tier divergence and block under the taxonomy amendment; `src/cadrumo/application/aggregation/source_resolution_operations.py`.
+- [x] `P04.S07` - Make the precedence overlay report tier divergence and block under the taxonomy amendment; `src/cadrumo/application/aggregation/source_resolution_operations.py`.
 
 ### Phase `P05` - Impute activity income and withholding by the taxpayer's criterion
 

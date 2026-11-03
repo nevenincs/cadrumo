@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:de0a879ba74f183ab338b85ecde9724714ff267e6abb78b5ca70389f2f358bb2'
+body_hash: 'sha256:334f5eaccc2b96842dca2ba4023c6e8ab2696056cfa76de4efb91a32c54b0cf1'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -972,6 +972,23 @@ related:
 - `S08` `verify:` `grade_earned under_supported 0` -> `pass`
 - `S08` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
 - `S08` `by:` `implementation-engineer-high`
+- `S07` `M` `dev/locales/tests/test_audit.py`
+- `S07` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S07` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S07` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`
+- `S07` `M` `src/cadrumo/application/aggregation/tests/test_precedence_overlay_screen.py`
+- `S07` `M` `src/cadrumo/application/modelo/_calculation_preparation.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_resolution.py`
+- `S07` `M` `src/cadrumo/application/modelo/tests/test_calculation_resolution_precedence.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_quarters_to_m390_annual.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_local_cross_period_carry.py`
+- `S07` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S07` `verify:` `137 focused tests (resolution precedence, overlay screen, note gate, ladder conformance, repository roundtrip, local cross-period carry, e2e M303 to M390)` -> `pass`
+- `S07` `verify:` `operation contract manifest, desktop modelo fixtures and contract checks` -> `pass`
+- `S07` `by:` `CADRUMO-IVA`
 
 ## Notes
 
@@ -1014,3 +1031,4 @@ related:
 - `S30` lint-imports fails only on the tui tooling lane `(dev.desktop_household_fixture,` `dev.desktop_imputation_election_fixture).` The wide run over application/aggregation, application/modelo, domain/calculations/registry, `entrypoints/tests/profile_persistence` and dev/registry/tests shows no credit or filed-observation failure; its failures are pre-existing or another lane's: M100 export settlement refusal (tui 3be7987f95, failing before S30), `precedence_tier_divergence` on M130 06, OSS year window, desktop frontend deps, registry date windows. The filed-observation comparison restates rows on the fourth-quarter basis (RIRPF art. 110.3.a), keeping A01 withholding and dropping withholding paid after 31 December; this itemised-basis tolerance follows the ADR principle but is not spelled out in its wording.
 - `S31` Operator ruling 2026-11-02 recorded as an ADR amendment. Wide run: 2857 passed, 12 failed, all 12 in the S30 baseline (cross-period carry precedence, OSS year 2012, M100 export settlement refusal, Sonnet-owned imputation e2e). lint-imports breaks only on the pre-existing undeclared `dev.desktop_*` fixture modules. Docs sequence refresh stays open: verify exits 2 with `unresolved_binding` because the seeds declare no imputation criterion and no operator CLI flag sets `irpf.activity_income_imputation_criterion;` no golden was changed. Commit 76a3922534.
 - `S08` Operator ruling 2026-11-02, recorded in the binding-capability-grade ADR amendment committed with S31. Both promotions were verified against one republished worktree authority. Wide run failures are the 12 S30-baseline failures only. DGT V4965-16 is cited in the binding comment, not `legal_refs:` the catalogue has no DGT consulta kind. Commit 898bc7f5d8.
+- `S07` Implemented by the IVA session on feature/iva-period as 950d71d157 (operator assignment), merged to feature/tui as 11597ef030; the source-disagreement type it reuses is b09654e5bb and 0f41170526. The row for the fixtures directory covers 173 regenerated desktop Modelo fixtures.
