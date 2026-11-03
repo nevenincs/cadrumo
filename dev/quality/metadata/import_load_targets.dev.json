@@ -1097,6 +1097,7 @@
         "dev.registry.compiler.validate_form_geometry",
         "dev.registry.compiler.validate_form_layouts",
         "dev.registry.compiler.validate_formulas",
+        "dev.registry.compiler.validate_household_row_owners",
         "dev.registry.compiler.validate_inherited_family_pairing",
         "dev.registry.compiler.validate_label_artifacts",
         "dev.registry.compiler.validate_layout_authority_content",

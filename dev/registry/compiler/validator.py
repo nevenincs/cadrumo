@@ -59,6 +59,7 @@ from .source_evidence_fingerprint import (
 )
 from .validate_evidence import EvidenceValidator, flush_corpus_text_cache
 from .validate_form_geometry import validate_form_geometry
+from .validate_household_row_owners import validate_household_row_owners
 from .validate_inherited_family_pairing import inherited_family_pairing_failures
 from .validate_layout_authority_content import validate_layout_authority_content
 from .validate_official_source_guidance_content import validate_suppression_notice_content
@@ -455,6 +456,7 @@ class RegistryValidator:
             failures = self._validate_registry_modelos(modelo_tuple)
             failures.extend(validate_registry_scope(modelo_tuple))
             failures.extend(validate_form_geometry(modelo_tuple))
+            failures.extend(validate_household_row_owners(modelo_tuple))
         finally:
             # Source-text extraction is the validation's dominant cold cost;
             # persisting it here is what lets the next process skip it.

@@ -1,0 +1,27 @@
+[fact]
+fact_id = "household-row-limit-owners"
+family = "mapping"
+
+# Which form and repeating group of its layout own the repeat limit of each stored
+# household row object. The record design bounds the occurrences of one row element, and
+# the layout's repeating group over the bindings reading the object carries that bound.
+# The registry build checks that the named group reads the object and declares the limit.
+[[fact.variants]]
+variant_id = "household-row-limit-owners:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-100-2025-xsd"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ['name="Hijo" minOccurs="1" maxOccurs="15"', 'name="Ascendiente" minOccurs="1" maxOccurs="4"']
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "form.renta_family.descendiente", value = "100" },
+  { key = "group.renta_family.descendiente", value = "hijo-rows" },
+  { key = "form.renta_family.ascendiente", value = "100" },
+  { key = "group.renta_family.ascendiente", value = "ascendiente-rows" },
+]
