@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:37+0100\n"
+"POT-Creation-Date: 2026-11-03 14:27+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -301,26 +301,61 @@ msgstr ""
 
 #: ../../how-to/filing-readiness.md:101
 msgid ""
-"Refine the projection with values the quarters cannot know: withholdings,"
-" personal circumstances, or specific boxes:"
+"Refine the projection with values the quarters cannot know: personal "
+"circumstances or specific boxes. `--casilla` accepts only boxes you enter"
+" yourself, such as casilla 0003 (cash employment pay). It refuses a "
+"calculated box, whose value the form derives from the others:"
 msgstr ""
 "Finomítsd a kivetítést olyan értékekkel, amelyeket a negyedévek nem "
-"ismerhetnek: levonások, személyes körülmények vagy konkrét rovatok:"
+"ismerhetnek: személyes körülmények vagy konkrét rovatok. A `--casilla` "
+"csak azokat a rovatokat fogadja el, amelyeket te magad adsz meg, például "
+"a 0003 rovatot (pénzben kapott munkajövedelem). A kiszámított rovatot "
+"elutasítja, mert annak értékét az űrlap a többiből származtatja:"
 
-#: ../../how-to/filing-readiness.md:107
+#: ../../how-to/filing-readiness.md:109
 msgid ""
-"Withholdings default to zero when not supplied, so a projection without "
-"them overstates the balance due if you had withholdings. Each projected "
+"The headline figures stop at the resulting tax (<span lang=\"es\">cuota "
+"resultante</span>), which is calculated before any withholding credit. "
+"The later boxes, total payments on account and <span lang=\"es\">cuota "
+"diferencial</span>, take the withholding credits from the same records a "
+"real calculation reads: the payer certificates you saved with `app ledger"
+" retencion-soportada record` give their sum, and an income class your "
+"profile does not declare, or that you attested with `app ledger "
+"retencion-soportada attest-absence`, gives a proven zero. An income class"
+" your profile declares with no record and no attestation has no value. "
+"The output then lists its box as unresolved, together with the totals "
+"computed from it, and shows no number for any of them. The text output "
+"prints one `unresolved` line per box; the JSON output carries them in "
+"`unresolved_bindings` and `unresolved_casillas`. You cannot type a "
+"withholding figure with `--casilla` or `--binding`: as in a real "
+"calculation, these boxes come only from the records. A projection that "
+"includes your withholdings is still a planning estimate. Each projected "
 "box carries its formula and legal references in the JSON output, the same"
 " legal basis as a real calculation."
 msgstr ""
-"A levonások alapértelmezésben nullák, ha nincsenek megadva, így egy "
-"nélkülük készült kivetítés túlbecsli a fizetendő egyenleget, ha voltak "
-"levonásaid. Minden kivetített rovat hordozza a képletét és a jogszabályi "
-"hivatkozásait a JSON-kimenetben, ugyanazzal a jogi alappal, mint egy "
-"valódi számítás."
+"Az összefoglaló számok az eredő adónál (cuota resultante) megállnak, "
+"amelyet a rendszer bármilyen levonásból származó jóváírás előtt számít "
+"ki. A későbbi rovatok, az előlegek összesen és a különbözeti adó (cuota "
+"diferencial), a levonásokból származó jóváírásokat ugyanazokból a "
+"nyilvántartásokból veszik, amelyeket egy valódi számítás is olvas: a "
+"kifizetői igazolások, amelyeket az `app ledger retencion-soportada "
+"record` paranccsal mentettél, adják az összegüket, azok a "
+"jövedelemosztályok pedig, amelyeket a profilod nem jelöl meg, vagy "
+"amelyeket az `app ledger retencion-soportada attest-absence` paranccsal "
+"igazoltál, bizonyított nullát adnak. Az a jövedelemosztály, amelyet a "
+"profilod megjelöl, de nincs hozzá sem nyilvántartás, sem igazolás, nem "
+"kap értéket. A kimenet ilyenkor megoldatlanként sorolja fel a rovatát, a "
+"belőle számított összesítésekkel együtt, és egyikhez sem mutat számot. A "
+"szöveges kimenet rovatonként egy `unresolved` sort ír ki; a JSON-kimenet "
+"az `unresolved_bindings` és az `unresolved_casillas` mezőben hordozza "
+"őket. Levonási összeget nem adhatsz meg a `--casilla` vagy a `--binding` "
+"kapcsolóval: mint egy valódi számításnál, ezek a rovatok kizárólag a "
+"nyilvántartásokból származnak. Az a kivetítés, amely tartalmazza a "
+"levonásaidat, továbbra is tervezési becslés. Minden kivetített rovat "
+"hordozza a képletét és a jogszabályi hivatkozásait a JSON-kimenetben, "
+"ugyanazzal a jogi alappal, mint egy valódi számítás."
 
-#: ../../how-to/filing-readiness.md:112
+#: ../../how-to/filing-readiness.md:127
 #, python-brace-format
 msgid ""
 "For when the year-end filing actually happens, see {ref}`Period codes and"
@@ -329,11 +364,11 @@ msgstr ""
 "Arról, hogy az év végi benyújtás ténylegesen mikor történik, lásd: "
 "{ref}`Időszakkódok és dátumok <period-tokens-and-dates>`."
 
-#: ../../how-to/filing-readiness.md:115
+#: ../../how-to/filing-readiness.md:130
 msgid "Trace a value to its legal basis"
 msgstr "Vezess vissza egy értéket a jogalapjához"
 
-#: ../../how-to/filing-readiness.md:117
+#: ../../how-to/filing-readiness.md:132
 msgid ""
 "Every calculated value carries its legal basis, and each review step "
 "shows it. The formula behind each calculated box carries its legal and "
@@ -345,11 +380,11 @@ msgstr ""
 "hordozza a jogszabályi és forráshivatkozásait. Lásd: [A számítási "
 "bemenetek áttekintése és megadása](review-calculation-values.md):"
 
-#: ../../how-to/filing-readiness.md:123
+#: ../../how-to/filing-readiness.md:138
 msgid "Two more places show the legal basis:"
 msgstr "Két további hely mutatja a jogi alapot:"
 
-#: ../../how-to/filing-readiness.md:125
+#: ../../how-to/filing-readiness.md:140
 msgid ""
 "The issues from the check name the legal references behind each rule. See"
 " [Check a draft declaration and act on the issues](verification-"
@@ -359,7 +394,7 @@ msgstr ""
 " hivatkozásokat. Lásd [Bevallás-piszkozat ellenőrzése és teendők a "
 "problémák alapján](verification-reports.md)."
 
-#: ../../how-to/filing-readiness.md:126
+#: ../../how-to/filing-readiness.md:141
 msgid ""
 "`aeat app review queue --explain` - pending issues with their legal "
 "references. See [the review queue](classify-transactions.md#see-"
@@ -369,11 +404,11 @@ msgstr ""
 " hivatkozásaikkal. Lásd [az ellenőrzési sort](classify-transactions.md"
 "#see-everything-that-still-needs-a-decision)."
 
-#: ../../how-to/filing-readiness.md:130
+#: ../../how-to/filing-readiness.md:145
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/filing-readiness.md:132
+#: ../../how-to/filing-readiness.md:147
 msgid ""
 "[Check a draft declaration and act on the issues](verification-"
 "reports.md) - box-by-box check of the draft."
@@ -381,7 +416,7 @@ msgstr ""
 "[Bevallás-piszkozat ellenőrzése és teendők a problémák alapján"
 "](verification-reports.md) - a piszkozat rovatonkénti ellenőrzése."
 
-#: ../../how-to/filing-readiness.md:134
+#: ../../how-to/filing-readiness.md:149
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "fill missing values that readiness or the check found."
@@ -390,7 +425,7 @@ msgstr ""
 "values.md) - töltsd ki a felkészültségi ellenőrzés vagy a vizsgálat által"
 " jelzett hiányzó értékeket."
 
-#: ../../how-to/filing-readiness.md:136
+#: ../../how-to/filing-readiness.md:151
 msgid ""
 "[How filings build on earlier ones](../explanation/building-on-earlier-"
 "filings.md) - how cross-period dependencies work."
@@ -398,7 +433,7 @@ msgstr ""
 "[Hogyan épülnek a benyújtások a korábbiakra](../explanation/building-on-"
 "earlier-filings.md) - hogyan működnek az időszakok közötti függőségek."
 
-#: ../../how-to/filing-readiness.md:138
+#: ../../how-to/filing-readiness.md:153
 msgid ""
 "[The filing workflow](filing-spine.md) - declarations, earlier "
 "calculations, and the history of each declaration."
@@ -406,6 +441,6 @@ msgstr ""
 "[A benyújtási munkafolyamat](filing-spine.md) - bevallások, korábbi "
 "számítások és az egyes bevallások előzményei."
 
-#: ../../how-to/filing-readiness.md:139
+#: ../../how-to/filing-readiness.md:154
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[CLI-referencia](../cli/index.rst) - teljes kapcsolóreferencia."

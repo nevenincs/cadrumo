@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:37+0100\n"
+"POT-Creation-Date: 2026-11-03 14:27+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -301,26 +301,59 @@ msgstr ""
 
 #: ../../how-to/filing-readiness.md:101
 msgid ""
-"Refine the projection with values the quarters cannot know: withholdings,"
-" personal circumstances, or specific boxes:"
+"Refine the projection with values the quarters cannot know: personal "
+"circumstances or specific boxes. `--casilla` accepts only boxes you enter"
+" yourself, such as casilla 0003 (cash employment pay). It refuses a "
+"calculated box, whose value the form derives from the others:"
 msgstr ""
 "Afina la proyección con valores que los trimestres no pueden conocer: "
-"retenciones, circunstancias personales o casillas concretas:"
+"circunstancias personales o casillas concretas. `--casilla` solo acepta "
+"las casillas que introduces tú mismo, como la casilla 0003 (retribuciones"
+" dinerarias del trabajo). Rechaza una casilla calculada, cuyo valor el "
+"formulario deriva de las demás:"
 
-#: ../../how-to/filing-readiness.md:107
+#: ../../how-to/filing-readiness.md:109
 msgid ""
-"Withholdings default to zero when not supplied, so a projection without "
-"them overstates the balance due if you had withholdings. Each projected "
+"The headline figures stop at the resulting tax (<span lang=\"es\">cuota "
+"resultante</span>), which is calculated before any withholding credit. "
+"The later boxes, total payments on account and <span lang=\"es\">cuota "
+"diferencial</span>, take the withholding credits from the same records a "
+"real calculation reads: the payer certificates you saved with `app ledger"
+" retencion-soportada record` give their sum, and an income class your "
+"profile does not declare, or that you attested with `app ledger "
+"retencion-soportada attest-absence`, gives a proven zero. An income class"
+" your profile declares with no record and no attestation has no value. "
+"The output then lists its box as unresolved, together with the totals "
+"computed from it, and shows no number for any of them. The text output "
+"prints one `unresolved` line per box; the JSON output carries them in "
+"`unresolved_bindings` and `unresolved_casillas`. You cannot type a "
+"withholding figure with `--casilla` or `--binding`: as in a real "
+"calculation, these boxes come only from the records. A projection that "
+"includes your withholdings is still a planning estimate. Each projected "
 "box carries its formula and legal references in the JSON output, the same"
 " legal basis as a real calculation."
 msgstr ""
-"Las retenciones toman el valor cero de forma predeterminada cuando no se "
-"aportan, así que una proyección sin ellas sobreestima el saldo a pagar si"
-" tuviste retenciones. Cada casilla proyectada lleva su fórmula y sus "
-"referencias legales en la salida JSON, la misma base legal que un cálculo"
-" real."
+"Las cifras principales llegan hasta la cuota resultante, que se calcula "
+"antes de cualquier crédito por retenciones. Las casillas posteriores, el "
+"total de pagos a cuenta y la cuota diferencial, toman los créditos por "
+"retenciones de los mismos registros que lee un cálculo real: los "
+"certificados de los pagadores que guardaste con `app ledger retencion-"
+"soportada record` dan su suma, y una clase de renta que tu perfil no "
+"declara, o que acreditaste con `app ledger retencion-soportada attest-"
+"absence`, da un cero demostrado. Una clase de renta que tu perfil declara"
+" sin registro y sin acreditación no tiene valor. La salida enumera "
+"entonces su casilla como sin resolver, junto con los totales calculados a"
+" partir de ella, y no muestra ningún número para ninguno de ellos. La "
+"salida de texto imprime una línea `unresolved` por casilla; la salida "
+"JSON las incluye en `unresolved_bindings` y `unresolved_casillas`. No "
+"puedes escribir una cifra de retenciones con `--casilla` ni con "
+"`--binding`: igual que en un cálculo real, estas casillas proceden "
+"únicamente de los registros. Una proyección que incluye tus retenciones "
+"sigue siendo una estimación de planificación. Cada casilla proyectada "
+"lleva su fórmula y sus referencias legales en la salida JSON, la misma "
+"base legal que un cálculo real."
 
-#: ../../how-to/filing-readiness.md:112
+#: ../../how-to/filing-readiness.md:127
 #, python-brace-format
 msgid ""
 "For when the year-end filing actually happens, see {ref}`Period codes and"
@@ -329,11 +362,11 @@ msgstr ""
 "Para cuándo se produce realmente la presentación de fin de año, consulta "
 "{ref}`Códigos de periodo y fechas <period-tokens-and-dates>`."
 
-#: ../../how-to/filing-readiness.md:115
+#: ../../how-to/filing-readiness.md:130
 msgid "Trace a value to its legal basis"
 msgstr "Rastrea un valor hasta su base legal"
 
-#: ../../how-to/filing-readiness.md:117
+#: ../../how-to/filing-readiness.md:132
 msgid ""
 "Every calculated value carries its legal basis, and each review step "
 "shows it. The formula behind each calculated box carries its legal and "
@@ -345,11 +378,11 @@ msgstr ""
 "referencias legales y de origen. Consulta [Revisar y aportar las entradas"
 " de cálculo](review-calculation-values.md):"
 
-#: ../../how-to/filing-readiness.md:123
+#: ../../how-to/filing-readiness.md:138
 msgid "Two more places show the legal basis:"
 msgstr "Otros dos lugares muestran la base legal:"
 
-#: ../../how-to/filing-readiness.md:125
+#: ../../how-to/filing-readiness.md:140
 msgid ""
 "The issues from the check name the legal references behind each rule. See"
 " [Check a draft declaration and act on the issues](verification-"
@@ -359,7 +392,7 @@ msgstr ""
 "hay detrás de cada regla. Consulta [Comprobar un borrador de declaración "
 "y actuar según las incidencias](verification-reports.md)."
 
-#: ../../how-to/filing-readiness.md:126
+#: ../../how-to/filing-readiness.md:141
 msgid ""
 "`aeat app review queue --explain` - pending issues with their legal "
 "references. See [the review queue](classify-transactions.md#see-"
@@ -369,11 +402,11 @@ msgstr ""
 "referencias legales. Consulta [la cola de revisión](classify-"
 "transactions.md#see-everything-that-still-needs-a-decision)."
 
-#: ../../how-to/filing-readiness.md:130
+#: ../../how-to/filing-readiness.md:145
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/filing-readiness.md:132
+#: ../../how-to/filing-readiness.md:147
 msgid ""
 "[Check a draft declaration and act on the issues](verification-"
 "reports.md) - box-by-box check of the draft."
@@ -381,7 +414,7 @@ msgstr ""
 "[Comprobar un borrador de declaración y actuar según las incidencias"
 "](verification-reports.md): comprobación casilla a casilla del borrador."
 
-#: ../../how-to/filing-readiness.md:134
+#: ../../how-to/filing-readiness.md:149
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "fill missing values that readiness or the check found."
@@ -390,7 +423,7 @@ msgstr ""
 "rellena los valores que faltan y que han detectado la preparación o la "
 "comprobación."
 
-#: ../../how-to/filing-readiness.md:136
+#: ../../how-to/filing-readiness.md:151
 msgid ""
 "[How filings build on earlier ones](../explanation/building-on-earlier-"
 "filings.md) - how cross-period dependencies work."
@@ -399,7 +432,7 @@ msgstr ""
 "/building-on-earlier-filings.md): cómo funcionan las dependencias entre "
 "periodos."
 
-#: ../../how-to/filing-readiness.md:138
+#: ../../how-to/filing-readiness.md:153
 msgid ""
 "[The filing workflow](filing-spine.md) - declarations, earlier "
 "calculations, and the history of each declaration."
@@ -407,6 +440,6 @@ msgstr ""
 "[El flujo de presentación](filing-spine.md): declaraciones, cálculos "
 "anteriores e historial de cada declaración."
 
-#: ../../how-to/filing-readiness.md:139
+#: ../../how-to/filing-readiness.md:154
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referencia de la CLI](../cli/index.rst): referencia completa de opciones."

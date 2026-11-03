@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:37+0100\n"
+"POT-Creation-Date: 2026-11-03 14:27+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -301,26 +301,59 @@ msgstr ""
 
 #: ../../how-to/filing-readiness.md:101
 msgid ""
-"Refine the projection with values the quarters cannot know: withholdings,"
-" personal circumstances, or specific boxes:"
+"Refine the projection with values the quarters cannot know: personal "
+"circumstances or specific boxes. `--casilla` accepts only boxes you enter"
+" yourself, such as casilla 0003 (cash employment pay). It refuses a "
+"calculated box, whose value the form derives from the others:"
 msgstr ""
 "Refina la projecció amb valors que els trimestres no poden conèixer: "
-"retencions, circumstàncies personals o caselles concretes:"
+"circumstàncies personals o caselles concretes. `--casilla` només accepta "
+"les caselles que introdueixes tu mateix, com ara la casella 0003 "
+"(retribucions dineràries del treball). Rebutja una casella calculada, el "
+"valor de la qual el formulari deriva de les altres:"
 
-#: ../../how-to/filing-readiness.md:107
+#: ../../how-to/filing-readiness.md:109
 msgid ""
-"Withholdings default to zero when not supplied, so a projection without "
-"them overstates the balance due if you had withholdings. Each projected "
+"The headline figures stop at the resulting tax (<span lang=\"es\">cuota "
+"resultante</span>), which is calculated before any withholding credit. "
+"The later boxes, total payments on account and <span lang=\"es\">cuota "
+"diferencial</span>, take the withholding credits from the same records a "
+"real calculation reads: the payer certificates you saved with `app ledger"
+" retencion-soportada record` give their sum, and an income class your "
+"profile does not declare, or that you attested with `app ledger "
+"retencion-soportada attest-absence`, gives a proven zero. An income class"
+" your profile declares with no record and no attestation has no value. "
+"The output then lists its box as unresolved, together with the totals "
+"computed from it, and shows no number for any of them. The text output "
+"prints one `unresolved` line per box; the JSON output carries them in "
+"`unresolved_bindings` and `unresolved_casillas`. You cannot type a "
+"withholding figure with `--casilla` or `--binding`: as in a real "
+"calculation, these boxes come only from the records. A projection that "
+"includes your withholdings is still a planning estimate. Each projected "
 "box carries its formula and legal references in the JSON output, the same"
 " legal basis as a real calculation."
 msgstr ""
-"Les retencions valen zero per defecte quan no es proporcionen, de manera "
-"que una projecció sense elles sobreestima el saldo a pagar si tenies "
-"retencions. Cada casella projectada porta la seva fórmula i les seves "
-"referències legals a la sortida JSON, la mateixa base legal que un càlcul"
-" real."
+"Les xifres principals s'aturen a la quota resultant, que es calcula abans"
+" de qualsevol crèdit per retencions. Les caselles posteriors, el total de"
+" pagaments a compte i la quota diferencial, prenen els crèdits per "
+"retencions dels mateixos registres que llegeix un càlcul real: els "
+"certificats dels pagadors que has desat amb `app ledger retencion-"
+"soportada record` en donen la suma, i una classe de renda que el teu "
+"perfil no declara, o que has acreditat amb `app ledger retencion-"
+"soportada attest-absence`, dona un zero demostrat. Una classe de renda "
+"que el teu perfil declara sense registre ni acreditació no té valor. La "
+"sortida llista aleshores la seva casella com a no resolta, juntament amb "
+"els totals calculats a partir d'ella, i no mostra cap número per a cap "
+"d'ells. La sortida de text imprimeix una línia `unresolved` per casella; "
+"la sortida JSON les porta a `unresolved_bindings` i "
+"`unresolved_casillas`. No pots escriure una xifra de retencions amb "
+"`--casilla` ni amb `--binding`: igual que en un càlcul real, aquestes "
+"caselles provenen només dels registres. Una projecció que inclou les "
+"teves retencions continua sent una estimació de planificació. Cada "
+"casella projectada porta la seva fórmula i les seves referències legals a"
+" la sortida JSON, la mateixa base legal que un càlcul real."
 
-#: ../../how-to/filing-readiness.md:112
+#: ../../how-to/filing-readiness.md:127
 #, python-brace-format
 msgid ""
 "For when the year-end filing actually happens, see {ref}`Period codes and"
@@ -329,11 +362,11 @@ msgstr ""
 "Per a quan la presentació de final d'any passa realment, consulta "
 "{ref}`Codis de període i dates <period-tokens-and-dates>`."
 
-#: ../../how-to/filing-readiness.md:115
+#: ../../how-to/filing-readiness.md:130
 msgid "Trace a value to its legal basis"
 msgstr "Traça un valor fins a la seva base legal"
 
-#: ../../how-to/filing-readiness.md:117
+#: ../../how-to/filing-readiness.md:132
 msgid ""
 "Every calculated value carries its legal basis, and each review step "
 "shows it. The formula behind each calculated box carries its legal and "
@@ -345,11 +378,11 @@ msgstr ""
 "referències legals i d'origen. Consulta [Revisa i aporta entrades de "
 "càlcul](review-calculation-values.md):"
 
-#: ../../how-to/filing-readiness.md:123
+#: ../../how-to/filing-readiness.md:138
 msgid "Two more places show the legal basis:"
 msgstr "Dos llocs més mostren la base legal:"
 
-#: ../../how-to/filing-readiness.md:125
+#: ../../how-to/filing-readiness.md:140
 msgid ""
 "The issues from the check name the legal references behind each rule. See"
 " [Check a draft declaration and act on the issues](verification-"
@@ -359,7 +392,7 @@ msgstr ""
 " de cada regla. Consulta [Comprova un esborrany de declaració i actua "
 "segons les incidències](verification-reports.md)."
 
-#: ../../how-to/filing-readiness.md:126
+#: ../../how-to/filing-readiness.md:141
 msgid ""
 "`aeat app review queue --explain` - pending issues with their legal "
 "references. See [the review queue](classify-transactions.md#see-"
@@ -369,11 +402,11 @@ msgstr ""
 "referències legals. Consulta [la cua de revisió](classify-transactions.md"
 "#see-everything-that-still-needs-a-decision)."
 
-#: ../../how-to/filing-readiness.md:130
+#: ../../how-to/filing-readiness.md:145
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/filing-readiness.md:132
+#: ../../how-to/filing-readiness.md:147
 msgid ""
 "[Check a draft declaration and act on the issues](verification-"
 "reports.md) - box-by-box check of the draft."
@@ -381,7 +414,7 @@ msgstr ""
 "[Comprova un esborrany de declaració i actua segons les incidències"
 "](verification-reports.md): comprovació casella a casella de l'esborrany."
 
-#: ../../how-to/filing-readiness.md:134
+#: ../../how-to/filing-readiness.md:149
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "fill missing values that readiness or the check found."
@@ -390,7 +423,7 @@ msgstr ""
 " emplena els valors que falten i que han detectat la preparació o la "
 "comprovació."
 
-#: ../../how-to/filing-readiness.md:136
+#: ../../how-to/filing-readiness.md:151
 msgid ""
 "[How filings build on earlier ones](../explanation/building-on-earlier-"
 "filings.md) - how cross-period dependencies work."
@@ -399,7 +432,7 @@ msgstr ""
 "/building-on-earlier-filings.md): com funcionen les dependències entre "
 "períodes."
 
-#: ../../how-to/filing-readiness.md:138
+#: ../../how-to/filing-readiness.md:153
 msgid ""
 "[The filing workflow](filing-spine.md) - declarations, earlier "
 "calculations, and the history of each declaration."
@@ -407,6 +440,6 @@ msgstr ""
 "[El flux de treball de presentació](filing-spine.md): declaracions, "
 "càlculs anteriors i historial de cada declaració."
 
-#: ../../how-to/filing-readiness.md:139
+#: ../../how-to/filing-readiness.md:154
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referència de la CLI](../cli/index.rst): referència completa d'opcions."
