@@ -152,7 +152,7 @@ _ACTIVITY_EPIGRAPH_PATH: Final[re.Pattern[str]] = re.compile(
 _IAE_EPIGRAPH_FIELD: Final[str] = "iae_epigraph"
 
 
-def _declared_activity_epigraphs(context: CalculationSourceContext) -> tuple[str | None, ...] | None:
+def declared_activity_epigraphs(context: CalculationSourceContext) -> tuple[str | None, ...] | None:
     """Return each declared activity's IAE epigraph in force at the period's end, ``None`` for one without.
 
     ``None`` overall when the profile cannot be read; an empty tuple when it
@@ -285,7 +285,7 @@ class RetencionSoportadaSourceResolver:
         by_class = _records_by_class(records)
         attested = {item.income_class: item for item in attestations}
         declared = _declared_categories(context)
-        activity_epigraphs = _declared_activity_epigraphs(context)
+        activity_epigraphs = declared_activity_epigraphs(context)
         binding_values: dict[BindingId, Decimal] = {}
         unresolved: list[BindingId] = []
         diagnostics: list[CalculationSourceDiagnostic] = []

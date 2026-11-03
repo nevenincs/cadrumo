@@ -25,6 +25,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.period import Period
+from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
 from ....domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
@@ -261,6 +262,96 @@ def test_under_accrual_the_withholding_is_also_stated_by_the_year_the_payer_paid
     later = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
     assert earlier.payment_year_binding_values == {_CREDIT_0599: _ZERO}
     assert later.payment_year_binding_values == {_CREDIT_0599: _RETENCION}
+
+
+_IN_YEAR = (date(_LATER, 3, 2), date(_LATER, 3, 20))
+_ALSO_IN_YEAR = (date(_LATER, 6, 2), date(_LATER, 6, 20))
+
+
+def _invoice_paid_in_year(
+    dates: tuple[date, date], number: str, tipo: TipoActividad | None
+) -> tuple[Transaction, Invoice]:
+    unlinked = _receipt(dates[1])
+    invoice = _issued(dates[0], linked=(unlinked.transaction_id,), number=number)
+    receipt = _receipt(dates[1], invoice_id=invoice.invoice_id).model_copy(update={"tipo_actividad": tipo})
+    return receipt, invoice
+
+
+def _rental_findings(resolution: CalculationSourceResolution) -> list[str]:
+    return [
+        item.message
+        for item in resolution.diagnostics
+        if item.reason == "source_issue" and item.source_ref == "withholding_rental_activity_component"
+    ]
+
+
+def test_a_rental_activity_receipt_leaves_its_withholding_out_of_the_activity_credit(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A01 receipt with 150,00 retained: 0599 holds 0,00 and the 150,00 is reported for the rental credit."""
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-A01", TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES)
+    resolution = _resolve(operation, _declared((_LATER, _DEVENGO)), rows=(row,), invoices=(invoice,), year=_LATER)
+    assert resolution.binding_values[_CREDIT_0599] == _ZERO
+    assert _CREDIT_0599 not in _unresolved_bindings(resolution)
+    (finding,) = _rental_findings(resolution)
+    assert "150.00 EUR" in finding
+
+
+def test_an_untagged_receipt_beside_a_rental_activity_leaves_the_activity_credit_unresolved(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    rental, rental_invoice = _invoice_paid_in_year(_IN_YEAR, "F-A01", TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES)
+    untagged, untagged_invoice = _invoice_paid_in_year(_ALSO_IN_YEAR, "F-2", None)
+    resolution = _resolve(
+        operation,
+        _declared((_LATER, _DEVENGO)),
+        rows=(rental, untagged),
+        invoices=(rental_invoice, untagged_invoice),
+        year=_LATER,
+    )
+    assert _CREDIT_0599 in _unresolved_bindings(resolution)
+    (message,) = [
+        item.message
+        for item in resolution.diagnostics
+        if item.reason == "unresolved_binding" and str(item.binding_id) == _CREDIT_0599
+    ]
+    assert "tipo_actividad" in message
+    assert untagged.transaction_id in message
+
+
+def test_an_untagged_receipt_is_unresolved_when_the_profile_declares_a_rental_activity(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-1", None)
+    facts = (*_declared((_LATER, _DEVENGO)), UserProfileFact(path="activities.iae_epigraph", value="861.1"))
+    resolution = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
+    assert _CREDIT_0599 in _unresolved_bindings(resolution)
+
+
+def test_an_untagged_receipt_without_a_rental_activity_credits_the_activity(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-1", None)
+    facts = (*_declared((_LATER, _DEVENGO)), UserProfileFact(path="activities.iae_epigraph", value="844"))
+    resolution = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
+    assert resolution.binding_values[_CREDIT_0599] == _RETENCION
+    assert _CREDIT_0599 not in _unresolved_bindings(resolution)
+    assert _rental_findings(resolution) == []
+
+
+def test_a_quarterly_return_keeps_a_rental_activity_withholding(operation: PinnedAuthorityOperation) -> None:
+    """RIRPF art. 110.3.a.2.º deducts the withholding of an urban rental carried on as an activity."""
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-A01", TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES)
+    resolution = _resolve(
+        operation,
+        _declared((_LATER, _DEVENGO)),
+        rows=(row,),
+        invoices=(invoice,),
+        year=_LATER,
+        modelo="130",
+        period="1T",
+    )
+    assert resolution.binding_values[_CREDIT_M130_06] == _RETENCION
 
 
 def test_under_cash_no_payment_year_figure_is_stated(operation: PinnedAuthorityOperation) -> None:

@@ -109,6 +109,8 @@ class RentaIncomeLedgerAggregation(
     """The numbers of the issued invoices that accrue unsettled with no EUR value to count."""
     rectificativa_corrections: tuple[RectificativaCorrection, ...] = ()
     rectificativa_refused: tuple[str, ...] = ()
+    rental_tag_missing: tuple[str, ...] = ()
+    """Withholding-bearing activity rows with no tipo de actividad, in a year with a rental activity."""
     """Why each correction accruing in the window could not be placed."""
 
 
@@ -344,6 +346,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
     criteria: ImputationCriteria | None = None,
+    rental: RentalActivityScreen | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the catalogue and aggregate an annual activity-income window.
 
@@ -378,6 +381,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
             criteria=criteria,
+            rental=rental,
         ).model_copy(update={"out_of_window_summary": rows_left_out_summary(whole_catalogue, touching)})
     if period.kind is not PeriodKind.ANNUAL:
         return aggregate_renta_m100_income_ledger(
@@ -390,6 +394,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
             criteria=criteria,
+            rental=rental,
         )
     partition = ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date)
     result = aggregate_renta_m100_income_ledger(
@@ -401,6 +406,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
         target_casilla_id=target_casilla_id,
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
+        rental=rental,
     )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
@@ -421,6 +427,7 @@ def aggregate_renta_m100_income_ledger(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     criteria: ImputationCriteria | None = None,
+    rental: RentalActivityScreen | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate annual activity-income from a :class:`TransactionCatalogue` into a selected target.
 
@@ -456,7 +463,8 @@ def aggregate_renta_m100_income_ledger(
         employment_category_matcher=employment_category_matcher,
         criteria=criteria,
     )
-    observations = list(projected.observations)
+    screened = _screen_rental_activity(projected.observations, transactions, rental)
+    observations = list(screened.observations)
     issues = list(projected.issues)
 
     casilla_aggregation = _m100_income_casilla_aggregation(
@@ -477,6 +485,7 @@ def aggregate_renta_m100_income_ledger(
         )
     )
     return RentaIncomeLedgerAggregation(
+        rental_tag_missing=screened.untagged,
         rectificativa_corrections=corrected.corrections,
         rectificativa_refused=corrected.refused,
         modelo=modelo,
@@ -537,6 +546,7 @@ def payment_dated_renta_m100_income_observations(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
+    rental: RentalActivityScreen | None = None,
 ) -> tuple[RentaIncomeObservation, ...]:
     """Return the ejercicio's activity receipts placed on the date the payer paid them.
 
@@ -551,8 +561,9 @@ def payment_dated_renta_m100_income_observations(
             context={"period": str(period)},
         )
     require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
-    return _project_income_onto_casilla(
-        ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date).in_window,
+    paid = ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date).in_window
+    projected = _project_income_onto_casilla(
+        paid,
         invoices=_load_income_invoices(ports=ports),
         bucket_id=bucket_id,
         window_start=date(period.filing_year, 1, 1),
@@ -561,7 +572,66 @@ def payment_dated_renta_m100_income_observations(
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
         allocate_part_payments=True,
-    ).observations
+    )
+    return _screen_rental_activity(projected.observations, paid, rental).observations
+
+
+class RentalActivityScreen(NamedTuple):
+    """Which activity rows the annual activity credit hands to the rental credit.
+
+    ``codes`` are the tipos de actividad whose withholding belongs to the
+    rental credit; ``declared`` says the profile declares a rental activity
+    for the ejercicio, which a ledger row carrying one of ``codes`` also shows.
+    """
+
+    codes: frozenset[str]
+    declared: bool
+
+
+class _ScreenedRentalActivity(NamedTuple):
+    observations: tuple[RentaIncomeObservation, ...]
+    untagged: tuple[str, ...]
+
+
+def _bears_withholding(observation: RentaIncomeObservation) -> bool:
+    derivation = observation.withheld_derivation
+    if derivation in (LedgerWithholdingDerivation.NOT_APPLICABLE, LedgerWithholdingDerivation.NONE_WITHHELD):
+        return False
+    return derivation is not LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE or observation.withheld_amount != 0
+
+
+def _screen_rental_activity(
+    observations: Sequence[RentaIncomeObservation],
+    transactions: TransactionCatalogue,
+    rental: RentalActivityScreen | None,
+) -> _ScreenedRentalActivity:
+    """Hand a rental activity row's declared retención to the rental credit, and name the untagged rows.
+
+    ``tipo_actividad`` is optional on a row, so an untagged row cannot be told
+    apart from a rental one. Where the ejercicio shows a rental activity, each
+    untagged row bearing a retención is named, and the activity credit is not
+    stated until it is tagged; where none is shown, untagged rows are activity rows.
+    """
+    if rental is None or not rental.codes:
+        return _ScreenedRentalActivity(tuple(observations), ())
+    screened: list[RentaIncomeObservation] = []
+    untagged: list[str] = []
+    rental_shown = rental.declared
+    for observation in observations:
+        transaction = transactions.get(observation.transaction_id)
+        tipo = None if transaction is None or transaction.tipo_actividad is None else transaction.tipo_actividad.value
+        if tipo in rental.codes:
+            rental_shown = True
+            if observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE and (
+                observation.withheld_amount > 0
+            ):
+                observation = observation.model_copy(
+                    update={"withheld_derivation": LedgerWithholdingDerivation.RENTAL_ACTIVITY_COMPONENT}
+                )
+        elif tipo is None and _bears_withholding(observation):
+            untagged.append(observation.transaction_id)
+        screened.append(observation)
+    return _ScreenedRentalActivity(tuple(screened), tuple(untagged) if rental_shown else ())
 
 
 def aggregate_renta_m131_agrario_income_ledger_from_repositories(
@@ -1179,6 +1249,7 @@ __all__ = [
     "RentaIncomeLedgerAggregationIssue",
     "RentaIncomeLedgerAggregationIssueReason",
     "RentaIncomeObservation",
+    "RentalActivityScreen",
     "UnadmittedActivityIncome",
     "aggregate_renta_income_ledger",
     "aggregate_renta_income_ledger_from_repositories",
