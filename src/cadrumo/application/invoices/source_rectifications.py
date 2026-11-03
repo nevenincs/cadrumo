@@ -18,6 +18,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
+from ...core.decimal.constants import ZERO
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.invoice_bindings import InvoiceObservation
 from ...domain.invoices.catalogue import InvoiceCatalogue
@@ -31,7 +32,6 @@ from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourc
 from .source_observations import ObservedInvoice, invoice_source_kind, is_rectificativa, rectified_invoices
 from .source_resolver_ports import M349FiledDeclaration, M349FiledDeclarationReader
 
-_ZERO = Decimal("0")
 _M349_RECTIFICATION_LEGAL_REFS: tuple[str, ...] = ("rd-1624-1992:art-80", "ley-37-1992:art-80")
 
 type _M349RecordKey = tuple[str, str, str]
@@ -192,14 +192,14 @@ def _net_same_period_records(
     totals: dict[_M349RecordKey, Decimal] = {}
     for _invoice, observation in items:
         key = _record_key(observation)
-        totals[key] = totals.get(key, _ZERO) + observation.base_amount
+        totals[key] = totals.get(key, ZERO) + observation.base_amount
     kept: list[ObservedInvoice] = []
     refusals: list[CalculationSourceDiagnostic] = []
     for invoice, observation in items:
         total = totals[_record_key(observation)]
-        if total > _ZERO:
+        if total > ZERO:
             kept.append((invoice, observation))
-        elif total < _ZERO and is_rectificativa(invoice):
+        elif total < ZERO and is_rectificativa(invoice):
             refusals.append(
                 _m349_refusal(
                     invoice,
@@ -208,7 +208,7 @@ def _net_same_period_records(
                     remedy="Check the amount of the correction and of the invoice it corrects, then calculate again.",
                 ),
             )
-        elif total < _ZERO:
+        elif total < ZERO:
             kept.append((invoice, observation))
     return kept, refusals
 
@@ -243,8 +243,8 @@ def _m349_rectification_observations(
         if previous is None:
             refusals.extend(_not_filed_refusal(member, resolver_id=resolver_id) for member in members)
             continue
-        corrected = previous - sum((member.observation.base_amount for member in members), _ZERO)
-        if corrected < _ZERO:
+        corrected = previous - sum((member.observation.base_amount for member in members), ZERO)
+        if corrected < ZERO:
             refusals.extend(
                 _m349_refusal(
                     member.invoice,
@@ -291,9 +291,9 @@ def _rectification_items(
                     "is_rectification": True,
                     "rectified_year": filed.period.filing_year,
                     "rectified_period": filed.period.registry_token,
-                    "rectified_base_previous": previous if index == 0 else _ZERO,
+                    "rectified_base_previous": previous if index == 0 else ZERO,
                     "base_amount": (
-                        corrected + sum((other.observation.base_amount for other in ordered[1:]), _ZERO)
+                        corrected + sum((other.observation.base_amount for other in ordered[1:]), ZERO)
                         if index == 0
                         else -observation.base_amount
                     ),
@@ -324,7 +324,7 @@ def _declared_base(
     ]
     if not operator_rows:
         return None
-    base = sum((row.importe for row in operator_rows), _ZERO)
+    base = sum((row.importe for row in operator_rows), ZERO)
     earlier = (item for item in declarations if item.period.end_date < context.period.end_date)
     for declaration in sorted(earlier, key=lambda item: item.period.end_date):
         for row in declaration.rows:
