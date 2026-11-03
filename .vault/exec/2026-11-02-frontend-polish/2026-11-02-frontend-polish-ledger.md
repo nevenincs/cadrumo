@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:32dd532088c0ae4e28a8294589dc2b76a303988e84082d3bfd59837121906a14'
+body_hash: 'sha256:46b25997be7172a01d1d77f82fb2c56e119afac4894808e77b73be045d07d377'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -307,6 +307,10 @@ related:
 - `S14` `verify:` `providers setup language preferences and provisioning cases` -> `pass`
 - `S14` `verify:` `11 preference regressions in final25 case batch` -> `pass`
 - `S14` `verify:` `npm run check` -> `pass`
+- `S15` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S15` `verify:` `Docs source-window bridge navigation and terminal restart cases` -> `pass`
+- `S15` `verify:` `terminal rendering theme palette and prior logs coverage` -> `pass`
+- `S15` `verify:` `S44 restored direct Docs controls` -> `pass`
 
 ## Notes
 
