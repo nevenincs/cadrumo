@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -66,8 +67,11 @@ def seed_m130_income_transaction(
     value_date: date | None = None,
     bucket_id: str | None = None,
     criterion_declared: bool = True,
+    tipo_actividad: TipoActividad | None = None,
 ) -> None:
     """Seed one real actividad-economica income row for source-bound M130 casilla 01.
+
+    A row whose ``tipo_actividad`` is agrarian counts in the agrarian volume of casilla 08 instead.
 
     ``value_date`` defaults to 15 February of ``filing_year`` (a Q1 row). Pass an
     explicit date to place the income in a later quarter — useful for exercising
@@ -117,6 +121,7 @@ def seed_m130_income_transaction(
                 "purchase_invoice_evidence_id": None,
                 "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
                 "classified_by": "manual",
+                "tipo_actividad": tipo_actividad,
             },
         )
         with open_test_profile_session(bucket_id):
