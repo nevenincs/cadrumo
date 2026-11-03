@@ -191,6 +191,9 @@ aggregation:
         the rate of the member state of consumption changed during this period, so
         its issue date cannot show which rate applies. Record the operation date on
         the invoice.
+      rate_tier_absent: The destination Member State has no rate in this rate tier
+        at any date, so the row cannot be written. Check the rate tier of the invoice
+        line.
       rate_tier_ambiguous: Two rates in the same tier of the destination Member State
         give this cuota, so the rate to write on the row is not known. Check the invoice
         line.
