@@ -153,8 +153,6 @@ def _common_inputs() -> dict[CasillaId, Decimal]:
     return {
         _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
         _M130_WITHHELD_CASILLA: Decimal("0"),
-        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
         _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
         _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
     }

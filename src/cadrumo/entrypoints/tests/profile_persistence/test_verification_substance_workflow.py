@@ -53,7 +53,6 @@ from .verification_substance_support import (
     _CASILLA_06,
     _CASILLA_08,
     _CASILLA_09,
-    _CASILLA_10,
     _CASILLA_12,
     _CASILLA_14,
     _CASILLA_15,
@@ -183,8 +182,6 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     casilla_inputs: dict[CasillaId, Decimal] = {
         _CASILLA_05: Decimal("0"),
         _CASILLA_06: Decimal("0"),
-        _CASILLA_08: Decimal("0"),
-        _CASILLA_10: Decimal("0"),
         _CASILLA_16: Decimal("0"),
         _CASILLA_18: Decimal("0"),
     }
@@ -244,8 +241,6 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     casilla_inputs: dict[CasillaId, Decimal] = {
         _CASILLA_05: Decimal("0"),
         _CASILLA_06: Decimal("0"),
-        _CASILLA_08: Decimal("0"),
-        _CASILLA_10: Decimal("0"),
         _CASILLA_16: Decimal("0"),
         _CASILLA_18: Decimal("0"),
     }
@@ -327,15 +322,9 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     assert report.granted_verificado_completo is False
 
 
-def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c10(repos: _Repos) -> None:
-    """M131 cap-predicate end-to-end integration.
-
-    M131 declares modelo-131-<rev>-c11-cap-by-c10 on all 4 revisions
-    via cap_le_when_positive(["11", "10"]). The companion test covers M130;
-    this test extends parallel coverage to M131. AEAT M131
-    instructions cite the same cap rule verbatim: "en ningún caso
-    podrá figurar en la casilla 11 un importe superior a la
-    cantidad positiva consignada en la casilla 10".
+def test_m131_c11_is_capped_at_the_positive_c10_whatever_the_carry(repos: _Repos) -> None:
+    """AEAT M131 instructions: "en ningún caso podrá figurar en la casilla 11 un importe superior a la
+    cantidad positiva consignada en la casilla 10". The box computes that cap, so the predicate stays silent.
     """
     wu_repo, _cr_repo, _vr_repo, bv_repo = repos
     with bundled_indexed_authority().operation():
@@ -381,18 +370,14 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
-    blocking = [f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
-    cap_findings = [
-        f
-        for f in blocking
-        if f.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
-        and dict(f.message_facts) == {"predicate_id": "modelo-131-2026-c11-cap-by-c10"}
-    ]
-    assert cap_findings, (
-        "M131 C11-cap-by-C10 predicate must fire when carry-forward exceeds positive C10; "
-        f"got blocking findings: {blocking}"
+    assert Decimal(revision.casilla_values[validated_casilla_id("11")]) == max(
+        Decimal("0"), Decimal(revision.casilla_values[validated_casilla_id("10")])
     )
-    assert report.granted_verificado_completo is False
+    assert not [
+        finding
+        for finding in report.findings
+        if dict(finding.message_facts) == {"predicate_id": "modelo-131-2026-c11-cap-by-c10"}
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -430,8 +415,6 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
 
     casilla_inputs: dict[CasillaId, Decimal] = {
         _CASILLA_05: Decimal("0"),
-        _CASILLA_08: Decimal("0"),
-        _CASILLA_10: Decimal("0"),
         _CASILLA_16: Decimal("0"),
         _CASILLA_18: Decimal("0"),
     }

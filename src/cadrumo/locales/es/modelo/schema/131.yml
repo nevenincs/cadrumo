@@ -199,8 +199,7 @@ modelo:
           irpf-pf-modulos-volumen-sin-datos-base:
             label: Volumen de ventas o ingresos sin datos-base
           irpf-pf-saldo-negativo-fin-periodo:
-            label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
-              10)
+            label: Saldo negativo trasladable a periodos posteriores
           minoracion-rendimientos-actividades-economicas:
             label: Minoración por rendimientos netos de actividades económicas
           pago-fraccionado-previo:

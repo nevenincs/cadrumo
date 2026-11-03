@@ -136,6 +136,7 @@ def aggregate_renta_income_ledger_from_repositories(
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
     criteria: ImputationCriteria | None = None,
+    excluded_activity_codes: frozenset[TipoActividad] = frozenset(),
 ) -> RentaIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate a cumulative income window.
 
@@ -168,6 +169,7 @@ def aggregate_renta_income_ledger_from_repositories(
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
             criteria=criteria,
+            excluded_activity_codes=excluded_activity_codes,
         ).model_copy(update={"out_of_window_summary": rows_left_out_summary(whole_catalogue, touching)})
     # Only the cumulative in-window subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
@@ -183,6 +185,7 @@ def aggregate_renta_income_ledger_from_repositories(
         target_casilla_id=target_casilla_id,
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
+        excluded_activity_codes=excluded_activity_codes,
     )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
@@ -203,6 +206,7 @@ def aggregate_renta_income_ledger(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     criteria: ImputationCriteria | None = None,
+    excluded_activity_codes: frozenset[TipoActividad] = frozenset(),
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate incoming professional-income transactions into a selected target.
 
@@ -222,6 +226,7 @@ def aggregate_renta_income_ledger(
         target_casilla_id: Registry-selected output casilla for professional income.
         activity_category_matcher: Predicate for activity-category transactions.
         employment_category_matcher: Predicate for employment-category transactions.
+        excluded_activity_codes: Declared activities whose rows belong to another box.
         criteria: The dated imputation election that places each row; ``None``
             keeps the bank date, for a caller that does not consult the profile.
 
@@ -241,6 +246,8 @@ def aggregate_renta_income_ledger(
 
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if transaction.tipo_actividad in excluded_activity_codes:
             continue
         outcome = _classify_income_transaction(
             transaction,
@@ -525,6 +532,7 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
     operation: PinnedAuthorityOperation,
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the catalogue and aggregate a selected activity-narrowed quarter.
 
@@ -544,6 +552,7 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
         operation=operation,
+        criteria=criteria,
     )
 
 
@@ -559,6 +568,7 @@ def aggregate_renta_m131_agrario_income_ledger(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     operation: PinnedAuthorityOperation,
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate an activity-narrowed quarterly income volume into a target.
 
@@ -592,6 +602,7 @@ def aggregate_renta_m131_agrario_income_ledger(
         agrarian_activity_codes: Selected activity-code set supplied by the registry.
         activity_category_matcher: Predicate for activity-category transactions.
         employment_category_matcher: Predicate for employment-category transactions.
+        criteria: The dated imputation election that places each row, when one is declared.
         operation: The operation's generation-pinned authority; the concept
             vocabulary and exclusion set are read from it.
 
@@ -618,6 +629,7 @@ def aggregate_renta_m131_agrario_income_ledger(
         target_casilla_id=target_casilla_id,
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
+        criteria=criteria,
         admits=lambda transaction: (
             transaction.tipo_actividad in agrarian_activity_codes
             and row_counts_toward_volumen_de_ingresos(

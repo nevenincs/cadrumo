@@ -20,9 +20,9 @@ Only ACTIVE, EUR-denominated, OUTGOING transactions whose explicit
 ``business_classification`` is BUSINESS or MIXED are eligible. The deductible
 amount is the IVA-exclusive base imponible (``taxable_base``), plus the
 non-recoverable share of ``iva_amount`` when the activity's IVA-deduction ratio
-(:func:`~.renta_ledger.resolve_iva_deduction_ratio` -- the SAME resolver the
-annual counterpart uses, for the SAME ejercicio, so the two filings cannot
-diverge) is less than full: IVA soportado a taxpayer cannot recover through
+(:func:`~.renta_ledger.resolve_iva_deduction_ratio`, the provisional percentage
+a quarter runs on; the annual return closes on the definitive one) is less than
+full: IVA soportado a taxpayer cannot recover through
 The indirect-tax input is PGC NRV 12.ª acquisition cost, same as the annual side (LIRPF arts.
 28-30 base-imponible deductibility governs the pago fraccionado's gasto
 determination identically to the annual declaration). A declarable expense
@@ -43,7 +43,7 @@ pipeline refuses it: the payment is computed on the same rendimiento neto
 This module does NOT reuse the annual pipeline's invoice-evidence
 reconciliation or its annual window, which are constraint-shape-divergent from
 the quarterly cumulative gasto sum. It shares that module's category-rule
-construction, its single IVA-deduction-ratio resolver
+construction, its provisional IVA-deduction-ratio resolver
 (:func:`~.renta_ledger.resolve_iva_deduction_ratio`) and its residence lookup.
 """
 
@@ -84,6 +84,7 @@ from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.tipo_actividad_partitions import agrarian_instalment_activity_codes
 from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
@@ -108,6 +109,7 @@ from .errors import AggregationValidationError
 from .renta_imputation import (
     ImputationCriteria,
     ImputationUnresolved,
+    expense_incurred_date,
     impute_ledger_row,
     rows_left_out_summary,
     rows_touching_window,
@@ -253,9 +255,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
     """Load the transaction catalogue and aggregate a cumulative expense window.
 
     Derives the activity's IVA-deduction ratio through
-    :func:`~.renta_ledger.resolve_iva_deduction_ratio` -- the SAME resolver the
-    The annual counterpart uses, for the SAME ejercicio (``period.filing_year``),
-    so the two filings cannot diverge on it. ``profile_record`` (a
+    :func:`~.renta_ledger.resolve_iva_deduction_ratio`, for the ejercicio
+    (``period.filing_year``). ``profile_record`` (a
     :class:`UserProfileRecord`) and ``prorrata_register_repository`` supply the
     profile and canonical register directly. ``usage_ratios`` carries the
     effective per-category ratios (the same mapping the annual pipeline is
@@ -454,8 +455,12 @@ def aggregate_renta_gasto_ledger(
     issues: list[RentaGastoLedgerAggregationIssue] = []
     advisories: list[RentaExpenseAdvisory] = []
 
+    # Apartado I of the form takes no agrarian figure; apartado II is a share of income alone.
+    agrarian = agrarian_instalment_activity_codes(effective_date=period.end_date, authority=operation)
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if transaction.tipo_actividad in agrarian:
             continue
         outcome = _classify_gasto_transaction(
             transaction,
@@ -490,7 +495,7 @@ def aggregate_renta_gasto_ledger(
                 criteria=criteria,
             ).fractions,
         )
-    observations = _apply_statutory_cap_trims(observations, rules=rules)
+    observations = _apply_statutory_cap_trims(observations, rules=rules, transactions=transactions, invoices=invoices)
     casilla_aggregation = _gasto_casilla_aggregation(
         window.period,
         observations,
@@ -730,6 +735,8 @@ def _apply_statutory_cap_trims(
     observations: list[RentaGastoObservation],
     *,
     rules: RentaCategoryDeductionRules,
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue | None,
 ) -> list[RentaGastoObservation]:
     """Hold the cumulative-window observations that share one statutory cap to that cap together."""
     trims = statutory_cap_trims(
@@ -738,7 +745,8 @@ def _apply_statutory_cap_trims(
                 claim_id=observation.transaction_id,
                 transaction_id=observation.transaction_id,
                 category=normalize_spending_category(observation.category_id),
-                claim_date=observation.filing_date,
+                imputed_on=observation.filing_date,
+                incurred_on=expense_incurred_date(transactions.transactions[observation.transaction_id], invoices),
                 deductible_amount=observation.deductible_amount,
             )
             for observation in observations

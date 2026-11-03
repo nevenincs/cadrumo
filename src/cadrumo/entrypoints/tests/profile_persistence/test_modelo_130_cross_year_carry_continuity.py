@@ -138,8 +138,6 @@ _Q1_INCOME = Decimal("6000")
 _Q1_EXPENSE = Decimal("2000")
 _Q1_INPUTS: dict[CasillaId, Decimal] = {
     _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }

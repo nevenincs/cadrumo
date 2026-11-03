@@ -194,8 +194,7 @@ modelo:
           irpf-pf-modulos-volumen-sin-datos-base:
             label: Turnover or income without base data
           irpf-pf-saldo-negativo-fin-periodo:
-            label: Negative balance carried forward to later periods (max. 0, -box
-              10)
+            label: Negative balance carried forward to later periods
           minoracion-rendimientos-actividades-economicas:
             label: Reduction for net income from business/professional activities
           pago-fraccionado-previo:

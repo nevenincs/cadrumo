@@ -112,6 +112,8 @@ class LedgerRentaIncomeProvider(BaseModel):
     modelo: Modelo = Modelo("130")
     target_casilla_id: CasillaId
     fact: LedgerIncomeFactValue
+    agrarian_quarter: bool = False
+    """The binding reads the art. 110.1.c activities' own quarter, which then leave the other bindings' rows."""
 
     @model_validator(mode="before")
     @classmethod

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.binding_temporal import TargetPeriodOffset
+from cadrumo.domain.calculations.registry.binding_temporal import PriorQuarterExpandingSpan
 from cadrumo.domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
@@ -144,10 +144,9 @@ def test_binding_query_rows_expose_typed_provider() -> None:
 
     assert isinstance(row.provider, PreviousFilingProvider)
     assert row.provider.source_modelo == "130"
-    assert row.provider.source_casilla_id == "saldo-negativo-fin-periodo"
-    assert isinstance(row.provider.temporal, TargetPeriodOffset)
-    assert row.provider.temporal.periods == -1
-    assert row.provider.temporal.within_filing_year is True
+    assert row.provider.source_casilla_ids == ("19", "15")
+    assert row.provider.required_source_casilla_ids == ("19",)
+    assert isinstance(row.provider.temporal, PriorQuarterExpandingSpan)
 
 
 def test_binding_query_rows_dump_typed_provider() -> None:
@@ -160,10 +159,10 @@ def test_binding_query_rows_dump_typed_provider() -> None:
     assert dumped["provider"] == {
         "kind": "previous_filing",
         "source_modelo": "130",
-        "temporal": {"kind": "target_period_offset", "periods": -1, "within_filing_year": True},
-        "source_casilla_ids": [],
-        "source_casilla_id": "saldo-negativo-fin-periodo",
-        "required_source_casilla_ids": None,
+        "temporal": {"kind": "prior_quarter_expanding_span"},
+        "source_casilla_ids": ["19", "15"],
+        "source_casilla_id": None,
+        "required_source_casilla_ids": ["19"],
         "grouping": None,
     }
 

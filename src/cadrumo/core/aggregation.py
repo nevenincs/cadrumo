@@ -57,6 +57,10 @@ class BindingAggregationOp(StrEnum):
             selected observations (e.g. Modelo 349 operator counts).
         PRIOR_PAGOS_FRACCIONADOS: Modelo 130 cumulative pago-fraccionado carry
             that nets the prior positive declaration against the running total.
+        PRIOR_NEGATIVE_RESULTS_UNDEDUCTED: The negative results of earlier
+            pago-fraccionado quarters that no quarter has deducted yet: per quarter,
+            the unsigned negative part of the first source casilla (its result),
+            less the second source casilla (what it deducted).
         PAGOS_FRACCIONADOS_INGRESADOS: The amount pago-fraccionado
             autoliquidaciones actually paid, folded across their source periods.
             Each period's effective filing contributes the result already paid
@@ -70,6 +74,7 @@ class BindingAggregationOp(StrEnum):
     COPY = "copy"
     COUNT_DISTINCT = "count_distinct"
     PRIOR_PAGOS_FRACCIONADOS = "prior_pagos_fraccionados"
+    PRIOR_NEGATIVE_RESULTS_UNDEDUCTED = "prior_negative_results_undeducted"
     PAGOS_FRACCIONADOS_INGRESADOS = "pagos_fraccionados_ingresados"
 
 
@@ -121,7 +126,7 @@ class RelationAggregationOp(StrEnum):
     period's own result. This is a deliberately separate axis from
     :class:`BindingAggregationOp` (which governs ``BindingDefinition`` folds and
     carries the binding-only ``rows`` / ``count_distinct`` /
-    ``prior_pagos_fraccionados`` members); the two are not interchanged. The
+    ``prior_pagos_fraccionados`` / ``prior_negative_results_undeducted`` members); the two are not interchanged. The
     complete set declared across the registry relation tree is ``copy``, ``sum``
     and ``pagos_fraccionados_ingresados``.
     """

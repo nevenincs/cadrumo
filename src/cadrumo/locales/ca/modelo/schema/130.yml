@@ -124,10 +124,17 @@ modelo:
               help: Import final a ingressar del Model 130 després de totes les deduccions
                 i autoliquidacions anteriors.
               label: Resultat final
+            rendimiento-neto-reducible-art-32-1:
+              help: Part del rendiment net acumulat generada en més de dos anys o
+                notòriament irregular, imputada en un únic període. No la indiquis
+                si la teva activitat obté aquest tipus de rendiments de manera habitual.
+                La casella 03 es calcula després de reduir-la un 30 %, sobre un màxim
+                de 300.000 euros l'any.
+              label: Rendiment net amb dret a la reducció de l'art. 32.1
             saldo-negativo-fin-periodo:
-              help: Llavor de traspàs calculada quan la casella 17 és negativa, usada
-                com a deducció a la casella 15 d'un trimestre posterior.
-              label: Saldo negatiu traslladable a períodes posteriors (màx. 0, -casella
-                17)
+              help: Resultats negatius d'aquesta autoliquidació i de les anteriors
+                de l'exercici que queden per deduir a la casella 15 d'un trimestre
+                posterior.
+              label: Saldo negatiu traslladable a períodes posteriors
           field:
             label: Ordre HAP/258/2015, exercicis 2019 i següents

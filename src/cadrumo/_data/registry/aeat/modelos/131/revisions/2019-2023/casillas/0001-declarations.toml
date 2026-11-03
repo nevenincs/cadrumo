@@ -86,8 +86,8 @@ number = "11"
 section = ["total_liquidacion"]
 semantic_role = "irpf_pf_modulos_resultados_negativos_anteriores"
 continuidad_id = "irpf-pf-modulos-resultados-negativos-anteriores"
-input_kind = "bound"
-binding = "modelo-131-resultados-negativos-anteriores"
+input_kind = "computed"
+formula = "modelo-131-resultados-negativos-anteriores-cap"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 [[revisions."2019-2023".casillas]]

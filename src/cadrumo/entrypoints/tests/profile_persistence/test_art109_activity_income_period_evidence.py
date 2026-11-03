@@ -53,8 +53,6 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.entrypoints.tests.profile_persistence.verification_substance_support import (
     _CASILLA_05,
     _CASILLA_06,
-    _CASILLA_08,
-    _CASILLA_10,
     _CASILLA_16,
     _CASILLA_18,
     _T0,
@@ -275,8 +273,6 @@ def _calculate_m130_draft(
             casilla_inputs={
                 _CASILLA_05: Decimal("0.00"),
                 _CASILLA_06: Decimal("0.00"),
-                _CASILLA_08: Decimal("0.00"),
-                _CASILLA_10: Decimal("0.00"),
                 _CASILLA_16: Decimal("0.00"),
                 _CASILLA_18: Decimal("0.00"),
             },

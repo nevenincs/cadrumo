@@ -196,8 +196,6 @@ _EXPENSE_ROWS: tuple[tuple[str, date, SpendingCategory, Decimal], ...] = (
 # expense rows drive it through the live source resolver.
 _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     _M130_RETENCIONES_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }

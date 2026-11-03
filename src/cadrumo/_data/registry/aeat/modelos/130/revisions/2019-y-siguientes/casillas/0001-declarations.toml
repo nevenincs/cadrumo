@@ -23,6 +23,19 @@ binding = "modelo-130-actividad-economica-gastos-cumulative"
 # and art-30 (estimación directa, gastos fiscalmente deducibles).
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
 
+# Working figure for box 03: only the operator can say a yield meets LIRPF art. 32.1,
+# whose last paragraph excludes activities that regularly obtain such yields.
+[[revisions."2019-y-siguientes".casillas]]
+id = "rendimiento-neto-reducible-art-32-1"
+number = "rendimiento-neto-reducible-art-32-1"
+section = ["actividades_economicas_estimacion_directa"]
+semantic_role = "irpf_pf_rendimiento_neto_reducible_art_32_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Support casilla for the art. 32.1 reduction inside box 03; the AEAT design has no box for it."
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-32-2015"], source_refs = ["aeat-modelo-130-instructions"] }
+legal_refs = ["ley-35-2006:art-32-2015"]
+source_refs = ["aeat-modelo-130-instructions"]
+
 [[revisions."2019-y-siguientes".casillas]]
 id = "03"
 number = "03"
@@ -88,6 +101,8 @@ id = "08"
 number = "08"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
 semantic_role = "irpf_pf_volumen_ingresos_trimestre"
+input_kind = "bound"
+binding = "modelo-130-volumen-ingresos-agrario"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -105,6 +120,8 @@ id = "10"
 number = "10"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
 semantic_role = "retenciones_ingresos_a_cuenta"
+input_kind = "bound"
+binding = "modelo-130-retenciones-agrarias"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"] }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 
@@ -196,12 +213,10 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:ar
 # -----------------------------------------------------------------------------
 # Prior-quarter negative-result carry-forward. AEAT Modelo 130 instructions
 # define the casilla 15 same-ejercicio carry under the RD 439/2007 art. 110
-# pago fraccionado framework. When a quarter's "Diferencia" (casilla 17) is
-# negative, the absolute value is carried forward as a deductible casilla 15
-# in the following quarter within the same ejercicio. The
-# saldo-negativo-fin-periodo casilla exposes that carry-forward seed; casilla
-# 15 picks it up via a previous_filing binding stamped by the resolver from
-# the prior quarter.
+# pago fraccionado framework. A negative casilla 19 stays deductible in any
+# later quarter of the same ejercicio until casilla 15 has used it; the
+# previous_filing binding folds those boxes over every earlier quarter. The
+# saldo-negativo-fin-periodo casilla reports the balance left at period end.
 # -----------------------------------------------------------------------------
 
 [[revisions."2019-y-siguientes".casillas]]
