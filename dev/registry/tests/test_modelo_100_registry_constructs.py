@@ -551,7 +551,7 @@ def test_modelo_100_dependency_classifications_cover_registered_relation_sources
 
 
 def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_only() -> None:
-    _modelos_by_id, catalogues = _loaded_registry()
+    modelos_by_id, catalogues = _loaded_registry()
     source = catalogues.sources["aeat-modelo-100-procedure"]
     source_text = (_source_root() / source.corpus_path).read_text(encoding="utf-8")
 
@@ -560,7 +560,13 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
 
     support = published_supported_filing_years()
     assert support is not None
-    for year in support.years:
+    # A filing-grade snapshot exists only for a year the modelo authors; a
+    # supported year above its newest revision is carried forward at
+    # calculation grade and cannot build the filing rung asserted here.
+    authored_years = {int(revision_id) for revision_id in modelos_by_id["100"].revisions}
+    filing_years = [year for year in support.years if year in authored_years]
+    assert filing_years
+    for year in filing_years:
         snapshot = _modelo_100_snapshot(year)
         cross_reference = snapshot.live_cross_references["modelo-100-filed-declarations-read"]
         policy = remote_state_policy_from_cross_reference(cross_reference)
