@@ -2038,8 +2038,9 @@ application:
         exportáld újra.
       export_settlement_unsupported: 'Az exportálás nem tudja megadni, hogyan rendeződik
         a bevallás: a rendezett összeg nem abba az irányba mutat, mint az eredmény,
-        például amikor az eredmény egy részét a házastársad visszatérítése ellen felfüggesztik.
-        A Cadrumo az idei nyomtatvány maradékát még nem számolja ki.'
+        például amikor a fizetendő összeg egy részét a házastársad visszatérítésének
+        terhére felfüggesztik, vagy lemondasz egy visszatérítésről. A Cadrumo az idei
+        nyomtatvány maradékát még nem számolja ki.'
       export_unsupported: A Modelo %{modelo} nyomtatvány nem exportálható fichero-BOE
         fájlba, mert %{reason}. A számítás, az ellenőrzés és az általad őrzött benyújtási
         rekordok létezhetnek, de ez a parancs ehhez a nyomtatványhoz nem tud AEAT

@@ -9746,9 +9746,10 @@ workspace:
         second_instalment_nothing: This amount is so small that the second instalment
           would come to nothing, so it is paid in one payment.
         settlement_unsupported: The amount this return settles does not go the way
-          its result does, as when the whole amount to pay is suspended against your
-          spouse's refund. Cadrumo does not yet compute the remainder for this year's
-          form, so it cannot be settled here.
+          its result does, as when all or part of the amount to pay is suspended against
+          your spouse's refund, or you waive all or part of a refund. Cadrumo does
+          not yet compute the remainder for this year's form, so it cannot be settled
+          here.
       file_format:
         fixed_width: AEAT file in the fixed-width BOE design
         xml_dictionary: AEAT XML file

@@ -132,7 +132,9 @@ def test_madrid_count_preserves_a_stored_value_for_a_non_madrid_filer() -> None:
             "tax_residence.ccaa": "cataluna",
             _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
         }
-        inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR, operation=_authority_operation_for_test)
+        inject_derived_autonomic_deduccion_facts(
+            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
+        )
 
         assert seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] == _UNREACHABLE_COUNT
         # The neutral default still lands on the sibling key it does own.
@@ -154,7 +156,9 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
             "renta_family.descendiente.0.convivencia": "true",
             _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
         }
-        inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR, operation=_authority_operation_for_test)
+        inject_derived_autonomic_deduccion_facts(
+            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
+        )
 
         resolved = seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY]
         assert isinstance(resolved, Decimal)
@@ -171,7 +175,9 @@ def test_unidad_familiar_base_preserves_a_stored_value() -> None:
             "renta_filing.declaration_type": "1",
         }
         seeded: dict[str, Any] = {**determinable_madrid, _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY: _UNREACHABLE_COUNT}
-        inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR, operation=_authority_operation_for_test)
+        inject_derived_autonomic_deduccion_facts(
+            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
+        )
 
         assert seeded[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] == _UNREACHABLE_COUNT
 
@@ -180,7 +186,9 @@ def test_unidad_familiar_base_preserves_a_stored_value() -> None:
         # different, so the survival above is the setdefault deferring rather than
         # the injector never touching the key at all.
         computed: dict[str, Any] = dict(determinable_madrid)
-        inject_derived_autonomic_deduccion_facts(computed, _MADRID_YEAR, operation=_authority_operation_for_test)
+        inject_derived_autonomic_deduccion_facts(
+            computed, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
+        )
         assert _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY in computed
         assert computed[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] != _UNREACHABLE_COUNT
 

@@ -2075,8 +2075,9 @@ application:
         y vuelve a exportarla.
       export_settlement_unsupported: 'La exportación no puede indicar cómo se liquida
         la declaración: el importe liquidado no va en el mismo sentido que el resultado,
-        como cuando una parte del resultado se suspende contra la devolución de tu
-        cónyuge. Cadrumo todavía no calcula el resto para el modelo de este ejercicio.'
+        como cuando se suspende una parte del importe a ingresar con cargo a la devolución
+        de tu cónyuge o renuncias a una devolución. Cadrumo todavía no calcula el
+        resto para el modelo de este ejercicio.'
       export_unsupported: El modelo %{modelo} no se puede exportar a fichero-BOE porque
         %{reason}. El cálculo, la comprobación y los registros de presentación que
         guardas pueden existir, pero este comando no puede producir un fichero para

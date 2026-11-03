@@ -907,7 +907,7 @@ def inject_derived_anualidades_eligibility_facts(
 def is_madrid_autonomic_deduccion_filing_year(
     filing_year: int,
     *,
-    authored_year: int | None = None,
+    authored_year: int,
     context: FamilyFactResolutionContext | None = None,
     operation: PinnedAuthorityOperation,
 ) -> bool:
@@ -928,7 +928,7 @@ def is_madrid_autonomic_deduccion_filing_year(
         declared_year = context.integer(_MADRID_AUTONOMIC_DEDUCCION_APPLICABILITY_FACT_ID)
     except RegistryValidationError:
         return False
-    return (filing_year if authored_year is None else authored_year) == declared_year
+    return authored_year == declared_year
 
 
 def is_madrid_resident(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
@@ -992,7 +992,7 @@ def inject_derived_autonomic_deduccion_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
     *,
-    authored_year: int | None = None,
+    authored_year: int,
     context: FamilyFactResolutionContext | None = None,
     operation: PinnedAuthorityOperation,
 ) -> None:

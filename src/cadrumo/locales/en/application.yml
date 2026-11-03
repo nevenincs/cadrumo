@@ -1975,8 +1975,8 @@ application:
         it again.
       export_settlement_unsupported: 'The export cannot state how the return is settled:
         the amount settled does not go the way the result does, as when part of the
-        result is suspended against your spouse''s refund. Cadrumo does not yet compute
-        the remainder for this year''s form.'
+        amount to pay is suspended against your spouse''s refund or you waive a refund.
+        Cadrumo does not yet compute the remainder for this year''s form.'
       export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
         %{reason}. The calculation, the check and the records of filings you keep
         may still exist, but this command cannot produce an AEAT upload file for this

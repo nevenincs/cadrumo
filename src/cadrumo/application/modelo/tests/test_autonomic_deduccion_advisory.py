@@ -286,7 +286,7 @@ def test_advisory_weighted_count_matches_calculate_path_candidate_count(
     # The calculate-path injector fail-closes for this indeterminate unit: the
     # synthetic key resolves to the neutral 0 default, never the real count.
     injected_index = dict(fact_index)
-    inject_derived_autonomic_deduccion_facts(injected_index, _YEAR, operation=modelo_operation)
+    inject_derived_autonomic_deduccion_facts(injected_index, _YEAR, authored_year=_YEAR, operation=modelo_operation)
     assert injected_index["renta_family.madrid_nacimiento_adopcion_eligible_count"] == Decimal("0")
 
     # The shared candidate-count primitive (which the verify-path advisory

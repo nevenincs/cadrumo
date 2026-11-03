@@ -249,7 +249,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     inject_derived_marriage_facts(fact_index, _YEAR)
     # Madrid nacimiento/adopción derived scalars (eligible count + unidad-familiar
     # base) are likewise injected at resolution time, defaulting to 0.
-    inject_derived_autonomic_deduccion_facts(fact_index, _YEAR, operation=authority_operation)
+    inject_derived_autonomic_deduccion_facts(fact_index, _YEAR, authored_year=_YEAR, operation=authority_operation)
     # The Art. 64/75 anualidades separate-escala flag is derived the same way.
     snapshot = _modelo_100_snapshot()
     inject_ordinary_work_maritime_facts(fact_index)
