@@ -1,15 +1,6 @@
 from __future__ import annotations
 
 
-def one_line_error_message(exc: Exception) -> str:
-    """Return the first non-empty exception line or its type name."""
-    for line in str(exc).splitlines():
-        stripped = line.strip()
-        if stripped:
-            return stripped
-    return exc.__class__.__name__
-
-
 def readiness_binding_input_channel(
     binding_id: str,
     *,

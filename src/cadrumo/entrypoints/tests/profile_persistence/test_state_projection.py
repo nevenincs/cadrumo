@@ -63,9 +63,11 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import projected_exercise
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
@@ -505,6 +507,42 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
     assert readiness.ledger_period == Period.from_year_and_code(2026, "1T")
     assert readiness.ledger_checked_transaction_count == 1
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
+
+
+def test_modelo_100_readiness_of_a_projected_year_reports_the_registry_ready(state_projection_dependencies) -> None:
+    """A year no edition authors is read at the grade it reaches, so the registry axis is not refused."""
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
+    _register_active_profile()
+    year = projected_exercise("100")
+    period = Period.from_year_and_code(year, "0A")
+
+    with bundled_indexed_authority().operation() as operation:
+        assert operation.reachable_authority_grade("100", filing_year=year, period="0A") is (
+            RegistryAuthorityGrade.CALCULATION
+        )
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            modelo_readiness_requests=(
+                ModeloReadinessRequest(
+                    modelo="100",
+                    revision_id=active_registry_revision_id(
+                        modelo="100", filing_year=year, period="0A", operation=operation
+                    ),
+                    filing_year=year,
+                    period=period,
+                ),
+            ),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.filing_year == year
+    assert readiness.registry_ready is True
+    assert readiness.registry_refusal == ""
+    assert readiness.registry_refusal_cause is None
 
 
 def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projection_dependencies) -> None:

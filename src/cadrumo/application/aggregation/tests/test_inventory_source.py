@@ -15,6 +15,7 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, projected_exercise
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import (
@@ -24,7 +25,9 @@ from ....core.aggregation import (
     CalculationSourceLineageRole,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ....domain.calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_first_filing_year
 from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventoryProvider
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
@@ -79,7 +82,14 @@ def _ref(value: str) -> FilingEvidenceReference:
     return FilingEvidenceReference(reference=value)
 
 
-def inventory_ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> InventoryLedger:
+def inventory_ledger(
+    actividad_id: str,
+    *,
+    physical_closing: Decimal | None = None,
+    year: int | None = None,
+) -> InventoryLedger:
+    """Build one complete activity ledger for ``year``, the newest authored Modelo 100 edition by default."""
+    year = newest_authored_edition("100") if year is None else year
     continuity = (PriorClosingContinuityEvidence(reference=_ref(f"prior-{actividad_id}"), content_digest="f" * 64),)
     acquisition = InventoryAcquisitionCost(
         consideration_excluding_iva=Decimal("100.00"),
@@ -115,7 +125,7 @@ def inventory_ledger(actividad_id: str, *, physical_closing: Decimal | None = No
     )
     movement = MovementRecord.from_purchase_acquisition(
         movement_id=f"purchase-{actividad_id}",
-        movement_date=date(2025, 2, 1),
+        movement_date=date(year, 2, 1),
         quantity=Decimal("1"),
         acquisition_cost=acquisition,
     )
@@ -123,10 +133,10 @@ def inventory_ledger(actividad_id: str, *, physical_closing: Decimal | None = No
     if physical_closing is not None:
         observation = PhysicalClosingObservation(
             observation_id=f"physical-{actividad_id}",
-            observed_on=date(2026, 1, 1),
-            as_of_date=date(2025, 12, 31),
+            observed_on=date(year + 1, 1, 1),
+            as_of_date=date(year, 12, 31),
             actividad_id=actividad_id,
-            filing_year=2025,
+            filing_year=year,
             closing_value=physical_closing,
             valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
             evidence=(
@@ -144,7 +154,7 @@ def inventory_ledger(actividad_id: str, *, physical_closing: Decimal | None = No
         )
     prior_fingerprint = fingerprint_prior_authoritative_closing(
         actividad_id=actividad_id,
-        filing_year=2024,
+        filing_year=year - 1,
         authoritative_closing_value=Decimal("100.00"),
         authoritative_source_fingerprint="e" * 64,
         evidence=continuity,
@@ -152,7 +162,7 @@ def inventory_ledger(actividad_id: str, *, physical_closing: Decimal | None = No
     return InventoryLedger.model_validate(
         {
             "actividad_id": actividad_id,
-            "year": 2025,
+            "year": year,
             "valuation_method": ValuationMethod.FIFO,
             "opening_stock": Decimal("100.00"),
             "period_movements": (movement,),
@@ -160,14 +170,14 @@ def inventory_ledger(actividad_id: str, *, physical_closing: Decimal | None = No
                 "decision": {
                     "decision_id": f"decision-{actividad_id}",
                     "actividad_id": actividad_id,
-                    "filing_year": 2025,
+                    "filing_year": year,
                     "authority": InventoryClosingAuthority.MOVEMENT_DERIVED,
                     "physical_observation_id": None if observation is None else observation.observation_id,
                     "physical_observation_fingerprint": None if observation is None else observation.fingerprint,
                     "reason": "Reviewed movement authority.",
                     "actor": "reviewer-secret",
                     "source_command": "inventory-secret-command",
-                    "decided_at": datetime(2026, 1, 2, tzinfo=UTC),
+                    "decided_at": datetime(year + 1, 1, 2, tzinfo=UTC),
                     "evidence": (
                         InventoryClosingDecisionEvidence(
                             reference=_ref(f"decision-{actividad_id}"),
@@ -179,8 +189,8 @@ def inventory_ledger(actividad_id: str, *, physical_closing: Decimal | None = No
                 "physical_observation": observation,
                 "prior_closing_link": {
                     "actividad_id": actividad_id,
-                    "current_filing_year": 2025,
-                    "prior_filing_year": 2024,
+                    "current_filing_year": year,
+                    "prior_filing_year": year - 1,
                     "prior_authoritative_closing_value": Decimal("100.00"),
                     "current_opening_value": Decimal("100.00"),
                     "prior_authoritative_source_fingerprint": "e" * 64,
@@ -439,11 +449,32 @@ def test_inventory_ledger_refuses_noncanonical_activity_identity(actividad_id: s
     assert actividad_id not in str(exc_info.value)
 
 
-def test_inventory_row_template_rejects_selector_coordinate_mismatch_without_repository_read() -> None:
+def test_a_projected_year_expands_the_rows_the_registry_authors_for_the_edition_it_is_carried_from() -> None:
+    year = projected_exercise("100")
+    revision = published_snapshot("100", filing_year=year, period="0A").revision
+    repository = _InventoryLedgerRepositoryScenario(
+        InventoryLedgerDocument(ledgers=(inventory_ledger("alpha", year=year),))
+    )
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, year=year))
+
+    assert repository.loads == 1
+    assert result.unresolved_binding_ids == ()
+    assert result.diagnostics == ()
+    assert sorted(result.row_binding_values.values()) == [Decimal("0.00"), Decimal("100.00"), Decimal("100.00")]
+    assert {binding_id for binding_id, _row in result.row_binding_values} == {
+        binding.id for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY
+    }
+
+
+def test_inventory_row_template_rejects_a_year_before_the_registry_authors_the_rows_without_repository_read(
+    operation: PinnedAuthorityOperation,
+) -> None:
     repository = _InventoryLedgerRepositoryScenario()
+    first = resolve_inventory_anexo_d_first_filing_year(filing_year=newest_authored_edition("100"), authority=operation)
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(
-        _context(_revision(inventory=True), year=2024),
+        _context(_revision(inventory=True), year=first - 1),
     )
 
     assert repository.loads == 0

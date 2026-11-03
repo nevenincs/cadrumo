@@ -2190,6 +2190,16 @@ application:
       profile_readiness_setup_incomplete_missing: 'A profil beállítása nincs befejezve;
         fejezd be a beállítási folyamatot, mielőtt bevallásokkal dolgoznál. Hiányzó
         mezők: %{profile_requirements}.'
+      readiness_registry_revision_mismatch: A Modelo %{modelo} nyomtatvány, %{filing_year}
+        adóév, %{period} időszak nyomtatványdefiníciói a(z) %{resolved_revision} változatot
+        alkalmazzák, nem a kért %{revision} változatot, ezért ez a feladat még nincs
+        készen.
+      readiness_registry_snapshot_unresolved: A Modelo %{modelo} nyomtatvány, %{filing_year}
+        adóév, %{period} időszak nyomtatványdefiníciói nem oldhatók fel, ezért ez
+        a feladat még nincs készen.
+      readiness_registry_snapshot_unresolved_reason: 'A Modelo %{modelo} nyomtatvány,
+        %{filing_year} adóév, %{period} időszak nyomtatványdefiníciói nem oldhatók
+        fel, ezért ez a feladat még nincs készen: %{reason}'
       recipient_decryption_failed: A címzett számára titkosított csomagot nem sikerült
         megfejteni; a kulcs nem megfelelő, vagy a csomagot módosították.
       recipient_encryption_invalid_key: A címzett nyilvános kulcsa nem egy érvényes

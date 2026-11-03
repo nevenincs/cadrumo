@@ -2233,6 +2233,15 @@ application:
       profile_readiness_setup_incomplete_missing: 'La configuración del perfil está
         incompleta; termina el asistente de configuración antes de trabajar con modelos.
         Campos pendientes: %{profile_requirements}.'
+      readiness_registry_revision_mismatch: Las definiciones del modelo %{modelo},
+        ejercicio %{filing_year}, periodo %{period} aplican la revisión %{resolved_revision}
+        y no la revisión pedida %{revision}, así que este trabajo aún no está listo.
+      readiness_registry_snapshot_unresolved: No se pudieron resolver las definiciones
+        del modelo %{modelo}, ejercicio %{filing_year}, periodo %{period}, así que
+        este trabajo aún no está listo.
+      readiness_registry_snapshot_unresolved_reason: 'No se pudieron resolver las
+        definiciones del modelo %{modelo}, ejercicio %{filing_year}, periodo %{period},
+        así que este trabajo aún no está listo: %{reason}'
       recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para
         el destinatario; la clave no coincide o el paquete ha sido manipulado.
       recipient_encryption_invalid_key: La clave pública del destinatario no es una

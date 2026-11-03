@@ -16,7 +16,7 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_filing_year
+from ...domain.calculations.registry.inventory_anexo_d_applicability import inventory_anexo_d_applies
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.row_source_identity import RowSourceIdentity
@@ -180,10 +180,10 @@ def _inventory_coordinate_refusal(
     # Refuse an inapplicable filing year here, before the encrypted ledger is
     # read: the projection would refuse it anyway, but only after a load.
     try:
-        applicable_filing_year = resolve_inventory_anexo_d_filing_year(filing_year=filing_year)
+        applies = inventory_anexo_d_applies(filing_year=filing_year)
     except RegistryValidationError:
-        applicable_filing_year = None
-    if applicable_filing_year == filing_year:
+        applies = False
+    if applies:
         return None
     return _template_refusal_resolution(
         binding_ids,

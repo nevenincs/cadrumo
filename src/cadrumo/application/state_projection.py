@@ -84,10 +84,7 @@ from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ..domain.deadlines.models import Schedule, TaxpayerProfile
-from ._state_projection_readiness import (
-    one_line_error_message,
-    readiness_binding_input_channel,
-)
+from ._state_projection_readiness import readiness_binding_input_channel
 from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
 from .auth.operator_probe_ports import OperatorProbePorts
 from .auth.operator_scope_ports import OperatorScopePorts
@@ -544,9 +541,13 @@ def _resolve_modelo_readiness_registry(
 ) -> _ModeloReadinessRegistryResolution:
     """Resolve the registry snapshot used by modelo readiness.
 
-    Registry lookup failures are converted into a typed refusal string so
-    callers can render ``registry_ready: false`` instead of losing the
-    rest of the projection.
+    The snapshot is read at the grade the filing coordinate reaches: a year the
+    selected edition does not author is carried across from it and reaches
+    calculation grade at most, so readiness for that year describes what
+    calculation needs instead of refusing a filing claim. Registry lookup
+    failures are converted into a typed refusal sentence, in the operator's
+    language, so callers can render ``registry_ready: false`` instead of losing
+    the rest of the projection.
     """
     from ..domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 
@@ -556,6 +557,11 @@ def _resolve_modelo_readiness_registry(
             request.modelo,
             filing_year=request.filing_year,
             period=period_token,
+            grade=operation.reachable_authority_grade(
+                request.modelo,
+                filing_year=request.filing_year,
+                period=period_token,
+            ),
         )
     except (FileNotFoundError, RegistrySnapshotError, RegistryValidationError) as exc:
         refusal = _registry_readiness_refusal(request, period_token=period_token, exc=exc)
@@ -591,11 +597,16 @@ def _registry_readiness_refusal(
     period_token: str,
     exc: Exception,
 ) -> str:
-    detail = one_line_error_message(exc)
-    return (
-        "registry snapshot unresolved for modelo "
-        f"{request.modelo!r}, year {request.filing_year}, period {period_token!r}, "
-        f"revision {request.revision_id!r}: {detail}."
+    from ..core.errors.error_codes import resolve_error_message
+    from ..core.i18n.render import tr
+
+    coordinate = {"modelo": request.modelo, "filing_year": request.filing_year, "period": period_token}
+    if not isinstance(exc, CadrumoError):
+        return tr("application.modelo.errors.readiness_registry_snapshot_unresolved", **coordinate)
+    return tr(
+        "application.modelo.errors.readiness_registry_snapshot_unresolved_reason",
+        reason=resolve_error_message(exc),
+        **coordinate,
     )
 
 
@@ -605,11 +616,15 @@ def _registry_readiness_revision_mismatch_refusal(
     period_token: str,
     resolved_revision_id: RevisionId,
 ) -> str:
-    return (
-        "registry snapshot unresolved for modelo "
-        f"{request.modelo!r}, year {request.filing_year}, period {period_token!r}, "
-        f"revision {request.revision_id!r}: requested revision {request.revision_id!r} "
-        f"does not match law-determined revision {resolved_revision_id!r}."
+    from ..core.i18n.render import tr
+
+    return tr(
+        "application.modelo.errors.readiness_registry_revision_mismatch",
+        modelo=request.modelo,
+        filing_year=request.filing_year,
+        period=period_token,
+        revision=request.revision_id,
+        resolved_revision=resolved_revision_id,
     )
 
 

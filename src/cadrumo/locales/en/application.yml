@@ -2117,6 +2117,15 @@ application:
         complete; declare the profile setup complete before working on modelos.
       profile_readiness_setup_incomplete_missing: 'Profile setup is incomplete; finish
         the setup flow before working on modelos. Outstanding fields: %{profile_requirements}.'
+      readiness_registry_revision_mismatch: The modelo definitions for modelo %{modelo},
+        filing year %{filing_year}, period %{period} apply revision %{resolved_revision},
+        not the requested revision %{revision}, so this target is not ready.
+      readiness_registry_snapshot_unresolved: The modelo definitions for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved, so this
+        target is not ready.
+      readiness_registry_snapshot_unresolved_reason: 'The modelo definitions for modelo
+        %{modelo}, filing year %{filing_year}, period %{period} could not be resolved,
+        so this target is not ready: %{reason}'
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
         the key does not match or the package was tampered with.
       recipient_encryption_invalid_key: The recipient's public key is not a well-formed
