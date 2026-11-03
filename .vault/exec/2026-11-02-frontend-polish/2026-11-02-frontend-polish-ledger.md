@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f15cc68645f9c5a3a29ef92898ba3808d154275402b06db5ad888aa84348669'
+body_hash: 'sha256:e3c02f1b84310f1acfcdfff88c79e7a5fb7a33219b8d683f86b190443d78d6ca'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -274,6 +274,14 @@ related:
 - `S42` `verify:` `three confirmation focus browser cases 20261103T003007Z-26936` -> `pass`
 - `S42` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
 - `S42` `verify:` `Terra bounded focus review` -> `pass`
+- `S43` `M` `native/desktop/frontend/src/shell/docking.ts`
+- `S43` `M` `native/desktop/frontend/src/components/docking/DockWorkspace.tsx`
+- `S43` `M` `native/desktop/frontend/src/App.tsx`
+- `S43` `M` `native/desktop/frontend/tests/live/docking.unit.ts`
+- `S43` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S43` `verify:` `docking model 10 cases` -> `pass`
+- `S43` `verify:` `TypeScript and scoped ESLint Prettier` -> `pass`
+- `S43` `verify:` `docking and inspector browser 41 cases` -> `pass`
 
 ## Notes
 

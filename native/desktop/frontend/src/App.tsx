@@ -691,6 +691,14 @@ export function App({ host }: { host: Host }) {
       : activePanes.includes(area);
   const firstPaneShown =
     (layout.docsShown || pageOn || maximized === "docs") && unhidden("docs");
+  const fitLedger =
+    ledgerOn &&
+    firstPaneShown &&
+    !docking.floating.some((entry) => entry.pane === "docs");
+  const dockMinimumWidths = useMemo(
+    () => (fitLedger ? { docs: mainMin, agent: agentMin } : undefined),
+    [fitLedger, mainMin, agentMin],
+  );
   const docsVisible = firstPaneShown && !pageOn;
   const calendarVisible = calendarOn && firstPaneShown;
   const ledgerVisible = ledgerOn && firstPaneShown;
@@ -3281,6 +3289,7 @@ export function App({ host }: { host: Host }) {
             />
             <DockWorkspace
               layout={docking}
+              minimumWidths={dockMinimumWidths}
               visible={dockOffered}
               expanded={expandedPane}
               fullscreen={fullscreen.fullscreen}

@@ -304,6 +304,18 @@ PASS for the bounded focus repair. The ledger integration run `20261103T001922Z-
 
 TypeScript and scoped ESLint/Prettier pass. Run `20261103T003007Z-26936` passes the existing confirmation/Enter-to-stage case and both explicit deferred-match cases (remain at result; move focus elsewhere). Terra's bounded review finds no blocker. That six-case run passed five and failed one; it is not a wholly passing run. The editing-row failure was corrected by searching for the virtualized row before editing, and the obsolete pane-title assertion now checks the owning dock tab. The remaining geometry test confirms the dock can compress the ledger scrolling band behind its pinned columns; S43 owns that separate repair. S10 remains open.
 
+### S43 fitted docking widths, 2026-11-03
+
+PASS for the bounded docking correction. At 1280px the former split could leave a negative scrolling band behind pinned ledger columns. Dock geometry now applies the ledger's measured content minimum and pane frame through the actual split tree. Row branches combine requirements, stacked branches share width, and only visible active tabs contribute. Floating panes remain independent. Infeasible widths retain the arrangement and existing local overflow behavior; this is not a promise that every narrow layout fits.
+
+Automatic fitting changes displayed rectangles and separator limits without rewriting saved ratios. Closing the inspector restores the preferred allocation. An actual user resize becomes the new preference; an attempted move against an existing fitted limit leaves that preference alone. Exact accessibility values use the same fitted geometry. A floating-point tolerance admits exact fits without inverted bounds.
+
+All ten docking model cases pass, covering nested, swapped, stacked, active/hidden/floating, infeasible and exact-fit layouts, restoration and explicit resizing. TypeScript and scoped ESLint/Prettier pass. Focused run `20261103T004248Z-58708` passed three cases. Full run `20261103T004319Z-56760` passed all 41 docking and inspector scenarios, including the original 1280px failure, no-op limit/restoration, deliberate resizing, narrow tab ownership and light/dark accessibility. Terra's final bounded review found no further blocker. This verifies browser presentation with the scenario host, not native window sizing or every OS scale setting. S10 and final integrated review remain separate work.
+
+### queued frontend integration, 2026-11-03
+
+The coordinator queued feature/tui `da19339268`, which includes IVA merge `11597ef030` and the operation-contract manifest repair, for a separate frontend integration window. No merge into this frontend worktree is authorized by that queue update. IVA reports 137 focused S07 tests and canonical Modelo/contract checks passing in its own worktree; those reports are not frontend verification evidence. Current frontend source remains unchanged by that snapshot, serial checks remain owned here, and Dev15370 remains running.
+
 ## Recommendations
 
 
