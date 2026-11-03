@@ -9798,8 +9798,8 @@ workspace:
           nulla lenne, ezért egy összegben fizetendő.
         settlement_unsupported: A bevallás által rendezett összeg nem az eredményével
           azonos irányú, például ha a teljes fizetendő összeget a házastársad visszatérítésének
-          terhére felfüggeszted. A hivatalos fájl ezt nem tudja rögzíteni, ezért itt
-          nem rendezhető.
+          terhére felfüggeszted. A Cadrumo az idei nyomtatvány maradékát még nem számolja
+          ki, ezért itt nem rendezhető.
       file_format:
         fixed_width: AEAT-fájl a rögzített szélességű BOE-formátumban
         xml_dictionary: AEAT XML-fájl

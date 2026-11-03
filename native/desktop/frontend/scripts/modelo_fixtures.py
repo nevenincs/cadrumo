@@ -1367,7 +1367,7 @@ def _write_projection_steps(directory: Path) -> None:
         frozen_clock(SEEDED_AT),
         _renta_seeded(Path(tmp), filer) as work,
     ):
-        seed_m130_income_transaction(amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta")
+        seed_m130_income_transaction(amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="synthetic-ledger")
         created = _operate(
             work,
             "modelo.work.create",
@@ -1412,7 +1412,9 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
     ):
         _record_certificate(work, filer)
         if filer.ledger_income is not None:
-            seed_m130_income_transaction(amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta")
+            seed_m130_income_transaction(
+                amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="synthetic-ledger"
+            )
         if filer.quarter_130:
             _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
         if filer.calculated:

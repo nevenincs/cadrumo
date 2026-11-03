@@ -91,6 +91,24 @@ def _refuse(message_key: str, **context: object) -> NoReturn:
     raise UserProfileValidationError(translated_message=message_key, context=context)
 
 
+# The two readings below return ``None`` instead of refusing inside their handlers: an exception raised in a handler
+# keeps the handled one as its context, and the handled errors quote the typed value.
+def _canonical_nif(raw: str, *, operation: PinnedAuthorityOperation) -> str | None:
+    try:
+        return canonical_person_tax_id(raw, operation=operation)
+    except IdentityError:
+        return None
+
+
+def _decoded_descendants(
+    supplied: dict[str, str], *, operation: PinnedAuthorityOperation
+) -> tuple[DescendantInfo, ...] | None:
+    try:
+        return descendant_list_from_facts(supplied, authority=operation)
+    except (ProfileAnswerTypeError, RegistryValidationError, ValueError):
+        return None
+
+
 def _validated_descendant_row(
     row: ProfileDescendantRow, *, position: int, operation: PinnedAuthorityOperation
 ) -> tuple[DescendantInfo, dict[str, str]]:
@@ -108,13 +126,12 @@ def _validated_descendant_row(
         _refuse(_BIRTH_DATE_REQUIRED_KEY, row=position)
     nif_path = f"{DESCENDANT_OBJECT_PATH}.0.{_NIF_LEAF}"
     if nif_path in supplied:
-        try:
-            supplied[nif_path] = canonical_person_tax_id(supplied[nif_path], operation=operation)
-        except IdentityError:
+        canonical_nif = _canonical_nif(supplied[nif_path], operation=operation)
+        if canonical_nif is None:
             _refuse(_NIF_INVALID_KEY, row=position)
-    try:
-        decoded = descendant_list_from_facts(supplied, authority=operation)
-    except (ProfileAnswerTypeError, RegistryValidationError, ValueError):
+        supplied[nif_path] = canonical_nif
+    decoded = _decoded_descendants(supplied, operation=operation)
+    if decoded is None:
         _refuse(_VALUE_INVALID_KEY, row=position)
     if len(decoded) != 1:
         _refuse(_BIRTH_DATE_REQUIRED_KEY, row=position)

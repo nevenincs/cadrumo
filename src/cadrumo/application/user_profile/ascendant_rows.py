@@ -90,19 +90,35 @@ def _refuse(message_key: str, **context: object) -> NoReturn:
     raise UserProfileValidationError(translated_message=message_key, context=context)
 
 
-def _tax_id(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> str:
-    """Admit a NIF or NIE whose checksum holds; an ascendant is a person, never an entity."""
+# The readings below return ``None`` instead of refusing inside their handlers: an exception raised in a handler
+# keeps the handled one as its context, and the handled errors quote the typed value.
+def _canonical_nif(raw: str, *, operation: PinnedAuthorityOperation) -> str | None:
     try:
         return canonical_person_tax_id(raw, operation=operation)
     except IdentityError:
-        _refuse(_NIF_INVALID_KEY, row=position)
+        return None
 
 
-def _date(raw: str, *, position: int, message_key: str) -> date:
+def _iso_date(raw: str) -> date | None:
     try:
         return require_iso8601_date(raw)
     except ValueError:
+        return None
+
+
+def _tax_id(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> str:
+    """Admit a NIF or NIE whose checksum holds; an ascendant is a person, never an entity."""
+    canonical = _canonical_nif(raw, operation=operation)
+    if canonical is None:
+        _refuse(_NIF_INVALID_KEY, row=position)
+    return canonical
+
+
+def _date(raw: str, *, position: int, message_key: str) -> date:
+    parsed = _iso_date(raw)
+    if parsed is None:
         _refuse(message_key, row=position)
+    return parsed
 
 
 def _cohabiting(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> str:

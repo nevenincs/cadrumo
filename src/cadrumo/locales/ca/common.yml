@@ -9846,8 +9846,8 @@ workspace:
           quedaria a zero, així que es paga d'una sola vegada.
         settlement_unsupported: L'import que liquida aquesta declaració no va en el
           mateix sentit que el seu resultat, com quan suspens tot l'import a ingressar
-          a càrrec de la devolució del teu cònjuge. El fitxer oficial no permet indicar-ho,
-          així que no es pot liquidar aquí.
+          a càrrec de la devolució del teu cònjuge. Cadrumo encara no calcula el romanent
+          per al model d'aquest exercici, així que no es pot liquidar aquí.
       file_format:
         fixed_width: Fitxer de l'AEAT amb el disseny de registre BOE d'amplada fixa
         xml_dictionary: Fitxer XML de l'AEAT

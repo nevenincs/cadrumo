@@ -253,6 +253,25 @@ def test_a_row_the_declaration_cannot_hold_is_refused_before_anything_is_written
     assert world.facts() == {}
 
 
+@pytest.mark.parametrize(
+    "leaves",
+    [
+        {"nif": "99999999A", "birth_date": "1948-03-04"},
+        {"nif": _CIF, "birth_date": "1948-03-04"},
+        {"birth_date": "1948-02-30"},
+        {"birth_date": "1948-03-04", "fallecimiento": "yesterday"},
+    ],
+)
+def test_a_refused_value_leaves_no_chained_exception_carrying_what_was_typed(
+    world: _World, leaves: dict[str, str]
+) -> None:
+    with pytest.raises(UserProfileValidationError) as refused:
+        world.replace(_row(**leaves))
+
+    assert refused.value.__cause__ is None
+    assert refused.value.__context__ is None
+
+
 def test_a_refusal_names_the_row_by_position(world: _World) -> None:
     with pytest.raises(UserProfileValidationError) as refused:
         world.replace(_row(birth_date="1948-03-04"), _row(birth_date="1950-01-01"), _row(nif=_NIF))

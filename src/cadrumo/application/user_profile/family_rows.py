@@ -13,8 +13,8 @@ household is stored in the objects above. Both groups are headed by the label of
 their canonical object, never by an array's label.
 
 Ascendants are stored as ``renta_family.ascendiente.{n}.{leaf}`` facts with
-``renta_family.ascendientes_count``. No wizard group or profile command writes
-them yet, and the schema names no leaves, so the leaves served are the ones the
+``renta_family.ascendientes_count``. The ``user-profile.ascendants`` operation
+writes them, and the schema names no leaves, so the leaves served are the ones the
 Modelo 100 household bindings read from that object and that a row can state.
 The two leaves those bindings read but nothing could store (the name and the
 official disability clave) are not offered. A filer with no stored ascendant

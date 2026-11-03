@@ -9860,8 +9860,9 @@ workspace:
           quedaría en cero, así que se paga de una sola vez.
         settlement_unsupported: El importe que liquida esta declaración no va en el
           mismo sentido que su resultado, como cuando suspendes todo el importe a
-          ingresar con cargo a la devolución de tu cónyuge. El fichero oficial no
-          permite indicarlo, así que no se puede liquidar aquí.
+          ingresar con cargo a la devolución de tu cónyuge. Cadrumo todavía no calcula
+          el resto para el modelo de este ejercicio, así que no se puede liquidar
+          aquí.
       file_format:
         fixed_width: Fichero de la AEAT con el diseño de registro BOE de ancho fijo
         xml_dictionary: Fichero XML de la AEAT

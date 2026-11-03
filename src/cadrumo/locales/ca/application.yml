@@ -2025,7 +2025,7 @@ application:
       export_settlement_unsupported: 'L''exportació no pot indicar com es liquida
         la declaració: l''import liquidat no va en el mateix sentit que el resultat,
         com quan una part del resultat se suspèn contra la devolució del teu cònjuge.
-        El fitxer oficial no té manera d''expressar-ho.'
+        Cadrumo encara no calcula el romanent per al model d''aquest exercici.'
       export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE perquè
         %{reason}. El càlcul, la comprovació i els registres de presentació que deses
         poden existir, però aquesta ordre no pot produir un fitxer per pujar a l'AEAT
