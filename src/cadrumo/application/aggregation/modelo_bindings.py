@@ -324,7 +324,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     )
                 else:
                     agrarian_target = _agrarian_quarter_target_casilla(context)
-                    agrarian_codes = (
+                    agrarian_codes: frozenset[TipoActividad] = (
                         frozenset()
                         if agrarian_target is None
                         else agrarian_instalment_activity_codes(

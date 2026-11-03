@@ -53,7 +53,6 @@ from .verification_substance_support import (
     _CASILLA_06,
     _CASILLA_08,
     _CASILLA_09,
-    _CASILLA_10,
     _CASILLA_12,
     _CASILLA_14,
     _CASILLA_15,

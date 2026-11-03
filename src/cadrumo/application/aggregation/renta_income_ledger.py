@@ -226,6 +226,7 @@ def aggregate_renta_income_ledger(
         target_casilla_id: Registry-selected output casilla for professional income.
         activity_category_matcher: Predicate for activity-category transactions.
         employment_category_matcher: Predicate for employment-category transactions.
+        excluded_activity_codes: Declared activities whose rows belong to another box.
         criteria: The dated imputation election that places each row; ``None``
             keeps the bank date, for a caller that does not consult the profile.
 
@@ -601,6 +602,7 @@ def aggregate_renta_m131_agrario_income_ledger(
         agrarian_activity_codes: Selected activity-code set supplied by the registry.
         activity_category_matcher: Predicate for activity-category transactions.
         employment_category_matcher: Predicate for employment-category transactions.
+        criteria: The dated imputation election that places each row, when one is declared.
         operation: The operation's generation-pinned authority; the concept
             vocabulary and exclusion set are read from it.
 

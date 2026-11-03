@@ -21,7 +21,8 @@ Only ACTIVE, EUR-denominated, OUTGOING transactions whose explicit
 amount is the IVA-exclusive base imponible (``taxable_base``), plus the
 non-recoverable share of ``iva_amount`` when the activity's IVA-deduction ratio
 (:func:`~.renta_ledger.resolve_iva_deduction_ratio`, the provisional percentage
-a quarter runs on; the annual return closes on the definitive one) is less than full: IVA soportado a taxpayer cannot recover through
+a quarter runs on; the annual return closes on the definitive one) is less than
+full: IVA soportado a taxpayer cannot recover through
 The indirect-tax input is PGC NRV 12.ª acquisition cost, same as the annual side (LIRPF arts.
 28-30 base-imponible deductibility governs the pago fraccionado's gasto
 determination identically to the annual declaration). A declarable expense

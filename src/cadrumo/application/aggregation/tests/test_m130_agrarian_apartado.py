@@ -28,10 +28,10 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ...actividad_asset.history import ActivityAssetHistory
+from ...actividad_asset.tests.register_support import MemoryRepository
 from ...modelo.calculation_resolution import resolve_calculation_inputs
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..source_mesh import CalculationSourceContext
-from ...actividad_asset.tests.register_support import MemoryRepository
 from .ledger_source_mesh_support import (
     BUCKET_ID,
     InMemoryTransactionCatalogueRepository,

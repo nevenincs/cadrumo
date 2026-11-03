@@ -834,6 +834,7 @@ def aggregate_renta_ledger_expenses(
         region_category_overrides: Optional per-:class:`CCAA` category-profile
             override layer; defaults to :func:`resolve_region_category_profiles`
             (empty) so every fact falls through to the state year profile.
+        definitive_prorrata_pending: The year's definitive prorrata is not registered, so IVA-bearing rows wait.
         iva_deduction_ratio: Optional activity-wide IVA-deduction fraction
             (LIVA arts. 94/104), threaded onto :class:`RentaDeductibilityContext`
             so the non-recoverable share of a fact's input IVA joins its
@@ -1159,7 +1160,7 @@ def _renta_observation_or_issue(
             RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
             f"filing date {anchor.isoformat()} is outside {period}",
         )
-    if definitive_prorrata_pending and fact.taxable_base is not None and fact.iva_amount:
+    if definitive_prorrata_pending and fact.taxable_base is not None and (fact.iva_amount or Decimal(0)) != 0:
         return _renta_transaction_issue(
             transaction,
             RentaLedgerAggregationIssueReason.DEFINITIVE_PRORRATA_PENDING,

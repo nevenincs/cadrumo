@@ -120,11 +120,11 @@ def _m130_chain(
     operation: PinnedAuthorityOperation, incomes: Mapping[str, str]
 ) -> dict[str, RegistryCalculationResult]:
     results: dict[str, RegistryCalculationResult] = {}
-    earlier: tuple[RegistryModeloObservation, ...] = ()
+    earlier: list[RegistryModeloObservation] = []
     for period, income in incomes.items():
-        result = _m130_quarter(operation, period, income=income, earlier=earlier)
+        result = _m130_quarter(operation, period, income=income, earlier=tuple(earlier))
         results[period] = result
-        earlier = (*earlier, _observation("130", period, result))
+        earlier.append(_observation("130", period, result))
     return results
 
 
@@ -193,7 +193,9 @@ def test_the_first_quarter_has_nothing_to_carry(operation: PinnedAuthorityOperat
     """No earlier quarter exists, so the carry is absent by design, not a resolved figure."""
     snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T")
 
-    assert _M130_CARRY not in resolve_previous_filing_binding_values(snapshot.revision, (), filing_year=_YEAR, period="1T")
+    assert _M130_CARRY not in resolve_previous_filing_binding_values(
+        snapshot.revision, (), filing_year=_YEAR, period="1T"
+    )
 
 
 def test_the_end_of_period_balance_reports_what_later_quarters_can_still_deduct(
@@ -242,11 +244,11 @@ def _m131_chain(
     operation: PinnedAuthorityOperation, quarters: Mapping[str, tuple[str, str]]
 ) -> dict[str, RegistryCalculationResult]:
     results: dict[str, RegistryCalculationResult] = {}
-    earlier: tuple[RegistryModeloObservation, ...] = ()
+    earlier: list[RegistryModeloObservation] = []
     for period, (volume, withheld) in quarters.items():
-        result = _m131_quarter(operation, period, volume=volume, withheld=withheld, earlier=earlier)
+        result = _m131_quarter(operation, period, volume=volume, withheld=withheld, earlier=tuple(earlier))
         results[period] = result
-        earlier = (*earlier, _observation("131", period, result))
+        earlier.append(_observation("131", period, result))
     return results
 
 

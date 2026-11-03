@@ -88,8 +88,6 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import (
     _DEFAULT_130_BINDING_VALUES,
-    _M130_AGRARIAN_VOLUME_CASILLA,
-    _M130_AGRARIAN_WITHHELD_CASILLA,
     _M130_CARRY_FORWARD_CASILLA,
     _M130_HOME_DEDUCTION_CASILLA,
     _M130_INCOME_CASILLA,

@@ -14,8 +14,8 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from .....application.aggregation.renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .....application.aggregation.renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
+from .....application.aggregation.renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .....application.aggregation.renta_ledger_models import (
     RentaLedgerAggregationIssueReason,
     RentaLedgerExpenseAggregation,
@@ -253,15 +253,7 @@ def _save_priced_row_with_prorrata(
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
-    settlement = (
-        {}
-        if definitive is None
-        else {
-            "definitive_percentage": Decimal(definitive),
-            "definitive_volume_con_derecho": Decimal(definitive),
-            "definitive_volume_sin_derecho": Decimal("100") - Decimal(definitive),
-        }
-    )
+    settled = None if definitive is None else Decimal(definitive)
     ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
@@ -270,7 +262,9 @@ def _save_priced_row_with_prorrata(
             provisional_percentage=Decimal(provisional),
             provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
-            **settlement,
+            definitive_percentage=settled,
+            definitive_volume_con_derecho=settled,
+            definitive_volume_sin_derecho=None if settled is None else Decimal("100") - settled,
         ),
     )
 
