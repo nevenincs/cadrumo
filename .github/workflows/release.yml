@@ -80,7 +80,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Upload the published registry authority
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cadrumo-registry-authority
           path: |
@@ -400,7 +400,7 @@ jobs:
           sha256sum build/cadrumo-release-cohort.tar.gz > build/cadrumo-release-cohort.tar.gz.sha256
 
       - name: Upload the sealed release cohort
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cadrumo-release-cohort
           path: |
@@ -441,7 +441,7 @@ jobs:
           authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -466,7 +466,7 @@ jobs:
             --distribution-evidence-dir var/distribution-install-readiness
 
       - name: Upload the distribution-evidence record
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: distribution-evidence-${{ matrix.row-id }}
           path: var/distribution-install-readiness/*.json
@@ -511,7 +511,7 @@ jobs:
           authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -597,7 +597,7 @@ jobs:
           echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: ${{ env.CADRUMO_HOMEBREW_ROOT }}/download
@@ -667,7 +667,7 @@ jobs:
 
       - name: Upload the Homebrew distribution-evidence rows
         if: always() && steps.initialize.outputs.ready == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: distribution-evidence-homebrew-${{ matrix.id }}
           path: ${{ env.CADRUMO_HOMEBREW_ROOT }}/distribution-install-readiness/*.json
@@ -675,7 +675,7 @@ jobs:
 
       - name: Upload the Homebrew acquisition bundle
         if: always() && steps.initialize.outputs.ready == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cadrumo-homebrew-acquisition-${{ matrix.id }}
           path: cadrumo-homebrew-acquisition-${{ matrix.id }}.tar.gz
@@ -713,7 +713,7 @@ jobs:
           "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: ${{ env.CADRUMO_SCOOP_ROOT }}/download
@@ -807,7 +807,7 @@ jobs:
 
       - name: Upload the Scoop distribution-evidence rows
         if: always() && steps.initialize.outputs.ready == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: distribution-evidence-scoop
           path: ${{ env.CADRUMO_SCOOP_ROOT }}/distribution-install-readiness/*.json
@@ -836,7 +836,7 @@ jobs:
           authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1025,7 +1025,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1087,7 +1087,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1182,7 +1182,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1293,7 +1293,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1393,7 +1393,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1452,7 +1452,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
@@ -1502,7 +1502,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Download the proven release cohort
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cadrumo-release-cohort
           path: build/cohort-download
