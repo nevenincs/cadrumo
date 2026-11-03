@@ -2283,6 +2283,9 @@ application:
         añadidas: %{claims_added}, sustituidas o retiradas: %{claims_removed}, cuadros
         de amortización modificados: %{schedules_changed}, bajas modificadas: %{disposals_changed}).
         Vuelve a calcularlo.'
+      application_not_required_maximum: 'La casilla [%{box}] tiene %{casilla_value},
+        pero debe ser %{computed_value}: la ley exige aplicar la mayor cuantía que
+        permite este ejercicio, ni más ni menos.'
       art20_reduccion_possible: La casilla [%{rnt_id}] recoge %{rnt_value} EUR de
         rendimiento neto del trabajo, dentro del límite del art. 20 LIRPF, así que
         la casilla [%{reduccion_id}] puede darte una reducción que aún no aplicas.
@@ -2454,6 +2457,9 @@ application:
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.
+      required_maximum_unresolved: La casilla [%{box}] aún no se puede comprobar,
+        porque no se conoce la cuantía máxima que la ley exige aplicar en este ejercicio.
+        Faltan algunas de las cifras de las que depende esa cuantía.
       scheme_period_contradicted: El valor {entered} de {binding_id} contradice el
         periodo de este trabajo, que es {expected}. Corrígelo o abre el trabajo del
         periodo correcto.

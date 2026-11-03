@@ -2156,6 +2156,9 @@ application:
         %{claims_added}, replaced or removed: %{claims_removed}, schedules changed:
         %{schedules_changed}, disposals changed: %{disposals_changed}). Calculate
         it again.'
+      application_not_required_maximum: 'Box [%{box}] holds %{casilla_value}, but
+        it must be %{computed_value}: the law requires applying the largest amount
+        this year allows, no more and no less.'
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
         from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
@@ -2318,6 +2321,9 @@ application:
         enough to file it.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
+      required_maximum_unresolved: Box [%{box}] cannot be checked yet, because the
+        largest amount the law requires it to apply this year is not known. Some of
+        the figures that amount depends on are missing.
       scheme_period_contradicted: The value {entered} in {binding_id} contradicts
         this work's period, which is {expected}. Correct it or open the work for the
         right period.

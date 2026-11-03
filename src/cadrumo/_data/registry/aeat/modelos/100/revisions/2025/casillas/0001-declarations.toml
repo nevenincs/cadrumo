@@ -1187,8 +1187,9 @@ additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025
 # and the opening pending balance in 1388.
 #
 # This is NOT an AEAT form box (no export_refs, internal_only): it is the
-# app-internal ceiling consumed by the BLOCKING verification predicate that
-# prevents an amount above the available Art. 50.3 compensation.
+# app-internal maximum consumed by the BLOCKING verification predicate that
+# requires the applied 1389 to equal it, since Art. 50.3 fixes the compensation
+# at the largest amount each year allows.
 [[revisions."2025".casillas]]
 id = "base-liq-neg-general-2024-aplicada-maxima"
 number = "base-liq-neg-general-2024-aplicada-maxima"

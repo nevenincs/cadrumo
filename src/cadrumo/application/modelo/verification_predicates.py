@@ -349,34 +349,43 @@ def _evaluate_at_most_one_positive(
     return sum(1 for cid in predicate.casilla_ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) <= 1
 
 
-def _evaluate_cap_le_when_positive(
+def _evaluate_positive_amount_within_present_bound(
     predicate: _AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
 ) -> bool:
-    limited_id, ceiling_id = predicate.casilla_ids
-    ceiling = casilla_values.get(ceiling_id, Decimal(0))
-    if ceiling <= Decimal(0):
-        return True
-    limited = casilla_values.get(limited_id, Decimal(0))
-    return limited <= ceiling
+    """Bound a positive amount by a present bound operand.
 
-
-def _evaluate_positive_application_le_present_stock(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _profile: TaxpayerProfile,
-    _text_values: Mapping[CasillaId, str],
-) -> bool:
-    """Bound positive elective application to a present stock operand."""
-    application_id, stock_id = predicate.casilla_ids
-    application = casilla_values.get(application_id, Decimal(0))
-    if application <= Decimal(0):
+    Serves ``cap_le_when_positive`` and ``positive_application_le_present_stock``.
+    An omitted or non-positive amount holds. A positive one needs the bound to
+    be present, because a missing bound is unknown rather than zero, and must
+    not exceed it, so a bound at or below zero admits no positive amount.
+    """
+    amount_id, bound_id = predicate.casilla_ids
+    amount = casilla_values.get(amount_id, Decimal(0))
+    if amount <= Decimal(0):
         return True
-    if stock_id not in casilla_values:
+    if bound_id not in casilla_values:
         return False
-    return application <= casilla_values[stock_id]
+    return amount <= casilla_values[bound_id]
+
+
+def _evaluate_application_equals_present_maximum(
+    predicate: _AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+    _text_values: Mapping[CasillaId, str],
+) -> bool:
+    """Require a mandatory application to equal its present maximum exactly.
+
+    An absent maximum never holds: the amount the law requires is unknown. An
+    omitted application reads as zero, so it holds only against a zero maximum.
+    """
+    application_id, maximum_id = predicate.casilla_ids
+    if maximum_id not in casilla_values:
+        return False
+    return casilla_values.get(application_id, Decimal(0)) == casilla_values[maximum_id]
 
 
 def _evaluate_equals(
@@ -490,9 +499,12 @@ _BLOCKING_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _Blocking
         VerificationPredicateOperator.ALL_NONZERO: _evaluate_all_nonzero,
         VerificationPredicateOperator.ANY_NONZERO: _evaluate_any_nonzero,
         VerificationPredicateOperator.AT_MOST_ONE_POSITIVE: _evaluate_at_most_one_positive,
-        VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE: _evaluate_cap_le_when_positive,
+        VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE: _evaluate_positive_amount_within_present_bound,
         VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: (
-            _evaluate_positive_application_le_present_stock
+            _evaluate_positive_amount_within_present_bound
+        ),
+        VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM: (
+            _evaluate_application_equals_present_maximum
         ),
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO: _evaluate_casilla_equals_implies_nonzero,
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO: _evaluate_casilla_equals_implies_zero,
@@ -521,11 +533,12 @@ def evaluate_predicate_expression(
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
     - ``at_most_one_positive(["id1", "id2", ...])`` — no more than one named
       casilla may be strictly positive.
-    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the ceiling
-      casilla is strictly positive, the limited casilla MUST NOT exceed it.
-    - positive_application_le_present_stock(["application_id", "stock_id"]) —
-      an omitted/non-positive elective application holds; a positive one
-      requires a present stock value and must not exceed that value.
+    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` and
+      ``positive_application_le_present_stock(["application_id", "stock_id"])``
+      — an omitted/non-positive amount holds; a positive one requires a
+      present bound value and must not exceed it.
+    - ``application_equals_present_maximum(["application_id", "maximum_id"])``
+      — the maximum must be present and the application must equal it.
     - ``casilla_equals_implies_nonzero`` / ``casilla_equals_implies_zero`` —
       when the antecedent's operator-entered text equals the literal, the
       consequent must be non-zero, or present and zero.
@@ -859,6 +872,8 @@ def _blocking_predicate_finding(
 
     A violated ``equals_sum`` names its total box and the sum of the boxes the
     design adds into it, so the filer can see the two figures that disagree.
+    A violated ``application_equals_present_maximum`` names the amount entered
+    and the maximum required, or says the maximum is not yet known.
     A categorical requirement names the missing field with a human message;
     other operators retain their predicate identity.
     """
@@ -881,6 +896,8 @@ def _blocking_predicate_finding(
             message_facts={},
             legal_refs=legal_refs,
         )
+    if operator is VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM:
+        return _application_maximum_finding(predicate, admitted, casilla_values)
     if operator is VerificationPredicateOperator.EQUALS_SUM:
         total_id, _total, addend_sum = _equals_sum_operands(admitted, casilla_values)
         return ModeloVerificationFinding(
@@ -901,6 +918,43 @@ def _blocking_predicate_finding(
         casilla_id=admitted.casilla_ids[0] if len(admitted.casilla_ids) == 1 else None,
         message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
         message_facts={"predicate_id": predicate.predicate_id},
+        legal_refs=legal_refs,
+    )
+
+
+def _application_maximum_finding(
+    predicate: VerificationPredicateDefinition,
+    admitted: _AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> ModeloVerificationFinding:
+    """Refuse an application that is not the required maximum, or whose maximum is unknown.
+
+    The finding sits on the application box. A known maximum names both the
+    entered amount and the amount required; an unknown one says the required
+    amount cannot be worked out yet, so it blocks instead of passing.
+    """
+    application_id, maximum_id = admitted.casilla_ids
+    legal_refs = tuple(predicate.legal_refs)
+    if maximum_id not in casilla_values:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            casilla_id=application_id,
+            message_locale_key="application.modelo.findings.required_maximum_unresolved",
+            message_facts={"predicate_id": predicate.predicate_id, "box": application_id},
+            legal_refs=legal_refs,
+        )
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=application_id,
+        message_locale_key="application.modelo.findings.application_not_required_maximum",
+        message_facts={
+            "predicate_id": predicate.predicate_id,
+            "box": application_id,
+            "casilla_value": casilla_values.get(application_id, Decimal(0)),
+            "computed_value": casilla_values[maximum_id],
+        },
         legal_refs=legal_refs,
     )
 

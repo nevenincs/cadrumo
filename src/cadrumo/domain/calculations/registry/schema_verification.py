@@ -415,9 +415,21 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # zero-default lanes safely when at most one is positive.
         "at_most_one_positive",
         "any_nonzero",
+        # cap_le_when_positive(["limited_id", "ceiling_id"]) — a positive limited
+        # amount needs a present ceiling and must not exceed it; a ceiling at or
+        # below zero admits none. Authored for the M130 C15 / M131 C11 caps
+        # ("solamente si en la casilla ... se hubiera obtenido una cantidad
+        # positiva") and the M200 art. 26 LIS ceiling.
         "cap_le_when_positive",
         # A positive elective application requires an actually present stock value.
         "positive_application_le_present_stock",
+        # application_equals_present_maximum(["application_id", "maximum_id"]) —
+        # a mandatory application: the maximum must be present and the applied
+        # amount must equal it exactly, so applying less and applying more both
+        # refuse and an unresolved maximum blocks. BLOCKING-only. Authored for
+        # LIRPF art. 50.3, whose compensation "deberá efectuarse en la cuantía
+        # máxima que permita cada uno de los ejercicios siguientes".
+        "application_equals_present_maximum",
         # casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
         # "consequent_casilla_id"]) — categorical-conditional material
         # implication: when the operator-entered raw text value of the named
@@ -553,6 +565,7 @@ class VerificationPredicateOperator(StrEnum):
     ANY_NONZERO = "any_nonzero"
     CAP_LE_WHEN_POSITIVE = "cap_le_when_positive"
     POSITIVE_APPLICATION_LE_PRESENT_STOCK = "positive_application_le_present_stock"
+    APPLICATION_EQUALS_PRESENT_MAXIMUM = "application_equals_present_maximum"
     CASILLA_EQUALS_IMPLIES_DIVERGES = "casilla_equals_implies_diverges"
     CASILLA_EQUALS_IMPLIES_NONZERO = "casilla_equals_implies_nonzero"
     CASILLA_EQUALS_IMPLIES_ZERO = "casilla_equals_implies_zero"
@@ -664,6 +677,12 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
         ),
         VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: _predicate_specification(
             VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM: _predicate_specification(
+            VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM,
             VerificationPredicateSyntax.CASILLA_LIST,
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
@@ -981,19 +1000,26 @@ class VerificationPredicateDefinition(RegistryModel):
       Authored for alternative result lanes such as Modelo 202 art. 40.3
       claves 18/26, where the downstream formula uses both zero-default
       lanes but the official instruction permits only one positive lane.
-    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the
-      ceiling casilla is strictly positive, the limited casilla MUST NOT
-      exceed the ceiling, enforcing AEAT cap rules like Modelo 131 C11 ≤ C10
-      and Modelo 130 C15 ≤ C14 ("en ningún caso podrá
-      figurar... un importe superior a la cantidad positiva consignada").
-      Predicate holds when ceiling ≤ 0; the cap applies only when the
-      operator's gross liability is positive.
+    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — a strictly
+      positive limited casilla requires a present ceiling and MUST NOT exceed
+      it, enforcing AEAT cap rules like Modelo 131 C11 ≤ C10 and Modelo 130
+      C15 ≤ C14 ("solamente si en la casilla ... se hubiera obtenido una
+      cantidad positiva"; "en ningún caso podrá figurar... un importe superior
+      a la cantidad positiva consignada"). A ceiling at or below zero admits
+      no positive limited amount; an omitted or non-positive limited amount
+      holds.
     - positive_application_le_present_stock(["application_id", "stock_id"]) —
       an omitted or non-positive elective application holds without
       requiring a stock value. A positive application requires the stock
       casilla to be present and must not exceed its actual value. Missing
       stock is not interpreted as zero; this predicate does not validate
       either operand's sign outside that comparison.
+    - ``application_equals_present_maximum(["application_id", "maximum_id"])``
+      — a mandatory application: the maximum casilla must be present and the
+      application (an omitted one reads as zero) must equal it exactly.
+      Applying less or more than the maximum is violated, and an absent
+      maximum is violated whatever the application, because the amount the
+      law requires is unknown.
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with a strictly-positive antecedent test: predicate
       holds iff ``casilla_values[antecedent] <= 0`` OR

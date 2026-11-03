@@ -8,6 +8,7 @@ scalar-family, and literal checks to its parsed captures.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from types import MappingProxyType
 
 from cadrumo.application.modelo.verification_predicates import (
     ADVISORY_PREDICATE_OPERATORS,
@@ -131,21 +132,32 @@ def _casilla_list_predicate_failures(
     for casilla_id in ids:
         if casilla_id not in casillas:
             failures.append(f"{prefix}: {owner} {operator.value} references unknown casilla {casilla_id!r}")
-    if operator is VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK:
-        failures.extend(_positive_application_casilla_failures(prefix, owner, operator, ids, casillas, casilla_by_id))
+    roles = _DECIMAL_OPERAND_ROLES.get(operator)
+    if roles is not None:
+        failures.extend(_decimal_operand_failures(prefix, owner, operator, roles, ids, casillas, casilla_by_id))
     return failures
 
 
-def _positive_application_casilla_failures(
+#: Operators whose operands are compared as amounts, by the role of each operand.
+_DECIMAL_OPERAND_ROLES: Mapping[VerificationPredicateOperator, tuple[str, ...]] = MappingProxyType(
+    {
+        VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: ("application", "stock"),
+        VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM: ("application", "maximum"),
+    }
+)
+
+
+def _decimal_operand_failures(
     prefix: str,
     owner: str,
     operator: VerificationPredicateOperator,
+    roles: tuple[str, ...],
     ids: tuple[CasillaId, ...],
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
     failures: list[str] = []
-    for role, casilla_id in zip(("application", "stock"), ids, strict=False):
+    for role, casilla_id in zip(roles, ids, strict=False):
         if casilla_id not in casillas:
             continue
         casilla = casilla_by_id.get(casilla_id)

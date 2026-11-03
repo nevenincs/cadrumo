@@ -11071,12 +11071,12 @@ position = 74
 
 [[revisions."2025".family_positions]]
 family = "verification_predicates"
-id = "cap-le-when-positive:compensacion-base-neg-general-no-excede-stock"
+id = "positive-application-le-present-stock:compensacion-base-neg-general-no-excede-stock"
 position = 0
 
 [[revisions."2025".family_positions]]
 family = "verification_predicates"
-id = "cap-le-when-positive:compensacion-base-neg-general-no-excede-limite"
+id = "application-equals-present-maximum:compensacion-base-neg-general-cuantia-maxima"
 position = 1
 
 [[revisions."2025".family_positions]]

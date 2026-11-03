@@ -88,6 +88,9 @@ _PROBE_EXPRESSIONS: Mapping[VerificationPredicateOperator, str] = MappingProxyTy
         VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: (
             'positive_application_le_present_stock(["01", "02"])'
         ),
+        VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM: (
+            'application_equals_present_maximum(["01", "02"])'
+        ),
         VerificationPredicateOperator.PROFILE_FIELD_REQUIRED: 'profile_field_required("ue_eee_status", "applies")',
         VerificationPredicateOperator.PROFILE_FLAG_ENABLED: 'profile_flag_enabled("ue_eee_status")',
         VerificationPredicateOperator.ROLL_FORWARD_BALANCES: 'roll_forward_balances(["01", "02", "06", "07"])',

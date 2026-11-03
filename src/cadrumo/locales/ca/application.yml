@@ -2286,6 +2286,9 @@ application:
         afegides: %{claims_added}, substituïdes o retirades: %{claims_removed}, quadres
         d''amortització modificats: %{schedules_changed}, baixes modificades: %{disposals_changed}).
         Torna a calcular-lo.'
+      application_not_required_maximum: 'La casella [%{box}] té %{casilla_value},
+        però ha de ser %{computed_value}: la llei exigeix aplicar la quantia més gran
+        que permet aquest exercici, ni més ni menys.'
       art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
         rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
         casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
@@ -2458,6 +2461,9 @@ application:
         per presentar-lo.
       registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
         de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
+      required_maximum_unresolved: La casella [%{box}] encara no es pot comprovar,
+        perquè no se sap la quantia màxima que la llei exigeix aplicar en aquest exercici.
+        Hi falten algunes de les xifres de què depèn aquesta quantia.
       scheme_period_contradicted: El valor {entered} de {binding_id} contradiu el
         període d'aquest treball, que és {expected}. Corregeix-lo o obre el treball
         del període correcte.

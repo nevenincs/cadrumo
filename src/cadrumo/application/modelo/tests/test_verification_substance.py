@@ -167,18 +167,36 @@ def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
     assert findings == []
 
 
-def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
-    """cap_le_when_positive: predicate holds (no cap) when ceiling ≤ 0.
+@pytest.mark.parametrize(
+    ("casilla_values", "expected"),
+    (
+        pytest.param(
+            {_CASILLA_11: Decimal("0"), _CASILLA_10: Decimal("-50")}, True, id="zero-limited-negative-ceiling"
+        ),
+        pytest.param({_CASILLA_11: Decimal("0")}, True, id="zero-limited-missing-ceiling"),
+        pytest.param(
+            {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("0")}, False, id="positive-limited-zero-ceiling"
+        ),
+        pytest.param(
+            {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("-50")}, False, id="positive-limited-negative-ceiling"
+        ),
+        pytest.param({_CASILLA_11: Decimal("750")}, False, id="positive-limited-missing-ceiling"),
+        pytest.param({_CASILLA_11: Decimal("500"), _CASILLA_10: Decimal("500")}, True, id="exact-ceiling-boundary"),
+    ),
+)
+def test_cap_le_when_positive_admits_no_positive_amount_without_a_positive_ceiling(
+    casilla_values: dict[CasillaId, Decimal],
+    expected: bool,
+) -> None:
+    """cap_le_when_positive: a positive limited amount needs a present, positive ceiling.
 
-    The AEAT cap rule only applies when the operator's gross liability
-    is positive. A zero or negative cuota means there's no cap to
-    enforce; the predicate must NOT block in that case.
+    The M131 instructions allow casilla 11 "si en la casilla 10 anterior se
+    hubiera obtenido una cantidad positiva" only, so a zero or negative C10
+    admits no positive C11, and a C10 that is not known cannot admit one.
     """
-    values_zero: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("0")}
-    assert evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero, workflow_profile()) is True
-    values_negative: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("-50")}
     assert (
-        evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative, workflow_profile()) is True
+        evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', casilla_values, workflow_profile())
+        is expected
     )
 
 
@@ -267,6 +285,79 @@ def test_positive_application_le_present_stock_emits_block_when_stock_is_absent(
     assert dict(findings[0].message_facts) == {
         "predicate_id": "modelo-200-compensacion-bin-no-excede-stock-disponible",
     }
+
+
+_APPLICATION_MAXIMUM = 'application_equals_present_maximum(["15", "14"])'
+
+
+@pytest.mark.parametrize(
+    ("casilla_values", "expected"),
+    (
+        pytest.param({}, False, id="omitted-application-and-maximum"),
+        pytest.param({_CASILLA_15: Decimal("0")}, False, id="zero-application-missing-maximum"),
+        pytest.param({_CASILLA_15: Decimal("5")}, False, id="positive-application-missing-maximum"),
+        pytest.param({_CASILLA_14: Decimal("0")}, True, id="omitted-application-zero-maximum"),
+        pytest.param({_CASILLA_15: Decimal("0"), _CASILLA_14: Decimal("0")}, True, id="zero-application-zero-maximum"),
+        pytest.param(
+            {_CASILLA_15: Decimal("5"), _CASILLA_14: Decimal("0")}, False, id="positive-application-zero-maximum"
+        ),
+        pytest.param({_CASILLA_14: Decimal("100")}, False, id="omitted-application-positive-maximum"),
+        pytest.param({_CASILLA_15: Decimal("99.99"), _CASILLA_14: Decimal("100")}, False, id="under-application"),
+        pytest.param({_CASILLA_15: Decimal("100"), _CASILLA_14: Decimal("100.00")}, True, id="exact-maximum"),
+        pytest.param({_CASILLA_15: Decimal("100.01"), _CASILLA_14: Decimal("100")}, False, id="over-application"),
+    ),
+)
+def test_application_equals_present_maximum_contract(
+    casilla_values: dict[CasillaId, Decimal],
+    expected: bool,
+) -> None:
+    """Only an application equal to a present maximum holds; an unknown maximum never does."""
+    assert evaluate_predicate_expression(_APPLICATION_MAXIMUM, casilla_values, workflow_profile()) is expected
+
+
+def _application_maximum_predicate() -> VerificationPredicateDefinition:
+    return VerificationPredicateDefinition(
+        id="application-equals-present-maximum:test-cuantia-maxima",
+        predicate_id="test-cuantia-maxima",
+        legal_refs=("ley-35-2006:art-50",),
+        expression=_APPLICATION_MAXIMUM,
+        finding_kind="BLOCKING_RULE",
+    )
+
+
+def test_application_equals_present_maximum_names_entered_and_required_amounts() -> None:
+    """A known maximum the application misses is refused on the application box with both amounts."""
+    findings = evaluate_verification_predicates(
+        (_application_maximum_predicate(),),
+        {_CASILLA_15: Decimal("40"), _CASILLA_14: Decimal("100")},
+        workflow_profile(),
+    )
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert findings[0].casilla_id == _CASILLA_15
+    assert findings[0].message_locale_key == "application.modelo.findings.application_not_required_maximum"
+    assert dict(findings[0].message_facts) == {
+        "predicate_id": "test-cuantia-maxima",
+        "box": _CASILLA_15,
+        "casilla_value": Decimal("40"),
+        "computed_value": Decimal("100"),
+    }
+
+
+def test_application_equals_present_maximum_blocks_an_unknown_maximum_as_unresolved() -> None:
+    """An absent maximum blocks with its own unresolved finding rather than passing."""
+    findings = evaluate_verification_predicates(
+        (_application_maximum_predicate(),),
+        {_CASILLA_15: Decimal("0")},
+        workflow_profile(),
+    )
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert findings[0].casilla_id == _CASILLA_15
+    assert findings[0].message_locale_key == "application.modelo.findings.required_maximum_unresolved"
+    assert dict(findings[0].message_facts) == {"predicate_id": "test-cuantia-maxima", "box": _CASILLA_15}
 
 
 def test_at_most_one_positive_blocks_only_multiple_positive_casillas() -> None:

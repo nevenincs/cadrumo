@@ -82,9 +82,13 @@ def test_a_declared_casilla_without_a_value_still_evaluates_as_zero() -> None:
     assert len(findings) == 1
     assert findings[0].casilla_id is None
     capped = evaluate_verification_predicates(
-        (_blocking('cap_le_when_positive(["01", "02"])'),), values, workflow_profile(), declared_casilla_ids=_DECLARED
+        (_blocking('cap_le_when_positive(["02", "01"])'),), values, workflow_profile(), declared_casilla_ids=_DECLARED
     )
     assert capped == []
+    uncapped = evaluate_verification_predicates(
+        (_blocking('cap_le_when_positive(["01", "02"])'),), values, workflow_profile(), declared_casilla_ids=_DECLARED
+    )
+    assert len(uncapped) == 1
 
 
 def test_an_advisory_predicate_is_not_checked_against_the_declared_set() -> None:

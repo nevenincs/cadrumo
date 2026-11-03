@@ -2241,6 +2241,9 @@ application:
         (hozzáadott értékcsökkenési leírások: %{claims_added}, felváltott vagy törölt:
         %{claims_removed}, módosult leírási ütemtervek: %{schedules_changed}, módosult
         kivezetések: %{disposals_changed}). Számítsd ki újra.'
+      application_not_required_maximum: 'A(z) [%{box}] rovatban %{casilla_value} szerepel,
+        de %{computed_value} kell, hogy legyen: a törvény előírja, hogy az adott évben
+        megengedett legnagyobb összeget kell alkalmazni, se többet, se kevesebbet.'
       art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
         (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
         belül, ezért a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet
@@ -2411,6 +2414,9 @@ application:
         a benyújtáshoz.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
+      required_maximum_unresolved: A(z) [%{box}] rovat még nem ellenőrizhető, mert
+        nem ismert, mekkora az a legnagyobb összeg, amelyet a törvény szerint ebben
+        az évben alkalmazni kell. Hiányzik néhány adat, amelytől ez az összeg függ.
       scheme_period_contradicted: A(z) {binding_id} mező {entered} értéke ellentmond
         e munka időszakának, amely {expected}. Javítsd, vagy nyisd meg a megfelelő
         időszak munkáját.
