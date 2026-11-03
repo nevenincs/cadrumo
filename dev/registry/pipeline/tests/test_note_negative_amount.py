@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportSignPosition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
+from ...form_layout.reconciliation import _admit_note_signed_amount
 from ..note_negative_amount import _NOTE_NEGATIVE_AMOUNTS, note_negative_amount_for
 from ..record_design_intermediate import RecordDesignIntermediateSource
 
@@ -57,3 +58,34 @@ def test_only_the_correction_amounts_of_a_revision_are_signed(revision: str, per
     assert len(signed) == 28
     assert all(record_id.startswith(record) for record_id, _ in signed)
     assert all(field.sign_position is ExportSignPosition.MINUS_DISPLACES_DIGIT for _, field in signed)
+
+
+_UNSIGNED = {"data_type": "decimal", "decimals": 2, "signed": False, "sign_position": None, "design_type": "Num"}
+_SIGNED = {
+    "data_type": "money",
+    "decimals": None,
+    "signed": True,
+    "sign_position": "minus_displaces_digit",
+    "design_type": None,
+}
+
+
+def test_form_reconciliation_admits_an_amount_gaining_the_noted_sign() -> None:
+    old = dict(_UNSIGNED)
+    assert _admit_note_signed_amount(old, _SIGNED) == 1
+    assert old == _SIGNED
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ({**_UNSIGNED, "decimals": 3}, _SIGNED),
+        ({**_UNSIGNED, "data_type": "text"}, _SIGNED),
+        (_UNSIGNED, {**_SIGNED, "sign_position": "blank_or_n"}),
+    ],
+    ids=["other-scale", "not-an-amount", "other-sign"],
+)
+def test_form_reconciliation_admits_no_other_shape_change(old: dict[str, object], new: dict[str, object]) -> None:
+    held = dict(old)
+    assert _admit_note_signed_amount(held, new) == 0
+    assert held == old

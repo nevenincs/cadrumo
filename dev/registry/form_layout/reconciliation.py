@@ -289,7 +289,9 @@ def _admit_note_signed_amount(old_field: dict[str, object], new_field: dict[str,
         or old_field["decimals"] != 2
     ):
         return 0
-    old_field.update({key: new_field[key] for key in ("data_type", "decimals", "signed", "sign_position", "design_type")})
+    old_field.update(
+        {key: new_field[key] for key in ("data_type", "decimals", "signed", "sign_position", "design_type")}
+    )
     return 1
 
 

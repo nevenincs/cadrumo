@@ -45,7 +45,7 @@ _NOTE_NEGATIVE_AMOUNTS: Final[dict[str, NoteNegativeAmountDeclaration]] = {
             "negativos llevarán un caracter '-' inmediatamente delante de los números.",
             "-0000000000001537' (El dato es -15,37",
         ),
-        # The form's own settlement lists "correcciones negativas apdo. 4"; no other amount of the design goes below zero.
+        # The form's settlement lists "correcciones negativas apdo. 4"; no other amount of the design goes below zero.
         amount_label="Cuota IVA corregida",
         sign_position=ExportSignPosition.MINUS_DISPLACES_DIGIT,
     ),
@@ -71,7 +71,9 @@ def with_note_negative_amount(
         return derivation
     field = derivation.field
     if field.data_type != "decimal" or field.decimals != 2:
-        raise RegistryValidationError(f"export field {field.id!r} is named by a sign note but is not a 2-decimal amount")
+        raise RegistryValidationError(
+            f"export field {field.id!r} is named by a sign note but is not a 2-decimal amount"
+        )
     return derivation.model_copy(
         update={
             "field": field.model_copy(

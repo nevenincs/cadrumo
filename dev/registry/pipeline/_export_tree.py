@@ -42,8 +42,8 @@ from .generated_export_inheritance_model import GeneratedExportInheritanceContex
 from .generated_tree_dispositions import type_column_rulings_for
 from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignRecord
 from .note_absent_fill import NoteAbsentFillDeclaration, note_absent_fill_for, with_note_absent_fill
-from .note_negative_amount import NoteNegativeAmountDeclaration, note_negative_amount_for, with_note_negative_amount
 from .note_literals import NoteLiteralDeclaration, note_literals_for
+from .note_negative_amount import NoteNegativeAmountDeclaration, note_negative_amount_for, with_note_negative_amount
 from .render_profile import validate_render_profile
 from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile

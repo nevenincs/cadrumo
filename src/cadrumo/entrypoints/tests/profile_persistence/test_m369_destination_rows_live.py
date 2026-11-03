@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.aggregation.errors import AggregationValidationError
+from cadrumo.application.aggregation.oss_ioss_wire_geometry import record_row_slots
 from cadrumo.application.aggregation.tests.oss_rate_change_support import variant_pct
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.application.modelo.action_errors import AmendmentKindNotPermittedError
@@ -33,7 +34,6 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.aggregation.oss_ioss_wire_geometry import record_row_slots
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
@@ -53,9 +53,9 @@ from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
 from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus, invoice_class_simplificada
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue

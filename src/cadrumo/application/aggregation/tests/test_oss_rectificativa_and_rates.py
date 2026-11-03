@@ -18,11 +18,11 @@ import pytest
 from ....core.money.rounding import round_to_cents
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
+from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.invoices.models import Invoice
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.lookup import coexisting_tier_rates, lookup_rate
 from ....domain.iva.schema import EUMemberState, IvaRateKind
-from ....domain.calculations.registry.tests.published_authority import published_revision
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..errors import AggregationValidationError
 from ..oss_ioss import OssIossLedgerSourceResolver
@@ -112,7 +112,9 @@ def test_a_correction_nets_at_the_rate_of_the_invoice_it_corrects(operation: Pin
     assert _row(resolution, _UNION, 1) == (code, "S", change.pct_before, Decimal("50.00"), cuota - half)
 
 
-def _correction_rows(resolution: CalculationSourceResolution, regime: _Regime) -> list[tuple[str, int, str, str, Decimal]]:
+def _correction_rows(
+    resolution: CalculationSourceResolution, regime: _Regime
+) -> list[tuple[str, int, str, str, Decimal]]:
     revision = published_revision("369", regime.revision_id)
     rows = []
     for country, year, period_type, period, cuota in record_row_slots(revision, _CORRECTION_RECORD[regime]):
@@ -261,7 +263,9 @@ def _entered_row(
     operation: PinnedAuthorityOperation, regime: _Regime, *, year: int, period_type: str, period: str
 ) -> CalculationSourceResolution:
     revision = published_revision("369", regime.revision_id)
-    country_slot, year_slot, type_slot, period_slot, cuota_slot = record_row_slots(revision, _CORRECTION_RECORD[regime])[0]
+    country_slot, year_slot, type_slot, period_slot, cuota_slot = record_row_slots(
+        revision, _CORRECTION_RECORD[regime]
+    )[0]
     filed = regime.period(_LATER_QUARTER)
     return OssIossLedgerSourceResolver(
         ports=InvoiceCatalogueReadPorts(invoice_reader=_Reader(()), transaction_reader=_Transactions())
