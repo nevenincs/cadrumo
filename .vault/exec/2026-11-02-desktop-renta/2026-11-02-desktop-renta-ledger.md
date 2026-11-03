@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0acbb9a87e5ad037d46ddfa7e8b5f477d7f3ecf1d2586c569351503d122c30c6'
+body_hash: 'sha256:ce1a6ee908fe76226b99d74fd5c188db35eb142139ae268c58b8d211bd24a680'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -638,6 +638,21 @@ related:
 - `S41` `verify:` `registry suites` -> `fail`
 - `S41` `verify:` `check-types` -> `fail`
 - `S41` `by:` `opus-medium`
+- `S38` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml`
+- `S38` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S38` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S38` `M` `src/cadrumo/application/modelo/tests/test_work_form_comparison_flags.py`
+- `S38` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S38` `verify:` `just check-registry` -> `pass`
+- `S38` `verify:` `just check-registry-gate` -> `pass`
+- `S38` `verify:` `just check-bindings` -> `pass`
+- `S38` `verify:` `just report-registry-edition-migration 100` -> `pass`
+- `S38` `verify:` `pytest comparison flags 2022-2025` -> `pass`
+- `S38` `verify:` `pytest renta suites` -> `pass`
+- `S38` `verify:` `pytest test_window_holds_no_tax_data` -> `pass`
+- `S38` `verify:` `lint-imports` -> `pass`
+- `S38` `verify:` `pytest dev/registry/tests modelo 100` -> `fail`
+- `S38` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -688,3 +703,4 @@ related:
 - `S40` Commit 33ff6d607d: fact household-row-limit-owners names the owning form and repeating group (Modelo 100 XSD maxOccurs 15 and 4); first lookup 0.07 s instead of 1.7 s; build check fails if the owner layout stops capping the object
 - `S42` Commit 63bdd87985: one row-filled derivation shared by admission and the form; new reason `not_read_by_calculation.` Import gate unavailable because the tree changed mid-run; dev/locales failures include export settlement and election keys and a non-literal `message_locale_key,` to resolve in S20
 - `S41` Hunks swept into WIP commit 3ab1f97ff4 plus a948bba8b4. 0500 is the base before compensation from 2022, 1391 = max(0, -0500), unobserved prior boxes refuse with typed `errors.calc.previous_filing_casillas_unobserved.` 0171 test failure dates from 0f570046bf (no stated imputation criterion), not 448b84d73d. Open for S20: registry formula parity on renta-resultado-ingresar-o-devolver 2024/2025 and `casilla_record_order` 1997-2148, window guard failure unidentified
+- `S38` WIP checkpoint a950a0438d then 6aa82fb235. TIPOTRIBUTACION design identical 2022-2025 so the role sits on the 2022 base only; redundant 2024/2025 overrides removed. `compares_taxation` served 2022-2025; 2020/2021 below support floor. The registry failure is `test_every_relation_prefill_binding_has_a_typed_source_coordinate` on 130/131 pagos-fraccionados bindings 2020-2025, outside S38's diff, carried to S20.
