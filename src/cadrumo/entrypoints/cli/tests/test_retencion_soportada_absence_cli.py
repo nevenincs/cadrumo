@@ -34,11 +34,11 @@ _EJERCICIO = "2025"
 _NOTE = "Synthetic note: the bank paid no interest subject to withholding."
 _ABSENCE_CODE = "REFUSED_RETENCION_SOPORTADA_ABSENCE"
 _REVISION_CODE = "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT"
-_MOVABLE_CAPITAL_LABELS = {
-    "Income from movable capital",
-    "Rendimientos del capital mobiliario",
-    "Rendiments del capital mobiliari",
-    "Ingóvagyon-jövedelem (tőkejövedelem)",
+_MOVABLE_CAPITAL_LABEL_BY_LANGUAGE = {
+    "en": "Income from movable capital",
+    "es": "Rendimientos del capital mobiliario",
+    "ca": "Rendiments del capital mobiliari",
+    "hu": "Ingóvagyon-jövedelem (tőkejövedelem)",
 }
 _PROFILE_FACTS = {
     "taxpayer_type.entity_type": "natural_person",
@@ -65,14 +65,14 @@ def native_absence_profile(tmp_path: Path) -> Iterator[RegisteredCliProfile]:
         yield profile
 
 
-def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
+def _invoke(profile: RegisteredCliProfile, *command: str, language: str = "en") -> Result:
     if profile.label is None:
         raise AssertionError("native absence profile must be registered before invocation")
     close_active_bucket_session()
     result = invoke_joined_cli(
         (
             "--language",
-            "en",
+            language,
             "--format",
             "json",
             "--profile",
@@ -111,9 +111,11 @@ def _attested(result: Result) -> RetencionSoportadaAttestAbsenceResult:
     return RetencionSoportadaAttestAbsenceResult.model_validate_json(json.dumps(unwrap_cli_result(result)))
 
 
-def _listed(profile: RegisteredCliProfile, ejercicio: str = _EJERCICIO) -> RetencionSoportadaListAbsencesResult:
+def _listed(
+    profile: RegisteredCliProfile, ejercicio: str = _EJERCICIO, *, language: str = "en"
+) -> RetencionSoportadaListAbsencesResult:
     return RetencionSoportadaListAbsencesResult.model_validate_json(
-        json.dumps(unwrap_cli_result(_invoke(profile, "list-absences", "--ejercicio", ejercicio)))
+        json.dumps(unwrap_cli_result(_invoke(profile, "list-absences", "--ejercicio", ejercicio, language=language)))
     )
 
 
@@ -232,8 +234,23 @@ def test_native_absence_is_withdrawn_under_its_revision_and_stays_listed(
     (withdrawn_row,) = _listed(profile).attestations
     assert (withdrawn_row.income_class, withdrawn_row.state) == ("capital_mobiliario", "withdrawn")
     assert withdrawn_row.revision_id == withdrawn.attestation.revision_id
-    # The worker resolves the label in the profile's output language, whatever language the CLI renders in.
-    assert withdrawn_row.income_class_label in _MOVABLE_CAPITAL_LABELS
+    assert withdrawn_row.income_class_label == _MOVABLE_CAPITAL_LABEL_BY_LANGUAGE["en"]
+
+
+@pytest.mark.windows_only
+def test_native_absence_listing_labels_the_class_in_the_requested_language(
+    native_absence_profile: RegisteredCliProfile,
+) -> None:
+    profile = native_absence_profile
+    _attested(_attest(profile, "capital_mobiliario"))
+
+    # The label follows the language of the invocation, not the language the profile's worker renders in:
+    # each of the four languages must name the class in its own words, so at most one can be the profile's.
+    labels = {
+        language: _listed(profile, language=language).attestations[0].income_class_label
+        for language in _MOVABLE_CAPITAL_LABEL_BY_LANGUAGE
+    }
+    assert labels == _MOVABLE_CAPITAL_LABEL_BY_LANGUAGE
 
 
 @pytest.mark.windows_only
