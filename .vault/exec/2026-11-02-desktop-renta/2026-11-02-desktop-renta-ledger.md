@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:93fe456d7000f016ce2c902ec3e7f3dc39c4be6fe5f2a365c28b3df0c582c446'
+body_hash: 'sha256:9e739fe66715515fb936f8a05923895cad80bac5acf6bc68d4de98089daf98ed'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -896,6 +896,32 @@ related:
 - `S51` `verify:` `storybook:build` -> `pass`
 - `S51` `verify:` `test_desktop_chrome` -> `fail`
 - `S51` `by:` `vaultspec-high-executor`
+- `S53` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`
+- `S53` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S53` `M` `native/desktop/frontend/src/dev/ledgerWithholdingFixture.ts`
+- `S53` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.stories.tsx`
+- `S53` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S53` `M` `dev/locales/desktop_chrome.py`
+- `S53` `M` `dev/locales/desktop_ledger_workflow_keys.py`
+- `S53` `M` `src/cadrumo/locales/en/common.yml`
+- `S53` `M` `src/cadrumo/locales/es/common.yml`
+- `S53` `M` `src/cadrumo/locales/ca/common.yml`
+- `S53` `M` `src/cadrumo/locales/hu/common.yml`
+- `S53` `M` `.importlinter`
+- `S53` `M` `dev/quality/metadata/import_load_targets.json`
+- `S53` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S53` `A` `dev/desktop_withholding_refusal_words_fixture.py`
+- `S53` `A` `native/desktop/frontend/src/dev/fixtures/ledgerWithholdingRefusalWords.json`
+- `S53` `D` `dev/desktop_withholding_certificate_words_fixture.py`
+- `S53` `D` `native/desktop/frontend/src/dev/fixtures/ledgerWithholdingWords.json`
+- `S53` `verify:` `tsc` -> `pass`
+- `S53` `verify:` `ledger-contract.mjs --check` -> `pass`
+- `S53` `verify:` `relay_contracts.py --check` -> `pass`
+- `S53` `verify:` `storybook:build` -> `pass`
+- `S53` `verify:` `playwright ledger-setup.spec.ts` -> `pass`
+- `S53` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S53` `verify:` `test_desktop_chrome` -> `fail`
+- `S53` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -958,3 +984,4 @@ related:
 - `S52` Commit 626dccd754. The pane shows `result.refusal.refusal_words;` the relay already forwarded them. The pane's own `desktop.ledger.withholding.refusal.<reason>` words remain for 13 unserved reasons; the backend session is serving words for every reason, after which the map is deleted (S53). Build chrome-strings regenerated so desktop.ledger.form.partial renders.
 - `S46` Commit 05786149c4. `ModeloWorkForm.withholding_credits` serves each credit's dependent numbered boxes from the formula graph, null when the graph cannot be read. The window walk is deleted. Open: no words for the null state yet, carried to S51.
 - `S51` Commit 9f34651a2e: unknown credit dependents now show served chrome words. The door itself is blocked on three backend fields asked of the renta-withholding session: `finding_id` on ModeloFormIssueLine, refusal words on CreditResolutionRefusalProjection, and a served sentence on CreditResolutionRowProjection. The commit also carries that session's absence `served.*` catalogue lines, committed whole by --only.
+- `S53` Commit e291a27cd0. The withholding pane shows only served refusal words for both operations; 13 `desktop.ledger.withholding.refusal.*` keys deleted in four locales. Remaining locale failures belong to other in-flight work (prorrata served keys, `credit_resolution` `served_source` identity, 17 unused chrome keys).

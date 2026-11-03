@@ -17,7 +17,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:5d581286da217af2f695808604570082a54b9431593a62dd70e99aae01f9d726'
+body_hash: 'sha256:19dd891d7bc34262ea846073e83a91e7426a8864c37a61861b674b309265f73f'
 ---
 
 # `desktop-renta` plan
@@ -89,7 +89,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S50` - [Sonnet high] let a projected Modelo 100 year resolve the Anexo D inventory applicability through the registry selection instead of an exact year match, and serve state-projection readiness at the grade the year reaches; `src/cadrumo/application/aggregation/inventory.py`.
 - [ ] `P01.S51` - [Opus medium] design and [Sonnet high] build the Modelo workspace door for a blocking credit or tier disagreement: list the served disagreements, accept one with a reason and revoke an acceptance at its expected revision, all in served words with stories and a scenario; `native/desktop/frontend/src/components/modelo/workspace`.
 - [x] `P01.S52` - [Sonnet high] show the withholding record's served refusal words for the three certificate custody refusals in the withholding pane, as invoice add already shows its served words; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
-- [ ] `P01.S53` - [Sonnet high] once the withholding record serves refusal words for every reason, delete the pane's own desktop.ledger.withholding.refusal words so the window holds no words of its own for the operation; `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`.
+- [x] `P01.S53` - [Sonnet high] once the withholding record serves refusal words for every reason, delete the pane's own desktop.ledger.withholding.refusal words so the window holds no words of its own for the operation; `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`.
 - [ ] `P01.S54` - [Sonnet high] delete every window-held tax word, token-to-words map, tax fact and eligibility rule as the backend serves each per operation (operator ruling 2026-11-03: the CLI, TUI and desktop derive everything from the backend), starting with the ledger classification flags; `native/desktop/frontend/src/shell/ledgerContract.ts`.
 
 ### Phase `P02` - contracts and fixtures
