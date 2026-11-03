@@ -13,10 +13,13 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.operations import OperationEffect
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.time.clock import now
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.renta.retencion_soportada import (
     RetencionSoportadaIdentity,
     RetencionSoportadaOrigen,
@@ -90,15 +93,20 @@ def _build_record(
         return _CertificateRefusal("repercutido_exceeds_ingreso_a_cuenta")
     if request.origin is RetencionSoportadaOrigen.PAYER_CERTIFICATE and request.evidence_fingerprint is None:
         return _CertificateRefusal("certificate_fingerprint_required")
-    if not tax_id_identity_token(request.payer_tax_id):
+    # A payer withholds under a Spanish identifier, and the identifier is what keys the row: a mistyped
+    # one would file the certificate under a payer that does not exist, and the printed and the bare
+    # forms of one identifier would key two rows. The checksum-validated canonical form fixes both.
+    try:
+        payer_tax_id = validate_runtime_spanish_tax_id(request.payer_tax_id)
+    except IdentityError:
         return _CertificateRefusal("validation")
-    payer_ref = ports.repository.payer_reference(request.payer_tax_id)
+    payer_ref = ports.repository.payer_reference(payer_tax_id)
     identity: RetencionSoportadaIdentity = (request.ejercicio, request.income_class, payer_ref)
     stored, _revision = ports.repository.load_revisioned(identity)
     try:
         return RetencionSoportadaRecord(
             ejercicio=request.ejercicio,
-            payer_tax_id=request.payer_tax_id,
+            payer_tax_id=payer_tax_id,
             payer_legal_name=request.payer_legal_name,
             payer_ref=payer_ref,
             income_class=request.income_class,
@@ -239,7 +247,8 @@ class RetencionSoportadaCertificadoExecutor:
                 def work() -> tuple[RetencionSoportadaRowProjection | None, int] | _CertificateRefusal:
                     ports = self._ports(context, request.profile_id)
                     if isinstance(request, RetencionSoportadaRecordRequest):
-                        return _record_certificate(request, ports)
+                        with validating_governed_facts(context.authority_operation):
+                            return _record_certificate(request, ports)
                     removed = _remove_certificate(request, ports)
                     if isinstance(removed, _CertificateRefusal):
                         return removed

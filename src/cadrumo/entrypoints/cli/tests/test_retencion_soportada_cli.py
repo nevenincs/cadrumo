@@ -33,6 +33,8 @@ _TAXPAYER = "12345678Z"
 _PAYER_A = "B00000000"
 _PAYER_B = "B00000018"
 _PAYER_C = "B00000026"
+# Control digit 1 where the hand-derived CIF control of these digits is 0.
+_PAYER_BAD_CONTROL = "B00000001"
 _EJERCICIO = "2025"
 _FIRST_CERTIFICATE = "1" * 64
 _SECOND_CERTIFICATE = "2" * 64
@@ -51,7 +53,7 @@ _PROFILE_FACTS = {
     "iva.voluntary_sii_enrolled": "false",
     "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
 }
-_PAYER_TAX_IDS = (_PAYER_A, _PAYER_B, _PAYER_C, _TAXPAYER)
+_PAYER_TAX_IDS = (_PAYER_A, _PAYER_B, _PAYER_C, _PAYER_BAD_CONTROL, _TAXPAYER)
 
 
 @pytest.fixture
@@ -238,11 +240,13 @@ def _replace_first_certificate(profile: RegisteredCliProfile, first: RetencionSo
 
 
 def _assert_invalid_records_refused(profile: RegisteredCliProfile) -> None:
-    # Refusals: the taxpayer's own NIF, repercutido above the ingreso a cuenta, an unsupported ejercicio,
-    # a certificate without its fingerprint and an unreadable amount.
+    # Refusals: the taxpayer's own NIF, a payer ID whose check character fails, repercutido above the
+    # ingreso a cuenta, an unsupported ejercicio, a certificate without its fingerprint and an unreadable amount.
     own = _refusal_context(_record(profile, _TAXPAYER, retencion="10.00"))
     assert own["reason"] == "own_tax_id"
     assert own["refusal_code"] == "REFUSED_RETENCION_SOPORTADA_WRITE"
+    unchecked = _refusal_context(_record(profile, _PAYER_BAD_CONTROL, retencion="10.00"))
+    assert unchecked["reason"] == "validation"
     excess = _refusal_context(
         _record(profile, _PAYER_C, retencion="10.00", ingreso_a_cuenta="100.00", repercutido="100.01")
     )

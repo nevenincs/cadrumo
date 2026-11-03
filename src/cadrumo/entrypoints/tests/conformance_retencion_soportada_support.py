@@ -35,7 +35,7 @@ from .conformance_family_contract import (
 )
 
 _EJERCICIO = 2025
-_PAYER = "B00000001"
+_PAYER = "B00000018"
 _SEEDING_TAXPAYER = "00000000T"
 
 

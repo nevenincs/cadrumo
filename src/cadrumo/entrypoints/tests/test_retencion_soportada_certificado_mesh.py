@@ -40,6 +40,7 @@ from cadrumo.application.retencion_soportada_certificado.contracts import (
 from cadrumo.application.retencion_soportada_certificado.executor import RetencionSoportadaCertificadoExecutor
 from cadrumo.application.retencion_soportada_certificado.ports import RetencionSoportadaCertificadoPorts
 from cadrumo.application.retencion_soportada_certificado.requests import RetencionSoportadaRecordRequest
+from cadrumo.application.retencion_soportada_certificado.results import RetencionSoportadaOperationExecutionResult
 from cadrumo.application.tests.operation_host_fakes import RecordingEvents
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.period import Period
@@ -54,6 +55,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.u
 
 _PROFILE = "3f1c8b2e-5d4a-4e6b-9c7d-0a1b2c3d4e5f"
 _TAXPAYER = "00000000T"
+# Synthetic CIFs whose control digit is hand-derived: with every digit before it zero but the last, the
+# odd-position doubling leaves 2 * d7 (digit-summed), so the control is (10 - 2 * d7) mod 10 -- 0, 8, 6.
+_PAYER_A = "B00000018"
+_PAYER_B = "B00000026"
+_PAYER_WRONG_CONTROL = "B00000001"
 _EJERCICIO = 2025
 _BINDING = "renta-retencion-soportada-trabajo"
 _LEGAL_REFS = ("ley-35-2006:art-99", "rd-439-2007:art-108")
@@ -108,7 +114,7 @@ def _ports_factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> 
 
 
 def _request(
-    payer: str, *, retencion: str, ingreso: str = "0.00", repercutido: str = "0.00"
+    payer: str, *, retencion: str, ingreso: str = "0.00", repercutido: str = "0.00", fingerprint: str = "a" * 64
 ) -> OperationRequest[BaseModel]:
     return OperationRequest(
         definition_id=RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
@@ -124,17 +130,30 @@ def _request(
             ingreso_a_cuenta=PublicDecimal(decimal=ingreso),
             ingreso_a_cuenta_repercutido=PublicDecimal(decimal=repercutido),
             origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
-            evidence_fingerprint="a" * 64,
+            evidence_fingerprint=fingerprint,
         ),
     )
 
 
-def _run(authority_operation: PinnedAuthorityOperation, request: OperationRequest[BaseModel]) -> object:
+def _run_in(
+    authority_operation: PinnedAuthorityOperation, request: OperationRequest[BaseModel]
+) -> tuple[object, _Context]:
     context = _Context(authority_operation)
     executor = RetencionSoportadaCertificadoExecutor(
         _ports_factory, definition_id=RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID
     )
-    return asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
+    return asyncio.run(executor.execute(request, cast(OperationExecutorContext, context))), context
+
+
+def _run(authority_operation: PinnedAuthorityOperation, request: OperationRequest[BaseModel]) -> object:
+    return _run_in(authority_operation, request)[0]
+
+
+def _refusal_reason(context: _Context) -> str:
+    result = context.operands.value
+    assert isinstance(result, RetencionSoportadaOperationExecutionResult)
+    assert result.refusal is not None
+    return result.refusal.reason
 
 
 def test_recorded_certificates_resolve_to_the_hand_summed_class_credit(
@@ -143,8 +162,8 @@ def test_recorded_certificates_resolve_to_the_hand_summed_class_credit(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
         # Payer A: 1.200,00 retención + 300,00 ingreso a cuenta (repercutido, still credited); payer B: 450,00.
         for request in (
-            _request("B00000001", retencion="1200.00", ingreso="300.00", repercutido="300.00"),
-            _request("B00000002", retencion="450.00"),
+            _request(_PAYER_A, retencion="1200.00", ingreso="300.00", repercutido="300.00"),
+            _request(_PAYER_B, retencion="450.00"),
         ):
             assert not isinstance(_run(operation, request), OperationRefusalEvidence)
         own = _run(operation, _request(_TAXPAYER, retencion="10.00"))
@@ -189,3 +208,40 @@ def test_recorded_certificates_resolve_to_the_hand_summed_class_credit(
     assert resolution.binding_values == {_BINDING: Decimal("1950.00")}
     assert len(stored) == 2
     assert all(revision_id != ABSENT_SECURE_OBJECT_REVISION_ID for _record, revision_id in stored)
+
+
+def test_a_payer_id_failing_its_checksum_is_refused_and_nothing_is_stored(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
+        refused, context = _run_in(operation, _request(_PAYER_WRONG_CONTROL, retencion="100.00"))
+        repository = RetencionSoportadaCertificadoRepositoryAdapter(
+            objects=secure_object_repository_for_active_bucket()
+        )
+        stored_after_refusal = repository.list_revisioned(_EJERCICIO)
+        accepted = _run(operation, _request(_PAYER_A, retencion="100.00"))
+        stored_after_success = repository.list_revisioned(_EJERCICIO)
+
+    assert isinstance(refused, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "validation"
+    assert stored_after_refusal == ()
+    assert not isinstance(accepted, OperationRefusalEvidence)
+    assert len(stored_after_success) == 1
+
+
+def test_the_printed_and_bare_forms_of_one_payer_id_name_one_row(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
+        first = _run(operation, _request(_PAYER_A, retencion="100.00"))
+        # The printed form of the same identifier meets the stored row, not an empty slot.
+        printed, context = _run_in(operation, _request("B-0000001-8", retencion="250.00", fingerprint="b" * 64))
+        repository = RetencionSoportadaCertificadoRepositoryAdapter(
+            objects=secure_object_repository_for_active_bucket()
+        )
+        stored = repository.list_revisioned(_EJERCICIO)
+
+    assert not isinstance(first, OperationRefusalEvidence)
+    assert isinstance(printed, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "stale_revision"
+    assert [record.retencion for record, _revision in stored] == [Decimal("100.00")]
