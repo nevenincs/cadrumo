@@ -79,7 +79,8 @@ _PROFILE_ID = UUID(_BUCKET_ID)
 _TAX_ID = "12345678Z"
 _SPOUSE_TAX_ID = "98765432M"
 _YEAR = 2025
-_PERIOD = Period.from_year_and_code(_YEAR, "0A")
+_COMPARED_YEARS = (2022, 2023, _YEAR)
+"""The filing years whose official design carries the individual or joint option and whose calculation compares."""
 _RESIDENCE: BindingId = "renta-profile-tax-residence-ccaa"
 _WORK_INCOME: CasillaId = "0003"
 _WORK_CREDIT: BindingId = "renta-retencion-soportada-trabajo"
@@ -162,14 +163,14 @@ def _seed_taxpayer(renta_facts: tuple[UserProfileFact, ...], *, economic_activit
 
 
 def _filler_binding_values(
-    operation: PinnedAuthorityOperation, *, leave_unanswered: frozenset[BindingId] = frozenset()
+    operation: PinnedAuthorityOperation, *, year: int, leave_unanswered: frozenset[BindingId] = frozenset()
 ) -> dict[BindingId, Decimal]:
     """The operator's zero answers for every binding no profile fact, record or ledger owns.
 
     The prior-period fold slots are answered on the binding channel, as the
     operator answers them, so the recorded operator layer replays them.
     """
-    snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
+    snapshot = operation.snapshot("100", filing_year=year, period="0A")
     revision = snapshot.revision
     alternates = {binding_id for casilla in revision.casillas for binding_id in casilla.alternate_bindings}
     targets = casillas_by_binding(revision)
@@ -196,14 +197,15 @@ class _Profile:
     work_units: WorkUnitCatalogueRepository
     calculations: CalculationRevisionCatalogueRepository
     events: BucketEventHistoryRepository
+    year: int = _YEAR
 
     def create_work(self) -> str:
         return create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=_PERIOD,
-            revision_id="2025",
+            filing_year=self.year,
+            period=Period.from_year_and_code(self.year, "0A"),
+            revision_id=str(self.year),
             ports=WorkLifecyclePorts(work_unit_repository=self.work_units, bucket_event_repository=self.events),
             operation=self.operation,
         ).work_unit_id
@@ -226,7 +228,9 @@ class _Profile:
                 work_unit_id,
                 actor="operator-A",
                 casilla_inputs={_WORK_INCOME: work_income},
-                binding_values=_filler_binding_values(self.operation, leave_unanswered=leave_unanswered),
+                binding_values=_filler_binding_values(
+                    self.operation, year=self.year, leave_unanswered=leave_unanswered
+                ),
                 enum_binding_values={_RESIDENCE: "madrid"},
                 record_operator_layer=record_operator_layer,
                 ports=ports,
@@ -302,7 +306,10 @@ def profile_factory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> G
         objects = runtime.repository
 
         def build(
-            renta_facts: tuple[UserProfileFact, ...] | None = None, *, economic_activity: bool = False
+            renta_facts: tuple[UserProfileFact, ...] | None = None,
+            *,
+            economic_activity: bool = False,
+            year: int = _YEAR,
         ) -> _Profile:
             _seed_taxpayer(
                 _married_facts() if renta_facts is None else renta_facts, economic_activity=economic_activity
@@ -312,6 +319,7 @@ def profile_factory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> G
                 work_units=WorkUnitCatalogueRepository(objects=objects),
                 calculations=CalculationRevisionCatalogueRepository(objects=objects),
                 events=BucketEventHistoryRepository(objects=objects),
+                year=year,
             )
 
         yield build
@@ -321,7 +329,7 @@ def _credited(profile: _Profile) -> None:
     seed_payer_certificate(
         operation=profile.operation,
         taxpayer_tax_id=_TAX_ID,
-        ejercicio=_YEAR,
+        ejercicio=profile.year,
         payer_tax_id="B12345674",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=Decimal("1.00"),
@@ -334,15 +342,16 @@ def _refused(profile: _Profile, work_unit_id: str) -> TaxationComparisonError:
     return refused.value
 
 
-def test_married_return_compares_on_its_held_values(profile_factory) -> None:
-    """A calculated married 2025 return compares both modes from what it holds, saving nothing.
+@pytest.mark.parametrize("year", _COMPARED_YEARS)
+def test_married_return_compares_on_its_held_values(profile_factory, year: int) -> None:
+    """A calculated married return, in every year whose design carries the filing option, compares both modes from what it holds, saving nothing.
 
     Only box 0003 was entered: every other manual box is empty and unread, and
     reads as nothing entered rather than blocking the comparison, as it does in
     the calculation itself. Art. 84.2.3º LIRPF gives the married unit 3,400 EUR
     off the joint base, so with one earner the joint result is lower.
     """
-    profile = profile_factory()
+    profile = profile_factory(year=year)
     _credited(profile)
     work_unit_id = profile.create_work()
     profile.calculate(work_unit_id, work_income=Decimal("52000"))
@@ -355,7 +364,7 @@ def test_married_return_compares_on_its_held_values(profile_factory) -> None:
     assert conjunta < individual
     assert Decimal(result.delta_resultado) == individual - conjunta
     assert result.modelo == "100"
-    assert result.filing_year == _YEAR
+    assert result.filing_year == year
     assert set(profile.calculations.load(operation=profile.operation).revisions) == saved
 
 
@@ -385,9 +394,10 @@ def test_unresolved_result_input_refuses_naming_the_boxes(profile_factory) -> No
         assert "52.000" not in detail.refusal_words
 
 
-def test_single_parent_with_cohabitation_unstated_refuses_on_the_joint_reduction(profile_factory) -> None:
+@pytest.mark.parametrize("year", _COMPARED_YEARS)
+def test_single_parent_with_cohabitation_unstated_refuses_on_the_joint_reduction(profile_factory, year: int) -> None:
     """Art. 84.2.4º LIRPF: the 2,150 EUR depends on cohabitation, so an unstated fact leaves 0461 unresolved."""
-    profile = profile_factory(_single_parent_facts(convive_con_otro_progenitor=None))
+    profile = profile_factory(_single_parent_facts(convive_con_otro_progenitor=None), year=year)
     _credited(profile)
     work_unit_id = profile.create_work()
     profile.calculate(work_unit_id, work_income=Decimal("30000"))
@@ -398,9 +408,10 @@ def test_single_parent_with_cohabitation_unstated_refuses_on_the_joint_reduction
     assert "0461" in refusal.casilla_ids
 
 
-def test_single_parent_without_spouse_compares(profile_factory) -> None:
+@pytest.mark.parametrize("year", _COMPARED_YEARS)
+def test_single_parent_without_spouse_compares(profile_factory, year: int) -> None:
     """A single-parent joint return has no spouse, so it compares without a spouse tax ID."""
-    profile = profile_factory(_single_parent_facts(convive_con_otro_progenitor=False))
+    profile = profile_factory(_single_parent_facts(convive_con_otro_progenitor=False), year=year)
     _credited(profile)
     work_unit_id = profile.create_work()
     profile.calculate(work_unit_id, work_income=Decimal("30000"))

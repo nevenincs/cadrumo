@@ -19,6 +19,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "compares_taxation", "compares_borrador"),
     [
+        ("100", 2022, "0A", True, True),
+        ("100", 2023, "0A", True, True),
+        ("100", 2024, "0A", False, True),
         ("100", 2025, "0A", True, True),
         ("130", 2025, "1T", False, False),
         ("303", 2025, "3T", False, False),

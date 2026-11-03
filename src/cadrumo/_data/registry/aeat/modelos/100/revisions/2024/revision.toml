@@ -7735,7 +7735,7 @@ selector = {revision = "2023", id = "ZCCAD"}
 fields = {legal_refs = ["ley-35-2006:art-74", "orden-hac-242-2025:art-3"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]}
 [[revisions."2024".casilla_overrides]]
 selector = {revision = "2023", id = "TIPOTRIBUTACION"}
-fields = {legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]}
+fields = {semantic_role = "irpf_tipo_tributacion", legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]}
 [[revisions."2024".casilla_overrides]]
 selector = {revision = "2023", id = "SEXO_D"}
 fields = {source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]}
