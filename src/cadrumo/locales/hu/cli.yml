@@ -417,7 +417,7 @@ cli:
           és nem ír semmit.
         duplicate_invalid: A számla típusának és a dokumentum adatainak a várt alakúnak
           kell lenniük.
-        duplicate_kind_help: 'A számla iránya: issued vagy received.'
+        duplicate_kind_help: 'A számla iránya: `issued` vagy `received`.'
         euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
           {date} napra, ezért a számla euróérték nélkül került rögzítésre, és kimarad
           az eurós összesítésekből, amíg árfolyam nem kerül hozzá.
@@ -2481,8 +2481,8 @@ cli:
     logout:
       help: Jelentkezz ki ebből a profilból az eszköz összes felhasználói munkamenetében.
         Az AEAT-munkamenetek aktívak maradnak.
-      name_help: A kijelentkeztetendő profil UUID-ja vagy pontos neve; hagyd el a
-        kiválasztott profil használatához.
+      name_help: A profil UUID-ja vagy pontos neve, amelyből ki akarsz jelentkezni;
+        hagyd el a kiválasztott profil használatához.
       notices:
         already_logged_out: Nincs kiválasztott profil; nincs miből kijelentkezni.
     passphrase:

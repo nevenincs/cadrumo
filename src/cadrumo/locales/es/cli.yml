@@ -426,7 +426,7 @@ cli:
           escribir nada.
         duplicate_invalid: El tipo de factura y los datos del documento deben tener
           la forma esperada.
-        duplicate_kind_help: 'Sentido de la factura: issued o received.'
+        duplicate_kind_help: 'Sentido de la factura: `issued` o `received`.'
         euro_rate_unavailable_message: No se encontró tipo de cambio a euros para
           {currency} el {date}, así que la factura se registró sin valor en euros
           y queda fuera de los totales en euros hasta que se añada un tipo.
