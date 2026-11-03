@@ -52,6 +52,7 @@ export type DockContent = {
   id: DockPane;
   title: string;
   content: ReactNode;
+  pageActions?: ReactNode;
   className?: string;
   status?: { phase: SessionPhase; note?: string };
 };
@@ -497,6 +498,11 @@ export function DockWorkspace({
                 ))}
               </TabsList>
             </Tabs>
+            {panes.find((pane) => pane.id === item.active)?.pageActions && (
+              <div className="flex shrink-0 items-center">
+                {panes.find((pane) => pane.id === item.active)?.pageActions}
+              </div>
+            )}
             {menus(item.active, item.floating)}
             <IconButton
               label={t(

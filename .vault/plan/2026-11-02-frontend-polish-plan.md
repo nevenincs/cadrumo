@@ -21,7 +21,7 @@ related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:5669baa974172d522d3284917354e6c4a9860a8001f840b74c79cfd1fed8580e'
+body_hash: 'sha256:aa890821e889bd3574670c15466444a59ab955c41d84c481cd03fcf4eda8ebc1'
 ---
 
 # `frontend-polish` plan
@@ -87,6 +87,8 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S41` - Reduce repeated locale-key payload in bundled chrome while preserving canonical catalogue semantics; `native/desktop/frontend/vite.config.ts, native/desktop/frontend/dev/chrome-catalogue.ts, native/desktop/frontend/tests/live/chrome-catalogue.unit.ts`.
 - [x] `S42` - Keep confirmation focus on its delayed matching link only while the person remains at the confirmed result; `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx, native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`.
 - [x] `S43` - Fit docked ledger minimum widths through split geometry without overwriting the chosen layout; `native/desktop/frontend/src/shell/docking.ts, native/desktop/frontend/src/components/docking/DockWorkspace.tsx, native/desktop/frontend/src/App.tsx, native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts, native/desktop/frontend/tests/scenarios/docking.spec.ts, native/desktop/frontend/tests/live/docking.unit.ts`.
+- [x] `S44` - Restore visible Docs history controls within the single dock header and verify Docs and terminal integration; `native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/components/docking/DockWorkspace.tsx, native/desktop/frontend/tests/scenarios/scenarios.spec.ts, native/desktop/frontend/tests/desktop.spec.ts`.
+- [ ] `S45` - Repair benchmark setup and timing for the current desktop and record valid measurements without weakening budgets; `native/desktop/frontend/scripts/benchmark.mjs`.
 
 ## Parallelization
 

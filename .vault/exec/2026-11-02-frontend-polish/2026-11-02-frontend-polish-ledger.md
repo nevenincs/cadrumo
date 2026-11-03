@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee09e95add1bae016dbe431061fc7d0fe8efcdc226300eeb9a11970f8375f8bc'
+body_hash: 'sha256:819981b267cc0ef0190b47f49c2d4f5854c3642a13499913d64f00f27be8f6e7'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -293,6 +293,13 @@ related:
 - `S11` `verify:` `Modelo product model operation served-field date cases` -> `pass`
 - `S11` `verify:` `12 port cases and 3 stale-baseline browser cases` -> `pass`
 - `S11` `verify:` `TypeScript scoped ESLint Prettier and Terra review` -> `pass`
+- `S44` `M` `native/desktop/frontend/src/App.tsx`
+- `S44` `M` `native/desktop/frontend/src/components/docking/DockWorkspace.tsx`
+- `S44` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S44` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S44` `verify:` `Docs docking bridge terminal preferences 25 cases` -> `pass`
+- `S44` `verify:` `npm run check` -> `pass`
+- `S44` `verify:` `Sol brief and Terra bounded review` -> `pass`
 
 ## Notes
 

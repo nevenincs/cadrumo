@@ -2824,75 +2824,7 @@ export function App({ host }: { host: Host }) {
             }}
           />
         </ModelListContext.Provider>
-      ) : browserOn && host.sedeView ? null : (
-        <PaneHeader
-          title={t(
-            profileOn
-              ? "desktop.profile.title"
-              : calendarOn
-                ? "desktop.calendar.title"
-                : aeatSyncOn
-                  ? "desktop.aeat_sync.title"
-                  : "desktop.pane.docs",
-          )}
-          onToggleMaximize={() => toggleMaximize("docs")}
-          controls={[
-            ...(!pageOn && docsEntry
-              ? ([
-                  {
-                    id: "docs-back",
-                    icon: "back",
-                    label: t("desktop.action.docs_back"),
-                    shortcut: primaryChord(byId("docs.back")),
-                    run: () => runAction("docs.back"),
-                  },
-                  {
-                    id: "docs-forward",
-                    icon: "forward",
-                    label: t("desktop.action.docs_forward"),
-                    shortcut: primaryChord(byId("docs.forward")),
-                    run: () => runAction("docs.forward"),
-                  },
-                ] satisfies PaneControl[])
-              : []),
-            maximizeControl(
-              "docs",
-              profileOn
-                ? "desktop.profile.maximize"
-                : calendarOn
-                  ? "desktop.calendar.maximize"
-                  : aeatSyncOn
-                    ? "desktop.aeat_sync.maximize"
-                    : "desktop.pane.maximize_docs",
-            ),
-            // The split's controls are on the TUI's header too: narrow, this
-            // header gives them up before it cuts its title.
-            ...splitControls.map((control) => ({ ...control, yields: true })),
-            // Every column is put away by its own close. The calendar's puts
-            // the calendar away, back to the documentation where that is shown.
-            calendarOn || profileOn || aeatSyncOn
-              ? {
-                  id: "close",
-                  icon: "close",
-                  label: t(
-                    profileOn
-                      ? "desktop.profile.close"
-                      : aeatSyncOn
-                        ? "desktop.aeat_sync.close"
-                        : "desktop.calendar.close",
-                  ),
-                  run: closePage,
-                }
-              : {
-                  id: "close",
-                  icon: "close",
-                  label: t("desktop.docs.hide"),
-                  shortcut: primaryChord(byId("docs.toggle")),
-                  run: () => closeColumn("docs"),
-                },
-          ]}
-        />
-      )}
+      ) : null}
       {browserMounted && host.sedeView && (
         // A view the runtime refuses for a missing component offers its setup.
         <BrowserPage
@@ -3386,6 +3318,25 @@ export function App({ host }: { host: Host }) {
                                 : "desktop.pane.docs",
                   ),
                   content: docsPane,
+                  pageActions:
+                    !pageOn && docsEntry ? (
+                      <>
+                        <IconButton
+                          label={t("desktop.action.docs_back")}
+                          shortcut={primaryChord(byId("docs.back"))}
+                          onClick={() => runAction("docs.back")}
+                        >
+                          <Icon name="back" />
+                        </IconButton>
+                        <IconButton
+                          label={t("desktop.action.docs_forward")}
+                          shortcut={primaryChord(byId("docs.forward"))}
+                          onClick={() => runAction("docs.forward")}
+                        >
+                          <Icon name="forward" />
+                        </IconButton>
+                      </>
+                    ) : undefined,
                 },
                 {
                   id: "tui",

@@ -1542,6 +1542,8 @@ test("bridge messages from any window but the documentation frame are ignored", 
   page: target,
 }) => {
   await openWithDocs(target);
+  const logs = target.locator('[data-dock-pane="logs"]');
+  await expect(logs).toBeHidden();
   await target.evaluate(() => {
     window.postMessage(
       {
@@ -1554,12 +1556,7 @@ test("bridge messages from any window but the documentation frame are ignored", 
     );
   });
   await target.waitForTimeout(300);
-  await expect(
-    target.getByRole("tab", {
-      name: label("desktop.rail.console"),
-      includeHidden: true,
-    }),
-  ).toHaveAttribute("aria-selected", "true");
+  await expect(logs).toBeHidden();
 });
 
 test("the remembered layout survives a reload", async ({ page: target }) => {
