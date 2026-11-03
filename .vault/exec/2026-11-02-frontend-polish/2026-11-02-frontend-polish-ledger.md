@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:46b25997be7172a01d1d77f82fb2c56e119afac4894808e77b73be045d07d377'
+body_hash: 'sha256:b4c5ef7d21b7ee2554dc9aceaa197290717163d97bdfc1e2747d78a2fae39bb9'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -311,8 +311,14 @@ related:
 - `S15` `verify:` `Docs source-window bridge navigation and terminal restart cases` -> `pass`
 - `S15` `verify:` `terminal rendering theme palette and prior logs coverage` -> `pass`
 - `S15` `verify:` `S44 restored direct Docs controls` -> `pass`
+- `S45` `M` `native/desktop/frontend/scripts/benchmark.mjs`
+- `S45` `verify:` `complete measured workload and captured calendar timing` -> `pass`
+- `S45` `verify:` `benchmark --check JS and CSS asset budgets` -> `fail`
+- `S45` `verify:` `remaining25 timing memory retention budgets` -> `pass`
+- `S45` `verify:` `scoped ESLint Prettier and Terra review` -> `pass`
 
 ## Notes
 
 - `S01` Initial implementation was included by concurrent commit e6a39bc125; this checkpoint retains final generation and harness corrections. Full npm check formatting fails on four unrelated files recorded in audit.
 - `S02` Terra corrective review resolved interrupted hidden refresh; final callback guard precedes marking settled.
+- `S45` Asset budgets remain open in S16; observed-idle measurement retains missing RENTA acknowledgment. Budgets unchanged.
