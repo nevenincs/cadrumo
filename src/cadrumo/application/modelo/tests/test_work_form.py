@@ -71,6 +71,7 @@ _MODELO = "130"
 _YEAR = 2026
 _PERIOD = "1T"
 _WORKING = "saldo-negativo-fin-periodo"
+_ART_32_WORKING = "rendimiento-neto-reducible-art-32-1"
 _UNPLACED = "19"
 _SECTION_TWO = ("08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18")
 
@@ -142,9 +143,10 @@ def _layout(
         *(
             FormPlacementDefinition(casilla_id=casilla.id, kind=FormPlacementKind.ON_FORM, box_number=casilla.number)
             for casilla in snapshot.revision.casillas
-            if str(casilla.id) not in {_WORKING, _UNPLACED}
+            if str(casilla.id) not in {_WORKING, _ART_32_WORKING, _UNPLACED}
         ),
         FormPlacementDefinition(casilla_id=_WORKING, kind=FormPlacementKind.WORKING_FIGURE),
+        FormPlacementDefinition(casilla_id=_ART_32_WORKING, kind=FormPlacementKind.WORKING_FIGURE),
         FormPlacementDefinition(
             casilla_id=_UNPLACED, kind=FormPlacementKind.UNPLACED, unplaced_reason=FormUnplacedReason.PENDING_REVIEW
         ),
@@ -231,11 +233,11 @@ def test_a_declared_layout_accounts_for_every_casilla_exactly_once(
     # Every casilla once, and beside them the answers no casilla of this layout takes.
     assert len(keys) == len(set(keys)) == len(snapshot.revision.casillas) + len(form.answers)
     assert sum(1 for key in keys if key[0] == "casilla") == len(snapshot.revision.casillas)
-    assert [
+    assert sorted(
         str(field.address.casilla_id)
         for field in form.working_figures
         if isinstance(field.address, ModeloFormCasillaAddressV1)
-    ] == [_WORKING]
+    ) == sorted([_WORKING, _ART_32_WORKING])
     assert [item.reason for item in form.unplaced] == [FormUnplacedReason.PENDING_REVIEW]
 
 
@@ -323,7 +325,7 @@ def test_a_held_manual_value_is_entered_only_when_the_operator_recorded_it(
         update={
             "casillas": tuple(
                 row.model_copy(update={"realised_kind": ModeloValueKind.LITERAL, "value": Decimal("250.00")})
-                if str(row.casilla_id) in {"06", "08"}
+                if str(row.casilla_id) in {"06", "16"}
                 else row
                 for row in review.casillas
             )
@@ -337,7 +339,7 @@ def test_a_held_manual_value_is_entered_only_when_the_operator_recorded_it(
     assert unknown["06"].unattributed
     assert recorded["06"].origin is ModeloFormOrigin.ENTERED
     assert not recorded["06"].unattributed
-    assert recorded["08"].origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert recorded["16"].origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
 
 
 def test_editability_follows_the_admission_and_the_source_policy(
@@ -354,7 +356,7 @@ def test_editability_follows_the_admission_and_the_source_policy(
             grammar=casilla_value_grammar(casilla),
         ),
         ModeloEditNonWritableScalarSurfaceEntryV1(
-            casilla_id="08", reason=ModeloEditNonWritableReason.SCHEMA_DECLARED_READ_ONLY
+            casilla_id="16", reason=ModeloEditNonWritableReason.SCHEMA_DECLARED_READ_ONLY
         ),
         ModeloEditWritableBindingOverrideSurfaceEntryV1(
             binding_id="modelo-130-pagos-fraccionados-anteriores",
@@ -368,8 +370,8 @@ def test_editability_follows_the_admission_and_the_source_policy(
 
     assert unadmitted["06"].editability is ModeloFormEditability.NO_ADMISSION
     assert admitted["06"].editability is ModeloFormEditability.EDITABLE_VALUE
-    assert admitted["08"].editability is ModeloFormEditability.NOT_WRITABLE
-    assert admitted["08"].not_writable_reason == "schema_declared_read_only"
+    assert admitted["16"].editability is ModeloFormEditability.NOT_WRITABLE
+    assert admitted["16"].not_writable_reason == "schema_declared_read_only"
     assert admitted["01"].editability is ModeloFormEditability.LOCKED_SOURCE
     assert admitted["05"].editability is ModeloFormEditability.OVERRIDABLE_SOURCE
     assert admitted["03"].editability is ModeloFormEditability.CALCULATED

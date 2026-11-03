@@ -108,7 +108,7 @@ def test_period_restricted_pages_follow_the_selected_frame(form_source, periods,
 )
 def test_form_and_support_inputs_share_declared_numeric_semantics(form_source, kind, expected):
     snapshot, _ = form_source
-    first = next(c for c in snapshot.revision.casillas if c.input_kind.value == "manual")
+    first = next(c for c in snapshot.revision.casillas if c.input_kind.value == "manual" and c.number.isdigit())
     revision = snapshot.revision.model_copy(
         update={
             "casillas": tuple(
