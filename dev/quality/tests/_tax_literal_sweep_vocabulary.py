@@ -172,7 +172,15 @@ _LETTER_CLAVE: Final = re.compile(r"^[A-Z]{1,2}$")
 _CLAVE_NAME: Final = re.compile(r"clave|subclave|tipo_|_code$|^code$|codigo", re.IGNORECASE)
 
 _MODELO_ADDRESS_CALLS: Final = frozenset(
-    {"Modelo", "modelo_directory", "revision", "revision_for_context", "select_revision_metadata", "snapshot"},
+    {
+        "Modelo",
+        "modelo_directory",
+        "reading_snapshot",
+        "revision",
+        "revision_for_context",
+        "select_revision_metadata",
+        "snapshot",
+    },
 )
 
 _FORM_NAMED_MODULE: Final = re.compile(r"(?:^|_)m(\d{3})(?:_|$)")

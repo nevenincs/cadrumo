@@ -420,6 +420,8 @@ class _BoundReader(_ExpressionKinds):
             return any(token in names for token in {"TransactionId", "_TransactionPrefix", "LedgerSplitChildRequest"})
         if self._owner == "domain/modelos/source_disagreement.py":
             return field == "sources" and "SourceDisagreementEntry" in names
+        if self._owner == "application/modelo/calculation_report.py":
+            return field == "sources" and "ModeloCalculationReportResolutionSource" in names
         if self._owner == "application/workflow/resume_contracts.py":
             return field == "candidates" and "WorkflowResumeCandidateSnapshot" in names
         if self._owner == "application/inventory/registered_requests.py":
