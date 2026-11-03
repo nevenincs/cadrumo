@@ -8468,7 +8468,7 @@ fields = { number = "*05", required = true, source_refs = ["aeat-dr-100-2025-dic
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "TIPOTRIBUTACION" }
-fields = { number = "*68 *69", section = ["datos_identificativos", "declaracion"], semantic_role = "irpf_declaracion_tipo_tributacion", source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"], legal_refs = ["orden-hac-277-2026:art-3"] }
+fields = { number = "*68 *69", section = ["datos_identificativos", "declaracion"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"], legal_refs = ["orden-hac-277-2026:art-3"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "ZCCAD" }

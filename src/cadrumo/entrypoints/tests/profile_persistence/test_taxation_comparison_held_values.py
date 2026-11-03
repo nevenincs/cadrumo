@@ -79,8 +79,12 @@ _PROFILE_ID = UUID(_BUCKET_ID)
 _TAX_ID = "12345678Z"
 _SPOUSE_TAX_ID = "98765432M"
 _YEAR = 2025
-_COMPARED_YEARS = (2022, 2023, _YEAR)
+_COMPARED_YEARS = (2022, 2023, 2024, _YEAR)
 """The filing years whose official design carries the individual or joint option and whose calculation compares."""
+_YEAR_OPERATOR_FACTS: dict[int, tuple[UserProfileFact, ...]] = {
+    2024: (UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),),
+}
+"""The operator inputs a year's own design adds, which the 2024 nursery-cap term reads and no profile derives."""
 _RESIDENCE: BindingId = "renta-profile-tax-residence-ccaa"
 _WORK_INCOME: CasillaId = "0003"
 _WORK_CREDIT: BindingId = "renta-retencion-soportada-trabajo"
@@ -312,7 +316,8 @@ def profile_factory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> G
             year: int = _YEAR,
         ) -> _Profile:
             _seed_taxpayer(
-                _married_facts() if renta_facts is None else renta_facts, economic_activity=economic_activity
+                (*(_married_facts() if renta_facts is None else renta_facts), *_YEAR_OPERATOR_FACTS.get(year, ())),
+                economic_activity=economic_activity,
             )
             return _Profile(
                 operation=operation,

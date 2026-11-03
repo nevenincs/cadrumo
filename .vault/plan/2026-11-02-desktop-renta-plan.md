@@ -16,7 +16,7 @@ related:
   - '[[2026-11-02-desktop-renta-renta-family-canonical-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:3e732ac9a462145cf78090f94483a1e858c013798455d7cb5c40e8f9a98c803f'
+body_hash: 'sha256:93593965d52dcb6a7d708013382cafdf762a93c896c1ddb93ccbe60f47aedd2c'
 ---
 
 # `desktop-renta` plan
@@ -73,7 +73,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S34` - [Sonnet high] apply the P01 re-review's low findings: settlement_unsupported words that say Cadrumo does not compute the remainder, the family rows docstring, a neutral synthetic fixture source key, a household row limit resolved from the registry instead of a modelo constant, and refused-NIF exceptions raised from None; `src/cadrumo/application/user_profile/household_row_limit.py`.
 - [x] `P01.S35` - [Opus medium] model the art. 50.3 compensation chain for every origin year: 0501 sums every applied row (1381, 1383, 1386, 1389 and their siblings) with each row capped by the maximum left after older rows are applied first, and give 2020 to 2024 the same stock and maximum gates instead of a free manual 0501; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_predicates/0001-declarations.toml`.
 - [x] `P01.S36` - [Sonnet high] make the estimate serve a typed next step when a calculated quarter cannot yet produce box 19 because its earlier-filing answers are missing, naming the quarter's open inputs, so the estimate never ends on the generic projection failure; `src/cadrumo/application/modelo/projection_next_steps.py`.
-- [ ] `P01.S38` - [Sonnet high] declare the filing-mode role on Modelo 100 revisions 2022 to 2024 where their official designs carry the individual or joint declaration type, so the taxation comparison is served for those years; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`.
+- [x] `P01.S38` - [Sonnet high] declare the filing-mode role on Modelo 100 revisions 2022 to 2024 where their official designs carry the individual or joint declaration type, so the taxation comparison is served for those years; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`.
 - [x] `P01.S39` - [Opus medium] serve every writable binding override a revision's edit surface admits as an answerable field on the work form, placed by the layout or in a served answers group, so a declaration never asks for an answer the window cannot take (such as Modelo 130's previous-year activity income and earlier negative results); `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P01.S40` - [Sonnet high] declare in the registry which declaration owns each household row object's repeat limit, so the profile writer reads the limit directly instead of scanning every modelo's annual revision; `src/cadrumo/application/user_profile/household_row_limit.py`.
 - [x] `P01.S41` - [Opus medium] place box 0500 before the art. 50.3 compensation as the AEAT design does, compute 1391 from the chain instead of a manual input, and find whether 448b84d73d broke test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses on box 0171, fixing the cause if so; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
