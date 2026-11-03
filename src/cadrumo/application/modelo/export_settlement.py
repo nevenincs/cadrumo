@@ -15,10 +15,10 @@ The amount comes from the box the declaration settles
 Modelo 100 its computed "Resultado a ingresar o a devolver" (``RESINGDEV``),
 which is the remainder still to pay once the spouse compensation suspends part
 of the result, otherwise the result itself. A revision that computes no such
-box settles from the result only while nothing is suspended: a positive
-suspended part leaves a remainder it does not compute, so that settlement is
-refused as unsupported. A suspended part left blank is nothing, as the
-calculation reads it. The disposition is the one the shared resolver derived
+box settles from the result only while nothing is suspended and no refund
+is waived (LIRPF art. 97.6): a positive suspended or waived part leaves a
+remainder it does not compute, so that settlement is refused as unsupported.
+A part left blank is nothing, as the calculation reads it. The disposition is the one the shared resolver derived
 from the result, and the settled amount must agree with it: the official
 design gives no settlement block for a result to pay of which nothing remains
 to pay, so such a settlement, like one whose amount is unknown, is refused
@@ -52,7 +52,7 @@ from ...core.result_disposition import ResultDisposition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
 from ...domain.modelos.errors import ModeloExportError
-from .settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_suspension_casilla_id
+from .settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_remainder_casilla_ids
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import ModeloRevision
@@ -143,11 +143,10 @@ def declared_settlement(
     amount = None if casilla_id is None else _decimal(casilla_values.get(casilla_id))
     if amount is None:
         return DeclaredSettlement(amount=None, refusal=SettlementRefusal.RESULT_UNKNOWN)
-    suspension = declaration_settlement_suspension_casilla_id(modelo, revision)
-    if suspension is not None:
-        # A box the filer left blank is read as the calculation reads it: nothing suspended.
-        suspended = _decimal(casilla_values.get(suspension))
-        if suspended is not None and suspended > 0:
+    for part_casilla_id in declaration_settlement_remainder_casilla_ids(modelo, revision):
+        # A box the filer left blank is read as the calculation reads it: nothing suspended or waived.
+        part = _decimal(casilla_values.get(part_casilla_id))
+        if part is not None and part > 0:
             return DeclaredSettlement(amount=None, refusal=SettlementRefusal.SETTLEMENT_UNSUPPORTED)
     if not _agrees(disposition, amount):
         return DeclaredSettlement(amount=None, refusal=SettlementRefusal.SETTLEMENT_UNSUPPORTED)

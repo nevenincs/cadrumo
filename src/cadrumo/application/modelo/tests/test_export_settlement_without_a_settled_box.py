@@ -35,13 +35,14 @@ from ...filing.draft_construction import build_draft
 from ...filing.runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 from ...filing.tests.export_support import filer_with_nothing_else
 from ..export_settlement import SettlementRefusal, declared_settlement, settlement_dictionary_values
-from ..settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_suspension_casilla_id
+from ..settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_remainder_casilla_ids
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _SALARY = "0003"
 _RESULT: CasillaId = validated_casilla_id("0670")
 _SUSPENDED: CasillaId = validated_casilla_id("0693")
+_WAIVED: CasillaId = validated_casilla_id("0694")
 _WITHHELD = "renta-retencion-soportada-trabajo"
 _REFUND_IBAN = "ES9121000418450200051332"
 
@@ -53,7 +54,7 @@ def _years_settled_from_the_result(operation: PinnedAuthorityOperation) -> list[
     for year in range(support.floor, support.horizon + 1):
         provider = _provider(operation, year)
         revision = provider.get_snapshot("100").revision
-        if declaration_settlement_suspension_casilla_id("100", revision) is not None:
+        if declaration_settlement_remainder_casilla_ids("100", revision):
             years.append(year)
     return years
 
@@ -164,6 +165,44 @@ def test_a_suspended_part_is_refused_because_the_remainder_is_not_computed(
         assert settled.refusal is SettlementRefusal.SETTLEMENT_UNSUPPORTED, year
         assert refused.value.context == {"cause": "settlement_unsupported", "result_disposition": "I"}, year
         assert refused.value.translated_message == "application.modelo.errors.export_settlement_unsupported", year
+
+
+def test_a_waived_refund_is_refused_because_the_remainder_is_not_computed(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Art. 97.6 a) LIRPF: a refund the filer waives in part is not paid out whole from the result."""
+    for year in _years_settled_from_the_result(operation):
+        provider = _provider(operation, year)
+        inputs: dict[str, ModeloInputValue] = {_WAIVED: Decimal("400.00")}
+        if _result_is_calculated(provider):
+            inputs[_WITHHELD] = Decimal("20000.00")
+        else:
+            inputs[str(_RESULT)] = Decimal("-1000.00")
+        draft = _draft(provider, year, inputs)
+        revision = provider.get_snapshot("100").revision
+        assert _money(draft, _WAIVED) == Decimal("400.00") and _money(draft, _RESULT) < 0, year
+
+        settled = declared_settlement("100", revision, _values(draft), disposition=None)
+        with pytest.raises(ModeloExportError) as refused:
+            _compose(operation, provider, year, draft)
+
+        assert settled.refusal is SettlementRefusal.SETTLEMENT_UNSUPPORTED, year
+        assert refused.value.context == {"cause": "settlement_unsupported", "result_disposition": "D"}, year
+        assert refused.value.translated_message == "application.modelo.errors.export_settlement_unsupported", year
+
+
+def test_a_waived_part_left_blank_is_nothing_as_the_calculation_reads_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    for year in _years_settled_from_the_result(operation):
+        revision = _provider(operation, year).get_snapshot("100").revision
+        values: dict[CasillaId, object] = {_RESULT: Decimal("-310.40"), _WAIVED: None}
+
+        settled = declared_settlement("100", revision, values, disposition=None)
+        never_keyed = declared_settlement("100", revision, {_RESULT: Decimal("-310.40")}, disposition=None)
+
+        assert settled.amount == Decimal("-310.40") and settled.refusal is None, year
+        assert never_keyed == settled, year
 
 
 def test_a_suspended_part_left_blank_is_nothing_as_the_calculation_reads_it(

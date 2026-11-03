@@ -30,7 +30,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...domain.calculations.registry.result_casillas import (
     result_disposition_casilla_ids,
     settlement_casilla_role,
-    settlement_suspension_casilla_id,
+    settlement_remainder_casilla_ids,
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 
@@ -198,7 +198,7 @@ def declaration_settlement_casilla_id(modelo: str, revision: ModeloRevision) -> 
     the filer may type is no declared amount. Otherwise the amount settled is
     the result itself: the one result box the "tipo de declaración" rule reads,
     where the revision defines it, which is the amount settled only while no
-    part of it is suspended (see :func:`declaration_settlement_suspension_casilla_id`).
+    part of it is suspended or waived (see :func:`declaration_settlement_remainder_casilla_ids`).
 
     Raises:
         AmbiguousDeclarationResultError: Two computed casillas of the revision
@@ -213,15 +213,16 @@ def declaration_settlement_casilla_id(modelo: str, revision: ModeloRevision) -> 
     return declared[0] if len(declared) == 1 else None
 
 
-def declaration_settlement_suspension_casilla_id(modelo: str, revision: ModeloRevision) -> CasillaId | None:
-    """Return the box that must hold no part of the result for the result to be the amount settled.
+def declaration_settlement_remainder_casilla_ids(modelo: str, revision: ModeloRevision) -> tuple[CasillaId, ...]:
+    """Return the boxes that must hold no part of the result for the result to be the amount settled.
 
-    Set only when ``revision`` computes no box of the settlement role, so its
-    settlement reads the result, and the modelo's record lets part of the
-    result be suspended. Where that box holds a positive part the amount
-    settled is the remainder, which the revision does not compute, so the
-    result is not the amount to pay or refund. ``None`` where the revision
-    computes the settlement box or declares no such part.
+    Non-empty only when ``revision`` computes no box of the settlement role, so
+    its settlement reads the result, and the modelo's record lets a part of the
+    result be suspended (an amount to pay) or waived (a refund) apart from it.
+    Where one of these boxes holds a positive part the amount settled is the
+    remainder, which the revision does not compute, so the result is not the
+    amount to pay or refund. Empty where the revision computes the settlement
+    box, and for a box the revision does not define.
 
     Raises:
         AmbiguousDeclarationResultError: Two computed casillas of the revision
@@ -229,11 +230,9 @@ def declaration_settlement_suspension_casilla_id(modelo: str, revision: ModeloRe
     """
     role = settlement_casilla_role(modelo)
     if role is not None and _computed_settlement_casilla(role, revision) is not None:
-        return None
-    suspended = settlement_suspension_casilla_id(modelo)
-    if suspended is None or suspended not in {casilla.id for casilla in revision.casillas}:
-        return None
-    return suspended
+        return ()
+    defined = {casilla.id for casilla in revision.casillas}
+    return tuple(casilla_id for casilla_id in settlement_remainder_casilla_ids(modelo) if casilla_id in defined)
 
 
 __all__ = [
@@ -244,5 +243,5 @@ __all__ = [
     "declaration_result_casilla_id",
     "declaration_result_casillas",
     "declaration_settlement_casilla_id",
-    "declaration_settlement_suspension_casilla_id",
+    "declaration_settlement_remainder_casilla_ids",
 ]

@@ -41,17 +41,19 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date, datetime
+from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.modelo import Modelo
+from ...core.payment_instalment_election import second_instalment_is_payable
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.time.clock import MADRID_TZ
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
-from ...domain.calculations.registry.payment_instalment_split import two_instalments_declared
+from ...domain.calculations.registry.payment_instalment_split import first_instalment_share, two_instalments_declared
 from ...domain.deadlines.domiciliation_cutoff import (
     DerivedPaymentCutoff,
     UnavailablePaymentCutoff,
@@ -361,6 +363,7 @@ def require_instalment_election_admissible(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     resolved_result_disposition: ResultDisposition | None,
+    settled_amount: Decimal | None,
     accounts: _ExportAccounts,
     exported_at: datetime,
     operation: PinnedAuthorityOperation,
@@ -369,8 +372,10 @@ def require_instalment_election_admissible(
 
     RD 439/2007 art. 62.2, as the Manual práctico de Renta 2025 states its
     conditions: the modelo declares the split, the result is to pay, the
-    declaration is not corrective, and it is filed within its period. A
-    second instalment direct-debited also needs a Spanish charge account.
+    declaration is not corrective, and it is filed within its period. No
+    source states a smallest amount to split, but an amount whose second
+    instalment would be nothing is paid at once. A second instalment
+    direct-debited also needs a Spanish charge account.
     """
     election = command.instalment_election
     if not election.splits:
@@ -385,6 +390,7 @@ def require_instalment_election_admissible(
         work_unit=work_unit,
         revision=revision,
         resolved_result_disposition=resolved_result_disposition,
+        settled_amount=settled_amount,
         exported_at=exported_at,
         operation=operation,
     )
@@ -406,6 +412,7 @@ def _instalment_refusal_reason(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     resolved_result_disposition: ResultDisposition | None,
+    settled_amount: Decimal | None,
     exported_at: datetime,
     operation: PinnedAuthorityOperation,
 ) -> str | None:
@@ -427,6 +434,13 @@ def _instalment_refusal_reason(
         return "filing_window_unknown"
     if exported_at.astimezone(MADRID_TZ).date() > window.closes_on:
         return "past_filing_window"
+    share = first_instalment_share(str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation)
+    if (
+        share is not None
+        and settled_amount is not None
+        and not second_instalment_is_payable(settled_amount, first_share=share)
+    ):
+        return "second_instalment_nothing"
     return None
 
 

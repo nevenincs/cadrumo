@@ -22,7 +22,7 @@ the election in casilla 0169.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -107,6 +107,15 @@ _M130_QUARTER_PAYMENT: CasillaId = validated_casilla_id("07")
 _CASH_ELECTION_CASILLA: CasillaId = validated_casilla_id("0169")
 _CASH_ELECTION_XML_TAG = "E1ITEMP"
 _M100_RESULT_CASILLA: CasillaId = validated_casilla_id("0670")
+# An instant inside the 2024 annual return's filing window, so the window is not what refuses a split.
+_WITHIN_THE_FILING_WINDOW = datetime(2025, 6, 2, 12, 0, tzinfo=UTC)
+# The payments on account that leave exactly one cent of this fixture's liability unpaid.
+_PAYMENTS_LEAVING_ONE_CENT = {
+    "1T": Decimal("300.00"),
+    "2T": Decimal("178.42"),
+    "3T": Decimal("0.00"),
+    "4T": Decimal("0.00"),
+}
 
 
 @pytest.fixture
@@ -362,3 +371,39 @@ def test_m100_places_stated_rows_by_the_criterion_through_export(
         "DEV_CUENTACORRIENTE": REFUND_IBAN,
     }
     assert _money(annual, _CASH_ELECTION_CASILLA) == Decimal(1 if marks else 0)
+
+
+def test_a_split_of_an_amount_whose_second_instalment_is_nothing_is_refused_with_its_reason(
+    secure_objects: SecureObjectRepository, tmp_path: Path
+) -> None:
+    """One cent to pay leaves nothing for a second instalment: the split is refused as such, not as a failed write."""
+    _seed_profile(DEVENGO)
+    persist_ledger(secure_objects)
+    seed_prior_year_m100(secure_objects)
+    for period, payment in _PAYMENTS_LEAVING_ONE_CENT.items():
+        import_official_m130_result_observation(secure_objects, period=period, c19_value=payment)
+
+    annual = _annual(secure_objects)
+
+    owed = _money(annual, _M100_RESULT_CASILLA)
+    assert owed == Decimal("0.01"), owed
+    payload = verify_and_export(annual, secure_objects, tmp_path / "at-once.xml")
+    with pytest.raises(ModeloInstalmentElectionRefusedError) as split:
+        export_revision_for_test(
+            ModeloExportCommand(
+                calculation_revision_id=annual.calculation_revision_id,
+                output_path=tmp_path / "split.xml",
+                actor="imputation-e2e",
+                instalment_election=PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_PAID,
+            ),
+            workflow_profile=autonomaworkflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=BUCKET_ID, taxpayer_tax_id=TAX_ID, secure_objects=secure_objects
+            ),
+            clock=_WITHIN_THE_FILING_WINDOW,
+        )
+    assert split.value.translated_message == "errors.refused.refused_modelo_instalment_election"
+    assert split.value.context is not None
+    assert split.value.context["reason"] == "second_instalment_nothing", split.value.context["reason"]
+    assert not (tmp_path / "split.xml").exists()
+    assert _settlement(payload) == {"TIPODECLARACION": "I", "ING_IMPORTE": "0.01"}

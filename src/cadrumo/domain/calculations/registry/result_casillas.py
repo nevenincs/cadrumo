@@ -51,17 +51,27 @@ def settlement_casilla_role(modelo: str) -> str | None:
     return resolve_form_codes(_RESULT_CASILLAS_FACT).entries.get(f"settlement_roles.{modelo}")
 
 
-def settlement_suspension_casilla_id(modelo: str) -> CasillaId | None:
-    """Return the box where ``modelo``'s record states the part of its result whose payment is suspended.
-
-    ``None`` when the modelo's result cannot be suspended in part. A positive part
-    leaves a remainder to pay that only a revision computing the settlement box
-    works out.
-    """
+def _declared_result_part_casilla_id(modelo: str, key: str) -> CasillaId | None:
     if not has_result_disposition_spec(modelo):
         return None
-    token = resolve_form_codes(_RESULT_CASILLAS_FACT).entries.get(f"settlement_suspensions.{modelo}")
+    token = resolve_form_codes(_RESULT_CASILLAS_FACT).entries.get(f"{key}.{modelo}")
     return None if token is None else validated_casilla_id(token, surface=_RESULT_CASILLAS_FACT)
+
+
+def settlement_remainder_casilla_ids(modelo: str) -> tuple[CasillaId, ...]:
+    """Return the boxes where ``modelo``'s record states a part of its result that is not settled as the result.
+
+    The record lets the part of an amount to pay whose payment is suspended
+    (``settlement_suspensions``) and the part of a refund the filer waives
+    (``settlement_waivers``) be stated apart from the result. A positive part in
+    either leaves a remainder that only a revision computing the settlement box
+    works out. Empty when the modelo's result cannot be divided.
+    """
+    declared = (
+        _declared_result_part_casilla_id(modelo, "settlement_suspensions"),
+        _declared_result_part_casilla_id(modelo, "settlement_waivers"),
+    )
+    return tuple(casilla_id for casilla_id in declared if casilla_id is not None)
 
 
 def canonical_result_amount(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> Decimal | None:
@@ -133,5 +143,5 @@ __all__ = [
     "derive_result_disposition",
     "result_disposition_casilla_ids",
     "settlement_casilla_role",
-    "settlement_suspension_casilla_id",
+    "settlement_remainder_casilla_ids",
 ]

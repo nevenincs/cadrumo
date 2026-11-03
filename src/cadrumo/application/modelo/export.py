@@ -145,7 +145,7 @@ from .export_preparation import (
     requireprior_domiciliation_marker_layout,
     resolve_work_unit_period,
 )
-from .export_settlement import declared_settlement, settlement_dictionary_values
+from .export_settlement import DeclaredSettlement, declared_settlement, settlement_dictionary_values
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
@@ -207,11 +207,18 @@ def _persist_exported_draft(
         exported_at=exported_at,
         operation=operation,
     )
+    settlement = declared_settlement(
+        str(work_unit.modelo),
+        schema_provider.get_snapshot(str(work_unit.modelo)).revision,
+        {value.casilla_id: value.value for value in approved.values},
+        disposition=resolved_result_disposition,
+    )
     require_instalment_election_admissible(
         command,
         work_unit=work_unit,
         revision=revision,
         resolved_result_disposition=resolved_result_disposition,
+        settled_amount=settlement.amount,
         accounts=accounts,
         exported_at=exported_at,
         operation=operation,
@@ -248,12 +255,11 @@ def _persist_exported_draft(
         dictionary_values.update(
             _settlement_values_for_export(
                 command,
-                approved=approved,
+                settlement=settlement,
                 work_unit=work_unit,
                 disposition=resolved_result_disposition,
                 charge_account=export_charge_account(accounts),
                 refund_account=export_refund_account(accounts),
-                schema_provider=schema_provider,
                 operation=operation,
             )
         )
@@ -353,27 +359,20 @@ def _stage_publish_and_record_export(
 def _settlement_values_for_export(
     command: ModeloExportCommand,
     *,
-    approved: ModeloDraft,
+    settlement: DeclaredSettlement,
     work_unit: WorkUnit,
     disposition: ResultDisposition | None,
     charge_account: ChargeAccount | None,
     refund_account: RefundAccount | None,
-    schema_provider: RegistrySchemaAccessor,
     operation: PinnedAuthorityOperation,
 ) -> dict[str, object]:
     """Derive the settlement, instalment and account values an XML dictionary export carries."""
-    modelo = str(work_unit.modelo)
     return settlement_dictionary_values(
         disposition=disposition,
-        settlement=declared_settlement(
-            modelo,
-            schema_provider.get_snapshot(modelo).revision,
-            {value.casilla_id: value.value for value in approved.values},
-            disposition=disposition,
-        ),
+        settlement=settlement,
         instalment=command.instalment_election,
         first_instalment_share=first_instalment_share(
-            modelo, period_day=work_unit.period.end_date, authority=operation
+            str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation
         ),
         charge_account=charge_account,
         refund_account=refund_account,

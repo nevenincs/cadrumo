@@ -47,7 +47,7 @@ from ....domain.transactions.own_accounts import (
 )
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
-from ..settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_suspension_casilla_id
+from ..settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_remainder_casilla_ids
 from ..work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormDeadline, ModeloFormExport
 from ..work_form_export_offer import (
     EXPORT_ARTEFACT_LOCALE_KEYS,
@@ -368,7 +368,7 @@ def test_every_supported_year_without_a_settled_box_offers_the_split_of_its_resu
     checked = 0
     for year in range(support.floor, support.horizon + 1):
         snapshot = form_snapshot(operation, "100", year, "0A")
-        if declaration_settlement_suspension_casilla_id("100", snapshot.revision) is None:
+        if not declaration_settlement_remainder_casilla_ids("100", snapshot.revision):
             continue
         blank = built_form(operation, "100", year, "0A", entered=frozenset())
         assert blank.result is not None
