@@ -45,6 +45,8 @@ from ....domain.transactions.own_accounts import (
     OwnAccountRole,
     OwnBankAccountDetails,
 )
+from ...operations.public_mirror import project_public_mirror, restore_public_mirror
+from ...operations.registry_schema_validation import strict_model_json_schema
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
 from ..settlement_casilla import declaration_settlement_casilla_id
@@ -56,6 +58,7 @@ from ..work_form_export_offer import (
     ModeloFormElectionQuestion,
     ModeloFormElectionReason,
     ModeloFormElectionState,
+    ModeloFormExportOffer,
     ModeloFormInstalment,
     ModeloFormUnavailable,
     asks_export_elections,
@@ -77,7 +80,12 @@ from ..work_form_typing_effect import (
     form_typing_effects,
     typing_effect_words,
 )
-from ..workbench_projection import project_modelo_workbench_form, restore_modelo_workbench_form
+from ..workbench_projection import (
+    ModeloWorkbenchFormProjectionV1,
+    PublicModeloFormExportOffer,
+    project_modelo_workbench_form,
+    restore_modelo_workbench_form,
+)
 from .work_form_fixture import built_form, form_snapshot, read_before_calculation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -278,6 +286,33 @@ def test_an_advisory_figure_carries_its_reason_and_only_then() -> None:
         )
 
 
+def test_public_workbench_schema_and_instalment_amounts_survive_strict_transport(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    strict_model_json_schema(ModeloWorkbenchFormProjectionV1)
+    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.01"), deadline=_deadline(30))
+    offer = form_export_offer(
+        "100", form_snapshot(operation, "100", 2025, "0A"), _EN, form=form, verified=False, filed=False
+    )
+    public = project_public_mirror(offer, ModeloFormExportOffer, PublicModeloFormExportOffer)
+    assert isinstance(public, PublicModeloFormExportOffer)
+    figures = next(
+        question.figures for question in public.elections if question.election is ModeloFormElection.INSTALMENT
+    )
+    assert tuple(figure.amount for figure in figures) == ("600.01", "400.00")
+    transported = PublicModeloFormExportOffer.model_validate_json(public.model_dump_json())
+    restored = restore_public_mirror(transported, ModeloFormExportOffer, PublicModeloFormExportOffer)
+    assert restored == offer
+    assert isinstance(restored, ModeloFormExportOffer)
+    amounts = next(
+        question.figures for question in restored.elections if question.election is ModeloFormElection.INSTALMENT
+    )
+    assert tuple(figure.amount.as_tuple() for figure in amounts) == (
+        Decimal("600.01").as_tuple(),
+        Decimal("400.00").as_tuple(),
+    )
+
+
 def test_a_settled_box_without_a_value_withholds_the_settlement_as_unknown(
     operation: PinnedAuthorityOperation,
 ) -> None:
@@ -305,7 +340,7 @@ def test_a_result_to_pay_with_nothing_left_to_pay_offers_no_settlement(operation
     for election in (ModeloFormElection.PAYMENT, ModeloFormElection.INSTALMENT, ModeloFormElection.CHARGE_ACCOUNT):
         assert questions[election].state is ModeloFormElectionState.UNAVAILABLE, election
         assert questions[election].reason is ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED, election
-        assert questions[election].state_words and questions[election].figures == ()
+        assert bool(questions[election].state_words) and questions[election].figures == ()
 
 
 def test_an_account_is_offered_by_its_label_and_mask_never_its_number(operation: PinnedAuthorityOperation) -> None:
@@ -497,7 +532,9 @@ def test_the_public_read_carries_the_offer_receipt_and_typing_words(operation: P
     projection = project_modelo_workbench_form(UUID("13000000-0000-4000-8000-000000000455"), form.work_unit_id, read)
     restored = restore_modelo_workbench_form(type(projection).model_validate_json(projection.model_dump_json()))
 
-    assert projection.export_offer == read.export_offer and projection.receipt == read.receipt
+    assert projection.export_offer is not None and read.export_offer is not None
+    assert projection.export_offer.model_dump(mode="json") == read.export_offer.model_dump(mode="json")
+    assert projection.receipt == read.receipt
     assert projection.typing_effects == read.typing_effects
     assert restored == read and restored.receipt_confirmed is False
 

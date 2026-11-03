@@ -923,6 +923,44 @@ export function MovementsSection({
   };
 
   // ---- Staged editing ---------------------------------------------------------
+  const draftCheckVersion = useRef(0);
+  const currentStage = useRef(stage.content);
+  currentStage.current = stage.content;
+  useEffect(
+    () => () => {
+      draftCheckVersion.current++;
+    },
+    [],
+  );
+  async function askDraftClassification(
+    kind: "business" | "mixed",
+    key: string,
+  ) {
+    const content = stage.content;
+    const version = ++draftCheckVersion.current;
+    const check = await checkOnce(port, stagedCheckRequest(content, byId));
+    if (
+      version !== draftCheckVersion.current ||
+      currentStage.current !== content
+    )
+      return;
+    const answer = check?.drafts.get(key);
+    if (typeof answer?.takes_expense_category !== "boolean") {
+      setToast(t("desktop.ledger.apply.read_failed"));
+      return;
+    }
+    setAsking({
+      kind,
+      ids: [],
+      skipped: 0,
+      partial: false,
+      error: null,
+      split: answer.takes_expense_category
+        ? { expenses: 1, income: 0 }
+        : { expenses: 0, income: 1 },
+      draft: key,
+    });
+  }
   const edit = useMovementEditing({
     t,
     locale,
@@ -937,16 +975,7 @@ export function MovementsSection({
     withYear: period === null,
     accounts,
     classify: (kind, ids) => classifySelection(kind, { ids }),
-    askDraft: (kind, key) =>
-      setAsking({
-        kind,
-        ids: [],
-        skipped: 0,
-        partial: false,
-        error: null,
-        split: { expenses: 1, income: 0 },
-        draft: key,
-      }),
+    askDraft: (kind, key) => void askDraftClassification(kind, key),
     say: (text) => setToast(text),
     openReview: pageEditing.openReview,
     focusDraft: pageEditing.focusDraft,

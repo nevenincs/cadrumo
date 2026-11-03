@@ -23,7 +23,7 @@ type RecordedRows = Record<
 >;
 type RecordedDrafts = Record<
   string,
-  LedgerStagedCheckResult["drafts"][number]["blockers"]
+  Omit<LedgerStagedCheckResult["drafts"][number], "key">
 >;
 
 /** Told of each question the recording does not hold, so it can be recorded. */
@@ -87,8 +87,8 @@ export function answerStagedCheck(
   const drafts: LedgerStagedCheckResult["drafts"] = [];
   for (const draft of request.drafts) {
     const question = draftQuestion(draft);
-    const blockers = (recorded.drafts as unknown as RecordedDrafts)[question];
-    if (blockers) drafts.push({ key: draft.key, blockers });
+    const answer = (recorded.drafts as unknown as RecordedDrafts)[question];
+    if (answer) drafts.push({ key: draft.key, ...answer });
     else {
       whole = false;
       unrecordedHook()?.("draft", question);

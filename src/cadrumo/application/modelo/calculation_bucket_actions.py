@@ -741,6 +741,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     )
     source_diagnostics = (
         channels.reconciliation.source_diagnostics
+        + publication.source_diagnostics
         + channels.override_diagnostics
         + advisory_diagnostics
         + profile_text_diagnostics

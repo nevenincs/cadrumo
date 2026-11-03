@@ -66,6 +66,8 @@ export function SignInDialog({
   const nameField = useRef<HTMLInputElement>(null);
   const choice = useRef<HTMLSelectElement>(null);
   const [revealed, setRevealed] = useState(false);
+  const [recoveryProfile, setRecoveryProfile] = useState<string | null>(null);
+  const [clearedProfile, setClearedProfile] = useState<string | null>(null);
   const [unchosen, setUnchosen] = useState(false);
   const errorId = useId();
   const choiceErrorId = useId();
@@ -140,6 +142,10 @@ export function SignInDialog({
       ? account.profiles.profiles
       : [];
   const named = account.target?.name ?? status.active_profile;
+  const canClearSavedSignIn =
+    named !== null &&
+    (account.refusal?.code.toUpperCase() === "SESSION_NOT_PERSISTED" ||
+      recoveryProfile === named);
   const mustChoose = account.mustChoose;
   // A profile the host would not name as written can be signed in to only
   // while it is the selected one.
@@ -258,6 +264,7 @@ export function SignInDialog({
               const bytes = new TextEncoder().encode(field.value);
               field.value = "";
               setRevealed(false);
+              setClearedProfile(null);
               void account.submit(bytes);
             }}
           >
@@ -356,14 +363,64 @@ export function SignInDialog({
               <AccountRefusal refusal={account.refusal} seconds={seconds} />
             )}
 
+            {clearedProfile !== null && clearedProfile === named && (
+              <Alert tone="success" role="status" icon={<Icon name="info" />}>
+                {t("desktop.signin.saved_cleared")}
+              </Alert>
+            )}
+
             <Button
               type="submit"
               className="w-full"
-              pending={busy}
-              disabled={seconds > 0}
+              pending={busy && !account.clearingSavedSignIn}
+              disabled={seconds > 0 || account.clearingSavedSignIn}
             >
-              {t(busy ? "desktop.signin.submitting" : "desktop.signin.submit")}
+              {t(
+                busy && !account.clearingSavedSignIn
+                  ? "desktop.signin.submitting"
+                  : "desktop.signin.submit",
+              )}
             </Button>
+            {canClearSavedSignIn && named && (
+              <div className="grid gap-2">
+                <p className="text-sm text-muted-foreground">
+                  {t("desktop.signin.clear_saved_lead")}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  pending={account.clearingSavedSignIn}
+                  disabled={busy || seconds > 0}
+                  onClick={() => {
+                    const field = input.current;
+                    if (busy || !field) return;
+                    if (!field.value) {
+                      field.focus();
+                      return;
+                    }
+                    const bytes = new TextEncoder().encode(field.value);
+                    field.value = "";
+                    setRevealed(false);
+                    setClearedProfile(null);
+                    setRecoveryProfile(named);
+                    void account
+                      .clearSavedSignIn(bytes, named)
+                      .then((cleared) => {
+                        if (cleared) {
+                          setRecoveryProfile(null);
+                          setClearedProfile(named);
+                        }
+                      });
+                  }}
+                >
+                  {t(
+                    account.clearingSavedSignIn
+                      ? "desktop.signin.clearing_saved"
+                      : "desktop.signin.clear_saved",
+                  )}
+                </Button>
+              </div>
+            )}
           </form>
         ) : noProfile ? null : (
           <AccountRefusal refusal={account.refusal} seconds={seconds} />

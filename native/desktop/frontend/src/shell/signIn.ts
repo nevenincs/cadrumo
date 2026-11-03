@@ -110,6 +110,9 @@ export function phaseOf(
   if (!status) return "checking";
   if (!status.runtimeAvailable) return "services-down";
   if (!status.supported) return "unsupported";
+  // Runtime presence can outlive this desktop's usable person session. A
+  // restoration refusal keeps the selected profile and opens password proof.
+  if (status.refusal) return "unknown";
   if (status.state === "present") return "signed-in";
   if (status.state === "unknown") return "unknown";
   // With none selected, the profiles that exist are still there to choose
@@ -126,6 +129,7 @@ export function phaseOf(
 const STANDING: ReadonlySet<string> = new Set([
   "PROFILE_LOCKED",
   "KEYRING_UNAVAILABLE",
+  "SESSION_NOT_PERSISTED",
   "THROTTLED",
 ]);
 
@@ -175,6 +179,7 @@ export function useSignIn(host: Host) {
   const [status, setStatus] = useState<SignInStatus | null>(null);
   const [refusal, setRefusal] = useState<SignInRefusal | null>(null);
   const [busy, setBusy] = useState(false);
+  const [clearingSavedSignIn, setClearingSavedSignIn] = useState(false);
   const [startingServices, setStartingServices] = useState(false);
   const [observingStartup, setObservingStartup] = useState(
     host.available && host.startManager !== undefined,
@@ -752,6 +757,49 @@ export function useSignIn(host: Host) {
     return made !== null;
   };
 
+  const clearSavedSignIn = async (password: Uint8Array, profile: string) => {
+    if (
+      submitting.current ||
+      !managerAllows() ||
+      mustChoose ||
+      profile !== (target?.name ?? status?.active_profile)
+    ) {
+      password.fill(0);
+      return false;
+    }
+    submitting.current = true;
+    invalidate();
+    const generation = request.current;
+    setBusy(true);
+    setClearingSavedSignIn(true);
+    setRefusal(null);
+    setRemaining(null);
+    try {
+      const result = await host.signOutWithPassword(password, profile);
+      if (
+        !mounted.current ||
+        generation !== request.current ||
+        !managerAllows()
+      )
+        return false;
+      setRemaining(result);
+      return true;
+    } catch (error) {
+      if (mounted.current && generation === request.current)
+        setRefusal(submitRefusalFrom(error));
+      return false;
+    } finally {
+      password.fill(0);
+      if (mounted.current && generation === request.current)
+        await refresh(true);
+      submitting.current = false;
+      if (mounted.current) {
+        setBusy(false);
+        setClearingSavedSignIn(false);
+      }
+    }
+  };
+
   const signOut = async () => {
     if (submitting.current || !managerAllows()) return;
     submitting.current = true;
@@ -832,6 +880,8 @@ export function useSignIn(host: Host) {
     canSignIn: canSignIn(phase),
     submit,
     signOut,
+    clearSavedSignIn,
+    clearingSavedSignIn,
     /** The person has seen what was refused: a refusal that came from an
      * attempt is not shown again when its surface is next opened. What is
      * still true stays: a wait that is running, a profile that is locked. */

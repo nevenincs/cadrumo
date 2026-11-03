@@ -10,7 +10,8 @@ from ....domain.calculations.record_row_membership import ClosedRecordRowSet, Re
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..errors import AggregationValidationError
 from ..source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
-from ..source_resolution_operations import merge_source_resolutions, merge_source_resolutions_by_precedence
+from ..source_resolution_operations import merge_source_resolutions
+from .source_precedence_support import merge_two_source_tiers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,7 +45,7 @@ def _resolution() -> CalculationSourceResolution:
     )
 
 
-@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_source_resolutions_by_precedence])
+@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_two_source_tiers])
 def test_unrelated_source_preserves_private_membership_and_values(merge) -> None:
     original = _resolution()
     result = merge(
@@ -58,7 +59,7 @@ def test_unrelated_source_preserves_private_membership_and_values(merge) -> None
     assert "sensitive-collection-reference" not in repr(result)
 
 
-@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_source_resolutions_by_precedence])
+@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_two_source_tiers])
 @pytest.mark.parametrize("binding", ["quota-1", "quota-2"])
 @pytest.mark.parametrize("reverse", [False, True])
 def test_overlay_cannot_change_a_closed_table_in_either_order(merge, binding: str, reverse: bool) -> None:
@@ -67,7 +68,7 @@ def test_overlay_cannot_change_a_closed_table_in_either_order(merge, binding: st
         merge(tuple(reversed(sources)) if reverse else sources)
 
 
-@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_source_resolutions_by_precedence])
+@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_two_source_tiers])
 def test_two_owners_cannot_supply_the_same_membership(merge) -> None:
     with pytest.raises(AggregationValidationError):
         merge((_resolution(), _resolution()))

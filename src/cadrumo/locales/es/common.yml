@@ -2949,8 +2949,9 @@ desktop:
         add_file: Añadir desde este ordenador
         add_staged: '{file} · adjunto aún sin guardar'
         adding: Añadir {file} · sin guardar
-        advisory: 'Aún no hay factura de compra. Solo es un aviso: nunca impide guardar
-          ni calcular.'
+        advisory: No hay ninguna factura de compra adjunta. Puedes guardar el movimiento;
+          para calcular una deducción pueden hacer falta sus datos fiscales y la documentación
+          justificativa.
         attach_existing: Adjuntar un documento
         attach_staged: Adjunto aún sin guardar
         attaching: Adjuntar {file} · sin guardar
@@ -2963,7 +2964,10 @@ desktop:
         no_free: No hay otro documento en el libro
         none: Sin documentos
         pick_failed: No se abrió el diálogo de archivos.
+        purchase_details_unavailable: No se pueden mostrar los detalles del justificante
+          de compra vinculado.
         purchase_invoice: Factura de compra · añadida {date}
+        purchase_linked: Justificante de compra vinculado
         search: Buscar documentos
       drop: Descartar
       earlier: Decisiones anteriores
@@ -4833,6 +4837,11 @@ desktop:
   signin:
     checking: Comprobando tu sesión…
     choose_profile: Elige un perfil
+    clear_saved: Borrar inicio de sesión guardado
+    clear_saved_lead: Vuelve a introducir tu contraseña para borrar el inicio de sesión
+      guardado de este perfil en este dispositivo. Tu perfil y tus datos fiscales
+      se conservan.
+    clearing_saved: Borrando el inicio de sesión guardado…
     dismiss: Ahora no
     hide_code: Oculta el código
     hide_password: Ocultar la contraseña
@@ -4876,6 +4885,8 @@ desktop:
       receipt_expired: Tu sesión ha caducado. Vuelve a iniciar sesión.
       runtime_unavailable: Los servicios en segundo plano de Cadrumo no están en marcha.
       throttled: Demasiados intentos. Podrás volver a intentarlo en {seconds} s.
+    saved_cleared: Se ha borrado el inicio de sesión guardado. Introduce tu contraseña
+      para volver a iniciar sesión.
     services_recovered: Los servicios en segundo plano están listos. Comprobando el
       inicio de sesión…
     show_code: Muestra el código
@@ -9602,6 +9613,24 @@ workspace:
       at_risk_cancel: Conservar los valores actuales
       at_risk_proceed: Recalcular
       at_risk_title: ¿Recalcular a partir de tus orígenes?
+      evidence:
+        calculate: Calcular
+        cancel: Cancelar
+        description: Responde a estas preguntas antes de calcular esta declaración.
+        joint_return: ¿Autoliquidación conjunta?
+        modelo_390_confirm: Confirmo que el apartado de exoneración del modelo 390
+          no se aplica a esta declaración.
+        modelo_390_hint: Este último periodo necesita tu confirmación sobre la exoneración
+          del modelo 390. Si no puedes confirmar la afirmación, cancela y revisa tu
+          situación fiscal.
+        'no': 'No'
+        stale: La declaración ha cambiado mientras respondías a estas preguntas. Vuelve
+          a elegir Calcular.
+        title: Datos para el cálculo
+        unavailable: No se ha podido recuperar la confirmación guardada para esta
+          declaración. Revisa su operación antes de continuar; no se ha creado otra
+          confirmación.
+        'yes': Sí
       kept: No se ha recalculado nada. Introduce los valores que quieras conservar
         y después recalcula.
       operator_entries_at_risk: 'Algunas casillas tienen valores que no se introdujeron
@@ -9817,6 +9846,31 @@ workspace:
       receipt_differs: El justificante no coincide con esta declaración.
       receipt_matches: El justificante coincide con esta declaración.
       receipt_missing: Aún no la confirma ningún justificante.
+      reconciliation:
+        category:
+          casilla: Valor de la casilla
+          header_field: Identidad del justificante
+          total: Total presentado
+        code: Código
+        context: Contexto
+        details: Detalles
+        differences: Diferencias
+        differs: Se han encontrado diferencias
+        evidence_value: Valor de la evidencia
+        field:
+          ejercicio: Ejercicio
+          modelo: Modelo
+          period: Periodo
+          tax_id: NIF
+          total_devolver: Importe a devolver
+          total_ingresar: Importe a ingresar
+        kind: Tipo
+        legal_refs: Referencias legales
+        matches: Los valores coinciden
+        not_present: No consta
+        notices: Avisos
+        source_refs: Fuentes oficiales
+        work_value: Valor del cálculo guardado
       record_as_filed: Registrar como presentada…
       record_lead: Registra aquí que la has presentado, para que lo sepan tu calendario
         y tus declaraciones posteriores. Después añade el justificante de la AEAT
@@ -10401,8 +10455,15 @@ workspace:
       reload_list: Volver a cargar la lista de declaraciones
       reload_needed: La solicitud ha finalizado. Vuelve a cargar los datos antes de
         hacer más cambios.
+      review_calculation: Revisar la declaración actual
+      review_calculation_hint: Carga la declaración actual para decidir qué hacer
+        después. Esto no deshace los cambios anteriores ni inicia otro cálculo.
+      reviewed_calculation: La declaración actual está cargada. Los cambios anteriores
+        no se han deshecho. Revísala antes de elegir un nuevo cálculo.
       saved_unread: El cambio se ha guardado, pero no se ha podido cargar su resultado.
         Vuelve a cargar los datos antes de hacer más cambios.
+      terminal_failed: La operación ha fallado y se ha detenido. Puede haber cambiado
+        registros.
       unknown: El resultado no está confirmado. La solicitud puede haber surtido efecto.
         Los cambios quedan en pausa.
       unresolved: Cadrumo no puede confirmar el resultado de esta solicitud en esta

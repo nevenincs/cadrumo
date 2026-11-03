@@ -469,12 +469,17 @@ def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
     if missing:
         blockers.append(LedgerStagedBlocker(kind="draft_incomplete", fields=missing))
     classification = _classification(fields.get("business_classification"))
+    direction = _direction(fields.get("direction"))
     blockers.extend(_draft_share_blockers(fields, classification))
-    if _direction(fields.get("direction")) is TransactionDirection.INTERNAL_TRANSFER:
+    if direction is TransactionDirection.INTERNAL_TRANSFER:
         transfer_blocker = _draft_transfer_blocker(fields, classification)
         if transfer_blocker is not None:
             blockers.append(transfer_blocker)
-    return LedgerStagedDraftAnswer(key=draft.key, blockers=tuple(blockers))
+    return LedgerStagedDraftAnswer(
+        key=draft.key,
+        takes_expense_category=direction is not None and takes_expense_category(direction, has_purchase_evidence=False),
+        blockers=tuple(blockers),
+    )
 
 
 def _category_fit(category: str, *, operation: PinnedAuthorityOperation) -> LedgerStagedCategoryFit:

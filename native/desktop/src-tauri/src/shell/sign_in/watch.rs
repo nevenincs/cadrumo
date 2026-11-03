@@ -46,6 +46,9 @@ pub(crate) struct Native {
 /// and the profiles on this computer when they were listed.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Observed {
+    /// This watch's publication generation, assigned at publish even when
+    /// the runtime's public values are unchanged. Zero before publication.
+    pub sequence: u64,
     pub status: SignInStatus,
     pub profile_id: Option<String>,
     pub profiles: Option<super::wire::ProfileList>,
@@ -132,12 +135,9 @@ impl Watch {
             }
             {
                 let fence = lock(&self.inner.fence);
-                if fence.mutations != 0 {
-                    return Err(failure(ErrorCode::SessionUnavailable)
-                        .with_reason("sign_in_mutation_in_progress"));
-                }
                 let snapshot = receiver.borrow_and_update();
-                if snapshot.sequence > fence.stale_through
+                if fence.mutations == 0
+                    && snapshot.sequence > fence.stale_through
                     && let Some(value) = &snapshot.value
                 {
                     return value.clone();
@@ -257,7 +257,10 @@ fn publish(inner: &Inner, value: Result<Observed>) {
     }
     inner.snapshot.send_modify(|snapshot| {
         snapshot.sequence += 1;
-        snapshot.value = Some(value);
+        snapshot.value = Some(value.map(|mut observed| {
+            observed.sequence = snapshot.sequence;
+            observed
+        }));
     });
 }
 
@@ -265,6 +268,7 @@ fn publish(inner: &Inner, value: Result<Observed>) {
 /// what the runtime's own clients report for the same state.
 fn refused(code: &str) -> Observed {
     Observed {
+        sequence: 0,
         status: SignInStatus {
             supported: true,
             state: Presence::Unknown,
@@ -436,6 +440,7 @@ fn observe(
     let active = connection.active_profile(true, deadline)?;
     let Some(profile_id) = active.selected_profile_id else {
         return Ok(Observed {
+            sequence: 0,
             status: SignInStatus {
                 supported: true,
                 state: Presence::Absent,
@@ -453,6 +458,7 @@ fn observe(
         .map(|(_, label)| label);
     let status = connection.sign_in_status(&profile_id, true, deadline)?;
     Ok(Observed {
+        sequence: 0,
         status: SignInStatus {
             supported: true,
             state: presence(&status.presence),
@@ -518,6 +524,7 @@ mod tests {
         // No connection is made for this test: observations are published directly.
         watch.inner.started.store(true, Ordering::Release);
         let present = Observed {
+            sequence: 1,
             status: SignInStatus {
                 supported: true,
                 state: Presence::Present,
@@ -532,23 +539,43 @@ mod tests {
         publish(&watch.inner, Ok(present.clone()));
         assert_eq!(watch.current().await.unwrap(), present);
         let mutation = watch.mutation();
-        let pending = watch.current().await.unwrap_err();
-        assert_eq!(pending.code, ErrorCode::SessionUnavailable);
-        assert_eq!(
-            pending.reason.as_deref(),
-            Some("sign_in_mutation_in_progress")
+        let overlapping = watch.mutation();
+        let current = watch.current();
+        tokio::pin!(current);
+        assert!(
+            tokio::time::timeout(Duration::from_millis(10), &mut current)
+                .await
+                .is_err()
+        );
+        publish(&watch.inner, Ok(present.clone()));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(10), &mut current)
+                .await
+                .is_err()
         );
         drop(mutation);
+        publish(&watch.inner, Ok(present.clone()));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(10), &mut current)
+                .await
+                .is_err()
+        );
+        drop(overlapping);
         assert!(
             watch.latest().is_err(),
             "an observation from before the mutation is stale"
         );
+        assert!(
+            tokio::time::timeout(Duration::from_millis(10), &mut current)
+                .await
+                .is_err()
+        );
         let changed = watch.changed();
         let mut absent = present.clone();
+        absent.sequence = 4;
         absent.status.state = Presence::Absent;
         let waiting = {
             let expected = absent.clone();
-            let current = watch.current();
             async move { assert_eq!(current.await.unwrap(), expected) }
         };
         let publishing = async {
@@ -558,6 +585,53 @@ mod tests {
         tokio::join!(waiting, publishing);
         changed.await;
         assert_eq!(watch.latest().unwrap(), absent);
+    }
+
+    #[test]
+    fn unchanged_runtime_values_still_advance_the_observation_generation() {
+        let watch = Watch::new(Err(failure(ErrorCode::PackageUnavailable)));
+        let observed = refused("runtime_unavailable");
+        publish(&watch.inner, Ok(observed.clone()));
+        let before = watch.latest().unwrap();
+        publish(&watch.inner, Ok(observed));
+        let after = watch.latest().unwrap();
+        assert_eq!(before.status, after.status);
+        assert_eq!(before.profile_id, after.profile_id);
+        assert!(after.sequence > before.sequence);
+        assert_ne!(before, after, "a restore pinned before the update is stale");
+    }
+
+    #[tokio::test]
+    async fn a_mutation_wait_preserves_observer_failures_and_close_cancellation() {
+        for close in [false, true] {
+            let watch = Watch::new(Err(failure(ErrorCode::PackageUnavailable)));
+            watch.inner.started.store(true, Ordering::Release);
+            let mutation = watch.mutation();
+            let current = watch.current();
+            tokio::pin!(current);
+            assert!(
+                tokio::time::timeout(Duration::from_millis(10), &mut current)
+                    .await
+                    .is_err()
+            );
+            if close {
+                watch.request_close();
+                let error = tokio::time::timeout(Duration::from_secs(1), &mut current)
+                    .await
+                    .unwrap()
+                    .unwrap_err();
+                assert_eq!(error.code, closing().code);
+                drop(mutation);
+            } else {
+                drop(mutation);
+                publish(&watch.inner, Err(failure(ErrorCode::ReadFailed)));
+                let error = tokio::time::timeout(Duration::from_secs(1), &mut current)
+                    .await
+                    .unwrap()
+                    .unwrap_err();
+                assert_eq!(error.code, ErrorCode::ReadFailed);
+            }
+        }
     }
 
     #[test]

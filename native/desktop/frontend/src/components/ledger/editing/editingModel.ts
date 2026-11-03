@@ -969,6 +969,8 @@ export function draftRow(draft: Draft): LedgerRow {
       iva_rate: fields.iva_rate ?? null,
       iva_amount: fields.iva_amount ?? null,
       iva_category: fields.iva_category ?? null,
+      deduction_fact_kind: null,
+      investment_asset_id: null,
       counterparty_country: null,
       counterparty_identification_state: null,
       irpf_category: fields.irpf_category ?? null,

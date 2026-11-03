@@ -161,6 +161,13 @@ pub(super) async fn choose<R: tauri::Runtime>(
     purpose: Purpose,
     filter_label: String,
 ) -> Result<Vec<PathBuf>> {
+    #[cfg(feature = "native-automation")]
+    if let Some(chosen) = super::automation_picker::take(super::automation_picker::Kind::Open)? {
+        if pick == Pick::Folder {
+            return Err(Failure::new("invalid"));
+        }
+        return Ok(chosen.into_iter().collect());
+    }
     use tauri_plugin_dialog::DialogExt;
     Ok(super::blocking(move || {
         let dialog = window.dialog().file().set_parent(&window);
@@ -193,6 +200,10 @@ pub(super) async fn choose_save<R: tauri::Runtime>(
     filter_label: String,
     suggested_name: Option<String>,
 ) -> Result<Option<PathBuf>> {
+    #[cfg(feature = "native-automation")]
+    if let Some(chosen) = super::automation_picker::take(super::automation_picker::Kind::Save)? {
+        return Ok(chosen);
+    }
     use tauri_plugin_dialog::DialogExt;
     Ok(super::blocking(move || {
         let mut dialog = window

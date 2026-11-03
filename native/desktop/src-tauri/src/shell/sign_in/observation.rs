@@ -1,5 +1,6 @@
 //! Public observations from the window's pushed sign-in watch, as the account menu shows them.
-//! One observer per host, sending only changes; it never resumes a receipt or owns a runtime.
+//! One observer per host, sending only changes after its own person restoration;
+//! it never owns a runtime or reports person activity.
 
 use super::{SignIn, wire::SignInStatus};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Result};

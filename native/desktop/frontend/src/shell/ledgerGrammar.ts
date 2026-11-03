@@ -16,6 +16,11 @@ import {
 import { ledgerLimits } from "./ledgerLimits";
 import type { LedgerEntryLimits } from "./ledgerSetup";
 
+/** The canonical stored-movement handle grammar, including valid prefixes. */
+export function isTransactionPrefix(id: string): boolean {
+  return /^[0-9a-f]{1,64}$/.test(id);
+}
+
 export type GrammarRefusalKey =
   | "limits_unavailable"
   | "too_long"

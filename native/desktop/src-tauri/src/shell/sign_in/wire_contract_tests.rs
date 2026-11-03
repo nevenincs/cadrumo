@@ -210,6 +210,45 @@ fn python_logout_keeps_known_and_unknown_automation_separate_and_propagates_refu
 }
 
 #[test]
+fn password_logout_recovery_requires_proven_disk_receipt_removal_and_keeps_native_cleanup_unknown()
+{
+    let mut document = fixture("logout-true");
+    document["result"]["human_receipt_revoked"] = json!(true);
+    document["result"]["receipt_removed"] = json!(true);
+    document["result"]["keychain_removed"] = json!(false);
+    let outcome = logout_recovery(from_document(document.clone()).unwrap())
+        .ok()
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(outcome).unwrap()["remainingAccess"]["automationRevoked"],
+        json!(false)
+    );
+    for field in ["human_receipt_revoked", "receipt_removed"] {
+        for value in [json!(false), Value::Null, json!("true"), json!(1)] {
+            let mut unproven = document.clone();
+            unproven["result"][field] = value;
+            assert!(
+                logout_recovery(from_document(unproven).unwrap()).is_err(),
+                "{field}"
+            );
+        }
+        let mut missing = document.clone();
+        missing["result"].as_object_mut().unwrap().remove(field);
+        assert!(
+            logout_recovery(from_document(missing).unwrap()).is_err(),
+            "{field}"
+        );
+    }
+    let refusal = logout_recovery(from_document(fixture("logout-refused")).unwrap())
+        .err()
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(refusal).unwrap()["code"],
+        json!("absent")
+    );
+}
+
+#[test]
 fn python_logout_access_is_carried_for_both_values_and_refused_when_absent() {
     // A key the person issued that can still admit, and one that cannot.
     for remains in [json!(true), json!(false), Value::Null] {

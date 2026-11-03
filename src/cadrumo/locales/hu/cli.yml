@@ -2461,6 +2461,8 @@ cli:
     logout:
       help: Jelentkezz ki ebből a profilból az eszköz összes felhasználói munkamenetében.
         Az AEAT-munkamenetek aktívak maradnak.
+      name_help: A kijelentkeztetendő profil UUID-ja vagy pontos neve; hagyd el a
+        kiválasztott profil használatához.
       notices:
         already_logged_out: Nincs kiválasztott profil; nincs miből kijelentkezni.
     passphrase:

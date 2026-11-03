@@ -87,6 +87,8 @@ def _stored_transaction(question: dict[str, Any]) -> Transaction:
             "own_account_id": stored["own_account_id"],
             "counterparty_country": stored["counterparty_country"],
             "counterparty_identification_state": stored["counterparty_identification_state"],
+            "deduction_fact_kind": stored["deduction_fact_kind"],
+            "investment_asset_id": stored["investment_asset_id"],
             "purchase_invoice_evidence_id": "e" * 64 if question["evidence"] else None,
         }
     )
@@ -109,9 +111,11 @@ def _row_answer(text: str) -> dict[str, Any]:
     return answer
 
 
-def _draft_answer(text: str) -> list[dict[str, Any]]:
+def _draft_answer(text: str) -> dict[str, Any]:
     draft = LedgerStagedDraft.model_validate_json(json.dumps({"key": "d", "fields": json.loads(text)}))
-    return json.loads(check_draft(draft).model_dump_json())["blockers"]
+    answer = json.loads(check_draft(draft).model_dump_json())
+    del answer["key"]
+    return answer
 
 
 def _absent() -> dict[str, Any]:
@@ -130,8 +134,13 @@ def test_every_recorded_answer_is_what_the_backend_answers() -> None:
     assert recording["rows"], "the recording is empty"
     for question, answer in recording["rows"].items():
         assert _row_answer(question) == answer, question
-    for question, blockers in recording["drafts"].items():
-        assert _draft_answer(question) == blockers, question
+
+
+def test_every_recorded_draft_is_what_the_backend_answers() -> None:
+    recording = _recording()
+    assert recording["drafts"], "the draft recording is empty"
+    for question, answer in recording["drafts"].items():
+        assert _draft_answer(question) == answer, question
 
 
 # Defined only when given the questions, since with none there is nothing to record.

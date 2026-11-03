@@ -2949,8 +2949,9 @@ desktop:
         add_file: Afegeix des d'aquest ordinador
         add_staged: '{file} · adjunt encara sense desar'
         adding: Afegir {file} · sense desar
-        advisory: 'Encara no hi ha factura de compra. Només és un avís: mai impedeix
-          desar ni calcular.'
+        advisory: No hi ha cap factura de compra adjunta. Pots desar el moviment;
+          per calcular una deducció poden caldre les seves dades fiscals i la documentació
+          justificativa.
         attach_existing: Adjunta un document
         attach_staged: Adjunt encara sense desar
         attaching: Adjuntar {file} · sense desar
@@ -2963,7 +2964,10 @@ desktop:
         no_free: No hi ha cap altre document al llibre
         none: Sense documents
         pick_failed: No s'ha obert el diàleg de fitxers.
+        purchase_details_unavailable: No es poden mostrar els detalls del justificant
+          de compra vinculat.
         purchase_invoice: Factura de compra · afegida {date}
+        purchase_linked: Justificant de compra vinculat
         search: Cerca documents
       drop: Descarta
       earlier: Decisions anteriors
@@ -4833,6 +4837,11 @@ desktop:
   signin:
     checking: S'està comprovant la teva sessió…
     choose_profile: Tria un perfil
+    clear_saved: Esborra l'inici de sessió desat
+    clear_saved_lead: Torna a introduir la contrasenya per esborrar l'inici de sessió
+      desat d'aquest perfil en aquest dispositiu. El perfil i les dades fiscals es
+      conserven.
+    clearing_saved: S'està esborrant l'inici de sessió desat…
     dismiss: Ara no
     hide_code: Amaga el codi
     hide_password: Amaga la contrasenya
@@ -4876,6 +4885,8 @@ desktop:
       receipt_expired: La teva sessió ha caducat. Torna a iniciar la sessió.
       runtime_unavailable: Els serveis en segon pla de Cadrumo no estan en marxa.
       throttled: Massa intents. Podràs tornar-ho a provar d'aquí a {seconds} s.
+    saved_cleared: S'ha esborrat l'inici de sessió desat. Introdueix la contrasenya
+      per tornar a iniciar sessió.
     services_recovered: Els serveis en segon pla estan preparats. S’està comprovant
       l’inici de sessió…
     show_code: Mostra el codi
@@ -9585,6 +9596,23 @@ workspace:
       at_risk_cancel: Conserva els valors actuals
       at_risk_proceed: Recalcula
       at_risk_title: Vols recalcular a partir dels teus orígens?
+      evidence:
+        calculate: Calcular
+        cancel: Cancel·lar
+        description: Respon aquestes preguntes abans de calcular aquesta declaració.
+        joint_return: Autoliquidació conjunta?
+        modelo_390_confirm: Confirmo que l’apartat d’exoneració del model 390 no s’aplica
+          a aquesta declaració.
+        modelo_390_hint: Aquest últim període necessita la teva confirmació sobre
+          l’exoneració del model 390. Si no pots confirmar l’afirmació, cancel·la
+          i revisa la teva situació fiscal.
+        'no': 'No'
+        stale: La declaració ha canviat mentre responies aquestes preguntes. Torna
+          a triar Calcular.
+        title: Dades per al càlcul
+        unavailable: No s’ha pogut recuperar la confirmació desada per a aquesta declaració.
+          Revisa la seva operació abans de continuar; no s’ha creat cap altra confirmació.
+        'yes': Sí
       kept: No s'ha recalculat res. Introdueix els valors que vulguis conservar i
         després recalcula.
       operator_entries_at_risk: 'Algunes caselles tenen valors que no es van introduir
@@ -9803,6 +9831,31 @@ workspace:
       receipt_differs: El justificant no coincideix amb aquesta declaració.
       receipt_matches: El justificant coincideix amb aquesta declaració.
       receipt_missing: Encara no la confirma cap justificant.
+      reconciliation:
+        category:
+          casilla: Valor de la casella
+          header_field: Identitat del justificant
+          total: Total presentat
+        code: Codi
+        context: Context
+        details: Detalls
+        differences: Diferències
+        differs: S'han trobat diferències
+        evidence_value: Valor de l'evidència
+        field:
+          ejercicio: Exercici
+          modelo: Model
+          period: Període
+          tax_id: NIF
+          total_devolver: Import a retornar
+          total_ingresar: Import a ingressar
+        kind: Tipus
+        legal_refs: Referències legals
+        matches: Els valors coincideixen
+        not_present: No consta
+        notices: Avisos
+        source_refs: Fonts oficials
+        work_value: Valor del càlcul desat
       record_as_filed: Registrar com a presentada…
       record_lead: Registra aquí que l'has presentada, perquè ho sàpiguen el teu calendari
         i les declaracions posteriors. Després afegeix el justificant de l'AEAT per
@@ -10394,8 +10447,14 @@ workspace:
       reload_list: Torna a carregar la llista de declaracions
       reload_needed: La sol·licitud ha finalitzat. Torna a carregar les dades abans
         de fer més canvis.
+      review_calculation: Revisar la declaració actual
+      review_calculation_hint: Carrega la declaració actual per decidir què fer després.
+        Això no desfà els canvis anteriors ni inicia cap altre càlcul.
+      reviewed_calculation: La declaració actual està carregada. Els canvis anteriors
+        no s’han desfet. Revisa-la abans de triar un nou càlcul.
       saved_unread: El canvi s'ha desat, però no s'ha pogut carregar el resultat.
         Torna a carregar les dades abans de fer més canvis.
+      terminal_failed: L’operació ha fallat i s’ha aturat. Pot haver canviat registres.
       unknown: El resultat no està confirmat. La sol·licitud pot haver tingut efecte.
         Els canvis queden en pausa.
       unresolved: Cadrumo no pot confirmar el resultat d'aquesta sol·licitud en aquesta

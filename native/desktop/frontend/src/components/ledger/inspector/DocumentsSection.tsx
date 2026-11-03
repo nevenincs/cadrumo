@@ -19,6 +19,10 @@ import { useStrings } from "../../../shell/strings";
 import { fileName } from "../documents/documentsModel";
 import type { InspectorRead } from "./useInspectorReads";
 import { formatTime } from "../../../shared/dateFormats";
+import {
+  documentAttachmentReference,
+  movementDocuments,
+} from "./movementDocuments";
 
 type DocumentAction = Extract<
   StagedAction,
@@ -27,9 +31,10 @@ type DocumentAction = Extract<
 
 /**
  * The inspector's Documents section: the movement's purchase invoice and
- * other attachments, each of which can be detached, an existing document
+ * other attachments. Only supplementary attachments can be detached; the
+ * purchase evidence reference is immutable. An existing document
  * to attach, and a document from this computer to add and attach. A
- * missing document is advice, never a block. Every change is staged.
+ * missing document is shown with the ledger's advice. Every change is staged.
  */
 export function DocumentsSection({
   port,
@@ -57,11 +62,9 @@ export function DocumentsSection({
   const [picking, setPicking] = useState(false);
   const [pickFailed, setPickFailed] = useState(false);
   const records = evidence?.kind === "ready" ? evidence.result.rows : [];
-  const linked = tx.purchase_invoice_evidence_id
-    ? (records.find(
-        (record) => record.evidence_id === tx.purchase_invoice_evidence_id,
-      ) ?? null)
-    : null;
+  const documents = movementDocuments(tx, records);
+  const purchase = documents.purchase;
+  const linked = purchase?.record ?? null;
   const lock = !answer
     ? t("desktop.ledger.apply.reading")
     : answer.takes_changes
@@ -130,6 +133,7 @@ export function DocumentsSection({
             file: file.token,
             name: file.name,
             idempotencyKey: newIdempotencyKey(),
+            supplementary: tx.purchase_invoice_evidence_id !== null,
           },
         });
         say(
@@ -148,58 +152,59 @@ export function DocumentsSection({
   return (
     <div className="grid gap-3">
       {lock && <Alert icon={<Icon name="lock" />}>{lock}</Alert>}
-      {tx.attachment_ids.length > 0 ? (
-        <ul className="ledger-attachments grid gap-1">
-          {tx.attachment_ids.map((attachment) => {
-            const evidenceRow =
-              linked !== null && linked.attachment_id === attachment;
-            return (
-              <li key={attachment} className="flex items-center gap-2 text-sm">
-                <Icon
-                  name={
-                    evidenceRow && linked.media_kind === "image"
-                      ? "image"
-                      : "page"
-                  }
-                />
-                <span className="grid min-w-0 flex-1">
-                  <span className="break-words">{nameOf(attachment)}</span>
-                  {evidenceRow && (
-                    <span className="text-xs text-muted-foreground">
-                      {t(
-                        "desktop.ledger.inspector.documents.purchase_invoice",
-                        {
-                          date: formatTime(locale, linked.created_at),
-                        },
-                      )}
-                    </span>
-                  )}
-                </span>
-                {detaching.has(attachment) ? (
-                  <span className="text-xs">
-                    {t("desktop.ledger.inspector.documents.detach_pending")}
-                  </span>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    disabled={lock !== null}
-                    aria-label={t(
-                      "desktop.ledger.inspector.documents.detach_named",
-                      {
-                        file: nameOf(attachment),
-                      },
+      {purchase && (
+        <div className="ledger-purchase-evidence flex items-start gap-2 text-sm">
+          <Icon name={linked?.media_kind === "image" ? "image" : "page"} />
+          <span className="grid min-w-0 flex-1">
+            <span className="break-words">
+              {linked
+                ? fileName(linked.source_path)
+                : t("desktop.ledger.inspector.documents.purchase_linked")}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {linked
+                ? t("desktop.ledger.inspector.documents.purchase_invoice", {
+                    date: formatTime(locale, linked.created_at),
+                  })
+                : evidence?.kind === "reading"
+                  ? t("desktop.ledger.loading")
+                  : t(
+                      "desktop.ledger.inspector.documents.purchase_details_unavailable",
                     )}
-                    onClick={() => detach(attachment)}
-                  >
-                    {t("desktop.ledger.inspector.documents.detach")}
-                  </Button>
-                )}
-              </li>
-            );
-          })}
+            </span>
+          </span>
+        </div>
+      )}
+      {documents.supplementary.length > 0 ? (
+        <ul className="ledger-attachments grid gap-1">
+          {documents.supplementary.map((attachment) => (
+            <li key={attachment} className="flex items-center gap-2 text-sm">
+              <Icon name="page" />
+              <span className="min-w-0 flex-1 break-words">
+                {nameOf(attachment)}
+              </span>
+              {detaching.has(attachment) ? (
+                <span className="text-xs">
+                  {t("desktop.ledger.inspector.documents.detach_pending")}
+                </span>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  disabled={lock !== null}
+                  aria-label={t(
+                    "desktop.ledger.inspector.documents.detach_named",
+                    { file: nameOf(attachment) },
+                  )}
+                  onClick={() => detach(attachment)}
+                >
+                  {t("desktop.ledger.inspector.documents.detach")}
+                </Button>
+              )}
+            </li>
+          ))}
         </ul>
-      ) : needsEvidence ? (
+      ) : purchase ? null : needsEvidence ? (
         <Alert icon={<Icon name="info" />}>
           {t("desktop.ledger.inspector.documents.advisory")}
         </Alert>
@@ -261,14 +266,17 @@ export function DocumentsSection({
               : t("desktop.ledger.inspector.documents.no_free")
           }
           onCommit={(chosen) => {
+            const record = records.find(
+              (record) => record.evidence_id === chosen,
+            );
+            if (!record) return;
             onStage({
               type: "stage_action",
               action: {
                 id: `attach:${id}:${chosen}`,
                 kind: "attach",
                 transactionId: id,
-                evidenceId: chosen,
-                attachmentIds: [],
+                ...documentAttachmentReference(tx, record),
               },
             });
             say(t("desktop.ledger.inspector.documents.attach_staged"));

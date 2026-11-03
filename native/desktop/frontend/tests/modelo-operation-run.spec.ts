@@ -24,11 +24,12 @@ const rejection = (code: string, operation_id: string | null = null) =>
 
 /** A port whose observe answers `observed` in turn, counting its calls. */
 function observing(observed: (() => LedgerOutcome)[]) {
-  const calls = { observe: 0 };
+  const calls = { observe: 0, operationIds: [] as string[] };
   const port = {
-    observe: () => {
+    observe: (operationId: string) => {
       const next = observed[calls.observe];
       calls.observe += 1;
+      calls.operationIds.push(operationId);
       return Promise.resolve().then(() => {
         if (!next) throw rejection("unknown");
         return next();
@@ -147,6 +148,138 @@ test("rejections are told apart by what reached the runtime", async () => {
   });
 });
 
+test("a rejected submission reads its served refusal without sending again", async () => {
+  const { port, calls } = observing([
+    () => ({
+      kind: "refused",
+      operation_id: "op-refused",
+      revision: 2,
+      reason: "observed_reason",
+      detail: {
+        detail_version: 1,
+        kind: "operation_error",
+        error_code: null,
+        message_key: null,
+        context: [],
+        context_entries_omitted: 0,
+        precondition_verdict_json: null,
+        refusal_words: "The backend served this explanation.",
+      },
+    }),
+  ]);
+  let sent = 0;
+  const run = await runOperation(
+    port,
+    () => {
+      sent += 1;
+      return Promise.reject(
+        Object.assign(rejection("refused", "op-refused"), {
+          reason: "original_reason",
+          detail: { refusal_words: "Untrusted rejection detail" },
+        }),
+      );
+    },
+    () => true,
+  );
+  expect(run).toEqual({
+    kind: "refused",
+    operationId: "op-refused",
+    reason: "original_reason",
+    words: "The backend served this explanation.",
+  });
+  expect(sent).toBe(1);
+  expect(calls.operationIds).toEqual(["op-refused"]);
+});
+
+test("an unreadable refusal keeps its original reason and no invented words", async () => {
+  const { port, calls } = observing([
+    () => {
+      throw rejection("unavailable");
+    },
+  ]);
+  let sent = 0;
+  const run = await runOperation(
+    port,
+    () => {
+      sent += 1;
+      return Promise.reject(
+        Object.assign(rejection("refused", "op-refused"), {
+          reason: "original_reason",
+          detail: { refusal_words: "Untrusted rejection detail" },
+        }),
+      );
+    },
+    () => true,
+  );
+  expect(run).toEqual({
+    kind: "refused",
+    operationId: "op-refused",
+    reason: "original_reason",
+    words: null,
+  });
+  expect(sent).toBe(1);
+  expect(calls.operationIds).toEqual(["op-refused"]);
+});
+
+test("an unexpected observed settlement does not turn a refusal into a saved write", async () => {
+  const { port, calls } = observing([() => settled("op-refused")]);
+  let sent = 0;
+  const run = await runOperation(
+    port,
+    () => {
+      sent += 1;
+      return Promise.reject(rejection("refused", "op-refused"));
+    },
+    () => true,
+  );
+  expect(run).toEqual({
+    kind: "refused",
+    operationId: "op-refused",
+    reason: null,
+    words: null,
+  });
+  expect(sent).toBe(1);
+  expect(calls.operationIds).toEqual(["op-refused"]);
+});
+
+test("a refusal observed for a different operation cannot supply its words", async () => {
+  const { port, calls } = observing([
+    () => ({
+      kind: "refused",
+      operation_id: "op-other",
+      revision: 2,
+      reason: null,
+      detail: {
+        detail_version: 1,
+        kind: "operation_error",
+        error_code: null,
+        message_key: null,
+        context: [],
+        context_entries_omitted: 0,
+        precondition_verdict_json: null,
+        refusal_words: "An unrelated explanation.",
+      },
+    }),
+  ]);
+  let sent = 0;
+  const run = await runOperation(
+    port,
+    () => {
+      sent += 1;
+      return Promise.reject(rejection("refused", "op-refused"));
+    },
+    () => true,
+  );
+  expect(run).toEqual({
+    kind: "refused",
+    operationId: "op-refused",
+    reason: null,
+    words: null,
+  });
+  expect(sent).toBe(1);
+  expect(calls.operationIds).toEqual(["op-refused"]);
+});
+
 test("a settled refusal names its operation", async () => {
   const { port } = observing([]);
   const run = await runOperation(
@@ -167,4 +300,101 @@ test("a settled refusal names its operation", async () => {
     reason: "operation_denied",
     words: null,
   });
+});
+
+const failedTerminal = {
+  operation_id: "a".repeat(64),
+  definition_id: "modelo.work.calculate",
+  effect: "unknown" as const,
+  refusal_words: "Review the invoice evidence before continuing.",
+};
+
+test("a known failed calculation preserves served words and unknown effects without another submission", async () => {
+  const { port, calls } = observing([]);
+  let sent = 0;
+  const run = await runOperation(
+    port,
+    async () => {
+      sent++;
+      throw Object.assign(rejection("unknown", failedTerminal.operation_id), {
+        terminal_failure: failedTerminal,
+        detail: { private_context: "canary" },
+      });
+    },
+    () => true,
+  );
+  expect(run).toEqual({
+    kind: "unknown",
+    operationId: failedTerminal.operation_id,
+    terminalFailure: failedTerminal,
+  });
+  expect(JSON.stringify(run)).not.toContain("canary");
+  expect(sent).toBe(1);
+  expect(calls.observe).toBe(0);
+});
+
+test("a terminal failure observed after running keeps its exact words and operation identity", async () => {
+  const { port } = observing([
+    () => {
+      throw Object.assign(rejection("unknown", failedTerminal.operation_id), {
+        terminal_failure: failedTerminal,
+      });
+    },
+  ]);
+  const run = await runOperation(
+    port,
+    () => Promise.resolve(running(failedTerminal.operation_id)),
+    () => true,
+  );
+  expect(run).toEqual({
+    kind: "unknown",
+    operationId: failedTerminal.operation_id,
+    terminalFailure: failedTerminal,
+  });
+});
+
+test("a failure for another observed operation cannot authorize reviewing the pending calculation", async () => {
+  const other = "b".repeat(64);
+  const { port } = observing([
+    () => {
+      throw Object.assign(rejection("unknown", other), {
+        terminal_failure: { ...failedTerminal, operation_id: other },
+      });
+    },
+  ]);
+  const run = await runOperation(
+    port,
+    () => Promise.resolve(running(failedTerminal.operation_id)),
+    () => true,
+  );
+  expect(run).toEqual({
+    kind: "unknown",
+    operationId: failedTerminal.operation_id,
+  });
+});
+
+test("malformed terminal evidence is discarded rather than treated as a stopped operation", async () => {
+  const { port } = observing([]);
+  for (const malformed of [
+    { ...failedTerminal, operation_id: "b".repeat(64) },
+    { ...failedTerminal, effect: "none" },
+    { ...failedTerminal, effect: "in_flight" },
+    { ...failedTerminal, definition_id: "private/invalid" },
+    { ...failedTerminal, refusal_words: "x".repeat(2049) },
+    { ...failedTerminal, refusal_words: { message: "canary" } },
+  ]) {
+    const run = await runOperation(
+      port,
+      async () => {
+        throw Object.assign(rejection("unknown", failedTerminal.operation_id), {
+          terminal_failure: malformed,
+        });
+      },
+      () => true,
+    );
+    expect(run).toEqual({
+      kind: "unknown",
+      operationId: failedTerminal.operation_id,
+    });
+  }
 });

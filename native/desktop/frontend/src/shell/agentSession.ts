@@ -30,6 +30,7 @@ import type {
 /** Why the agent service is not serving, as a stable code. They are the
  * desktop launcher's own vocabulary, not cadrumo-agent's. */
 export type AgentServiceRefusal =
+  | "agent_platform_unsupported"
   | "agent_service_absent"
   | "agent_service_incompatible"
   | "agent_signed_out"

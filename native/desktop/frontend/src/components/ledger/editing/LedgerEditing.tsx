@@ -99,9 +99,10 @@ export function useLedgerEditing({
     (event: StageEvent) => {
       if (event.type === "stage") remember(event.cells.map((cell) => cell.id));
       if (event.type === "stage_action") remember(actionRows(event.action));
+      if (event.type === "rekey") onRekey(event.from, event.to);
       dispatch(event);
     },
-    [dispatch, remember],
+    [dispatch, remember, onRekey],
   );
   const read = useCallback(() => {
     const out = new Map<string, LedgerRow>();
@@ -149,21 +150,20 @@ export function useLedgerEditing({
   }, []);
   const afterApply = useCallback(
     (report: ApplyReport, fresh: ReadonlyMap<string, LedgerRow>) => {
-      for (const { from, to } of report.rekeys) {
+      for (const { from } of report.rekeys) {
         base.current.delete(from);
-        onRekey(from, to);
       }
       rebase(fresh);
       reread();
     },
-    [onRekey, reread, rebase],
+    [reread, rebase],
   );
   const apply = useLedgerApply({
     port,
     period,
     content,
     read,
-    dispatch,
+    dispatch: onStage,
     afterApply,
     rebase,
     pause,

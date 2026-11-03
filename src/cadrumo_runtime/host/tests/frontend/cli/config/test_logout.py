@@ -48,7 +48,9 @@ class _Client:
         self.profile_id = profile_id
         self.calls: list[str] = []
         self.on_logout: Callable[[], None] | None = None
+        self.on_password: Callable[[], None] | None = None
         self.receipt_refusal: Exception | None = None
+        self.keychain_removed = True
         self.signed_in = False
         self.proofs: list[bytes] = []
 
@@ -66,7 +68,7 @@ class _Client:
             profile_id=self.profile_id,
             session_ids=(),
             receipt_removed=True,
-            keychain_removed=True,
+            keychain_removed=self.keychain_removed,
             automation_enabled=True,
             automation_access_remains=False,
         )
@@ -81,6 +83,8 @@ class _Client:
         assert not persist_receipt
         self.calls.append("password")
         self.proofs.append(bytes(secret))
+        if self.on_password is not None:
+            self.on_password()
         self.signed_in = True
 
     def sign_in_status(self) -> SignInStatusReply:
@@ -220,3 +224,85 @@ def test_logout_proves_the_person_by_a_stored_sign_in_before_the_password(
     else:
         assert client.calls == ["resume", "password", "sign_out", "close"]
         assert client.proofs == [_CREDENTIAL_INPUT.encode()]
+
+
+@pytest.mark.parametrize("target_kind", ["label", "identifier"])
+@pytest.mark.parametrize("changes_during_proof", [False, True])
+def test_password_logout_keeps_its_explicit_target_when_selection_changes_during_proof(
+    monkeypatch: pytest.MonkeyPatch,
+    run_cadrumo_cli: Callable[..., Result],
+    target_kind: str,
+    changes_during_proof: bool,
+) -> None:
+    profile_id = UUID(register_cli_profile(label="Explicit recovery profile", log_in=False))
+    other = register_cli_profile(label="Other selected profile", log_in=False)
+    client = _Client(profile_id)
+    client.receipt_refusal = ProfileReceiptRefusedError(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE)
+    client.keychain_removed = False
+    _install_client(monkeypatch, client)
+
+    def selection_changes() -> None:
+        with active_profile_pointer_transaction() as pointer:
+            pointer.compare_and_select(expected=pointer.read(), bucket_id=other)
+
+    if changes_during_proof:
+        with active_profile_pointer_transaction() as pointer:
+            pointer.compare_and_select(expected=pointer.read(), bucket_id=str(profile_id))
+        client.on_password = selection_changes
+    else:
+        selection_changes()
+    name = "Explicit recovery profile" if target_kind == "label" else str(profile_id)
+    result = run_cadrumo_cli(
+        ("--format", "json", "config", "logout", "--secrets-stdin", "--", name),
+        input=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
+    )
+    assert result.exit_code == 0, result.output
+    assert _CREDENTIAL_INPUT not in result.output
+    payload = json.loads(result.stdout)["result"]
+    assert payload["logged_out_profile"] == "Explicit recovery profile"
+    assert payload["human_receipt_revoked"] is True and payload["receipt_removed"] is True
+    assert payload["keychain_removed"] is False and payload["automation_revoked"] is False
+    assert observe_active_profile_pointer().bucket_id == other
+    assert client.calls == ["password", "sign_out", "close"]
+
+
+def test_password_logout_refuses_unknown_explicit_target_without_signing_out_selected_profile(
+    monkeypatch: pytest.MonkeyPatch, run_cadrumo_cli: Callable[..., Result]
+) -> None:
+    profile_id = UUID(register_cli_profile(label="Untouched selected profile", log_in=False))
+    client = _Client(profile_id)
+    _install_client(monkeypatch, client)
+    captured = observe_active_profile_pointer()
+    result = run_cadrumo_cli(
+        ("--format", "json", "config", "logout", "--secrets-stdin", "--", "Unknown profile"),
+        input=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
+    )
+    assert result.exit_code != 0
+    assert client.calls == []
+    assert _CREDENTIAL_INPUT not in result.output
+    assert observe_active_profile_pointer() == captured
+
+
+@pytest.mark.parametrize("receipt_available", [False, True])
+def test_password_logout_refuses_bad_proof_before_sign_out(
+    monkeypatch: pytest.MonkeyPatch, run_cadrumo_cli: Callable[..., Result], receipt_available: bool
+) -> None:
+    profile_id = UUID(register_cli_profile(label="Refused recovery proof", log_in=False))
+    client = _Client(profile_id)
+    if not receipt_available:
+        client.receipt_refusal = ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT)
+
+    def bad_proof() -> None:
+        raise FrontendRefusedError("operation_denied")
+
+    client.on_password = bad_proof
+    _install_client(monkeypatch, client)
+    captured = observe_active_profile_pointer()
+    result = run_cadrumo_cli(
+        ("--format", "json", "config", "logout", "--secrets-stdin", "--", str(profile_id)),
+        input=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
+    )
+    assert result.exit_code != 0
+    assert client.calls == ["password", "close"]
+    assert _CREDENTIAL_INPUT not in result.output
+    assert observe_active_profile_pointer() == captured

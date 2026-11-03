@@ -10,11 +10,12 @@ import sys
 from pathlib import Path
 from typing import Protocol
 
+from cadrumo.core.package_interpreter import interpreter_command
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ..adapters.linux_pidfd import open_linux_pidfd
 from ..adapters.linux_worker_process import linux_process_start_identity
-from ..adapters.worker_arguments import validated_worker_arguments
+from ..adapters.worker_arguments import validated_worker_arguments, worker_interpreter_arguments
 
 
 class _ParentPoll(Protocol):
@@ -90,7 +91,7 @@ def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes]
     environment.update({name: value for name, value in os.environ.items() if name in path_names})
     try:
         return subprocess.Popen(  # noqa: S603 - fixed interpreter and verified worker arguments
-            (sys.executable, *worker_arguments),
+            (*interpreter_command(), *worker_arguments[len(worker_interpreter_arguments(worker_arguments)) :]),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

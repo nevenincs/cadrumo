@@ -70,4 +70,43 @@ mod tests {
         extra["message"] = serde_json::json!("private-canary");
         assert!(serde_json::from_value::<Report>(extra).is_err());
     }
+
+    #[test]
+    fn registered_relay_failure_codes_survive_without_private_failure_fields() {
+        let commands = RegisteredCommands(BTreeSet::from(["ledger_submit"]));
+        for code in [
+            "unavailable",
+            "unknown",
+            "saved_unread",
+            "refused",
+            "not_admitted",
+            "not_signed_in",
+            "invalid",
+            "too_large",
+            "file_unavailable",
+            "review_changed",
+            "conflict",
+            "session_unavailable",
+            "read_failed",
+        ] {
+            let raw = serde_json::json!({
+                "event":"command_rejected", "level":"ERROR", "command":"ledger_submit",
+                "code":code, "dropped":0,
+            });
+            let report: Report = serde_json::from_value(raw.clone()).unwrap();
+            let admitted = report.admit(&commands);
+            let encoded = serde_json::to_value(&admitted).unwrap();
+            assert_eq!(encoded["code"], code);
+            assert_eq!(encoded["command"], "ledger_submit");
+            let diagnostics = cadrumo_application::diagnostics::Diagnostics::default();
+            diagnostics.desktop_diagnostic(admitted);
+            let entries = super::super::host::HostEvents::default().poll(&diagnostics);
+            assert_eq!(entries[0].context["reason_code"], code);
+            for field in ["reason", "message", "operation_id", "payload", "exception"] {
+                let mut extra = raw.clone();
+                extra[field] = serde_json::json!("private-canary");
+                assert!(serde_json::from_value::<Report>(extra).is_err());
+            }
+        }
+    }
 }

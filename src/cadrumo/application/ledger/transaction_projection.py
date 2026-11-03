@@ -73,6 +73,8 @@ class LedgerTransactionProjection(BaseModel):
     iva_rate: str | None
     iva_amount: str | None
     iva_category: str | None
+    deduction_fact_kind: str | None = None
+    investment_asset_id: str | None = None
     counterparty_country: str | None
     counterparty_identification_state: str | None
     irpf_category: str | None

@@ -38,6 +38,7 @@ from cadrumo_client.transport.frame_io import read_document, read_secret, write_
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import close_transport_after_failure
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerAdmissionAbandoned,
     ProfileWorkerContractRequest,
     ProfileWorkerLeaseTransferRequest,
     ProfileWorkerManageRequest,
@@ -413,6 +414,7 @@ async def _submit_payload_reply(
                 request_id=request_id,
                 receipt=submitted.receipt,
                 release=release,
+                newly_admitted=submitted.response_capability is not None,
             ),
             deadline=time.monotonic() + 5,
         )
@@ -449,6 +451,22 @@ async def _handle_operation(
     operations: ProfileWorkerOperationHost,
     request: ProfileWorkerOperationRequest | ProfileWorkerResumeRequest,
 ) -> None:
+    if isinstance(request, ProfileWorkerOperationRequest) and request.action == "operation_abandon":
+        settled = await await_cancellation_complete(
+            operations.abandon_submission(request.operation_id, request.session_id),
+            task_name="profile-operation-abandon",
+        )
+        write_document(
+            channel,
+            ProfileWorkerAdmissionAbandoned(
+                identity=operations.custody.identity,
+                request_id=request.request_id,
+                operation_id=request.operation_id,
+                settled=settled,
+            ),
+            deadline=time.monotonic() + 5,
+        )
+        return
     if isinstance(request, ProfileWorkerResumeRequest):
         operation_id = await operations.resume(request.operation_id, request.session_id, frontend=request.frontend)
         action = AccessAction.RESUME

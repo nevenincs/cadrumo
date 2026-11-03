@@ -8,8 +8,10 @@ from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import replace
+from types import SimpleNamespace
 from typing import cast, override
 
+import keyring
 import pytest
 from pydantic import SecretBytes
 
@@ -18,7 +20,13 @@ from cadrumo.adapters.persistence.storage.custody.automation_secret_store import
 from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
-from .. import macos_core_foundation, macos_keychain_contracts, macos_keychain_policy, macos_login_keychain
+from .. import (
+    acceleration_keychain,
+    macos_core_foundation,
+    macos_keychain_contracts,
+    macos_keychain_policy,
+    macos_login_keychain,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -309,6 +317,54 @@ def test_noninteractive_scope_restores_original_flag_after_refusal() -> None:
         assert caught.value.reason is AutomationCustodyCode.NEEDS_USER
         assert state.allowed == original
         assert state.set_calls == [0, original]
+
+
+@pytest.mark.parametrize("action", ["read", "write", "delete"])
+@pytest.mark.parametrize("refused", [False, True])
+def test_acceleration_backend_uses_the_same_verified_noninteractive_scope(
+    monkeypatch: pytest.MonkeyPatch, action: str, refused: bool
+) -> None:
+    state = _UiState()
+    api = _UiNative(state)
+    monkeypatch.setattr(acceleration_keychain, "sys", SimpleNamespace(platform="darwin"))
+    monkeypatch.setattr(macos_login_keychain, "sys", SimpleNamespace(platform="darwin"))
+    monkeypatch.setattr(macos_login_keychain.ctypes, "CDLL", lambda _path: object())
+    functions = {
+        "SecKeychainGetUserInteractionAllowed": api.ui_get,
+        "SecKeychainSetUserInteractionAllowed": api.ui_set,
+    }
+    monkeypatch.setattr(macos_login_keychain, "bind_native_function", lambda _library, name, *_: functions[name])
+    monkeypatch.setattr(keyring, "get_keyring", lambda: SimpleNamespace(priority=5))
+    calls: list[tuple[str, ...]] = []
+
+    def credential_call(*arguments: str) -> str:
+        assert state.allowed == 0
+        calls.append(arguments)
+        if refused:
+            raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
+        return "synthetic-proof"
+
+    monkeypatch.setattr(keyring, "get_password", credential_call)
+    monkeypatch.setattr(keyring, "set_password", credential_call)
+    monkeypatch.setattr(keyring, "delete_password", credential_call)
+    backend, _, _ = acceleration_keychain._keyring()
+
+    def call() -> None:
+        if action == "read":
+            assert backend.get_password("synthetic-service", "synthetic-account") == "synthetic-proof"
+        elif action == "write":
+            backend.set_password("synthetic-service", "synthetic-account", "synthetic-proof")
+        else:
+            backend.delete_password("synthetic-service", "synthetic-account")
+
+    if refused:
+        with pytest.raises(AutomationCustodyError) as caught:
+            call()
+        assert caught.value.reason is AutomationCustodyCode.NEEDS_USER
+    else:
+        call()
+    assert len(calls) == 1
+    assert state.allowed == 1 and state.set_calls == [0, 1]
 
 
 @pytest.mark.parametrize("defect", ["disable-error", "disable-ignored", "restore-error", "restore-ignored"])

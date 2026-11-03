@@ -216,6 +216,22 @@ test("an unfinished setup opens the panel once, one row per element, each status
   await expect(panel(target)).toBeVisible();
 });
 
+test("unsupported agent setup does not read the catalog or local models", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=fresh&catalog=unsupported",
+  );
+  await expect(panel(target)).toBeVisible();
+  await openLocalAi(target);
+  await target.waitForTimeout(1200);
+  expect(
+    (await hostCalls(target)).filter(
+      (call) => call === "agentProviderCatalog" || call === "agentLocalModels",
+    ),
+  ).toEqual([]);
+});
+
 test("the local AI is a dropdown holding its program and the model list", async ({
   page: target,
 }) => {

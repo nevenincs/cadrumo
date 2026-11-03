@@ -115,6 +115,8 @@ fn window(native: watch::Native) -> Arc<SignIn> {
         observation: observation::Observer::default(),
         person: std::sync::Mutex::new(std::sync::Weak::new()),
         signed_in: std::sync::Mutex::new(None),
+        restoration: std::sync::Mutex::new(restoration::Restoration::default()),
+        diagnostics: Arc::new(cadrumo_application::diagnostics::Diagnostics::default()),
         person_events: tokio::sync::broadcast::channel(16).0,
         custody: Custody::default(),
         closed: std::sync::atomic::AtomicBool::new(false),

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,7 @@ import pytest
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 
 from ...packaging.native.layout import desktop_image, load_layout
-from ..package import stage_lane_package
+from ..package import mirror, stage_lane_package
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -89,6 +90,85 @@ def test_a_changed_staged_file_is_mirrored_again(tmp_path: Path) -> None:
     stage_lane_package(layout, staged, host, lane)
 
     assert (lane / "lib" / "module.py").read_bytes() == b"print('rebuilt payload')\n"
+
+
+def test_restage_replaces_the_host_inode_and_rebinds_descriptors(tmp_path: Path) -> None:
+    layout = load_layout("windows-x64")
+    staged, host, lane = tmp_path / "stage", tmp_path / "host.exe", tmp_path / "lane"
+    staged.mkdir()
+    _stage(staged, layout)
+    old_host, new_host = b"host version one", b"host version two"
+    assert len(old_host) == len(new_host)
+    host.write_bytes(old_host)
+    image = stage_lane_package(layout, staged, host, lane)
+    old_inode = image.stat().st_ino
+    host.write_bytes(new_host)
+
+    if os.name == "posix":
+        with image.open("rb") as old_image:
+            stage_lane_package(layout, staged, host, lane)
+            assert image.stat().st_ino != old_inode
+            assert old_image.read() == old_host
+    else:
+        stage_lane_package(layout, staged, host, lane)
+
+    assert image.read_bytes() == new_host
+    host_digest = _sha(new_host)
+    descriptor_member = layout["files"]["service_descriptors"]
+    descriptors = json.loads((lane / descriptor_member).read_bytes())
+    for descriptor in descriptors:
+        expected = descriptor.pop("descriptor_digest")
+        assert sha256_hex(canonical_json_bytes(descriptor)) == expected
+        assert descriptor["image_digest"] == host_digest
+        assert [parent["image_digest"] for parent in descriptor["allowed_parent_images"]] == [host_digest]
+    manifest = json.loads((lane / layout["files"]["package_manifest"]).read_text(encoding="utf-8"))
+    desktop = desktop_image(layout)
+    assert desktop is not None
+    assert manifest["files"][desktop.package_path] == host_digest
+    assert manifest["files"][descriptor_member] == _sha((lane / descriptor_member).read_bytes())
+
+
+def test_mirror_replaces_a_changed_image_without_rewriting_its_inode(tmp_path: Path) -> None:
+    source, destination = tmp_path / "source", tmp_path / "destination"
+    source.mkdir()
+    staged_image = source / "signed-image"
+    staged_image.write_bytes(b"old image")
+    assert mirror(source, destination, rebound=frozenset()) == 1
+    image = destination / staged_image.name
+    old_inode = image.stat().st_ino
+    staged_image.write_bytes(b"new image")
+    os.utime(staged_image, ns=(staged_image.stat().st_atime_ns, image.stat().st_mtime_ns + 1_000_000_000))
+
+    if os.name == "posix":
+        with image.open("rb") as old_image:
+            assert mirror(source, destination, rebound=frozenset()) == 1
+            assert image.stat().st_ino != old_inode
+            assert old_image.read() == b"old image"
+    else:
+        assert mirror(source, destination, rebound=frozenset()) == 1
+    assert image.read_bytes() == b"new image"
+
+
+def test_failed_mirror_copy_keeps_the_original_and_removes_the_temporary_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source, destination = tmp_path / "source", tmp_path / "destination"
+    source.mkdir()
+    destination.mkdir()
+    (source / "signed-image").write_bytes(b"replacement image")
+    target = destination / "signed-image"
+    target.write_bytes(b"original image")
+    before = _snapshot(destination)
+
+    def fail_copy(_source: Path, target_path: Path) -> None:
+        target_path.write_bytes(b"partial")
+        raise OSError("copy failed")
+
+    monkeypatch.setattr(shutil, "copy2", fail_copy)
+    with pytest.raises(OSError, match="copy failed"):
+        mirror(source, destination, rebound=frozenset({"signed-image"}))
+
+    assert _snapshot(destination) == before
 
 
 def test_a_stage_from_another_layout_is_refused(tmp_path: Path) -> None:

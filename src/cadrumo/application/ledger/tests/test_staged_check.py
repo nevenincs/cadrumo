@@ -210,6 +210,34 @@ def test_a_staged_direction_decides_who_takes_a_category() -> None:
     assert check_stored_row(_row(("direction", "OUTGOING")), income).takes_expense_category is True
 
 
+@pytest.mark.parametrize(
+    ("direction", "expected", "missing"),
+    [
+        ("INCOMING", False, ("description",)),
+        ("OUTGOING", True, ("description",)),
+        ("INTERNAL_TRANSFER", False, ("description",)),
+        (None, False, ("direction", "description")),
+        ("UNKNOWN", False, ("description",)),
+    ],
+)
+def test_draft_category_projection_uses_direction_and_preserves_blockers(
+    direction: str | None, expected: bool, missing: tuple[str, ...]
+) -> None:
+    fields = {"booked_date": "2026-03-02", "amount": "10", "currency": "EUR"}
+    if direction is not None:
+        fields["direction"] = direction
+    draft = LedgerStagedDraft(
+        key="draft",
+        fields=tuple(
+            LedgerStagedDraftField.model_validate({"field": key, "value": value}) for key, value in fields.items()
+        ),
+    )
+    answer = check_draft(draft)
+    assert answer.key == "draft"
+    assert answer.takes_expense_category is expected
+    assert [(blocker.kind, blocker.fields) for blocker in answer.blockers] == [("draft_incomplete", missing)]
+
+
 def test_mixed_needs_its_share_and_only_mixed_takes_one() -> None:
     plain = _stored(classification=BusinessClassification.BUSINESS)
     needs = check_stored_row(_row(("business_classification", "MIXED")), plain)

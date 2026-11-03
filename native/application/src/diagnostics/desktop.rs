@@ -22,6 +22,37 @@ pub enum DiagnosticOrigin {
     Tauri,
 }
 
+/// A host relay's payload-free failure vocabulary, separate from application errors.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RelayFailureCode {
+    Unavailable,
+    Unknown,
+    SavedUnread,
+    Refused,
+    NotAdmitted,
+    NotSignedIn,
+    Invalid,
+    TooLarge,
+    FileUnavailable,
+    ReviewChanged,
+    Conflict,
+}
+
+/// Only closed host codes may be persisted; exception and payload text never qualify.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(untagged)]
+pub enum DesktopDiagnosticCode {
+    Application(ErrorCode),
+    Relay(RelayFailureCode),
+}
+
+impl From<ErrorCode> for DesktopDiagnosticCode {
+    fn from(code: ErrorCode) -> Self {
+        Self::Application(code)
+    }
+}
+
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DesktopDiagnostic {
@@ -31,7 +62,7 @@ pub struct DesktopDiagnostic {
     pub level: LogLevel,
     /// Resolved against registered command names by the host.
     pub command: Option<String>,
-    pub code: Option<ErrorCode>,
+    pub code: Option<DesktopDiagnosticCode>,
     pub dropped: u32,
     pub line: Option<u32>,
     pub column: Option<u32>,

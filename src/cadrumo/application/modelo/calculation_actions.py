@@ -322,7 +322,22 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         m303_regimen_simplificado_annual_summary_handoff,
     )
 
-    return persist_calculation_revision(
+    source_issues = (
+        *source_issues,
+        *(
+            CalculationSourceIssue(
+                reason="precedence_tier_divergence",
+                binding_source=None,
+                message=diagnostic.message,
+                resolver_id=diagnostic.resolver_id,
+                casilla_id=diagnostic.casilla_id,
+                disagreement=diagnostic.disagreement,
+            )
+            for diagnostic in prepared.channels.source_diagnostics
+            if diagnostic.reason == "precedence_tier_divergence"
+        ),
+    )
+    publication = persist_calculation_revision(
         operation=ports.operation,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
@@ -376,6 +391,12 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_repository=ports.work_unit_repository,
         bucket_event_repository=ports.bucket_event_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+    )
+    return CalculationRevisionPublication(
+        revision=publication.revision,
+        work_unit=publication.work_unit,
+        published=publication.published,
+        source_diagnostics=prepared.channels.source_diagnostics,
     )
 
 

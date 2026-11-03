@@ -35,6 +35,8 @@ impl LogLevel {
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum AgentRefusal {
+    #[serde(rename = "agent_platform_unsupported")]
+    UnsupportedPlatform,
     #[serde(rename = "agent_service_absent")]
     ServiceAbsent,
     #[serde(rename = "agent_service_incompatible")]
@@ -54,6 +56,7 @@ pub enum AgentRefusal {
 impl AgentRefusal {
     pub fn from_launcher(code: &str) -> Self {
         match code {
+            "agent_platform_unsupported" => Self::UnsupportedPlatform,
             "agent_service_absent" => Self::ServiceAbsent,
             "agent_service_incompatible" => Self::ServiceIncompatible,
             "agent_signed_out" => Self::SignedOut,

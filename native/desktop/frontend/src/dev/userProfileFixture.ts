@@ -16,7 +16,10 @@ declare global {
       conflict(): void;
       deferRead(): void;
       releaseRead(): void;
-      rejectRead(): void;
+      rejectRead(
+        code?:
+          "unavailable" | "refused" | "not_signed_in" | "unknown" | "conflict",
+      ): void;
       reads(): number;
       writes(): number;
       burst(): void;
@@ -90,7 +93,7 @@ export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
   let refuse: "refused" | "unknown" | "conflict" | null = null;
   let deferred = false;
   let release: (() => void) | undefined;
-  let reject: (() => void) | undefined;
+  let reject: ((code: string) => void) | undefined;
   const credentials = new Set<string>();
   let certificate: string | null = null;
   let picks = 0;
@@ -150,8 +153,8 @@ export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
     releaseRead() {
       release?.();
     },
-    rejectRead() {
-      reject?.();
+    rejectRead(code = "unavailable") {
+      reject?.(code);
     },
     credentials: () => [...credentials],
     credentialAttempts: () => attempts,
@@ -205,7 +208,7 @@ export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
         deferred = false;
         await new Promise<void>((resolve, refused) => {
           release = resolve;
-          reject = () => refused({ code: "unavailable" });
+          reject = (code) => refused({ code });
         });
       }
       await new Promise((resolve) => setTimeout(resolve, 40));

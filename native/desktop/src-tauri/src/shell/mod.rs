@@ -1,6 +1,8 @@
 pub mod about;
 pub mod aeat_sync;
 pub mod agent_access;
+#[cfg(any(feature = "native-automation", test))]
+mod automation_picker;
 pub mod channel;
 mod clipboard;
 mod external;

@@ -14,6 +14,23 @@ pub(crate) const SETTLE_LIMIT: Duration = Duration::from_secs(90);
 /// The runtime's refusal of an operation it no longer knows.
 pub(crate) const UNKNOWN_OPERATION: &str = "unknown_operation";
 
+/// Execution is definitively stopped; its previously published effect remains
+/// unresolved. This is presentation evidence, never a no-write/rollback claim.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct TerminalFailure {
+    pub(crate) operation_id: String,
+    pub(crate) definition_id: String,
+    pub(crate) effect: TerminalFailureEffect,
+    pub(crate) refusal_words: Option<String>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TerminalFailureEffect {
+    Unknown,
+    Partial,
+    Updated,
+}
+
 #[derive(Debug, Serialize)]
 pub struct Failure {
     pub(crate) code: &'static str,
@@ -21,6 +38,8 @@ pub struct Failure {
     /// The runtime's closed refusal code, where one was given.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) reason: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) terminal_failure: Option<TerminalFailure>,
 }
 impl Failure {
     pub(crate) fn new(code: &'static str) -> Self {
@@ -28,6 +47,7 @@ impl Failure {
             code,
             operation_id: None,
             reason: None,
+            terminal_failure: None,
         }
     }
 }

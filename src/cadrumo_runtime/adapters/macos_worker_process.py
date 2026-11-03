@@ -40,7 +40,7 @@ from .macos_worker_markers import (
     encode_macos_worker_marker,
     stale_macos_worker_markers,
 )
-from .worker_arguments import validated_worker_arguments
+from .worker_arguments import validated_worker_arguments, worker_interpreter_arguments
 from .worker_environment import worker_path_environment_names
 
 _CLEAN_ENVIRONMENT = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
@@ -118,6 +118,7 @@ def macos_worker_job_definition(
         "-i",
         *(f"{name}={value}" for name, value in environment.items()),
         str(executable),
+        *worker_interpreter_arguments(worker_arguments),
         "-I",
         "-m",
         _GUARDIAN_MODULE,

@@ -192,6 +192,7 @@ desktop:
     sending: Enviando…
     sent_files: Archivos enviados con este mensaje
     sent_skills: Habilidades cargadas
+    platform_unsupported: El agente de IA aún no está disponible en esta plataforma.
     service_absent: El agente no está instalado. Reinstala Cadrumo para añadirlo.
     service_credential_missing: Configura un proveedor en los ajustes para empezar.
     service_failed: El agente ha dejado de funcionar.

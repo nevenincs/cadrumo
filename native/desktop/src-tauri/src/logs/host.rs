@@ -530,7 +530,9 @@ mod tests {
                 event: DesktopEvent::CommandRejected,
                 level,
                 command: Some("shell_window_action".into()),
-                code: Some(cadrumo_application::error::application::ErrorCode::WebviewFailed),
+                code: Some(
+                    cadrumo_application::error::application::ErrorCode::WebviewFailed.into(),
+                ),
                 dropped: 2,
                 line: Some(12),
                 column: Some(7),

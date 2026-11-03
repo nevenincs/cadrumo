@@ -710,6 +710,25 @@ arguments = [
 distinct = [["request", "result"]]
 greater = [["bound", "request"], ["bound", "result"]]
 
+# The packaged POSIX interpreter also disables site. Preserve its supervisor's
+# minimal environment for this exact invocation, just as for ordinary Python.
+[[invocations]]
+profile = "kdf-child"
+platform = "posix"
+arguments = [
+  { literal = "-S" },
+  { literal = "-m" },
+  { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
+  { literal = "--request-fd" },
+  { slot = "request", kind = "descriptor", minimum = 3 },
+  { literal = "--result-fd" },
+  { slot = "result", kind = "descriptor", minimum = 3 },
+  { literal = "--descriptor-bound" },
+  { slot = "bound", kind = "descriptor", minimum = 1 },
+]
+distinct = [["request", "result"]]
+greater = [["bound", "request"], ["bound", "result"]]
+
 # ---------------------------------------------------------------------------
 # Launch-profile conformance vectors, authored by hand: an image, its arguments
 # and its caller's environment in; the selected profile and the exact defined
@@ -805,6 +824,25 @@ arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "
 ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
 profile = "kdf-child"
 environment = { NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
+
+[[launch_vectors]]
+name = "posix-hosted-kdf-child-keeps-its-parent-environment"
+platform = "posix"
+image = "python"
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"]
+ambient = { PYTHONDONTWRITEBYTECODE = "1", PYTHONHASHSEED = "0", PYTHONNOUSERSITE = "1", NEUTRAL = "kept" }
+profile = "kdf-child"
+environment = { PYTHONDONTWRITEBYTECODE = "1", PYTHONHASHSEED = "0", PYTHONNOUSERSITE = "1", NEUTRAL = "kept" }
+
+[[launch_vectors]]
+name = "posix-hosted-kdf-repeated-descriptor-is-not-the-invocation"
+platform = "posix"
+image = "python"
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "3", "--result-fd", "3", "--descriptor-bound", "1024"]
+ambient = { HOME = "/home/ada", NEUTRAL = "dropped" }
+profile = "python"
+environment = { HOME = "/home/ada", CADRUMO_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 [[launch_vectors]]
 name = "posix-kdf-standard-descriptor-is-not-the-invocation"

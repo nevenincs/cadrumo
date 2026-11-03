@@ -8,10 +8,36 @@ import {
 } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
-import { start, stop, connect, within } from "./session.mjs";
+import {
+  start,
+  stop,
+  connect,
+  within,
+  readSession,
+  verifyListener,
+  queuePickerSelection,
+} from "./session.mjs";
 
 const [command, session, ...args] = process.argv.slice(2);
 const print = (value) => console.log(JSON.stringify(value, null, 2));
+
+async function visibleElement(browser, selector) {
+  const element = await browser.$(selector);
+  await element.waitForExist({ timeout: 10000 });
+  // The embedded WebKit driver can report isDisplayed=false for visible
+  // controls. Check layout in the actual webview before using native actions.
+  await browser.waitUntil(
+    () =>
+      browser.execute((node) => {
+        if (!node?.isConnected || !node.getClientRects().length) return false;
+        const style = getComputedStyle(node);
+        return style.visibility !== "hidden" && style.visibility !== "collapse";
+      }, element),
+    { timeout: 10000, timeoutMsg: `Control is not visible: ${selector}` },
+  );
+  return element;
+}
+
 try {
   if (!command || command === "help") {
     console.log(`Native exploratory automation (macOS; ps and lsof required)
@@ -25,6 +51,8 @@ The result names a SESSION file. Keep it for subsequent commands:
   select SESSION SELECTOR VALUE | keys SESSION KEY...
   frame SESSION SELECTOR | parent SESSION
   screenshot SESSION NAME.png
+  choose-file SESSION open|save ABSOLUTE-PATH (queue answer, then click the real chooser control)
+  cancel-file SESSION open|save (queue cancellation, then click the real chooser control)
   export-file SESSION ABSOLUTE-PATH (verifies output is under this run's exports directory)
   stop SESSION | resume SESSION (same synthetic storage after stopping/rebuilding)
 Use real GUI controls for all account, ledger and Modelo changes. Save exports into run/exports.
@@ -35,6 +63,20 @@ No fixture seeding, tax flow or backend-command shortcut is built into this harn
     print(await start(session));
   } else if (command === "stop") {
     print(await stop(session));
+  } else if (command === "choose-file" || command === "cancel-file") {
+    if (args.length !== (command === "choose-file" ? 2 : 1))
+      throw new Error(
+        "Supply a chooser kind and, for choose-file, an absolute path.",
+      );
+    const state = readSession(session);
+    verifyListener(state);
+    print(
+      queuePickerSelection(
+        state.run,
+        args[0],
+        command === "choose-file" ? args[1] : null,
+      ),
+    );
   } else {
     const { browser, state } = await connect(session);
     let result;
@@ -63,11 +105,16 @@ No fixture seeding, tax flow or backend-command shortcut is built into this harn
             (element.innerText || element.textContent || "")
               .trim()
               .slice(0, 160);
+          const scope =
+            [...document.querySelectorAll('[role="dialog"], dialog[open]')]
+              .filter(visible)
+              .at(-1) || document.body;
           return {
             title: document.title,
-            text: document.body.innerText.slice(0, 14000),
+            dialog: scope !== document.body,
+            text: scope.innerText.slice(0, 14000),
             controls: [
-              ...document.querySelectorAll(
+              ...scope.querySelectorAll(
                 "button,input,textarea,select,a,[role=button],[role=combobox],[role=tab],[role=checkbox]",
               ),
             ]
@@ -98,15 +145,13 @@ No fixture seeding, tax flow or backend-command shortcut is built into this harn
         });
         break;
       case "click": {
-        const element = await browser.$(args[0]);
-        await element.waitForDisplayed({ timeout: 10000 });
+        const element = await visibleElement(browser, args[0]);
         await element.click();
         result = { clicked: args[0] };
         break;
       }
       case "fill": {
-        const element = await browser.$(args[0]);
-        await element.waitForDisplayed({ timeout: 10000 });
+        const element = await visibleElement(browser, args[0]);
         await element.setValue(args[1]);
         result = { filled: args[0] };
         break;
@@ -122,16 +167,44 @@ No fixture seeding, tax flow or backend-command shortcut is built into this harn
             { mode: 0o600, flag: "wx" },
           );
         const secret = readFileSync(within(state.run, file), "utf8");
-        const element = await browser.$(args[0]);
-        await element.waitForDisplayed({ timeout: 10000 });
+        const element = await visibleElement(browser, args[0]);
         await element.setValue(secret);
         result = { filled: args[0], syntheticSecret: args[1] };
         break;
       }
-      case "select":
-        await (await browser.$(args[0])).selectByAttribute("value", args[1]);
+      case "select": {
+        const element = await visibleElement(browser, args[0]);
+        await browser.execute(
+          (node, value) => {
+            if (
+              !(node instanceof HTMLSelectElement) ||
+              node.disabled ||
+              node.multiple
+            )
+              throw new Error("Expected an enabled single-selection control.");
+            const option = [...node.options].find(
+              (item) => item.value === value,
+            );
+            if (!option || option.disabled || option.parentElement?.disabled)
+              throw new Error("The requested option is unavailable.");
+            // WKWebView's WebDriver option click may return without changing the
+            // select. Use its DOM setter and normal input/change event path.
+            const setter = Object.getOwnPropertyDescriptor(
+              HTMLSelectElement.prototype,
+              "value",
+            ).set;
+            setter.call(node, value);
+            node.dispatchEvent(new Event("input", { bubbles: true }));
+            node.dispatchEvent(new Event("change", { bubbles: true }));
+            if (node.value !== value)
+              throw new Error("Selection did not take effect.");
+          },
+          element,
+          args[1],
+        );
         result = { selected: args[0] };
         break;
+      }
       case "keys":
         await browser.keys(args);
         result = { keys: true };
@@ -151,7 +224,7 @@ No fixture seeding, tax flow or backend-command shortcut is built into this harn
       }
       default:
         throw new Error(
-          "Commands: start, stop SESSION, snapshot/windows/window/frame/parent/click/fill/fill-secret/select/keys/screenshot SESSION [arguments]",
+          "Commands: start, stop SESSION, choose-file/cancel-file/snapshot/windows/window/frame/parent/click/fill/fill-secret/select/keys/screenshot SESSION [arguments]",
         );
     }
     // Action types only: field values and secret material never enter this log.

@@ -21,6 +21,8 @@ _DEFAULT_FIELDS: dict[str, object] = {
     "iva_rate": None,
     "iva_amount": None,
     "iva_category": None,
+    "deduction_fact_kind": None,
+    "investment_asset_id": None,
     "counterparty_country": None,
     "counterparty_identification_state": None,
     "irpf_category": None,

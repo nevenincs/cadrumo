@@ -3,6 +3,7 @@ import {
   servedRefusalWords,
   type LedgerFailureCode,
   type LedgerOutcome,
+  type TerminalOperationFailure,
 } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
 
@@ -26,7 +27,11 @@ export type OperationRun<Result> =
   | { kind: "not_sent"; code: LedgerFailureCode }
   /** It committed, and its result could not be read. */
   | { kind: "saved_unread" }
-  | { kind: "unknown"; operationId: string | null };
+  | {
+      kind: "unknown";
+      operationId: string | null;
+      terminalFailure?: TerminalOperationFailure;
+    };
 
 /** How long to wait between looks at a running write. */
 const OBSERVE_MS = 400;
@@ -55,16 +60,36 @@ export async function runOperation<Result>(
   } catch (error) {
     const failure = ledgerFailure(error);
     if (failure.code === "saved_unread") return { kind: "saved_unread" };
-    if (failure.code === "refused" && failure.operation_id !== null)
+    if (failure.code === "refused" && failure.operation_id !== null) {
+      // Submit rejects with closed metadata. Read the already-settled
+      // operation for its served explanation; never submit the write again.
+      let words: string | null = null;
+      try {
+        const observed = await port.observe(failure.operation_id);
+        if (
+          observed.kind === "refused" &&
+          observed.operation_id === failure.operation_id
+        )
+          words = servedRefusalWords(observed.detail);
+      } catch {
+        // The refusal is known even when its explanation cannot be read.
+      }
       return {
         kind: "refused",
         operationId: failure.operation_id,
         reason: failure.reason ?? null,
-        words: null,
+        words,
       };
+    }
     if (NOT_SENT.has(failure.code))
       return { kind: "not_sent", code: failure.code };
-    return { kind: "unknown", operationId: failure.operation_id };
+    return {
+      kind: "unknown",
+      operationId: failure.operation_id,
+      ...(failure.terminal_failure
+        ? { terminalFailure: failure.terminal_failure }
+        : {}),
+    };
   }
   for (;;) {
     if (outcome.kind === "settled")
@@ -86,8 +111,15 @@ export async function runOperation<Result>(
       // The operation was this definition's; its settlement carries its
       // result under the same contract.
       outcome = (await port.observe(operation)) as LedgerOutcome<Result>;
-    } catch {
-      return { kind: "unknown", operationId: operation };
+    } catch (error) {
+      const failure = ledgerFailure(error);
+      return {
+        kind: "unknown",
+        operationId: operation,
+        ...(failure.terminal_failure?.operation_id === operation
+          ? { terminalFailure: failure.terminal_failure }
+          : {}),
+      };
     }
   }
 }

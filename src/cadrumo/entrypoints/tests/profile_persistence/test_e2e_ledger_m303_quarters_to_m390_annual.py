@@ -51,6 +51,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -65,11 +66,18 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloCrossPeriodCleanStateError
+from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_with_trusted_mesh_sources
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+from cadrumo.application.modelo.calculation_note_gate import (
+    ModeloCalculationBlockedError,
+    require_no_blocking_calculation_notes,
+)
+from cadrumo.application.modelo.calculation_operation import calculation_public_result
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
@@ -100,6 +108,8 @@ from cadrumo.domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
@@ -110,9 +120,12 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.source_disagreement import DisagreementDecimalValue, SourceDisagreementRole
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from cadrumo.domain.transactions.enums import TransactionDirection
+from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition_work_ports import (
@@ -270,7 +283,7 @@ def _wallet_decision(
     )
 
 
-def _store_profile(secure_objects: SecureObjectRepository) -> None:
+def _store_profile(secure_objects: SecureObjectRepository, *, activity_start_date: date = date(2020, 1, 1)) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
     seed_test_profile_record(
         _create_profile_record_for_test(
@@ -296,7 +309,7 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
             ),
             created_at=_T0,
             updated_at=_T0,
@@ -465,6 +478,164 @@ def _calculate_and_file_m303_quarter(
         iva_compensation_history_repository=IvaCompensationHistoryRepository(),
     )
     return revision
+
+
+def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_return(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The desktop's first calculation reaches persistence and its public projection with real ledger sources."""
+    _store_profile(secure_objects, activity_start_date=date(2026, 1, 1))
+    persist_year_of_invoices(
+        secure_objects,
+        filing_year=2026,
+        facts_by_period={
+            "1T": {
+                "issued_base": Decimal("11428.57"),
+                "issued_iva": Decimal("2400.00"),
+                "received_base": Decimal("4761.90"),
+                "received_iva": Decimal("1000.00"),
+                "eu_supply_base": Decimal("0.00"),
+                "reverse_charge_base": Decimal("0.00"),
+                "reverse_charge_iva": Decimal("0.00"),
+            }
+        },
+    )
+    invoice_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+    issued = build_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Cliente de prueba SL",
+        counterparty_tax_id="A58818501",
+        counterparty_country="ES",
+        invoice_number="EMI-2026-1T",
+        issued_at=date(2026, 2, 10),
+        taxable_base=Decimal("11428.57"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+        rate_provider=invoice_ports.rate_provider,
+    )
+    invoices = InvoiceCatalogueRepository(objects=secure_objects)
+    invoices.save(build_invoice_catalogue((*invoices.load().invoices.values(), issued)))
+    ledger = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    ledger.save(
+        TransactionCatalogue.from_transactions(
+            tuple(
+                transaction.model_copy(update={"invoice_id": issued.invoice_id})
+                if transaction.direction is TransactionDirection.INCOMING
+                else transaction
+                for transaction in ledger.load().transactions.values()
+            )
+        )
+    )
+    period = Period.from_year_and_code(2026, "1T")
+    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    work = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=2026,
+        period=period,
+        revision_id=snapshot.revision.id,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        ),
+        clock=datetime(2026, 4, 1, tzinfo=UTC),
+        operation=operation,
+    )
+    evidence = general_m303_filing_evidence(period, reference="test:first-2026", operation=operation)
+    assert evidence.m303 is not None and evidence.m303.joint_return_elected is False
+    result = calculate_modelo_work_revision(
+        work_unit_id=work.work_unit_id,
+        actor="operator",
+        inputs=WorkCalculateInputBundle.build(
+            casilla_inputs={},
+            binding_values={},
+            enum_binding_values={},
+            relation_values={},
+            detail_rows=(),
+            borrador_snapshot_id=None,
+            filing_instance_evidence=evidence,
+        ),
+        ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+    )
+    public = calculation_public_result(result, operation=operation)
+    assert result.revision_published is True
+    assert Decimal(result.revision.casilla_values[_DEVENGADA_TOTAL]) == Decimal("2400.00")
+    assert Decimal(result.revision.casilla_values[_DEDUCIBLE_TOTAL]) == Decimal("1000.00")
+    assert Decimal(result.revision.casilla_values[_RESULTADO]) == Decimal("1400.00")
+    assert public.calculation_revision_id == result.revision.calculation_revision_id
+    assert len(result.revision.source_transaction_ids) == 2
+    assert (
+        CalculationRevisionCatalogueRepository(objects=secure_objects)
+        .load()
+        .get(result.revision.calculation_revision_id)
+        == result.revision
+    )
+
+
+@pytest.mark.parametrize(
+    ("binding", "caller_value", "expected_reason"),
+    [
+        ("modelo-303-prorrata-regularizacion-casilla-44", "120", "precedence_tier_divergence"),
+        ("modelo-303-autoconsumo-promotor-base", "120", "precedence_tier_divergence_advisory"),
+        ("modelo-303-prorrata-regularizacion-casilla-44", "100", None),
+    ],
+    ids=["filed-disagreement", "working-disagreement", "equal-values"],
+)
+def test_calculation_persists_the_selected_precedence_value_and_its_disagreement(
+    secure_objects: SecureObjectRepository,
+    binding: str,
+    caller_value: str,
+    expected_reason: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """An allowed higher-tier value wins, but its contested filing figure still withholds filing after reload."""
+    _store_profile(secure_objects)
+    persist_year_of_invoices(secure_objects)
+    work, _revision = _calculate_m303_quarter_revision(secure_objects, period="1T", operation=operation)
+    publication = calculate_modelo_revision_with_trusted_mesh_sources(
+        work.work_unit_id,
+        ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+        actor="operator",
+        casilla_inputs={},
+        backend_binding_values={binding: Decimal("100.00")},
+        binding_values={binding: Decimal(caller_value)},
+        source_provenance=(),
+        filing_instance_evidence=general_m303_filing_evidence(
+            work.period, reference="test:contested-carry", operation=operation
+        ),
+        profile=None,
+        clock=_FILE_AT,
+    )
+    assert publication.revision.binding_overrides[binding] == caller_value
+    if expected_reason is None:
+        assert publication.source_diagnostics == ()
+        assert publication.revision.source_issues == ()
+        return
+    (diagnostic,) = publication.source_diagnostics
+    assert diagnostic.reason == expected_reason
+    assert diagnostic.disagreement is not None
+    assert diagnostic.disagreement.selected_role is SourceDisagreementRole.CALLER
+    amounts = []
+    for source in diagnostic.disagreement.sources:
+        assert isinstance(source.value, DisagreementDecimalValue)
+        amounts.append(source.value.decimal)
+    assert amounts == [Decimal("100.00"), Decimal("120.00")]
+    stored = (
+        CalculationRevisionCatalogueRepository(objects=secure_objects)
+        .load()
+        .get(publication.revision.calculation_revision_id)
+    )
+    assert stored is not None
+    if expected_reason == "precedence_tier_divergence":
+        (issue,) = tuple(issue for issue in stored.source_issues if issue.reason == "precedence_tier_divergence")
+        assert issue.disagreement == diagnostic.disagreement
+        with pytest.raises(ModeloCalculationBlockedError):
+            require_no_blocking_calculation_notes(stored, action="file")
+    else:
+        assert stored.source_issues == ()
+        require_no_blocking_calculation_notes(stored, action="file")
 
 
 def test_persisted_m303_ledger_revision_verifies_and_exports(

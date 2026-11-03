@@ -44,7 +44,11 @@ export type MovementsView = {
   collapsed: ReadonlySet<string>;
   setCollapsed: (collapsed: ReadonlySet<string>) => void;
   selection: ReadonlySet<string>;
-  setSelection: (selection: ReadonlySet<string>) => void;
+  setSelection: (
+    selection:
+      | ReadonlySet<string>
+      | ((current: ReadonlySet<string>) => ReadonlySet<string>),
+  ) => void;
   savedView: SavedViewId | null;
   chooseView: (view: SavedViewId) => void;
   groupBy: GroupingId | null;
@@ -93,7 +97,19 @@ export function useMovementsView(
     collapsed,
     setCollapsed: (collapsed) => update({ collapsed: [...collapsed] }),
     selection,
-    setSelection: (selection) => update({ selection: [...selection] }),
+    setSelection: (selection) =>
+      setState((current) => {
+        const next = {
+          ...current,
+          selection: [
+            ...(typeof selection === "function"
+              ? selection(new Set(current.selection))
+              : selection),
+          ],
+        };
+        memory.current.movements = next;
+        return next;
+      }),
     savedView,
     chooseView: (next) => {
       update({ filters: viewFilters(next), collapsed: [] });

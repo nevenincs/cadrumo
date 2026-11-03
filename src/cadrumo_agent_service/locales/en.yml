@@ -187,6 +187,7 @@ desktop:
     sending: Sending…
     sent_files: Files sent with this message
     sent_skills: Skills loaded
+    platform_unsupported: The AI agent is not yet supported on this platform.
     service_absent: The agent isn't installed. Reinstall Cadrumo to add it.
     service_credential_missing: Set up a provider in settings to start.
     service_failed: The agent stopped working.

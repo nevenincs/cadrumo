@@ -72,7 +72,16 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.logout.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(*_MACHINE_SECRET_OPTIONS, _OUTPUT_LANGUAGE),
+        parameters=(
+            ArgumentSpec(
+                name="name",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.config.logout.name_help"),
+            ),
+            *_MACHINE_SECRET_OPTIONS,
+            _OUTPUT_LANGUAGE,
+        ),
         policy=BOOTSTRAP_DESTRUCTIVE,
         handler=LazyBinding.available(DeferredTarget("cadrumo_client.commands.custody", "config_logout")),
         result_schema=ResultSchemaSpec(

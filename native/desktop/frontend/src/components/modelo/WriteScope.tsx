@@ -11,7 +11,11 @@ import {
 import type { LedgerOutcome } from "../../shell/ledger";
 import type { ModeloPort } from "../../shell/modelo";
 import type { ModeloWriteHolds } from "../../shell/modeloWriteHolds";
-import { WriteHoldNotice, useModeloWriteHold } from "./WriteHoldNotice";
+import {
+  WriteHoldNotice,
+  useModeloWriteHold,
+  useModeloReviewedFailure,
+} from "./WriteHoldNotice";
 import { runOperation, type OperationRun } from "./dialogs/operationRun";
 
 type Scope = {
@@ -61,6 +65,7 @@ export function ScopedWriteHoldNotice() {
       target={scope.target}
       port={scope.port}
       onReload={() => void reload()}
+      onReviewCurrent={scope.reload}
       refreshing={refreshing}
     />
   );
@@ -78,6 +83,7 @@ export function useModeloOperation() {
   const scope = useModeloWriteScope();
   const { holds, target, port, onWritten } = scope;
   const hold = useModeloWriteHold(holds, target);
+  const reviewedFailure = useModeloReviewedFailure(holds, target);
   const generation = useRef(0);
   useLayoutEffect(
     () => () => {
@@ -97,7 +103,8 @@ export function useModeloOperation() {
       if (!lease) return null;
       onWritten?.();
       const outcome = await runOperation(port, send, current);
-      if (outcome.kind === "unknown") holds.unknown(lease, outcome.operationId);
+      if (outcome.kind === "unknown")
+        holds.unknown(lease, outcome.operationId, outcome.terminalFailure);
       else if (outcome.kind === "settled" || outcome.kind === "saved_unread")
         holds.needsRead(lease, outcome.kind === "saved_unread");
       else holds.notWritten(lease);
@@ -108,5 +115,5 @@ export function useModeloOperation() {
     },
     [holds, target, port, onWritten],
   );
-  return { ...scope, hold, run };
+  return { ...scope, hold, reviewedFailure, run };
 }

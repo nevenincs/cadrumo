@@ -191,6 +191,7 @@ desktop:
     sending: Enviant…
     sent_files: Fitxers enviats amb aquest missatge
     sent_skills: Habilitats carregades
+    platform_unsupported: L'agent d'IA encara no està disponible en aquesta plataforma.
     service_absent: L'agent no està instal·lat. Reinstal·la Cadrumo per afegir-lo.
     service_credential_missing: Configura un proveïdor als ajustos per començar.
     service_failed: L'agent ha deixat de funcionar.

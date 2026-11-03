@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +24,7 @@ class CalculationRevisionPublication:
     revision: CalculationRevision
     work_unit: WorkUnit
     published: bool
+    source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
     def __post_init__(self) -> None:
         """Keep the returned revision bound to the observed or committed parent."""

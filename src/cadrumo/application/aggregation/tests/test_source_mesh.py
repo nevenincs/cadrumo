@@ -31,9 +31,9 @@ from ..source_mesh import (
 from ..source_resolution_operations import (
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
-    merge_source_resolutions_by_precedence,
     storage_degradation_resolution,
 )
+from .source_precedence_support import merge_two_source_tiers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -934,7 +934,7 @@ def test_source_resolution_merge_rejects_duplicate_row_binding_ownership() -> No
     assert context["second_resolver"] == "manual-bridge"
 
 
-@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_source_resolutions_by_precedence])
+@pytest.mark.parametrize("merge", [merge_source_resolutions, merge_two_source_tiers])
 def test_source_resolution_merges_refuse_duplicate_row_casilla_ownership(
     merge: Callable[[Sequence[CalculationSourceResolution]], CalculationSourceResolution],
 ) -> None:
@@ -1029,7 +1029,7 @@ def test_precedence_merge_cannot_strip_an_existing_row_source_identity() -> None
     )
 
     with pytest.raises(AggregationValidationError, match="duplicate_row_binding_owner"):
-        merge_source_resolutions_by_precedence((source, caller))
+        merge_two_source_tiers((source, caller))
 
 
 def test_source_resolution_merge_rejects_duplicate_binding_across_value_channels() -> None:

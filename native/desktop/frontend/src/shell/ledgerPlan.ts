@@ -606,7 +606,7 @@ const DRAFT_DECIMALS: ReadonlySet<DraftField> = new Set([
 function checkDraft(draft: Draft, check: StagedCheck): DraftEntry {
   return {
     key: draft.key,
-    blockers: (check.drafts.get(draft.key) ?? []).map(
+    blockers: (check.drafts.get(draft.key)?.blockers ?? []).map(
       (blocker) => heldBy(blocker) as PlanBlocker,
     ),
   };

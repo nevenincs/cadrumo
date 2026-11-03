@@ -65,9 +65,9 @@ export function TerminalPane({
   const t = useStrings();
   const container = useRef<HTMLDivElement>(null);
   const terminal = useRef<{ term: Terminal; fit: FitAddon } | null>(null);
-  // Optional terminals acquire resources only when first opened. Once used,
-  // keep their buffer and session while hidden; the account gate owns TUI.
-  const [activated, setActivated] = useState(kind === "tui" || shown);
+  // Terminals acquire resources only when first opened. Once used, keep their
+  // buffer and session while hidden.
+  const [activated, setActivated] = useState(shown);
   if (shown && !activated) setActivated(true);
   // The session effect runs once per pane; everything else it reads is live.
   const live = useRef({

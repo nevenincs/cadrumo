@@ -125,6 +125,23 @@ fn mint_bearer() -> Result<Zeroizing<String>> {
 }
 
 impl Supervisor {
+    /// A host without a runnable service publishes its reason without observing
+    /// sign-in or starting a supervision task.
+    #[cfg(any(not(windows), test))]
+    pub fn unavailable(
+        observe: Observe,
+        changed: Changed,
+        reason: Refusal,
+        diagnostics: Arc<Diagnostics>,
+    ) -> Self {
+        let supervisor = Self::new(observe, changed, None, diagnostics);
+        *lock(&supervisor.shared.status) = Status {
+            state: State::Refused { code: reason },
+            lane: None,
+        };
+        supervisor
+    }
+
     /// `launch` builds the launcher command; without one this host has no
     /// agent service and says so.
     pub fn new(
@@ -213,6 +230,9 @@ impl Supervisor {
     /// An explicit user retry starts a new bounded attempt budget. Passive
     /// status reads never reset failures; canonical sign-in still gates launch.
     pub fn retry(&self) {
+        if self.launch.is_none() {
+            return;
+        }
         self.shared.retry_requested.store(true, Ordering::Release);
         self.shared.wake.notify_one();
         self.begin();

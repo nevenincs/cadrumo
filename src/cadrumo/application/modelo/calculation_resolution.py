@@ -35,6 +35,7 @@ from ...domain.calculations.registry.bindings import (
     resolve_bound_casilla_binding_value,
 )
 from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
+from ...domain.calculations.registry.filing_bound_reach import filing_bound_reach, filing_bound_reach_digest
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -47,9 +48,15 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.modelos.calculation_binding_values import PERSISTED_BOOLEAN_BINDING_TOKENS
 from ...domain.modelos.filing_record import FilingDeclarationKind
+from ...domain.modelos.source_disagreement import SourceDisagreementFact, SourceDisagreementRole
 from ...domain.modelos.work_unit import WorkUnit
-from ..aggregation.source_mesh import CalculationSourceResolution
-from ..aggregation.source_resolution_operations import merge_source_resolutions_by_precedence
+from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
+from ..aggregation.source_resolution_operations import (
+    PrecedenceKeyKind,
+    PrecedenceTier,
+    TierDivergence,
+    merge_source_resolutions_by_precedence,
+)
 from .binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,
     reject_binding_channel_mismatch,
@@ -83,6 +90,7 @@ class ResolvedCalculationChannels:
     boolean_bindings: dict[BindingId, bool]
     borrador_snapshot_id: str | None
     bindings_sourced_from_borrador: tuple[BindingId, ...]
+    source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,9 +185,15 @@ def resolve_calculation_binding_channels(
         binding_values=dict(caller_binding_values),
         enum_binding_values=dict(caller_enum_binding_values),
     )
-    merged = merge_source_resolutions_by_precedence(
-        (profile_resolution, backend_tier, borrador_resolution, caller_tier),
+    overlay = merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(SourceDisagreementRole.PROFILE, profile_resolution, "profile"),
+            PrecedenceTier(SourceDisagreementRole.BACKEND, backend_tier, "bucket_source_mesh"),
+            PrecedenceTier(SourceDisagreementRole.BORRADOR, borrador_resolution, "borrador"),
+            PrecedenceTier(SourceDisagreementRole.CALLER, caller_tier, "operator_input"),
+        ),
     )
+    merged = overlay.resolution
     resolved_bindings = dict(sorted(merged.binding_values.items()))
     resolved_enum_bindings = dict(sorted(merged.enum_binding_values.items()))
     resolved_date_bindings = dict(sorted(merged.date_binding_values.items()))
@@ -209,7 +223,53 @@ def resolve_calculation_binding_channels(
         bindings_sourced_from_borrador=(
             borrador_provenance.bindings_sourced if borrador_provenance is not None else ()
         ),
+        source_diagnostics=_precedence_diagnostics(work_unit, snapshot, overlay.divergences),
     )
+
+
+def _precedence_diagnostics(
+    work_unit: WorkUnit, snapshot: RegistrySnapshot, divergences: tuple[TierDivergence, ...]
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Keep every source disagreement; filing reach determines the existing note grade."""
+    if not divergences:
+        return ()
+    reach = filing_bound_reach(snapshot.revision)
+    digest = filing_bound_reach_digest(reach)
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for divergence in divergences:
+        reached = (
+            reach.casillas.get(divergence.key, ())
+            if divergence.key_kind is PrecedenceKeyKind.CASILLA
+            else reach.bindings.get(divergence.key, ())
+        )
+        fact = SourceDisagreementFact.of(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+            work_unit_id=work_unit.work_unit_id,
+            registry_revision_id=snapshot.revision.id,
+            inputs_digest=digest,
+            key=divergence.key,
+            value_channel=divergence.value_channel,
+            reached_casillas=reached,
+            sources=divergence.sources,
+            selected_role=divergence.selected_role,
+            differing_row_indices=divergence.differing_row_indices,
+        )
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="precedence_tier_divergence" if reached else "precedence_tier_divergence_advisory",
+                source_kind="source_precedence",
+                resolver_id="calculate_binding_precedence",
+                message=(
+                    f"Sources disagree on {divergence.key}; "
+                    f"the calculation used the {divergence.selected_role.value} value."
+                ),
+                casilla_id=reached[0] if reached else None,
+                disagreement=fact,
+            )
+        )
+    return tuple(diagnostics)
 
 
 def resolve_calculation_inputs(

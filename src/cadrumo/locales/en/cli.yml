@@ -2314,6 +2314,8 @@ cli:
     logout:
       help: Sign out of this profile across human sessions on this device. AEAT sessions
         stay active.
+      name_help: Profile UUID or exact label to sign out; omit to use the selected
+        profile.
       notices:
         already_logged_out: No profile is selected; there is nothing to sign out.
     passphrase:

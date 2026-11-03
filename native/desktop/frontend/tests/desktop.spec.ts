@@ -19,6 +19,7 @@ async function signInHost(
   deferInitialList = false,
   bundled = true,
   logLevel = "INFO",
+  profiles = [{ name: "Test profile", active: true }],
 ) {
   await target.addInitScript(
     ({
@@ -29,6 +30,7 @@ async function signInHost(
       logLevel,
       about,
       calendar,
+      profiles,
     }) => {
       const state = {
         presence: "absent",
@@ -46,6 +48,15 @@ async function signInHost(
         activeStatusReads: 0,
         activeListReads: 0,
         signOuts: 0,
+        savedClearCalls: 0,
+        savedClearRawPassword: false,
+        savedClearToken: false,
+        savedClearProfile: null as string | null,
+        savedClearFieldEmpty: false,
+        savedClearSecretWiped: false,
+        savedClearError: "",
+        deferSavedClear: false,
+        releaseSavedClear: null as (() => void) | null,
         // What the product reports a sign-out leaves standing: the saved
         // setting is on, and whether an issued key can still admit is a
         // separate answer.
@@ -60,7 +71,7 @@ async function signInHost(
         rawPassword: false,
         tokenHeader: false,
         secretCleared: false,
-        profiles: [{ name: "Test profile", active: true }],
+        profiles,
         listReads: 0,
         profileHeader: null as string | null,
         creations: 0,
@@ -244,6 +255,41 @@ async function signInHost(
               case "profile_views_calendar":
                 state.viewReads.push({ command, ...args });
                 return calendar;
+              case "sign_out_with_password": {
+                ++state.savedClearCalls;
+                state.savedClearRawPassword =
+                  args instanceof Uint8Array &&
+                  new TextDecoder().decode(args) === "secret á漢";
+                state.savedClearToken =
+                  options?.headers?.["x-cadrumo-token"] === "a".repeat(64);
+                state.savedClearProfile =
+                  options?.headers?.["x-cadrumo-profile"] ?? null;
+                state.savedClearFieldEmpty =
+                  document.querySelector<HTMLInputElement>("#profile-password")
+                    ?.value === "";
+                try {
+                  if (state.deferSavedClear)
+                    await new Promise<void>((resolve) => {
+                      state.releaseSavedClear = resolve;
+                    });
+                  if (state.savedClearError)
+                    throw { code: state.savedClearError };
+                  state.presence = "absent";
+                  return {
+                    remainingAccess: {
+                      automationEnabled: true,
+                      automationAccessRemains: state.automationAccessRemains,
+                      automationRevoked: false,
+                    },
+                  };
+                } finally {
+                  setTimeout(() => {
+                    state.savedClearSecretWiped =
+                      args instanceof Uint8Array &&
+                      args.every((byte) => byte === 0);
+                  }, 0);
+                }
+              }
               case "sign_out":
                 ++state.signOuts;
                 state.presence = "absent";
@@ -316,6 +362,7 @@ async function signInHost(
       logLevel,
       about: ABOUT_FIXTURE,
       calendar: FIXTURE_CALENDAR,
+      profiles,
     },
   );
   await target.addInitScript(() => {
@@ -336,6 +383,65 @@ const signInState = (target: Page) =>
         .__signInTest,
   );
 
+async function revealTui(target: Page) {
+  await target
+    .locator(".rail")
+    .getByRole("button", { name: label("desktop.rail.tui") })
+    .click();
+}
+
+test("a saved open and maximized TUI stays closed until asked for", async ({
+  page,
+}) => {
+  await seedLayout(page, {
+    prefs: { fontSize: "large" },
+    layout: {
+      page: "docs",
+      tuiShown: true,
+      maximized: "tui",
+      splitRatio: 0.7,
+      agentRatio: 0.3,
+    },
+  });
+  await signInHost(page);
+  await page.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { submitCode: "" },
+    ),
+  );
+  await page
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret");
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(page.getByLabel(label("desktop.signin.password"))).toHaveCount(
+    0,
+  );
+  expect((await signInState(page)).tuiStarts).toBe(0);
+  await expect(page.locator(".pane-tui .xterm")).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const state = JSON.parse(localStorage.getItem("cadrumo-shell-layout")!);
+        return [
+          state.layout.tuiShown,
+          state.layout.maximized,
+          state.layout.splitRatio,
+          state.layout.agentRatio,
+          state.prefs.fontSize,
+        ];
+      }),
+    )
+    .toEqual([false, null, 0.7, 0.3, "large"]);
+  await revealTui(page);
+  await expect.poll(async () => (await signInState(page)).tuiStarts).toBe(1);
+  await revealTui(page);
+  await revealTui(page);
+  expect((await signInState(page)).tuiStarts).toBe(1);
+});
+
 test("terminal cursor replies survive output arriving before session opening completes", async ({
   page,
 }) => {
@@ -355,6 +461,11 @@ test("terminal cursor replies survive output arriving before session opening com
   await page
     .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
     .click();
+  await expect(page.getByLabel(label("desktop.signin.password"))).toHaveCount(
+    0,
+  );
+  expect((await signInState(page)).tuiStarts).toBe(0);
+  await revealTui(page);
   await expect.poll(async () => (await signInState(page)).tuiStarts).toBe(1);
   // Let xterm consume the cursor query while the host still holds the open reply.
   await page.evaluate(async () => {
@@ -379,13 +490,13 @@ for (const [severity, value] of [
     page,
   }) => {
     await signInHost(page, false, false, false, true, severity);
-    await page.keyboard.press("Control+Shift+KeyL");
+    await page.keyboard.press("ControlOrMeta+Shift+KeyL");
     await openLogFilters(page);
     const selector = page.getByLabel(label("desktop.logs.minimum_level"));
     await expect(selector).toHaveValue(value);
     await selector.selectOption("2");
     await page.keyboard.press("Escape");
-    await page.keyboard.press("Control+Shift+KeyK");
+    await page.keyboard.press("ControlOrMeta+Shift+KeyK");
     await page.locator("[cmdk-input]").fill(label("desktop.action.logs_reset"));
     await page
       .locator("[cmdk-item]")
@@ -793,8 +904,10 @@ for (const pending of ["status", "list"] as const)
         exact: true,
       })
       .click();
-    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
     await expect(password).toHaveCount(0);
+    expect((await signInState(target)).tuiStarts).toBe(0);
+    await revealTui(target);
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
     await expect
       .poll(async () => (await signInState(target)).secretCleared)
       .toBe(true);
@@ -896,6 +1009,8 @@ for (const pending of ["status", "list"] as const)
       else state.releaseList();
     }, pending);
     await expect(dialog).toHaveCount(0);
+    expect((await signInState(target)).tuiStarts).toBe(0);
+    await revealTui(target);
     await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
     const state = await signInState(target);
     expect(state.creations).toBe(1);
@@ -993,7 +1108,7 @@ test("a created profile remains available when automatic sign-in is refused", as
   expect(state.tuiStarts).toBe(0);
 });
 
-test("throttling counts down without retry and a successful sign-in starts the TUI", async ({
+test("throttling counts down and sign-in opens the TUI only on request", async ({
   page: target,
 }) => {
   await signInHost(target);
@@ -1025,6 +1140,11 @@ test("throttling counts down without retry and a successful sign-in starts the T
     .getByLabel(label("desktop.signin.password"), { exact: true })
     .fill("secret á漢");
   await submit.click();
+  await expect(target.getByLabel(label("desktop.signin.password"))).toHaveCount(
+    0,
+  );
+  expect((await signInState(target)).tuiStarts).toBe(0);
+  await revealTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   expect((await signInState(target)).tuiStarts).toBe(1);
   await target
@@ -1120,6 +1240,7 @@ test("a locked profile is said beside the sign-in form, which stays available an
   // Put aside, the pane behind it says the same, with the way to try again.
   await target.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
+  await revealTui(target);
   await expect(gate).toContainText(
     label("desktop.signin.refused.profile_locked"),
   );
@@ -1156,7 +1277,9 @@ test("a locked profile is said beside the sign-in form, which stays available an
     .toBeGreaterThan(reads);
   await password.fill("secret á漢");
   await submit.click();
+  await expect(password).toHaveCount(0);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  expect((await signInState(target)).tuiStarts).toBe(1);
   expect((await signInState(target)).submissions).toBe(2);
 });
 
@@ -1166,6 +1289,7 @@ test("a locked profile is said beside the sign-in form, which stays available an
 const REFUSALS = {
   PROFILE_LOCKED: label("desktop.signin.refused.profile_locked"),
   KEYRING_UNAVAILABLE: label("desktop.signin.refused.keyring_unavailable"),
+  session_not_persisted: label("desktop.signin.refused.keyring_unavailable"),
   CREDENTIAL_REJECTED: label("desktop.signin.refused.invalid"),
   // The wait runs down, so only the words before it are fixed.
   THROTTLED:
@@ -1222,6 +1346,142 @@ for (const [code, said] of Object.entries(REFUSALS))
     expect((await signInState(target)).tuiStarts).toBe(0);
   });
 
+test("saved sign-in recovery requires a fresh password and names the selected profile", async ({
+  page: target,
+}) => {
+  await signInHost(target, true, false, false, true, "INFO", [
+    { name: "Test profile", active: true },
+    { name: "Perfil á漢", active: false },
+  ]);
+  const dialog = target.locator(".sign-in");
+  const password = dialog.getByLabel(label("desktop.signin.password"), {
+    exact: true,
+  });
+  await dialog
+    .getByLabel(label("desktop.signin.profile"), { exact: true })
+    .selectOption({ label: "Perfil á漢" });
+  await target.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      {
+        submitCode: "session_not_persisted",
+        deferSavedClear: true,
+      },
+    ),
+  );
+  await password.fill("secret á漢");
+  await dialog
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(dialog).toContainText(
+    label("desktop.signin.refused.keyring_unavailable"),
+  );
+  const clear = dialog.getByRole("button", {
+    name: label("desktop.signin.clear_saved"),
+    exact: true,
+  });
+  await expect(clear).toBeVisible();
+  await expect(dialog).toContainText(label("desktop.signin.clear_saved_lead"));
+  await expect(password).toHaveValue("");
+  await clear.click();
+  expect((await signInState(target)).savedClearCalls).toBe(0);
+  await password.fill("secret á漢");
+  await clear.click();
+  await expect
+    .poll(async () => (await signInState(target)).savedClearCalls)
+    .toBe(1);
+  await expect(password).toHaveValue("");
+  const pending = dialog
+    .locator('button[type="button"]')
+    .filter({ hasText: label("desktop.signin.clearing_saved") });
+  await expect(pending).toBeDisabled();
+  await pending.evaluate((button: HTMLButtonElement) => button.click());
+  const inFlight = await signInState(target);
+  expect(inFlight.savedClearCalls).toBe(1);
+  expect(inFlight.savedClearRawPassword).toBe(true);
+  expect(inFlight.savedClearToken).toBe(true);
+  expect(inFlight.savedClearFieldEmpty).toBe(true);
+  expect(inFlight.savedClearProfile).toBe(encodeURIComponent("Perfil á漢"));
+  await target.evaluate(() =>
+    (
+      window as unknown as { __signInTest: { releaseSavedClear: () => void } }
+    ).__signInTest.releaseSavedClear(),
+  );
+  await expect(dialog).toContainText(label("desktop.signin.saved_cleared"));
+  await expect
+    .poll(async () => (await signInState(target)).savedClearSecretWiped)
+    .toBe(true);
+  const completed = await signInState(target);
+  expect(completed.submissions).toBe(1);
+  expect(completed.tuiStarts).toBe(0);
+  await expect(password).toHaveValue("");
+});
+
+test("saved sign-in recovery keeps a wrong-password refusal and permits retry", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await target.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      {
+        submitCode: "session_not_persisted",
+        savedClearError: "CREDENTIAL_REJECTED",
+      },
+    ),
+  );
+  const dialog = target.locator(".sign-in");
+  const password = dialog.getByLabel(label("desktop.signin.password"), {
+    exact: true,
+  });
+  await password.fill("secret á漢");
+  await dialog
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  const clear = dialog.getByRole("button", {
+    name: label("desktop.signin.clear_saved"),
+    exact: true,
+  });
+  await expect(clear).toBeVisible();
+  await password.fill("secret á漢");
+  await clear.click();
+  await expect(dialog).toContainText(label("desktop.signin.refused.invalid"));
+  await expect(dialog).not.toContainText(label("desktop.signin.saved_cleared"));
+  await expect(password).toHaveValue("");
+  await expect(clear).toBeVisible();
+  await expect
+    .poll(async () => (await signInState(target)).savedClearSecretWiped)
+    .toBe(true);
+  const result = await signInState(target);
+  expect(result.savedClearCalls).toBe(1);
+  expect(result.submissions).toBe(1);
+  expect(result.tuiStarts).toBe(0);
+  await target.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { savedClearError: "", savedClearSecretWiped: false },
+    ),
+  );
+  await password.fill("secret á漢");
+  await clear.click();
+  await expect(dialog).toContainText(label("desktop.signin.saved_cleared"));
+  await expect
+    .poll(async () => (await signInState(target)).savedClearSecretWiped)
+    .toBe(true);
+  expect((await signInState(target)).savedClearCalls).toBe(2);
+  expect((await signInState(target)).submissions).toBe(1);
+});
+
+test("saved sign-in recovery never claims success with no profile", async ({
+  page: target,
+}) => {
+  await signInHost(target, true, false, false, true, "INFO", []);
+  await expect(target.locator(".sign-in")).not.toContainText(
+    label("desktop.signin.saved_cleared"),
+  );
+  expect((await signInState(target)).savedClearCalls).toBe(0);
+});
+
 test("the end of the TUI's session reads the account again", async ({
   page: target,
 }) => {
@@ -1238,6 +1498,11 @@ test("the end of the TUI's session reads the account again", async ({
   await target
     .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
     .click();
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toHaveCount(0);
+  expect((await signInState(target)).tuiStarts).toBe(0);
+  await revealTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   const reads = (await signInState(target)).statusReads as number;
   await target.evaluate(() =>
@@ -1285,6 +1550,7 @@ test("unsupported platforms hide desktop sign-in and Account", async ({
   page: target,
 }) => {
   await signInHost(target, false);
+  await revealTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect(
     target.getByLabel(label("desktop.signin.password"), { exact: true }),
@@ -1304,6 +1570,7 @@ test("the desktop host reads the profile's calendar and message counts", async (
   page: target,
 }) => {
   await signInHost(target, false);
+  await revealTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   const messages = target.locator('[data-rail="messages"]');
   await expect(messages).toBeVisible();
@@ -1395,7 +1662,7 @@ test("without a host the shell lays out every area and invents nothing", async (
     name: label("desktop.rail.label"),
   });
   await expect(rail.getByRole("button")).toHaveCount(7);
-  // The TUI is shown; the documentation waits to be asked for. The agent
+  // The TUI and documentation wait to be asked for. The agent
   // works only for a signed-in profile, and with no host nobody is: its
   // column is not shown, and its button stays in the rail, held, saying why.
   await expect(target.locator(".pane-agent")).toBeHidden();
@@ -1410,6 +1677,8 @@ test("without a host the shell lays out every area and invents nothing", async (
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.unavailable"),
   );
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(0);
+  await revealTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   for (const rows of await target.locator(".xterm-rows").all())
     await expect(rows).toHaveText("");
@@ -1456,6 +1725,7 @@ test("maximize, swap, orientation and hide never reload the documentation", asyn
   page: target,
 }) => {
   await openWithDocs(target);
+  await revealTui(target);
   // A marker in the page's own window survives only if the frame never
   // remounts or reloads.
   const docs = docsFrame(target);
@@ -1492,6 +1762,7 @@ test("a window too narrow for side by side stacks without changing the choice", 
 }) => {
   await seedLayout(target);
   await target.goto("/");
+  await revealTui(target);
   const docsHead = target.locator(".pane-docs .pane-head");
   const stack = docsHead.getByRole("button", {
     name: label("desktop.split.stack"),
@@ -1542,6 +1813,7 @@ test("bridge messages from any window but the documentation frame are ignored", 
   page: target,
 }) => {
   await openWithDocs(target);
+  await openPanelTab(target, "console");
   await target.evaluate(() => {
     window.postMessage(
       {
@@ -1564,6 +1836,7 @@ test("bridge messages from any window but the documentation frame are ignored", 
 
 test("the remembered layout survives a reload", async ({ page: target }) => {
   await target.goto("/");
+  await revealTui(target);
   await target
     .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
@@ -1587,6 +1860,7 @@ test("the remembered layout survives a reload", async ({ page: target }) => {
     )
     .toBe("python");
   await target.reload();
+  await revealTui(target);
   await expect(target.locator(".split")).toHaveClass(/split-column/);
   await expect(target.locator("section.panel")).toBeVisible();
   await expect(

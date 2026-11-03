@@ -33,6 +33,10 @@ test.beforeEach(async ({ page }) => {
   await page.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&window=port",
   );
+  await page
+    .locator(".rail")
+    .getByRole("button", { name: label("desktop.rail.tui") })
+    .click();
   await expect(header(page, "console")).toBeVisible();
   await expect(page.getByRole("main")).toHaveCount(1);
   await expect(page.getByRole("main")).toBeVisible();
@@ -132,7 +136,7 @@ test("native fullscreen restores the saved split and expansion is separate", asy
     .click();
   expect(await content(page, "docs").boundingBox()).toEqual(before);
   await arrange(page, "docs", "desktop.dock.fullscreen");
-  await page.keyboard.press("Control+Shift+Digit1");
+  await page.keyboard.press("ControlOrMeta+Shift+Digit1");
   await expect(content(page, "console")).toBeVisible();
   await expect(content(page, "console").locator("textarea")).toBeFocused();
   await expect(page.locator(".titlebar")).toHaveAttribute(

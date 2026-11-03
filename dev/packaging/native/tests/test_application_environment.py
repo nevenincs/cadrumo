@@ -5,11 +5,13 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import sys
 import tomllib
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.package_interpreter import ROLE_IMAGE_OPTION, isolated_interpreter_command
 from dev._paths import REPO_ROOT
 
 from ..application_environment import load_for_build, parse
@@ -22,6 +24,32 @@ from ..layout import load_layout
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
+
+
+def test_hosted_posix_kdf_command_selects_only_the_exact_child_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "_xoptions", {ROLE_IMAGE_OPTION: "/package/cadrumo"}, raising=False)
+    command = isolated_interpreter_command()
+    assert command == ("/package/cadrumo", "--role", "python", "-S")
+    arguments = (
+        *command[3:],
+        "-m",
+        "cadrumo.adapters.persistence.storage.custody._kdf_worker",
+        "--request-fd",
+        "3",
+        "--result-fd",
+        "4",
+        "--descriptor-bound",
+        "1024",
+    )
+    declaration = load_for_build(REPO_ROOT)
+    assert reference_select(declaration, "posix", "python", arguments) == "kdf-child"
+    for invalid in (
+        (*arguments[:4], "2", *arguments[5:]),
+        (*arguments[:6], "3", *arguments[7:]),
+        (*arguments[:8], "not-a-number"),
+        (*arguments, "--extra"),
+    ):
+        assert reference_select(declaration, "posix", "python", invalid) == "python"
 
 
 @pytest.mark.parametrize("family,target", [("windows", "windows-x86-64"), ("posix", "linux-x86-64")])

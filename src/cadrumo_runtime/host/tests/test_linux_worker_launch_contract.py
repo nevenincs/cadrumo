@@ -10,6 +10,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.core import package_interpreter
 from cadrumo.core.config import Settings
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -68,9 +69,10 @@ def test_scope_rejects_worker_substitution_before_manager_access(
     assert refused.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
 
 
+@pytest.mark.parametrize("hosted", [False, True])
 @pytest.mark.parametrize("script_mode", [False, True])
 def test_scope_forwards_trusted_selection_inside_existing_guardian_containment(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script_mode: bool
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script_mode: bool, hosted: bool
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
@@ -84,6 +86,8 @@ def test_scope_forwards_trusted_selection_inside_existing_guardian_containment(
     selected = script if script_mode else None
     scope = linux_worker_process.LinuxProcessScope(worker_id=uuid4(), worker_script=selected)
     command = ("-I", "-B", str(script)) if script_mode else _DEFAULT
+    role = ("--role", "python") if hosted else ()
+    command = (*role, *command)
     recorded: list[tuple[str, ...]] = []
     unavailable = RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
 
@@ -98,7 +102,7 @@ def test_scope_forwards_trusted_selection_inside_existing_guardian_containment(
     assert refused.value is unavailable
     (arguments,) = recorded
     guardian = arguments.index("cadrumo_runtime.host.linux_worker_guardian")
-    assert arguments[guardian - 2 : guardian] == ("-I", "-m")
+    assert arguments[arguments.index(str(executable)) : guardian] == (str(executable), *role, "-I", "-m")
     assert arguments[guardian + 1 : guardian + 5] == ("--parent-pid", "41", "--parent-start", "start-41")
     separator = arguments.index("--", guardian)
     selection = arguments[guardian + 5 : separator]
@@ -151,14 +155,19 @@ def test_guardian_refuses_worker_substitution_before_parent_or_process_access(
     )
 
 
+@pytest.mark.parametrize("hosted", [False, True])
 @pytest.mark.parametrize("script_mode", [False, True])
 def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worker(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script_mode: bool
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script_mode: bool, hosted: bool
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
     selected = script if script_mode else None
     command = ("-I", "-B", str(script)) if script_mode else _DEFAULT
+    role = ("--role", "python") if hosted else ()
+    command = (*role, *command)
+    image = "/packaged/Cadrumo" if hosted else sys.executable
+    monkeypatch.setattr(package_interpreter.sys, "_xoptions", {"cadrumo_role_image": image} if hosted else {})
     starts: list[int] = []
     opened: list[int] = []
     closed: list[int] = []
@@ -241,7 +250,7 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     assert (
         linux_worker_guardian.run(["--parent-pid", "41", "--parent-start", "start-41", *selection, "--", *command]) == 7
     )
-    assert launched == [(sys.executable, *command)]
+    assert launched == [(image, *command)]
     assert registered == [51, 52] and opened == [41, 61]
     assert unbounded_waits == [None]
     assert closed == [52, 51]

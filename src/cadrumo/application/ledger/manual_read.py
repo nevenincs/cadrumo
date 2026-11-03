@@ -201,6 +201,10 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         iva_rate=_display_optional_decimal(transaction.iva_rate),
         iva_amount=_display_optional_decimal(transaction.iva_amount),
         iva_category=_optional_ledger_enum_value(transaction.iva_category),
+        deduction_fact_kind=(
+            transaction.deduction_fact_kind.value if transaction.deduction_fact_kind is not None else None
+        ),
+        investment_asset_id=transaction.investment_asset_id,
         counterparty_country=transaction.counterparty_country,
         counterparty_identification_state=_optional_ledger_enum_value(
             transaction.counterparty_identification_state,

@@ -7,6 +7,7 @@ mod observation;
 mod opening_tests;
 mod password;
 mod profiles;
+mod restoration;
 mod watch;
 // The child runner and the envelope decoder are also the provider settings'
 // channel: one set of lanes, one deadline, one output bound, one settlement.
@@ -198,12 +199,14 @@ pub struct SignIn {
     pub children: Arc<Children>,
     observation: observation::Observer,
     watch: watch::Watch,
-    // The one person session this window holds; each consumer keeps it alive
-    // only while it uses it.
+    // The one person session shared by this window's consumers.
     person: std::sync::Mutex<std::sync::Weak<std::sync::Mutex<crate::agent::person::Person>>>,
-    // The session the window's own sign-in opened, kept until a resumed
-    // session replaces it or the person signs out, so none is resumed twice.
+    // Strongly retain both password-opened and restored sessions until one
+    // replaces it or the person signs out; a status read must not drop the
+    // usable session it just established.
     signed_in: std::sync::Mutex<Option<crate::agent::person::HeldPerson>>,
+    restoration: std::sync::Mutex<restoration::Restoration>,
+    diagnostics: Arc<cadrumo_application::diagnostics::Diagnostics>,
     // What every person session of this window was pushed, whichever is held.
     person_events: crate::agent::person::PersonEvents,
     // Whether the session held waits for a fresh proof after the profile's
@@ -265,6 +268,8 @@ impl SignIn {
             observation: observation::Observer::default(),
             person: std::sync::Mutex::new(std::sync::Weak::new()),
             signed_in: std::sync::Mutex::new(None),
+            restoration: std::sync::Mutex::new(restoration::Restoration::default()),
+            diagnostics: launch.diagnostics.clone(),
             person_events: tokio::sync::broadcast::channel(16).0,
             custody: Custody::default(),
             closed: std::sync::atomic::AtomicBool::new(false),
@@ -296,7 +301,20 @@ impl SignIn {
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
             return Err(closing());
         }
+        // Never wait for a watch mutation here: password sign-in owns that
+        // fence while replacing this cache. Fresh-only checking avoids a
+        // restoration holding the cache while waiting for that same sign-in.
+        // Sample after acquiring the cache: a completed password sign-in or
+        // status publication while this call waited is the current state,
+        // not a reason to reject an already-held usable person.
         let mut cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
+        let observed = self.watch.latest()?;
+        if observed.profile_id.as_deref() != Some(profile_id)
+            || observed.status.state != Presence::Present
+            || !observed.status.runtime_ready()
+        {
+            return Err(failure(ErrorCode::SessionUnavailable).with_reason("person_not_signed_in"));
+        }
         if let Some(held) = cached.upgrade() {
             let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
             if person.identity["profile_id"] == profile_id && person.is_open() {
@@ -308,15 +326,46 @@ impl SignIn {
                 return Ok(held);
             }
         }
-        let mut person = self.resume(profile_id)?;
+        let mut person = self
+            .restoration
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .attempt(&observed, || {
+                self.resume(profile_id).inspect_err(|failure| {
+                    // This real attempt is logged once; returning its cached refusal
+                    // to later status readers must not create a diagnostic storm.
+                    self.diagnostics.failure(failure.error.clone());
+                })
+            })?;
+        if self.watch.latest()? != observed {
+            return Err(
+                failure(ErrorCode::SessionUnavailable).with_reason("person_observation_changed")
+            );
+        }
         let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
             return Err(closing());
         }
-        person.observe_events(self.person_events.clone())?;
+        if let Err(error) = person.observe_events(self.person_events.clone()) {
+            self.diagnostics.failure(error.clone());
+            self.restoration
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .failed(&observed, restoration::Failed::unavailable(error.clone()));
+            return Err(error);
+        }
+        if self.watch.latest()? != observed {
+            return Err(
+                failure(ErrorCode::SessionUnavailable).with_reason("person_observation_changed")
+            );
+        }
         let held = Arc::new(std::sync::Mutex::new(person));
         *cached = Arc::downgrade(&held);
-        *self.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        *self.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = Some(held.clone());
+        self.restoration
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .restored();
         Ok(held)
     }
 
@@ -385,7 +434,13 @@ impl SignIn {
                 return Err(closing());
             }
             return match rebound {
-                Ok(()) => Ok(signed_in(active)),
+                Ok(()) => {
+                    self.restoration
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .restored();
+                    Ok(signed_in(active))
+                }
                 Err(NativeSignIn::Refused(refusal)) => Ok(SignInResult::Refused { refusal }),
                 Err(NativeSignIn::Unavailable(error)) => Err(error),
             };
@@ -417,6 +472,10 @@ impl SignIn {
         }
         *cached = Arc::downgrade(&held);
         *self.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = Some(held);
+        self.restoration
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .restored();
         Ok(signed_in(active))
     }
 
@@ -487,22 +546,57 @@ impl SignIn {
             .ok_or_else(|| failure(ErrorCode::ReadFailed).with_reason("profile_identity_absent"))
     }
 
-    /// The current status if one is already known and fresh; never waits.
+    /// The current fresh observation, with this window's own standing. It
+    /// never starts restoration or waits for a newer watch snapshot.
     pub(crate) fn current_observation(&self) -> Result<SignInStatus> {
-        Ok(self.shown(self.watch.latest()?.status))
+        Ok(self.shown(&self.watch.latest()?))
     }
 
     pub(crate) async fn read_status(self: &Arc<Self>) -> Result<SignInStatus> {
         if !supported() {
             return Ok(SignInStatus::unsupported());
         }
-        Ok(self.shown(self.watch.current().await?.status))
+        loop {
+            // Await only outside any mutation or person-cache lock.
+            let observed = self.watch.current().await?;
+            if observed.status.state == Presence::Present
+                && observed.status.runtime_ready()
+                && let Some(profile_id) = observed.profile_id.clone()
+            {
+                let owner = self.clone();
+                // A runtime's stored presence alone does not grant this new
+                // desktop a session. Establish it before announcing usability.
+                let _ = super::blocking(move || Ok(owner.person(&profile_id))).await?;
+            }
+            match self.watch.latest() {
+                Ok(latest) if latest == observed => return Ok(self.shown(&observed)),
+                // A password/profile mutation or runtime change won the race.
+                // Re-read after its fence, never publish the old restoration.
+                _ => continue,
+            }
+        }
     }
 
-    /// `status` with what this window knows that the runtime's stored sign-in
-    /// does not say: that its own session waits for a fresh proof.
-    fn shown(&self, mut status: SignInStatus) -> SignInStatus {
+    fn shown(&self, observed: &watch::Observed) -> SignInStatus {
+        let mut status = observed.status.clone();
         status.reconnecting = self.custody.reconnecting();
+        // Lock order matches person/sign_in: cache, held person, restoration.
+        let cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
+        let usable = cached.upgrade().is_some_and(|held| {
+            let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
+            observed
+                .profile_id
+                .as_deref()
+                .is_some_and(|profile_id| person.identity["profile_id"] == profile_id)
+                && person.is_open()
+        });
+        let refused = self
+            .restoration
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .current(observed)
+            .map(|failure| failure.refusal);
+        status.require_person(usable, refused);
         status
     }
 
@@ -670,17 +764,21 @@ impl SignIn {
 
     /// Resumes the stored sign-in of `profile_id` on a fresh connection of the
     /// window's own, as the desktop frontend, and holds the session it admits.
-    fn resume(&self, profile_id: &str) -> Result<crate::agent::person::Person> {
+    fn resume(
+        &self,
+        profile_id: &str,
+    ) -> std::result::Result<crate::agent::person::Person, restoration::Failed> {
         use cadrumo_application::runtime_client::session::Frontend;
         let waiting = cadrumo_application::runtime_client::timeout::TimeoutWait::new();
 
-        let native = self.native.as_ref().map_err(Clone::clone)?;
-        let recovery = self.recovery()?;
-        let connection = self.connect(waiting.deadline()).map_err(|refusal| {
-            failure(ErrorCode::SessionUnavailable)
-                .with_reason("person_resume_unavailable")
-                .caused_by(refusal)
-        })?;
+        let native = self
+            .native
+            .as_ref()
+            .map_err(|error| restoration::Failed::unavailable(error.clone()))?;
+        let recovery = self.recovery().map_err(restoration::Failed::unavailable)?;
+        let connection = self
+            .connect(waiting.deadline())
+            .map_err(restoration::Failed::runtime)?;
         let pushed = connection.subscribe_scoped();
         let admitted = connection
             .resume_receipt(
@@ -689,12 +787,9 @@ impl SignIn {
                 Frontend::Desktop,
                 waiting.deadline(),
             )
-            .map_err(|refusal| {
-                failure(ErrorCode::SessionUnavailable)
-                    .with_reason("person_resume_refused")
-                    .caused_by(refusal)
-            })?;
+            .map_err(restoration::Failed::resume)?;
         crate::agent::person::Person::native(connection, pushed, admitted, None, recovery)
+            .map_err(restoration::Failed::unavailable)
     }
 
     /// Notes the person's input through the session this window holds, so a
@@ -886,6 +981,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         sign_in_unsubscribe,
         sign_in_submit,
         sign_out,
+        sign_out_with_password,
         profile_list,
         profile_create,
         profile_delete_review,
@@ -1011,6 +1107,29 @@ pub async fn sign_out(
         Err(result) => Ok(result),
         Ok(outcome) => wire::logout(outcome),
     }
+}
+
+/// Explicit password proof for retiring the named profile's previous sign-in.
+#[tauri::command]
+pub async fn sign_out_with_password(
+    state: State<'_, Arc<SignIn>>,
+    request: Request<'_>,
+) -> std::result::Result<SignOutResult, wire::CommandFailure> {
+    if !supported() {
+        return Err(failure(ErrorCode::UnsupportedPlatform).into());
+    }
+    let (profile, secret) = password_sign_out_input(request.headers(), request.body())?;
+    let state = state.inner().clone();
+    let outcome = super::blocking(move || state.run(&LOGOUT, Some(&profile), Some(secret))).await?;
+    wire::logout_recovery(outcome)
+}
+
+fn password_sign_out_input(
+    headers: &HeaderMap,
+    body: &InvokeBody,
+) -> Result<(String, Zeroizing<Vec<u8>>)> {
+    let profile = label(headers)?.ok_or_else(|| failure(ErrorCode::InvalidArguments))?;
+    Ok((profile, encoded(body, false)?))
 }
 
 /// The label a call names, or none. Refused unless it is text the product
@@ -1329,6 +1448,42 @@ mod tests {
             arguments(&LOGOUT, None, false),
             ["--format", "json", "config", "logout"]
         );
+        assert_eq!(
+            arguments(&LOGOUT, Some("Named profile"), true),
+            [
+                "--format",
+                "json",
+                "config",
+                "logout",
+                "--secrets-stdin",
+                "--",
+                "Named profile"
+            ]
+        );
+    }
+
+    #[test]
+    fn password_sign_out_requires_an_explicit_target_and_protected_body() {
+        let body = InvokeBody::Raw("synthetic-profile-proof".as_bytes().to_vec());
+        let (profile, proof) = password_sign_out_input(&named("Named%20profile"), &body).unwrap();
+        assert_eq!(profile, "Named profile");
+        assert_eq!(
+            serde_json::from_slice::<serde_json::Value>(&proof).unwrap(),
+            serde_json::json!({"passphrase":"synthetic-profile-proof"})
+        );
+        for (headers, body) in [
+            (HeaderMap::new(), body),
+            (
+                named("Named"),
+                InvokeBody::Json(serde_json::json!({"passphrase":"synthetic"})),
+            ),
+            (named("Named"), InvokeBody::Raw(vec![255])),
+        ] {
+            assert_eq!(
+                password_sign_out_input(&headers, &body).unwrap_err().code,
+                ErrorCode::InvalidArguments
+            );
+        }
     }
 
     // What the fixtures assert of the product's models, asked of a real

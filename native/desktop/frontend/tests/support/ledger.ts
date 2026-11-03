@@ -37,6 +37,8 @@ export function movement(
     iva_rate: null,
     iva_amount: null,
     iva_category: null,
+    deduction_fact_kind: null,
+    investment_asset_id: null,
     counterparty_country: null,
     counterparty_identification_state: null,
     irpf_category: null,
