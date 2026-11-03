@@ -112,7 +112,7 @@ def _name_pattern() -> str:
     pytest.fail("the bundled XSD declares no tipo_ApeNom")
 
 
-def _verified_work_unit() -> str:
+def _calculated_work_unit() -> tuple[str, str]:
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(_FILING_YEAR)
     )
@@ -120,10 +120,31 @@ def _verified_work_unit() -> str:
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_CALCULATE_FLAGS]
     )
     assert calculated.exit_code == 0, calculated.output
-    revision_id = require_schema_envelope(calculated.output)["calculation_revision_id"]
+    return work_unit_id, require_schema_envelope(calculated.output)["calculation_revision_id"]
+
+
+def _verified_work_unit() -> str:
+    work_unit_id, revision_id = _calculated_work_unit()
     verified = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "verify", revision_id])
     assert verified.exit_code == 0, verified.output
     return work_unit_id
+
+
+def _assert_refused_naming_the_box(surnames: str, tmp_path: Path) -> None:
+    """Verification refuses the name by its box, and the export of that work then writes nothing."""
+    work_unit_id, revision_id = _calculated_work_unit()
+    output = tmp_path / "modelo-100.xml"
+
+    verified = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "verify", revision_id])
+    exported = invoke_cached_cli(["app", "modelo", "export", work_unit_id, "--output", str(output)])
+
+    for result in (verified, exported):
+        assert result.exit_code != 0
+        assert "application.filing" not in result.output
+        assert surnames not in result.output
+        assert surnames.upper() not in result.output
+    assert "DP_APENOM_D" in verified.output
+    assert not output.exists()
 
 
 def _json_error(output: str) -> dict[str, object]:
@@ -189,21 +210,14 @@ def test_a_surname_stored_past_the_bound_after_work_began_refuses_calculate_nami
 
 
 @pytest.mark.parametrize("surnames_length", [77, 252])
-def test_a_name_past_the_official_box_refuses_export_naming_the_box(
+def test_a_name_past_the_official_box_refuses_verification_and_export_naming_the_box(
     runtime_profile: TestRuntimeProfile, tmp_path: Path, surnames_length: int
 ) -> None:
     """Composed with a space and ``ANA``, these make the 81 and 256 character ends of the range."""
     surnames = "P" * surnames_length
     _seed(runtime_profile, name="Ana", surnames=surnames)
-    output = tmp_path / "modelo-100.xml"
 
-    result = invoke_cached_cli(["app", "modelo", "export", _verified_work_unit(), "--output", str(output)])
-
-    assert result.exit_code != 0
-    assert "DP_APENOM_D" in result.output
-    assert "application.filing" not in result.output
-    assert surnames not in result.output
-    assert not output.exists()
+    _assert_refused_naming_the_box(surnames, tmp_path)
 
 
 def test_a_mixed_case_accented_name_exports_in_capitals(runtime_profile: TestRuntimeProfile, tmp_path: Path) -> None:
@@ -219,19 +233,11 @@ def test_a_mixed_case_accented_name_exports_in_capitals(runtime_profile: TestRun
     assert root.findtext(_NAME_PATH) == "PÉREZ NÚÑEZ JOSÉ MARÍA"
 
 
-def test_a_name_no_case_can_make_valid_refuses_naming_it_and_writes_nothing(
+def test_a_name_no_case_can_make_valid_refuses_verification_naming_it_and_writes_nothing(
     runtime_profile: TestRuntimeProfile, tmp_path: Path
 ) -> None:
     surnames = "Pérez Gil 5"
     assert re.fullmatch(_name_pattern(), f"{surnames} ANA".upper()) is None
     _seed(runtime_profile, name="Ana", surnames=surnames)
-    output = tmp_path / "modelo-100.xml"
 
-    result = invoke_cached_cli(["app", "modelo", "export", _verified_work_unit(), "--output", str(output)])
-
-    assert result.exit_code != 0
-    assert "DP_APENOM_D" in result.output
-    assert "application.filing" not in result.output
-    assert surnames not in result.output
-    assert surnames.upper() not in result.output
-    assert not output.exists()
+    _assert_refused_naming_the_box(surnames, tmp_path)
