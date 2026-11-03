@@ -68,36 +68,3 @@ reason = """
 The correction amount's type column reads Num, and general note 1 glosses Num as unsigned. Notes 3 and 4 of the same sheet say Num admits a leading '-', and their worked examples write -15,37 as -0000000000001537. The form settles negative corrections from this slot, so the amount is declared signed, with the minus displacing the leading digit.
 """
 reconsideration_condition = "Remove this row if a later edition of the design gives the amount a type that states its sign, or withdraws notes 3 and 4."
-
-[[dispositions]]
-kind = "record_drift"
-modelo = "369"
-revision = "esquema-exterior"
-source_ref = "aeat-dr-369-2021"
-source_sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
-remedy = "republish"
-differing_records = 2
-reason = "Notes 3 and 4 of the design say the correction amount takes a leading minus, which the shipped amount refuses."
-reconsideration_condition = "Retire once this tree is republished."
-
-[[dispositions]]
-kind = "record_drift"
-modelo = "369"
-revision = "esquema-union"
-source_ref = "aeat-dr-369-2021"
-source_sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
-remedy = "republish"
-differing_records = 2
-reason = "Notes 3 and 4 of the design say the correction amount takes a leading minus, which the shipped amount refuses."
-reconsideration_condition = "Retire once this tree is republished."
-
-[[dispositions]]
-kind = "record_drift"
-modelo = "369"
-revision = "esquema-importacion"
-source_ref = "aeat-dr-369-2021"
-source_sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
-remedy = "republish"
-differing_records = 2
-reason = "Notes 3 and 4 of the design say the correction amount takes a leading minus, which the shipped amount refuses."
-reconsideration_condition = "Retire once this tree is republished."
