@@ -2623,7 +2623,16 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "1 - individual"
+              },
+              {
+                "value": "2",
+                "label": "2 - joint"
+              }
+            ],
             "help": [
               "Taxation type code",
               "1 - individual: Use when you are filing only your own individual return",
@@ -2760,7 +2769,24 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "Disability grade 33% to 64%"
+              },
+              {
+                "value": "2",
+                "label": "Disability grade 65% or higher"
+              },
+              {
+                "value": "3",
+                "label": "Judicial incapacity or equivalent"
+              },
+              {
+                "value": "4",
+                "label": "Third-party assistance or reduced mobility"
+              }
+            ],
             "help": [
               "First taxpayer disability code",
               "Disability grade 33% to 64%: Recognised disability of 33% to 64% - increases the personal minimum.",
@@ -2946,7 +2972,24 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "Disability grade 33% to 64%"
+              },
+              {
+                "value": "2",
+                "label": "Disability grade 65% or higher"
+              },
+              {
+                "value": "3",
+                "label": "Judicial incapacity or equivalent"
+              },
+              {
+                "value": "4",
+                "label": "Third-party assistance or reduced mobility"
+              }
+            ],
             "help": [
               "Spouse disability grade (if applicable)",
               "Disability grade 33% to 64%: Recognised disability of 33% to 64% - increases the personal minimum.",
@@ -3050,6 +3093,32 @@
             "row_index": null
           },
           {
+            "path": "renta_family.convive_con_otro_progenitor",
+            "label": "Lives with the other parent of a child in the household",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "country_options": [],
+            "choices": [
+              {
+                "value": "true",
+                "label": "Yes"
+              },
+              {
+                "value": "false",
+                "label": "No"
+              }
+            ],
+            "help": [
+              "Do you live with the father or mother of any child in your family unit?",
+              "Article 84.2.4 of the personal income tax law (LIRPF) denies the joint-taxation reduction of a single-parent family unit when the taxpayer lives with the father or mother of any child in the unit. Leave this unanswered if you do not know; Cadrumo then cannot work out that reduction."
+            ],
+            "about": "In a single-parent family unit, whether the taxpayer lives with the father or mother of any child in the unit; the joint-taxation reduction does not apply while they do.",
+            "ejercicio_answer": null,
+            "row_index": null
+          },
+          {
             "path": "renta_family.descendants_eu_eea_deduction",
             "label": "EU/EEA descendant deduction",
             "value": null,
@@ -3126,6 +3195,20 @@
             "choices": [],
             "help": null,
             "about": "Count of descendants represented in Renta family facts.",
+            "ejercicio_answer": null,
+            "row_index": null
+          },
+          {
+            "path": "renta_family.ascendientes_count",
+            "label": "Ascendant count",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "country_options": [],
+            "choices": [],
+            "help": null,
+            "about": "Count of ascendants represented in Renta family facts.",
             "ejercicio_answer": null,
             "row_index": null
           },
@@ -6142,7 +6225,16 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "1 - individual"
+              },
+              {
+                "value": "2",
+                "label": "2 - conjunta"
+              }
+            ],
             "help": [
               "Código del tipo de tributación",
               "1 - individual: Usa este valor cuando presentes solo tu declaración individual",
@@ -6279,7 +6371,24 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "Discapacidad del 33% al 64%"
+              },
+              {
+                "value": "2",
+                "label": "Discapacidad del 65% o superior"
+              },
+              {
+                "value": "3",
+                "label": "Incapacidad judicial o equivalente"
+              },
+              {
+                "value": "4",
+                "label": "Ayuda de terceros o movilidad reducida"
+              }
+            ],
             "help": [
               "Clave de discapacidad del primer declarante",
               "Discapacidad del 33% al 64%: Discapacidad reconocida del 33% al 64% - incrementa el mínimo personal.",
@@ -6465,7 +6574,24 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "Discapacidad del 33% al 64%"
+              },
+              {
+                "value": "2",
+                "label": "Discapacidad del 65% o superior"
+              },
+              {
+                "value": "3",
+                "label": "Incapacidad judicial o equivalente"
+              },
+              {
+                "value": "4",
+                "label": "Ayuda de terceros o movilidad reducida"
+              }
+            ],
             "help": [
               "Grado de discapacidad del cónyuge (si aplica)",
               "Discapacidad del 33% al 64%: Discapacidad reconocida del 33% al 64% - incrementa el mínimo personal.",
@@ -6569,6 +6695,32 @@
             "row_index": null
           },
           {
+            "path": "renta_family.convive_con_otro_progenitor",
+            "label": "Convive con el padre o la madre de algún hijo del hogar",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "country_options": [],
+            "choices": [
+              {
+                "value": "true",
+                "label": "Sí"
+              },
+              {
+                "value": "false",
+                "label": "No"
+              }
+            ],
+            "help": [
+              "¿Convives con el padre o la madre de alguno de los hijos de tu unidad familiar?",
+              "El artículo 84.2.4.º de la Ley del IRPF excluye la reducción por tributación conjunta de la unidad familiar monoparental cuando el contribuyente convive con el padre o la madre de alguno de los hijos que forman parte de ella. Déjalo sin responder si no lo sabes; entonces Cadrumo no puede calcular esa reducción."
+            ],
+            "about": "In a single-parent family unit, whether the taxpayer lives with the father or mother of any child in the unit; the joint-taxation reduction does not apply while they do.",
+            "ejercicio_answer": null,
+            "row_index": null
+          },
+          {
             "path": "renta_family.descendants_eu_eea_deduction",
             "label": "Deducción por descendientes UE/EEE",
             "value": null,
@@ -6645,6 +6797,20 @@
             "choices": [],
             "help": null,
             "about": "Count of descendants represented in Renta family facts.",
+            "ejercicio_answer": null,
+            "row_index": null
+          },
+          {
+            "path": "renta_family.ascendientes_count",
+            "label": "Número de ascendientes",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "country_options": [],
+            "choices": [],
+            "help": null,
+            "about": "Count of ascendants represented in Renta family facts.",
             "ejercicio_answer": null,
             "row_index": null
           },
@@ -9655,7 +9821,16 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "1 - tributació individual"
+              },
+              {
+                "value": "2",
+                "label": "2 - conjunta"
+              }
+            ],
             "help": [
               "Codi del tipus de tributació",
               "1 - tributació individual: Fes servir aquest valor quan presentis només la declaració individual",
@@ -9792,7 +9967,24 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "Discapacitat del 33% al 64%"
+              },
+              {
+                "value": "2",
+                "label": "Discapacitat del 65% o superior"
+              },
+              {
+                "value": "3",
+                "label": "Incapacitat judicial o equivalent"
+              },
+              {
+                "value": "4",
+                "label": "Ajuda de tercers o mobilitat reduïda"
+              }
+            ],
             "help": [
               "Clau de discapacitat del primer declarant",
               "Discapacitat del 33% al 64%: Discapacitat reconeguda del 33% al 64% - incrementa el mínim personal.",
@@ -9978,7 +10170,24 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "Discapacitat del 33% al 64%"
+              },
+              {
+                "value": "2",
+                "label": "Discapacitat del 65% o superior"
+              },
+              {
+                "value": "3",
+                "label": "Incapacitat judicial o equivalent"
+              },
+              {
+                "value": "4",
+                "label": "Ajuda de tercers o mobilitat reduïda"
+              }
+            ],
             "help": [
               "Grau de discapacitat del cònjuge (si aplica)",
               "Discapacitat del 33% al 64%: Discapacitat reconeguda del 33% al 64% - incrementa el mínim personal.",
@@ -10082,6 +10291,32 @@
             "row_index": null
           },
           {
+            "path": "renta_family.convive_con_otro_progenitor",
+            "label": "Conviu amb el pare o la mare d'algun fill de la llar",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "country_options": [],
+            "choices": [
+              {
+                "value": "true",
+                "label": "Sí"
+              },
+              {
+                "value": "false",
+                "label": "No"
+              }
+            ],
+            "help": [
+              "Convius amb el pare o la mare d'algun dels fills de la teva unitat familiar?",
+              "L'article 84.2.4 de la Llei de l'IRPF exclou la reducció per tributació conjunta de la unitat familiar monoparental quan el contribuent conviu amb el pare o la mare d'algun dels fills que en formen part. Deixa-ho sense respondre si no ho saps; llavors Cadrumo no pot calcular aquesta reducció."
+            ],
+            "about": "In a single-parent family unit, whether the taxpayer lives with the father or mother of any child in the unit; the joint-taxation reduction does not apply while they do.",
+            "ejercicio_answer": null,
+            "row_index": null
+          },
+          {
             "path": "renta_family.descendants_eu_eea_deduction",
             "label": "Deducció per descendents UE/EEE",
             "value": null,
@@ -10158,6 +10393,20 @@
             "choices": [],
             "help": null,
             "about": "Count of descendants represented in Renta family facts.",
+            "ejercicio_answer": null,
+            "row_index": null
+          },
+          {
+            "path": "renta_family.ascendientes_count",
+            "label": "Nombre d'ascendents",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "country_options": [],
+            "choices": [],
+            "help": null,
+            "about": "Count of ascendants represented in Renta family facts.",
             "ejercicio_answer": null,
             "row_index": null
           },
@@ -13170,7 +13419,16 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "1 - egyéni"
+              },
+              {
+                "value": "2",
+                "label": "2 - közös"
+              }
+            ],
             "help": [
               "Adózási típus kódja",
               "1 - egyéni: Akkor használd, ha kizárólag a saját egyéni bevallásodat nyújtod be",
@@ -13307,7 +13565,24 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "Fogyatékossági fokozat 33%-tól 64%-ig"
+              },
+              {
+                "value": "2",
+                "label": "Fogyatékossági fokozat 65% vagy magasabb"
+              },
+              {
+                "value": "3",
+                "label": "Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű"
+              },
+              {
+                "value": "4",
+                "label": "Harmadik személy segítsége vagy korlátozott mozgásképesség"
+              }
+            ],
             "help": [
               "Az első adózó fogyatékossági kódja",
               "Fogyatékossági fokozat 33%-tól 64%-ig: Elismert 33–64%-os fogyatékosság - növeli a személyi minimumot.",
@@ -13493,7 +13768,24 @@
             "required": false,
             "field_type": "string",
             "country_options": [],
-            "choices": [],
+            "choices": [
+              {
+                "value": "1",
+                "label": "Fogyatékossági fokozat 33%-tól 64%-ig"
+              },
+              {
+                "value": "2",
+                "label": "Fogyatékossági fokozat 65% vagy magasabb"
+              },
+              {
+                "value": "3",
+                "label": "Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű"
+              },
+              {
+                "value": "4",
+                "label": "Harmadik személy segítsége vagy korlátozott mozgásképesség"
+              }
+            ],
             "help": [
               "Házastárs fogyatékossági fokozata (ha alkalmazható)",
               "Fogyatékossági fokozat 33%-tól 64%-ig: Elismert 33–64%-os fogyatékosság - növeli a személyi minimumot.",
@@ -13597,6 +13889,32 @@
             "row_index": null
           },
           {
+            "path": "renta_family.convive_con_otro_progenitor",
+            "label": "Együtt él a háztartás valamelyik gyermekének másik szülőjével",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "country_options": [],
+            "choices": [
+              {
+                "value": "true",
+                "label": "Igen"
+              },
+              {
+                "value": "false",
+                "label": "Nem"
+              }
+            ],
+            "help": [
+              "Együtt élsz a családi egységedhez tartozó valamelyik gyermek apjával vagy anyjával?",
+              "Az szja-törvény (LIRPF) 84. cikkének 2. bekezdés 4. pontja kizárja a közös adózás szerinti csökkentést az egyszülős családi egységnél, ha az adózó az egységhez tartozó valamelyik gyermek apjával vagy anyjával él együtt. Ha nem tudod, hagyd megválaszolatlanul; ilyenkor a Cadrumo nem tudja kiszámolni ezt a csökkentést."
+            ],
+            "about": "In a single-parent family unit, whether the taxpayer lives with the father or mother of any child in the unit; the joint-taxation reduction does not apply while they do.",
+            "ejercicio_answer": null,
+            "row_index": null
+          },
+          {
             "path": "renta_family.descendants_eu_eea_deduction",
             "label": "EU/EGT-leszármazott kedvezmény",
             "value": null,
@@ -13673,6 +13991,20 @@
             "choices": [],
             "help": null,
             "about": "Count of descendants represented in Renta family facts.",
+            "ejercicio_answer": null,
+            "row_index": null
+          },
+          {
+            "path": "renta_family.ascendientes_count",
+            "label": "Felmenők száma",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "country_options": [],
+            "choices": [],
+            "help": null,
+            "about": "Count of ascendants represented in Renta family facts.",
             "ejercicio_answer": null,
             "row_index": null
           },

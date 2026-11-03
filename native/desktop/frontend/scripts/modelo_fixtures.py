@@ -955,6 +955,11 @@ class RentaFiler:
     compared: bool = False
     #: Whether the comparison is also recorded for the states the filer's own income does not reach.
     compared_states: bool = False
+    #: The filing year of the declaration; the Renta the scenarios open is ``RENTA_YEAR``'s.
+    year: int = RENTA_YEAR
+    #: The income classes the filer attests no payer withheld on, as the register records the attestation: a class
+    #: with neither a certificate nor an attestation stays unresolved, which is not the same as none.
+    attested_none: tuple[str, ...] = ()
 
 
 RENTA_FILERS: tuple[RentaFiler, ...] = (
@@ -976,7 +981,8 @@ RENTA_FILERS: tuple[RentaFiler, ...] = (
         ledger_income=Decimal("40000.00"),
         quarter_130=True,
     ),
-    # The same filer with a certificate in the register: the projection resolves the credit it states.
+    # The same filer with a certificate in the register, and the attestation that no payer withheld on the rental
+    # activity the register would otherwise leave unresolved: the projection resolves every credit.
     RentaFiler(
         "credited",
         "trabajo,actividad_economica",
@@ -984,6 +990,7 @@ RENTA_FILERS: tuple[RentaFiler, ...] = (
         certified=Decimal("2000.00"),
         ledger_income=Decimal("40000.00"),
         quarter_130=True,
+        attested_none=("arrendamiento_inmueble_urbano_actividad",),
     ),
     # The salaried filer with a certificate that leaves a result to pay, read within the filing period: the
     # result may be paid at once or in two instalments, and the split states both amounts as advisory.
@@ -1028,7 +1035,50 @@ RENTA_FILERS: tuple[RentaFiler, ...] = (
     ),
     # A married couple whose return was never calculated.
     RentaFiler("uncalculated", "trabajo", household="married", calculated=False, compared=True),
+    # A single parent who has not said whether they live with the child's other parent: the joint reduction
+    # depends on it, so the comparison names the box it leaves without a value.
+    RentaFiler(
+        "parent", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00"), household="parent", compared=True
+    ),
+    # The same parent stating that they do not live with the child's other parent: the comparison is made.
+    RentaFiler(
+        "parentapart",
+        "trabajo",
+        salary=("30000", "1900"),
+        certified=Decimal("2000.00"),
+        household="parent-apart",
+        compared=True,
+    ),
 )
+
+
+def renta_years() -> tuple[int, ...]:
+    """The filing years the registry supports, which are the years whose Modelo 100 the product serves.
+
+    The registry declares the span as bounds, and a year without an authored edition is projected from the nearest
+    one, so the years are read from it and no list is kept here.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        return tuple(operation.supported_filing_years().years)
+
+
+def renta_year_filer(year: int) -> RentaFiler:
+    """The married couple with a certificate in the register, whose Modelo 100 is the one of ``year``.
+
+    Its form is read in every language, and its comparison and settlement as the application serves them for that
+    year, so each year's own capability is what the envelopes state.
+    """
+    return RentaFiler(
+        f"y{year}",
+        "trabajo",
+        salary=("30000", "1900"),
+        certified=Decimal("2000.00"),
+        household="married",
+        compared=True,
+        year=year,
+    )
 
 
 #: The tax id the profile states for a married filer's spouse.
@@ -1040,7 +1090,9 @@ def _household_facts(name: str) -> tuple[Any, ...]:
 
     ``single`` is one unmarried taxpayer who states nothing of a family situation. ``married`` is a married couple
     that states the spouse and the family situation; ``married-no-spouse`` leaves the spouse out. ``alone`` is an
-    unmarried taxpayer who states a family situation with no child in the household.
+    unmarried taxpayer who states a family situation with no child in the household. ``parent`` is an unmarried
+    taxpayer with a minor child in the household who has not said whether they live with the child's other parent,
+    and ``parent-apart`` is the same taxpayer stating that they do not.
     """
     from datetime import date
 
@@ -1052,6 +1104,7 @@ def _household_facts(name: str) -> tuple[Any, ...]:
     # The form codes the profile stores are the registry's own, read under a pinned authority.
     with bundled_indexed_authority().operation():
         married_code = RentaMaritalStatus.CASADO.code
+        single_code = RentaMaritalStatus.SOLTERO.code
         individual_code = RentaDeclaracionType.INDIVIDUAL.code
     if name == "single":
         return RENTA_UNMARRIED_TAXPAYER_FACTS
@@ -1072,12 +1125,23 @@ def _household_facts(name: str) -> tuple[Any, ...]:
         return (*married, UserProfileFact(path="renta_spouse.tax_id", value=RENTA_SPOUSE_TAX_ID))
     if name == "married-no-spouse":
         return married
+    if name in {"parent", "parent-apart"}:
+        parent = (
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="renta_taxpayer.marital_status", value=single_code),
+            UserProfileFact(path="renta_filing.declaration_type", value=individual_code),
+            UserProfileFact(path="renta_family.situacion_familiar", value="soltero"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=True),
+        )
+        if name == "parent":
+            return parent
+        return (*parent, UserProfileFact(path="renta_family.convive_con_otro_progenitor", value=False))
     raise SystemExit(f"no household is named {name}")
 
 
 @contextmanager
-def _renta_seeded(tmp: Path, filer: RentaFiler, *, year: int = RENTA_YEAR) -> Generator[Any]:
-    """One synthetic profile whose first declaration is the filer's Modelo 100 of ``year``, not yet calculated."""
+def _renta_seeded(tmp: Path, filer: RentaFiler) -> Generator[Any]:
+    """One synthetic profile whose first declaration is the filer's Modelo 100 of its year, not yet calculated."""
     from cadrumo.domain.user_profile.values import UserProfileFact
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
@@ -1089,22 +1153,31 @@ def _renta_seeded(tmp: Path, filer: RentaFiler, *, year: int = RENTA_YEAR) -> Ge
     )
     with (
         profile_adapter_composition(),
-        seeded_operator_work(tmp, modelo="100", filing_year=year, period_code=RENTA_PERIOD, extra_facts=facts) as work,
+        seeded_operator_work(
+            tmp, modelo="100", filing_year=filer.year, period_code=RENTA_PERIOD, extra_facts=facts
+        ) as work,
     ):
         yield work
 
 
 def _record_certificate(work: Any, filer: RentaFiler) -> None:
-    """Store the payer's withholding certificate in the register, as the register's one write door stores it."""
-    from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+    """Store the payer's certificate and the filer's attestations in the register, as its write door does."""
+    from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import (
+        seed_absence_attestation,
+        seed_payer_certificate,
+    )
     from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 
+    for token in filer.attested_none:
+        seed_absence_attestation(
+            operation=work.operation, ejercicio=filer.year, income_class=RetencionSoportadaClase(token)
+        )
     if filer.certified is None or filer.salary is None:
         return
     seed_payer_certificate(
         operation=work.operation,
         taxpayer_tax_id=MAIN_TAX_ID,
-        ejercicio=RENTA_YEAR,
+        ejercicio=filer.year,
         payer_tax_id=RENTA_PAYER_TAX_ID,
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=filer.certified,
@@ -1115,8 +1188,29 @@ def _record_certificate(work: Any, filer: RentaFiler) -> None:
 def _calculate_renta(work: Any, filer: RentaFiler, *, borrador_snapshot_id: str | None = None) -> None:
     """Calculate the filer's declaration through the registered calculation, with the answers it refuses without.
 
+    The filer starts from the answers the latest design asks. Another year's design asks others, which the
+    calculation names one at a time as the binding it refuses without; the filer answers each as none, the way
+    an operator answers a question the calculation puts, and the calculation is asked again.
     A draft imported earlier is replayed into the calculation when ``borrador_snapshot_id`` names it.
     """
+    from cadrumo.application.modelo.work_missing_input import ModeloWorkMissingInputError
+
+    answers = list(RENTA_ANSWERS)
+    while True:
+        try:
+            _calculate_renta_with(work, filer, tuple(answers), borrador_snapshot_id=borrador_snapshot_id)
+        except ModeloWorkMissingInputError as missing:
+            if any(missing.binding_id == key for key, _ in answers):
+                raise
+            answers.append((missing.binding_id, "0"))
+        else:
+            return
+
+
+def _calculate_renta_with(
+    work: Any, filer: RentaFiler, answers: tuple[tuple[str, str], ...], *, borrador_snapshot_id: str | None
+) -> None:
+    """Calculate the filer's declaration once, answering the bindings in ``answers``."""
     from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
     from cadrumo.application.modelo.calculation_request_fields import (
         ModeloCalculationInputFieldsV1,
@@ -1143,9 +1237,7 @@ def _calculate_renta(work: Any, filer: RentaFiler, *, borrador_snapshot_id: str 
             actor=ACTOR,
             caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
             inputs=ModeloCalculationInputFieldsV1(
-                binding_overrides=tuple(
-                    ModeloCalculationOverride(key=key, value=value) for key, value in RENTA_ANSWERS
-                ),
+                binding_overrides=tuple(ModeloCalculationOverride(key=key, value=value) for key, value in answers),
                 casilla_overrides=tuple(ModeloCalculationOverride(key=box, value=value) for box, value in stated),
                 borrador_snapshot_id=borrador_snapshot_id,
             ),
@@ -1255,35 +1347,18 @@ RENTA_SMALL_SALARY: tuple[str, str] = ("5000", "300")
 INDIVIDUAL_LOWER = ("2400.00", "2100.00", "3000.00", "2700.00")
 
 
-#: A tax year whose Modelo 100 declares no filing mode, so it cannot be compared.
-UNDECLARED_YEAR = 2024
-
-
-def _write_undeclared_comparison(directory: Path) -> None:
-    """Read the comparison of a declaration whose form declares no filing mode: the application refuses it.
-
-    The window offers a comparison only where the form says it applies, so this refusal is one it is never asked
-    for; the application still words it.
-    """
-    filer = RentaFiler("undeclared", "trabajo")
-    with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        _renta_seeded(Path(tmp), filer, year=UNDECLARED_YEAR) as work,
-    ):
-        _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-undeclared")
-
-
-#: The refusals of the comparison that no declaration of these synthetic profiles reaches: one on a form the authority
-#: no longer selects, and one on a calculation saved before the entries were recorded.
-UNREACHED_COMPARISON_REFUSALS: tuple[str, ...] = ("revision_outdated", "entries_unknown")
+#: The refusals of the comparison that no declaration of these synthetic profiles reaches: one on a form that
+#: declares no filing mode, which no supported year's Modelo 100 is, one on a form the authority no longer selects,
+#: and one on a calculation saved before the entries were recorded.
+UNREACHED_COMPARISON_REFUSALS: tuple[str, ...] = ("not_declared", "revision_outdated", "entries_unknown")
 
 
 def _write_unreached_comparison_refusals(directory: Path) -> None:
     """Record the comparison refusals the profiles above cannot reach, as the executor raises them, in each language.
 
-    A work unit made on an older revision, or a calculation saved before entries were recorded, cannot be made
-    through the current application. The error is the one the comparison raises for it, recorded as a stopped
-    executor's detail is, with its served sentence.
+    A form that declares no filing mode, a work unit made on an older revision, or a calculation saved before
+    entries were recorded, cannot be made through the current application. The error is the one the comparison
+    raises for it, recorded as a stopped executor's detail is, with its served sentence.
     """
     from cadrumo.application.modelo.taxation_comparison import TaxationComparisonError, TaxationComparisonRefusal
     from cadrumo.application.operations.error_detail import build_operation_error_detail
@@ -1415,7 +1490,7 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
         _record_certificate(work, filer)
         if filer.ledger_income is not None:
             seed_m130_income_transaction(
-                amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="synthetic-ledger"
+                amount=filer.ledger_income, filing_year=filer.year, source_key="synthetic-ledger"
             )
         if filer.quarter_130:
             _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
@@ -1432,7 +1507,9 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
         if first:
             _write_list(directory, work, "declarations-renta")
             _write_projection_refusal(directory, work, "project-no-quarters")
-            _write_settlement_states(directory, work)
+            _write_settlement_states(directory, work, SETTLEMENT_STATES)
+        elif filer.year != RENTA_YEAR:
+            _write_settlement_states(directory, work, SETTLEMENT_STATES[:1], prefix=f"{filer.envelope}-")
 
 
 #: The filer whose profile holds the Borrador drafts: a salaried filer with one certificate in the register.
@@ -1600,13 +1677,18 @@ def _write_borrador_comparisons(directory: Path) -> None:
 def _write_renta(directory: Path) -> None:
     """Read every filer's 2025 Modelo 100 in every language, and the declarations list of the first filer.
 
+    The married couple is also read for each other supported year, whose own design and registry edition, or the
+    edition it is projected from, decide what the form offers.
+
     A filer with a calculated first quarter is also read for its projection of the annual return. The profile that
     holds the Borrador drafts is read for its comparison of each draft with the calculation.
     """
     for number, filer in enumerate(RENTA_FILERS):
         _write_renta_filer(directory, filer, first=number == 0)
+    for year in renta_years():
+        if year != RENTA_YEAR:
+            _write_renta_filer(directory, renta_year_filer(year), first=False)
     _write_projection_steps(directory)
-    _write_undeclared_comparison(directory)
     _write_unreached_comparison_refusals(directory)
     _write_borrador_comparisons(directory)
 
@@ -1630,8 +1712,17 @@ SETTLEMENT_STATES: tuple[tuple[str, str, str | None, int, bool], ...] = (
 SETTLEMENT_DAY = RENTA_FILING_PERIOD_DAY.date()
 
 
-def _write_settlement_states(directory: Path, work: Any) -> None:
-    """Write the export offer of each settlement state in every language, as the real offer states it."""
+def _write_settlement_states(
+    directory: Path,
+    work: Any,
+    states: tuple[tuple[str, str, str | None, int, bool], ...],
+    *,
+    prefix: str = "",
+) -> None:
+    """Write the export offer of each settlement state in every language, as the real offer states it.
+
+    The offer is the one of the work's own filing year, named after ``prefix`` where it is not the Renta's.
+    """
     from cadrumo.application.modelo.settlement_casilla import declaration_settlement_casilla_id
     from cadrumo.application.modelo.tests.work_form_fixture import built_form, form_snapshot
     from cadrumo.application.modelo.work_form_declaration_facts import ModeloFormDeadline
@@ -1640,17 +1731,18 @@ def _write_settlement_states(directory: Path, work: Any) -> None:
     from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 
     operation = work.operation
-    snapshot = form_snapshot(operation, "100", RENTA_YEAR, RENTA_PERIOD)
-    blank = built_form(operation, "100", RENTA_YEAR, RENTA_PERIOD, entered=frozenset())
+    year = work.work_unit.filing_year
+    snapshot = form_snapshot(operation, "100", year, RENTA_PERIOD)
+    blank = built_form(operation, "100", year, RENTA_PERIOD, entered=frozenset())
     if blank.result is None:
-        raise SystemExit("the 2025 Modelo 100 names no result box")
+        raise SystemExit(f"the {year} Modelo 100 names no result box")
     settling = declaration_settlement_casilla_id("100", snapshot.revision)
-    for name, result, settled, days, amended in SETTLEMENT_STATES:
+    for name, result, settled, days, amended in states:
         held: dict[str, Decimal | str] = {str(blank.result.casilla_id): Decimal(result)}
         if settling is not None and settling != blank.result.casilla_id:
             held[str(settling)] = Decimal(result if settled is None else settled)
         closes = SETTLEMENT_DAY + timedelta(days=days)
-        form = built_form(operation, "100", RENTA_YEAR, RENTA_PERIOD, held=held, entered=frozenset()).model_copy(
+        form = built_form(operation, "100", year, RENTA_PERIOD, held=held, entered=frozenset()).model_copy(
             update={
                 "calculation_revision_id": "c" * 64,
                 "deadline": ModeloFormDeadline(
@@ -1667,7 +1759,7 @@ def _write_settlement_states(directory: Path, work: Any) -> None:
             offer = form_export_offer(
                 "100", snapshot, OutputLanguage(language), form=form, verified=False, filed=False, amended=amended
             )
-            _write(directory, f"settlement-100-{RENTA_PERIOD}-{name}-{language}.json", offer)
+            _write(directory, f"settlement-100-{RENTA_PERIOD}-{prefix}{name}-{language}.json", offer)
 
 
 # -- writes ---------------------------------------------------------------------
@@ -2553,7 +2645,7 @@ PACKED_MODELOS: tuple[str, ...] = ("100",)
 PATCH_OF = "patch_of"
 PATCH_CHANGES = "changes"
 _PACKED_NAME = re.compile(
-    r"^(?P<form>modelo-(?P<modelo>[0-9]+)-[0-9A-Z]+)(?P<filer>(?:-[a-z]+)?)-(?P<language>[a-z]{2})$"
+    r"^(?P<form>modelo-(?P<modelo>[0-9]+)-[0-9A-Z]+)(?P<filer>(?:-[a-z][a-z0-9]*)?)-(?P<language>[a-z]{2})$"
 )
 
 
@@ -2606,15 +2698,39 @@ def stored_envelope(directory: Path, name: str) -> Any:
     return _patched(stored_envelope(directory, stored[PATCH_OF]), stored[PATCH_CHANGES])
 
 
-def _patch_base(name: str) -> str | None:
-    """The form a Modelo 100 form is stored as a patch of, or none for the one that is stored whole."""
+_YEAR_FILER = re.compile(r"^-y(?P<year>[0-9]+)$")
+
+
+def _patch_base(name: str, names: Iterable[str] = ()) -> str | None:
+    """The form a Modelo 100 form is stored as a patch of, or none for the one that is stored whole.
+
+    A filer's form is a patch of the first filer's in the same language. A form of another filing year is a patch
+    of its own English form in the other languages, and its English form is a patch of the form of the year beside
+    it on the way to the Renta's own, whose designs differ least: the couple's form of the Renta's year, which is
+    where the years above it start from as well.
+    """
     found = _PACKED_NAME.match(name)
     if found is None or found["modelo"] not in PACKED_MODELOS:
         return None
     form, filer, language = found["form"], found["filer"], found["language"]
-    if filer:
-        return f"{form}-{language}"
-    return None if language == LANGUAGES[0] else f"{form}-{LANGUAGES[0]}"
+    year = _YEAR_FILER.match(filer)
+    if year is None:
+        if filer:
+            return f"{form}-{language}"
+        return None if language == LANGUAGES[0] else f"{form}-{LANGUAGES[0]}"
+    if language != LANGUAGES[0]:
+        return f"{form}{filer}-{LANGUAGES[0]}"
+    held = {
+        int(other_year["year"])
+        for other in names
+        if (other_name := _PACKED_NAME.match(other)) is not None
+        and other_name["form"] == form
+        and (other_year := _YEAR_FILER.match(other_name["filer"])) is not None
+    }
+    toward = int(year["year"]) + (1 if int(year["year"]) < RENTA_YEAR else -1)
+    if toward in held:
+        return f"{form}-y{toward}-{LANGUAGES[0]}"
+    return f"{form}-married-{LANGUAGES[0]}"
 
 
 def pack_envelopes(directory: Path) -> None:
@@ -2625,7 +2741,7 @@ def pack_envelopes(directory: Path) -> None:
     names = sorted(path.stem for path in directory.glob("*.json"))
     whole = {name: stored_envelope(directory, name) for name in names}
     for name, value in whole.items():
-        base = _patch_base(name)
+        base = _patch_base(name, names)
         if base is None:
             text = _compact(value)
         else:

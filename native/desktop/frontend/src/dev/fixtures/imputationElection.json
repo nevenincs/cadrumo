@@ -1141,7 +1141,8 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "A wizard answer failed validation. Correct the value shown.",
-        "refusal_words_language": "en"
+        "refusal_words_language": "en",
+        "next_step": null
       },
       "es": {
         "detail_version": 1,
@@ -1169,7 +1170,8 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "Una respuesta del asistente no superó la validación. Corrige el valor indicado.",
-        "refusal_words_language": "es"
+        "refusal_words_language": "es",
+        "next_step": null
       },
       "ca": {
         "detail_version": 1,
@@ -1197,7 +1199,8 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "Una resposta de l'assistent no ha superat la validació. Corregeix el valor indicat.",
-        "refusal_words_language": "ca"
+        "refusal_words_language": "ca",
+        "next_step": null
       },
       "hu": {
         "detail_version": 1,
@@ -1225,7 +1228,8 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "Egy varázsló-válasz nem ment át az érvényesítésen. Javítsd a megjelenített értéket.",
-        "refusal_words_language": "hu"
+        "refusal_words_language": "hu",
+        "next_step": null
       }
     },
     "stale": {
@@ -1255,7 +1259,8 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "The secure object was changed by another writer; reload it and retry with the current revision.",
-        "refusal_words_language": "en"
+        "refusal_words_language": "en",
+        "next_step": null
       },
       "es": {
         "detail_version": 1,
@@ -1283,7 +1288,8 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "El objeto seguro cambió por otra escritura; vuelve a cargarlo e inténtalo de nuevo con la revisión actual.",
-        "refusal_words_language": "es"
+        "refusal_words_language": "es",
+        "next_step": null
       },
       "ca": {
         "detail_version": 1,
@@ -1311,7 +1317,8 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "L'objecte segur ha canviat per una altra escriptura; torna'l a carregar i reintenta-ho amb la revisió actual.",
-        "refusal_words_language": "ca"
+        "refusal_words_language": "ca",
+        "next_step": null
       },
       "hu": {
         "detail_version": 1,
@@ -1339,7 +1346,8 @@
         "context_entries_omitted": 0,
         "precondition_verdict_json": null,
         "refusal_words": "A biztonságos objektumot egy másik írás módosította; töltsd be újra, majd próbáld újra az aktuális revízióval.",
-        "refusal_words_language": "hu"
+        "refusal_words_language": "hu",
+        "next_step": null
       }
     }
   }
