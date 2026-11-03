@@ -9741,6 +9741,31 @@ workspace:
       receipt_differs: The receipt does not match this declaration.
       receipt_matches: The receipt matches this declaration.
       receipt_missing: Not confirmed by a receipt yet.
+      reconciliation:
+        category:
+          casilla: Box
+          header_field: Header field
+          total: Total
+        code: Code
+        context: Context
+        details: Details
+        differences: Differences
+        differs: Some compared values differ from the document.
+        evidence_value: In the document
+        field:
+          ejercicio: Year
+          modelo: Modelo
+          period: Period
+          tax_id: Tax ID
+          total_devolver: Amount to be refunded
+          total_ingresar: Amount to pay
+        kind: Kind
+        legal_refs: Legal references
+        matches: The compared values match the document.
+        not_present: Not present
+        notices: Notices
+        source_refs: Sources
+        work_value: In your declaration
       record_as_filed: Record as filed…
       record_lead: Record here that you filed it, so your calendar and later declarations
         know. Then add the AEAT's receipt to confirm it.

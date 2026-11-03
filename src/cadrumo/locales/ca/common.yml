@@ -9923,6 +9923,31 @@ workspace:
       receipt_differs: El justificant no coincideix amb aquesta declaració.
       receipt_matches: El justificant coincideix amb aquesta declaració.
       receipt_missing: Encara no la confirma cap justificant.
+      reconciliation:
+        category:
+          casilla: Casella
+          header_field: Camp de capçalera
+          total: Total
+        code: Codi
+        context: Context
+        details: Detalls
+        differences: Diferències
+        differs: Alguns valors comparats difereixen del document.
+        evidence_value: Al document
+        field:
+          ejercicio: Exercici
+          modelo: Model
+          period: Període
+          tax_id: NIF
+          total_devolver: Import a retornar
+          total_ingresar: Import a ingressar
+        kind: Tipus
+        legal_refs: Referències legals
+        matches: Els valors comparats coincideixen amb el document.
+        not_present: No consta
+        notices: Avisos
+        source_refs: Fonts
+        work_value: A la teva declaració
       record_as_filed: Registrar com a presentada…
       record_lead: Registra aquí que l'has presentada, perquè ho sàpiguen el teu calendari
         i les declaracions posteriors. Després afegeix el justificant de l'AEAT per

@@ -41,6 +41,16 @@ def _composed_families(
         "workspace.modelo.filing.copy.": filing_copies(),
         # The save formats the filing view asks a location for.
         "workspace.modelo.filing.filter.": ("boe", "csv", "pdf", "xlsx", "xml", "zip"),
+        # The comparison's difference categories and the header fields it names.
+        "workspace.modelo.filing.reconciliation.category.": ("casilla", "header_field", "total"),
+        "workspace.modelo.filing.reconciliation.field.": (
+            "ejercicio",
+            "modelo",
+            "period",
+            "tax_id",
+            "total_devolver",
+            "total_ingresar",
+        ),
         "workspace.modelo.issues.verdict.": values(VerificationCompletenessStatus),
         "workspace.modelo.legend.meaning.origin.": values(ModeloFormOrigin),
         "workspace.modelo.level.": values(ModeloFormAttention),

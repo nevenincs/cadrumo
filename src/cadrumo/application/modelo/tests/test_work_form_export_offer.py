@@ -203,11 +203,12 @@ def _questions(
     *,
     own_accounts: OwnAccountRegister | None = None,
     amended: bool = False,
+    language: OutputLanguage = _EN,
 ) -> dict[ModeloFormElection, ModeloFormElectionQuestion]:
     modelo = str(form.modelo)
     snapshot = form_snapshot(operation, modelo, form.filing_year, str(form.period.code))
     offer = form_export_offer(
-        modelo, snapshot, _EN, form=form, verified=False, filed=False, own_accounts=own_accounts, amended=amended
+        modelo, snapshot, language, form=form, verified=False, filed=False, own_accounts=own_accounts, amended=amended
     )
     return {question.election: question for question in offer.elections}
 
@@ -267,6 +268,21 @@ def test_the_split_states_both_instalments_of_the_amount_left_to_pay_as_advisory
     assert all(figure.advisory and figure.advisory_words for figure in instalment.figures)
     assert "60%" in first.words and "600.01" in first.words
     assert "40%" in second.words and "400.00" in second.words
+
+
+def test_the_instalment_words_state_the_amount_in_the_marks_of_their_language(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The figure's ``amount`` stays decimal text; only its words take the language's marks."""
+    form = _calculated(
+        operation, "100", 2025, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
+    )
+
+    first, second = _questions(operation, form, language=OutputLanguage.ES)[ModeloFormElection.INSTALMENT].figures
+
+    assert (first.amount, second.amount) == ("600.01", "400.00")
+    assert "600,01" in first.words and "600.01" not in first.words
+    assert "400,00" in second.words and "400.00" not in second.words
 
 
 def test_an_advisory_figure_carries_its_reason_and_only_then() -> None:
