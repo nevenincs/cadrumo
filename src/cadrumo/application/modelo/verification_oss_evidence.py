@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind
+from ...core.period import Period
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     LegalRefId,
@@ -85,7 +86,11 @@ def m369_source_issue_finding(
 
 def _declares_no_activity(work_unit: WorkUnit, target: CalculationRevision) -> bool:
     """Read the operator's own answer on the return's no-activity row through the dated fact."""
-    declaration = resolve_oss_ioss_regime_catalogue(effective_date=work_unit.period.end_date).no_activity
+    period = work_unit.period
+    # An Exterior token such as EXT-1T files the calendar quarter it names, which carries the date.
+    quarter = period.scheme_quarter
+    dated = period if quarter is None else Period.from_year_and_code(period.filing_year, quarter.value)
+    declaration = resolve_oss_ioss_regime_catalogue(effective_date=dated.end_date).no_activity
     if declaration is None:
         return False
     for binding_id, entered in target.binding_overrides.items():
