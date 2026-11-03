@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:11ba105d9f23023377e17e04a13d22d650b97d26918295abcf7d7bca1ee27127'
+body_hash: 'sha256:d3ddff4be343b15865bd940c492ab3162b67e6af675c3d9cc1f58533100e4a50'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -1081,6 +1081,37 @@ related:
 - `S32` `verify:` `pytest test_calculation_revision_amendment_kind.py test_amend_kind_resolution.py and 294 focused tests` -> `pass`
 - `S32` `verify:` `ruff, ruff format, ty on touched files; dev.operation_contract_manifest.generate --check; lint-imports 30 kept` -> `pass`
 - `S32` `verify:` `desktop tsc, eslint, prettier, modelo-fixtures --check, relay_contracts --check, 4 correction scenarios` -> `pass`
+- `S18` `A` `src/cadrumo/adapters/persistence/profile/retencion_soportada_evidence_custody.py`
+- `S18` `M` `.vault/adr/2026-11-01-export-parity-suffered-withholding-schemas-adr.md`
+- `S18` `M` `.vault/audit/2026-09-26-export-parity-audit.md`
+- `S18` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/tests/retencion_soportada_seed.py`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_soportada_records.py`
+- `S18` `M` `src/cadrumo/application/aggregation/retencion_soportada_repository.py`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/contracts.py`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/ports.py`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/registered_operation.py`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/requests.py`
+- `S18` `M` `src/cadrumo/domain/renta/retencion_soportada.py`
+- `S18` `M` `src/cadrumo/domain/renta/tests/test_retencion_soportada_record.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/_app_ledger_retencion_soportada_command_specs.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/operation_ledger_retencion_soportada.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/retencion_soportada_commands.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S18` `M` `src/cadrumo/entrypoints/retencion_soportada_certificado_composition.py`
+- `S18` `M` `src/cadrumo/entrypoints/tests/conformance_retencion_soportada_support.py`
+- `S18` `M` `src/cadrumo/entrypoints/tests/profile_persistence/projection_m130_seeding_support.py`
+- `S18` `M` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
+- `S18` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/en/cli.yml`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/cli.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `verify:` `pytest -m "" mesh executor (14), records adapter, domain record, native CLI, absence CLI, conformance -k retencion_soportada, live M100 credit files (31)` -> `pass`
+- `S18` `verify:` `dev.locales status --check; ruff; ruff format --check; ty; lint-imports` -> `pass`
 
 ## Notes
 
@@ -1130,3 +1161,4 @@ related:
 - `S17` P03 phase review 2026-11-03 follow-up bc9c230741: the payer NIF is checksum-validated and keyed canonically. Audit fdb20cd89f.
 - `S29` P03 review follow-up 8e15a7a749: `list_absences` class labels render in the --language locale.
 - `S32` Landed on feature/tui in root as 1280b3a4ac (Python half plus the desktop contract mirror and CorrectionDialog, committed together by the tui frontend session) and a8c5811060 (new test). Stored identities parse unchanged because the wire values are identical.
+- `S18` P03 review rulings (operator 2026-11-03), recorded as ADR D Amendment 2026-11-03 (e28d00bbbf): `PROFILE_FIELD` admitted as a terminal origin; certificate bytes are held in attachment custody, with refusals `certificate_not_in_custody,` `certificate_file_unreadable` and `certificate_fingerprint_mismatch` (01a28ab372); a same-evidence correction keeps the lineage (18aa70a39f). 01a28ab372 also carries S20 cli.yml help hunks. The desktop half (ledgerSetup.ts, WithholdingPane.tsx) is pending with the tui frontend session.
