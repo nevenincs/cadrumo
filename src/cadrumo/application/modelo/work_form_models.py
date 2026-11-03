@@ -1034,6 +1034,10 @@ class ModeloWorkForm(ModeloFormBase):
     #: for this declaration: its revision declares one Borrador PDF extraction profile. ``False`` says no
     #: draft can be read for it, never that a draft agrees.
     compares_borrador: bool = False
+    #: Whether this declaration offers the profile's IVA compensation wallet: its revision declares the
+    #: compensación-pendiente binding the wallet decision owns. It holds before any calculation and says
+    #: nothing about the balance, the wallet's history or whether a wallet write would be admitted.
+    offers_iva_wallet: bool = False
     #: Set when the declaration is recorded as filed.
     filing: ModeloFormFiling | None = None
     #: The latest file exported for this declaration, or ``None`` when none was ever exported.

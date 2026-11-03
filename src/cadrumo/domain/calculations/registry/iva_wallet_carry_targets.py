@@ -12,15 +12,19 @@ revision does not inherit the carve-out.
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from .form_codes import form_for_role
 from .ids import BindingId, RevisionId
+
+if TYPE_CHECKING:
+    from .schema import ModeloRevision
 
 __all__ = [
     "MODELO_303_IVA_COMPENSATION_BINDING_ID",
     "is_iva_wallet_owned_carry_target",
     "iva_wallet_owned_binding_ids_for_revision",
+    "revision_offers_iva_wallet",
 ]
 
 #: The single M303 compensación-pendiente binding id, owned by the iva-wallet
@@ -54,3 +58,14 @@ def iva_wallet_owned_binding_ids_for_revision(
     if modelo_id != form_for_role("iva.periodic"):
         return frozenset[BindingId]()
     return frozenset((MODELO_303_IVA_COMPENSATION_BINDING_ID,))
+
+
+def revision_offers_iva_wallet(*, modelo_id: str, revision: ModeloRevision) -> bool:
+    """Return whether ``revision`` declares a binding the iva-wallet decision owns.
+
+    The answer follows the revision's own bindings: a revision that carries the
+    compensación-pendiente slot reads the profile's wallet, and one that does not
+    has no wallet to offer, whatever its modelo number.
+    """
+    owned = iva_wallet_owned_binding_ids_for_revision(modelo_id=modelo_id, revision_id=revision.id)
+    return any(binding.id in owned for binding in revision.bindings)
