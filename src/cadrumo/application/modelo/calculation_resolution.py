@@ -347,7 +347,7 @@ def _backend_binding_provenance(
         source = None if binding is None else binding.source
         family = _BACKEND_SOURCE_FAMILY if source is None else source.value
         fingerprints: frozenset[str] = (
-            frozenset() if source is None else frozenset(fingerprints_by_source.get(source, ()))
+            frozenset[str]() if source is None else frozenset(fingerprints_by_source.get(source, ()))
         )
         provenance[binding_id] = TierValueProvenance(
             source_family=family,
