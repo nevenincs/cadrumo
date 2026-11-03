@@ -223,8 +223,6 @@ def _call_site_keys(module: ast.Module, function_name: str) -> set[str]:
 
 
 def _fact_names(module: ast.Module, call: ast.Call, facts: ast.expr) -> set[str]:
-    if isinstance(facts, ast.IfExp):
-        return _fact_names(module, call, facts.body) | _fact_names(module, call, facts.orelse)
     if isinstance(facts, ast.Name):
         return _local_keys(module, _enclosing(module, call), facts.id)
     if isinstance(facts, ast.Call) and isinstance(facts.func, ast.Name):
@@ -243,19 +241,6 @@ def _enum_member[EnumT: (ModeloVerificationFindingKind, ModeloVerificationFindin
     if isinstance(node, ast.Attribute) and node.attr in enum.__members__:
         return enum[node.attr]
     return default
-
-
-def _carried_locale_keys(module: ast.Module, field: str) -> tuple[str, ...]:
-    """Every literal catalogue key the module hands to a non-finding record's ``field`` keyword."""
-    return tuple(
-        dict.fromkeys(
-            keyword.value.value
-            for node in ast.walk(module)
-            if isinstance(node, ast.Call) and not (isinstance(node.func, ast.Name) and node.func.id == _FINDING_CLASS)
-            for keyword in node.keywords
-            if keyword.arg == field and isinstance(keyword.value, ast.Constant) and isinstance(keyword.value.value, str)
-        )
-    )
 
 
 def _constant_locale_key(module: ast.Module, name: str) -> str | None:
@@ -277,10 +262,7 @@ def _constant_locale_key(module: ast.Module, name: str) -> str | None:
 def _locale_keys(node: ast.expr | None, locator: str, module: ast.Module | None = None) -> tuple[str, ...]:
     """Read every literal branch; refuse a key that cannot be inspected statically.
 
-    With the producing ``module``, a module-level string constant is read as its literal, and an
-    attribute of a record the module builds with a literal keyword of the same name is read from
-    each of those constructions, so a refusal that carries its own key is checked for every key it
-    can carry.
+    With the producing ``module``, a module-level string constant is read as its literal.
     """
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return (node.value,)
@@ -288,11 +270,8 @@ def _locale_keys(node: ast.expr | None, locator: str, module: ast.Module | None 
         return tuple(
             dict.fromkeys((*_locale_keys(node.body, locator, module), *_locale_keys(node.orelse, locator, module)))
         )
-    if module is not None:
-        if isinstance(node, ast.Name) and (constant := _constant_locale_key(module, node.id)) is not None:
-            return (constant,)
-        if isinstance(node, ast.Attribute) and (carried := _carried_locale_keys(module, node.attr)):
-            return carried
+    if module is not None and isinstance(node, ast.Name) and (constant := _constant_locale_key(module, node.id)):
+        return (constant,)
     pytest.fail(f"{locator}: a finding built without a literal catalogue key")
 
 

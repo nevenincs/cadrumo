@@ -209,12 +209,35 @@ def _guaranteed_facts(module: ast.Module, call: ast.Call, facts: ast.expr) -> se
     return keys
 
 
-def _literal_locale_keys(node: ast.expr | None) -> tuple[str, ...]:
-    """Inspect every conditional branch and refuse dynamically computed keys."""
+def _module_string_constant(module: ast.Module, name: str) -> str | None:
+    """The string literal a module-level constant of that name is bound to, when exactly one is."""
+    values = {
+        statement.value.value
+        for statement in module.body
+        if isinstance(statement, ast.Assign | ast.AnnAssign)
+        and isinstance(statement.value, ast.Constant)
+        and isinstance(statement.value.value, str)
+        and any(
+            isinstance(target, ast.Name) and target.id == name
+            for target in (statement.targets if isinstance(statement, ast.Assign) else [statement.target])
+        )
+    }
+    return next(iter(values)) if len(values) == 1 else None
+
+
+def _literal_locale_keys(node: ast.expr | None, module: ast.Module | None = None) -> tuple[str, ...]:
+    """Inspect every conditional branch and refuse dynamically computed keys.
+
+    With the producing ``module``, a module-level string constant reads as its literal.
+    """
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return (node.value,)
     if isinstance(node, ast.IfExp):
-        return tuple(dict.fromkeys((*_literal_locale_keys(node.body), *_literal_locale_keys(node.orelse))))
+        return tuple(
+            dict.fromkeys((*_literal_locale_keys(node.body, module), *_literal_locale_keys(node.orelse, module)))
+        )
+    if module is not None and isinstance(node, ast.Name) and (constant := _module_string_constant(module, node.id)):
+        return (constant,)
     raise _UnresolvedFactsError("message_locale_key is not a literal string or conditional of literal strings")
 
 
@@ -237,7 +260,7 @@ def _producer_sites() -> list[tuple[str, set[str], str]]:
                     facts = keyword.value
             locator = f"{path.relative_to(SRC_DIR).as_posix()}:{node.lineno}"
             try:
-                locale_keys = _literal_locale_keys(locale_key_node)
+                locale_keys = _literal_locale_keys(locale_key_node, module)
                 guaranteed = set() if facts is None else _guaranteed_facts(module, node, facts)
             except _UnresolvedFactsError as exc:
                 pytest.fail(

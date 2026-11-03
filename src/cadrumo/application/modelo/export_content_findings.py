@@ -10,6 +10,7 @@ refuses, and a layout of another format reaches no finding here.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum, auto
 
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -36,16 +37,24 @@ from .profile_export_binding import resolve_export_identity
 from .verification_preconditions import build_verification_precondition_failure
 
 
+class _RefusalKind(StrEnum):
+    """Why the export would refuse the return."""
+
+    REQUIRED_CONTENT_MISSING = auto()
+    VALUE_REFUSED = auto()
+    NOT_RENDERED = auto()
+
+
 @dataclass(frozen=True, slots=True)
 class _Refusal:
     """What the export would refuse: boxes when it names them, none when no file can be built."""
 
-    message_locale_key: str
-    boxes: tuple[str | None, ...] = (None,)
+    kind: _RefusalKind
+    boxes: tuple[str, ...] = ()
 
 
 def _not_rendered() -> _Refusal:
-    return _Refusal(message_locale_key="application.modelo.findings.xml_return_not_rendered")
+    return _Refusal(kind=_RefusalKind.NOT_RENDERED)
 
 
 def _refused_boxes(
@@ -87,15 +96,9 @@ def _refused_boxes(
         )
     except (ModeloDraftError, ModeloError) as refused:
         if is_xml_required_content_refusal(refused):
-            return _Refusal(
-                message_locale_key="application.modelo.findings.xml_required_content_missing",
-                boxes=refused_xml_boxes(refused),
-            )
+            return _Refusal(kind=_RefusalKind.REQUIRED_CONTENT_MISSING, boxes=refused_xml_boxes(refused))
         if is_xml_value_refusal(refused):
-            return _Refusal(
-                message_locale_key="application.modelo.findings.xml_value_refused",
-                boxes=refused_xml_boxes(refused),
-            )
+            return _Refusal(kind=_RefusalKind.VALUE_REFUSED, boxes=refused_xml_boxes(refused))
         # Any other cause may quote a private value, so only the fact of it travels.
         return _not_rendered()
     return None
@@ -120,16 +123,8 @@ def append_export_content_findings(
     if refused is None:
         return
     declared_casillas = {casilla.id for casilla in snapshot.revision.casillas}
-    for box in refused.boxes:
-        finding = ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            casilla_id=box if box in declared_casillas else None,
-            message_locale_key=refused.message_locale_key,
-            message_facts={} if box is None else {"box": box},
-            legal_refs=tuple(layout.legal_refs),
-            source_refs=tuple(layout.source_refs),
-        )
+
+    def record(finding: ModeloVerificationFinding, *, refusal: str, box: str | None) -> None:
         findings.append(finding)
         failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
             calculation_revision_id=target.calculation_revision_id,
@@ -137,11 +132,46 @@ def append_export_content_findings(
             condition_id="modelo.work.verify.xml_return_content.accepted",
             scenario_id="modelo.work.verify.xml_return_content.refused",
             evidence_id="modelo.work.verify.xml_return_content",
-            evidence_values={
-                "refusal": refused.message_locale_key.rpartition(".")[2],
-                **({} if box is None else {"box": box}),
-            },
+            evidence_values={"refusal": refusal, **({} if box is None else {"box": box})},
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+
+    if refused.kind is _RefusalKind.NOT_RENDERED:
+        record(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                casilla_id=None,
+                message_locale_key="application.modelo.findings.xml_return_not_rendered",
+                message_facts={},
+                legal_refs=tuple(layout.legal_refs),
+                source_refs=tuple(layout.source_refs),
+            ),
+            refusal="xml_return_not_rendered",
+            box=None,
+        )
+        return
+    for box in refused.boxes:
+        record(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                casilla_id=box if box in declared_casillas else None,
+                message_locale_key=(
+                    "application.modelo.findings.xml_required_content_missing"
+                    if refused.kind is _RefusalKind.REQUIRED_CONTENT_MISSING
+                    else "application.modelo.findings.xml_value_refused"
+                ),
+                message_facts={"box": box},
+                legal_refs=tuple(layout.legal_refs),
+                source_refs=tuple(layout.source_refs),
+            ),
+            refusal=(
+                "xml_required_content_missing"
+                if refused.kind is _RefusalKind.REQUIRED_CONTENT_MISSING
+                else "xml_value_refused"
+            ),
+            box=box,
         )
 
 
