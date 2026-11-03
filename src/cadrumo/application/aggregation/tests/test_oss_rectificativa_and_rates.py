@@ -22,15 +22,36 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.lookup import coexisting_tier_rates, lookup_rate
 from ....domain.iva.schema import EUMemberState, IvaRateKind
+from ....domain.calculations.registry.tests.published_authority import published_revision
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..errors import AggregationValidationError
+from ..oss_ioss import OssIossLedgerSourceResolver
+from ..oss_ioss_wire_geometry import record_row_slots
+from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .oss_rate_change_support import ordinary_general_variants, rate_change_inside_a_quarter
-from .test_oss_detail_sections import _IMPORT, _UNION, _invoice, _resolve, _row
+from .test_oss_detail_sections import (
+    _BUCKET,
+    _EXTERIOR,
+    _IMPORT,
+    _UNION,
+    _invoice,
+    _Reader,
+    _Regime,
+    _resolve,
+    _row,
+    _Transactions,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SUPPLY = date(2026, 2, 17)
 _CUSTOMER = "FR40303265045"
 _LATER_QUARTER = date(2026, 5, 4)
+_CORRECTION_RECORD = {
+    _EXTERIOR: "modelo-369-exterior-t36902",
+    _UNION: "modelo-369-union-t36908",
+    _IMPORT: "modelo-369-importacion-t36911",
+}
 
 
 def _correction(
@@ -91,14 +112,195 @@ def test_a_correction_nets_at_the_rate_of_the_invoice_it_corrects(operation: Pin
     assert _row(resolution, _UNION, 1) == (code, "S", change.pct_before, Decimal("50.00"), cuota - half)
 
 
-def test_a_correction_of_an_earlier_period_refuses_because_section_4_cannot_write_it(
+def _correction_rows(resolution: CalculationSourceResolution, regime: _Regime) -> list[tuple[str, int, str, str, Decimal]]:
+    revision = published_revision("369", regime.revision_id)
+    rows = []
+    for country, year, period_type, period, cuota in record_row_slots(revision, _CORRECTION_RECORD[regime]):
+        if country in resolution.enum_binding_values:
+            rows.append(
+                (
+                    resolution.enum_binding_values[country],
+                    int(resolution.binding_values[year]),
+                    resolution.enum_binding_values[period_type],
+                    resolution.enum_binding_values[period],
+                    resolution.binding_values[cuota],
+                )
+            )
+    return rows
+
+
+def _resolve_corrections(
+    operation: PinnedAuthorityOperation, regime: _Regime, *invoices: Invoice, on: date
+) -> CalculationSourceResolution:
+    return _resolve(operation, regime, invoices, period=regime.period(on))
+
+
+def _regime_first(regime: _Regime, day: date) -> Invoice:
+    return _invoice(regime, "F-1", country="FR", tier="general", base="1000.00", cuota="200.00", supply_date=day)
+
+
+def _regime_correction(regime: _Regime, day: date, *, number: str = "R-1", cuota: str = "20.00") -> Invoice:
+    base = str(Decimal(cuota) * 5)
+    return _invoice(regime, number, country="FR", tier="general", base=base, cuota=cuota, supply_date=day).model_copy(
+        update={
+            "invoice_class": invoice_class_rectificativa(),
+            "series": "R",
+            "counterparty_tax_id": _CUSTOMER,
+            "rectifies_invoice_number": "F-1",
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("regime", "later", "period_type", "period"),
+    [
+        (_EXTERIOR, _LATER_QUARTER, "T", "1"),
+        (_UNION, _LATER_QUARTER, "T", "1"),
+        (_IMPORT, date(2026, 3, 4), "M", "2"),
+    ],
+    ids=["exterior", "union", "import"],
+)
+def test_a_correction_of_an_earlier_period_takes_a_row_of_that_period_below_zero(
+    operation: PinnedAuthorityOperation, regime: _Regime, later: date, period_type: str, period: str
+) -> None:
+    """F-1's 200,00 is filed; R-1 takes 20,00 off it, so the later return states -20,00 for the earlier period."""
+    resolution = _resolve_corrections(
+        operation, regime, _regime_first(regime, _SUPPLY), _regime_correction(regime, later), on=later
+    )
+    assert _correction_rows(resolution, regime) == [("FR", 2026, period_type, period, Decimal("-20.00"))]
+
+
+def test_corrections_of_one_period_net_into_one_row_and_of_another_take_their_own(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """DR369 section 4 holds it, but its cuota field is unsigned, so the renderer cannot write the reduction."""
-    assert (
-        _refusal(operation, _first(), _correction(supply_date=_LATER_QUARTER), on=_LATER_QUARTER)
-        == "aggregation.oss_ioss.errors.rectificativa_outside_period"
+    """R-1 -20,00 and R-2 -5,00 name F-1 of 1T; R-3 -10,00 names F-3 of 4T of the year before."""
+    previous = date(2025, 11, 17)
+    resolution = _resolve_corrections(
+        operation,
+        _UNION,
+        _regime_first(_UNION, _SUPPLY),
+        _regime_correction(_UNION, _LATER_QUARTER),
+        _regime_correction(_UNION, _LATER_QUARTER, number="R-2", cuota="5.00"),
+        _invoice(_UNION, "F-3", country="FR", tier="general", base="100.00", cuota="20.00", supply_date=previous),
+        _regime_correction(_UNION, _LATER_QUARTER, number="R-3", cuota="10.00").model_copy(
+            update={"rectifies_invoice_number": "F-3"}
+        ),
+        on=_LATER_QUARTER,
     )
+    assert _correction_rows(resolution, _UNION) == [
+        ("FR", 2025, "T", "4", Decimal("-10.00")),
+        ("FR", 2026, "T", "1", Decimal("-25.00")),
+    ]
+
+
+def test_a_correction_issued_in_the_period_of_its_invoice_stays_on_the_row(operation: PinnedAuthorityOperation) -> None:
+    resolution = _resolve_corrections(
+        operation, _UNION, _regime_first(_UNION, _SUPPLY), _regime_correction(_UNION, _SUPPLY), on=_SUPPLY
+    )
+    assert _correction_rows(resolution, _UNION) == []
+
+
+def test_a_correction_issued_before_its_invoice_refuses(operation: PinnedAuthorityOperation) -> None:
+    assert (
+        _refusal(operation, _regime_first(_UNION, _LATER_QUARTER), _regime_correction(_UNION, _SUPPLY), on=_SUPPLY)
+        == "aggregation.oss_ioss.errors.rectificativa_target_later"
+    )
+
+
+def test_corrections_of_one_invoice_refuse_together_above_what_it_declared(operation: PinnedAuthorityOperation) -> None:
+    """150,00 and 60,00 each fit F-1's 200,00; together they do not."""
+    assert (
+        _refusal(
+            operation,
+            _regime_first(_UNION, _SUPPLY),
+            _regime_correction(_UNION, _LATER_QUARTER, cuota="150.00"),
+            _regime_correction(_UNION, _LATER_QUARTER, number="R-2", cuota="60.00"),
+            on=_LATER_QUARTER,
+        )
+        == "aggregation.oss_ioss.errors.rectificativa_above_row"
+    )
+
+
+@pytest.mark.parametrize(
+    ("regime", "corrected", "last_inside", "first_outside"),
+    [
+        # 1T 2023 closed on 30-04-2023, so the limit is 30-04-2026: 1T 2026 is filed from 1 April, 2T from 1 July.
+        (_UNION, date(2023, 2, 17), date(2026, 2, 17), date(2026, 5, 4)),
+        # February 2023 closed on 31-03-2023, so the limit is 31-03-2026: 02/2026 is filed from 1 March, 03 from 1 April.
+        (_IMPORT, date(2023, 2, 17), date(2026, 2, 17), date(2026, 3, 4)),
+    ],
+    ids=["quarter", "month"],
+)
+def test_the_three_year_limit_counts_from_the_close_of_the_corrected_return(
+    operation: PinnedAuthorityOperation, regime: _Regime, corrected: date, last_inside: date, first_outside: date
+) -> None:
+    resolution = _resolve_corrections(
+        operation, regime, _regime_first(regime, corrected), _regime_correction(regime, last_inside), on=last_inside
+    )
+    assert _correction_rows(resolution, regime)[0][4] == Decimal("-20.00")
+    with pytest.raises(AggregationValidationError) as refused:
+        _resolve_corrections(
+            operation,
+            regime,
+            _regime_first(regime, corrected),
+            _regime_correction(regime, first_outside),
+            on=first_outside,
+        )
+    assert str(refused.value.translated_message) == "aggregation.oss_ioss.errors.correction_beyond_limit"
+
+
+def test_a_foreign_currency_correction_of_an_earlier_period_refuses(operation: PinnedAuthorityOperation) -> None:
+    corrected = _regime_correction(_UNION, _LATER_QUARTER).model_copy(update={"currency": "PLN"})
+    assert (
+        _refusal(operation, _regime_first(_UNION, _SUPPLY), corrected, on=_LATER_QUARTER)
+        == "aggregation.oss_ioss.errors.correction_currency_unsourced"
+    )
+
+
+def _entered_row(
+    operation: PinnedAuthorityOperation, regime: _Regime, *, year: int, period_type: str, period: str
+) -> CalculationSourceResolution:
+    revision = published_revision("369", regime.revision_id)
+    country_slot, year_slot, type_slot, period_slot, cuota_slot = record_row_slots(revision, _CORRECTION_RECORD[regime])[0]
+    filed = regime.period(_LATER_QUARTER)
+    return OssIossLedgerSourceResolver(
+        ports=InvoiceCatalogueReadPorts(invoice_reader=_Reader(()), transaction_reader=_Transactions())
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET,
+            work_unit_id="a" * 64,
+            modelo="369",
+            filing_year=filed.filing_year,
+            period=filed,
+            revision=revision,
+            operation=operation,
+            caller_binding_values={year_slot: Decimal(year), cuota_slot: Decimal("15.00")},
+            caller_enum_binding_values={country_slot: "PL", type_slot: period_type, period_slot: period},
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    ("year", "period_type", "period", "reason"),
+    [
+        (2026, "T", "2", "correction_row_invalid"),
+        (2026, "M", "1", "correction_row_invalid"),
+        (2026, "T", "9", "correction_row_invalid"),
+        (2023, "T", "1", "correction_beyond_limit"),
+    ],
+    ids=["same-period", "wrong-type", "no-such-period", "beyond-limit"],
+)
+def test_an_entered_row_the_return_cannot_file_refuses(
+    operation: PinnedAuthorityOperation, year: int, period_type: str, period: str, reason: str
+) -> None:
+    with pytest.raises(AggregationValidationError) as refused:
+        _entered_row(operation, _UNION, year=year, period_type=period_type, period=period)
+    assert str(refused.value.translated_message) == f"aggregation.oss_ioss.errors.{reason}"
+
+
+def test_an_entered_row_of_an_earlier_period_stands(operation: PinnedAuthorityOperation) -> None:
+    resolution = _entered_row(operation, _UNION, year=2026, period_type="T", period="1")
+    assert _correction_rows(resolution, _UNION) == []
 
 
 def test_a_correction_whose_invoice_is_not_recorded_refuses(operation: PinnedAuthorityOperation) -> None:

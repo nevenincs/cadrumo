@@ -33,6 +33,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.aggregation.oss_ioss_wire_geometry import record_row_slots
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
@@ -54,6 +55,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus, invoice_class_simplificada
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -245,6 +247,7 @@ def _calculate(
     operation: PinnedAuthorityOperation,
     *,
     extra_rows: dict[str, Decimal] | None = None,
+    extra_enums: dict[str, str] | None = None,
 ) -> tuple[BucketAggregationCalculationResult, WorkUnit]:
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
@@ -273,7 +276,10 @@ def _calculate(
             work_unit.work_unit_id,
             ports=ports,
             binding_values={**_period_rows(scenario), **(extra_rows or {})},
-            enum_binding_values={f"{scenario.fichero}.{key}": value for key, value in scenario.declarant.items()},
+            enum_binding_values={
+                **{f"{scenario.fichero}.{key}": value for key, value in scenario.declarant.items()},
+                **(extra_enums or {}),
+            },
             clock=_T1,
         )
     return result, work_unit
@@ -768,3 +774,148 @@ def _published_rows(scenario: _Scenario, operation: PinnedAuthorityOperation) ->
         _invoice(scenario, f"OSS-BREADTH-{index}", state.upper(), tier, "100.00", f"{pct:.2f}")
         for index, (state, tier, pct) in enumerate(sorted(rows))
     )
+
+
+@dataclass(frozen=True)
+class _CorrectionPage:
+    record: str
+    tag: bytes
+    prefix: str
+    period_type: str
+    period: str
+
+
+_CORRECTION_PAGES = {
+    _EXTERIOR.revision_id: _CorrectionPage("modelo-369-exterior-t36902", b"<T36902>", "iva.exterior", "T", "4"),
+    _UNION.revision_id: _CorrectionPage("modelo-369-union-t36908", b"<T36908>", "iva.union", "T", "4"),
+    _IMPORT.revision_id: _CorrectionPage("modelo-369-importacion-t36911", b"<T36911>", "iva.importacion", "M", "11"),
+}
+_PREVIOUS_YEAR_SUPPLY = date(_YEAR - 1, 11, 17)
+_CORRECTION_ROW = 26
+
+
+def _reducing(scenario: _Scenario) -> tuple[Invoice, Invoice]:
+    """F-OLD, filed the year before at 1.000,00 + 200,00, and the rectificativa issued in this return's period."""
+    first = _invoice(scenario, "F-OLD", "FR", "general", "1000.00", "200.00", supply=_PREVIOUS_YEAR_SUPPLY)
+    correction = _invoice(scenario, "R-1", "FR", "general", "100.00", "20.00").model_copy(
+        update={
+            "invoice_class": invoice_class_rectificativa(),
+            "series": "R",
+            "counterparty_tax_id": "FR40303265045",
+            "rectifies_invoice_number": "F-OLD",
+        }
+    )
+    return first, correction
+
+
+def _correction_wire(scenario: _Scenario, country: str, cuota: str) -> bytes:
+    page = _CORRECTION_PAGES[scenario.revision_id]
+    return f"{country}{_YEAR - 1}{page.period_type}{page.period:<2}{cuota}".encode("ascii")
+
+
+def _correction_page_rows(wire: bytes, scenario: _Scenario, count: int) -> bytes:
+    start = wire.index(_CORRECTION_PAGES[scenario.revision_id].tag) + 9
+    return wire[start : start + count * _CORRECTION_ROW]
+
+
+def _parsed_correction_amounts(wire: bytes, scenario: _Scenario) -> list[Decimal]:
+    revision = (
+        published_authority_operation()
+        .snapshot("369", filing_year=_YEAR, period=scenario.period_code, revision_id=scenario.revision_id)
+        .revision
+    )
+    slots = record_row_slots(revision, _CORRECTION_PAGES[scenario.revision_id].record)
+    amounts = {slot[4] for slot in slots}
+    parsed = parse_export_payload(revision.export_layouts[0], wire)
+    return [field.value for field in parsed.fields if field.binding_id in amounts and isinstance(field.value, Decimal)]
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_a_reduction_of_an_earlier_period_settles_against_this_periods_services(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """France: services 50,00 this period, correction -20,00 of last year's, so 30,00 to pay."""
+    page = _CORRECTION_PAGES[scenario.revision_id]
+    result, _ = _calculate(
+        objects,
+        scenario,
+        (*_reducing(scenario), _invoice(scenario, "OSS-1", "FR", "general", "250.00", "50.00")),
+        operation,
+    )
+    values = result.revision.casilla_values
+    assert result.revision.source_issues == ()
+    assert Decimal(values[scenario.total_casilla]) == Decimal("50.00")
+    assert Decimal(values[f"{page.prefix}.resultado.fr.correcciones-negativas"]) == Decimal("-20.00")
+    assert Decimal(values[f"{page.prefix}.resultado.fr.correcciones-positivas"]) == Decimal("0")
+    assert Decimal(values[f"{page.prefix}.resultado.fr.resultado"]) == Decimal("30.00")
+    assert Decimal(values[f"{page.prefix}.resultado.fr.ingresar"]) == Decimal("30.00")
+    report = _verify(result)
+    assert report.granted_verificado_completo is True, [
+        (finding.message_locale_key, finding.message_facts) for finding in report.findings
+    ]
+
+    wire = _export(objects, tmp_path, scenario, result)
+    start = wire.index(scenario.page_tag) + scenario.first_position - 1
+    assert wire[start : start + 42] == _line("FR", "02000", "S", "25000", "5000")
+    assert _correction_page_rows(wire, scenario, 2) == _correction_wire(scenario, "FR", "-0000000000002000") + (
+        b" " * _CORRECTION_ROW
+    )
+    assert _parsed_correction_amounts(wire, scenario) == [Decimal("-20.00")]
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_a_reduction_above_the_periods_services_is_to_be_returned_by_that_state(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """France: -20,00 with nothing to set it against, while Poland's 23,00 stays payable on its own."""
+    page = _CORRECTION_PAGES[scenario.revision_id]
+    result, _ = _calculate(
+        objects,
+        scenario,
+        (*_reducing(scenario), _invoice(scenario, "OSS-3", "PL", "general", "100.00", "23.00")),
+        operation,
+    )
+    values = result.revision.casilla_values
+    assert Decimal(values[f"{page.prefix}.resultado.fr.resultado"]) == Decimal("-20.00")
+    assert Decimal(values[f"{page.prefix}.resultado.fr.devolver"]) == Decimal("20.00")
+    assert Decimal(values[f"{page.prefix}.resultado.fr.ingresar"]) == Decimal("0")
+    assert Decimal(values[f"{page.prefix}.resultado.pl.ingresar"]) == Decimal("23.00")
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_an_entered_increase_of_an_earlier_period_files_with_no_sign(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Poland: services 23,00 this period, +15,00 for last year's, so 38,00 to pay."""
+    page = _CORRECTION_PAGES[scenario.revision_id]
+    revision = (
+        published_authority_operation()
+        .snapshot("369", filing_year=_YEAR, period=scenario.period_code, revision_id=scenario.revision_id)
+        .revision
+    )
+    country, year, period_type, period, cuota = record_row_slots(revision, page.record)[0]
+    result, _ = _calculate(
+        objects,
+        scenario,
+        (_invoice(scenario, "OSS-3", "PL", "general", "100.00", "23.00"),),
+        operation,
+        extra_rows={year: Decimal(_YEAR - 1), cuota: Decimal("15.00")},
+        extra_enums={country: "PL", period_type: page.period_type, period: page.period},
+    )
+    values = result.revision.casilla_values
+    assert Decimal(values[f"{page.prefix}.resultado.pl.correcciones-positivas"]) == Decimal("15.00")
+    assert Decimal(values[f"{page.prefix}.resultado.pl.ingresar"]) == Decimal("38.00")
+    wire = _export(objects, tmp_path, scenario, result)
+    assert _correction_page_rows(wire, scenario, 1) == _correction_wire(scenario, "PL", "00000000000001500")
+    assert _parsed_correction_amounts(wire, scenario) == [Decimal("15.00")]

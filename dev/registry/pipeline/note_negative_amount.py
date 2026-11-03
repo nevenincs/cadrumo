@@ -38,7 +38,7 @@ _NOTE_NEGATIVE_AMOUNTS: Final[dict[str, NoteNegativeAmountDeclaration]] = {
         source_ref="aeat-dr-369-2021",
         source_sha256="b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3",
         sheet="T3690 Estruc. gral",
-        note_cells=("A33", "A34"),
+        note_cells=("A33", "A34", "F41"),
         note_statements=(
             "3. Los campos numéricos (Num) sólo admiten números más el carácter de signo negativo '-'.",
             "4. Los campos numéricos (Num) admiten números tanto positivos como negativos. Los datos numéricos "
