@@ -166,5 +166,5 @@ def test_main_prints_one_json_result(staged_build: Path, capsys: pytest.CaptureF
     assert desktop_automation_stage.main(["--build", str(staged_build), "--config", "Debug"]) == 0
     output = capsys.readouterr()
     assert len(output.out.splitlines()) == 1
-    assert json.loads(output.out)["package"].endswith("automation/package/Debug/app")
+    assert Path(json.loads(output.out)["package"]).parts[-4:] == ("automation", "package", "Debug", "app")
     assert output.err == ""
