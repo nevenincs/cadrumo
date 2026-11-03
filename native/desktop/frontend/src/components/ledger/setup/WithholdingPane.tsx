@@ -21,7 +21,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { formatAmount } from "../../../shared/numbers";
 import { formatInstantDay } from "../../../shared/dateFormats";
-import { tokensOf, useStrings } from "../../../shell/strings";
+import { useStrings } from "../../../shell/strings";
 import { PeriodSelector } from "../PeriodSelector";
 import { WriteHold, type Landing, type LandingCheck } from "../WritePause";
 import { CertificateFilePicker } from "./CertificateFilePicker";
@@ -389,18 +389,11 @@ export function WithholdingPane({
   };
 
   /** A refusal said in the words the backend served for it, with the
-   * refusal's own or the detail's; else in this pane's own words for a reason
-   * it has some for. A reason it has none for (and the backend served no
-   * words for) gets the generic notice, never the token. */
-  const ownWords = tokensOf("desktop.ledger.withholding.refusal.");
+   * refusal's own or the detail's. A refusal that arrives without words (a
+   * transport failure, say) gets the generic notice, never its reason. */
   const refusalIn = (detail: unknown): string | null => {
-    const found = (detail as Partial<WithholdingMutationResult> | null)
-      ?.refusal;
-    const served = servedRefusalWords(found) ?? servedRefusalWords(detail);
-    if (served) return served;
-    return found && ownWords.includes(found.reason)
-      ? t(`desktop.ledger.withholding.refusal.${found.reason}`)
-      : null;
+    const found = (detail as { refusal?: unknown } | null)?.refusal;
+    return servedRefusalWords(found) ?? servedRefusalWords(detail);
   };
   const refusal = () =>
     write.last?.kind === "refused" ? refusalIn(write.last.detail) : null;

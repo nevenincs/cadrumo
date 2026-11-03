@@ -5,7 +5,7 @@
 // never holds the payer's tax identifier, which is dropped once it has named
 // the payer's reference. Everything it answers is synthetic.
 
-import served from "./fixtures/ledgerWithholdingWords.json";
+import served from "./fixtures/ledgerWithholdingRefusalWords.json";
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,
@@ -35,8 +35,9 @@ type Tools = {
 
 /** What the made-up register cannot cause itself, which a scenario asks the
  * next certificate record to meet: a file that cannot be read once chosen,
- * or a record refused after its file was kept, as a race would leave it. */
-export type CertificateFault = "unreadable" | "kept_in_part";
+ * a record refused after its file was kept, as a race would leave it, or a
+ * refusal that arrives with no words served. */
+export type CertificateFault = "unreadable" | "kept_in_part" | "wordless";
 declare global {
   interface Window {
     __scenarioWithholding?: {
@@ -56,13 +57,14 @@ const AMOUNTS = [
   "ingreso_a_cuenta_repercutido",
 ] as const;
 const DECIMAL = /^(0|[1-9]\d*)(\.\d+)?$/;
-/** The sentences the backend serves with the certificate custody and file
- * refusals, in each language, read from its own wording; it serves none for
- * the other reasons. */
-const SERVED_WORDS: Record<
+/** The sentences the backend serves with every refusal of the record and of
+ * the absence operations, by reason and language, read from its own wording. */
+type ServedWords = Record<
   string,
   Record<string, { refusal_words: string; refusal_words_language: string }>
-> = served;
+>;
+const RECORD_WORDS: ServedWords = served.record;
+const ABSENCE_WORDS: ServedWords = served.absence;
 /** The class the scenario serves a label for; the others are served bare. */
 const LABELLED = {
   [WITHHOLDING_INCOME_CLASSES[0]]: "Employment income",
@@ -229,10 +231,17 @@ export function withholdingOperations(tools: Tools) {
     if (Object.keys(request).some((key) => !allowed.includes(key))) invalid();
   };
 
+  /** The sentence served for a reason, in the window's language. */
+  const wordsOf = (words: ServedWords, reason: string) => {
+    const found = words[reason];
+    if (!found) throw new Error(`no refusal words are served for ${reason}`);
+    return found[language] ?? found.en;
+  };
   const certificateRefusal = (
     code: string,
     reason: string,
     ejercicio: number,
+    withWords = true,
   ): never =>
     stop(code, {
       outcome: "refused",
@@ -244,9 +253,7 @@ export function withholdingOperations(tools: Tools) {
         code,
         reason,
         ejercicio,
-        ...(SERVED_WORDS[reason]
-          ? (SERVED_WORDS[reason][language] ?? SERVED_WORDS[reason].en)
-          : {}),
+        ...(withWords ? wordsOf(RECORD_WORDS, reason) : {}),
       },
     });
   const keptInPartRefusal = (
@@ -260,7 +267,7 @@ export function withholdingOperations(tools: Tools) {
       ejercicio,
       row: null,
       count: null,
-      refusal: { code, reason, ejercicio },
+      refusal: { code, reason, ejercicio, ...wordsOf(RECORD_WORDS, reason) },
     });
   const absenceRefusal = (
     code: string,
@@ -273,7 +280,13 @@ export function withholdingOperations(tools: Tools) {
       profile_id: profileId,
       ejercicio,
       attestation: null,
-      refusal: { code, reason, ejercicio, income_class: incomeClass },
+      refusal: {
+        code,
+        reason,
+        ejercicio,
+        income_class: incomeClass,
+        ...wordsOf(ABSENCE_WORDS, reason),
+      },
     });
   const attestationFor = (ejercicio: number, incomeClass: string) =>
     attestations.find(
@@ -342,9 +355,11 @@ export function withholdingOperations(tools: Tools) {
       if (given !== null && !/^[0-9a-f]{64}$/.test(given)) return invalid();
       const picked = text(request.source_path);
       const file = picked === null ? null : fileOf(picked);
-      const fault = file === null ? undefined : faults.shift();
+      const fault = faults.shift();
       // The file is read first, and a fingerprint given with it only
       // cross-checks the bytes read.
+      if (fault === "wordless")
+        return certificateRefusal(WRITE_CODE, "validation", ejercicio, false);
       if (file !== null) {
         if (fault === "unreadable")
           return certificateRefusal(

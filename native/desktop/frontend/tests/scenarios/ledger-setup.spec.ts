@@ -25,22 +25,26 @@ declare global {
 // readiness reason that opens the movements it names, and a reset whose
 // dry run the sealed declarations block.
 
-/** The sentences the backend serves for the certificate custody and file
- * refusals, in each language, as the generated fixture holds them. */
-const CERTIFICATE_WORDS = JSON.parse(
+/** The sentences the backend serves with every refusal of the withholding
+ * record and absence operations, by reason and language, as the generated
+ * fixture holds them. */
+const REFUSAL_WORDS = JSON.parse(
   readFileSync(
     new URL(
-      "../../src/dev/fixtures/ledgerWithholdingWords.json",
+      "../../src/dev/fixtures/ledgerWithholdingRefusalWords.json",
       import.meta.url,
     ),
     "utf8",
   ),
 ) as Record<
-  | "certificate_not_in_custody"
-  | "certificate_file_unreadable"
-  | "certificate_fingerprint_mismatch",
-  Record<string, { refusal_words: string }>
+  "record" | "absence",
+  Record<string, Record<string, { refusal_words: string }>>
 >;
+const servedWords = (
+  operation: "record" | "absence",
+  reason: string,
+  language = "en",
+) => REFUSAL_WORDS[operation][reason]![language]!.refusal_words;
 const WITHHOLDING_LANGUAGES = ["en", "es", "ca", "hu"] as const;
 
 const engine = readFileSync(
@@ -1514,53 +1518,82 @@ test("a certificate is recorded, and the payer's tax ID is nowhere in the window
   expect(held).toEqual({ page: false, fields: false, storage: false });
 });
 
-test("a refusal the backend served no words for is said in the pane's own, and keeps the form", async ({
+for (const language of WITHHOLDING_LANGUAGES) {
+  test(`a withholding record refused for its figures or its source is said in the words the backend served in ${language}, and keeps the form`, async ({
+    page: target,
+  }) => {
+    await openWithholding(target, undefined, language);
+    await target
+      .getByRole("button", {
+        name: label("desktop.ledger.withholding.action.record", {}, language),
+        exact: true,
+      })
+      .click();
+    const form = withholdingForm(target);
+    const labelled = (key: string) =>
+      form.getByLabel(label(key, {}, language), { exact: true });
+    await labelled("desktop.ledger.withholding.income_class").selectOption(
+      "trabajo",
+    );
+    await labelled("desktop.ledger.withholding.payer_tax_id").fill(
+      PAYER_TAX_ID,
+    );
+    await labelled("desktop.ledger.withholding.amount.ingreso_a_cuenta").fill(
+      "20",
+    );
+    await labelled(
+      "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
+    ).fill("30");
+    await labelled("desktop.ledger.withholding.origin_label").selectOption(
+      "operator_declaration",
+    );
+    const line = target.locator(".setup-call-line");
+    await recordButton(form, language).click();
+    // The sentence as served: neither the reason's token nor a notice of the
+    // window's own stands in for it.
+    await expect(line).toHaveText(
+      servedWords("record", "repercutido_exceeds_ingreso_a_cuenta", language),
+    );
+    await expect(line).not.toContainText(
+      "repercutido_exceeds_ingreso_a_cuenta",
+    );
+    await expect(form).toBeVisible();
+    await expect(
+      labelled("desktop.ledger.withholding.payer_tax_id"),
+    ).toHaveValue(PAYER_TAX_ID);
+    await labelled(
+      "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
+    ).fill("0");
+    await labelled("desktop.ledger.withholding.origin_label").selectOption(
+      "payer_certificate",
+    );
+    await recordButton(form, language).click();
+    await expect(line).toHaveText(
+      servedWords("record", "certificate_fingerprint_required", language),
+    );
+    await expect(line).not.toContainText("certificate_fingerprint_required");
+    await expect(form).toBeVisible();
+  });
+}
+
+test("a withholding record refused with no words served says only that it was not saved, and keeps the form", async ({
   page: target,
 }) => {
   await openWithholding(target);
-  await button(target, "desktop.ledger.withholding.action.record").click();
-  const form = withholdingForm(target);
-  await field(form, "desktop.ledger.withholding.income_class").selectOption(
-    "trabajo",
+  const form = await startCertificate(target);
+  await target.evaluate(() =>
+    window.__scenarioWithholding!.nextRecords(["wordless"]),
   );
-  await field(form, "desktop.ledger.withholding.payer_tax_id").fill(
-    PAYER_TAX_ID,
-  );
-  await field(form, "desktop.ledger.withholding.amount.ingreso_a_cuenta").fill(
-    "20",
-  );
-  await field(
-    form,
-    "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
-  ).fill("30");
-  await field(form, "desktop.ledger.withholding.origin_label").selectOption(
-    "operator_declaration",
-  );
-  const submit = button(form, "desktop.ledger.withholding.action.record");
-  await submit.click();
-  await expect(target.locator(".setup-call-line")).toContainText(
-    label(
-      "desktop.ledger.withholding.refusal.repercutido_exceeds_ingreso_a_cuenta",
-    ),
-  );
+  await button(form, "desktop.ledger.withholding.action.record").click();
+  const line = target.locator(".setup-call-line");
+  // No reason token or sentence of the window's own stands in for words the
+  // backend did not serve.
+  await expect(line).toHaveText(label("desktop.ledger.form.refused"));
+  await expect(line).not.toContainText("validation");
   await expect(form).toBeVisible();
   await expect(
     field(form, "desktop.ledger.withholding.payer_tax_id"),
   ).toHaveValue(PAYER_TAX_ID);
-  await field(
-    form,
-    "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
-  ).fill("0");
-  await field(form, "desktop.ledger.withholding.origin_label").selectOption(
-    "payer_certificate",
-  );
-  await submit.click();
-  await expect(target.locator(".setup-call-line")).toContainText(
-    label(
-      "desktop.ledger.withholding.refusal.certificate_fingerprint_required",
-    ),
-  );
-  await expect(form).toBeVisible();
 });
 
 /** Starts a certificate record the way a payer's certificate is: a class, a
@@ -1645,7 +1678,7 @@ for (const language of WITHHOLDING_LANGUAGES) {
     // The sentence as served: neither the reason's token nor a notice of the
     // window's own stands in for it.
     await expect(line).toHaveText(
-      CERTIFICATE_WORDS.certificate_file_unreadable[language]!.refusal_words,
+      servedWords("record", "certificate_file_unreadable", language),
     );
     await expect(line).not.toContainText("certificate_file_unreadable");
     await expect(form).toBeVisible();
@@ -1677,15 +1710,14 @@ for (const language of WITHHOLDING_LANGUAGES) {
     // The register's custody holds no such document.
     await recordButton(form, language).click();
     await expect(line).toHaveText(
-      CERTIFICATE_WORDS.certificate_not_in_custody[language]!.refusal_words,
+      servedWords("record", "certificate_not_in_custody", language),
     );
     await expect(line).not.toContainText("certificate_not_in_custody");
     // A file chosen beside it must be that document.
     await chooseCertificateFile(form, language);
     await recordButton(form, language).click();
     await expect(line).toHaveText(
-      CERTIFICATE_WORDS.certificate_fingerprint_mismatch[language]!
-        .refusal_words,
+      servedWords("record", "certificate_fingerprint_mismatch", language),
     );
     await expect(line).not.toContainText("certificate_fingerprint_mismatch");
     await expect(form).toBeVisible();
@@ -1822,10 +1854,60 @@ test("an income class is stated to have no withholding, the statement is withdra
   );
   await field(refused, "desktop.ledger.withholding.note").fill("None.");
   await button(refused, "desktop.ledger.withholding.action.attest").click();
-  await expect(target.locator(".setup-call-line")).toContainText(
-    label("desktop.ledger.withholding.refusal.records_present"),
+  await expect(target.locator(".setup-call-line")).toHaveText(
+    servedWords("absence", "records_present"),
   );
 });
+
+for (const language of WITHHOLDING_LANGUAGES) {
+  test(`a statement refused for its class is said in the words the backend served in ${language}, without the reason's token`, async ({
+    page: target,
+  }) => {
+    await openWithholding(target, undefined, language);
+    const line = target.locator(".setup-call-line");
+    for (const [incomeClass, reason] of [
+      ["trabajo", "records_present"],
+      ["actividad_economica", "already_attested"],
+    ] as const) {
+      await target
+        .getByRole("button", {
+          name: label("desktop.ledger.withholding.action.attest", {}, language),
+          exact: true,
+        })
+        .click();
+      const form = withholdingForm(target);
+      await form
+        .getByLabel(
+          label("desktop.ledger.withholding.income_class", {}, language),
+          {
+            exact: true,
+          },
+        )
+        .selectOption(incomeClass);
+      await form
+        .getByLabel(label("desktop.ledger.withholding.note", {}, language), {
+          exact: true,
+        })
+        .fill("Note.");
+      await form
+        .getByRole("button", {
+          name: label("desktop.ledger.withholding.action.attest", {}, language),
+          exact: true,
+        })
+        .click();
+      await expect(line).toHaveText(servedWords("absence", reason, language));
+      await expect(line).not.toContainText(reason);
+      await expect(form).toBeVisible();
+      await target
+        .getByRole("button", {
+          name: label("desktop.ledger.withholding.action.attest", {}, language),
+          exact: true,
+        })
+        .first()
+        .click();
+    }
+  });
+}
 
 test("a statement that is already active offers its withdrawal against the revision listed, and is refused if stated again", async ({
   page: target,
@@ -1838,8 +1920,8 @@ test("a statement that is already active offers its withdrawal against the revis
   );
   await field(form, "desktop.ledger.withholding.note").fill("Again.");
   await button(form, "desktop.ledger.withholding.action.attest").click();
-  await expect(target.locator(".setup-call-line")).toContainText(
-    label("desktop.ledger.withholding.refusal.already_attested"),
+  await expect(target.locator(".setup-call-line")).toHaveText(
+    servedWords("absence", "already_attested"),
   );
   // Nothing was doubled: the listed statement stands, and withdraws.
   const row = target.locator(".ledger-withholding-attested tr", {

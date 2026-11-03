@@ -509,8 +509,8 @@ export type WithholdingMutationResult = {
       | "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT";
     reason: WithholdingRefusalReason;
     ejercicio: number;
-    /** The finished sentence the backend serves, in its own language, for
-     * the certificate custody and file refusals; absent for the others. */
+    /** The finished sentence the backend serves with every refusal, in its
+     * own language. */
     refusal_words?: string | null;
     refusal_words_language?: string | null;
   } | null;
@@ -584,6 +584,10 @@ export type WithholdingAbsenceResult = {
     reason: WithholdingAbsenceReason;
     ejercicio: number;
     income_class: WithholdingIncomeClass;
+    /** The finished sentence the backend serves with every refusal, in its
+     * own language. */
+    refusal_words?: string | null;
+    refusal_words_language?: string | null;
   } | null;
 };
 export type WithholdingAttestRequest = {

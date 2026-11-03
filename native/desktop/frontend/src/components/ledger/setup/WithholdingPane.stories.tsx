@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import served from "@/dev/fixtures/ledgerWithholdingWords.json";
+import served from "@/dev/fixtures/ledgerWithholdingRefusalWords.json";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import {
   STORY_PERIOD,
@@ -16,9 +16,9 @@ import { WithholdingPane } from "./WithholdingPane";
 // The withholding register of Setup › Registers over the scenario's ledger:
 // the payers' certificates by income class, a year with none, the statements
 // that a class had no withholding with the withdrawn ones kept as history, a
-// refusal said in the pane's own words, and a certificate file picked and
-// kept, with the three custody and file refusals said in the words the
-// backend served for them and the one that kept the file. The scenario's
+// certificate file picked and kept, and the refusals of both operations said
+// in the sentences the backend served for them, with the one that kept the
+// file. The pane holds no words of its own for a refusal. The scenario's
 // payer and tax ID are made up.
 
 type Args = { locale: string; shape?: LedgerShape };
@@ -174,10 +174,10 @@ export const AttestationsListed: Story = {
   },
 };
 
-/** A certificate the register refused with no words served, said in the
- * pane's own. */
-export const RefusedInPaneWords: Story = {
-  name: "Refusal in the pane's own words",
+/** A certificate the register refused for passing on more than it was paid,
+ * said in the sentence the backend served. */
+export const RefusedInServedWords: Story = {
+  name: "Refusal in the served words",
   play: async ({ canvasElement }) => {
     await openForm(canvasElement, "record");
     const form = canvasElement.querySelector<HTMLElement>(
@@ -208,9 +208,65 @@ export const RefusedInPaneWords: Story = {
     );
     await waitFor(() =>
       within(canvasElement).getByText(
-        word(
-          "desktop.ledger.withholding.refusal.repercutido_exceeds_ingreso_a_cuenta",
-        ),
+        served.record.repercutido_exceeds_ingreso_a_cuenta.en.refusal_words,
+      ),
+    );
+  },
+};
+
+/** A statement for a class that has certificates, said in the sentence the
+ * backend served for the absence operation. */
+export const AttestationRefusedRecordsPresent: Story = {
+  name: "Statement refused: certificates recorded",
+  play: async ({ canvasElement }) => {
+    await openForm(canvasElement, "attest");
+    const form = canvasElement.querySelector<HTMLElement>(
+      ".ledger-withholding-form",
+    )!;
+    const inside = within(form);
+    const [choose] = inside.getAllByRole("combobox");
+    await userEvent.selectOptions(choose!, "trabajo");
+    await userEvent.type(
+      inside.getByLabelText(word("desktop.ledger.withholding.note")),
+      "None.",
+    );
+    await userEvent.click(
+      inside.getByRole("button", {
+        name: word("desktop.ledger.withholding.action.attest"),
+      }),
+    );
+    await waitFor(() =>
+      within(canvasElement).getByText(
+        served.absence.records_present.en.refusal_words,
+      ),
+    );
+  },
+};
+
+/** A statement for a class already stated, said in the sentence the backend
+ * served for the absence operation. */
+export const AttestationRefusedAlreadyStated: Story = {
+  name: "Statement refused: already stated",
+  play: async ({ canvasElement }) => {
+    await openForm(canvasElement, "attest");
+    const form = canvasElement.querySelector<HTMLElement>(
+      ".ledger-withholding-form",
+    )!;
+    const inside = within(form);
+    const [choose] = inside.getAllByRole("combobox");
+    await userEvent.selectOptions(choose!, "actividad_economica");
+    await userEvent.type(
+      inside.getByLabelText(word("desktop.ledger.withholding.note")),
+      "Again.",
+    );
+    await userEvent.click(
+      inside.getByRole("button", {
+        name: word("desktop.ledger.withholding.action.attest"),
+      }),
+    );
+    await waitFor(() =>
+      within(canvasElement).getByText(
+        served.absence.already_attested.en.refusal_words,
       ),
     );
   },
@@ -292,7 +348,7 @@ export const CertificateFileUnreadable: Story = {
     await sendCertificate(inside);
     await waitFor(() =>
       within(canvasElement).getByText(
-        served.certificate_file_unreadable.en.refusal_words,
+        served.record.certificate_file_unreadable.en.refusal_words,
       ),
     );
   },
@@ -318,7 +374,7 @@ export const CertificateNotInCustody: Story = {
     await sendCertificate(inside);
     await waitFor(() =>
       within(canvasElement).getByText(
-        served.certificate_not_in_custody.en.refusal_words,
+        served.record.certificate_not_in_custody.en.refusal_words,
       ),
     );
   },
@@ -346,7 +402,7 @@ export const CertificateFingerprintMismatch: Story = {
     await sendCertificate(inside);
     await waitFor(() =>
       within(canvasElement).getByText(
-        served.certificate_fingerprint_mismatch.en.refusal_words,
+        served.record.certificate_fingerprint_mismatch.en.refusal_words,
       ),
     );
   },

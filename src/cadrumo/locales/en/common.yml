@@ -4270,24 +4270,6 @@ desktop:
       payer_tax_id: Payer tax ID
       payer_tax_id_hint: Sent with the record to identify the payer. It is not shown
         again.
-      refusal:
-        already_attested: This class already has a statement.
-        certificate_fingerprint_required: A payer certificate needs its document.
-        ejercicio_unsupported: This year is not supported.
-        family_not_declared: This income class is not declared for this year.
-        identity_mismatch: The payer details do not match the record stored under
-          this reference.
-        not_attested: This class has no statement to withdraw.
-        not_found: That certificate is no longer stored.
-        own_tax_id: The payer's tax ID is your own.
-        records_present: Certificates are recorded for this class, so it cannot be
-          stated as having none.
-        repercutido_exceeds_ingreso_a_cuenta: The payment on account passed on cannot
-          exceed the payment on account.
-        stale_revision: The record changed since it was listed. Read it again and
-          retry.
-        taxpayer_tax_id_unknown: Your own tax ID is not in your profile yet.
-        validation: Some of the figures or fields are not accepted.
       remove: Remove
       remove_confirm: Remove certificate
       remove_of: Remove the certificate of {payer}

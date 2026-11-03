@@ -4311,24 +4311,6 @@ desktop:
       payer_tax_id: A kifizető adóazonosítója
       payer_tax_id_hint: A rögzítéssel együtt kerül elküldésre a kifizető azonosításához.
         Nem jelenik meg újra.
-      refusal:
-        already_attested: Ehhez az osztályhoz már van jelzés.
-        certificate_fingerprint_required: A kifizetői igazoláshoz kell a dokumentuma.
-        ejercicio_unsupported: Ez az év nem támogatott.
-        family_not_declared: Ez a jövedelemosztály nincs bejelentve erre az évre.
-        identity_mismatch: A kifizető adatai nem egyeznek az ezen a hivatkozáson tárolt
-          rekorddal.
-        not_attested: Ehhez az osztályhoz nincs visszavonható jelzés.
-        not_found: Ez az igazolás már nincs tárolva.
-        own_tax_id: A kifizető adóazonosítója a tiéd.
-        records_present: Ebben az osztályban rögzítettél igazolásokat, ezért nem jelezhető,
-          hogy nincs egy sem.
-        repercutido_exceeds_ingreso_a_cuenta: Az áthárított előlegbefizetés nem haladhatja
-          meg az előlegbefizetést.
-        stale_revision: A rekord megváltozott, mióta listáztad. Olvasd be újra, és
-          próbáld meg még egyszer.
-        taxpayer_tax_id_unknown: A saját adóazonosítód még nincs a profilodban.
-        validation: Néhány szám vagy mező nem fogadható el.
       remove: Eltávolítás
       remove_confirm: Igazolás eltávolítása
       remove_of: '{payer} igazolásának eltávolítása'

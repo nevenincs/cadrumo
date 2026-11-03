@@ -1,0 +1,348 @@
+{
+  "record": {
+    "own_tax_id": {
+      "en": {
+        "refusal_words": "The payer's tax ID (NIF) is your own. Withholding you practise yourself is not a credit in your favour.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "El NIF del pagador es el tuyo. Una retención que practicas tú no es un crédito a tu favor.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "El NIF del pagador és el teu. Una retenció que practiques tu no és un crèdit a favor teu.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "A kifizető adóazonosítója (NIF) a sajátod. Az általad végzett levonás nem jár számodra jóváírással.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "ejercicio_unsupported": {
+      "en": {
+        "refusal_words": "This year is outside the filing years Cadrumo supports.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Este ejercicio está fuera de los años de presentación que admite Cadrumo.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Aquest exercici és fora dels anys de presentació que admet Cadrumo.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Ez az adóév kívül esik a Cadrumo által támogatott bevallási éveken.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "family_not_declared": {
+      "en": {
+        "refusal_words": "The Modelo 100 for this year reads no withholding suffered, so a record here would never reach a calculation.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "El Modelo 100 de este ejercicio no lee retenciones soportadas, así que un registro aquí nunca llegaría a un cálculo.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "El Model 100 d'aquest exercici no llegeix retencions suportades, així que un registre aquí no arribaria mai a un càlcul.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Az adóév Modelo 100 változata nem olvas elszenvedett levonást, így az itteni rekord soha nem jutna el egy számításhoz.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "identity_mismatch": {
+      "en": {
+        "refusal_words": "The record does not match the payer, income class or certificate already stored for it.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "El registro no coincide con el pagador, la clase de renta o el certificado ya guardados para él.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "El registre no coincideix amb el pagador, la classe de renda o el certificat ja desats per a ell.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemosztállyal vagy igazolással.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "stale_revision": {
+      "en": {
+        "refusal_words": "This withholding record changed since you read it. Read it again and retry.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Este registro de retención cambió desde que lo leíste. Vuelve a leerlo y reinténtalo.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Aquest registre de retenció ha canviat des que el vas llegir. Torna a llegir-lo i reintenta-ho.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Ez a levonási rekord megváltozott, amióta elolvastad. Olvasd be újra, és próbáld meg ismét.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "repercutido_exceeds_ingreso_a_cuenta": {
+      "en": {
+        "refusal_words": "The payment on account (ingreso a cuenta) passed on to you cannot be larger than the one the payer made.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "El ingreso a cuenta que te han repercutido no puede ser mayor que el que hizo el pagador.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "L'ingrés a compte que t'han repercutit no pot ser més gran que el que va fer el pagador.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "A rád áthárított ingreso a cuenta nem lehet nagyobb annál, amelyet a kifizető teljesített.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "certificate_fingerprint_required": {
+      "en": {
+        "refusal_words": "A payer certificate needs its document. Choose the certificate file, or declare the withholding yourself if you have no certificate.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Un certificado del pagador necesita su documento. Elige el archivo del certificado o, si no tienes certificado, declara tú la retención.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Un certificat del pagador necessita el seu document. Tria el fitxer del certificat o, si no tens certificat, declara tu la retenció.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "A kifizetői igazoláshoz tartozik egy dokumentum. Válaszd ki az igazolás fájlját, vagy ha nincs igazolásod, nyilatkozz magad a levonásról.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "certificate_not_in_custody": {
+      "en": {
+        "refusal_words": "Cadrumo holds no stored certificate with that fingerprint, or the stored file no longer matches it. Choose the certificate file so Cadrumo keeps it among your encrypted documents.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Cadrumo no tiene guardado ningún certificado con esa huella, o el archivo guardado ya no coincide con ella. Elige el archivo del certificado para que Cadrumo lo guarde entre tus documentos cifrados.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Cadrumo no té desat cap certificat amb aquesta empremta, o el fitxer desat ja no hi coincideix. Tria el fitxer del certificat perquè Cadrumo el desi entre els teus documents xifrats.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "A Cadrumo nem tárol ilyen ujjlenyomatú igazolást, vagy az eltárolt fájl már nem egyezik vele. Válaszd ki az igazolás fájlját, hogy a Cadrumo a titkosított dokumentumaid között megőrizze.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "certificate_file_unreadable": {
+      "en": {
+        "refusal_words": "The certificate file could not be read. Check that it still exists, is not empty and is a PDF, an image or an XML document, then choose it again.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "No se pudo leer el archivo del certificado. Comprueba que sigue existiendo, que no está vacío y que es un PDF, una imagen o un documento XML, y vuelve a elegirlo.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "No s'ha pogut llegir el fitxer del certificat. Comprova que encara existeix, que no està buit i que és un PDF, una imatge o un document XML, i torna a triar-lo.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Az igazolás fájlja nem olvasható. Ellenőrizd, hogy még megvan, nem üres, és PDF, kép vagy XML dokumentum, majd válaszd ki újra.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "certificate_fingerprint_mismatch": {
+      "en": {
+        "refusal_words": "The certificate file does not match the fingerprint recorded for it, so nothing was stored. Choose the right file and try again.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "El archivo del certificado no coincide con la huella registrada para él, así que no se guardó nada. Elige el archivo correcto e inténtalo de nuevo.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "El fitxer del certificat no coincideix amb l'empremta registrada per a ell, així que no s'ha desat res. Tria el fitxer correcte i torna-ho a provar.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Az igazolás fájlja nem egyezik a hozzá rögzített ujjlenyomattal, ezért semmi sem lett mentve. Válaszd ki a megfelelő fájlt, és próbáld újra.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "taxpayer_tax_id_unknown": {
+      "en": {
+        "refusal_words": "Your profile has no tax ID (NIF) yet, so a payer that is yourself cannot be ruled out. Add your NIF to your profile first.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Tu perfil todavía no tiene NIF, así que no se puede descartar que el pagador seas tú. Añade primero tu NIF al perfil.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "El teu perfil encara no té NIF, així que no es pot descartar que el pagador siguis tu. Afegeix primer el teu NIF al perfil.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "A profilodban még nincs adóazonosító (NIF), ezért nem zárható ki, hogy a kifizető te vagy. Előbb add meg a NIF-ed a profilban.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "not_found": {
+      "en": {
+        "refusal_words": "No withholding record exists for that year, income class and payer. It may already have been removed.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "No hay ningún registro de retención para ese ejercicio, clase de renta y pagador. Puede que ya se haya eliminado.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "No hi ha cap registre de retenció per a aquest exercici, classe de renda i pagador. Pot ser que ja s'hagi eliminat.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Ehhez az adóévhez, jövedelemosztályhoz és kifizetőhöz nincs levonási rekord. Lehet, hogy már törölték.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "validation": {
+      "en": {
+        "refusal_words": "The withholding record was not saved. Check the payer's tax ID, that the amounts have at most two decimals, and the certificate.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "El registro de retención no se guardó. Revisa el NIF del pagador, que los importes tengan como máximo dos decimales y el certificado.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "El registre de retenció no s'ha desat. Revisa el NIF del pagador, que els imports tinguin com a màxim dos decimals i el certificat.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "A levonási rekord nem lett mentve. Ellenőrizd a kifizető adóazonosítóját, hogy az összegeknek legfeljebb két tizedesjegyük legyen, és az igazolást.",
+        "refusal_words_language": "hu"
+      }
+    }
+  },
+  "absence": {
+    "ejercicio_unsupported": {
+      "en": {
+        "refusal_words": "This year is outside the filing years Cadrumo supports.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Este ejercicio está fuera de los años de presentación que admite Cadrumo.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Aquest exercici és fora dels anys de presentació que admet Cadrumo.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Ez az adóév kívül esik a Cadrumo által támogatott bevallási éveken.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "family_not_declared": {
+      "en": {
+        "refusal_words": "The Modelo 100 for this year reads no withholding suffered, so a statement here would never reach a calculation.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "El Modelo 100 de este ejercicio no lee retenciones soportadas, así que una declaración aquí nunca llegaría a un cálculo.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "El Model 100 d'aquest exercici no llegeix retencions suportades, així que una declaració aquí no arribaria mai a un càlcul.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Az adóév Modelo 100 változata nem olvas elszenvedett levonást, így az itteni nyilatkozat soha nem jutna el egy számításhoz.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "records_present": {
+      "en": {
+        "refusal_words": "Certificates are already recorded for this income class, so it cannot be stated as having none. Remove them first.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Ya hay certificados registrados para esta clase de renta, así que no se puede declarar que no tiene retenciones. Elimínalos primero.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Ja hi ha certificats registrats per a aquesta classe de renda, així que no es pot declarar que no té retencions. Elimina'ls primer.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Erre a jövedelemosztályra már vannak rögzített igazolások, ezért nem jelenthető ki, hogy nincs levonás. Előbb töröld őket.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "already_attested": {
+      "en": {
+        "refusal_words": "This income class already has an active statement of no withholding for this year.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Esta clase de renta ya tiene una declaración activa de ausencia de retenciones para este ejercicio.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Aquesta classe de renda ja té una declaració activa d'absència de retencions per a aquest exercici.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Erre a jövedelemosztályra ebben az adóévben már van aktív levonásmentességi nyilatkozat.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "not_attested": {
+      "en": {
+        "refusal_words": "This income class has no active statement to withdraw.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Esta clase de renta no tiene ninguna declaración activa que retirar.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Aquesta classe de renda no té cap declaració activa per retirar.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Ennek a jövedelemosztálynak nincs aktív nyilatkozata, amelyet vissza lehetne vonni.",
+        "refusal_words_language": "hu"
+      }
+    },
+    "stale_revision": {
+      "en": {
+        "refusal_words": "This statement changed since you read it. Read it again and retry.",
+        "refusal_words_language": "en"
+      },
+      "es": {
+        "refusal_words": "Esta declaración cambió desde que la leíste. Vuelve a leerla y reinténtalo.",
+        "refusal_words_language": "es"
+      },
+      "ca": {
+        "refusal_words": "Aquesta declaració ha canviat des que la vas llegir. Torna a llegir-la i reintenta-ho.",
+        "refusal_words_language": "ca"
+      },
+      "hu": {
+        "refusal_words": "Ez a nyilatkozat megváltozott, amióta elolvastad. Olvasd be újra, és próbáld meg ismét.",
+        "refusal_words_language": "hu"
+      }
+    }
+  }
+}

@@ -4342,26 +4342,6 @@ desktop:
       payer_tax_id: NIF del pagador
       payer_tax_id_hint: S'envia amb el registre per identificar el pagador. No es
         torna a mostrar.
-      refusal:
-        already_attested: Aquesta classe ja té una indicació.
-        certificate_fingerprint_required: El certificat d'un pagador necessita el
-          seu document.
-        ejercicio_unsupported: Aquest any no és compatible.
-        family_not_declared: Aquesta classe de renda no està declarada per a aquest
-          any.
-        identity_mismatch: Les dades del pagador no coincideixen amb el registre desat
-          amb aquesta referència.
-        not_attested: Aquesta classe no té cap indicació per retirar.
-        not_found: Aquest certificat ja no està desat.
-        own_tax_id: El NIF del pagador és el teu.
-        records_present: Hi ha certificats anotats en aquesta classe, de manera que
-          no es pot indicar que no en té cap.
-        repercutido_exceeds_ingreso_a_cuenta: L'ingrés a compte repercutit no pot
-          superar l'ingrés a compte.
-        stale_revision: El registre ha canviat des que el vas llistar. Torna'l a llegir
-          i prova-ho de nou.
-        taxpayer_tax_id_unknown: El teu propi NIF encara no és al teu perfil.
-        validation: Algunes xifres o camps no s'admeten.
       remove: Treu
       remove_confirm: Treu el certificat
       remove_of: Treu el certificat de {payer}
