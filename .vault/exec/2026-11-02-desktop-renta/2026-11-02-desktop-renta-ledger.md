@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4fcff1f1a80a7ee95e2068d8b8dc8e04f5902189471c2a99d8b7637cceeec63e'
+body_hash: 'sha256:56a7875d2923edbdcf58b651e3692038ed4af29d7c78822f8b22a72aac81f704'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -699,6 +699,35 @@ related:
 - `S19` `verify:` `playwright scenarios modelo specs` -> `fail`
 - `S19` `verify:` `test_desktop_chrome` -> `fail`
 - `S19` `by:` `vaultspec-standard-executor`
+- `S20` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S20` `M` `src/cadrumo/application/live/borrador_100_comparison.py`
+- `S20` `M` `src/cadrumo/application/modelo/export_settlement.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_outline.py`
+- `S20` `M` `src/cadrumo/application/user_profile/ascendant_rows.py`
+- `S20` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S20` `M` `src/cadrumo/application/user_profile/imputation_election_service.py`
+- `S20` `M` `src/cadrumo/application/user_profile/question_view.py`
+- `S20` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S20` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S20` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S20` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S20` `M` `dev/locales/tests/test_audit.py`
+- `S20` `M` `src/cadrumo/entrypoints/cli/tests/test_compare_taxation_payload_contract.py`
+- `S20` `M` `dev/registry/compiler/validate_household_row_owners.py`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S20` `M` `dev/quality/metadata/import_load_targets.json`
+- `S20` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S20` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S20` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S20` `verify:` `locale audit, parity, dynamic prefix, casilla catalogue` -> `pass`
+- `S20` `verify:` `test_desktop_chrome` -> `fail`
+- `S20` `verify:` `lint-imports` -> `pass`
+- `S20` `verify:` `just check-types` -> `fail`
+- `S20` `verify:` `playwright scenarios modelo/renta` -> `fail`
+- `S20` `verify:` `pytest renta regression` -> `fail`
+- `S20` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -752,3 +781,4 @@ related:
 - `S38` WIP checkpoint a950a0438d then 6aa82fb235. TIPOTRIBUTACION design identical 2022-2025 so the role sits on the 2022 base only; redundant 2024/2025 overrides removed. `compares_taxation` served 2022-2025; 2020/2021 below support floor. The registry failure is `test_every_relation_prefill_binding_has_a_typed_source_coordinate` on 130/131 pagos-fraccionados bindings 2020-2025, outside S38's diff, carried to S20.
 - `S43` Commit 2441755ff6. Every `contains_date` gate replaced by `select_revision_metadata_for_year;` revision carry gate projects within the support span; Madrid deduction gate compares the snapshot's authored year. A 2026 Modelo 100 calculates end to end. Wide run 9988 passed, 83 failed: 81 trace to the Modelo 130 art. 32.1 split and `box_number` length from the renta-withholding merge 24e2cef114, plus `minimo_descendientes` and 2025 prorrata tests, none touching S43 paths. Supported-filing-years floor 2022 left as declared.
 - `S19` Commits 5e0ec02dfc fixtures, 3567b54052 stories and journeys. Final single re-record via the full producer; years from the registry incl. projected 2026 calculated. projectable true only for 2025/2026: the m130 projection mapping is authored for revision 2025 only. Two-earner `individual_lower_result` not recordable: the comparison models a single input set per household. 46 Playwright failures are raw chrome keys `(workspace.modelo.filing.*,` `iva_wallet.*)` from a chrome declaration mismatch shown by `test_desktop_chrome,` plus 2 pre-existing modelo-workspace scenarios; carried to S20.
+- `S20` Commits 058065391e, 991f48bdea, cae85744d0, e499839a18, e9a18f1117, 148173569a, b7da0dbe77, 99d8a52aa8, 17bcee39e3, 5fd7982366. Every failure the plan's commits caused is fixed. Remaining reds belong to other lanes: desktop chrome 17 keys (frontend 6fa9d30093, 975330ea1f, bb0476fd0c); check-types 3 diagnostics outside our files; 130/131 relation-prefill drift (10dcf5c8fc); 0171 (0f570046bf); Modelo 130/131 split regressions (ca59ec5ecb, fb844a52db, 24e2cef114); identity inventory keys of other lanes; 2 Playwright modelo-workspace scenarios. 46 raw-key scenarios were stale build chrome-strings, cleared by regeneration.
