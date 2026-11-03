@@ -109,18 +109,20 @@ def _question_item(
     )
 
 
-def profile_question_choices(question: WizardQuestion) -> tuple[ProfileQuestionChoice, ...]:
-    """Return the accepted answers of ``question`` in the words setup asks them, in the active language."""
+def profile_question_choices(
+    question: WizardQuestion, *, locale: str | None = None
+) -> tuple[ProfileQuestionChoice, ...]:
+    """Return the accepted answers of ``question`` as setup words them, in ``locale`` or the active language."""
     if question.widget is WizardWidget.CONFIRM:
         return (
-            ProfileQuestionChoice(value="true", label=tr("flows.confirm.yes")),
-            ProfileQuestionChoice(value="false", label=tr("flows.confirm.no")),
+            ProfileQuestionChoice(value="true", label=tr("flows.confirm.yes", locale=locale)),
+            ProfileQuestionChoice(value="false", label=tr("flows.confirm.no", locale=locale)),
         )
     return tuple(
         ProfileQuestionChoice(
             value=choice.value,
-            label=tr(choice.label),
-            description=None if choice.description is None else tr(choice.description),
+            label=tr(choice.label, locale=locale),
+            description=None if choice.description is None else tr(choice.description, locale=locale),
         )
         for choice in question.choices
     )

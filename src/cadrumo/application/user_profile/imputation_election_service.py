@@ -14,7 +14,6 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...core.config import override_settings
 from ...core.i18n.render import tr
 from ..aggregation.renta_imputation import declared_imputation_criteria
 from ..wizard.catalogue import build_setup_flow
@@ -89,13 +88,13 @@ def _questions(flow: WizardFlow) -> dict[str, WizardQuestion]:
     return questions
 
 
-def _question_words(question: WizardQuestion) -> ProfileImputationElectionQuestion:
+def _question_words(question: WizardQuestion, *, locale: str) -> ProfileImputationElectionQuestion:
     return ProfileImputationElectionQuestion(
         question_id=question.id,
         path=question.profile_key,
-        prompt=tr(question.prompt),
-        help=None if question.help is None else tr(question.help),
-        choices=profile_question_choices(question),
+        prompt=tr(question.prompt, locale=locale),
+        help=None if question.help is None else tr(question.help, locale=locale),
+        choices=profile_question_choices(question, locale=locale),
     )
 
 
@@ -111,25 +110,25 @@ def read_imputation_election(
     flow = build_setup_flow(authority_operation)
     questions = _questions(flow)
     accounting = questions[ACCOUNTING_QUESTION_ID]
-    with override_settings(cadrumo_output_language=request.output_language.value):
-        return ProfileImputationElectionReadResult(
-            profile_id=request.profile_id,
-            record_revision=record.record_revision,
-            content_digest=record.content_digest,
-            tax_year=request.tax_year,
-            criterion=_criterion_answer(record, request.tax_year),
-            codigo_comercio_accounting=_answer(record.facts, ACCOUNTING_PROFILE_PATH, request.tax_year),
-            criterion_statements=profile_field_ejercicio_answers(flow, record.facts)[CRITERION_PROFILE_PATH].statements,
-            criterion_question=_question_words(questions[CRITERION_QUESTION_ID]),
-            year_question=_question_words(questions[YEAR_QUESTION_ID]),
-            accounting_question=_question_words(accounting),
-            accounting_asked_for_criteria=tuple(
-                condition.equals
-                for condition in iter_conditions(accounting.visible_when)
-                if condition.question_id == CRITERION_QUESTION_ID and condition.equals is not None
-            ),
-            words_language=request.output_language,
-        )
+    locale = request.output_language.value
+    return ProfileImputationElectionReadResult(
+        profile_id=request.profile_id,
+        record_revision=record.record_revision,
+        content_digest=record.content_digest,
+        tax_year=request.tax_year,
+        criterion=_criterion_answer(record, request.tax_year),
+        codigo_comercio_accounting=_answer(record.facts, ACCOUNTING_PROFILE_PATH, request.tax_year),
+        criterion_statements=profile_field_ejercicio_answers(flow, record.facts)[CRITERION_PROFILE_PATH].statements,
+        criterion_question=_question_words(questions[CRITERION_QUESTION_ID], locale=locale),
+        year_question=_question_words(questions[YEAR_QUESTION_ID], locale=locale),
+        accounting_question=_question_words(accounting, locale=locale),
+        accounting_asked_for_criteria=tuple(
+            condition.equals
+            for condition in iter_conditions(accounting.visible_when)
+            if condition.question_id == CRITERION_QUESTION_ID and condition.equals is not None
+        ),
+        words_language=request.output_language,
+    )
 
 
 def apply_imputation_election(
