@@ -129,6 +129,45 @@ def test_borrador_snapshot_requires_canonical_registry_coordinate() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("binding_values", "message"),
+    [
+        (["renta-retencion-soportada-trabajo"], "borrador binding values must be a mapping"),
+        ({"renta-retencion-soportada-trabajo": 15}, "borrador binding value must be a tagged decimal or text"),
+        (
+            {"renta-retencion-soportada-trabajo": {"kind": "decimal", "value": "1", "extra": "x"}},
+            "borrador binding value must be a tagged decimal or text",
+        ),
+        (
+            {"renta-retencion-soportada-trabajo": {"kind": "decimal", "value": 1}},
+            "borrador binding value must be a tagged decimal or text",
+        ),
+        (
+            {"renta-retencion-soportada-trabajo": {"kind": "number", "value": "1"}},
+            "borrador binding value kind must be decimal or text",
+        ),
+    ],
+)
+def test_borrador_snapshot_refuses_stored_binding_values_of_the_wrong_type(
+    binding_values: object, message: str
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        Borrador100Snapshot.model_validate(
+            {
+                "snapshot_id": "a" * 64,
+                "bucket_id": _BUCKET_ID,
+                "modelo": "100",
+                "filing_year": 2025,
+                "period": _PERIOD,
+                "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
+                "captured_at": _CAPTURED_AT,
+                "source_url": _SOURCE,
+                "state": SnapshotLifecycleState.ACTIVE,
+                "binding_values": binding_values,
+            }
+        )
+
+
 def test_borrador_100_snapshot_service_captures_content_addressed_snapshot() -> None:
     repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)

@@ -43,11 +43,12 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Final, cast
+from typing import Final
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.period import Period
+from ...core.type_guards import is_object_collection
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -345,9 +346,8 @@ def _canonical(value: object) -> object:
         return value.isoformat()
     if isinstance(value, Enum):
         return _canonical(value.value)
-    if isinstance(value, tuple | list | frozenset | set):
-        items = cast("Iterable[object]", value)
-        return sorted(canonical_json_bytes(_canonical(item)).decode("utf-8") for item in items)
+    if is_object_collection(value):
+        return sorted(canonical_json_bytes(_canonical(item)).decode("utf-8") for item in value)
     return str(value)
 
 

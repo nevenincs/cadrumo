@@ -16,7 +16,7 @@ detail words both when it is built.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -84,7 +84,7 @@ class OperationNextStepErrorMixin:
 
     def __init__(self, *args: object, next_step: OperationNextStepWording | None = None, **kwargs: object) -> None:
         """Initialize the parent error and retain the step's wording."""
-        parent_init = cast(Callable[..., None], super().__init__)
+        parent_init: Callable[..., None] = super().__init__
         parent_init(*args, **kwargs)
         self._operation_next_step = next_step
 

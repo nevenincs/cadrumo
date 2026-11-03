@@ -8,15 +8,23 @@ sector name.
 
 from __future__ import annotations
 
-from typing import Final, cast, get_args
+from typing import Final, get_args
 
 from ...core.external_constants import OutputLanguage
 from ..operations.error_detail import operation_catalogue_refusal_words
 from .projection_contracts import ProrrataRefusalCode, ProrrataRefusalReason
 
+
+def _declared_refusal_reasons() -> tuple[str, ...]:
+    declared = get_args(ProrrataRefusalReason.__value__)
+    reasons = tuple(reason for reason in declared if isinstance(reason, str))
+    if len(reasons) != len(declared):
+        raise TypeError("every prorrata refusal reason must be a string literal")
+    return reasons
+
+
 _SERVED_REFUSAL_LOCALE_KEYS: Final[dict[str, str]] = {
-    reason: f"application.prorrata_register.served.{reason}"
-    for reason in cast(tuple[str, ...], get_args(ProrrataRefusalReason.__value__))
+    reason: f"application.prorrata_register.served.{reason}" for reason in _declared_refusal_reasons()
 }
 
 

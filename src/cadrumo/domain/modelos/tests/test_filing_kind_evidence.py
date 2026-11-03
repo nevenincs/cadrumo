@@ -137,6 +137,25 @@ def test_a_stored_page_indicator_reading_is_ignored_when_the_projection_loads() 
     assert [reading.source for reading in loaded.readings] == [FilingKindReadingSource.SUBMITTED_FILE_MARKER]
 
 
+def test_a_stored_readings_value_that_is_not_a_list_is_refused() -> None:
+    stored = {"kind": "original", "basis": "submitted_file_marker", "source_locator": _MARKER_LOCATOR, "readings": "x"}
+
+    with pytest.raises(ValidationError):
+        ObservedFilingKind.model_validate(stored)
+
+
+def test_a_stored_reading_that_is_not_a_mapping_is_refused_rather_than_dropped() -> None:
+    stored = {
+        "kind": "original",
+        "basis": "submitted_file_marker",
+        "source_locator": _MARKER_LOCATOR,
+        "readings": ["submitted_file_page_indicator"],
+    }
+
+    with pytest.raises(ValidationError):
+        ObservedFilingKind.model_validate(stored)
+
+
 @pytest.mark.parametrize(
     ("identity_kind", "expected"),
     [

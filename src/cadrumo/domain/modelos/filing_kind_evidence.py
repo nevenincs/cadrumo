@@ -23,16 +23,17 @@ for an admitted ``ORIGINAL``.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Self, cast
+from typing import Final, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.type_guards import is_object_list_or_tuple, is_object_mapping
 from .filing_record import FilingDeclarationKind, declaration_kind_for_tipo_solicitud
 
 
@@ -96,9 +97,9 @@ class FilingKindUnknownReason(StrEnum):
 
 
 def _is_retired_page_indicator_reading(reading: object) -> bool:
-    if not isinstance(reading, Mapping):
+    if not is_object_mapping(reading):
         return False
-    return cast("Mapping[str, object]", reading).get("source") == _RETIRED_PAGE_INDICATOR_SOURCE
+    return reading.get("source") == _RETIRED_PAGE_INDICATOR_SOURCE
 
 
 def _parse_kind(value: object) -> FilingDeclarationKind | None:
@@ -176,9 +177,9 @@ class ObservedFilingKind(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _drop_retired_page_indicator_readings(cls, value: object) -> object:
-        if not isinstance(value, (list, tuple)):
+        if not is_object_list_or_tuple(value):
             return value
-        stored: list[object] = list(cast("Sequence[object]", value))
+        stored: list[object] = list(value)
         return tuple(reading for reading in stored if not _is_retired_page_indicator_reading(reading))
 
     @field_validator("kind", mode="before")

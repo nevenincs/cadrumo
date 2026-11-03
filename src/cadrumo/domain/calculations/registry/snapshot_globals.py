@@ -8,12 +8,13 @@ binding, formula and revision model.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field, model_validator
 
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.modelo import Modelo
+from ....core.type_guards import is_object_mapping
 from .convenio import ConvenioAuthority
 from .m303_orden_projection_models import M303AnnualOrdenAuthority
 from .schema_base import RegistryModel
@@ -54,9 +55,9 @@ class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):
     @model_validator(mode="before")
     @classmethod
     def _floor_is_relative_to_the_horizon(cls, data: object) -> object:
-        if not isinstance(data, Mapping):
+        if not is_object_mapping(data):
             return data
-        declared = dict(cast("Mapping[str, object]", data))
+        declared: dict[object, object] = dict(data)
         if "filing_grade_years_before_horizon" not in declared:
             return declared
         span = declared.pop("filing_grade_years_before_horizon")

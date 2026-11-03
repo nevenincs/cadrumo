@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, Protocol, cast, override
+from typing import Annotated, Literal, Protocol, override
 
 from pydantic import BaseModel, Field, PlainSerializer, PlainValidator, StringConstraints, TypeAdapter, model_validator
 
@@ -27,6 +27,7 @@ from ...core.identity.hex_ids import SnapshotId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
+from ...core.type_guards import is_object_mapping
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistrySnapshotError
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -78,9 +79,9 @@ def encode_borrador_binding_values(values: Mapping[BindingId, _BorradorValue]) -
 def _decode_borrador_binding_value(raw: object) -> _BorradorValue:
     if isinstance(raw, (Decimal, str)):
         return raw
-    if not isinstance(raw, Mapping):
+    if not is_object_mapping(raw):
         raise ValueError("borrador binding value must be a tagged decimal or text")
-    tagged = cast("Mapping[object, object]", raw)
+    tagged = raw
     text = tagged.get("value")
     if set(tagged) != {"kind", "value"} or not isinstance(text, str):
         raise ValueError("borrador binding value must be a tagged decimal or text")
@@ -99,9 +100,9 @@ def _decode_borrador_binding_value(raw: object) -> _BorradorValue:
 
 
 def _decode_borrador_binding_values(raw: object) -> dict[str, _BorradorValue]:
-    if not isinstance(raw, Mapping):
+    if not is_object_mapping(raw):
         raise ValueError("borrador binding values must be a mapping")
-    entries = cast("Mapping[object, object]", raw)
+    entries = raw
     return {
         _BINDING_ID_ADAPTER.validate_python(key, strict=True): _decode_borrador_binding_value(value)
         for key, value in entries.items()

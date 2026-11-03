@@ -31,9 +31,9 @@ import re
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import cast
 from xml.etree.ElementTree import Element
 
+from ...core.type_guards import is_object_mapping
 from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry
 from .errors import ModeloApplicationError
 
@@ -154,10 +154,9 @@ def refused_xml_boxes(error: BaseException) -> tuple[str, ...]:
     so the two cannot come to different answers about the same declaration.
     """
     context = getattr(error, "context", None)
-    if not isinstance(context, Mapping):
+    if not is_object_mapping(context):
         return ()
-    typed_context = cast("Mapping[str, object]", context)
-    listed = typed_context.get("refused_boxes", typed_context.get("box"))
+    listed = context.get("refused_boxes", context.get("box"))
     return tuple(str(listed).split(", ")) if listed is not None else ()
 
 
