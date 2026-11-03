@@ -584,4 +584,6 @@ def test_the_check_lists_a_disagreement_with_the_finding_id_an_acceptance_answer
     (line,) = [line for line in form_issue_lines(form, OutputLanguage.EN) if reason in line.technical]
 
     assert finding_id in line.technical
-    assert "accept-disagreement" in line.action
+    # The line names the finding in its own field and says to accept it; the command is the command line's.
+    assert line.finding_id == finding_id
+    assert "accept" in line.action and "accept-disagreement" not in line.action and finding_id not in line.action

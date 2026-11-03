@@ -92,6 +92,18 @@ _AT_SOURCE_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.at_so
 _AT_SOURCE_IF_APPLIES_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.at_source_if_applies"
 _FINDING_ACTION_ROOT: Final[str] = "application.modelo.work_form.finding_action"
 
+_SERVED_NOTE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "credit_source_disagreement": "application.modelo.work_form.served_action.credit_source_disagreement",
+        "precedence_tier_divergence": "application.modelo.work_form.served_action.precedence_tier_divergence",
+    }
+)
+"""What to do about a note, for the reasons whose catalogue action names a command line.
+
+A line is shown by every frontend, so it says what to do without naming a command, an option or a
+placeholder to fill; the command line words the same step with its command from the catalogue.
+"""
+
 _AT_SOURCE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         f"{_FINDING_ACTION_ROOT}.enter_box_value": _AT_SOURCE_ACTION_LOCALE_KEY,
@@ -460,7 +472,12 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         box=note.box or None,
         where=_note_where(note, field, context),
         message=message,
-        action=_action_words(what_to_do_locale_key(note.reason), field, context, box=box_text),
+        action=_action_words(
+            _SERVED_NOTE_ACTION_LOCALE_KEYS.get(note.reason) or what_to_do_locale_key(note.reason),
+            field,
+            context,
+            box=box_text,
+        ),
         detail=detail,
         technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
         address=None if field is None else field.address,

@@ -80,7 +80,7 @@ from ...domain.modelos.credit_resolution import CreditResolutionRecord
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.work_unit import WorkUnit
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH
-from .credit_resolution import disagreement_value_text
+from .disagreement_words import disagreement_value_text
 from .settlement_casilla import DECLARATION_RESULT_SEMANTIC_ROLES, SETTLEMENT_SEMANTIC_ROLES
 from .work_review import ModeloWorkReviewCasilla
 

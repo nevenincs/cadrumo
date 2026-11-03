@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from string import Formatter
 from typing import cast
 
@@ -27,11 +28,17 @@ from ....domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bin
 from ....domain.calculations.registry.ledger_renta_income_bindings import renta_income_target_casilla
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from ....domain.modelos.source_disagreement import (
+    DisagreementDecimalValue,
+    SourceDisagreementEntry,
+    SourceDisagreementRole,
+)
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...actividad_asset.history import ActivityAssetHistory
 from ...actividad_asset.ports import ActivityAssetHistoryRepository
 from ...aggregation.tests.ledger_source_mesh_support import register_asset, resolve_m100
 from ..calculation_notes import fact_locale_key, note_fact_text, read_element_names, read_recorded_notes
+from ..disagreement_words import sources_facts, value_facts
 from ..printed_boxes import snapshot_printed_boxes
 from ..work_form_issue_lines import form_issue_lines
 from .test_work_form_gate_agreement import _checked_form, _revision, _work_unit
@@ -76,6 +83,22 @@ _VALUES = {
     "income_class": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD.value,
     "compared_amount": "1199.99",
     "cross_check": "retencion_soportada",
+    "accepted": value_facts(DisagreementDecimalValue.of(Decimal("1200.00"))),
+    "sources": sources_facts(
+        (
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.VALUE_SOURCE,
+                source_family="binding",
+                value=DisagreementDecimalValue.of(Decimal("1200.00")),
+            ),
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.CROSS_CHECK,
+                source_family="borrador",
+                value=DisagreementDecimalValue.of(Decimal("1199.99")),
+            ),
+        )
+    ),
+    "reason": "The payer states the lower amount in its own copy.",
 }
 _RAW = re.compile(
     r"[0-9a-f]{12,}"  # a hash or the tail of one

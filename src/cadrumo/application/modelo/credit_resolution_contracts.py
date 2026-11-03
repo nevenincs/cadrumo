@@ -30,8 +30,8 @@ from ...domain.modelos.credit_resolution import (
 from ...domain.modelos.source_disagreement import SourceDisagreementRole
 from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH
-from .credit_resolution import disagreement_value_text
 from .credit_resolution_words import credit_resolution_answer_words
+from .disagreement_words import disagreement_value_text
 
 __all__ = [
     "MODELO_CREDIT_RESOLUTION_ACCEPT_OPERATION_DEFINITION_ID",

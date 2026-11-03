@@ -14,6 +14,7 @@ synthetic.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -53,6 +54,7 @@ from ....application.modelo.declarations_workspace_contracts import Declarations
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_form_findings import ModeloFormAttention
 from ....core.casilla_id import CasillaId
+from ....core.config import override_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -371,24 +373,28 @@ def test_every_applied_resolution_is_listed_with_its_box_sources_amounts_and_rea
     _accept(harness, revision, TRABAJO_CASILLA)
     trabajo = _disagreement(revision, TRABAJO_CASILLA)
 
-    notes = applied_resolution_notes(
-        revision, load_credit_resolutions(harness.resolutions, modelo="100", filing_year=YEAR, period="0A")
-    )
+    with override_settings(cadrumo_output_language="en"):
+        notes = applied_resolution_notes(
+            revision, load_credit_resolutions(harness.resolutions, modelo="100", filing_year=YEAR, period="0A")
+        )
 
     # Only the accepted disagreement is listed; the capital one is still open.
     (note,) = notes
     assert note.reason == "credit_resolution_applied"
-    assert dict(note.fact.values) == {
-        "box": str(TRABAJO_CASILLA),
-        "accepted": "1950.00",
-        "sources": "value_source=1950.00; cross_check=1800.00",
-        "finding": _finding_id(trabajo),
-        "reason": _REASON,
-    }
+    values = dict(note.fact.values)
+    assert set(values) == {"box", "accepted", "sources", "reason"}
+    assert (values["box"], values["reason"]) == (str(TRABAJO_CASILLA), _REASON)
+    assert json.loads(values["accepted"]) == ["decimal", "1950.00"]
+    assert [(role, kind_and_text) for role, _family, kind_and_text in json.loads(values["sources"])] == [
+        ("value_source", ["decimal", "1950.00"]),
+        ("cross_check", ["decimal", "1800.00"]),
+    ]
     assert note_attention(note.reason, box=None) is ModeloFormAttention.INFO
     for text in (note.message, note.detail):
         assert text
-    assert "1950.00" in note.message and "1800.00" in note.message and _REASON in note.message
+    # The sentence words the sources and writes the amounts as the language does, and names no id or token.
+    assert "1,950.00" in note.message and "1,800.00" in note.message and _REASON in note.message
+    assert _finding_id(trabajo) not in note.message and "value_source" not in note.message
     # Once taken back the acceptance lists nothing.
     revoke_credit_resolution(
         _identity(trabajo),

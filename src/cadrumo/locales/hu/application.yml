@@ -2916,6 +2916,14 @@ application:
         modelo_blank: A nyomtatvány azonosítója nem lehet üres.
   prorrata_register:
     served:
+      served_action:
+        credit_source_disagreement: Vesd össze az összeget az egyes kifizetők igazolásával,
+          javítsd a hibás forrást, és számold újra. Ha ellenőrizted, hogy a felhasznált
+          összeg helyes, fogadd el, és add meg az indokát.
+        precedence_tier_divergence: Hasonlítsd össze a forrásokat, javítsd ki a hibásat,
+          majd számolj újra. Az ellenőrzés, az exportálás és a rögzítés megvárja,
+          amíg egyeznek, vagy amíg el nem fogadod a felhasznált értéket, és meg nem
+          adod az indokát.
       gross_declaration_absent: 'A nyilvántartás elutasította a törlést: erre a bevallási
         időszakra nincs megadott bruttó alap, így nincs mit törölni.'
       gross_declaration_duplicate: 'A nyilvántartás elutasította a bruttó alapot:

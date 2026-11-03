@@ -2808,6 +2808,13 @@ application:
     served:
       gross_declaration_absent: 'The register refused the removal: no gross base is
         declared for that liquidation period, so there is nothing to remove.'
+      served_action:
+        credit_source_disagreement: Compare the amount with each payer's certificate,
+          correct the source that is wrong, and recalculate. If you have checked that
+          the amount in use is right, accept it and say why.
+        precedence_tier_divergence: Compare the sources and correct the one that is
+          wrong, then calculate again. Checking, exporting and recording wait until
+          they agree, or until you accept the value in use and say why.
       gross_declaration_duplicate: 'The register refused the gross base: one is already
         declared for that liquidation period. Nothing was written.'
       gross_declaration_sector_unknown: 'The register refused the gross base: the

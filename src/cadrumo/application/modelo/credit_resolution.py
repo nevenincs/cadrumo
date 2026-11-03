@@ -36,16 +36,6 @@ from ...domain.modelos.calculation_revision_sources import (
     RecordedCalculationNote,
 )
 from ...domain.modelos.credit_resolution import CreditResolutionRecord
-from ...domain.modelos.source_disagreement import (
-    DisagreementBooleanValue,
-    DisagreementDateValue,
-    DisagreementDecimalValue,
-    DisagreementEnumValue,
-    DisagreementRelationValue,
-    DisagreementRowsValue,
-    DisagreementTextValue,
-    DisagreementValue,
-)
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH, SourceDisagreementResolutions
@@ -55,6 +45,7 @@ from .credit_resolution_repository import (
     CreditResolutionReader,
     CreditResolutionRefusedError,
 )
+from .disagreement_words import sources_facts, value_facts
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
@@ -69,7 +60,6 @@ __all__ = [
     "credit_resolution_degradation_diagnostics",
     "credit_resolution_for_finding",
     "credit_resolutions_for_work",
-    "disagreement_value_text",
     "find_finding",
     "load_credit_resolutions",
     "stale_resolution_issues",
@@ -238,23 +228,6 @@ def _stale_issue(disagreement: CalculationSourceIssue) -> CalculationSourceIssue
     )
 
 
-def disagreement_value_text(value: DisagreementValue) -> str:
-    """State one source's value as plain text, in its own type's canonical form."""
-    match value:
-        case DisagreementDecimalValue() | DisagreementRelationValue():
-            return value.amount
-        case DisagreementEnumValue():
-            return value.token
-        case DisagreementDateValue():
-            return value.value.isoformat()
-        case DisagreementBooleanValue():
-            return "true" if value.value else "false"
-        case DisagreementTextValue():
-            return value.value
-        case DisagreementRowsValue():
-            return ",".join(disagreement_value_text(row) for row in value.rows)
-
-
 def applied_resolution_notes(
     revision: CalculationRevision, lookup: CreditResolutionLookup
 ) -> tuple[RecordedCalculationNote, ...]:
@@ -273,11 +246,8 @@ def applied_resolution_notes(
         note_fact = CalculationNoteFact.of(
             CalculationNoteSentence.CREDIT_RESOLUTION_APPLIED,
             box=fact.reached_casillas[0] if fact.reached_casillas else fact.key,
-            accepted=disagreement_value_text(accepted.value),
-            sources="; ".join(
-                f"{source.role.value}={disagreement_value_text(source.value)}" for source in fact.sources
-            ),
-            finding=record.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH],
+            accepted=value_facts(accepted.value),
+            sources=sources_facts(fact.sources),
             reason=record.reason,
         )
         notes.append(

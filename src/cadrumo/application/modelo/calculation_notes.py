@@ -61,6 +61,7 @@ from ...domain.user_profile.labels import profile_field_label_key
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from .disagreement_words import CROSS_CHECK_LABEL_LOCALE_KEYS, sources_facts_words, value_facts_words
 from .value_presentation import format_casilla_value
 from .work_form_findings import ModeloFormAttention
 
@@ -304,15 +305,8 @@ _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
 )
 _INCOME_CLASS_VALUE: Final[str] = "income_class"
 _CROSS_CHECK_VALUE: Final[str] = "cross_check"
-CROSS_CHECK_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
-    {
-        "retencion_soportada": "application.modelo.credit_cross_check_source.retencion_soportada",
-        "borrador": "application.modelo.credit_cross_check_source.borrador",
-        "ledger": "application.modelo.credit_cross_check_source.ledger",
-        "filed_observation": "application.modelo.credit_cross_check_source.filed_observation",
-    }
-)
-"""How a note names the source a credit was compared with, by its cross-check kind."""
+_ACCEPTED_VALUE: Final[str] = "accepted"
+_SOURCES_VALUE: Final[str] = "sources"
 _logger = get_logger(__name__)
 STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
@@ -411,6 +405,10 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         return tr(profile_field_label_key(section, field), locale=language.value)
     if name == _CROSS_CHECK_VALUE:
         return tr(CROSS_CHECK_LABEL_LOCALE_KEYS[value], locale=language.value)
+    if name == _ACCEPTED_VALUE:
+        return value_facts_words(value, language)
+    if name == _SOURCES_VALUE:
+        return sources_facts_words(value, language)
     return value
 
 
@@ -537,7 +535,6 @@ __all__ = [
     "CALCULATION_NOTE_ATTENTION",
     "CALCULATION_SCREEN_OUTDATED_REASON",
     "CHECK_REFUSED_REASONS",
-    "CROSS_CHECK_LABEL_LOCALE_KEYS",
     "DERIVED_GATE_REASONS",
     "EXPORT_REFUSED_REASONS",
     "FILED_BEFORE_GRADE_CAP_REASON",

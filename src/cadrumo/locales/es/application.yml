@@ -2962,6 +2962,14 @@ application:
         base bruta declarada para esa liquidación, así que no hay nada que eliminar.'
       gross_declaration_duplicate: 'El registro ha rechazado la base bruta: ya hay
         una declarada para esa liquidación. No se ha guardado nada.'
+      served_action:
+        credit_source_disagreement: Compara el importe con el certificado de cada
+          pagador, corrige la fuente que esté mal y vuelve a calcular. Si has comprobado
+          que el importe utilizado es correcto, acéptalo e indica el motivo.
+        precedence_tier_divergence: Compara las fuentes y corrige la que esté mal;
+          después vuelve a calcular. La comprobación, la exportación y el registro
+          esperan hasta que coincidan, o hasta que aceptes el valor utilizado e indiques
+          el motivo.
       gross_declaration_sector_unknown: 'El registro ha rechazado la base bruta: el
         sector no es un sector diferenciado declarado. No se ha guardado nada.'
       provenance_not_electable: 'El registro ha rechazado la opción: no puedes elegir
