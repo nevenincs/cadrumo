@@ -29,7 +29,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
 )
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -38,16 +38,20 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
-from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.transactions.enums import TransactionDirection
+from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
 from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
 from .ordinary_m303_scenarios import joint_return_options
+from .source_mesh_calculate_transactions import (
+    classified_rent_transaction,
+    ledger_transaction,
+    m100_activity_expense_transaction,
+    m100_activity_income_transaction,
+)
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -258,163 +262,6 @@ def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
     assert captured.exit_code == 0, captured.output
 
 
-def _raw_transaction(
-    provider_id: str,
-    *,
-    booked_date: date = date(2025, 2, 10),
-    amount: Decimal,
-) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=booked_date,
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente o proveedor",
-        description=f"ledger row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="f" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2025, 2, 11, 12, 0, tzinfo=UTC),
-            provider_name="manual-ledger",
-        ),
-        raw_fields={"source_kind": "ledger_transaction"},
-    )
-
-
-def _transaction(
-    provider_id: str,
-    *,
-    direction: TransactionDirection,
-    amount: Decimal,
-    taxable_base: Decimal,
-    iva_amount: Decimal,
-    # Defaults to the general tipo, which every rate-bearing row in this file
-    # declares. A category whose cuota is zero by law takes an explicit ZERO
-    # tipo rather than an absent one: the missing-fact screen refuses a row with
-    # no iva_rate at all, and the zero-cuota guard refuses any tipo that is not
-    # exactly 0, so Decimal("0") is the one value satisfying both. (That the
-    # other rows here rely on the default is a fact about the file today, not a
-    # contract.)
-    iva_rate: Decimal | None = Decimal("0.21"),
-    iva_category: IvaCategory | None = None,
-    deduction_fact_kind: IvaDeductionFactKind | None = None,
-    deduction_locator: str | None = None,
-    counterparty_country: str | None = None,
-    counterparty_identification_state: EUMemberState | None = None,
-) -> Transaction:
-    raw = _raw_transaction(provider_id, amount=amount)
-    fields: dict[str, object] = {
-        "raw": raw,
-        # Stated, so the period never rests on the bank date and the source-advisory
-        # assertions in this file see only the advisories they are about.
-        "operation_date": raw.booked_date,
-        "direction": direction,
-        "business_classification": BusinessClassification.BUSINESS,
-        "source_jurisdiction": "ES",
-        "group_label": None,
-        "category_id": "material_oficina",
-        "taxable_base": taxable_base,
-        "iva_rate": iva_rate,
-        "iva_amount": iva_amount,
-        "classified_at": datetime(2025, 2, 11, 13, 0, tzinfo=UTC),
-        "classified_by": "manual",
-    }
-    if iva_category is not None:
-        fields["iva_category"] = iva_category
-    if deduction_fact_kind is not None:
-        # LIVA art. 97: the factura confers the right to deduct, so an input
-        # row only reaches a soportado binding once it carries its
-        # invoice-evidence deduction authority.
-        fields["deduction_fact_kind"] = deduction_fact_kind
-        fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
-            source_locator=deduction_locator or "invoice:test-purchase",
-            evidence_digest="a" * 64,
-        )
-    if counterparty_country is not None:
-        fields["counterparty_country"] = counterparty_country
-    if counterparty_identification_state is not None:
-        fields["counterparty_identification_state"] = counterparty_identification_state
-    return Transaction.model_validate(fields)
-
-
-def _classified_rent_transaction() -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(
-                "rent-net-withholding",
-                booked_date=date(2026, 3, 15),
-                amount=Decimal("2754.00"),
-            ),
-            "direction": TransactionDirection.OUTGOING,
-            "group_label": None,
-            "business_classification": BusinessClassification.BUSINESS,
-            "source_jurisdiction": "ES",
-            "category_id": "arrendamiento_local",
-            "taxable_base": Decimal("2700.00"),
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("567.00"),
-            "irpf_category": "arrendamiento_local",
-            "classified_at": datetime(2026, 3, 15, 12, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
-def _m100_activity_income_transaction() -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(
-                "m100-activity-income",
-                booked_date=date(2024, 3, 15),
-                amount=Decimal("12000.00"),
-            ),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "business_classification": BusinessClassification.BUSINESS,
-            "source_jurisdiction": "ES",
-            "taxable_base": Decimal("12000.00"),
-            "iva_rate": Decimal("0"),
-            "iva_amount": Decimal("0"),
-            "classified_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
-def _m100_activity_expense_transaction(
-    transaction_id: str,
-    *,
-    value_date: date,
-    category: SpendingCategory,
-    taxable_base: Decimal,
-) -> Transaction:
-    iva_amount = (taxable_base * Decimal("0.21")).quantize(Decimal("0.01"))
-    gross_amount = taxable_base + iva_amount
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(
-                transaction_id,
-                booked_date=value_date,
-                amount=gross_amount,
-            ),
-            "direction": TransactionDirection.OUTGOING,
-            "group_label": None,
-            "business_classification": BusinessClassification.BUSINESS,
-            "source_jurisdiction": "ES",
-            "category_id": category.value,
-            "taxable_base": taxable_base,
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": iva_amount,
-            "classified_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
 def _seed_prior_m100_zero_carry() -> None:
     from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
@@ -528,25 +375,25 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
 ) -> None:
     """An operator's public CLI M100 path carries ledger income through 0171/0180/0224."""
     expense_rows = (
-        _m100_activity_expense_transaction(
+        m100_activity_expense_transaction(
             "m100-expense-office",
             value_date=date(2024, 2, 20),
             category=SpendingCategory.from_registry("material_oficina"),
             taxable_base=Decimal("500.00"),
         ),
-        _m100_activity_expense_transaction(
+        m100_activity_expense_transaction(
             "m100-expense-software",
             value_date=date(2024, 5, 22),
             category=SpendingCategory.from_registry("software_suscripcion"),
             taxable_base=Decimal("700.00"),
         ),
-        _m100_activity_expense_transaction(
+        m100_activity_expense_transaction(
             "m100-expense-phone",
             value_date=date(2024, 8, 12),
             category=SpendingCategory.from_registry("telefonia_movil"),
             taxable_base=Decimal("300.00"),
         ),
-        _m100_activity_expense_transaction(
+        m100_activity_expense_transaction(
             "m100-expense-advisory",
             value_date=date(2024, 11, 8),
             category=SpendingCategory.from_registry("asesoria_fiscal"),
@@ -576,7 +423,7 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
         with _opened_profile(profile, authority_operation) as bucket_id:
             _seed_prior_m100_zero_carry()
             TransactionCatalogueRepository(bucket_id=bucket_id).save(
-                TransactionCatalogue.from_transactions((_m100_activity_income_transaction(), *expense_rows)),
+                TransactionCatalogue.from_transactions((m100_activity_income_transaction(), *expense_rows)),
             )
             InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
 
@@ -770,7 +617,7 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
         work_unit = _create_115_work_unit(profile)
         with _opened_profile(profile, authority_operation) as bucket_id:
             TransactionCatalogueRepository(bucket_id=bucket_id).save(
-                TransactionCatalogue.from_transactions((_classified_rent_transaction(),)),
+                TransactionCatalogue.from_transactions((classified_rent_transaction(),)),
             )
 
         calculated = _cli(
@@ -982,14 +829,14 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
 ) -> None:
     with _operator_profile(tmp_path) as native_profile:
         work_unit = _create_303_work_unit(native_profile)
-        sale = _transaction(
+        sale = ledger_transaction(
             "sale-general",
             direction=TransactionDirection.INCOMING,
             amount=Decimal("121.00"),
             taxable_base=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
         )
-        purchase = _transaction(
+        purchase = ledger_transaction(
             "purchase-general",
             direction=TransactionDirection.OUTGOING,
             amount=Decimal("60.50"),
@@ -1125,7 +972,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     JSON ``notices`` channel and the human text output.
     """
     # A consumed domestic sale (matches the repercutido-general binding) ...
-    domestic_sale = _transaction(
+    domestic_sale = ledger_transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("121.00"),
@@ -1134,7 +981,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     )
     # ... plus a cuota-less intra-community supply (exempt, base-only) that no
     # M303 cuota binding selects and that must NOT raise a source advisory.
-    cuota_less_supply = _transaction(
+    cuota_less_supply = ledger_transaction(
         "intra-community-supply",
         direction=TransactionDirection.INCOMING,
         # Base-only, as an exempt supply is: LIVA art. 25 exempts the operation,
@@ -1215,7 +1062,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
     repercutido-general binding must leave ``source_advisories`` empty and emit
     no ADVISORY line.
     """
-    domestic_sale = _transaction(
+    domestic_sale = ledger_transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("121.00"),
