@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e739fe66715515fb936f8a05923895cad80bac5acf6bc68d4de98089daf98ed'
+body_hash: 'sha256:81f614dff707e0b2572d5afd7bb598d5d4d5c2ca79014a8f9acf039da14f93e9'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -922,6 +922,29 @@ related:
 - `S53` `verify:` `test_window_holds_no_tax_data` -> `pass`
 - `S53` `verify:` `test_desktop_chrome` -> `fail`
 - `S53` `by:` `vaultspec-standard-executor`
+- `S54` `M` `native/desktop/frontend/src/shell/ledgerContract.ts`
+- `S54` `M` `native/desktop/frontend/scripts/ledger_contract.py`
+- `S54` `A` `native/desktop/frontend/src/shell/ledgerClassifications.ts`
+- `S54` `A` `native/desktop/frontend/tests/support/servedClassifications.ts`
+- `S54` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S54` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S54` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/editing/editingModel.ts`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/inspector/ClassifySection.tsx`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorModel.ts`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S54` `M` `native/desktop/frontend/src/components/ledger/setup/RuleDialog.tsx`
+- `S54` `M` `native/desktop/frontend/src/dev/fixtures/ledgerEntryOptions.json`
+- `S54` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S54` `M` `src/cadrumo/application/ledger/tests/test_entry_options.py`
+- `S54` `verify:` `ledger-contract.mjs --check` -> `pass`
+- `S54` `verify:` `relay_contracts.py --check` -> `pass`
+- `S54` `verify:` `storybook:build` -> `pass`
+- `S54` `verify:` `playwright ledger specs` -> `pass`
+- `S54` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S54` `verify:` `tsc` -> `fail`
+- `S54` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -985,3 +1008,4 @@ related:
 - `S46` Commit 05786149c4. `ModeloWorkForm.withholding_credits` serves each credit's dependent numbered boxes from the formula graph, null when the graph cannot be read. The window walk is deleted. Open: no words for the null state yet, carried to S51.
 - `S51` Commit 9f34651a2e: unknown credit dependents now show served chrome words. The door itself is blocked on three backend fields asked of the renta-withholding session: `finding_id` on ModeloFormIssueLine, refusal words on CreditResolutionRefusalProjection, and a served sentence on CreditResolutionRowProjection. The commit also carries that session's absence `served.*` catalogue lines, committed whole by --only.
 - `S53` Commit e291a27cd0. The withholding pane shows only served refusal words for both operations; 13 `desktop.ledger.withholding.refusal.*` keys deleted in four locales. Remaining locale failures belong to other in-flight work (prorrata served keys, `credit_resolution` `served_source` identity, 17 unused chrome keys).
+- `S54` Commit b3a41c4296 (backend-served-surface P01.S03 window half). Three window classification sets deleted; served rows held in ledgerClassifications.ts. tsc errors are S51's uncommitted modeloFixture.ts. Not served yet: a 'carries business figures' flag (window still uses generated isBusinessBearing) and the mixed usage-ratio lookup. Committed via a temporary index around a held index.lock; history verified linear.

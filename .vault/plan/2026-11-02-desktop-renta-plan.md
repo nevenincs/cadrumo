@@ -18,7 +18,7 @@ related:
   - '[[2026-11-03-backend-served-surface-plan]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:c44a82d10bbccad7d8a4472666e60e8e8735094f4b63dce752f8ea79edbd39d4'
+body_hash: 'sha256:196b46d49d8772943c63e0c1e048f4446d16c96580fa3505ae933f7c9d363cc4'
 ---
 
 # `desktop-renta` plan
@@ -91,7 +91,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [ ] `P01.S51` - [Opus medium] design and [Sonnet high] build the Modelo workspace door for a blocking credit or tier disagreement: list the served disagreements, accept one with a reason and revoke an acceptance at its expected revision, all in served words with stories and a scenario; `native/desktop/frontend/src/components/modelo/workspace`.
 - [x] `P01.S52` - [Sonnet high] show the withholding record's served refusal words for the three certificate custody refusals in the withholding pane, as invoice add already shows its served words; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
 - [x] `P01.S53` - [Sonnet high] once the withholding record serves refusal words for every reason, delete the pane's own desktop.ledger.withholding.refusal words so the window holds no words of its own for the operation; `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`.
-- [ ] `P01.S54` - [Sonnet high] delete the ledger classification constants and their classify rules now that the backend serves the classification flags; the rest of the window deletions run under the backend-served surface plan; `native/desktop/frontend/src/shell/ledgerContract.ts`.
+- [x] `P01.S54` - [Sonnet high] delete the ledger classification constants and their classify rules now that the backend serves the classification flags; the rest of the window deletions run under the backend-served surface plan; `native/desktop/frontend/src/shell/ledgerContract.ts`.
 
 ### Phase `P02` - contracts and fixtures
 
