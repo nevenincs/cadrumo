@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from dev.acceptance import installed_cli as installed_cli_module
+from dev.acceptance.income_tax.cli_journey import imputation_criterion_args
 from dev.acceptance.installed_cli import InstalledCli, decode_cli_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -117,3 +118,14 @@ def test_installed_cli_records_a_non_json_refusal_without_retaining_its_diagnost
             "app ledger list", 2, "non_json_failure", (), error_code="acceptance.installed_cli.non_json_failure"
         )
     ]
+
+
+def test_the_journey_declares_the_cash_criterion_for_its_year_without_commercial_accounting() -> None:
+    """RIRPF art. 7.2: the cobros y pagos election needs a direct-estimation filer with no Codigo de Comercio books."""
+    assert imputation_criterion_args(2025) == (
+        "--irpf-activity-income-imputation-criterion",
+        "cobros_y_pagos",
+        "--irpf-activity-income-imputation-year",
+        "2025",
+        "--no-irpf-codigo-comercio-accounting",
+    )

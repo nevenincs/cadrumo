@@ -13,6 +13,7 @@ import hashlib
 import json
 import secrets
 from collections.abc import Sequence
+from contextlib import AbstractContextManager, ExitStack
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -34,6 +35,23 @@ from .scenario import (
 )
 
 _CLIENT_NIF: Final[str] = "A58818501"
+_RENTAL_ACTIVITY_CLASS: Final[str] = "arrendamiento_inmueble_urbano_actividad"
+
+
+def imputation_criterion_args(year: int, criterion: str = "cobros_y_pagos") -> tuple[str, ...]:
+    """The profile options that declare the activity-income imputation criterion for ``year``.
+
+    RIRPF art. 7.2 opens the cobros y pagos criterion to a direct-estimation taxpayer who keeps no Codigo
+    de Comercio accounting, so the three answers travel together. Without a declared criterion a
+    withholding credit cannot be placed in an ejercicio and the annual calculation refuses it.
+    """
+    return (
+        "--irpf-activity-income-imputation-criterion",
+        criterion,
+        "--irpf-activity-income-imputation-year",
+        str(year),
+        "--no-irpf-codigo-comercio-accounting",
+    )
 
 
 def _observe_annual_calculation_values(
@@ -49,10 +67,26 @@ def _observe_annual_calculation_values(
         "0218": _money(annual.deductible_expenses),
         "0220": _money(annual.deductible_expenses),
         "0224": _money(annual.activity_net_income),
+        # LIRPF art. 99.1: the invoices' withholding is a payment on account of the activity.
+        "0599": _money(annual.activity_withholding),
         "0604": _money(annual.m130_payments),
+        # The profile declares no other income class, so every other credit is a proven zero and the total
+        # of the payments on account is the activity credit plus the fractional payments.
+        "0609": _money(annual.activity_withholding + annual.m130_payments),
     }
-    actual = {casilla: _money(Decimal(str(values.get(casilla)))) for casilla in expected}
-    if actual != expected:
+    # A casilla the calculation left unresolved is absent from the map: name it instead of reading it as a number.
+    actual = {
+        casilla: _money(Decimal(str(values[casilla]))) if casilla in values else "<unresolved>" for casilla in expected
+    }
+    # An unresolved figure is not a wrong one. The activity chain may stay unresolved when a source it reads is
+    # not ready (the 2025 inventory activity ledger), and that outcome is reported by verification below; a
+    # resolved figure, and every credit, must equal the oracle.
+    chain = {"0171", "0218", "0220", "0224"}
+    unresolved = {casilla for casilla, value in actual.items() if value == "<unresolved>"}
+    if unresolved - chain:
+        raise JourneyError(f"Modelo 100 credits unresolved: {sorted(unresolved - chain)}")
+    mismatched = {casilla for casilla, value in actual.items() if value != expected[casilla]} - unresolved
+    if mismatched:
         raise JourneyError(f"Modelo 100 annual oracle mismatch: expected {expected}, got {actual}")
     return actual
 
@@ -143,6 +177,29 @@ class CliControlsEvidence:
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-safe representation."""
         return dict[str, object](asdict(self))
+
+
+def attest_no_withholding(cli: InstalledCli, *, year: int, income_class: str) -> None:
+    """Attest through the public command that no payer withheld on one income class of the ejercicio.
+
+    The profile declares an activity without an IAE epigraph, so it cannot prove that no urban rental is
+    carried on as an activity. The credit of casilla 0598 for that class is then a proven zero only on the
+    taxpayer's own attestation, never a silent zero.
+    """
+    cli.run(
+        (
+            "app",
+            "ledger",
+            "retencion-soportada",
+            "attest-absence",
+            "--ejercicio",
+            str(year),
+            "--income-class",
+            income_class,
+            "--note",
+            "Synthetic note: no payer withheld on this income.",
+        )
+    )
 
 
 def command_result(document: dict[str, Any]) -> dict[str, Any]:
@@ -565,7 +622,8 @@ def _control_cli(*, executable: Path, authority_root: Path, storage_root: Path, 
         authority_root=authority_root,
         passphrase=secrets.token_urlsafe(32),
     )
-    cli.create_profile(year=year)
+    cli.create_profile(year=year, extra_args=imputation_criterion_args(year))
+    attest_no_withholding(cli, year=year, income_class=_RENTAL_ACTIVITY_CLASS)
     return cli
 
 
@@ -899,18 +957,44 @@ def run_cli_controls(
 
 
 def run_cli_journey(
-    *, executable: Path, authority_root: Path, storage_root: Path, output_dir: Path, year: int
+    *,
+    executable: Path,
+    authority_root: Path,
+    storage_root: Path,
+    output_dir: Path,
+    year: int,
+    runtime_scope: AbstractContextManager[object] | None = None,
 ) -> CliJourneyEvidence:
-    """Execute the installed CLI-only path in a fresh secure store."""
+    """Execute the installed CLI-only path in a fresh secure store.
+
+    ``runtime_scope`` serves the store with the installed runtime for the journey's lifetime. It is entered
+    after the store is shown to be fresh, because a serving runtime writes its own log into the store root.
+    """
     if storage_root.exists() and any(storage_root.iterdir()):
         raise JourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
+    with ExitStack() as resources:
+        if runtime_scope is not None:
+            resources.enter_context(runtime_scope)
+        return _run_cli_journey_served(
+            executable=executable,
+            authority_root=authority_root,
+            storage_root=storage_root,
+            output_dir=output_dir,
+            year=year,
+        )
+
+
+def _run_cli_journey_served(
+    *, executable: Path, authority_root: Path, storage_root: Path, output_dir: Path, year: int
+) -> CliJourneyEvidence:
     generation = authority_generation(authority_root)
     cli = InstalledCli(
         executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
     )
-    cli.create_profile(year=year)
+    cli.create_profile(year=year, extra_args=imputation_criterion_args(year))
+    attest_no_withholding(cli, year=year, income_class=_RENTAL_ACTIVITY_CLASS)
     ingested = ingest_income_fixture(cli, year=year)
     # A new child process reads the store after all ingestion; no in-memory
     # object crosses this boundary.

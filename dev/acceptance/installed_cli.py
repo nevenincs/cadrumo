@@ -214,13 +214,16 @@ class InstalledCli:
             encoding="utf-8",
         )
 
-    def create_profile(self, *, year: int) -> None:
-        """Create and complete the shared synthetic natural-person profile."""
+    def create_profile(self, *, year: int, extra_args: Sequence[str] = ()) -> None:
+        """Create and complete the shared synthetic natural-person profile.
+
+        ``extra_args`` are further profile options the scenario states, appended to the shared admission command.
+        """
         payload = json.dumps(
             {"passphrase": self.passphrase, "passphrase_confirmation": self.passphrase}, separators=(",", ":")
         )
         self.run(
-            profile_create_args(year),
+            (*profile_create_args(year), *extra_args),
             authenticated=False,
             stdin_payload=payload,
             command="config profile create",
