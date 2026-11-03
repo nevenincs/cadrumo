@@ -106,7 +106,15 @@ PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: Final[Mapping[PriorDomiciliationElecti
     }
 )
 INSTALMENT_ELECTION_LOCALE_KEYS: Final[Mapping[PaymentInstalmentElection, str]] = MappingProxyType(
-    {member: f"tui.modelo.export.instalment_election.{member.value}" for member in PaymentInstalmentElection}
+    {
+        PaymentInstalmentElection.SINGLE: "tui.modelo.export.instalment_election.single",
+        PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_DEBITED: (
+            "tui.modelo.export.instalment_election.two_instalments_second_debited"
+        ),
+        PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_PAID: (
+            "tui.modelo.export.instalment_election.two_instalments_second_paid"
+        ),
+    }
 )
 _INSTALMENT_CONDITIONS_LOCALE_KEY: Final = "tui.modelo.export.instalment_election.conditions"
 _FIRST_INSTALMENT_LOCALE_KEY: Final = "workspace.modelo.export.instalment.first"
@@ -202,7 +210,20 @@ _NOT_APPLICABLE_REASONS: Final = frozenset(
     {ModeloFormElectionReason.NOTHING_TO_PAY, ModeloFormElectionReason.NOTHING_TO_REFUND},
 )
 _ELECTION_REASON_LOCALE_KEYS: Final[Mapping[ModeloFormElectionReason, str]] = MappingProxyType(
-    {reason: f"workspace.modelo.export.election.{reason.value}" for reason in ModeloFormElectionReason}
+    {
+        ModeloFormElectionReason.NOTHING_TO_PAY: "workspace.modelo.export.election.nothing_to_pay",
+        ModeloFormElectionReason.NOTHING_TO_REFUND: "workspace.modelo.export.election.nothing_to_refund",
+        ModeloFormElectionReason.RESULT_UNKNOWN: "workspace.modelo.export.election.result_unknown",
+        ModeloFormElectionReason.AMENDMENT: "workspace.modelo.export.election.amendment",
+        ModeloFormElectionReason.PAST_FILING_WINDOW: "workspace.modelo.export.election.past_filing_window",
+        ModeloFormElectionReason.FILING_WINDOW_UNKNOWN: "workspace.modelo.export.election.filing_window_unknown",
+        ModeloFormElectionReason.NO_OPEN_ACCOUNT: "workspace.modelo.export.election.no_open_account",
+        ModeloFormElectionReason.NO_SPANISH_ACCOUNT: "workspace.modelo.export.election.no_spanish_account",
+        ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED: "workspace.modelo.export.election.settlement_unsupported",
+        ModeloFormElectionReason.SECOND_INSTALMENT_NOTHING: (
+            "workspace.modelo.export.election.second_instalment_nothing"
+        ),
+    }
 )
 
 
