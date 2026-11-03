@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:72eccf5072791db6696d472bc473aac3c1590b260773e3430cc409874af3cee6'
+body_hash: 'sha256:93fe456d7000f016ce2c902ec3e7f3dc39c4be6fe5f2a365c28b3df0c582c446'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -884,6 +884,18 @@ related:
 - `S46` `verify:` `playwright renta-credits` -> `pass`
 - `S46` `verify:` `test_window_holds_no_tax_data` -> `pass`
 - `S46` `by:` `vaultspec-high-executor`
+- `S51` `M` `native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx`
+- `S51` `M` `dev/locales/desktop_workspace_keys.py`
+- `S51` `M` `src/cadrumo/locales/en/common.yml`
+- `S51` `M` `src/cadrumo/locales/es/common.yml`
+- `S51` `M` `src/cadrumo/locales/ca/common.yml`
+- `S51` `M` `src/cadrumo/locales/hu/common.yml`
+- `S51` `verify:` `tsc` -> `pass`
+- `S51` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S51` `verify:` `dev.locales audit` -> `pass`
+- `S51` `verify:` `storybook:build` -> `pass`
+- `S51` `verify:` `test_desktop_chrome` -> `fail`
+- `S51` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -945,3 +957,4 @@ related:
 - `S48` Commits a2b0346b3f and the identity-inventory enrolment of the S49 certificate hints. `authored_year` required; settlement-unsupported words name the suspended and the waived refund (0693, 0694, art. 97.6 LIRPF). Remaining identity-inventory failure is other lanes' keys. s20-attribution-incomplete: af80a603c4, f734e601ba and 6720e519fc also own unused chrome keys. Fixtures `settlement-100-0A-unsupported-*` to re-record in S45.
 - `S52` Commit 626dccd754. The pane shows `result.refusal.refusal_words;` the relay already forwarded them. The pane's own `desktop.ledger.withholding.refusal.<reason>` words remain for 13 unserved reasons; the backend session is serving words for every reason, after which the map is deleted (S53). Build chrome-strings regenerated so desktop.ledger.form.partial renders.
 - `S46` Commit 05786149c4. `ModeloWorkForm.withholding_credits` serves each credit's dependent numbered boxes from the formula graph, null when the graph cannot be read. The window walk is deleted. Open: no words for the null state yet, carried to S51.
+- `S51` Commit 9f34651a2e: unknown credit dependents now show served chrome words. The door itself is blocked on three backend fields asked of the renta-withholding session: `finding_id` on ModeloFormIssueLine, refusal words on CreditResolutionRefusalProjection, and a served sentence on CreditResolutionRowProjection. The commit also carries that session's absence `served.*` catalogue lines, committed whole by --only.
