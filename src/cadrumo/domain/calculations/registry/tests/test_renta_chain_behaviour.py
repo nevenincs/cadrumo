@@ -48,7 +48,6 @@ _C1383 = validated_casilla_id("1383", surface="test_renta_chain_behaviour casill
 _C1386 = validated_casilla_id("1386", surface="test_renta_chain_behaviour casilla id")
 _C1389 = validated_casilla_id("1389", surface="test_renta_chain_behaviour casilla id")
 _C0505 = validated_casilla_id("0505", surface="test_renta_chain_behaviour casilla id")
-_C0506 = validated_casilla_id("0506", surface="test_renta_chain_behaviour casilla id")
 _C0507 = validated_casilla_id("0507", surface="test_renta_chain_behaviour casilla id")
 _C0511 = validated_casilla_id("0511", surface="test_renta_chain_behaviour casilla id")
 _C0513 = validated_casilla_id("0513", surface="test_renta_chain_behaviour casilla id")
@@ -135,7 +134,8 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         # (max(0422-0423, 0)) and cannot be supplied as input.
         # 0461 is now computed via renta-reduccion-art-84-conjunta
         # (declaration_type + minor_children_in_unit binding) and cannot be supplied as input.
-        _C0506: Decimal("0"),
+        # 0506 is the remainder of 0461 applied to the savings base
+        # (renta-reduccion-art-84-conjunta-remanente-ahorro) and cannot be supplied as input.
         _C0507: Decimal("0"),
         # 0511 and 0512 are now computed via lookup_parameter against
         # renta-2025-minimo-contribuyente-base-2025 (state and per-CCAA

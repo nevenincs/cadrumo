@@ -449,6 +449,33 @@ source_refs = ["aeat-dr-100-2022-dictionary", "boe-modelo-100-2022-form", "aeat-
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Reducción por tributación conjunta"]
 [[revisions."2022".formulas]]
+id = "renta-reduccion-art-84-conjunta-remanente-ahorro"
+target_casilla_id = "0506"
+# Art. 84.2.3º and 4º LIRPF: the joint reduction (0461) is applied first to the
+# base imponible general (0435), which it cannot make negative; the remainder
+# reduces the base imponible del ahorro (0460), which cannot go negative either.
+# The record design names this box JREDU21, "Remanente de la casilla [0461] que
+# se aplica". It starts here with the computed 0461 and the general base that
+# 0500 keeps from going negative; both are this edition's.
+#   0506 = max(0, min(0460, 0461 - max(0, 0435)))
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "min", args = [
+        { casilla_id = "0460" },
+        { op = "subtract", args = [
+            { casilla_id = "0461" },
+            { op = "max", args = [{ literal = "0" }, { casilla_id = "0435" }] },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-84", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["El remanente, si lo hubiera, minorará la base imponible del ahorro, que tampoco podrá resultar negativa"]
+[[revisions."2022".formulas]]
 id = "renta-reduccion-prevision-social-total"
 target_casilla_id = "0468"
 # Art. 52.1 LIRPF tiered joint limit. Two independent pools, each bounded by

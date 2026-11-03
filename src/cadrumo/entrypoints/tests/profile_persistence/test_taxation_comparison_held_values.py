@@ -12,7 +12,7 @@ the compared results read has no value, and names those boxes in served words.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Generator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -63,6 +63,7 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.operations.error_detail import build_operation_error_detail
 from ....application.operations.models import OperationRequest
 from ....application.operations.owner import OperationExecutorContext
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
@@ -101,6 +102,8 @@ _YEAR_OPERATOR_FACTS: dict[int, tuple[UserProfileFact, ...]] = {
 """The operator inputs a year's own design adds, which the 2024 nursery-cap term reads and no profile derives."""
 _RESIDENCE: BindingId = "renta-profile-tax-residence-ccaa"
 _WORK_INCOME: CasillaId = "0003"
+_SAVINGS_INCOME: CasillaId = "0429"
+"""The net positive movable-capital yield integrated in the savings base, which the operator keys."""
 _WORK_CREDIT: BindingId = "renta-retencion-soportada-trabajo"
 
 
@@ -124,6 +127,7 @@ def _married_facts(
     situacion: str | None = "casado",
     minor_children: bool | None = False,
     spouse_tax_id: str | None = _SPOUSE_TAX_ID,
+    declaration_type: RentaDeclaracionType = RentaDeclaracionType.INDIVIDUAL,
 ) -> tuple[UserProfileFact, ...]:
     facts = [
         UserProfileFact(path="renta_taxpayer.birth_date", value=datetime(1980, 3, 15, tzinfo=UTC).date()),
@@ -131,7 +135,7 @@ def _married_facts(
         UserProfileFact(path="renta_taxpayer.marriage_full_year", value=True),
         UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("1")),
         UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("12")),
-        UserProfileFact(path="renta_filing.declaration_type", value=RentaDeclaracionType.INDIVIDUAL.code),
+        UserProfileFact(path="renta_filing.declaration_type", value=declaration_type.code),
     ]
     if spouse_tax_id is not None:
         facts.append(UserProfileFact(path="renta_spouse.tax_id", value=spouse_tax_id))
@@ -188,7 +192,7 @@ def _filler_binding_values(
     The prior-period fold slots are answered on the binding channel, as the
     operator answers them, so the recorded operator layer replays them.
     """
-    snapshot = operation.snapshot("100", filing_year=year, period="0A")
+    snapshot = operation.snapshot("100", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
     revision = snapshot.revision
     alternates = {binding_id for casilla in revision.casillas for binding_id in casilla.alternate_bindings}
     targets = casillas_by_binding(revision)
@@ -236,6 +240,7 @@ class _Profile:
         work_unit_id: str,
         *,
         work_income: Decimal,
+        savings_income: Decimal | None = None,
         leave_unanswered: frozenset[BindingId] = frozenset(),
         record_operator_layer: bool = True,
     ) -> CalculationRevision:
@@ -248,7 +253,10 @@ class _Profile:
             return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit_id,
                 actor="operator-A",
-                casilla_inputs={_WORK_INCOME: work_income},
+                casilla_inputs={
+                    _WORK_INCOME: work_income,
+                    **({} if savings_income is None else {_SAVINGS_INCOME: savings_income}),
+                },
                 binding_values=_filler_binding_values(
                     self.operation, year=self.year, leave_unanswered=leave_unanswered
                 ),
@@ -615,3 +623,86 @@ def test_stating_the_cohabitation_lets_a_single_parent_compare(profile_factory, 
     refusal = _refused(profile, work_unit_id)
     assert refusal.refusal is TaxationComparisonRefusal.UNRESOLVED_BOXES
     assert "0461" in refusal.casilla_ids
+
+
+_JOINT_REDUCTION: CasillaId = "0461"
+_GENERAL_TAXABLE_BASE: CasillaId = "0435"
+_SAVINGS_TAXABLE_BASE: CasillaId = "0460"
+_GENERAL_LIQUIDABLE_BASE: CasillaId = "0500"
+_JOINT_REDUCTION_SAVINGS_REMAINDER: CasillaId = "0506"
+_SAVINGS_LIQUIDABLE_BASE: CasillaId = "0510"
+_MARRIED_UNIT_REDUCTION = Decimal("3400")
+"""Art. 84.2.3º LIRPF: the married unit's joint reduction."""
+_LOW_WORK_INCOME = Decimal("2000")
+"""Work income the general base cannot carry the whole joint reduction on."""
+_SAVINGS = Decimal("20000")
+
+
+def _joint_values(
+    year: int, profile_factory: Callable[..., _Profile], *, work_income: Decimal, savings_income: Decimal | None
+) -> Mapping[CasillaId, Decimal]:
+    """Calculate a married joint return and return the values it saved."""
+    profile = profile_factory(_married_facts(declaration_type=RentaDeclaracionType.JOINT), year=year)
+    _credited(profile)
+    work_unit_id = profile.create_work()
+    revision = profile.calculate(work_unit_id, work_income=work_income, savings_income=savings_income)
+    return revision.casilla_values
+
+
+@pytest.mark.parametrize("year", _COMPARED_YEARS)
+def test_joint_reduction_the_general_base_cannot_absorb_reduces_the_savings_base(profile_factory, year: int) -> None:
+    """Art. 84.2.3º LIRPF: the remainder of 0461 the general base cannot take reduces the savings base.
+
+    The reduction goes first to the general base, which it may not make
+    negative; box 0506 (JREDU21, "Remanente de la casilla [0461] que se
+    aplica") carries the rest into the savings base 0510.
+    """
+    values = _joint_values(year, profile_factory, work_income=_LOW_WORK_INCOME, savings_income=_SAVINGS)
+
+    general = max(Decimal("0"), values[_GENERAL_TAXABLE_BASE])
+    assert values[_JOINT_REDUCTION] == _MARRIED_UNIT_REDUCTION
+    assert general < _MARRIED_UNIT_REDUCTION
+    assert values[_SAVINGS_TAXABLE_BASE] == _SAVINGS
+    assert values[_GENERAL_LIQUIDABLE_BASE] == Decimal("0")
+    assert values[_JOINT_REDUCTION_SAVINGS_REMAINDER] == _MARRIED_UNIT_REDUCTION - general
+    assert values[_SAVINGS_LIQUIDABLE_BASE] == _SAVINGS - (_MARRIED_UNIT_REDUCTION - general)
+
+
+@pytest.mark.parametrize("year", _COMPARED_YEARS)
+def test_joint_reduction_the_general_base_absorbs_leaves_the_savings_base_whole(profile_factory, year: int) -> None:
+    """A general base at least equal to 0461 takes all of it, so 0506 is zero and 0510 keeps all the savings."""
+    values = _joint_values(year, profile_factory, work_income=Decimal("52000"), savings_income=_SAVINGS)
+
+    assert values[_GENERAL_TAXABLE_BASE] >= _MARRIED_UNIT_REDUCTION
+    assert values[_JOINT_REDUCTION_SAVINGS_REMAINDER] == Decimal("0")
+    assert values[_SAVINGS_LIQUIDABLE_BASE] == _SAVINGS
+
+
+@pytest.mark.parametrize("year", _COMPARED_YEARS)
+def test_joint_reduction_without_savings_never_makes_the_savings_base_negative(profile_factory, year: int) -> None:
+    """With no savings income the remainder has nothing to reduce: 0506 and 0510 stay at zero, never below it."""
+    values = _joint_values(year, profile_factory, work_income=_LOW_WORK_INCOME, savings_income=None)
+
+    assert max(Decimal("0"), values[_GENERAL_TAXABLE_BASE]) < _MARRIED_UNIT_REDUCTION
+    assert values[_SAVINGS_TAXABLE_BASE] == Decimal("0")
+    assert values[_JOINT_REDUCTION_SAVINGS_REMAINDER] == Decimal("0")
+    assert values[_SAVINGS_LIQUIDABLE_BASE] == Decimal("0")
+
+
+@pytest.mark.parametrize("year", _COMPARED_YEARS)
+def test_comparison_credits_the_joint_reduction_remainder_against_savings(profile_factory, year: int) -> None:
+    """The joint run applies the remainder of 0461 to the savings base, so it costs less than the individual run.
+
+    The general base is too small for the reduction and the savings income
+    exceeds the personal minimum, so the only difference between the two runs
+    is the remainder taken off the taxed savings base.
+    """
+    profile = profile_factory(year=year)
+    _credited(profile)
+    work_unit_id = profile.create_work()
+    profile.calculate(work_unit_id, work_income=_LOW_WORK_INCOME, savings_income=_SAVINGS)
+
+    result = profile.compare(work_unit_id)
+
+    assert Decimal(result.conjunta_resultado) < Decimal(result.individual_resultado)
+    assert result.recommendation is TaxationRecommendation.CONJUNTA

@@ -87,7 +87,6 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
         # would refuse it as a supplied input.
         "0003": Decimal("0"),
         "0429": Decimal("0"),
-        "0506": Decimal("0"),
         "0507": Decimal("0"),
         # 0513/0514 (mínimo por descendientes) are computed (Option A engine);
         # the zero for these
