@@ -70,6 +70,7 @@ from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import TransactionKind, require_transaction_kind
+from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.lookup import coexisting_tier_rates, lookup_published_rate, lookup_rate, tier_rates_within
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind, IvaRateRecord
@@ -165,9 +166,21 @@ def _applied_rate(
 
     A tier's rates are its ordinary one and those coexisting with it, and the cuota tells
     them apart. The closest reading wins; two rates giving the same cuota leave the row's
-    percentage unknown, so that refuses. A nil line says nothing and reads the ordinary rate.
+    percentage unknown, so that refuses, as does a tier the Member State never had.
+    A nil line says nothing and reads the ordinary rate.
     """
-    ordinary = lookup_rate(member_state, rate_kind, on_date, operation=operation)
+    try:
+        ordinary = lookup_rate(member_state, rate_kind, on_date, operation=operation)
+    except IvaRateNotFoundError as exc:
+        # The table answers every date of a tier a state has, so this state never had the tier.
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rate_tier_absent"),
+            context={
+                "destination_member_state": member_state.value,
+                "rate_kind": rate_kind.value,
+                "transaction_date": on_date.isoformat(),
+            },
+        ) from exc
     persisted = round_to_cents(iva)
     if base == Decimal("0") and persisted == Decimal("0"):
         return ordinary

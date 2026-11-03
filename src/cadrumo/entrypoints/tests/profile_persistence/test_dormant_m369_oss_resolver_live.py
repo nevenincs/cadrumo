@@ -664,34 +664,49 @@ def test_m369_exterior_quarter_with_a_rate_change_files_one_row_per_rate(
     } == {(change.member_state.upper(), "S", pct) for _, pct, _ in amounts}
 
 
-@pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind("super_reduced"), IvaRateKind("zero")))
-def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_vocabulary(
-    unsupported_rate_kind: IvaRateKind,
-) -> None:
+def _exterior_row_for_rate_kind(rate_kind: IvaRateKind) -> OssIossLedgerObservation:
+    return OssIossLedgerObservation.model_validate(
+        {
+            "ledger_id": f"unsupported-{rate_kind.value}",
+            "transaction_date": date(2026, 2, 15),
+            "regime": OssIossRegime("external_scheme"),
+            "destination_member_state": "de",
+            "rate_kind": rate_kind,
+            "invoice_direction": InvoiceKind.ISSUED,
+            "transaction_kind": TransactionKind("external_scheme_services"),
+            "base_amount": Decimal("100"),
+            "iva_amount": Decimal("0"),
+        }
+    )
+
+
+def test_m369_exterior_refuses_rate_kind_outside_official_standard_reduced_vocabulary() -> None:
     """Exterior never guesses an R/S wire token for an unsupported classification."""
     with pytest.raises(AggregationValidationError) as exc_info, bundled_indexed_authority().operation() as operation:
-        observation = OssIossLedgerObservation.model_validate(
-            {
-                "ledger_id": f"unsupported-{unsupported_rate_kind.value}",
-                "transaction_date": date(2026, 2, 15),
-                "regime": OssIossRegime("external_scheme"),
-                "destination_member_state": "de",
-                "rate_kind": unsupported_rate_kind,
-                "invoice_direction": InvoiceKind.ISSUED,
-                "transaction_kind": TransactionKind("external_scheme_services"),
-                "base_amount": Decimal("100"),
-                "iva_amount": Decimal("0"),
-            }
-        )
         oss_ioss_module._detail_binding_values(
             _revision("369", "esquema-exterior"),
-            (observation,),
+            (_exterior_row_for_rate_kind(IvaRateKind("zero")),),
             operation=operation,
         )
 
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.detail_rate_kind_unsupported"
     assert exc_info.value.context is not None
-    assert exc_info.value.context["rate_kind"] == unsupported_rate_kind.value
+    assert exc_info.value.context["rate_kind"] == "zero"
+
+
+def test_m369_exterior_refuses_a_rate_tier_the_destination_state_never_had() -> None:
+    """Germany has no super-reduced tier at any date, so the row is refused, not an uncaught lookup failure."""
+    with pytest.raises(AggregationValidationError) as exc_info, bundled_indexed_authority().operation() as operation:
+        oss_ioss_module._detail_binding_values(
+            _revision("369", "esquema-exterior"),
+            (_exterior_row_for_rate_kind(IvaRateKind("super_reduced")),),
+            operation=operation,
+        )
+
+    assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.rate_tier_absent"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["rate_kind"] == "super_reduced"
+    assert exc_info.value.context["destination_member_state"] == "de"
 
 
 def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
