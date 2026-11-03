@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:8675ee4a102387d920211feb72eb72d469d3ab97144ed35882d9230820fce69b'
+body_hash: 'sha256:0860f26b4f67b9e9b739e4ce081a52eb45ea8645226e6311177c45b826a5c417'
 ---
 
 # `export-parity` plan
@@ -96,7 +96,7 @@ Prove the mixed personas end to end against independent oracles, close the remai
 
 - [x] `P07.S25` - Make manual prior-accrual Modelo 193 rows face the settled-amount export gate; `src/cadrumo/application/filing/ and src/cadrumo/application/modelo/`.
 - [ ] `P07.S26` - Prove the employee, employee-autonomo and payer personas end to end with independent oracles and extend the income-tax journey to 0599; `src/cadrumo/entrypoints/tests/ and dev/acceptance/income_tax/`.
-- [ ] `P07.S32` - Retire CalculationRevisionAmendmentKind in favour of the one filing declaration kind; `src/cadrumo/domain/modelos/ and src/cadrumo/application/modelo/`.
+- [x] `P07.S32` - Retire CalculationRevisionAmendmentKind in favour of the one filing declaration kind; `src/cadrumo/domain/modelos/ and src/cadrumo/application/modelo/`.
 - [ ] `P07.S11` - Record the 1577 and 0598 follow-ups and hand off the touched modelos and revisions for authority publication; `.vault/plan/`.
 
 ## Parallelization

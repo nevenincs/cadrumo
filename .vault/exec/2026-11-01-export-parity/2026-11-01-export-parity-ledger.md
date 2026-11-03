@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b21444a494561570f814fffd012bb1e6f9a5db312f1bb090b7500a630efc185'
+body_hash: 'sha256:11ba105d9f23023377e17e04a13d22d650b97d26918295abcf7d7bca1ee27127'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -1025,6 +1025,62 @@ related:
 - `S17` `M` `.vault/audit/2026-09-26-export-parity-audit.md`
 - `S17` `verify:` `pytest -m integration test_retencion_soportada_certificado_mesh.py, test_retencion_soportada_cli.py, conformance -k retencion_soportada` -> `pass`
 - `S29` `verify:` `pytest -m integration test_retencion_soportada_absence_cli.py` -> `pass`
+- `S32` `M` `dev/locales/fstring_registry.py`
+- `S32` `M` `dev/locales/tests/test_command_choice_spelling.py`
+- `S32` `M` `dev/registry/edition_export_scenarios.py`
+- `S32` `M` `dev/registry/tests/test_workbook_context.py`
+- `S32` `M` `native/desktop/frontend/src/components/modelo/workspace/CorrectionDialog.tsx`
+- `S32` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S32` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S32` `M` `src/cadrumo/adapters/outbound/aeat/export/tests/test_fixed_width_codec_conformance.py`
+- `S32` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prior_domiciliation_election.py`
+- `S32` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S32` `M` `src/cadrumo/application/filing/tests/export_support.py`
+- `S32` `M` `src/cadrumo/application/filing/tests/test_producer_snapshot.py`
+- `S32` `M` `src/cadrumo/application/modelo/_amendment_kind_resolution.py`
+- `S32` `M` `src/cadrumo/application/modelo/amendment_actions.py`
+- `S32` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S32` `M` `src/cadrumo/application/modelo/amendment_projection.py`
+- `S32` `M` `src/cadrumo/application/modelo/export_amendment_evidence.py`
+- `S32` `M` `src/cadrumo/application/modelo/filing_revision_persistence.py`
+- `S32` `M` `src/cadrumo/application/modelo/prior_domiciliation.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_amend_request_detail_rows.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_work_amend_correction.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_amend_contracts.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_amend_correction.py`
+- `S32` `M` `src/cadrumo/core/amendment_kind_regime.py`
+- `S32` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S32` `M` `src/cadrumo/domain/modelos/calculation_revision_aggregate.py`
+- `S32` `M` `src/cadrumo/domain/modelos/calculation_revision_amendment.py`
+- `S32` `M` `src/cadrumo/domain/modelos/calculation_revision_invariants.py`
+- `S32` `M` `src/cadrumo/domain/modelos/tests/test_filing_kind_evidence.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/common.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/modelo_amend_wizard_commands.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/modelo_amend_wizard_results.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/modelo_commands.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/tests/test_m303_rectificativa_motive_lifecycle.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard_payload.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/_export_output_paths_support.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_amend_flow.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_amend_kind_resolution.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_amend_pending_chain.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_summary.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths_domiciliacion.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_external_source_import.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_filed_capture_external_baseline.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_import_flow.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_import_flow_mutation_guards.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m369_destination_rows_live.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_modelo_support.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_clock_gate_amendment.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
+- `S32` `A` `src/cadrumo/domain/modelos/tests/test_calculation_revision_amendment_kind.py`
+- `S32` `verify:` `pytest test_calculation_revision_amendment_kind.py test_amend_kind_resolution.py and 294 focused tests` -> `pass`
+- `S32` `verify:` `ruff, ruff format, ty on touched files; dev.operation_contract_manifest.generate --check; lint-imports 30 kept` -> `pass`
+- `S32` `verify:` `desktop tsc, eslint, prettier, modelo-fixtures --check, relay_contracts --check, 4 correction scenarios` -> `pass`
 
 ## Notes
 
@@ -1073,3 +1129,4 @@ related:
 - `S25` 0d22d4b7c3: hand-declared rows with EJERCICIO DEVENGO before the filing year (Orden EHA/3377/2011 positions 118-121) now count as settled prior-accrual rows in the one gate. Follow-up: the gate opens its own bundled authority instead of the caller's pin.
 - `S17` P03 phase review 2026-11-03 follow-up bc9c230741: the payer NIF is checksum-validated and keyed canonically. Audit fdb20cd89f.
 - `S29` P03 review follow-up 8e15a7a749: `list_absences` class labels render in the --language locale.
+- `S32` Landed on feature/tui in root as 1280b3a4ac (Python half plus the desktop contract mirror and CorrectionDialog, committed together by the tui frontend session) and a8c5811060 (new test). Stored identities parse unchanged because the wire values are identical.
