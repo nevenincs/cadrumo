@@ -2,6 +2,11 @@ modelo:
   schema:
     '131':
       binding:
+        modelo-131-resultados-negativos-anteriores:
+          help: L'import, sense signe, dels resultats negatius de les teves autoliquidacions
+            anteriors del model 131 d'aquest exercici que encara no hagis deduït.
+          label: Resultats negatius de trimestres anteriors de l'exercici pendents
+            de deduir · casella 11
         x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
           label: 'Domiciliació: IBAN'
         x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:

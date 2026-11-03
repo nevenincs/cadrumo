@@ -2,6 +2,11 @@ modelo:
   schema:
     '131':
       binding:
+        modelo-131-resultados-negativos-anteriores:
+          help: El importe, sin signo, de los resultados negativos de tus autoliquidaciones
+            anteriores del modelo 131 de este ejercicio que no hayas deducido antes.
+          label: Resultados negativos de trimestres anteriores del ejercicio pendientes
+            de deducir · casilla 11
         x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
           label: 'Domiciliación: IBAN'
         x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:
