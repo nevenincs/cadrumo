@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1671723ba9176aeaed43d63f3763177e3dc766a7578bdbf142f946ce744b7ff7'
+body_hash: 'sha256:72eccf5072791db6696d472bc473aac3c1590b260773e3430cc409874af3cee6'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -836,6 +836,54 @@ related:
 - `S48` `verify:` `pytest settlement, export, locale audit` -> `fail`
 - `S48` `verify:` `test_window_holds_no_tax_data` -> `pass`
 - `S48` `by:` `vaultspec-standard-executor`
+- `S52` `M` `.importlinter`
+- `S52` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S52` `M` `dev/quality/metadata/import_load_targets.json`
+- `S52` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S52` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`
+- `S52` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.stories.tsx`
+- `S52` `M` `native/desktop/frontend/src/dev/ledgerWithholdingFixture.ts`
+- `S52` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S52` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S52` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S52` `M` `native/desktop/frontend/src/dev/LedgerStage.tsx`
+- `S52` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S52` `A` `dev/desktop_withholding_certificate_words_fixture.py`
+- `S52` `A` `native/desktop/frontend/src/dev/fixtures/ledgerWithholdingWords.json`
+- `S52` `verify:` `tsc` -> `pass`
+- `S52` `verify:` `eslint` -> `pass`
+- `S52` `verify:` `ledger-contract.mjs --check` -> `pass`
+- `S52` `verify:` `relay_contracts.py --check` -> `pass`
+- `S52` `verify:` `storybook:build` -> `pass`
+- `S52` `verify:` `playwright ledger-setup.spec.ts` -> `pass`
+- `S52` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S52` `by:` `vaultspec-standard-executor`
+- `S46` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S46` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S46` `M` `src/cadrumo/application/modelo/work_form_inspection.py`
+- `S46` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S46` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S46` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/creditBoxes.ts`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/Credits.stories.tsx`
+- `S46` `M` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S46` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S46` `A` `src/cadrumo/application/modelo/work_form_credits.py`
+- `S46` `A` `src/cadrumo/application/modelo/tests/test_work_form_withholding_credit_dependents.py`
+- `S46` `verify:` `ruff` -> `pass`
+- `S46` `verify:` `ty` -> `pass`
+- `S46` `verify:` `lint-imports` -> `pass`
+- `S46` `verify:` `pytest work_form workbench` -> `pass`
+- `S46` `verify:` `tsc` -> `pass`
+- `S46` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S46` `verify:` `relay_contracts.py --check` -> `pass`
+- `S46` `verify:` `storybook:build` -> `pass`
+- `S46` `verify:` `playwright renta-credits` -> `pass`
+- `S46` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S46` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -895,3 +943,5 @@ related:
 - `S50` Commit 4902820ea6. Anexo D applies from its first authored filing year on `(inventory_anexo_d_applies),` so a projected year resolves 0177/0181/0182. Readiness reads at the reachable grade and refuses in served words. Open: the typed modelo.readiness.summary still carries only the cause token to the window.
 - `S49` Commits af49eeff4c contract and fixtures, e0094299fc custody UI. Disagreement operations admitted in the relay with no UI (S51). Custody refusals show the generic not-saved notice because the backend serves no refusal words for the record; asked the withholding session to serve them. PARTIAL now its own call kind via settle.rs. Failures not from this Step: modelo-workspace.spec.ts:130/:156 (fail on pre-regeneration fixtures), `automation_picker.rs:163` Rust tests, 17 unused chrome keys.
 - `S48` Commits a2b0346b3f and the identity-inventory enrolment of the S49 certificate hints. `authored_year` required; settlement-unsupported words name the suspended and the waived refund (0693, 0694, art. 97.6 LIRPF). Remaining identity-inventory failure is other lanes' keys. s20-attribution-incomplete: af80a603c4, f734e601ba and 6720e519fc also own unused chrome keys. Fixtures `settlement-100-0A-unsupported-*` to re-record in S45.
+- `S52` Commit 626dccd754. The pane shows `result.refusal.refusal_words;` the relay already forwarded them. The pane's own `desktop.ledger.withholding.refusal.<reason>` words remain for 13 unserved reasons; the backend session is serving words for every reason, after which the map is deleted (S53). Build chrome-strings regenerated so desktop.ledger.form.partial renders.
+- `S46` Commit 05786149c4. `ModeloWorkForm.withholding_credits` serves each credit's dependent numbered boxes from the formula graph, null when the graph cannot be read. The window walk is deleted. Open: no words for the null state yet, carried to S51.
