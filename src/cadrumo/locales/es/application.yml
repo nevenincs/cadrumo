@@ -1794,6 +1794,10 @@ application:
         indica que las reglas oficiales muestran que la casilla no aplica a este periodo.'
       notice_title: 'Cálculo local: no es un justificante de la AEAT'
       page_counter: Página {page} de {pages}
+      resolution_label: Casilla {box} · discrepancia {finding}
+      resolution_value: 'Aceptado {accepted}. Las fuentes indican: {sources}. Motivo:
+        {reason}'
+      resolutions_heading: Discrepancias entre fuentes aceptadas
       section_unnamed: Casillas
       signature_meaning: La firma de integridad de Cadrumo adjunta a este PDF acredita
         que la clave de este perfil declaró que, en el instante de exportación según

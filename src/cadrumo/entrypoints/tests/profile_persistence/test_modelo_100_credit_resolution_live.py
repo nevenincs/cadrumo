@@ -17,19 +17,23 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.secure_object_namespaces import MODELO_CREDIT_RESOLUTION_NAMESPACE
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....application.export.review_snapshot_loader import CALCULATION_NOTE_FINDING_PREFIX
 from ....application.modelo.calculation_note_gate import (
     SOURCE_DISAGREEMENT_FINDING_ID_LENGTH,
     ModeloCalculationBlockedError,
     blocking_calculation_issues,
 )
 from ....application.modelo.calculation_notes import note_attention
+from ....application.modelo.calculation_report_export import applied_report_resolutions
 from ....application.modelo.credit_resolution import (
     applied_resolution_notes,
     credit_resolution_for_finding,
@@ -38,11 +42,14 @@ from ....application.modelo.credit_resolution import (
     load_credit_resolutions,
 )
 from ....application.modelo.credit_resolution_repository import (
+    CreditResolutionPersistenceError,
     CreditResolutionRefusedError,
     credit_resolution_key,
     revoke_credit_resolution,
     store_credit_resolution,
 )
+from ....application.modelo.declaration_summary import declaration_summary
+from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_form_findings import ModeloFormAttention
 from ....core.casilla_id import CasillaId
@@ -52,6 +59,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.credit_resolution import CreditResolutionIdentity
+from ....entrypoints.calculation_review_snapshot_composition import load_calculation_review_snapshot
 from .credit_resolution_live_support import (
     BUCKET_ID,
     CAPITAL_BINDING,
@@ -392,3 +400,109 @@ def test_every_applied_resolution_is_listed_with_its_box_sources_amounts_and_rea
     assert not applied_resolution_notes(
         revision, load_credit_resolutions(harness.resolutions, modelo="100", filing_year=YEAR, period="0A")
     )
+
+
+def test_a_report_lists_the_acceptances_that_cover_the_revision_and_refuses_when_they_cannot_be_read(
+    harness: CreditLiveHarness, secure_objects: SecureObjectRepository
+) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    ports = modelo_export_ports_for_test(bucket_id=BUCKET_ID, secure_objects=secure_objects)
+    unit = harness.current_work_unit()
+    assert applied_report_resolutions(revision, unit, export_ports=ports) == ()
+    _accept(harness, revision, TRABAJO_CASILLA)
+    trabajo = _disagreement(revision, TRABAJO_CASILLA)
+
+    (applied,) = applied_report_resolutions(revision, unit, export_ports=ports)
+
+    assert applied.identity == _identity(trabajo)
+    key = credit_resolution_key(_identity(trabajo))
+    stored = secure_objects.load(
+        MODELO_CREDIT_RESOLUTION_NAMESPACE.namespace,
+        key,
+        expected_class=MODELO_CREDIT_RESOLUTION_NAMESPACE.sensitivity,
+        max_supported_version=MODELO_CREDIT_RESOLUTION_NAMESPACE.schema_version,
+    )
+    assert stored is not None
+    secure_objects.save(
+        namespace=MODELO_CREDIT_RESOLUTION_NAMESPACE.namespace,
+        object_key=key,
+        classification=stored.classification,
+        schema_version=stored.schema_version,
+        written_at=stored.written_at,
+        payload=stored.payload.replace(b'"state":"active"', b'"state":"no-such-state"'),
+    )
+    # A report that could not read the acceptances would state the figure as unanswered on no evidence.
+    with pytest.raises(CreditResolutionPersistenceError):
+        applied_report_resolutions(revision, unit, export_ports=ports)
+
+
+def _summary(harness: CreditLiveHarness, revision: CalculationRevision, operation: PinnedAuthorityOperation):
+    """The declarations-list row of the harness's work unit, built as the generation reader builds it."""
+    unit = harness.current_work_unit()
+    declaration = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id=unit.work_unit_id,
+        modelo=unit.modelo,
+        filing_year=unit.filing_year,
+        period=unit.period,
+        state=unit.state,
+        has_current_calculation=True,
+        has_current_filing=False,
+    )
+    lookup = load_credit_resolutions(
+        harness.resolutions, modelo="100", filing_year=YEAR, period=unit.period.registry_token
+    )
+    return declaration_summary(
+        declaration,
+        revisions={revision.calculation_revision_id: revision},
+        verification=None,
+        operation=operation,
+        resolutions=lookup.resolutions,
+    )
+
+
+def test_the_declarations_list_counts_a_covered_disagreement_as_no_blocker_exactly_as_the_gate_does(
+    harness: CreditLiveHarness, operation: PinnedAuthorityOperation
+) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    open_count = _summary(harness, revision, operation).blocking_count
+    assert open_count is not None
+
+    _accept(harness, revision, TRABAJO_CASILLA)
+    one_answered = _summary(harness, revision, operation).blocking_count
+    _accept(harness, revision, CAPITAL_CASILLA)
+    both_answered = _summary(harness, revision, operation).blocking_count
+
+    assert (open_count, one_answered, both_answered) == (open_count, open_count - 1, open_count - 2)
+    assert both_answered == len(
+        blocking_calculation_issues(
+            revision, credit_resolutions_for_work(harness.resolutions, harness.current_work_unit())
+        )
+    )
+
+
+def test_the_review_workbook_lists_an_accepted_disagreement_as_accepted_and_the_open_one_as_withheld(
+    harness: CreditLiveHarness, operation: PinnedAuthorityOperation
+) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    prefix = CALCULATION_NOTE_FINDING_PREFIX
+
+    def codes() -> dict[str, list[str]]:
+        snapshot = load_calculation_review_snapshot(
+            revision.calculation_revision_id, profile_id=UUID(BUCKET_ID), operation=operation
+        )
+        found: dict[str, list[str]] = {}
+        for finding in snapshot.findings:
+            if finding.code.startswith(prefix):
+                # The box leads the related ids; a note that names its source adds it after.
+                found.setdefault(finding.code.removeprefix(prefix), []).extend(finding.related_ids[:1])
+        return found
+
+    before = codes()
+    assert sorted(before["credit_source_disagreement"]) == [str(TRABAJO_CASILLA), str(CAPITAL_CASILLA)]
+    assert "credit_resolution_applied" not in before
+
+    _accept(harness, revision, TRABAJO_CASILLA)
+    after = codes()
+
+    assert after["credit_source_disagreement"] == [str(CAPITAL_CASILLA)]
+    assert after["credit_resolution_applied"] == [str(TRABAJO_CASILLA)]

@@ -1797,6 +1797,10 @@ application:
         a aquest període.'
       notice_title: 'Càlcul local: no és un justificant de l''AEAT'
       page_counter: Pàgina {page} de {pages}
+      resolution_label: Casella {box} · discrepància {finding}
+      resolution_value: 'Acceptat {accepted}. Les fonts indiquen: {sources}. Motiu:
+        {reason}'
+      resolutions_heading: Discrepàncies entre fonts acceptades
       section_unnamed: Caselles
       signature_meaning: La signatura d'integritat de Cadrumo adjunta a aquest PDF
         acredita que la clau d'aquest perfil va declarar que, en l'instant d'exportació

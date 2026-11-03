@@ -81,6 +81,7 @@ def _secure_read_door(
     account_session_reader: Callable[[], HomeAccountSession] | None,
 ) -> Callable[[], SecureProfileWorkbenchGenerationReadDoorV1]:
     """Compose the read door over one profile's secure repositories, afresh for each capture."""
+    from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
     from ..adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationRecordRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -130,6 +131,7 @@ def _secure_read_door(
                 operation=operation,
             ),
             verification_repository=calculation_binding.verification_repository(),
+            credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
             reconciliation_reader=lambda: tuple(ModeloReconciliationRecordRepository(objects=objects).iter_records()),
             notification_custody_reader=_notification_custody_reader(profile_id),
             census_observation_reader=lambda: asyncio.run(read_stored_censal_observation(UUID(profile_id))),

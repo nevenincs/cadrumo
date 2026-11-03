@@ -69,6 +69,9 @@ VALUE_NOT_APPLICABLE_LOCALE_KEY: Final[str] = "application.modelo.calculation_su
 VALUE_TRUE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_true"
 VALUE_FALSE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_false"
 SECTION_UNNAMED_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.section_unnamed"
+RESOLUTIONS_HEADING_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.resolutions_heading"
+RESOLUTION_LABEL_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.resolution_label"
+RESOLUTION_VALUE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.resolution_value"
 TRACE_HEADING_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.trace_heading"
 TRACE_NONE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.trace_none"
 TRACE_CALCULATION_REVISION_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.trace_calculation_revision"
@@ -184,6 +187,9 @@ class CalculationSummaryPresentation(BaseModel):
     column_concept: str = Field(min_length=1)
     column_amount: str = Field(min_length=1)
     sections: tuple[CalculationSummarySection, ...]
+    resolutions_heading: str = ""
+    resolutions: tuple[CalculationSummaryFact, ...] = ()
+    """The acceptances of source disagreements the report lists, as a label and a statement each; none if none."""
     trace_heading: str = Field(min_length=1)
     trace: tuple[CalculationSummaryFact, ...]
     signature_meaning: str = Field(min_length=1)
@@ -280,6 +286,22 @@ def _sections(report: ModeloCalculationReport, *, chrome: _Chrome) -> tuple[Calc
             grouped.append((row.section_path, [presented]))
     return tuple(
         CalculationSummarySection(heading=_section_heading(path, chrome), rows=tuple(rows)) for path, rows in grouped
+    )
+
+
+def _resolutions(report: ModeloCalculationReport, *, chrome: _Chrome) -> tuple[CalculationSummaryFact, ...]:
+    """One labelled statement for each applied resolution, in the order the report lists them."""
+    return tuple(
+        CalculationSummaryFact(
+            label=chrome.text(RESOLUTION_LABEL_LOCALE_KEY, box=item.box, finding=item.finding_id),
+            value=chrome.text(
+                RESOLUTION_VALUE_LOCALE_KEY,
+                accepted=next(source.value for source in item.sources if source.role == item.accepted_role),
+                sources="; ".join(f"{source.role}={source.value}" for source in item.sources),
+                reason=" ".join(item.reason.split()),
+            ),
+        )
+        for item in report.credit_resolutions
     )
 
 
@@ -386,6 +408,8 @@ def build_calculation_summary_presentation(
         column_concept=chrome.raw(COLUMN_CONCEPT_LOCALE_KEY),
         column_amount=chrome.raw(COLUMN_AMOUNT_LOCALE_KEY),
         sections=_sections(report, chrome=chrome),
+        resolutions_heading=chrome.raw(RESOLUTIONS_HEADING_LOCALE_KEY) if report.credit_resolutions else "",
+        resolutions=_resolutions(report, chrome=chrome),
         trace_heading=chrome.raw(TRACE_HEADING_LOCALE_KEY),
         trace=tuple(
             CalculationSummaryFact(label=chrome.raw(key), value=none_text if value is None else value)

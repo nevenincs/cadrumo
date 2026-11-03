@@ -29,6 +29,8 @@ from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationReportCatalogue
 from ...domain.modelos.work_unit import WorkUnitState
 from .calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    SourceDisagreementResolutions,
     blocking_calculation_issues,
     calculation_filed_before_grade_cap,
     calculation_screen_outdated,
@@ -84,8 +86,13 @@ def declaration_summary(
     revisions: Mapping[str, CalculationRevision],
     verification: VerificationReportCatalogue | None,
     operation: PinnedAuthorityOperation,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> DeclarationSummary:
     """Project one row; a registry refusal cannot erase its neighbours.
+
+    ``resolutions`` are the source disagreements the operator accepted for this
+    declaration: the row counts a disagreement they cover as the gate does, which
+    is as no blocker.
 
     See Also:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
@@ -111,7 +118,9 @@ def declaration_summary(
         return DeclarationSummary(state=DeclarationSummaryState.DRAFT)
     blockers, checked = _verification_summary(head, verification)
     try:
-        outdated, blockers, checked = _gated_by_calculation(declaration, head, operation, blockers, checked)
+        outdated, blockers, checked = _gated_by_calculation(
+            declaration, head, operation, blockers, checked, resolutions
+        )
         filed_before_cap = _filed_before_grade_cap(declaration, head, operation)
         state = _summary_state(declaration, head, blockers, checked)
         result = settlement_result_values(
@@ -183,6 +192,7 @@ def _gated_by_calculation(
     operation: PinnedAuthorityOperation,
     blockers: int | None,
     checked: bool,
+    resolutions: SourceDisagreementResolutions,
 ) -> tuple[bool, int | None, bool]:
     """Apply the calculation-note gate to the summary: a refused revision is neither checked nor ready to file.
 
@@ -199,7 +209,7 @@ def _gated_by_calculation(
         period=declaration.period,
         operation=operation,
     )
-    notes = len(blocking_calculation_issues(head))
+    notes = len(blocking_calculation_issues(head, resolutions))
     if notes:
         blockers = (blockers or 0) + notes
     return outdated, blockers, checked and not outdated and not notes

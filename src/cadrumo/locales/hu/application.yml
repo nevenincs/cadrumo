@@ -1758,6 +1758,10 @@ application:
         erre az időszakra nem vonatkozik.'
       notice_title: 'Helyi számítás: nem AEAT-bizonylat'
       page_counter: '{page}. oldal / {pages}'
+      resolution_label: '{box}. mező · eltérés {finding}'
+      resolution_value: 'Elfogadva: {accepted}. A források szerint: {sources}. Indoklás:
+        {reason}'
+      resolutions_heading: Elfogadott forrás-eltérések
       section_unnamed: Rovatok
       signature_meaning: 'A PDF-be ágyazott Cadrumo sértetlenségi aláírás azt igazolja,
         hogy ennek a profilnak a kulcsa kijelentette: az exportálás pillanatában,

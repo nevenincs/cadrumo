@@ -1704,6 +1704,10 @@ application:
         the official rules show the box does not apply to this period.'
       notice_title: 'Local calculation: not an AEAT receipt'
       page_counter: Page {page} of {pages}
+      resolution_label: Box {box} · finding {finding}
+      resolution_value: 'Accepted {accepted}. The sources state: {sources}. Reason:
+        {reason}'
+      resolutions_heading: Accepted source disagreements
       section_unnamed: Boxes
       signature_meaning: The Cadrumo integrity signature embedded in this PDF attests
         that this profile's key declared that, at the export instant by this installation's

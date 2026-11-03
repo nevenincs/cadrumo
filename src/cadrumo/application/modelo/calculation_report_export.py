@@ -55,6 +55,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.credit_resolution import CreditResolutionRecord
 from ...domain.modelos.errors import ModeloExportError
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordStatus
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
@@ -71,6 +72,7 @@ from .calculation_report_document import (
     serialize_calculation_report,
 )
 from .calculation_report_provenance_key import derive_calculation_report_provenance_key
+from .credit_resolution import applied_credit_resolutions, load_credit_resolutions
 from .export import load_exportable_revision_target
 from .export_contracts import ModeloExportNoActiveBucketError
 from .export_ports import ModeloExportPorts
@@ -326,7 +328,31 @@ def build_modelo_calculation_report_for_revision(
         ),
         report_language=report_language,
         exported_at=exported_at,
+        credit_resolutions=applied_report_resolutions(revision, work_unit, export_ports=export_ports),
     )
+
+
+def applied_report_resolutions(
+    revision: CalculationRevision, work_unit: WorkUnit, *, export_ports: ModeloExportPorts
+) -> tuple[CreditResolutionRecord, ...]:
+    """The acceptances that cover a disagreement of ``revision``, as the report lists them.
+
+    A store that cannot be read is refused when the revision persisted any
+    disagreement: a report that left out an acceptance it could not read would
+    present a figure as unanswered, or as answered, on no evidence.
+
+    Raises:
+        CreditResolutionPersistenceError: The resolutions could not be read.
+    """
+    lookup = load_credit_resolutions(
+        export_ports.credit_resolution,
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    if lookup.failure is not None and any(issue.disagreement is not None for issue in revision.source_issues):
+        raise lookup.failure
+    return applied_credit_resolutions(revision, lookup)
 
 
 def export_modelo_calculation_report(
@@ -455,6 +481,7 @@ __all__ = [
     "ModeloCalculationReportCommand",
     "ModeloCalculationReportResult",
     "ModeloCalculationReportTaxpayerUnknownError",
+    "applied_report_resolutions",
     "build_modelo_calculation_report_for_revision",
     "export_modelo_calculation_report",
 ]

@@ -50,6 +50,7 @@ from ..export.errors import ExportFormatError
 from ..export.tabular import ExportSerializationFormat, serialize_tabular_rows
 from .calculation_report import (
     ModeloCalculationReport,
+    ModeloCalculationReportResolution,
     ModeloCalculationReportRow,
 )
 from .calculation_report_certification import (
@@ -101,6 +102,9 @@ CALCULATION_REPORT_DIGEST_PREAMBLE_KEY: Final[str] = "report_sha256"
 The digest is derived from the report rather than stored on its header, so it is
 named here as the one preamble line that is not a header field.
 """
+
+CALCULATION_REPORT_RESOLUTION_PREAMBLE_KEY: Final[str] = "credit_resolution"
+"""Preamble key stem of each applied resolution, numbered from one, after the header facts."""
 
 _SECTION_PATH_SEPARATOR: Final[str] = " / "
 _REFERENCE_SEPARATOR: Final[str] = " "
@@ -244,9 +248,25 @@ def calculation_report_csv_preamble_lines(report: ModeloCalculationReport) -> tu
     """
     facts: dict[str, object] = dict(report.header.model_dump(mode="json"))
     facts[CALCULATION_REPORT_DIGEST_PREAMBLE_KEY] = report.report_sha256
-    return tuple(
+    header_lines = tuple(
         f"{CALCULATION_REPORT_CSV_PREAMBLE_PREFIX}{key}: {_preamble_value(facts[key])}" for key in sorted(facts)
     )
+    return header_lines + tuple(
+        f"{CALCULATION_REPORT_CSV_PREAMBLE_PREFIX}{CALCULATION_REPORT_RESOLUTION_PREAMBLE_KEY}_{index}: "
+        f"{calculation_report_resolution_text(item)}"
+        for index, item in enumerate(report.credit_resolutions, start=1)
+    )
+
+
+def calculation_report_resolution_text(item: ModeloCalculationReportResolution) -> str:
+    """State one applied resolution on a single line: box, finding id, accepted value, sources and reason.
+
+    Line breaks and runs of blanks in the operator's reason are folded to single
+    spaces, so the statement stays on the one comment line it is written on.
+    """
+    sources = "; ".join(f"{source.role}={source.value}" for source in item.sources)
+    reason = " ".join(item.reason.split())
+    return f"box={item.box} finding={item.finding_id} accepted={item.accepted_role} sources={sources} reason={reason}"
 
 
 def _preamble_value(value: object) -> str:
@@ -390,12 +410,14 @@ __all__ = [
     "CALCULATION_REPORT_CSV_FIELDNAMES",
     "CALCULATION_REPORT_CSV_PREAMBLE_PREFIX",
     "CALCULATION_REPORT_DIGEST_PREAMBLE_KEY",
+    "CALCULATION_REPORT_RESOLUTION_PREAMBLE_KEY",
     "DOCUMENT_SERIALIZERS",
     "CalculationReportDocument",
     "CalculationSummaryPdfRendering",
     "CalculationSummaryPdfUnavailableError",
     "calculation_report_csv_preamble_lines",
     "calculation_report_csv_row",
+    "calculation_report_resolution_text",
     "require_calculation_summary_pdf_available",
     "serialize_calculation_report",
     "serialize_calculation_report_csv",

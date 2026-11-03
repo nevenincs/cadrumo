@@ -25,6 +25,8 @@ from .....application.modelo.calculation_report import (
     CalculationReportValueState,
     ModeloCalculationReport,
     ModeloCalculationReportHeader,
+    ModeloCalculationReportResolution,
+    ModeloCalculationReportResolutionSource,
     ModeloCalculationReportRow,
     local_calculation_report_notice,
 )
@@ -168,6 +170,7 @@ def synthetic_report(
     *,
     authority_logical_generation: str = GENERATION,
     rows: tuple[ModeloCalculationReportRow, ...] | None = None,
+    credit_resolutions: tuple[ModeloCalculationReportResolution, ...] = (),
 ) -> ModeloCalculationReport:
     """Return the synthetic Modelo 303 report in ``language``."""
     report_rows = synthetic_report_rows() if rows is None else rows
@@ -198,6 +201,7 @@ def synthetic_report(
             local_calculation_notice=local_calculation_report_notice(language),
         ),
         rows=report_rows,
+        credit_resolutions=credit_resolutions,
     )
 
 
@@ -218,6 +222,21 @@ def render_summary(
         )
 
 
+def synthetic_resolution() -> ModeloCalculationReportResolution:
+    """Return one accepted disagreement on casilla 27, whose reason needs Hungarian letters and wraps."""
+    return ModeloCalculationReportResolution(
+        finding_id="0123456789abcdef",
+        box="27",
+        sources=(
+            ModeloCalculationReportResolutionSource(role="value_source", source_family="binding", value="259259.26"),
+            ModeloCalculationReportResolutionSource(role="cross_check", source_family="borrador", value="259259.25"),
+        ),
+        accepted_role="value_source",
+        reason="A kifizető saját igazolása ezt az összeget tartalmazza, ezért a számítás összegét fogadtam el.",
+        resolved_at=EXPORTED_AT,
+    )
+
+
 __all__ = [
     "BUCKET_ID",
     "CALCULATION_REVISION_ID",
@@ -234,4 +253,5 @@ __all__ = [
     "synthetic_keypair",
     "synthetic_report",
     "synthetic_report_rows",
+    "synthetic_resolution",
 ]
