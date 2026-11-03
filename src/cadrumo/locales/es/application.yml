@@ -1054,7 +1054,7 @@ application:
           values_differ: El borrador de la AEAT y tu cálculo tienen valores distintos.
         stale:
           calculation_outdated: Las reglas cambiaron después de guardar tu cálculo,
-            así que hay que recalcularlo.
+            así que tienes que calcular de nuevo.
           calculation_used_other_capture: Tu cálculo se hizo a partir de un borrador
             de la AEAT distinto del que se compara aquí.
           newer_capture_refused: Hay guardado un borrador que importaste después,

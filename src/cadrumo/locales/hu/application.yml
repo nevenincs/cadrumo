@@ -2387,7 +2387,7 @@ application:
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.
       iva_cuota_disagrees_with_rate: A(z) %{transaction_date} dátumú IVA-bejegyzés
         %{recorded_cuota} EUR IVA-összeget rögzít, de a(z) %{base_amount} EUR alap
-        %{iva_rate_percent}%-os kulcs mellett %{expected_cuota} EUR-t ad. Javítsd
+        %{iva_rate_percent} százalékos kulcs mellett %{expected_cuota} EUR-t ad. Javítsd
         az IVA-összeget, az alapot vagy a kulcsot, majd számolj újra, mielőtt ellenőrzöd
         ezt a nyilatkozatot.
       iva_import_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
@@ -3127,8 +3127,8 @@ application:
         dátum; évszám-hónap-nap alakban add meg.
       ascendant_birth_date_required: A(z) %{row}. felmenőnek nincs születési dátuma,
         pedig minden felmenőhöz kell egy.
-      ascendant_convivientes_invalid: Az a leszármazottszám, akivel a(z) %{row}. felmenő
-        együtt él, 0 és %{limit} közötti egész szám legyen.
+      ascendant_convivientes_invalid: Azon leszármazottak száma, akikkel a(z) %{row}.
+        felmenő együtt él, 0 és %{limit} közötti egész szám legyen.
       ascendant_death_before_birth: A(z) %{row}. felmenő halálozási dátuma korábbi,
         mint a születési dátuma.
       ascendant_death_date_invalid: A(z) %{row}. felmenő halálozási dátuma nem érvényes
