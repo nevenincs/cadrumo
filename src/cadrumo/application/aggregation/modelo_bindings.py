@@ -63,6 +63,7 @@ from ...domain.calculations.registry.ledger_renta_income_bindings import (
     declared_withholding_binding_ids,
     ledger_renta_withholding_derivation_partition,
     ledger_renta_withholding_value_outcomes,
+    renta_income_target_casilla,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     unrouted_ledger_renta_income_quantities,
@@ -165,21 +166,6 @@ from .source_resolution_operations import (
 
 _M131_AGRARIAN_ACTIVITY_SELECTOR = "modelo-131:selector-m036-volumen-ingresos-agrario"
 _M100_RENTAL_ACTIVITY_SELECTOR = "modelo-100:selector-m036-arrendadores-inmuebles"
-
-
-def _renta_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
-    providers = tuple(
-        binding.provider
-        for binding in context.revision.bindings
-        if isinstance(binding.provider, LedgerRentaIncomeProvider) and str(binding.provider.modelo) == context.modelo
-    )
-    targets = {provider.target_casilla_id for provider in providers if not provider.agrarian_quarter}
-    if len(targets) != 1:
-        raise RegistryError(
-            "selected revision must declare exactly one renta-income aggregation target",
-            context={"modelo": context.modelo, "target_count": len(targets)},
-        )
-    return next(iter(targets))
 
 
 def _agrarian_quarter_target_casilla(context: CalculationSourceContext) -> CasillaId | None:
@@ -329,7 +315,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # takes the quarter alone into casilla 05 and, unlike the other two,
         # narrows the rows first -- to the art. 110.1.c activity set, and away from
         # the subvenciones de capital and indemnizaciones that article excludes.
-        target_casilla_id = _renta_income_target_casilla(context)
+        target_casilla_id = renta_income_target_casilla(context.revision, modelo=context.modelo)
         criteria = declared_imputation_criteria(
             context.profile.record if context.profile is not None else None,
             self._imputation_filings(context) if self._imputation_filings is not None else None,
