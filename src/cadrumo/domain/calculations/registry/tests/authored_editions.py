@@ -45,6 +45,33 @@ def newest_authored_edition(modelo_id: str) -> int:
     return newest_authored_editions(modelo_id, 1)[0]
 
 
+def projected_exercise(modelo_id: str) -> int:
+    """Return the first exercise past the newest authored revision, which the registry projects from it."""
+    newest = authored_revisions(modelo_id)[-1]
+    if newest.valid_to is None:
+        raise LookupError(f"modelo {modelo_id}: the newest authored revision is open-ended, so nothing is projected")
+    return newest.valid_to.year + 1
+
+
+def supported_exercises_with_projection(modelo_id: str) -> tuple[int, ...]:
+    """Return every authored exercise from the support floor up, then the first projected one.
+
+    The floor comes from the registry's one support declaration, so the span moves
+    with it rather than with a hand-written year.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        floor = operation.supported_filing_years().floor
+    authored = tuple(
+        year
+        for revision in authored_revisions(modelo_id)
+        for year in range(
+            max(revision.valid_from.year, floor),
+            (revision.valid_to.year if revision.valid_to is not None else revision.valid_from.year) + 1,
+        )
+    )
+    return (*authored, projected_exercise(modelo_id))
+
+
 def single_exercise_editions(modelo_id: str) -> tuple[int, ...]:
     """Return the exercises of the revisions authored for exactly one calendar year."""
     return tuple(

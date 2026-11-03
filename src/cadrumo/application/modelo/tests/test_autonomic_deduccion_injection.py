@@ -19,7 +19,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, projected_exercise
 
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.user_profile.values import UserProfileFactValue
@@ -100,6 +100,20 @@ def test_filing_year_before_the_reviewed_edition_injects_nothing() -> None:
         inject_derived_autonomic_deduccion_facts(facts, _REVIEWED_EDITION - 1, operation=_authority_operation_for_test)
         assert _COUNT_KEY not in facts
         assert _OTROS_KEY not in facts
+
+
+def test_projected_filing_year_supplies_the_defaults_through_its_authored_edition() -> None:
+    """A year projected from the reviewed edition reads the same revision, so its bindings are supplied too."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        facts = _facts(**{"tax_residence.ccaa": "cataluna"})
+        inject_derived_autonomic_deduccion_facts(
+            facts,
+            projected_exercise("100"),
+            authored_year=_REVIEWED_EDITION,
+            operation=_authority_operation_for_test,
+        )
+        assert facts[_COUNT_KEY] == Decimal("0")
+        assert facts[_OTROS_KEY] == Decimal("0")
 
 
 def test_non_cohabiting_child_leaves_count_at_zero() -> None:

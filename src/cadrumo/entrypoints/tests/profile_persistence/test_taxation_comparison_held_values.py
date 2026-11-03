@@ -12,7 +12,8 @@ the compared results read has no value, and names those boxes in served words.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -38,7 +39,9 @@ from ....application.modelo.calculation_action_ports import CalculationActionPor
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ....application.modelo.calculation_operation import build_modelo_work_calculate_definition
 from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from ....application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from ....application.modelo.taxation_comparison import (
     TaxationComparisonError,
     TaxationComparisonRefusal,
@@ -49,6 +52,11 @@ from ....application.modelo.taxation_comparison_operation import (
     ModeloTaxationComparisonProjection,
     ModeloTaxationComparisonRequest,
     build_modelo_taxation_comparison_definition,
+)
+from ....application.modelo.work_addressing import law_selected_revision_for_work_target
+from ....application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculateRequest,
 )
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -61,10 +69,16 @@ from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....core.retencion_soportada import RetencionSoportadaClase
+from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from ....domain.calculations.registry.tests.authored_editions import (
+    newest_authored_edition,
+    projected_exercise,
+    supported_exercises_with_projection,
+)
 from ....domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
@@ -79,8 +93,8 @@ _PROFILE_ID = UUID(_BUCKET_ID)
 _TAX_ID = "12345678Z"
 _SPOUSE_TAX_ID = "98765432M"
 _YEAR = 2025
-_COMPARED_YEARS = (2022, 2023, 2024, _YEAR)
-"""The filing years whose official design carries the individual or joint option and whose calculation compares."""
+_COMPARED_YEARS = supported_exercises_with_projection("100")
+"""Every authored Modelo 100 exercise from the support floor up, then the first year projected from the newest edition."""
 _YEAR_OPERATOR_FACTS: dict[int, tuple[UserProfileFact, ...]] = {
     2024: (UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),),
 }
@@ -204,12 +218,15 @@ class _Profile:
     year: int = _YEAR
 
     def create_work(self) -> str:
+        period = Period.from_year_and_code(self.year, "0A")
         return create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=self.year,
-            period=Period.from_year_and_code(self.year, "0A"),
-            revision_id=str(self.year),
+            period=period,
+            revision_id=law_selected_revision_for_work_target(
+                modelo="100", filing_year=self.year, period=period, operation=self.operation
+            ),
             ports=WorkLifecyclePorts(work_unit_repository=self.work_units, bucket_event_repository=self.events),
             operation=self.operation,
         ).work_unit_id
@@ -239,6 +256,44 @@ class _Profile:
                 record_operator_layer=record_operator_layer,
                 ports=ports,
             ).revision
+
+    def calculate_through_operation(
+        self, work_unit_id: str, *, monkeypatch: pytest.MonkeyPatch
+    ) -> ModeloWorkCalculatePublicResultV2:
+        """Run the registered calculate executor over the production ports, replaying the head, as the worker does."""
+        monkeypatch.setattr("cadrumo.core.bucket_pointer.require_active_bucket_id", lambda: _BUCKET_ID)
+        stored: list[BaseModel] = []
+        effects: list[OperationEffect] = []
+        request = OperationRequest[BaseModel](
+            definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(_BUCKET_ID),
+            payload=ModeloWorkCalculateRequest(work_unit_id=work_unit_id, actor="operator-A"),
+        )
+
+        def unavailable_attachments(bucket_id: str) -> object:
+            raise AssertionError(f"no attachment store is read for a Modelo 100 calculation ({bucket_id})")
+
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=self.work_units,
+            calculation_repository=self.calculations,
+            bucket_event_repository=self.events,
+        ) as ports:
+
+            def factory(*, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None):
+                del operation, profile_record
+                assert bucket_id == _BUCKET_ID
+                return ports
+
+            definition = build_modelo_work_calculate_definition(
+                calculation_action_ports_factory=factory,
+                attachment_store_factory=cast("Callable[[str], AttachmentStoreProtocol]", unavailable_attachments),
+            )
+            context = _executor_context(request, ports=ports, stored=stored, effects=effects)
+            with override_settings(cadrumo_active_profile=_BUCKET_ID, cadrumo_output_language="en"):
+                asyncio.run(definition.executor_factory.create().execute(request, context))
+        (result,) = stored
+        return ModeloWorkCalculatePublicResultV2.model_validate(result)
 
     def compare(self, work_unit_id: str) -> ModeloTaxationComparisonProjection:
         """Run the registered executor over the production calculation ports, as the worker does."""
@@ -277,6 +332,11 @@ def _executor_context(
     stored: list[BaseModel],
     effects: list[OperationEffect],
 ) -> OperationExecutorContext:
+    class Cancellation:
+        @asynccontextmanager
+        async def irreversible_section(self) -> AsyncGenerator[None]:
+            yield
+
     class Events:
         async def phase(self, phase_code: str) -> None:
             del phase_code
@@ -297,6 +357,7 @@ def _executor_context(
             SimpleNamespace(
                 identity=SimpleNamespace(definition_id=request.definition_id, subject_ref=request.subject_ref),
                 authority_operation=ports.operation,
+                cancellation=Cancellation(),
                 events=Events(),
                 operands=Operands(),
             ),
@@ -321,7 +382,7 @@ def profile_factory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> G
             )
             return _Profile(
                 operation=operation,
-                work_units=WorkUnitCatalogueRepository(objects=objects),
+                work_units=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
                 calculations=CalculationRevisionCatalogueRepository(objects=objects),
                 events=BucketEventHistoryRepository(objects=objects),
                 year=year,
@@ -371,6 +432,29 @@ def test_married_return_compares_on_its_held_values(profile_factory, year: int) 
     assert result.modelo == "100"
     assert result.filing_year == year
     assert set(profile.calculations.load(operation=profile.operation).revisions) == saved
+
+
+@pytest.mark.parametrize("year", [newest_authored_edition("100"), projected_exercise("100")])
+def test_calculate_work_completes_end_to_end_for_an_authored_and_a_projected_year(
+    profile_factory, monkeypatch: pytest.MonkeyPatch, year: int
+) -> None:
+    """The calculate operation publishes its result for the newest authored year and for the year projected from it.
+
+    A projected year's work unit holds the source edition's revision, and the
+    law revision the published result is checked against is the one the same
+    temporal selection gives, so the result is neither refused nor left
+    unresolvable.
+    """
+    profile = profile_factory(year=year)
+    _credited(profile)
+    work_unit_id = profile.create_work()
+    profile.calculate(work_unit_id, work_income=Decimal("52000"))
+
+    result = profile.calculate_through_operation(work_unit_id, monkeypatch=monkeypatch)
+
+    assert result.work_unit_id == work_unit_id
+    assert result.calculation.filing_year == year
+    assert result.calculation.registry_snapshot_ref.revision_id == str(newest_authored_edition("100"))
 
 
 def test_unresolved_result_input_refuses_naming_the_boxes(profile_factory) -> None:

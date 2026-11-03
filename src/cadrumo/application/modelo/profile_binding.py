@@ -87,6 +87,7 @@ from .profile_derived_facts import (
     inject_derived_minimo_descendientes_facts,
     inject_derived_state_attribution_facts,
     inject_ordinary_work_maritime_facts,
+    snapshot_authored_year,
 )
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
@@ -436,6 +437,7 @@ def _load_profile_facts(
     inject_derived_autonomic_deduccion_facts(
         fact_index,
         snapshot.filing_year,
+        authored_year=snapshot_authored_year(snapshot),
         context=family_context,
         operation=operation,
     )

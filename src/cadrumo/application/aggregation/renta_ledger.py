@@ -44,6 +44,7 @@ from ...domain.calculations.registry.iva_regime_vocabulary import (
 )
 from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.temporal import select_revision_metadata_for_year
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import SpendingCategory
@@ -128,9 +129,11 @@ def _registry_renta_ledger_declarations(
 ) -> dict[str, str]:
     """Resolve the selected renta-ledger declaration mapping without fallbacks."""
     effective_date = date(filing_year, 12, 31)
-    directory = operation.modelo_directory(modelo)
-    if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
-        raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+    select_revision_metadata_for_year(
+        operation.modelo_directory(modelo),
+        filing_year=filing_year,
+        on=effective_date,
+    )
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="renta-ledger-category-variant-routing-mapping",

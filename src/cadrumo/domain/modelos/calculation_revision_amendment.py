@@ -17,6 +17,7 @@ from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import SourceReference
+from ..calculations.registry.temporal import select_revision_metadata_for_year
 from .errors import ModeloValidationError
 from .filing_record import FilingDeclarationKind
 
@@ -100,13 +101,13 @@ def _registry_m303_rectificativa_declarations(
     operation: PinnedAuthorityOperation,
 ) -> Mapping[str, str]:
     """Resolve M303 amendment declarations from the dated registry mapping."""
-    if not any(metadata.contains_date(today_madrid()) for metadata in operation.modelo_directory("303").revisions):
-        raise ModeloValidationError("M303 has no registry revision for today's date")
+    today = today_madrid()
+    select_revision_metadata_for_year(operation.modelo_directory("303"), filing_year=today.year, on=today)
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-303-rectificativa-record-design-mapping",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
+            effective_date=today,
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

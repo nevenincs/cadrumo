@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.calculations.registry.temporal import select_authored_revision_metadata
+from ...domain.calculations.registry.temporal import select_authored_revision_metadata, select_revision_metadata
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,13 +75,25 @@ def revision_carry_outcome(
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
     try:
-        # A carried prior filing may predate the supported filing floor; the law
-        # still selected a design for it, so the envelope is not applied here.
-        selected_revision_id = select_authored_revision_metadata(
-            operation.modelo_directory(snapshot_ref.modelo),
-            filing_year=snapshot_ref.modelo_year,
-            period=snapshot_ref.period,
-        ).id
+        directory = operation.modelo_directory(snapshot_ref.modelo)
+        support = directory.supported_filing_years
+        if support is not None and support.admits_filing_year(snapshot_ref.modelo_year):
+            # Inside the supported span the stamp is what the work unit holds, so the
+            # law revision is the one the same selection gives it, including the
+            # nearest authored edition for a year no edition authors.
+            selected_revision_id = select_revision_metadata(
+                directory,
+                filing_year=snapshot_ref.modelo_year,
+                period=snapshot_ref.period,
+            ).id
+        else:
+            # A carried prior filing may predate the supported filing floor; the law
+            # still selected a design for it, so the envelope is not applied here.
+            selected_revision_id = select_authored_revision_metadata(
+                directory,
+                filing_year=snapshot_ref.modelo_year,
+                period=snapshot_ref.period,
+            ).id
     except Exception as exc:
         return RevisionCarryOutcome(
             refused=True,

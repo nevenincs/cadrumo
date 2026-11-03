@@ -36,6 +36,7 @@ from ...core.period import FilingPeriodCode, Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.temporal import select_revision_metadata_for_year
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
 
@@ -104,12 +105,14 @@ def _active_counterpart_modelos(
     effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
-    """Validate that every counterpart vocabulary has a revision in force."""
+    """Validate that the canonical temporal selection yields a revision for every counterpart vocabulary."""
     modelos = tuple(str(match.group(1)) for key in entries if (match := _OPERATION_KINDS_KEY.fullmatch(key)))
     for modelo in modelos:
-        directory = operation.modelo_directory(modelo)
-        if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
-            raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+        select_revision_metadata_for_year(
+            operation.modelo_directory(modelo),
+            filing_year=effective_date.year,
+            on=effective_date,
+        )
     return modelos
 
 

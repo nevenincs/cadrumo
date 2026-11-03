@@ -68,6 +68,7 @@ from .profile_derived_facts import (
     is_madrid_autonomic_deduccion_filing_year,
     is_madrid_resident,
     madrid_nacimiento_adopcion_candidate_weighted_count,
+    snapshot_authored_year,
 )
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
@@ -175,6 +176,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     family_context = FamilyFactResolutionContext(authority=operation, filing_period=coordinate, devengo_date=coordinate)
     if not is_madrid_autonomic_deduccion_filing_year(
         snapshot.filing_year,
+        authored_year=snapshot_authored_year(snapshot),
         context=family_context,
         operation=operation,
     ):

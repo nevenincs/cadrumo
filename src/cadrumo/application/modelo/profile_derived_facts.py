@@ -232,7 +232,7 @@ def inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal(_LAST_MONTH)
 
 
-def _authored_year(snapshot: RegistrySnapshot) -> int:
+def snapshot_authored_year(snapshot: RegistrySnapshot) -> int:
     """Return the year a snapshot's revision was authored for.
 
     Derived profile selectors and the revision's date context are keyed by it:
@@ -570,7 +570,7 @@ def _resolved_minimo_descendientes_tranches(
     the check stays defensive for any future partial revision).
     """
     # A projected year reuses the authored edition's dated parameter values.
-    date_context = {"filing_period": date(_authored_year(snapshot), 12, 31)}
+    date_context = {"filing_period": date(snapshot_authored_year(snapshot), 12, 31)}
 
     def _resolve_tranche(suffix: str) -> Decimal | None:
         specific = (
@@ -621,7 +621,7 @@ def _resolved_minimo_descendientes_thresholds(
     a fabricated ceiling.
     """
     # A projected year reuses the authored edition's dated parameter values.
-    date_context = {"filing_period": date(_authored_year(snapshot), 12, 31)}
+    date_context = {"filing_period": date(snapshot_authored_year(snapshot), 12, 31)}
 
     def _resolve(suffix: str) -> Decimal | None:
         parameter = _minimo_descendientes_parameter(snapshot, suffix=suffix)
@@ -735,8 +735,8 @@ def inject_derived_minimo_descendientes_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    estatal_key = f"renta_family.descendientes_minimos_aggregate_{_authored_year(snapshot)}"
-    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{_authored_year(snapshot)}"
+    estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot_authored_year(snapshot)}"
+    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot_authored_year(snapshot)}"
 
     estatal_tranches = _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=None)
     if estatal_tranches is None:
@@ -877,7 +877,7 @@ def inject_derived_anualidades_eligibility_facts(
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
     filing_year = snapshot.filing_year
-    key = f"renta_family.anualidades_sin_minimo_descendientes_{_authored_year(snapshot)}"
+    key = f"renta_family.anualidades_sin_minimo_descendientes_{snapshot_authored_year(snapshot)}"
     if key not in declared_profile_selectors(snapshot.revision):
         return
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
@@ -907,10 +907,16 @@ def inject_derived_anualidades_eligibility_facts(
 def is_madrid_autonomic_deduccion_filing_year(
     filing_year: int,
     *,
+    authored_year: int | None = None,
     context: FamilyFactResolutionContext | None = None,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Return whether the registry declares the Madrid deduction for *filing_year*."""
+    """Return whether the registry declares the Madrid deduction for *filing_year*.
+
+    The declared year names the edition that carries the deduction, so a filing
+    year projected from that edition matches through *authored_year*, the
+    exercise the selected revision was authored for.
+    """
     if context is None:
         coordinate = date(filing_year, 12, 31)
         context = FamilyFactResolutionContext(
@@ -922,7 +928,7 @@ def is_madrid_autonomic_deduccion_filing_year(
         declared_year = context.integer(_MADRID_AUTONOMIC_DEDUCCION_APPLICABILITY_FACT_ID)
     except RegistryValidationError:
         return False
-    return filing_year == declared_year
+    return (filing_year if authored_year is None else authored_year) == declared_year
 
 
 def is_madrid_resident(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
@@ -986,6 +992,7 @@ def inject_derived_autonomic_deduccion_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
     *,
+    authored_year: int | None = None,
     context: FamilyFactResolutionContext | None = None,
     operation: PinnedAuthorityOperation,
 ) -> None:
@@ -1007,7 +1014,8 @@ def inject_derived_autonomic_deduccion_facts(
     instead. A deducción's failure mode is over-claim, so silence on an
     indeterminate unidad-familiar aggregate is the safe default.
 
-    Only the registry-declared filing year is handled; other years return early.
+    Only the registry-declared edition is handled, whether it is filed directly or
+    reached by projection through *authored_year*; other years return early.
     Idempotent: keys already present are not overwritten.
     """
     if context is None:
@@ -1017,7 +1025,9 @@ def inject_derived_autonomic_deduccion_facts(
             filing_period=coordinate,
             devengo_date=coordinate,
         )
-    if not is_madrid_autonomic_deduccion_filing_year(filing_year, context=context, operation=operation):
+    if not is_madrid_autonomic_deduccion_filing_year(
+        filing_year, authored_year=authored_year, context=context, operation=operation
+    ):
         return
 
     # Always supply a neutral 0 default so the casilla-1039 formula's two profile
@@ -1098,7 +1108,7 @@ def inject_derived_incremento_guarderia_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.incremento_guarderia_{_authored_year(snapshot)}"
+    key = f"renta_family.incremento_guarderia_{snapshot_authored_year(snapshot)}"
     if key not in declared_selectors:
         return
 
@@ -1144,7 +1154,7 @@ def inject_derived_deduccion_maternidad_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.deduccion_maternidad_{_authored_year(snapshot)}"
+    key = f"renta_family.deduccion_maternidad_{snapshot_authored_year(snapshot)}"
     if key not in declared_selectors:
         return
 

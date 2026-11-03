@@ -41,6 +41,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
+from ...domain.calculations.registry.temporal import select_revision_metadata_for_year
 from ...domain.currency.service import resolve_fx_conversion_stamp
 from ...domain.invoices.business_premises import BusinessPremisesLease
 from ...domain.invoices.catalogue import InvoiceCatalogue
@@ -153,9 +154,11 @@ def _registry_m349_operation_type_requirement(
     operation: PinnedAuthorityOperation,
 ) -> tuple[IvaCategory, tuple[IntracomOperationType, ...]]:
     """Resolve the M349 category/clave ambiguity from registry data."""
-    directory = operation.modelo_directory("349")
-    if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
-        raise ValueError(f"Modelo 349 has no registry revision for {effective_date.isoformat()}")
+    select_revision_metadata_for_year(
+        operation.modelo_directory("349"),
+        filing_year=effective_date.year,
+        on=effective_date,
+    )
     entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
 
     try:
