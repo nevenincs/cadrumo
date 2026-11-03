@@ -1,5 +1,6 @@
 # Annual publication of the días inhábiles calendar that fixes filing-deadline
-# extensions (Ley 39/2015 art. 30.5 and 30.6). Each year cites the Secretaría de
+# extensions (Ley 39/2015 art. 30.2, 30.5 and 31.3 for the national filing-close shift; art. 30.6 for
+# the territorial domiciliación cutoff). Each year cites the Secretaría de
 # Estado de Función Pública resolution for the Administración General del Estado,
 # the calendar that governs AEAT procedures.
 #
@@ -18,7 +19,7 @@ variant_id = "holiday-calendar-publication:2024"
 date_axis = "submission_date"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -40,7 +41,7 @@ variant_id = "holiday-calendar-publication:2025"
 date_axis = "submission_date"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -62,7 +63,7 @@ variant_id = "holiday-calendar-publication:2026"
 date_axis = "submission_date"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
-legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"

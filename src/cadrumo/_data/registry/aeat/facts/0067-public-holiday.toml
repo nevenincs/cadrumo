@@ -36,7 +36,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-01-01
 valid_to = 2024-01-01
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -61,7 +61,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-01-06
 valid_to = 2024-01-06
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -84,7 +84,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-03-29
 valid_to = 2024-03-29
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -107,7 +107,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-05-01
 valid_to = 2024-05-01
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -130,7 +130,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-08-15
 valid_to = 2024-08-15
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -155,7 +155,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-10-12
 valid_to = 2024-10-12
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -178,7 +178,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-11-01
 valid_to = 2024-11-01
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -201,7 +201,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-12-06
 valid_to = 2024-12-06
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -224,7 +224,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2024-12-25
 valid_to = 2024-12-25
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1558,7 +1558,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-01-01
 valid_to = 2025-01-01
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1581,7 +1581,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-01-06
 valid_to = 2025-01-06
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1604,7 +1604,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-04-18
 valid_to = 2025-04-18
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1627,7 +1627,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-05-01
 valid_to = 2025-05-01
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1650,7 +1650,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-08-15
 valid_to = 2025-08-15
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1675,7 +1675,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-11-01
 valid_to = 2025-11-01
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1700,7 +1700,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-12-06
 valid_to = 2025-12-06
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1723,7 +1723,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-12-08
 valid_to = 2025-12-08
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1746,7 +1746,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2025-12-25
 valid_to = 2025-12-25
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -3011,7 +3011,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2026-01-01
 valid_to = 2026-01-01
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -3034,7 +3034,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2026-01-06
 valid_to = 2026-01-06
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -3057,7 +3057,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2026-04-03
 valid_to = 2026-04-03
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -3080,7 +3080,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2026-05-01
 valid_to = 2026-05-01
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -3105,7 +3105,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2026-08-15
 valid_to = 2026-08-15
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -3128,7 +3128,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2026-10-12
 valid_to = 2026-10-12
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -3151,7 +3151,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2026-12-08
 valid_to = 2026-12-08
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -3174,7 +3174,7 @@ selectors = [{ name = "jurisdiction", value = "national" }]
 date_axis = "submission_date"
 valid_from = 2026-12-25
 valid_to = 2026-12-25
-legal_refs = ["ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 source_refs = ["boe-dias-inhabiles-age-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
