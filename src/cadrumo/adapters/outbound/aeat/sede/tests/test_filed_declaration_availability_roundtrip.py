@@ -28,6 +28,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
+from ......core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ..schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -85,7 +86,7 @@ def test_report_refuses_a_naive_discovered_at() -> None:
 
 def test_availability_refuses_an_out_of_range_ejercicio() -> None:
     with pytest.raises(ValidationError, match="ejercicios"):
-        FiledDeclarationAvailability(modelo="303", ejercicios=(1999,))
+        FiledDeclarationAvailability(modelo="303", ejercicios=(FOUR_DIGIT_YEAR_FIRST - 1,))
 
 
 def test_availability_refuses_an_unknown_field() -> None:

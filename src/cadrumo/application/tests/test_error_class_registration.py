@@ -18,6 +18,7 @@ import pytest
 from pydantic import SecretStr
 
 from ...core.aggregation import BindingSourceKind
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from .operator_probe_fakes import fake_operator_probe_ports
 
@@ -51,13 +52,19 @@ def test_session_deserialization_error_raised_on_bad_type() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
-    from ...core.period import Period
+def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    from ...domain.iva_compensation.carry_forward import (
+        build_iva_compensation_carry_forward_report,
+        derive_iva_compensation_year_end_carry_partition,
+    )
     from ...domain.iva_compensation.errors import IvaCompensationYearRangeError
-    from ..calculations.iva_compensation_history import iva_compensation_period_key
+
+    report = build_iva_compensation_carry_forward_report((), as_of_year=FOUR_DIGIT_YEAR_FIRST, operation=operation)
 
     with pytest.raises(IvaCompensationYearRangeError):
-        iva_compensation_period_key(Period.from_year_and_code(1999, "1T"))
+        derive_iva_compensation_year_end_carry_partition(report, (), filing_year=FOUR_DIGIT_YEAR_FIRST - 1)
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year(
@@ -67,7 +74,7 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year(
     from ...domain.iva_compensation.errors import IvaCompensationYearRangeError
 
     with pytest.raises(IvaCompensationYearRangeError):
-        build_iva_compensation_carry_forward_report((), as_of_year=2100, operation=operation)
+        build_iva_compensation_carry_forward_report((), as_of_year=FOUR_DIGIT_YEAR_LAST + 1, operation=operation)
 
 
 # ---------------------------------------------------------------------------

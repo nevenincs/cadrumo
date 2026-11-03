@@ -68,7 +68,7 @@ def test_modelo_options_match_the_hand_authored_fixture_exactly() -> None:
 
 
 def test_ejercicio_options_match_the_hand_authored_fixture_exactly() -> None:
-    assert filed_register_ejercicio_options(_synthetic_html()) == (2026, 2025, 2024)
+    assert filed_register_ejercicio_options(_synthetic_html()) == (2026, 2025, 2024, 1999)
 
 
 def test_a_modelo_with_an_empty_description_is_still_offered() -> None:
@@ -81,8 +81,9 @@ def test_the_placeholder_option_is_not_a_modelo() -> None:
     assert not any(code.startswith("-") for code in filed_register_modelo_options(_real_html()))
 
 
-def test_an_ejercicio_below_the_supported_range_is_dropped() -> None:
-    assert 1999 not in filed_register_ejercicio_options(_synthetic_html())
+def test_an_old_ejercicio_the_register_offers_is_kept() -> None:
+    # The register's offer is read as it stands; which years the product serves is the registry's to say.
+    assert 1999 in filed_register_ejercicio_options(_synthetic_html())
 
 
 def test_the_two_option_shapes_stay_disjoint_on_real_markup() -> None:
@@ -176,10 +177,11 @@ def test_the_assembled_report_pins_the_register_options_provenance() -> None:
         discovered_at=datetime(2026, 8, 7, 12, 0, tzinfo=UTC),
     )
     assert report.signal is FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS
-    assert report.offered_pairs[:4] == (
+    assert report.offered_pairs[:5] == (
         ("ATF", 2026),
         ("ATF", 2025),
         ("ATF", 2024),
+        ("ATF", 1999),
         ("DT2", 2026),
     )
-    assert len(report.offered_pairs) == 6 * 3
+    assert len(report.offered_pairs) == 6 * 4
