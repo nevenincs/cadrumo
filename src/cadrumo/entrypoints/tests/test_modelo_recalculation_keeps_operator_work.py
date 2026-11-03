@@ -31,7 +31,7 @@ from ...domain.modelos.calculation_revision_operator_layer import CalculationOpe
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _C06 = validated_casilla_id("06")
-_C08 = validated_casilla_id("08")
+_C16 = validated_casilla_id("16")
 
 
 def _intent(
@@ -45,7 +45,7 @@ def test_recalculating_keeps_manual_values_and_clears(tmp_path: Path) -> None:
         applied = work.apply(
             scalar=(
                 _intent(_C06, ModeloEditScalarIntentKind.SET_TYPED_VALUE, "100"),
-                _intent(_C08, ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE),
+                _intent(_C16, ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE),
             )
         )
         assert applied.refusal is None
@@ -54,7 +54,7 @@ def test_recalculating_keeps_manual_values_and_clears(tmp_path: Path) -> None:
         recalculated = work.recalculate()
 
     assert recalculated.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C06: "100"})
-    assert recalculated.cleared_casilla_ids == (_C08,)
+    assert recalculated.cleared_casilla_ids == (_C16,)
     assert recalculated.casilla_values[_C06] == Decimal("100")
     assert recalculated.calculation_revision_id == edited.calculation_revision_id
 

@@ -37,7 +37,7 @@ from ...domain.modelos.calculation_revision_operator_layer import CalculationOpe
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _C06 = validated_casilla_id("06")
-_C08 = validated_casilla_id("08")
+_C16 = validated_casilla_id("16")
 
 
 def _set(casilla_id: CasillaId, value: ModeloScalar) -> ModeloScalarEditIntentV1:
@@ -68,12 +68,12 @@ def _refused_without_effect(work: SeededOperatorWork, applied: AppliedEdit, *, h
 def test_a_second_edit_keeps_the_first_edits_value(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         _updated(work.apply(scalar=(_set(_C06, "100.00"),)))
-        _updated(work.apply(scalar=(_set(_C08, "50"),)))
+        _updated(work.apply(scalar=(_set(_C16, "50"),)))
         head = work.require_head()
 
-    assert head.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C06: "100", _C08: "50"})
+    assert head.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C06: "100", _C16: "50"})
     assert head.casilla_values[_C06] == Decimal("100")
-    assert head.casilla_values[_C08] == Decimal("50")
+    assert head.casilla_values[_C16] == Decimal("50")
 
 
 def test_restore_returns_one_casilla_to_its_source_and_keeps_the_rest(tmp_path: Path) -> None:
@@ -81,28 +81,28 @@ def test_restore_returns_one_casilla_to_its_source_and_keeps_the_rest(tmp_path: 
         source_value = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work.work_unit_id, ports=work.ports, record_operator_layer=True, clock=SEEDED_AT
         ).revision.input_values_by_casilla_id.get(_C06)
-        _updated(work.apply(scalar=(_set(_C06, "100"), _set(_C08, "50"))))
+        _updated(work.apply(scalar=(_set(_C06, "100"), _set(_C16, "50"))))
         _updated(work.apply(scalar=(_intent(_C06, ModeloEditScalarIntentKind.RESTORE_SOURCE_VALUE),)))
         head = work.require_head()
 
-    assert head.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C08: "50"})
+    assert head.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C16: "50"})
     assert head.input_values_by_casilla_id.get(_C06) == source_value
     assert _C06 not in head.cleared_casilla_ids
 
 
 def test_a_clear_is_recorded_distinct_from_zero_and_a_later_set_withdraws_it(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
-        _updated(work.apply(scalar=(_set(_C06, "100"), _set(_C08, "50"))))
-        _updated(work.apply(scalar=(_intent(_C08, ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE),)))
+        _updated(work.apply(scalar=(_set(_C06, "100"), _set(_C16, "50"))))
+        _updated(work.apply(scalar=(_intent(_C16, ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE),)))
         cleared = work.require_head()
-        _updated(work.apply(scalar=(_set(_C08, "0"),)))
+        _updated(work.apply(scalar=(_set(_C16, "0"),)))
         zero = work.require_head()
 
-    assert cleared.cleared_casilla_ids == (_C08,)
-    assert _C08 not in cleared.input_values_by_casilla_id
+    assert cleared.cleared_casilla_ids == (_C16,)
+    assert _C16 not in cleared.input_values_by_casilla_id
     assert cleared.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C06: "100"})
     assert zero.cleared_casilla_ids == ()
-    assert zero.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C06: "100", _C08: "0"})
+    assert zero.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C06: "100", _C16: "0"})
 
 
 def test_clearing_a_casilla_a_source_feeds_is_refused_and_writes_nothing(tmp_path: Path) -> None:
@@ -127,7 +127,7 @@ def test_a_malformed_amount_is_a_typed_refusal_not_a_raw_error(tmp_path: Path, l
         _updated(work.apply(scalar=(_set(_C06, "100"),)))
         before = work.require_head().calculation_revision_id
 
-        applied = work.apply(scalar=(_set(_C08, lexeme),))
+        applied = work.apply(scalar=(_set(_C16, lexeme),))
 
         _refused_without_effect(work, applied, head_before=before)
 
