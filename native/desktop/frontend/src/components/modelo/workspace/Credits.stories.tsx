@@ -121,6 +121,32 @@ export const Unresolved: Story = {
   },
 };
 
+export const Dependents: Story = {
+  name: "The boxes the application works out from the credits, apart from the credits",
+  render: (_, { globals }) => (
+    <Credits shape="renta" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement }) => {
+    await credits(canvasElement);
+    const region = canvasElement.querySelector<HTMLElement>(
+      "section:has([data-credit]) ~ section:has([data-credit])",
+    );
+    if (!region)
+      throw new Error("the boxes worked out from the credits are not drawn");
+    const boxes = (root: ParentNode) =>
+      [...root.querySelectorAll<HTMLElement>("[data-credit]")].map(
+        (row) => row.dataset.credit,
+      );
+    const dependents = boxes(region);
+    expect(dependents.length).toBeGreaterThan(0);
+    // A credit is listed as a credit, never again among the boxes read from it.
+    const all = boxes(canvasElement);
+    const listedCredits = all.slice(0, all.length - dependents.length);
+    for (const box of dependents) expect(listedCredits).not.toContain(box);
+    expect(canvasElement.querySelector("input, textarea")).toBeNull();
+  },
+};
+
 export const FromRegister: Story = {
   name: "Salaried, certificate in the register: the credit from the register",
   render: (_, { globals }) => (

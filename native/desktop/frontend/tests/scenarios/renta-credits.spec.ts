@@ -67,11 +67,16 @@ async function openCredits(
   return panel;
 }
 
-/** The boxes the withholding register supplies, as the form served them. */
-async function servedCredits(
+/** The boxes the withholding register supplies, and the boxes the form
+ * served as worked out from any of them, each in the order the form draws
+ * them; `dependents` is null when the form could not say which they are. */
+async function servedCreditBoxes(
   target: Page,
   language: Language,
-): Promise<PublicModeloFormField[]> {
+): Promise<{
+  credits: PublicModeloFormField[];
+  dependents: PublicModeloFormField[] | null;
+}> {
   return target.evaluate(async (asked) => {
     const port = window.__fixtureModelo!;
     const list = await port.declarations(asked);
@@ -79,22 +84,37 @@ async function servedCredits(
       (entry) => entry.modelo === "100" && entry.existing,
     )!.existing!.work_unit_id;
     const read = await port.form(unit, asked);
-    const found: PublicModeloFormField[] = [];
+    const served = read.form.form.withholding_credits;
+    const key = (address: PublicModeloFormField["address"]) =>
+      address.kind === "casilla"
+        ? `c:${address.casilla_id}`
+        : `b:${address.binding_id}`;
+    const credited = new Set(served.map((credit) => key(credit.address)));
+    const reading = new Set(
+      served.flatMap((credit) => (credit.dependents ?? []).map(key)),
+    );
+    const fields: PublicModeloFormField[] = [];
     const walk = (node: unknown): void => {
       if (Array.isArray(node)) node.forEach(walk);
       else if (node && typeof node === "object") {
-        if ("held_zero" in node && "edit_address" in node) {
-          const field = node as PublicModeloFormField;
-          if (field.bindings.some((b) => b.policy.surface === "withholding"))
-            found.push(field);
-        }
+        if ("held_zero" in node && "edit_address" in node)
+          fields.push(node as PublicModeloFormField);
         Object.values(node).forEach(walk);
       }
     };
     walk(read.form.form.pages);
-    return found;
+    return {
+      credits: fields.filter((field) => credited.has(key(field.address))),
+      dependents: served.every((credit) => credit.dependents !== null)
+        ? fields.filter((field) => reading.has(key(field.address)))
+        : null,
+    };
   }, language);
 }
+
+/** The boxes the withholding register supplies, as the form served them. */
+const servedCredits = async (target: Page, language: Language) =>
+  (await servedCreditBoxes(target, language)).credits;
 
 /** The estimate the application answered for the filer's profile. */
 async function servedEstimate(
@@ -190,6 +210,29 @@ for (const language of LANGUAGES) {
     await expect(panel.getByRole("spinbutton")).toHaveCount(0);
   });
 }
+
+test("the boxes worked out from the credits are the ones the application served", async ({
+  page: target,
+}) => {
+  const panel = await openCredits(target, "renta");
+  const { credits, dependents } = await servedCreditBoxes(target, "en");
+  expect(credits.length).toBeGreaterThan(0);
+  expect(dependents).not.toBeNull();
+  expect(dependents!.length).toBeGreaterThan(0);
+  const region = panel.getByRole("region", {
+    name: label("desktop.modelo.credits.dependents"),
+  });
+  // Exactly the served boxes, in the order the form draws them, and none of
+  // them is a credit itself.
+  await expect(region.locator("[data-credit]")).toHaveCount(dependents!.length);
+  for (const [at, field] of dependents!.entries()) {
+    await expect(region.locator("[data-credit]").nth(at)).toHaveAttribute(
+      "data-credit",
+      field.box!,
+    );
+    expect(credits.map((credit) => credit.box)).not.toContain(field.box);
+  }
+});
 
 test("a credit from the register shows the figure the application served", async ({
   page: target,

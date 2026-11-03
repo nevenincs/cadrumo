@@ -1,49 +1,36 @@
-import type { PublicModeloFormField } from "../../../shell/modeloContract";
-import type { PlacedField } from "../form/session";
+import type {
+  ModeloFormCredit,
+  PublicModeloFormField,
+} from "../../../shell/modeloContract";
+import { addressKey, type PlacedField } from "../form/session";
 
-// Which boxes of a form are credits a register supplies, and which boxes
-// read them. Both come from what the form served: a box's source policy names
-// the area it is corrected in, and a calculated box names the boxes its
-// formula reads. Nothing here knows a box number or what a credit is.
+// The credits the withholding register supplies and the boxes worked out
+// from them, as the form served them. The application names both; this only
+// finds the boxes it named among those the form draws, in the form's order.
 
-/** The area the withholding records are kept and corrected in. */
-const REGISTER_SURFACE = "withholding";
+export type CreditBoxes = {
+  /** The boxes the register supplies, in the order the form draws them. */
+  credits: PublicModeloFormField[];
+  /** The boxes worked out from any credit, in the order the form draws them;
+   * null when the application could not say which they are, which is not
+   * the same as none. */
+  dependents: PublicModeloFormField[] | null;
+};
 
-/** The boxes whose figure the withholding register supplies, in the order the
- * form draws them. */
-export function creditFields(
+export function creditBoxes(
   placed: readonly PlacedField[],
-): PublicModeloFormField[] {
-  return placed
-    .map(({ field }) => field)
-    .filter((field) =>
-      field.bindings.some((b) => b.policy.surface === REGISTER_SURFACE),
-    );
-}
-
-/** The calculated boxes that read a credit, directly or through another
- * calculated box, in the order the form draws them. A box with no printed
- * number is not listed: there is nothing to name it by. */
-export function dependentFields(
-  placed: readonly PlacedField[],
-  credits: readonly PublicModeloFormField[],
-): PublicModeloFormField[] {
+  served: readonly ModeloFormCredit[],
+): CreditBoxes {
+  const credited = new Set(served.map((credit) => addressKey(credit.address)));
+  const known = served.every((credit) => credit.dependents !== null);
   const reading = new Set(
-    credits.flatMap((field) => (field.box ? [field.box] : [])),
+    served.flatMap((credit) => (credit.dependents ?? []).map(addressKey)),
   );
-  const found: PublicModeloFormField[] = [];
-  // A box can read one that is drawn after it, so repeat until nothing joins.
-  for (let joined = true; joined;) {
-    joined = false;
-    for (const { field } of placed) {
-      if (!field.box || reading.has(field.box)) continue;
-      if (!field.formula_operands.some((operand) => reading.has(operand)))
-        continue;
-      reading.add(field.box);
-      found.push(field);
-      joined = true;
-    }
-  }
-  const order = new Map(placed.map(({ field }, at) => [field, at]));
-  return found.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+  const fields = placed.map(({ field }) => field);
+  return {
+    credits: fields.filter((field) => credited.has(addressKey(field.address))),
+    dependents: known
+      ? fields.filter((field) => reading.has(addressKey(field.address)))
+      : null,
+  };
 }

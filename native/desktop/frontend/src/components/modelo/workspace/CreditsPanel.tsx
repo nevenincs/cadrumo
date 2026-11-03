@@ -8,7 +8,7 @@ import type {
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import { Credits } from "./CreditsView";
-import { creditFields, dependentFields } from "./creditBoxes";
+import { creditBoxes } from "./creditBoxes";
 import { Estimate } from "./EstimateView";
 import {
   estimateFigure,
@@ -52,10 +52,10 @@ export function CreditsPanel({
   const t = useStrings();
   const form = envelope.form.form;
   const periodCode = parsePeriodCode(form.period.code);
-  const credits = useMemo(() => creditFields(session.placed), [session.placed]);
-  const dependents = useMemo(
-    () => dependentFields(session.placed, credits),
-    [session.placed, credits],
+  const served = form.withholding_credits;
+  const { credits, dependents } = useMemo(
+    () => creditBoxes(session.placed, served),
+    [session.placed, served],
   );
   const projection =
     estimate.read.phase === "ready" ? estimate.read.projection : null;

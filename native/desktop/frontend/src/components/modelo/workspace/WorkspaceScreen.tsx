@@ -63,7 +63,6 @@ import {
   type CalculationEvidenceAnswer,
 } from "./calculationEvidence";
 import type { CorrectionAnswer, CorrectionResult } from "./CorrectionDialog";
-import { creditFields } from "./creditBoxes";
 import { CreditsPanel } from "./CreditsPanel";
 import { useEstimate } from "./estimateRead";
 import { hasIvaWallet } from "./ivaWalletRead";
@@ -650,7 +649,8 @@ function Ready({
           ? t("desktop.modelo.view.iva_wallet")
           : undefined,
         credits:
-          creditFields(session.placed).length > 0 || hasIvaWallet(envelope) ? (
+          envelope.form.form.withholding_credits.length > 0 ||
+          hasIvaWallet(envelope) ? (
             <CreditsPanel
               envelope={envelope}
               session={session}

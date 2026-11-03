@@ -4582,6 +4582,22 @@ export type ModeloFormCounts = {
 };
 
 /**
+ * A box the withholding register supplies, and the numbered boxes the
+ * calculation works out from it.
+ *
+ * `dependents` are the numbered boxes this form shows whose formula reads the
+ * credit, directly or through other figures, printed or not, in the form's
+ * reading order; a box that is itself a credit is listed as a credit, not
+ * here. An empty tuple says no formula of the revision reads the credit.
+ * `None` says the revision declares a formula the graph cannot read, so which
+ * boxes depend on the credit is not known; it never stands for none.
+ */
+export type ModeloFormCredit = {
+  address: ModeloFormAddressV1;
+  dependents: ModeloFormCasillaAddressV1[] | null;
+};
+
+/**
  * The last day of the voluntary filing window for this declaration.
  *
  * `nominal_closes_on` is the date the registry declares; `closes_on` is the
@@ -8137,6 +8153,7 @@ export type PublicModeloWorkForm = {
   unplaced: PublicModeloFormUnplacedField[];
   answers: PublicModeloFormField[];
   result_addresses: CasillaId[];
+  withholding_credits: ModeloFormCredit[];
   counts: ModeloFormCounts;
   progress: ModeloWorkProgress;
   operator_entries_known: boolean;

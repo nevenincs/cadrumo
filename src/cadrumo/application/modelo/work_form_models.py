@@ -975,6 +975,21 @@ class ModeloFormSourceGroup(ModeloFormBase):
     readings: tuple[ModeloFormSourceReading, ...] = ()
 
 
+class ModeloFormCredit(ModeloFormBase):
+    """A box the withholding register supplies, and the numbered boxes the calculation works out from it.
+
+    ``dependents`` are the numbered boxes this form shows whose formula reads the
+    credit, directly or through other figures, printed or not, in the form's
+    reading order; a box that is itself a credit is listed as a credit, not here.
+    An empty tuple says no formula of the revision reads the credit. ``None``
+    says the revision declares a formula the graph cannot read, so which boxes
+    depend on the credit is not known; it never stands for none.
+    """
+
+    address: ModeloFormAddressV1
+    dependents: tuple[ModeloFormCasillaAddressV1, ...] | None
+
+
 class ModeloWorkForm(ModeloFormBase):
     """The editor form of one work target in one language."""
 
@@ -997,6 +1012,8 @@ class ModeloWorkForm(ModeloFormBase):
     #: unplaced list takes, each as a field of its own, so every answer the declaration can be given has a place.
     answers: tuple[ModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...] = ()
+    #: The boxes the withholding register supplies, in reading order, each with the boxes worked out from it.
+    withholding_credits: tuple[ModeloFormCredit, ...] = ()
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool
@@ -1205,6 +1222,7 @@ __all__ = [
     "ModeloFormCasillaAddressV1",
     "ModeloFormContextFieldBlock",
     "ModeloFormCounts",
+    "ModeloFormCredit",
     "ModeloFormEarlierFiling",
     "ModeloFormEditability",
     "ModeloFormField",

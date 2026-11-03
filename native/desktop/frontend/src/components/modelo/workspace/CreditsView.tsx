@@ -138,8 +138,9 @@ export function Credits({
   extraOf,
 }: {
   credits: readonly PublicModeloFormField[];
-  /** The boxes that read a credit, directly or through another box. */
-  dependents: readonly PublicModeloFormField[];
+  /** The boxes the application works out from a credit, directly or through
+   * another figure; null when it could not say which they are. */
+  dependents: readonly PublicModeloFormField[] | null;
   lines: readonly ModeloFormIssueLine[];
   onGo(address: ModeloFormAddressV1): void;
   onOpenSurface(surface: OpenableSurface): void;
@@ -185,7 +186,7 @@ export function Credits({
           </Button>
         )}
       </section>
-      {dependents.length > 0 && (
+      {dependents !== null && dependents.length > 0 && (
         <section
           aria-label={t("desktop.modelo.credits.dependents")}
           className="flex flex-col gap-2"

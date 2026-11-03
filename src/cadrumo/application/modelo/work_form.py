@@ -84,6 +84,7 @@ from .edit_models import (
 from .work_form_answers import answer_fields
 from .work_form_context import WorkFormContext
 from .work_form_counts import count_work_form_fields
+from .work_form_credits import withholding_credits
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure
 from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_projection import project_casilla_field
@@ -372,6 +373,7 @@ def _assemble_work_form(
         unplaced=tuple(unplaced),
         answers=tuple(answers),
         result_addresses=result_casilla_ids(context),
+        withholding_credits=withholding_credits(tuple(every_field), snapshot.revision),
         counts=count_work_form_fields(every_field, filed=context.filed),
         progress=review.progress,
         operator_entries_known=entered_casilla_ids is not None,

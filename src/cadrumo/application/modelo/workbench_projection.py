@@ -79,6 +79,7 @@ from .work_form_models import (
     ModeloFormBinding,
     ModeloFormBlocker,
     ModeloFormCounts,
+    ModeloFormCredit,
     ModeloFormEditability,
     ModeloFormGridColumn,
     ModeloFormInspectionReason,
@@ -365,6 +366,7 @@ class PublicModeloWorkForm(BaseModel):
     unplaced: tuple[PublicModeloFormUnplacedField, ...]
     answers: tuple[PublicModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...]
+    withholding_credits: tuple[ModeloFormCredit, ...] = ()
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
     operator_entries_known: bool
