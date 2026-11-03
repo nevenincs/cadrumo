@@ -201,7 +201,7 @@ def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
             for field in page.fields
             if _is_page_one_structured_input_field(field.description)
         }
-        registry_fields = {
+        registry_fields: set[tuple[int | None, int | None, str]] = {
             (
                 selector.offset,
                 selector.length,
