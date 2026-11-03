@@ -1438,6 +1438,10 @@ errors:
     filing_year_outside_support_envelope: 'A Modelo %{modelo_id} %{filing_year} adóéve
       és %{period} időszaka a támogatott bevallási éveken kívül esik (alsó határ:
       %{floor}, horizont: %{horizon}); az adott koordinátát lefedő revíziók: %{covering_revision_ids}.'
+    filing_year_projected: A Modelo %{modelo_id} bevallásnak még nincs %{filing_year}.
+      évi kiadása. A(z) %{period} időszakot a(z) %{authored_filing_year}. évi szabályokkal
+      számoljuk, amelyekkel kiszámolható és megtekinthető, de benyújtásra nem ellenőrizhető,
+      és nem exportálható az AEAT-nak szánt fájlként.
     modelo_not_registered: A nyomtatvány nincs regisztrálva a nyomtatványdefiníciók
       között.
     no_revision_for_period: 'A nyilvántartásban nincs a Modelo %{modelo_id} bevallást

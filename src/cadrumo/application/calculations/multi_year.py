@@ -77,7 +77,7 @@ class PreviousFilingSourceResolver:
         if self._registry_snapshot is not None:
             snapshot = self._registry_snapshot
         else:
-            snapshot = self._operation.snapshot(
+            snapshot = self._operation.reading_snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,

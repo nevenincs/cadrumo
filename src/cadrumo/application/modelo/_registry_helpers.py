@@ -128,9 +128,14 @@ def _resolve_registry_snapshot(
     filing_year: int,
     period: Period,
     operation: PinnedAuthorityOperation | None = None,
-    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    grade: RegistryAuthorityGrade | None = None,
 ) -> RegistrySnapshot:
-    """Resolve the law-selected registry snapshot for one filing target at ``grade``."""
+    """Resolve the law-selected registry snapshot for one filing target at ``grade``.
+
+    Without a ``grade`` the snapshot is read as a consumer that calculates or
+    reports would read it: filing grade for an authored year, calculation grade
+    for a year carried across from another edition.
+    """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return _resolve_registry_snapshot(
@@ -140,6 +145,8 @@ def _resolve_registry_snapshot(
                 operation=indexed_operation,
                 grade=grade,
             )
+    if grade is None:
+        return operation.reading_snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     return operation.snapshot(modelo, filing_year=filing_year, period=period.registry_token, grade=grade)
 
 

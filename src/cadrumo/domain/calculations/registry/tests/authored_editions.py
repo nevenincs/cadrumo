@@ -53,15 +53,17 @@ def projected_exercise(modelo_id: str) -> int:
     return newest.valid_to.year + 1
 
 
-def supported_exercises_with_projection(modelo_id: str) -> tuple[int, ...]:
-    """Return every authored exercise from the support floor up, then the first projected one.
+def supported_authored_exercises(modelo_id: str) -> tuple[int, ...]:
+    """Return every exercise from the support floor up that an authored revision of one modelo governs.
 
     The floor comes from the registry's one support declaration, so the span moves
-    with it rather than with a hand-written year.
+    with it rather than with a hand-written year. A year no edition authors is not
+    among them: the registry carries the nearest edition across it, which reaches
+    calculation grade at most.
     """
     with bundled_indexed_authority().operation() as operation:
         floor = operation.supported_filing_years().floor
-    authored = tuple(
+    return tuple(
         year
         for revision in authored_revisions(modelo_id)
         for year in range(
@@ -69,7 +71,11 @@ def supported_exercises_with_projection(modelo_id: str) -> tuple[int, ...]:
             (revision.valid_to.year if revision.valid_to is not None else revision.valid_from.year) + 1,
         )
     )
-    return (*authored, projected_exercise(modelo_id))
+
+
+def supported_exercises_with_projection(modelo_id: str) -> tuple[int, ...]:
+    """Return every authored exercise from the support floor up, then the first projected one."""
+    return (*supported_authored_exercises(modelo_id), projected_exercise(modelo_id))
 
 
 def single_exercise_editions(modelo_id: str) -> tuple[int, ...]:

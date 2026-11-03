@@ -2430,6 +2430,10 @@ application:
       registry_authority_grade_insufficient: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai még nincsenek kellően egyeztetve a hivatalos forrásokkal
         a benyújtáshoz.
+      registry_filing_year_projected: A Modelo %{modelo} %{filing_year}. évi nyomtatványa
+        még nincs az alkalmazásban, ezért a(z) %{period} időszakot a(z) %{authored_filing_year}.
+        évi szabályokkal számoljuk. Kiszámolhatod és megtekintheted, de benyújtásra
+        nem ellenőrizhető, és nem exportálható az AEAT-nak szánt fájlként.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
       required_maximum_unresolved: A(z) [%{box}] rovat még nem ellenőrizhető, mert

@@ -57,17 +57,25 @@ def published_snapshot(
     period: str,
     on: date | None = None,
     revision_id: RevisionId | None = None,
-    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    grade: RegistryAuthorityGrade | None = None,
 ) -> RegistrySnapshot:
-    """Build one admitted snapshot from the published generation."""
+    """Build one admitted snapshot from the published generation.
+
+    Without a ``grade`` the snapshot is read as a consumer that calculates or
+    previews reads it: filing grade for an authored year, calculation grade for
+    a year carried across from another edition. A test about the filing claim
+    itself names ``RegistryAuthorityGrade.FILING``.
+    """
     with bundled_indexed_authority().operation() as operation:
+        if grade is None and revision_id is None:
+            return operation.reading_snapshot(modelo_id, filing_year=filing_year, period=period, on=on)
         return operation.snapshot(
             modelo_id,
             filing_year=filing_year,
             period=period,
             on=on,
             revision_id=revision_id,
-            grade=grade,
+            grade=RegistryAuthorityGrade.FILING if grade is None else grade,
         )
 
 

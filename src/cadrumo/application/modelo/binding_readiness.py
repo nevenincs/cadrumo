@@ -89,7 +89,7 @@ def profile_resolvable_binding_ids(
     if resolved_period is None:
         return frozenset[str]()
     try:
-        snapshot = operation.snapshot(
+        snapshot = operation.reading_snapshot(
             modelo,
             filing_year=filing_year,
             period=resolved_period,

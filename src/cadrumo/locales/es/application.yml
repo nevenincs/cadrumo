@@ -2473,6 +2473,10 @@ application:
       registry_authority_grade_insufficient: Las reglas del modelo %{modelo} de %{filing_year},
         periodo %{period}, aún no están contrastadas con las fuentes oficiales lo
         suficiente para presentarlo.
+      registry_filing_year_projected: El modelo %{modelo} de %{filing_year} aún no
+        está en la aplicación, así que el periodo %{period} se calcula con las reglas
+        de %{authored_filing_year}. Puedes calcularlo y verlo, pero no se puede comprobar
+        para presentarlo ni exportar como fichero para la AEAT.
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.

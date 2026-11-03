@@ -104,7 +104,7 @@ def _resolve_import_profile(
 ) -> tuple[ModeloRevision, ExtractionProfileDefinition]:
     if period.filing_year != filing_year:
         raise ValueError("borrador import period differs from filing year")
-    snapshot = operation.snapshot("100", filing_year=filing_year, period=period.registry_token)
+    snapshot = operation.reading_snapshot("100", filing_year=filing_year, period=period.registry_token)
     profile = borrador_pdf_extraction_profile(snapshot)
     if profile is None:
         raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_profile_unresolved")

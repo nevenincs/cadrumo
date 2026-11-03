@@ -74,6 +74,7 @@ from .schema_live_verification import LiveCrossReferenceDecision
 from .schema_references import (
     RegistrySnapshotRef,
     TemporalProjectionDirection,
+    reachable_authority_grade,
 )
 from .schema_revision_validation import (
     require_revision_family_storage_delta,
@@ -1057,6 +1058,16 @@ class RegistrySnapshot(RegistryModel):
             modelo_year=self.filing_year,
             period=self.period,
         )
+
+    @property
+    def effective_authority_grade(self) -> RegistryAuthorityGrade:
+        """Return the authority this snapshot reaches for its requested filing year.
+
+        The selected revision's declared grade, except that a year the revision
+        does not author is carried across from the nearest edition and reaches
+        calculation grade at most.
+        """
+        return reachable_authority_grade(self.revision.effective_authority_grade, self.revision_projection_direction)
 
     @staticmethod
     def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:

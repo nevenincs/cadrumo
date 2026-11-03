@@ -488,7 +488,7 @@ def test_work_unit_revision_must_equal_the_pinned_registry_selection() -> None:
         compare_taxation_for_work_unit(
             stale_unit.work_unit_id,
             bucket_id=str(_PROFILE),
-            ports=_comparison_ports(stale_unit, SimpleNamespace(snapshot=snapshot)),
+            ports=_comparison_ports(stale_unit, SimpleNamespace(reading_snapshot=snapshot)),
         )
     assert refused.value.refusal is TaxationComparisonRefusal.REVISION_OUTDATED
     assert selections == [("100", 2025, "0A")]
@@ -497,7 +497,7 @@ def test_work_unit_revision_must_equal_the_pinned_registry_selection() -> None:
 def test_work_unit_without_a_calculation_refuses_before_any_run() -> None:
     selected = published_snapshot("100", filing_year=2025, period="0A")
     unit = _unit(revision=selected.revision.id)
-    authority = SimpleNamespace(snapshot=lambda _modelo, **_coordinates: selected)
+    authority = SimpleNamespace(reading_snapshot=lambda _modelo, **_coordinates: selected)
 
     with pytest.raises(TaxationComparisonError) as refused:
         compare_taxation_for_work_unit(
@@ -509,7 +509,7 @@ def test_work_unit_without_a_calculation_refuses_before_any_run() -> None:
 def test_revision_without_a_filing_mode_refuses_as_not_declared() -> None:
     selected = published_snapshot("303", filing_year=2025, period="3T")
     unit = _unit(revision=selected.revision.id, modelo="303")
-    authority = SimpleNamespace(snapshot=lambda _modelo, **_coordinates: selected)
+    authority = SimpleNamespace(reading_snapshot=lambda _modelo, **_coordinates: selected)
 
     with pytest.raises(TaxationComparisonError) as refused:
         compare_taxation_for_work_unit(

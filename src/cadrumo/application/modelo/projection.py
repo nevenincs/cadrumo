@@ -1142,7 +1142,9 @@ def project_modelo_100_from_m130(
     :class:`ModeloProjectRevisionNotMappedError`.
     """
     declaration = registry_projection_declaration(year, operation=operation)
-    m100_snapshot = operation.snapshot(declaration.target_modelo, filing_year=year, period=declaration.target_period)
+    m100_snapshot = operation.reading_snapshot(
+        declaration.target_modelo, filing_year=year, period=declaration.target_period
+    )
     _require_declared_target(
         declaration, year=year, target_revision_id=str(m100_snapshot.revision.id), operation=operation
     )

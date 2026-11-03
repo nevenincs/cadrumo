@@ -184,7 +184,7 @@ def calculation_revision_claims_ledger_iva(
     """
     ref = revision.registry_snapshot_ref
     try:
-        snapshot = operation.snapshot(
+        snapshot = operation.reading_snapshot(
             ref.modelo,
             filing_year=ref.modelo_year,
             period=ref.period,

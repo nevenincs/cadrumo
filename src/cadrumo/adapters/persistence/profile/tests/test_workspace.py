@@ -124,7 +124,7 @@ _RELATION_FILING_YEAR = _relation_fold_filing_year()
 
 def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field() -> None:
     authority = published_authority_operation()
-    snapshot = authority.snapshot("100", filing_year=_RELATION_FILING_YEAR, period="0A")
+    snapshot = authority.reading_snapshot("100", filing_year=_RELATION_FILING_YEAR, period="0A")
     bindings = snapshot.revision.bindings
     assert bindings  # sanity: this fixture coordinate carries a real fold slot
 
@@ -147,7 +147,7 @@ def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field
 
 def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field() -> None:
     authority = published_authority_operation()
-    snapshot = authority.snapshot("100", filing_year=_RELATION_FILING_YEAR, period="0A")
+    snapshot = authority.reading_snapshot("100", filing_year=_RELATION_FILING_YEAR, period="0A")
     bindings = snapshot.revision.bindings
 
     endpoints = relation_target_endpoints_for_binding(bindings, _RELATION_BINDING_ID)

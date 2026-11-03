@@ -26,6 +26,7 @@ from ....domain.calculations.registry.bindings import resolve_available_bound_in
 from ....domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ....domain.calculations.registry.result_casillas import derive_result_disposition
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from ....domain.deadlines.models import RefundAccount
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
@@ -49,9 +50,8 @@ _REFUND_IBAN = "ES9121000418450200051332"
 
 def _years_settled_from_the_result(operation: PinnedAuthorityOperation) -> list[int]:
     """The supported ejercicios whose revision computes no settled box, so it settles from its result."""
-    support = operation.supported_filing_years()
     years = []
-    for year in range(support.floor, support.horizon + 1):
+    for year in supported_authored_exercises("100"):
         provider = _provider(operation, year)
         revision = provider.get_snapshot("100").revision
         if declaration_settlement_remainder_casilla_ids("100", revision):

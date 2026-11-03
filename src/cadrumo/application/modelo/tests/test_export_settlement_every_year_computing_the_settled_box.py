@@ -28,6 +28,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ....domain.calculations.registry.result_casillas import derive_result_disposition
+from ....domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from ....domain.deadlines.models import RefundAccount
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
@@ -59,10 +60,9 @@ def _provider(operation: PinnedAuthorityOperation, year: int) -> RegistrySchemaA
 
 
 def _years_computing_the_settled_box(operation: PinnedAuthorityOperation) -> list[int]:
-    support = operation.supported_filing_years()
     return [
         year
-        for year in range(support.floor, support.horizon + 1)
+        for year in supported_authored_exercises("100")
         if declaration_settlement_casilla_id("100", _provider(operation, year).get_snapshot("100").revision) == _SETTLED
     ]
 

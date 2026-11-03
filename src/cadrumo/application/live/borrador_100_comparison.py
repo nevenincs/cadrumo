@@ -652,7 +652,9 @@ def compare_borrador_100_with_calculation(
     at most one readable snapshot, with every refused one beside it.
     """
     period = Period.from_year_and_code(filing_year, _ANNUAL)
-    registry = operation.snapshot(str(_annual_modelo(operation)), filing_year=filing_year, period=period.registry_token)
+    registry = operation.reading_snapshot(
+        str(_annual_modelo(operation)), filing_year=filing_year, period=period.registry_token
+    )
     snapshot = reading.readable[0] if reading.readable else None
     saved = _saved_calculation(sources, period, operation)
     stale = (

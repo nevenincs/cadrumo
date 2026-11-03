@@ -653,6 +653,67 @@ class PinnedAuthorityOperation:
         )
         return self.revision(normalized, selected.id)
 
+    def reachable_authority_grade(
+        self,
+        modelo_id: str | Modelo,
+        *,
+        filing_year: int,
+        period: str,
+    ) -> RegistryAuthorityGrade:
+        """Return the highest grade a snapshot of this filing coordinate can be built at.
+
+        The law-selected revision's declared grade, lowered to calculation when
+        the revision is carried across a year it does not author. A reader that
+        opens a declaration at what its authority claims asks here instead of
+        reading the revision, so a projected year is opened at the grade it
+        reaches rather than refused at the grade its source edition declares.
+        """
+        from .schema_references import reachable_authority_grade
+        from .temporal import revision_temporal_resolution
+
+        revision = self.revision_for_context(modelo_id, filing_year=filing_year, period=period)
+        resolution = revision_temporal_resolution(
+            revision,
+            filing_year=filing_year,
+            period=period,
+            support=self.supported_filing_years(),
+        )
+        return reachable_authority_grade(revision.effective_authority_grade, resolution.projection_direction)
+
+    def reading_snapshot(
+        self,
+        modelo_id: str | Modelo,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+    ) -> RegistrySnapshot:
+        """Return the snapshot a consumer reads to calculate, preview or report, not to claim for filing.
+
+        An authored year is read at filing grade, exactly as :meth:`snapshot`
+        reads it. A year the selected revision does not author is carried across
+        from the nearest edition and reaches calculation grade at most, so it is
+        read at that grade instead of being refused as a filing claim. Only the
+        filing-claim gates (verification, export, filing) ask :meth:`snapshot`
+        for filing grade of a year directly.
+        """
+        from .schema_references import TemporalProjectionDirection
+        from .temporal import revision_temporal_resolution
+
+        revision = self.revision_for_context(modelo_id, filing_year=filing_year, period=period, on=on)
+        resolution = revision_temporal_resolution(
+            revision,
+            filing_year=filing_year,
+            period=period,
+            support=self.supported_filing_years(),
+        )
+        grade = (
+            RegistryAuthorityGrade.FILING
+            if resolution.projection_direction is TemporalProjectionDirection.AUTHORED
+            else RegistryAuthorityGrade.CALCULATION
+        )
+        return self.snapshot(modelo_id, filing_year=filing_year, period=period, on=on, grade=grade)
+
     def snapshot(
         self,
         modelo_id: str | Modelo,

@@ -1524,6 +1524,10 @@ errors:
     filing_year_outside_support_envelope: 'L''exercici %{filing_year} i el període
       %{period} del model %{modelo_id} queden fora dels exercicis admesos (mínim %{floor},
       horitzó %{horizon}); revisions que cobreixen aquesta coordenada: %{covering_revision_ids}.'
+    filing_year_projected: El model %{modelo_id} encara no té edició de %{filing_year}.
+      El període %{period} es calcula amb les regles de %{authored_filing_year}, que
+      serveixen per calcular i previsualitzar el model, però no per comprovar-lo per
+      presentar-lo ni exportar-lo com a fitxer per a l'AEAT.
     modelo_not_registered: El model no està registrat al registre.
     no_revision_for_period: 'Cap revisió del registre cobreix el model %{modelo_id}
       de l''exercici %{filing_year} i període %{period}; revisions disponibles: %{available_revision_ids}.'

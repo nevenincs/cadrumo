@@ -189,7 +189,19 @@ def require_no_blocking_calculation_notes(
 def _screened_snapshot(
     operation: PinnedAuthorityOperation, *, modelo: str, filing_year: int, period: Period
 ) -> RegistrySnapshot:
+    """The filing-grade snapshot an action on the revision is screened against.
+
+    A year the selected revision does not author has none, so checking,
+    exporting and recording its revision refuse here as the registry refuses it.
+    """
     return operation.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+
+
+def _read_screened_snapshot(
+    operation: PinnedAuthorityOperation, *, modelo: str, filing_year: int, period: Period
+) -> RegistrySnapshot:
+    """The snapshot a form or review reads a revision's screen from, which a projected year carries too."""
+    return operation.reading_snapshot(modelo, filing_year=filing_year, period=period.registry_token)
 
 
 def _screen_outdated(
@@ -219,7 +231,7 @@ def calculation_screen_outdated(
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
             The stored calculation head carrying values, provenance and lifecycle facts.
     """
-    snapshot = _screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
+    snapshot = _read_screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
     return _screen_outdated(revision, snapshot, operation)
 
 
@@ -289,7 +301,7 @@ def calculation_filed_before_grade_cap(
     """
     if revision.state not in _FILED_STATES or revision.screen_stamp is not None:
         return None
-    snapshot = _screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
+    snapshot = _read_screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
     return _filed_before_grade_cap(revision, snapshot, operation)
 
 

@@ -262,8 +262,8 @@ def test_a_register_that_is_not_there_leaves_the_plain_phrase() -> None:
 
 @pytest.mark.parametrize("year", _SUPPORT.years)
 def test_every_box_a_note_names_is_the_number_the_form_prints(year: int, operation: PinnedAuthorityOperation) -> None:
-    annual = operation.snapshot("100", filing_year=year, period="0A")
-    instalment = operation.snapshot("130", filing_year=year, period="1T")
+    annual = operation.reading_snapshot("100", filing_year=year, period="0A")
+    instalment = operation.reading_snapshot("130", filing_year=year, period="1T")
     annual_boxes = snapshot_printed_boxes(operation, annual)
     instalment_boxes = snapshot_printed_boxes(operation, instalment)
 

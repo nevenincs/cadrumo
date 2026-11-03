@@ -544,16 +544,11 @@ def assemble_modelo_work_review(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> ModeloWorkReview:
-    selected_revision = operation.revision_for_context(
-        modelo,
-        filing_year=filing_year,
-        period=period.registry_token,
-    )
     snapshot = operation.snapshot(
         modelo,
         filing_year=filing_year,
         period=period.registry_token,
-        grade=selected_revision.effective_authority_grade,
+        grade=operation.reachable_authority_grade(modelo, filing_year=filing_year, period=period.registry_token),
     )
     work_units = work_unit_repository.load()
     calculation_repo = calculation_repository

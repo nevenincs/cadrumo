@@ -168,19 +168,37 @@ def resolve_verification_snapshot(
         # file, and the operator got a traceback instead of a finding.
         classification = getattr(exc, "registry_failure", None)
         facts = dict(getattr(classification, "facts", {}) or {})
-        finding = ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key="application.modelo.findings.registry_authority_grade_insufficient",
-            message_facts={
-                "modelo": str(work_unit.modelo),
-                "filing_year": work_unit.filing_year,
-                "period": work_unit.period.registry_token,
-                "declared_grade": str(facts.get("declared_authority_grade", "")),
-                "requested_grade": str(facts.get("requested_authority_grade", "")),
-            },
-            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
-        )
+        # A year the selected revision does not author is carried across from the
+        # edition that does, and the facts name that edition; a revision that
+        # declares less than filing authority names its grade instead.
+        authored_filing_year = facts.get("authored_filing_year")
+        if isinstance(authored_filing_year, int) and not isinstance(authored_filing_year, bool):
+            finding = ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message_locale_key="application.modelo.findings.registry_filing_year_projected",
+                message_facts={
+                    "modelo": str(work_unit.modelo),
+                    "filing_year": work_unit.filing_year,
+                    "period": work_unit.period.registry_token,
+                    "authored_filing_year": authored_filing_year,
+                },
+                legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+            )
+        else:
+            finding = ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message_locale_key="application.modelo.findings.registry_authority_grade_insufficient",
+                message_facts={
+                    "modelo": str(work_unit.modelo),
+                    "filing_year": work_unit.filing_year,
+                    "period": work_unit.period.registry_token,
+                    "declared_grade": str(facts.get("declared_authority_grade", "")),
+                    "requested_grade": str(facts.get("requested_authority_grade", "")),
+                },
+                legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+            )
         findings.append(finding)
         failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
             calculation_revision_id=target.calculation_revision_id,

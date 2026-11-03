@@ -126,10 +126,14 @@ def assert_snapshot_matches_work_unit_revision(
 def resolve_registry_snapshot_for_work_unit(
     work_unit: WorkUnit,
     *,
-    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    grade: RegistryAuthorityGrade | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySnapshot:
     """Resolve and return the :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+
+    Without a ``grade`` the snapshot is read as a consumer that calculates or
+    reports on the work unit would read it: filing grade for an authored year,
+    calculation grade for a year carried across from another edition.
 
     After resolution the snapshot's revision id is asserted equal to the work
     unit's pinned ``revision_id`` via :func:`assert_snapshot_matches_work_unit_revision`
@@ -151,11 +155,19 @@ def resolve_registry_snapshot_for_work_unit(
 
     if operation is not None:
         try:
-            snapshot = operation.snapshot(
-                work_unit.modelo,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period.registry_token,
-                grade=grade,
+            snapshot = (
+                operation.reading_snapshot(
+                    work_unit.modelo,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                )
+                if grade is None
+                else operation.snapshot(
+                    work_unit.modelo,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                    grade=grade,
+                )
             )
         except RegistrySnapshotError as exc:
             raise CalculationRegistryUnavailableError(

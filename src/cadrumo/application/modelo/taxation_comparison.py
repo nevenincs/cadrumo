@@ -533,7 +533,7 @@ def compare_taxation_for_work_unit(
         )
     work_unit = selection.work_unit
     try:
-        snapshot = operation.snapshot(
+        snapshot = operation.reading_snapshot(
             str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period.registry_token
         )
     except (FileNotFoundError, RegistrySnapshotError) as exc:

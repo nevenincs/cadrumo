@@ -142,7 +142,7 @@ def dependency_access_periods(
         return frozenset[Period]()
     if payload.modelo is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    snapshot = operation.snapshot(payload.modelo, filing_year=payload.filing_year, period=payload.period.code)
+    snapshot = operation.reading_snapshot(payload.modelo, filing_year=payload.filing_year, period=payload.period.code)
     requirements = cross_period_dependency_requirements(snapshot)
     return frozenset({payload.period.to_period(), *(item.period for item in requirements)})
 
@@ -180,7 +180,9 @@ class ModeloDependencyExecutor:
         )
         clean_state = None
         if payload.period is not None and payload.modelo is not None:
-            snapshot = operation.snapshot(payload.modelo, filing_year=payload.filing_year, period=payload.period.code)
+            snapshot = operation.reading_snapshot(
+                payload.modelo, filing_year=payload.filing_year, period=payload.period.code
+            )
             verdict = evaluate_cross_period_clean_state(
                 snapshot,
                 operation=operation,

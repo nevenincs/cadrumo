@@ -99,7 +99,7 @@ class ModeloWorkbookExport(BaseModel):
 def resolve_published_snapshot(modelo: ModeloId, period: Period) -> RegistrySnapshot:
     """Resolve one snapshot from the published authority, as runtime reads it."""
     with bundled_indexed_authority().operation() as operation:
-        return operation.snapshot(
+        return operation.reading_snapshot(
             modelo,
             filing_year=period.filing_year,
             period=period.registry_token,

@@ -2337,6 +2337,10 @@ application:
       registry_authority_grade_insufficient: The rules for modelo %{modelo} %{filing_year},
         period %{period}, are not yet checked against the official sources closely
         enough to file it.
+      registry_filing_year_projected: The %{filing_year} form of modelo %{modelo}
+        is not in the application yet, so period %{period} is worked out with the
+        rules of %{authored_filing_year}. You can calculate and preview it, but it
+        cannot be checked for filing or exported as a file for AEAT.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
       required_maximum_unresolved: Box [%{box}] cannot be checked yet, because the

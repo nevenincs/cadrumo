@@ -217,7 +217,9 @@ class ModeloSpreadsheetExecutor:
         if ports.profile_id != payload.profile_id or ports.operation is not operation:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         period = payload.period.to_period()
-        snapshot = operation.snapshot(payload.modelo, filing_year=period.filing_year, period=period.registry_token)
+        snapshot = operation.reading_snapshot(
+            payload.modelo, filing_year=period.filing_year, period=period.registry_token
+        )
         if (
             snapshot.modelo.id != payload.modelo
             or snapshot.filing_year != period.filing_year

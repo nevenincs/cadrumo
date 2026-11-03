@@ -9,6 +9,7 @@ from typing import override as typing_override
 
 from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.external_constants import (
     PDF_EXTENSION,
@@ -52,6 +53,7 @@ __all__ = [
     "TemporalProjectionDirection",
     "TemporalSupportEnvelope",
     "date_within_validity_window",
+    "reachable_authority_grade",
     "source_window_applies_across",
 ]
 
@@ -346,6 +348,24 @@ class TemporalProjectionDirection(StrEnum):
     AUTHORED = "authored"
     BACKWARD = "backward"
     FORWARD = "forward"
+
+
+def reachable_authority_grade(
+    declared: RegistryAuthorityGrade, direction: TemporalProjectionDirection
+) -> RegistryAuthorityGrade:
+    """Return the rung of authority a revision reaches for a year it does or does not author.
+
+    A revision's declared grade is a claim about the filing years its edition
+    authors. A year it does not author is answered by carrying the nearest
+    edition across, which computes amounts and previews a form but is not the
+    reviewed design of that year, so such a year reaches calculation grade at
+    most. Enum declaration order is the authority ladder, so a revision that
+    declares less than calculation keeps its lower rung.
+    """
+    if direction is TemporalProjectionDirection.AUTHORED:
+        return declared
+    ladder = tuple(RegistryAuthorityGrade)
+    return min(declared, RegistryAuthorityGrade.CALCULATION, key=ladder.index)
 
 
 def _validate_support_bounds[T: (int, date)](floor: T, horizon: T, hard_ceiling: T | None) -> None:

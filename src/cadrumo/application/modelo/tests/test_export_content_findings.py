@@ -9,9 +9,9 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -33,10 +33,15 @@ _KEY_PREFIX = "application.modelo.findings.xml_"
 
 def _content_findings(modelo_code: str, period_code: str) -> list[ModeloVerificationFinding]:
     """Run the real revision verification for a filer whose profile holds no identity."""
-    filing_year = max(PublishedGovernedFactSource().supported_filing_years().years)
     modelo = ModeloCode(modelo_code)
-    period = Period.from_year_and_code(filing_year, period_code)
     with bundled_indexed_authority().operation() as operation:
+        filing_year = max(
+            year
+            for year in operation.supported_filing_years().years
+            if operation.reachable_authority_grade(modelo_code, filing_year=year, period=period_code)
+            is RegistryAuthorityGrade.FILING
+        )
+        period = Period.from_year_and_code(filing_year, period_code)
         revision_id = str(operation.snapshot(modelo_code, filing_year=filing_year, period=period_code).revision.id)
         work_unit = WorkUnit(
             work_unit_id=derive_work_unit_id(

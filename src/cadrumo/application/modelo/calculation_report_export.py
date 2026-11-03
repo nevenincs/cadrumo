@@ -280,20 +280,19 @@ def build_modelo_calculation_report_for_revision(
     require_work_unit_calculation_screen_current(
         work_unit=work_unit, revision=revision, action="report", operation=operation
     )
-    # The same two-step resolution the review assembly performs: select the
-    # revision metadata first so the snapshot is built at the rung of authority
-    # that revision declares, rather than at the strictest rung a modelo filed
-    # on AEAT's own sede would refuse.
-    selected = operation.revision_for_context(
-        str(work_unit.modelo),
-        filing_year=work_unit.period.filing_year,
-        period=work_unit.period.registry_token,
-    )
+    # The same resolution the review assembly performs: the snapshot is built at
+    # the rung of authority the selected revision reaches for this year, rather
+    # than at the strictest rung a modelo filed on AEAT's own sede, or a year
+    # carried across from another edition, would refuse.
     snapshot = operation.snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.period.filing_year,
         period=work_unit.period.registry_token,
-        grade=selected.effective_authority_grade,
+        grade=operation.reachable_authority_grade(
+            str(work_unit.modelo),
+            filing_year=work_unit.period.filing_year,
+            period=work_unit.period.registry_token,
+        ),
     )
     verification_report_id, verification_outcome = _latest_verification_facts(
         revision,

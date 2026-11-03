@@ -255,7 +255,7 @@ class ModeloCalculationAdvisories(BaseModel):
         boxes = (
             snapshot_printed_boxes(
                 operation,
-                operation.snapshot(
+                operation.reading_snapshot(
                     str(result.work_unit.modelo),
                     filing_year=result.work_unit.filing_year,
                     period=result.work_unit.period.registry_token,

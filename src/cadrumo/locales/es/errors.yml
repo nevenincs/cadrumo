@@ -1518,6 +1518,10 @@ errors:
     filing_year_outside_support_envelope: 'El ejercicio %{filing_year} y el periodo
       %{period} del modelo %{modelo_id} quedan fuera de los ejercicios admitidos (mínimo
       %{floor}, horizonte %{horizon}); revisiones que cubren esa coordenada: %{covering_revision_ids}.'
+    filing_year_projected: El modelo %{modelo_id} aún no tiene edición de %{filing_year}.
+      El periodo %{period} se calcula con las reglas de %{authored_filing_year}, que
+      sirven para calcular y ver el modelo, pero no para comprobarlo para su presentación
+      ni exportarlo como fichero para la AEAT.
     modelo_not_registered: El modelo no está registrado en el registro.
     no_revision_for_period: 'Ninguna revisión del registro cubre el modelo %{modelo_id}
       del ejercicio %{filing_year} y periodo %{period}; revisiones disponibles: %{available_revision_ids}.'

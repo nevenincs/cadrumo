@@ -2478,6 +2478,10 @@ application:
       registry_authority_grade_insufficient: Les regles del model %{modelo} de %{filing_year},
         període %{period}, encara no estan prou contrastades amb les fonts oficials
         per presentar-lo.
+      registry_filing_year_projected: El model %{modelo} de %{filing_year} encara
+        no és a l'aplicació, així que el període %{period} es calcula amb les regles
+        de %{authored_filing_year}. Pots calcular-lo i previsualitzar-lo, però no
+        es pot comprovar per presentar-lo ni exportar com a fitxer per a l'AEAT.
       registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
         de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
       required_maximum_unresolved: La casella [%{box}] encara no es pot comprovar,

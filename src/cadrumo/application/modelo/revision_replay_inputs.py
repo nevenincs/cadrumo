@@ -370,7 +370,7 @@ def _snapshot_for_work_unit(
 ) -> RegistrySnapshot | None:
     """Return the law-determined registry snapshot for ``work_unit``, if loadable."""
     try:
-        return operation.snapshot(
+        return operation.reading_snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,

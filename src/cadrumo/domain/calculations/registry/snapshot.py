@@ -31,7 +31,13 @@ from .revision_context import records_by_id
 from .schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from .schema_base import DateAxis, filing_period_from_scope
 from .schema_catalogues import RegistryCatalogues
-from .schema_references import LegalReference, SourceReference, governed_period_span
+from .schema_references import (
+    LegalReference,
+    SourceReference,
+    TemporalProjectionDirection,
+    governed_period_span,
+    reachable_authority_grade,
+)
 from .schema_surfaces import CasillaContinuidadEvolutionDefinition
 from .snapshot_proof import SnapshotCrossCheckProof, snapshot_proof_key
 from .snapshot_references import collect_snapshot_ref_ids
@@ -330,6 +336,11 @@ def build_validated_snapshot(
     caller asking when a modelo is due is not making a filing assertion, and
     forcing it to would make a scheduling question unanswerable rather than safe.
 
+    A filing year the selected revision does not author is carried across from
+    the nearest authored edition. The two human gates were given to the edition,
+    not to that year, so such a year reaches calculation grade at most and a
+    filing request for it is refused, whatever a publication proof recorded.
+
     ``proof`` is publication's record that this exact request already passed
     every cross-check of this function under the same validator. It replaces
     the cross-check registry and nothing else: selection, temporal resolution,
@@ -365,6 +376,18 @@ def build_validated_snapshot(
         filing_year=filing_year,
         period=period,
         support=catalogues.supported_filing_years,
+    )
+    # Selection data, not a cross-check: a publication proof covers the checks of
+    # the request it recorded, and the year a revision authors is the one fact a
+    # proof recorded for an earlier selection cannot vouch for.
+    _require_authored_year_for_grade(
+        modelo,
+        revision,
+        projection_direction=temporal_resolution.projection_direction,
+        authored_filing_year=temporal_resolution.authored_filing_year,
+        filing_year=filing_year,
+        period=period,
+        requested_grade=grade,
     )
     if proof is not None:
         _require_matching_proof(proof, modelo, revision, filing_year=filing_year, period=period, grade=grade)
@@ -475,6 +498,59 @@ def _check_snapshot_authority_grade(
                 "requested_authority_grade": requested_grade.value,
                 "declared_authority_grade": declared_grade.value,
                 "authority_grade_declared": True,
+            },
+        ),
+    )
+
+
+def _require_authored_year_for_grade(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    projection_direction: TemporalProjectionDirection,
+    authored_filing_year: int,
+    filing_year: int,
+    period: str,
+    requested_grade: RegistryAuthorityGrade,
+) -> None:
+    """Refuse a claim above calculation for a filing year the selected revision does not author.
+
+    The registry carries the nearest authored edition across a year nobody
+    authored, so calculation and preview keep working there. That carried
+    design is not the reviewed design of the requested year, and the two human
+    gates of a filing snapshot were given to the edition, not to the year, so
+    the year reaches calculation grade at most. A revision whose own declaration
+    is already below the request is left to the declared-grade check, which
+    names the revision as the cause.
+    """
+    ladder = tuple(RegistryAuthorityGrade)
+    declared = revision.effective_authority_grade
+    reach = reachable_authority_grade(declared, projection_direction)
+    if ladder.index(reach) >= ladder.index(requested_grade) or ladder.index(declared) < ladder.index(requested_grade):
+        return
+    raise RegistryValidationError(
+        f"modelo {modelo.id} revision {revision.id} authors filing year {authored_filing_year}, not {filing_year}, "
+        f"so the year reaches {reach.value!r} authority at most and cannot satisfy the requested "
+        f"{requested_grade.value!r} snapshot authority.",
+        translated_message="errors.snapshot.filing_year_projected",
+        context={
+            "modelo_id": modelo.id,
+            "filing_year": filing_year,
+            "period": period,
+            "revision_id": revision.id,
+            "authored_filing_year": authored_filing_year,
+        },
+        registry_failure=RegistryFailureClassification(
+            condition=RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
+            facts={
+                "modelo": modelo.id,
+                "revision_id": revision.id,
+                "requested_authority_grade": requested_grade.value,
+                "declared_authority_grade": reach.value,
+                "authority_grade_declared": True,
+                "filing_year": filing_year,
+                "authored_filing_year": authored_filing_year,
+                "projection_direction": projection_direction.value,
             },
         ),
     )

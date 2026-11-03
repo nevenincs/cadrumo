@@ -1411,6 +1411,10 @@ errors:
     filing_year_outside_support_envelope: 'Filing year %{filing_year} period %{period}
       for modelo %{modelo_id} lies outside the supported filing years (floor %{floor},
       horizon %{horizon}); revisions covering that coordinate: %{covering_revision_ids}.'
+    filing_year_projected: Modelo %{modelo_id} has no %{filing_year} edition yet.
+      Period %{period} is worked out with the rules of %{authored_filing_year}, which
+      can be calculated and previewed but not checked for filing or exported as a
+      file for AEAT.
     modelo_not_registered: Model is not registered in the registry.
     no_revision_for_period: 'No registry revision covers modelo %{modelo_id} filing
       year %{filing_year} period %{period}; available revisions: %{available_revision_ids}.'

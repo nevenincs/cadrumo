@@ -242,6 +242,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.registry_authority_grade_insufficient": (
             "application.modelo.work_form.finding_action.await_update"
         ),
+        "application.modelo.findings.registry_filing_year_projected": (
+            "application.modelo.work_form.finding_action.await_update"
+        ),
         "application.modelo.findings.registry_snapshot_unresolved": (
             "application.modelo.work_form.finding_action.retry_or_update"
         ),

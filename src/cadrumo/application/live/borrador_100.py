@@ -295,7 +295,7 @@ def borrador_100_snapshot_refusal(
     if revision_carry_outcome(snapshot.registry_snapshot_ref, operation=operation).refused:
         return Borrador100SnapshotRefusalReason.REGISTRY_COORDINATE_UNCONFIRMED
     try:
-        revision = operation.snapshot(
+        revision = operation.reading_snapshot(
             snapshot.modelo,
             filing_year=snapshot.filing_year,
             period=snapshot.period.registry_token,
@@ -328,7 +328,7 @@ def require_borrador_100_snapshot_coordinates_current(
             "borrador registry coordinate cannot be re-confirmed: "
             f"{snapshot.registry_snapshot_ref.revision_id}: {outcome.detail}"
         )
-    revision = operation.snapshot(
+    revision = operation.reading_snapshot(
         snapshot.modelo,
         filing_year=snapshot.filing_year,
         period=snapshot.period.registry_token,
@@ -534,7 +534,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
                     operation=pinned,
                     printed_observations=printed_observations,
                 )
-        selected = operation.snapshot(
+        selected = operation.reading_snapshot(
             Modelo("100").value,
             filing_year=filing_year,
             period=period.registry_token,

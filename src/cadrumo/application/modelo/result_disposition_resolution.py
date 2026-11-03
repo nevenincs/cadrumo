@@ -390,7 +390,7 @@ def _result_disposition_values_for_revision(
     # assert_snapshot_matches_work_unit_revision so the two resolution sites
     # cannot drift in wording or refusal type.
     try:
-        snapshot = operation.snapshot(
+        snapshot = operation.reading_snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=period.registry_token,

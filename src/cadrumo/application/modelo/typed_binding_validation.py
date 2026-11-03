@@ -188,7 +188,7 @@ def resolve_typed_bindings(
 ) -> ModeloBindingsResolveTypedProjection:
     """Build the typed preview from the retained authority operation."""
     period = payload.period.to_period()
-    snapshot = operation.snapshot(
+    snapshot = operation.reading_snapshot(
         payload.modelo, filing_year=period.filing_year, period=period.registry_token, on=payload.as_of
     )
     declarations = revision_bindings_by_id(snapshot.revision)

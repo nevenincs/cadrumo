@@ -150,10 +150,10 @@ def modelo_form_snapshot(
     actually claims, as the work review does; the filing gates ask for filing
     grade where they apply.
     """
-    selected = law_selected_revision_for_work_target(
+    law_selected_revision_for_work_target(
         modelo=str(modelo), filing_year=filing_year, period=period, stored_revision_id=revision_id, operation=operation
     )
-    grade = operation.revision(str(modelo), selected).effective_authority_grade
+    grade = operation.reachable_authority_grade(str(modelo), filing_year=filing_year, period=period.registry_token)
     return operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token, grade=grade)
 
 

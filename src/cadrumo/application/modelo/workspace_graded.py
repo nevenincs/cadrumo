@@ -817,7 +817,7 @@ def _assemble_graded_projection(
         page_size=page_size,
     )
 
-    declared_grade = snapshot.revision.effective_authority_grade
+    declared_grade = snapshot.effective_authority_grade
     projection = ModeloWorkspaceProjectionV1(
         admission=ModeloWorkspaceGradedSnapshotScopeV1(
             scope=ModeloWorkspaceSnapshotScopeV1(

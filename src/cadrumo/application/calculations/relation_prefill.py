@@ -848,7 +848,7 @@ def _snapshot_for_context(
 ) -> RegistrySnapshot:
     if registry_snapshot is not None:
         return registry_snapshot
-    return operation.snapshot(
+    return operation.reading_snapshot(
         context.modelo,
         filing_year=context.filing_year,
         period=context.period.registry_token,
