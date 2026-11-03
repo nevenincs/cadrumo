@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd71dcf477a820bc566870bd21dcf36a91c995bc3124cf8de1c2b0ba5ccb0291'
+body_hash: 'sha256:75c87e4894859fdaa5119121a33be9536f28398f77e91c25e3ba0ad78860e96f'
 related:
   - "[[2026-09-23-tuimodelo-export-paths-reference]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
@@ -155,3 +155,7 @@ ADR D section 5 hypothesises reporting an attestation contradicted by a ledger i
 
 ### verification pending | note | live Modelo 100 credit tests cannot run on the shared tree
 `test_modelo_100_retencion_soportada_credits_live.py` and `test_retencion_soportada_absence_m100.py` fail at construction with `CalculationActionPorts.__init__() missing ... 'credit_resolution_reader'`. The uncommitted P04 edits in `src/cadrumo/application/modelo/calculation_action_ports.py` add that argument before its callers are updated. Not caused by P03 or by the fixes above. Re-run both files when the P04 writer commits.
+
+### P03 findings ruled and resolved 2026-11-03 | medium | the three open P03 findings follow the operator's rulings
+The operator ruled on each open item. The `PROFILE_FIELD` origin is admitted by the ADR amendment of 2026-11-03. The certificate fingerprint is checked against attachment custody by the write port, and the import takes the certificate file (`01a28ab372`). A correction against the same certificate overwrites the row and keeps the lineage (`18aa70a39f`). Recommendations kept open: the desktop files named in the amendment still send a typed fingerprint and know none of the new refusal reasons; the live Modelo 100 credit tests were re-run against the new custody check and passed.
+
