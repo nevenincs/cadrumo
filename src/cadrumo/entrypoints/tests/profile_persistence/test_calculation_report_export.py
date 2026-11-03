@@ -76,8 +76,9 @@ from cadrumo.core.calculation_report_format import CalculationReportDocumentForm
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.grade_cap_support import recapped_operation
 from cadrumo.domain.filing.software_identity import AeatSoftwareIdentityGrade
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -200,13 +201,14 @@ def _report(
     revision: CalculationRevision,
     *,
     report_language: OutputLanguage = OutputLanguage.ES,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloCalculationReport:
     return build_modelo_calculation_report_for_revision(
         revision.calculation_revision_id,
         active_bucket_id=work_unit.bucket_id,
         export_ports=_export_ports(repos, work_unit),
         signing_keypair=build_review_package_signing_keypair_capability(bucket_id=work_unit.bucket_id),
-        operation=published_authority_operation(),
+        operation=published_authority_operation() if operation is None else operation,
         report_language=report_language,
         exported_at=_EXPORTED_AT,
     )
@@ -310,6 +312,13 @@ def test_a_filed_revision_without_a_screen_stamp_keeps_its_report(repos: Repos) 
 # when filed before a capped binding's figure was withheld.
 _FILED_CAPPED_FIGURE = Decimal("510.00")
 _CAPPED_BOX = "06"
+# The published registry caps no binding, so the filed-before-cap screen is exercised against an
+# operation whose Modelo 130 snapshots declare the cap in memory on the binding that feeds casilla 06.
+_CAPPED_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
+
+
+def _capping_operation() -> PinnedAuthorityOperation:
+    return recapped_operation(published_authority_operation(), "130", _CAPPED_BINDING)
 
 
 def _filed_with_box(repos: Repos, *, value: Decimal, stamped: bool) -> tuple[WorkUnit, CalculationRevision]:
@@ -345,11 +354,13 @@ def _filed_with_box(repos: Repos, *, value: Decimal, stamped: bool) -> tuple[Wor
     return work_unit, calculation_repo.load().revisions[changed.calculation_revision_id]
 
 
-def _review_finding_reasons(work_unit: WorkUnit, revision: CalculationRevision) -> set[str]:
+def _review_finding_reasons(
+    work_unit: WorkUnit, revision: CalculationRevision, operation: PinnedAuthorityOperation
+) -> set[str]:
     snapshot = load_calculation_review_snapshot(
         revision.calculation_revision_id,
         profile_id=UUID(work_unit.bucket_id),
-        operation=published_authority_operation(),
+        operation=operation,
     )
     return {
         item.code.removeprefix(CALCULATION_NOTE_FINDING_PREFIX)
@@ -363,7 +374,7 @@ def test_a_revision_filed_before_screens_with_a_capped_figure_gets_no_signed_rep
     work_unit, revision = _filed_with_box(repos, value=_FILED_CAPPED_FIGURE, stamped=False)
 
     with pytest.raises(ModeloCalculationBlockedError) as refused:
-        _report(repos, work_unit, revision)
+        _report(repos, work_unit, revision, operation=_capping_operation())
 
     context = refused.value.context or {}
     assert context["reason"] == FILED_BEFORE_GRADE_CAP_REASON
@@ -382,13 +393,15 @@ def test_a_revision_filed_before_screens_with_a_proven_zero_or_a_stamp_keeps_its
 ) -> None:
     work_unit, revision = _filed_with_box(repos, value=value, stamped=stamped)
 
-    assert _report(repos, work_unit, revision).header.calculation_revision_id == revision.calculation_revision_id
+    report = _report(repos, work_unit, revision, operation=_capping_operation())
+
+    assert report.header.calculation_revision_id == revision.calculation_revision_id
 
 
 def test_the_review_workbook_flags_a_revision_filed_before_screens_with_a_capped_figure(repos: Repos) -> None:
     work_unit, revision = _filed_with_box(repos, value=_FILED_CAPPED_FIGURE, stamped=False)
 
-    assert FILED_BEFORE_GRADE_CAP_REASON in _review_finding_reasons(work_unit, revision)
+    assert FILED_BEFORE_GRADE_CAP_REASON in _review_finding_reasons(work_unit, revision, _capping_operation())
 
 
 @_ALLOWED_FILED
@@ -397,7 +410,7 @@ def test_the_review_workbook_does_not_flag_a_proven_zero_or_a_stamped_filed_revi
 ) -> None:
     work_unit, revision = _filed_with_box(repos, value=value, stamped=stamped)
 
-    assert FILED_BEFORE_GRADE_CAP_REASON not in _review_finding_reasons(work_unit, revision)
+    assert FILED_BEFORE_GRADE_CAP_REASON not in _review_finding_reasons(work_unit, revision, _capping_operation())
 
 
 def test_report_rows_follow_the_registry_order_of_the_pinned_snapshot(repos: Repos) -> None:
