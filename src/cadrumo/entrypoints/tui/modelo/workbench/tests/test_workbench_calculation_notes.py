@@ -215,7 +215,7 @@ async def test_a_declaration_opened_afresh_says_to_calculate_again_to_see_the_no
 @pytest.mark.asyncio
 async def test_a_note_opened_in_place_reads_what_its_calculation_worded_after_its_sentence() -> None:
     """The catalogue's sentence lists the note; opening it reads the account its resolver worded for the filer."""
-    written = "Liquidation 1T declared deductible input VAT, but the ledger holds none for it."
+    written = "Liquidation 1T declared deductible input IVA, but the ledger holds none for it."
     note = ModeloFormCalculationNote(reason="source_issue", attention=ModeloFormAttention.MISSING, message=written)
     form = synthetic_form(needs_input=False).model_copy(update={"calculation_notes": (note,)})
     with override_settings(cadrumo_output_language="en"):

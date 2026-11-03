@@ -240,7 +240,7 @@ def _without_printed_country_prefix(tax_id: str, *, operation: PinnedAuthorityOp
     """Return the issuer's identifier without the ``ES`` a document may print before it.
 
     The profile holds the bare NIF while an e-invoice's seller block commonly
-    prints the VAT form. The Spanish identifier owner knows that prefix, so the
+    prints the form with its country prefix. The Spanish identifier owner knows that prefix, so the
     printed form is canonicalised through it; an identifier it does not accept
     keeps its printed form and is compared as it stands, never loosened.
     """

@@ -242,7 +242,7 @@ def test_each_note_carries_the_account_its_resolver_worded_in_the_forms_language
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The message a calculate result carries for a diagnostic is the one its note on the form carries."""
-    written = "Liquidation 1T declared deductible input VAT, but the ledger holds none for it."
+    written = "Liquidation 1T declared deductible input IVA, but the ledger holds none for it."
 
     (note,) = _form(operation, diagnostics=(_worded(written),)).calculation_notes
 
@@ -264,7 +264,7 @@ def test_two_accounts_of_one_reason_are_two_notes_and_one_account_twice_is_one(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Without facts of its own, a note is told apart by what its resolver wrote, so neither account is lost."""
-    first = "The gross deductible input VAT of the earlier liquidations is negative."
+    first = "The gross deductible input IVA of the earlier liquidations is negative."
     second = "The earlier liquidations this regularisation reads are missing."
 
     def issue(message: str) -> CalculationSourceDiagnostic:

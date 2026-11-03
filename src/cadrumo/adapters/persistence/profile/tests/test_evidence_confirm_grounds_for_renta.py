@@ -270,7 +270,7 @@ def test_an_issued_document_printing_another_issuer_is_still_refused(
     tmp_path: Path,
     invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
-    """Stripping the VAT prefix is not a way past the check: a different NIF stays another issuer."""
+    """Stripping the country prefix is not a way past the check: a different NIF stays another issuer."""
     source = tmp_path / "facturae_32_retencion_suplidos_invoice.xml"
     printed = (_EVIDENCE_CORPUS / source.name).read_text(encoding="utf-8")
     source.write_text(printed.replace(f">ES{_FIXTURE_SELLER_TAX_ID}<", ">ESB12345674<", 1), encoding="utf-8")

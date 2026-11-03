@@ -6,8 +6,8 @@ Worked by hand, in the Union regime against France's published 20 and 10:
   general row of 900,00 and 180,00, because a correction takes off its invoice's row.
 * France also publishes a reduced 5,5, so 100,00 + 5,50 is a row of its own at 5,5.
 
-Each second reduced rate comes from the table of EPRS "VAT rates", 1 July 2025, typed
-here by hand so it does not repeat the registry.
+Each second reduced rate comes from the EPRS table of the rates in force on 1 July 2025,
+typed here by hand so it does not repeat the registry.
 """
 
 from datetime import date, timedelta

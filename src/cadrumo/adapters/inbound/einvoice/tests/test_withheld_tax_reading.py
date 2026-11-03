@@ -77,7 +77,7 @@ def _ubl_subtotal(scheme: str | None, *, percent: str, base: str, amount: str) -
     )
 
 
-_UBL_VAT_TOTAL = (
+_UBL_IVA_TOTAL = (
     '<cac:TaxTotal><cbc:TaxAmount currencyID="EUR">210.00</cbc:TaxAmount>'
     + _ubl_subtotal("VAT", percent="21.00", base="1000.00", amount="210.00")
     + "</cac:TaxTotal>"
@@ -247,7 +247,7 @@ def test_a_stated_zero_is_zero_and_an_absent_figure_stays_absent() -> None:
 def test_ubl_reads_a_withholding_whose_scheme_names_irpf() -> None:
     parsed = parse_einvoice_document(
         _ubl(
-            _UBL_VAT_TOTAL,
+            _UBL_IVA_TOTAL,
             _ubl_withholding("150.00", _ubl_subtotal("IRPF", percent="15.00", base="1000.00", amount="150.00")),
         ),
     )
@@ -263,7 +263,7 @@ def test_ubl_reads_a_withholding_whose_scheme_names_irpf() -> None:
 def test_ubl_leaves_a_withholding_it_cannot_name_unread(scheme: str | None) -> None:
     parsed = parse_einvoice_document(
         _ubl(
-            _UBL_VAT_TOTAL,
+            _UBL_IVA_TOTAL,
             _ubl_withholding("150.00", _ubl_subtotal(scheme, percent="15.00", base="1000.00", amount="150.00")),
         ),
     )
@@ -280,7 +280,7 @@ def test_ubl_never_takes_irpf_in_a_tax_total_for_iva() -> None:
         + "</cac:TaxTotal>"
     )
 
-    parsed = parse_einvoice_document(_ubl(_UBL_VAT_TOTAL, misplaced))
+    parsed = parse_einvoice_document(_ubl(_UBL_IVA_TOTAL, misplaced))
 
     assert parsed.iva_amount == Decimal("210.00")
     assert parsed.iva_breakdown == [(Decimal("21.00"), Decimal("1000.00"), Decimal("210.00"))]

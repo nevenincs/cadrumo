@@ -224,7 +224,7 @@ def test_a_calculation_note_without_facts_says_its_kind_then_what_its_resolver_w
 ) -> None:
     """The catalogue sentence stays first in the form's language; the resolver's own account follows as written."""
     say = _say(language)
-    written = "Liquidation 1T declared deductible input VAT, but the ledger holds none for it."
+    written = "Liquidation 1T declared deductible input IVA, but the ledger holds none for it."
     note = ModeloFormCalculationNote(
         reason="source_issue", attention=note_attention("source_issue", box=None), message=written
     )

@@ -26,9 +26,12 @@ _EXTERNAL_IDENTITY_TOKENS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat", "vatid"}),
     # A word printed on a foreign-language invoice, not a Cadrumo identifier.
     "application/ledger/invoice_label_vocabulary.py": frozenset({"vat"}),
+    # The tax-scheme code that EN 16931 e-invoices (UBL and CII) print for IVA.
+    "adapters/inbound/einvoice/tests/test_withheld_tax_reading.py": frozenset({"VAT"}),
 }
 _EXTERNAL_VAT_PROSE_VALUES = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat"}),
+    "adapters/inbound/einvoice/tests/test_withheld_tax_reading.py": frozenset({"VAT"}),
     # Label alternations matched against text printed on foreign-language invoices.
     "application/ledger/invoice_label_vocabulary.py": frozenset(
         {
@@ -53,7 +56,10 @@ _EXTERNAL_VAT_PROSE_VALUES = {
         {
             "(^|[._:/-])vat([._:/-]|$)",
             "from 1 july 2025, the standard rate of vat in estonia is 24% instead of 22%",
+            "taxed at 13% vat rate instead of the current 9%",
             "reduced vat rate 13,5%",
+            "reduced vat rate 10%",
+            "basic vat rate (25,5%)",
         },
     ),
     # The rendered English operator label for the Modelo 349 operator identifier.
@@ -67,6 +73,8 @@ _EXTERNAL_VAT_PROSE_VALUES = {
 }
 _EXTERNAL_VAT_PROSE_FRAGMENTS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"``VAT``"}),
+    # The scheme code a UBL invoice fixture prints inside its tax category.
+    "adapters/inbound/einvoice/tests/test_ubl_document_level_tax_total.py": frozenset({"<cbc:ID>VAT</cbc:ID>"}),
     # Labels printed on the foreign-language invoice fixtures the reader must parse.
     "application/ledger/tests/test_invoice_label_reader.py": frozenset({"VAT ID", "VAT 0%"}),
 }
