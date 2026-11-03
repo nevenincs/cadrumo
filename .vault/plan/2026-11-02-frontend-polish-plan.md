@@ -21,7 +21,7 @@ related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:ab283ba09f8cd5a20164ba6081b1aad5aa4eb19539bf0d7cf2b009b915da3814'
+body_hash: 'sha256:70168b4645783eb51671d5080797621c71054afbb8aec8204fcb520b4b4b9706'
 ---
 
 # `frontend-polish` plan
@@ -84,7 +84,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S38` - Recover failed log subscriptions in place with current-owner isolation; `native/desktop/frontend/src/shell/useHostLogs.ts, native/desktop/frontend/src/components/RecordList.tsx, native/desktop/frontend/src/components/HostRecordList.tsx, native/desktop/frontend/src/dev/, native/desktop/frontend/tests/scenarios/logs.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [x] `S39` - Expose served IVA wallet balances and explicit managed operations with profile-scoped outcome holds; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/scripts/modelo_fixtures.py, native/desktop/frontend/tests/scenarios/modelo*.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [x] `S40` - Show identical filing block explanations once while retaining action-specific refusal and accessible associations; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
-- [ ] `S41` - Reduce repeated locale-key payload in bundled chrome while preserving canonical catalogue semantics; `native/desktop/frontend/vite.config.ts, native/desktop/frontend/dev/chrome-catalogue.ts, native/desktop/frontend/tests/live/chrome-catalogue.unit.ts`.
+- [x] `S41` - Reduce repeated locale-key payload in bundled chrome while preserving canonical catalogue semantics; `native/desktop/frontend/vite.config.ts, native/desktop/frontend/dev/chrome-catalogue.ts, native/desktop/frontend/tests/live/chrome-catalogue.unit.ts`.
 
 ## Parallelization
 

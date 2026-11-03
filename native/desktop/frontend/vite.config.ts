@@ -1,13 +1,14 @@
 import { buildPath, requireBuildOutput } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
 import { docsFixture } from "./dev/docs-fixture/plugin.ts";
+import { chromeCatalogueModule } from "./dev/chrome-catalogue.ts";
 import { productBoundary } from "./dev/product-boundary.ts";
 import {
   testRunProductBuild,
   testRunPorts,
   testRunScenariosBuild,
 } from "./scripts/test-run-directory.mjs";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
@@ -23,9 +24,10 @@ const docsStatic = fileURLToPath(
 // The shell's generated inputs, by the names the shell imports them
 // under. They are outputs of the build directory in use, so one build's are
 // never another's and nothing generated is written into the source tree.
+const CHROME_FILE = "chrome-strings.json";
 const GENERATED_INPUTS: Record<string, string> = {
   "virtual:operational-settings": "operational-settings.ts",
-  "virtual:desktop-strings": "chrome-strings.json",
+  "virtual:desktop-strings": CHROME_FILE,
   "virtual:desktop-palette.css": "palette.css",
   "virtual:desktop-provider-icons": "provider-icons.json",
   "virtual:desktop-navigation": "navigation.json",
@@ -153,9 +155,18 @@ export default defineConfig(({ command, mode }) => {
             this.error(
               `${name} has not been generated in ${generated}. Build the desktop-frontend-generated target, or run just dev.`,
             );
+          if (id === "virtual:desktop-strings" && command === "build")
+            return "\0desktop-strings";
+          // Development keeps the file's normal transformation and HMR.
           // The file itself: it is then watched and transformed as any
           // stylesheet or JSON module is.
           return file;
+        },
+        load(id) {
+          if (id !== "\0desktop-strings") return;
+          const file = resolve(generated, CHROME_FILE);
+          this.addWatchFile(file);
+          return chromeCatalogueModule(JSON.parse(readFileSync(file, "utf8")));
         },
       },
       {

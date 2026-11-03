@@ -290,7 +290,16 @@ The final focused run `20261103T001331Z-28880` passes all 14 cases: nine wallet 
 
 Terra's final bounded integrated review finds no blocker against the wallet, aggregation, carry and desktop authority decisions. These browser scenarios use a synthetic host; canonical producers exercise the actual operation executors, but this is not live native-wallet or AEAT verification. Backend refusal remains authoritative for unsupported requests, and an unknown operation without an identifier remains unresolved. S39 is ready to close; overall Modelo and integrated frontend coverage remain separate open work.
 
+### S41 catalogue payload review, 2026-11-03
+
+PASS for the bounded encoding change. The build shares the four catalogues' identical ordered key vector and reconstructs the existing synchronous locale maps. Canonical locale JSON, translation ownership, fallback/token behavior and the development file/HMR route remain unchanged. Malformed values or differently ordered locale keys stop the build. The generated file remains a watched input; no generated source or translation is hand-maintained.
+
+The three direct unit cases pass: exact canonical catalogue round-trip and order; special own keys, empty values, placeholders, Unicode and script-delimiter escaping; and refusal of malformed/mismatched catalogues. TypeScript, scoped ESLint/Prettier, and the product build passed. The four-language built-scenario cases subsequently passed, including the new wallet labels. Terra's bounded review found no blocker and classified this as build encoding under the accepted localization decision, not a new catalogue or loading authority.
+
+Within the same pre-S39 product-build cohort, Node gzip totals for all emitted JavaScript fell from 1,063,818 to 951,984 bytes: 111,834 bytes (10.5%) removed without removing strings. CSS remained 22,366 bytes. The retained product artifact confirms 704,131 bytes for the main chunk, 247,115 for the catalogue-bearing chunk and 738 for startup. This is emitted-payload evidence, not a claim about the later wallet cohort's total bytes or native startup speed. S16 remains open: the overall JavaScript/CSS budgets still fail, the corrected calendar timer needs remeasurement, and further main-chunk reductions require actual module attribution rather than guessing from xterm/WebGL identifiers.
+
 ## Recommendations
+
 
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

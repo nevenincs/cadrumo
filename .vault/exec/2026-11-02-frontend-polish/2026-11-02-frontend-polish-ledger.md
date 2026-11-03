@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dc24eea5b0ea2fdb85fe4efce6821b729ed9710b39436f5babff081c2f5bf1c1'
+body_hash: 'sha256:cd5ee2a8e0c9f5edaa6b2a32716e5ccabc6d4ee8b5ab582e89f19e9e8927d469'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -261,6 +261,14 @@ related:
 - `S39` `verify:` `14 focused browser cases 20261103T001331Z-28880` -> `pass`
 - `S39` `verify:` `24 declaration workspace profile cases 20261103T001600Z-29224` -> `pass`
 - `S39` `verify:` `Terra integrated review and visual inspection` -> `pass`
+- `S41` `M` `native/desktop/frontend/vite.config.ts`
+- `S41` `A` `native/desktop/frontend/dev/chrome-catalogue.ts`
+- `S41` `A` `native/desktop/frontend/tests/live/chrome-catalogue.unit.ts`
+- `S41` `verify:` `three catalogue unit cases` -> `pass`
+- `S41` `verify:` `TypeScript scoped ESLint Prettier product build` -> `pass`
+- `S41` `verify:` `four-language built-scenario regression` -> `pass`
+- `S41` `verify:` `same-cohort gzip payload reduction111834bytes` -> `pass`
+- `S41` `verify:` `Terra bounded encoding review` -> `pass`
 
 ## Notes
 
