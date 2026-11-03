@@ -334,6 +334,8 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="economic activity"),
+            # Advertising services (IAE group 844) is an activity and not an urban rental.
+            UserProfileFact(path="activities.iae_epigraph", value="844"),
             *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo,actividad_economica"),
             UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
