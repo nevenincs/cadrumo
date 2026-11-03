@@ -684,6 +684,20 @@
         "path": []
       }
     },
+    "modelo.work.accept_disagreement": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "calculation_revision_id"
+        ]
+      }
+    },
     "modelo.work.amend": {
       "bucket_field": false,
       "file_fields": {},
@@ -773,6 +787,20 @@
       "subject": {
         "kind": "profile",
         "path": []
+      }
+    },
+    "modelo.work.disagreements": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "calculation_revision_id"
+        ]
       }
     },
     "modelo.work.discard": {
@@ -973,6 +1001,20 @@
       "subject": {
         "kind": "profile",
         "path": []
+      }
+    },
+    "modelo.work.revoke_disagreement": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "calculation_revision_id"
+        ]
       }
     },
     "modelo.work.verify": {

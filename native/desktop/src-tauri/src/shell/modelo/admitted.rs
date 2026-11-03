@@ -76,7 +76,7 @@ const SESSION: bool = false;
 /// operand, never in a plain payload.
 pub(super) const FINANCIAL: [&str; 2] = ["modelo.edit.apply", "modelo.edit.preflight"];
 
-const ADMITTED: [(&str, Kind, Subject, bool); 78] = [
+const ADMITTED: [(&str, Kind, Subject, bool); 81] = [
     ("modelo.036.query", Read, Profile, NAMED),
     ("modelo.036.read", Read, Profile, NAMED),
     ("modelo.036.record", Write, Profile, NAMED),
@@ -150,6 +150,7 @@ const ADMITTED: [(&str, Kind, Subject, bool); 78] = [
     ("modelo.spreadsheet.export", Write, Profile, NAMED),
     ("modelo.verification_report.list", Read, Profile, NAMED),
     ("modelo.verification_report.view", Read, Profile, NAMED),
+    ("modelo.work.accept_disagreement", Write, CALCULATION, NAMED),
     (
         "modelo.work.amend",
         Write,
@@ -162,6 +163,7 @@ const ADMITTED: [(&str, Kind, Subject, bool); 78] = [
     ("modelo.work.compare_taxation", Read, Profile, NAMED),
     ("modelo.work.create", Write, Profile, NAMED),
     ("modelo.work.dependencies", Read, Profile, NAMED),
+    ("modelo.work.disagreements", Read, CALCULATION, NAMED),
     ("modelo.work.discard", Write, BASELINE_WORK_UNIT, SESSION),
     (
         "modelo.work.file",
@@ -192,6 +194,7 @@ const ADMITTED: [(&str, Kind, Subject, bool); 78] = [
     ("modelo.work.revision", Read, Profile, NAMED),
     ("modelo.work.revision_snapshot", Read, CALCULATION, NAMED),
     ("modelo.work.revisions", Read, Profile, NAMED),
+    ("modelo.work.revoke_disagreement", Write, CALCULATION, NAMED),
     ("modelo.work.verify", Write, CALCULATION, SESSION),
     (
         "modelo.work.wizard_attempt",

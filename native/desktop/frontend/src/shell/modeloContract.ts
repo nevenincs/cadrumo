@@ -401,6 +401,8 @@ export type CalculationNoteSentence =
   | "retencion_soportada_absence_contradicted"
   | "credit_source_disagreement"
   | "credit_cross_check_absent"
+  | "credit_resolution_stale"
+  | "credit_resolution_applied"
   | "household_rows_incomplete";
 
 /**
@@ -491,6 +493,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "advisory_binding_value"
     | "credit_source_disagreement"
     | "credit_cross_check_absent"
+    | "credit_resolution_stale"
+    | "credit_resolution_applied"
     | "m349_clave_inferred_from_category"
     | "unconverted_foreign_currency"
     | "unclassified_declarant_role_fact"
@@ -611,18 +615,22 @@ export type CalculationSourceDiagnosticSnapshot = {
  * carries the whole `SourceDisagreementFact` in `disagreement` and withholds
  * filing. `credit_cross_check_absent` is a declared cross-check source with
  * nothing to compare, which reads "not cross-checked", never agreement, and
- * withholds nothing. `fact` states such a note's own row, element, interval
- * and amount. `binding_source` is `None` only where the condition names no
- * binding source kind. outcome. `household_rows_incomplete` is a household
- * group whose stated count is larger than the rows the profile records: the
- * recorded rows are used and the group is not proven complete; it withholds
- * nothing. `fact` states such a note's own row, element, interval and amount.
- * `binding_source` is `None` only where the condition names no binding source
- * kind. `precedence_tier_divergence` is a filed figure for which a higher
- * source tier replaced a different value a lower tier held; `disagreement`
- * states every tier's value and which one the calculation used, and it
- * withholds filing until the sources agree. `disagreement` is carried by
- * exactly the reasons in `DISAGREEMENT_REASONS`.
+ * withholds nothing. `credit_resolution_stale` is a figure the operator
+ * accepted that is now disputed in another way than the one accepted: the
+ * resolution no longer covers it, the disagreement it restates still withholds
+ * filing, and the note itself withholds nothing. `fact` states such a note's
+ * own row, element, interval and amount. `binding_source` is `None` only where
+ * the condition names no binding source kind. outcome.
+ * `household_rows_incomplete` is a household group whose stated count is
+ * larger than the rows the profile records: the recorded rows are used and the
+ * group is not proven complete; it withholds nothing. `fact` states such a
+ * note's own row, element, interval and amount. `binding_source` is `None`
+ * only where the condition names no binding source kind.
+ * `precedence_tier_divergence` is a filed figure for which a higher source
+ * tier replaced a different value a lower tier held; `disagreement` states
+ * every tier's value and which one the calculation used, and it withholds
+ * filing until the sources agree. `disagreement` is carried by exactly the
+ * reasons in `DISAGREEMENT_REASONS`.
  */
 export type CalculationSourceIssue = {
   reason:
@@ -654,6 +662,7 @@ export type CalculationSourceIssue = {
     | "advisory_binding_value"
     | "credit_source_disagreement"
     | "credit_cross_check_absent"
+    | "credit_resolution_stale"
     | "precedence_tier_divergence";
   binding_source: BindingSourceKind | null;
   message: string;
@@ -910,6 +919,111 @@ export type CoverageAdviceReason =
   | "applicable_window_missing"
   | "applicability_undetermined"
   | "registry_unmodeled";
+
+/**
+ * Accept the value the calculation used for one disagreement of the revision,
+ * by its finding id.
+ *
+ * The acceptance is recorded under the label of the session that admitted the
+ * execution; no request field names who acted, because nothing would
+ * authenticate it.
+ */
+export type CreditResolutionAcceptRequest = {
+  profile_id: string;
+  calculation_revision_id: CalculationRevisionId;
+  finding_id: string;
+  reason: string;
+};
+
+/**
+ * Every resolution one declaration holds, active and revoked.
+ */
+export type CreditResolutionListProjection = {
+  profile_id: string;
+  calculation_revision_id: CalculationRevisionId;
+  resolutions: CreditResolutionRowProjection[];
+};
+
+/**
+ * Read every resolution the revision's declaration holds, active or revoked.
+ */
+export type CreditResolutionListRequest = {
+  profile_id: string;
+  calculation_revision_id: CalculationRevisionId;
+};
+
+/**
+ * An accepted or revoked resolution, or the typed refusal that stored nothing.
+ */
+export type CreditResolutionMutationProjection = {
+  outcome: "accepted" | "revoked" | "refused";
+  profile_id: string;
+  calculation_revision_id: CalculationRevisionId;
+  resolution: CreditResolutionRowProjection | null;
+  refusal: CreditResolutionRefusalProjection | null;
+};
+
+export type CreditResolutionOperationRefusalReason =
+  | "already_resolved"
+  | "not_resolved"
+  | "unknown_finding"
+  | "calculation_not_current"
+  | "stale_revision";
+
+/**
+ * Safe, closed context of a refusal made before anything was stored.
+ */
+export type CreditResolutionRefusalProjection = {
+  code:
+    "REFUSED_CREDIT_RESOLUTION" | "REFUSED_CREDIT_RESOLUTION_REVISION_CONFLICT";
+  reason: CreditResolutionOperationRefusalReason;
+  finding_id: string;
+};
+
+/**
+ * Take back the active resolution of one finding, guarded by the revision it
+ * is stored at.
+ */
+export type CreditResolutionRevokeRequest = {
+  profile_id: string;
+  calculation_revision_id: CalculationRevisionId;
+  finding_id: string;
+  expected_revision_id: string;
+};
+
+/**
+ * One stored resolution beside the revision it is stored at, with the sources
+ * it answers.
+ */
+export type CreditResolutionRowProjection = {
+  finding_id: string;
+  key: string;
+  reached_casillas: CasillaId[];
+  sources: CreditResolutionSourceProjection[];
+  accepted_role: SourceDisagreementRole;
+  reason: string;
+  state: CreditResolutionState;
+  resolved_at: string;
+  resolved_by_session: string;
+  revoked_at: string | null;
+  revoked_by_session: string | null;
+  revision_id: string;
+  applies: boolean;
+};
+
+/**
+ * One source of a disagreement and what it stated, as the operator sees it.
+ */
+export type CreditResolutionSourceProjection = {
+  role: SourceDisagreementRole;
+  source_family: string;
+  value: string;
+};
+
+/**
+ * Whether a resolution currently lifts the hold on its figure.
+ */
+export type CreditResolutionState = "active" | "revoked";
 
 /**
  * Blocking reason codes for a cross-period clean-state verdict.
@@ -4405,6 +4519,8 @@ export type ModeloFormBlocker = {
  * own answer: the gate refuses the file and the recording while such a note
  * stands, whatever its attention says, so the editor withholds them too
  * (`blocking_calculation_notes`), as it does for a note at the blocking level.
+ * `finding_id` names the source disagreement the note states, the id an
+ * operator answers with a resolution; it is `None` for every other note.
  * `fact` is what this note says about its own subject, when its reason alone
  * does not. `message` is the calculation's own account of this note, as its
  * resolver worded it for the filer and the calculate result carries it, in the
@@ -4417,6 +4533,7 @@ export type ModeloFormCalculationNote = {
   casilla_id: CasillaId | null;
   box: string | null;
   withholds_filing: boolean;
+  finding_id: string | null;
   fact: CalculationNoteFact | null;
   element_names: [string, string][];
   message: string | null;
@@ -8636,6 +8753,7 @@ export const MODELO_DEFINITIONS = [
   "modelo.spreadsheet.export",
   "modelo.verification_report.list",
   "modelo.verification_report.view",
+  "modelo.work.accept_disagreement",
   "modelo.work.amend",
   "modelo.work.amendment_context",
   "modelo.work.calculate",
@@ -8643,6 +8761,7 @@ export const MODELO_DEFINITIONS = [
   "modelo.work.compare_taxation",
   "modelo.work.create",
   "modelo.work.dependencies",
+  "modelo.work.disagreements",
   "modelo.work.discard",
   "modelo.work.file",
   "modelo.work.filing_record",
@@ -8658,6 +8777,7 @@ export const MODELO_DEFINITIONS = [
   "modelo.work.revision",
   "modelo.work.revision_snapshot",
   "modelo.work.revisions",
+  "modelo.work.revoke_disagreement",
   "modelo.work.verify",
   "modelo.work.wizard_attempt",
   "modelo.work.wizard_context",
@@ -8676,9 +8796,12 @@ export const MODELO_EDIT_DEFINITIONS = [
 export const MODELO_STORED_SUBJECT_DEFINITIONS = [
   "modelo.export",
   "modelo.review_package.build",
+  "modelo.work.accept_disagreement",
   "modelo.work.amend",
+  "modelo.work.disagreements",
   "modelo.work.file",
   "modelo.work.revision_snapshot",
+  "modelo.work.revoke_disagreement",
   "modelo.work.verify",
 ] as const;
 
@@ -8891,6 +9014,10 @@ export type ModeloContracts = {
     request: ModeloVerificationReportViewRequest;
     result: ModeloVerificationReportViewProjection;
   };
+  "modelo.work.accept_disagreement": {
+    request: CreditResolutionAcceptRequest;
+    result: CreditResolutionMutationProjection;
+  };
   "modelo.work.amend": {
     request: ModeloWorkAmendRequest;
     result: ModeloWorkAmendPublicResultV2;
@@ -8918,6 +9045,10 @@ export type ModeloContracts = {
   "modelo.work.dependencies": {
     request: ModeloDependencyRequest;
     result: ModeloDependencyProjection;
+  };
+  "modelo.work.disagreements": {
+    request: CreditResolutionListRequest;
+    result: CreditResolutionListProjection;
   };
   "modelo.work.discard": {
     request: ModeloWorkDiscardRequest;
@@ -8978,6 +9109,10 @@ export type ModeloContracts = {
   "modelo.work.revisions": {
     request: ModeloWorkRevisionsRequest;
     result: ModeloWorkRevisionsProjection;
+  };
+  "modelo.work.revoke_disagreement": {
+    request: CreditResolutionRevokeRequest;
+    result: CreditResolutionMutationProjection;
   };
   "modelo.work.verify": {
     request: ModeloWorkVerifyRequest;
