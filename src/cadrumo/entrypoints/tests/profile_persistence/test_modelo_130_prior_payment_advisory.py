@@ -118,7 +118,6 @@ _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
 _M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 
 # The prior 1T pago fraccionado the casilla-05 carry deducts at 2T.
 _PRIOR_1T_CASILLA_07 = Decimal("200")
@@ -227,7 +226,7 @@ def _seed_prior_1t_m130_filing(
         # The 1T saldo-negativo-fin-periodo (= 0 for a positive 1T result) is
         # the anchor the casilla-15 carry binding reads at 2T; a complete
         # prior filing carries it so the 2T calculate resolves the carry.
-        _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+        validated_casilla_id("19"): Decimal("0"),
     }
     if minoracion is not None:
         casillas[_M130_HOME_DEDUCTION_CASILLA] = minoracion

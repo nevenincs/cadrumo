@@ -4,7 +4,7 @@
 # over every earlier quarter of the ejercicio, each read from what its filing prints.
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-resultados-negativos-anteriores"
-provider = { kind = "previous_filing", source_modelo = "131", source_casilla_ids = ["15", "11"], temporal = { kind = "prior_quarter_expanding_span" } }
+provider = { kind = "previous_filing", source_modelo = "131", source_casilla_ids = ["15", "11"], required_source_casilla_ids = ["15"], temporal = { kind = "prior_quarter_expanding_span" } }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "prior_negative_results_undeducted" }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]

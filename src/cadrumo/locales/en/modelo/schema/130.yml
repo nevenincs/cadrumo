@@ -113,8 +113,8 @@ modelo:
                 self-assessments.
               label: Final result
             saldo-negativo-fin-periodo:
-              help: Computed carry-forward seed when box 17 is negative, used as deductible
-                box 15 in a later quarter.
-              label: Negative balance transferable to later periods (max 0, -box 17)
+              help: Negative results of this return and earlier returns of the year
+                still to deduct in box 15 of a later quarter.
+              label: Negative balance transferable to later periods
           field:
             label: Order HAP/258/2015, tax years 2019 onwards

@@ -42,7 +42,6 @@ _M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15")
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
 _M130_DIFERENCIA_CASILLA: CasillaId = validated_casilla_id("17")
 _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
 _M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479")
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
@@ -212,12 +211,9 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     assert carry_binding.source == "previous_filing"
     assert selector_as_dict(carry_binding) == {
         "source_modelo": "130",
-        "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
-        "temporal": {
-            "kind": BindingTemporalKind.TARGET_PERIOD_OFFSET,
-            "periods": -1,
-            "within_filing_year": True,
-        },
+        "source_casilla_ids": ("19", "15"),
+        "required_source_casilla_ids": ("19",),
+        "temporal": {"kind": BindingTemporalKind.PRIOR_QUARTER_EXPANDING_SPAN},
     }
     assert carry_binding.source_refs == ("aeat-modelo-130-instructions",)
     assert carry_binding.source_citations
@@ -386,9 +382,8 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
         casilla_values = {
             _M130_PAGO_FRACCIONADO_CASILLA: _prior_07[period],
             _M130_HOME_DEDUCTION_CASILLA: _prior_16[period],
+            validated_casilla_id("19"): -saldo_seed if period == prior_period else Decimal("0"),
         }
-        if period == prior_period:
-            casilla_values[_M130_SALDO_NEGATIVO_CASILLA] = saldo_seed
         return registry_grounded_modelo_observation(
             modelo="130",
             filing_year=filing_year,
@@ -489,7 +484,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
         casilla_values={
             _M130_PAGO_FRACCIONADO_CASILLA: Decimal("38.00"),
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _M130_SALDO_NEGATIVO_CASILLA: Decimal("62.00"),
+            validated_casilla_id("19"): Decimal("-62.00"),
         },
     )
     prior_year_income_observation = registry_grounded_modelo_observation(
@@ -567,7 +562,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
         casilla_values={
             _M130_PAGO_FRACCIONADO_CASILLA: prior_07,
             _M130_HOME_DEDUCTION_CASILLA: prior_16,
-            _M130_SALDO_NEGATIVO_CASILLA: saldo_seed,
+            validated_casilla_id("19"): -saldo_seed,
         },
     )
     # The M100 income-reduction binding also resolves through the

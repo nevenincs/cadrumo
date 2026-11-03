@@ -700,11 +700,11 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     (the modelo-130-relation-regression guarantee).
 
     Shared fixture (prior 1T/2T observations, engine-independent for this wiring gate):
-      1T: casilla 07 = +500 (a real pago fraccionado), casilla 16 = 60, saldo = 0
-      2T: casilla 07 = +300, casilla 16 = 40, saldo = 150 (a loss carried to 3T)
+      1T: casilla 07 = +500 (a real pago fraccionado), casilla 16 = 60, casilla 19 = 0
+      2T: casilla 07 = +300, casilla 16 = 40, casilla 19 = -150 (a loss carried to 3T)
 
     At 3T:
-      casilla-15 (op=copy, offset -1) = 2T saldo (the single immediately-prior quarter)
+      casilla-15 = the earlier negative casilla 19 none of them has deducted = 150
       casilla-05 (op=sum, expanding span {1T, 2T}) = Σ max(0, 07) − Σ 16,
                 computed in-test from the seeded fixture inputs (not a hand-summed literal).
     """
@@ -723,7 +723,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
             casilla_values={
                 _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_1T,
                 _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_1T,
-                _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+                validated_casilla_id("19"): Decimal("0"),
             },
         ),
         source_kind="app_filing",
@@ -738,7 +738,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
             casilla_values={
                 _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_2T,
                 _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_2T,
-                _M130_SALDO_NEGATIVO_CASILLA: _PRIOR_2T_SALDO,
+                validated_casilla_id("19"): -_PRIOR_2T_SALDO,
             },
         ),
         source_kind="app_filing",
@@ -757,5 +757,5 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         _PRIOR_16_1T + _PRIOR_16_2T
     )
     assert resolved.get("modelo-130-pagos-fraccionados-anteriores") == expected_casilla_05
-    # The single-offset op=copy carry still reads exactly the immediately-prior quarter's saldo.
+    # The carry folds both quarters' casilla 19 and 15.
     assert resolved.get(_CARRY_FORWARD_BINDING) == _PRIOR_2T_SALDO

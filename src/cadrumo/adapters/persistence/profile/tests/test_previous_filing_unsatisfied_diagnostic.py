@@ -63,10 +63,6 @@ _PRIOR_QUARTER = "1T"
 _M130_PRIOR_PAGOS_BINDING: BindingId = "modelo-130-pagos-fraccionados-anteriores"
 _M130_C07: CasillaId = validated_casilla_id("07", surface="_M130_C07")
 _M130_C16: CasillaId = validated_casilla_id("16", surface="_M130_C16")
-_M130_SALDO_NEGATIVO: CasillaId = validated_casilla_id(
-    "saldo-negativo-fin-periodo",
-    surface="_M130_SALDO_NEGATIVO",
-)
 #: The four Modelo 100 casillas the cross-modelo prior-year net-income carry sums.
 _M100_NET_INCOME_CASILLAS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(token, surface="_M100_NET_INCOME_CASILLAS") for token in ("0224", "1479", "1553", "1577")
@@ -143,7 +139,7 @@ def _seed_prior_quarter(secure_objects: SecureObjectRepository) -> None:
                     casilla_values={
                         _M130_C07: Decimal("412.55"),
                         _M130_C16: Decimal("0"),
-                        _M130_SALDO_NEGATIVO: Decimal("0"),
+                        validated_casilla_id("19"): Decimal("0"),
                     },
                 ),
             ),
@@ -161,7 +157,7 @@ def _seed_prior_quarter(secure_objects: SecureObjectRepository) -> None:
                         casilla_values={
                             _M130_C07: Decimal("412.55"),
                             _M130_C16: Decimal("0"),
-                            _M130_SALDO_NEGATIVO: Decimal("0"),
+                            validated_casilla_id("19"): Decimal("0"),
                         },
                     ),
                 )

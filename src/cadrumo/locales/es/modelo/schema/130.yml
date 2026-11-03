@@ -114,9 +114,9 @@ modelo:
                 y autoliquidaciones anteriores.
               label: Resultado final
             saldo-negativo-fin-periodo:
-              help: Importe de traspaso calculado cuando la casilla 17 es negativa,
-                utilizado como deducción en la casilla 15 de un trimestre posterior.
-              label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
-                17)
+              help: Resultados negativos de esta autoliquidación y de las anteriores
+                del ejercicio que quedan por deducir en la casilla 15 de un trimestre
+                posterior.
+              label: Saldo negativo trasladable a periodos posteriores
           field:
             label: Orden HAP/258/2015, ejercicios 2019 y siguientes

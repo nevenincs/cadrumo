@@ -114,8 +114,8 @@ modelo:
                 és korábbi önadózás után.
               label: Végső eredmény
             saldo-negativo-fin-periodo:
-              help: Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben
-                a 15. mező levonásaként használható.
-              label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -17. mező)
+              help: Az év ezen és korábbi bevallásainak negatív eredményei, amelyek
+                egy későbbi negyedévben a 15. mezőben még levonhatók.
+              label: Későbbi időszakokra átvihető negatív egyenleg
           field:
             label: HAP/258/2015 rendelet, 2019. adóévtől
