@@ -7,6 +7,7 @@ storage root.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from collections.abc import Iterator
@@ -36,8 +37,8 @@ _PAYER_C = "B00000026"
 # Control digit 1 where the hand-derived CIF control of these digits is 0.
 _PAYER_BAD_CONTROL = "B00000001"
 _EJERCICIO = "2025"
-_FIRST_CERTIFICATE = "1" * 64
-_SECOND_CERTIFICATE = "2" * 64
+_FIRST_CERTIFICATE = b"%PDF-1.4 first synthetic payer certificate"
+_SECOND_CERTIFICATE = b"%PDF-1.4 second synthetic payer certificate"
 _PROFILE_FACTS = {
     "taxpayer_type.entity_type": "natural_person",
     "identity.name": "Native",
@@ -90,6 +91,19 @@ def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
     return result
 
 
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _certificate_file(profile: RegisteredCliProfile, data: bytes) -> Path:
+    """Write a synthetic certificate beside, not inside, the profile storage root and return its path."""
+    directory = profile.storage_root.parent / "certificate-files"
+    directory.mkdir(exist_ok=True)
+    path = directory / f"{_sha256(data)[:12]}.pdf"
+    path.write_bytes(data)
+    return path
+
+
 def _record(
     profile: RegisteredCliProfile,
     payer: str,
@@ -100,7 +114,8 @@ def _record(
     repercutido: str = "0.00",
     income_class: str = "trabajo",
     ejercicio: str = _EJERCICIO,
-    fingerprint: str | None = _FIRST_CERTIFICATE,
+    certificate: bytes | None = _FIRST_CERTIFICATE,
+    evidence_sha256: str | None = None,
     revision: str | None = None,
 ) -> Result:
     command = [
@@ -123,8 +138,10 @@ def _record(
         "--payer-name",
         "Pagador Sintetico SL",
     ]
-    if fingerprint is not None:
-        command += ["--evidence-sha256", fingerprint]
+    if certificate is not None:
+        command += ["--certificate-file", str(_certificate_file(profile, certificate))]
+    if evidence_sha256 is not None:
+        command += ["--evidence-sha256", evidence_sha256]
     if revision is not None:
         command += ["--expected-revision", revision]
     return _invoke(profile, *command)
@@ -169,7 +186,7 @@ def _recorded(
     ingreso_a_cuenta: str = "0.00",
     repercutido: str = "0.00",
     income_class: str = "trabajo",
-    fingerprint: str | None = _FIRST_CERTIFICATE,
+    certificate: bytes | None = _FIRST_CERTIFICATE,
     revision: str | None = None,
 ) -> RetencionSoportadaRecordResult:
     result = _record(
@@ -180,7 +197,7 @@ def _recorded(
         ingreso_a_cuenta=ingreso_a_cuenta,
         repercutido=repercutido,
         income_class=income_class,
-        fingerprint=fingerprint,
+        certificate=certificate,
         revision=revision,
     )
     return RetencionSoportadaRecordResult.model_validate_json(json.dumps(unwrap_cli_result(result)))
@@ -192,11 +209,11 @@ def _record_two_certificates(
     first = _recorded(profile, _PAYER_A, retencion="1000.00", ingreso_a_cuenta="300.00", repercutido="300.00")
     assert first.count == 1
     assert first.row.pago_a_cuenta == "1300.00"
-    assert first.row.evidence_sha256 == _FIRST_CERTIFICATE
+    assert first.row.evidence_sha256 == _sha256(_FIRST_CERTIFICATE)
     assert first.row.origin == "payer_certificate"
     assert len(first.row.payer_ref) == 64
 
-    second = _recorded(profile, _PAYER_B, retencion="450.00", origin="operator_declaration", fingerprint=None)
+    second = _recorded(profile, _PAYER_B, retencion="450.00", origin="operator_declaration", certificate=None)
     assert second.count == 2
     assert second.row.evidence_sha256 is None
     return first
@@ -204,7 +221,7 @@ def _record_two_certificates(
 
 def _assert_revision_conflicts_refused(profile: RegisteredCliProfile) -> None:
     # A first record cannot overwrite a stored row, and a stale revision is refused.
-    unguarded = _refusal_context(_record(profile, _PAYER_A, retencion="1200.00", fingerprint=_SECOND_CERTIFICATE))
+    unguarded = _refusal_context(_record(profile, _PAYER_A, retencion="1200.00", certificate=_SECOND_CERTIFICATE))
     assert unguarded["reason"] == "stale_revision"
     assert unguarded["refusal_code"] == "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT"
     stale = _refusal_context(
@@ -214,7 +231,7 @@ def _assert_revision_conflicts_refused(profile: RegisteredCliProfile) -> None:
             retencion="1200.00",
             ingreso_a_cuenta="300.00",
             repercutido="300.00",
-            fingerprint=_SECOND_CERTIFICATE,
+            certificate=_SECOND_CERTIFICATE,
             revision="f" * 64,
         )
     )
@@ -230,13 +247,13 @@ def _replace_first_certificate(profile: RegisteredCliProfile, first: RetencionSo
         retencion="1200.00",
         ingreso_a_cuenta="300.00",
         repercutido="300.00",
-        fingerprint=_SECOND_CERTIFICATE,
+        certificate=_SECOND_CERTIFICATE,
         revision=first.row.revision_id,
     )
     assert replaced.count == 2
     assert replaced.row.payer_ref == first.row.payer_ref
     assert replaced.row.revision_id != first.row.revision_id
-    assert replaced.row.evidence_sha256 == _SECOND_CERTIFICATE
+    assert replaced.row.evidence_sha256 == _sha256(_SECOND_CERTIFICATE)
 
 
 def _assert_invalid_records_refused(profile: RegisteredCliProfile) -> None:
@@ -253,8 +270,21 @@ def _assert_invalid_records_refused(profile: RegisteredCliProfile) -> None:
     assert excess["reason"] == "repercutido_exceeds_ingreso_a_cuenta"
     unsupported = _refusal_context(_record(profile, _PAYER_C, retencion="10.00", ejercicio="1999"))
     assert unsupported["reason"] == "ejercicio_unsupported"
-    unfingerprinted = _refusal_context(_record(profile, _PAYER_C, retencion="10.00", fingerprint=None))
+    unfingerprinted = _refusal_context(_record(profile, _PAYER_C, retencion="10.00", certificate=None))
     assert unfingerprinted["reason"] == "certificate_fingerprint_required"
+    # A fingerprint of bytes this profile never kept names no evidence.
+    uncustodied = _refusal_context(
+        _record(profile, _PAYER_C, retencion="10.00", certificate=None, evidence_sha256=_sha256(b"never kept"))
+    )
+    assert uncustodied["reason"] == "certificate_not_in_custody"
+    # A fingerprint that is not the named file's is refused, and the file is not kept.
+    mismatched = _refusal_context(
+        _record(profile, _PAYER_C, retencion="10.00", evidence_sha256=_sha256(b"another file"))
+    )
+    assert mismatched["reason"] == "certificate_fingerprint_mismatch"
+    assert mismatched["effect"] == "none"
+    unreadable = _refusal_context(_record(profile, _PAYER_C, retencion="10.00", certificate=b""))
+    assert unreadable["reason"] == "certificate_file_unreadable"
     malformed = _record(profile, _PAYER_C, retencion="1.234,50")
     assert malformed.exit_code != 0
     assert "1.234,50" in malformed.output

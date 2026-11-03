@@ -211,13 +211,19 @@ def _seed_payer_records(
             ingreso_a_cuenta=Decimal("0.00"),
             ingreso_a_cuenta_repercutido=Decimal("0.00"),
             origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
-            evidence_fingerprint=f"{index + 1:x}" * 64,
+            evidence_fingerprint=ports.custody.ingest(
+                source_path=Path("synthetic-certificate.pdf"),
+                data=f"synthetic certificate {index + 1}".encode(),
+                mime_type="application/pdf",
+                captured_at=_T0,
+            ),
             captured_at=_T0,
         )
         record_retencion_soportada(
             record,
             repository=ports.repository,
             authority=ports.authority,
+            custody=ports.custody,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
             expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
         )

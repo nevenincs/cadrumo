@@ -645,9 +645,12 @@ cli:
         attest_absence_help: Kijelented, hogy egy adóévben egyetlen kifizető sem vont
           le adóelőleget egy jövedelemosztályra. Ez a saját nyilatkozatod, nem a kifizető
           igazolása.
+        certificate_file_help: Az igazolás fájlja (PDF vagy kép), amely titkosítva
+          kerül a tárhelyedre; az SHA-256 ujjlenyomata lesz a rekord bizonyítéka.
         ejercicio_help: Az adóév (`ejercicio`), amelyhez a jövedelem tartozik.
-        evidence_sha256_help: Az igazolás fájljának SHA-256 értéke; payer_certificate
-          esetén kötelező.
+        evidence_sha256_help: Egy már a tárhelyeden lévő igazolás SHA-256 ujjlenyomata,
+          vagy ellenőrzés a --certificate-file fájllal szemben. A payer_certificate
+          esetén a kettő közül az egyik kötelező.
         group_help: Rögzítsd a kifizetőid igazolásai szerinti levonásokat.
         importe_integro_help: A kifizető által fizetett pénzbeli jövedelem a levonás
           előtt.
@@ -1588,6 +1591,12 @@ cli:
           jelentéshez.
         view_help: Egy ellenőrzési jelentés megjelenítése azonosító alapján.
       work:
+        accept_disagreement_help: Fogadd el azt az összeget, amelyet a számítás egy
+          forrás-eltérésnél felhasznált, az ellenőrzés által megnevezett azonosítóval,
+          és add meg az indoklásodat. Maga az összeg nem változik, az elfogadás pedig
+          megszűnik, amint bármelyik forrás más összeget ad.
+        accept_disagreement_reason_required: Add meg a --reason kapcsolóval, miért
+          fogadod el ezt az összeget.
         actor_help: A műveletért felelős személy (szabad szöveges felirat, max. 64
           karakter).
         actor_too_long: A --by címke legfeljebb {limit} karakter lehet; {length} érkezett.
@@ -1730,6 +1739,16 @@ cli:
         dependencies_help: Keresztidőszaki bevallástörténeti függőségek és az aktuális
           clean-state blokkolók megjelenítése a célbevalláshoz
         dependencies_period_requires_modelo: A --period beállításhoz kötelező a --modelo.
+        disagreement_expected_revision_help: A változat, amelyen az elfogadás tárolva
+          van, ahogy a `work disagreements` mutatja; kötelező
+        disagreement_finding_id_help: A 16 karakteres azonosító, amelyet az ellenőrzés
+          vagy a számítás az eltéréshez megnevez
+        disagreement_invalid_input: Az azonosító 16 kisbetűs hexadecimális karakter
+          legyen, az indoklás legfeljebb 512, a végrehajtó neve legfeljebb 128 karakter.
+        disagreement_reason_help: Miért fogadod el a felhasznált összeget; kötelező,
+          legfeljebb 512 karakter
+        disagreements_help: Listázd egy bevallás elfogadott eltéréseit, érvényeseket
+          és visszavontakat, azzal a változattal, amelyen mindegyik tárolva van.
         discard_help: Bevallás megjelölése elvetettként (az állapotváltás megmarad
           az ellenőrzési naplóban).
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtasd újra:
@@ -2014,6 +2033,10 @@ cli:
           formula_id, operandus-hivatkozások és -értékek).
         revisions_help: Mentett számítások listázása, opcionálisan egy bevallásra
           szűrve.
+        revoke_disagreement_help: Vond vissza egy eltérés elfogadását az azonosítójával,
+          a `work disagreements` által mutatott tárolt változattal védve.
+        revoke_disagreement_revision_required: Add meg az --expected-revision kapcsolóval
+          az elfogadás tárolt változatát; a `work disagreements` mutatja.
         row_empty_key: Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
           formátumúnak kell lennie.
         row_empty_spec: --row nem lehet üres; a várt formátum TÍPUS MEZŐ=érték [...]

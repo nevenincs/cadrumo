@@ -611,8 +611,12 @@ cli:
           you are replacing. Leave it out for a first attestation.
         attest_absence_help: Attest that no payer withheld on an income class in an
           ejercicio. This is your own statement, not a payer certificate.
+        certificate_file_help: Certificate file (PDF or image) to keep encrypted in
+          your storage; its SHA-256 becomes the evidence of the record.
         ejercicio_help: Tax year (`ejercicio`) the income is imputed to.
-        evidence_sha256_help: SHA-256 of the certificate file; required for payer_certificate.
+        evidence_sha256_help: SHA-256 of a certificate already in your storage, or
+          a check against --certificate-file. A payer_certificate needs one of the
+          two.
         group_help: Record the withholding your payers' certificates report.
         importe_integro_help: Money income the payer paid, before withholding.
         income_class_help: Income class the payer withheld on, for example `trabajo`.
@@ -1498,6 +1502,12 @@ cli:
           report
         view_help: Show one check report by id
       work:
+        accept_disagreement_help: Accept the amount a calculation used for one disagreement
+          between its sources, by the finding id the check names, and state your reason.
+          The figure itself does not change, and the acceptance lapses as soon as
+          any source states another amount.
+        accept_disagreement_reason_required: Give the reason you accept this amount
+          with --reason.
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
         actor_too_long: The --by label must be at most {limit} characters; received
           {length}. It names the actor on the audit event this command records, so
@@ -1634,6 +1644,16 @@ cli:
         dependencies_help: Show cross-period filing-history dependencies and current
           clean-state blockers for a target filing
         dependencies_period_requires_modelo: The --period option requires --modelo.
+        disagreement_expected_revision_help: Revision the acceptance is stored at,
+          as `work disagreements` shows it; required
+        disagreement_finding_id_help: The 16-character finding id that the check or
+          the calculation names for the disagreement
+        disagreement_invalid_input: The finding id must be 16 lowercase hexadecimal
+          characters, the reason up to 512 characters and the actor up to 128.
+        disagreement_reason_help: Why you accept the amount in use; required, up to
+          512 characters
+        disagreements_help: List the disagreements you accepted for a declaration,
+          active and taken back, with the revision each is stored at.
         discard_help: Mark a declaration as discarded (the state change is kept in
           the audit trail)
         discard_requires_yes: Discard is an auditable state transition. Re-run `aeat
@@ -1902,6 +1922,11 @@ cli:
         revision_verbose_help: Expose the full per-casilla formula trace (op, formula_id,
           operand refs and values).
         revisions_help: List saved calculations, optionally filtered to one declaration
+        revoke_disagreement_help: Take back the acceptance of one disagreement by
+          its finding id, guarded by the stored revision that `work disagreements`
+          shows.
+        revoke_disagreement_revision_required: Give the stored revision of the acceptance
+          with --expected-revision; `work disagreements` shows it.
         row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
           format.
         row_empty_spec: --row spec cannot be empty; expected TYPE FIELD=value [...]

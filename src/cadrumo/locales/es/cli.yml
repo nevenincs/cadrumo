@@ -650,9 +650,12 @@ cli:
         attest_absence_help: Declara que ningún pagador practicó retención sobre una
           clase de renta en un ejercicio. Es tu propia declaración, no un certificado
           del pagador.
+        certificate_file_help: Archivo del certificado (PDF o imagen) que se guarda
+          cifrado en tu almacenamiento; su SHA-256 pasa a ser la evidencia del registro.
         ejercicio_help: Ejercicio (año) al que se imputa la renta.
-        evidence_sha256_help: SHA-256 del archivo del certificado; obligatorio con
-          payer_certificate.
+        evidence_sha256_help: SHA-256 de un certificado que ya está en tu almacenamiento,
+          o comprobación frente a --certificate-file. Un payer_certificate necesita
+          una de las dos cosas.
         group_help: Registra las retenciones que te certifican tus pagadores.
         importe_integro_help: Renta dineraria que pagó el pagador, antes de la retención.
         income_class_help: Clase de renta sobre la que el pagador retuvo, por ejemplo
@@ -1617,6 +1620,12 @@ cli:
           de un informe de comprobación
         view_help: Mostrar un informe de comprobación por id
       work:
+        accept_disagreement_help: Acepta el importe que un cálculo utilizó en una
+          discrepancia entre sus fuentes, con el identificador que nombra la comprobación,
+          e indica tu motivo. La cifra en sí no cambia, y la aceptación caduca en
+          cuanto cualquier fuente dé otro importe.
+        accept_disagreement_reason_required: Indica con --reason por qué aceptas este
+          importe.
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
         actor_too_long: La etiqueta --by debe tener como máximo {limit} caracteres;
           se recibieron {length}. Identifica al actor del evento de auditoría que
@@ -1757,6 +1766,16 @@ cli:
         dependencies_help: Muestra dependencias de historial de presentaciones entre
           modelos y los bloqueos clean-state actuales para una presentación objetivo
         dependencies_period_requires_modelo: La opción --period requiere --modelo.
+        disagreement_expected_revision_help: Revisión en que se guarda la aceptación,
+          tal como la muestra `work disagreements`; obligatoria
+        disagreement_finding_id_help: El identificador de 16 caracteres que la comprobación
+          o el cálculo nombra para la discrepancia
+        disagreement_invalid_input: El identificador debe tener 16 caracteres hexadecimales
+          en minúsculas, el motivo hasta 512 caracteres y el actor hasta 128.
+        disagreement_reason_help: Por qué aceptas el importe utilizado; obligatorio,
+          hasta 512 caracteres
+        disagreements_help: Lista las discrepancias que aceptaste para una declaración,
+          vigentes y retiradas, con la revisión en que se guarda cada una.
         discard_help: Marcar una declaración como descartada (el cambio de estado
           queda en el registro de auditoría)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelve
@@ -2032,6 +2051,10 @@ cli:
           (op, formula_id, referencias y valores de los operandos).
         revisions_help: Listar los cálculos guardados, opcionalmente filtrados por
           declaración
+        revoke_disagreement_help: Retira la aceptación de una discrepancia con su
+          identificador, protegida por la revisión guardada que muestra `work disagreements`.
+        revoke_disagreement_revision_required: Indica con --expected-revision la revisión
+          guardada de la aceptación; `work disagreements` la muestra.
         row_empty_key: Clave de campo --row vacía en {token}; cada campo debe tener
           el formato CLAVE=VALOR.
         row_empty_spec: --row no puede estar vacío; se esperaba TIPO CAMPO=valor [...]

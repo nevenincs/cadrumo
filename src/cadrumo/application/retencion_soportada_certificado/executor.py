@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+import mimetypes
+from dataclasses import dataclass, field
 from decimal import Decimal
+from pathlib import Path
 from typing import Final
 from uuid import UUID
 
@@ -13,6 +15,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.hashing import sha256_hex
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.operations import OperationEffect
@@ -29,7 +32,10 @@ from ..aggregation.retencion_soportada_repository import (
     RetencionSoportadaRevisionConflictError,
     RetencionSoportadaWriteRefusedError,
     record_retencion_soportada,
+    require_retencion_soportada_writable,
 )
+from ..ledger.evidence import admit_evidence_file
+from ..ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
@@ -57,6 +63,8 @@ from .results import (
     RetencionSoportadaRowProjection,
 )
 
+_UNKNOWN_MIME_TYPE: Final = "application/octet-stream"
+
 _REQUEST_TYPES: Final[dict[str, type[RetencionSoportadaProfileRequest]]] = {
     RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID: RetencionSoportadaListRequest,
     RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID: RetencionSoportadaRecordRequest,
@@ -66,9 +74,23 @@ _REQUEST_TYPES: Final[dict[str, type[RetencionSoportadaProfileRequest]]] = {
 
 @dataclass(frozen=True, slots=True)
 class _CertificateRefusal:
-    """A request the operation refuses with a typed reason before anything is stored."""
+    """A request the operation refuses with a typed reason, before any record is stored.
+
+    ``bytes_stored`` is set when the certificate bytes had already reached custody
+    by the time the refusal was reached, so the operation reports that effect.
+    """
 
     reason: RetencionSoportadaCertificadoRefusalReason
+    bytes_stored: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class _CertificateFile:
+    """The bytes of a certificate file the worker read, and the sha256 custody will address them by."""
+
+    path: Path
+    data: bytes = field(repr=False)
+    fingerprint: str
 
 
 def _refusal_code(reason: RetencionSoportadaCertificadoRefusalReason) -> str:
@@ -77,9 +99,32 @@ def _refusal_code(reason: RetencionSoportadaCertificadoRefusalReason) -> str:
     return RETENCION_SOPORTADA_WRITE_REFUSAL_CODE
 
 
+def _read_certificate(request: RetencionSoportadaRecordRequest) -> _CertificateFile | _CertificateRefusal | None:
+    """Read the certificate file the request names, or ``None`` when it names none.
+
+    The fingerprint a request also carries is an integrity cross-check against
+    the bytes actually read, never the address custody is given.
+    """
+    if request.source_path is None or request.source_directory is None:
+        return None
+    try:
+        resolved, _media_kind = admit_evidence_file(request.source_path, Path(request.source_directory))
+        data = resolved.read_bytes()
+    except (PurchaseInvoiceEvidenceInputError, OSError):
+        return _CertificateRefusal("certificate_file_unreadable")
+    if not data:
+        return _CertificateRefusal("certificate_file_unreadable")
+    fingerprint = sha256_hex(data)
+    if request.evidence_fingerprint is not None and request.evidence_fingerprint != fingerprint:
+        return _CertificateRefusal("certificate_fingerprint_mismatch")
+    return _CertificateFile(path=resolved, data=data, fingerprint=fingerprint)
+
+
 def _build_record(
     request: RetencionSoportadaRecordRequest,
     ports: RetencionSoportadaCertificadoPorts,
+    *,
+    fingerprint: str | None,
 ) -> RetencionSoportadaRecord | _CertificateRefusal:
     """Build the record the write path will judge, or name why its shape cannot be represented."""
     amounts = {
@@ -91,7 +136,7 @@ def _build_record(
     }
     if amounts["ingreso_a_cuenta_repercutido"] > amounts["ingreso_a_cuenta"]:
         return _CertificateRefusal("repercutido_exceeds_ingreso_a_cuenta")
-    if request.origin is RetencionSoportadaOrigen.PAYER_CERTIFICATE and request.evidence_fingerprint is None:
+    if request.origin is RetencionSoportadaOrigen.PAYER_CERTIFICATE and fingerprint is None:
         return _CertificateRefusal("certificate_fingerprint_required")
     # A payer withholds under a Spanish identifier, and the identifier is what keys the row: a mistyped
     # one would file the certificate under a payer that does not exist, and the printed and the bare
@@ -111,7 +156,7 @@ def _build_record(
             payer_ref=payer_ref,
             income_class=request.income_class,
             origin=request.origin,
-            evidence_fingerprint=request.evidence_fingerprint,
+            evidence_fingerprint=fingerprint,
             replaces_evidence_fingerprint=stored.evidence_fingerprint if stored is not None else None,
             captured_at=now(),
             **amounts,
@@ -127,21 +172,48 @@ def _record_certificate(
     taxpayer_tax_id = ports.taxpayer_tax_id()
     if taxpayer_tax_id is None or not tax_id_identity_token(taxpayer_tax_id):
         return _CertificateRefusal("taxpayer_tax_id_unknown")
-    record = _build_record(request, ports)
+    certificate = _read_certificate(request)
+    if isinstance(certificate, _CertificateRefusal):
+        return certificate
+    record = _build_record(
+        request,
+        ports,
+        fingerprint=request.evidence_fingerprint if certificate is None else certificate.fingerprint,
+    )
     if isinstance(record, _CertificateRefusal):
         return record
+    expected_revision_id = request.expected_revision_id or ABSENT_SECURE_OBJECT_REVISION_ID
+    stored_bytes = False
     try:
-        record_retencion_soportada(
+        # Every refusal that does not depend on custody is settled before the bytes are kept, so a record
+        # the write would refuse leaves nothing behind.
+        require_retencion_soportada_writable(
             record,
             repository=ports.repository,
             authority=ports.authority,
             taxpayer_tax_id=taxpayer_tax_id,
-            expected_revision_id=request.expected_revision_id or ABSENT_SECURE_OBJECT_REVISION_ID,
+            expected_revision_id=expected_revision_id,
+        )
+        if certificate is not None:
+            ports.custody.ingest(
+                source_path=certificate.path,
+                data=certificate.data,
+                mime_type=mimetypes.guess_type(certificate.path.name)[0] or _UNKNOWN_MIME_TYPE,
+                captured_at=now(),
+            )
+            stored_bytes = True
+        record_retencion_soportada(
+            record,
+            repository=ports.repository,
+            authority=ports.authority,
+            custody=ports.custody,
+            taxpayer_tax_id=taxpayer_tax_id,
+            expected_revision_id=expected_revision_id,
         )
     except RetencionSoportadaWriteRefusedError as exc:
-        return _CertificateRefusal(exc.reason)
+        return _CertificateRefusal(exc.reason, bytes_stored=stored_bytes)
     except RetencionSoportadaRevisionConflictError:
-        return _CertificateRefusal("stale_revision")
+        return _CertificateRefusal("stale_revision", bytes_stored=stored_bytes)
     stored, revision_id = ports.repository.load_revisioned(record.identity)
     if stored is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -256,7 +328,7 @@ class RetencionSoportadaCertificadoExecutor:
 
                 outcome = await asyncio.to_thread(work)
                 if isinstance(outcome, _CertificateRefusal):
-                    return await self._persist_refusal(context, request, operation_id, outcome.reason)
+                    return await self._persist_refusal(context, request, operation_id, outcome)
                 row, count = outcome
                 result = RetencionSoportadaOperationExecutionResult(
                     operation_id=operation_id,
@@ -277,11 +349,11 @@ class RetencionSoportadaCertificadoExecutor:
         context: OperationExecutorContext,
         request: RetencionSoportadaRecordRequest | RetencionSoportadaRemoveRequest,
         operation_id: RetencionSoportadaOperationId,
-        reason: RetencionSoportadaCertificadoRefusalReason,
+        refused: _CertificateRefusal,
     ) -> OperationRefusalEvidence:
-        code = _refusal_code(reason)
+        code = _refusal_code(refused.reason)
         refusal = RetencionSoportadaRefusalProjection.model_validate(
-            {"code": code, "reason": reason, "ejercicio": request.ejercicio},
+            {"code": code, "reason": refused.reason, "ejercicio": request.ejercicio},
         )
         result = RetencionSoportadaOperationExecutionResult(
             operation_id=operation_id,
@@ -291,5 +363,5 @@ class RetencionSoportadaCertificadoExecutor:
             refusal=refusal,
         )
         detail_ref = await context.operands.put(result, written_at=now())
-        await context.events.effect(OperationEffect.NONE)
+        await context.events.effect(OperationEffect.PARTIAL if refused.bytes_stored else OperationEffect.NONE)
         return OperationRefusalEvidence(refusal_code=code, detail_ref=detail_ref)

@@ -1,18 +1,21 @@
 """Certificates recorded through the registered executor feed the real suffered-withholding source mesh.
 
-The executor runs against the real encrypted repository, the real write port and
-the pinned authority; only the operation host's event and operand plumbing is a
-minimal stand-in. All identifiers and amounts are synthetic.
+The executor runs against the real encrypted repository, the real write port, the
+real attachment custody and the pinned authority; only the operation host's event
+and operand plumbing is a minimal stand-in. All identifiers, files and amounts are
+synthetic.
 """
 
 from __future__ import annotations
 
 import asyncio
+import hashlib
+from collections.abc import Callable
 from contextlib import asynccontextmanager
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
+from typing import cast, override
 from uuid import UUID
 
 import pytest
@@ -21,7 +24,13 @@ from pydantic import BaseModel
 from cadrumo.adapters.persistence.profile.retencion_soportada_certificado import (
     RetencionSoportadaCertificadoRepositoryAdapter,
 )
+from cadrumo.adapters.persistence.profile.retencion_soportada_evidence_custody import (
+    RetencionSoportadaEvidenceCustodyAdapter,
+)
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import active_bucket_custody
+from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.retencion_soportada_repository import (
     PinnedRetencionSoportadaWriteAuthority,
@@ -38,11 +47,14 @@ from cadrumo.application.retencion_soportada_certificado.contracts import (
     RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.retencion_soportada_certificado.executor import RetencionSoportadaCertificadoExecutor
-from cadrumo.application.retencion_soportada_certificado.ports import RetencionSoportadaCertificadoPorts
+from cadrumo.application.retencion_soportada_certificado.ports import (
+    RetencionSoportadaCertificadoPorts,
+    RetencionSoportadaCertificateCustody,
+)
 from cadrumo.application.retencion_soportada_certificado.requests import RetencionSoportadaRecordRequest
 from cadrumo.application.retencion_soportada_certificado.results import RetencionSoportadaOperationExecutionResult
 from cadrumo.application.tests.operation_host_fakes import RecordingEvents
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
@@ -104,17 +116,67 @@ class _Context:
         self.operands = _Operands(self.cancellation)
 
 
-def _ports_factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> RetencionSoportadaCertificadoPorts:
-    del profile_id
-    return RetencionSoportadaCertificadoPorts(
-        repository=RetencionSoportadaCertificadoRepositoryAdapter(objects=secure_object_repository_for_active_bucket()),
-        authority=PinnedRetencionSoportadaWriteAuthority(operation),
-        taxpayer_tax_id=lambda: _TAXPAYER,
-    )
+class _RacingCustody(RetencionSoportadaCertificateCustody):
+    """The real custody, with one competing write landing while a certificate is being kept.
+
+    It reproduces the only way a refusal can follow the keeping of the bytes: another
+    writer moves the payer's row between the executor's check and its write.
+    """
+
+    def __init__(self, inner: RetencionSoportadaCertificateCustody, *, race: Callable[[], None]) -> None:
+        self._inner = inner
+        self._race = race
+
+    @override
+    def holds(self, fingerprint: str) -> bool:
+        return self._inner.holds(fingerprint)
+
+    @override
+    def ingest(self, *, source_path: Path, data: bytes, mime_type: str, captured_at: datetime) -> str:
+        kept = self._inner.ingest(source_path=source_path, data=data, mime_type=mime_type, captured_at=captured_at)
+        self._race()
+        return kept
+
+
+def _custody() -> RetencionSoportadaEvidenceCustodyAdapter:
+    return active_bucket_custody()
+
+
+def _repository() -> RetencionSoportadaCertificadoRepositoryAdapter:
+    return RetencionSoportadaCertificadoRepositoryAdapter(objects=secure_object_repository_for_active_bucket())
+
+
+def _ports_factory(custody: RetencionSoportadaCertificateCustody | None = None):
+    def factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> RetencionSoportadaCertificadoPorts:
+        del profile_id
+        return RetencionSoportadaCertificadoPorts(
+            repository=_repository(),
+            authority=PinnedRetencionSoportadaWriteAuthority(operation),
+            custody=custody or _custody(),
+            taxpayer_tax_id=lambda: _TAXPAYER,
+        )
+
+    return factory
+
+
+def _certificate_file(directory: Path, name: str) -> bytes:
+    """Write a synthetic certificate named ``name`` into ``directory`` and return its bytes."""
+    data = f"%PDF-1.4 synthetic payer certificate {name}".encode()
+    (directory / name).write_bytes(data)
+    return data
 
 
 def _request(
-    payer: str, *, retencion: str, ingreso: str = "0.00", repercutido: str = "0.00", fingerprint: str = "a" * 64
+    payer: str,
+    *,
+    retencion: str,
+    ingreso: str = "0.00",
+    repercutido: str = "0.00",
+    directory: Path | None = None,
+    file: str | None = None,
+    fingerprint: str | None = None,
+    origin: RetencionSoportadaOrigen = RetencionSoportadaOrigen.PAYER_CERTIFICATE,
+    expected_revision: str | None = None,
 ) -> OperationRequest[BaseModel]:
     return OperationRequest(
         definition_id=RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
@@ -129,24 +191,35 @@ def _request(
             retencion=PublicDecimal(decimal=retencion),
             ingreso_a_cuenta=PublicDecimal(decimal=ingreso),
             ingreso_a_cuenta_repercutido=PublicDecimal(decimal=repercutido),
-            origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
+            origin=origin,
             evidence_fingerprint=fingerprint,
+            source_path=file,
+            source_directory=None if directory is None else str(directory),
+            expected_revision_id=expected_revision,
         ),
     )
 
 
 def _run_in(
-    authority_operation: PinnedAuthorityOperation, request: OperationRequest[BaseModel]
+    authority_operation: PinnedAuthorityOperation,
+    request: OperationRequest[BaseModel],
+    *,
+    custody: RetencionSoportadaCertificateCustody | None = None,
 ) -> tuple[object, _Context]:
     context = _Context(authority_operation)
     executor = RetencionSoportadaCertificadoExecutor(
-        _ports_factory, definition_id=RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID
+        _ports_factory(custody), definition_id=RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID
     )
     return asyncio.run(executor.execute(request, cast(OperationExecutorContext, context))), context
 
 
-def _run(authority_operation: PinnedAuthorityOperation, request: OperationRequest[BaseModel]) -> object:
-    return _run_in(authority_operation, request)[0]
+def _run(
+    authority_operation: PinnedAuthorityOperation,
+    request: OperationRequest[BaseModel],
+    *,
+    custody: RetencionSoportadaCertificateCustody | None = None,
+) -> object:
+    return _run_in(authority_operation, request, custody=custody)[0]
 
 
 def _refusal_reason(context: _Context) -> str:
@@ -156,17 +229,27 @@ def _refusal_reason(context: _Context) -> str:
     return result.refusal.reason
 
 
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
 def test_recorded_certificates_resolve_to_the_hand_summed_class_credit(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
+    files = tmp_path / "certificates"
+    files.mkdir()
+    for name in ("a.pdf", "b.pdf", "own.pdf"):
+        _certificate_file(files, name)
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
         # Payer A: 1.200,00 retención + 300,00 ingreso a cuenta (repercutido, still credited); payer B: 450,00.
         for request in (
-            _request(_PAYER_A, retencion="1200.00", ingreso="300.00", repercutido="300.00"),
-            _request(_PAYER_B, retencion="450.00"),
+            _request(
+                _PAYER_A, retencion="1200.00", ingreso="300.00", repercutido="300.00", directory=files, file="a.pdf"
+            ),
+            _request(_PAYER_B, retencion="450.00", directory=files, file="b.pdf"),
         ):
             assert not isinstance(_run(operation, request), OperationRefusalEvidence)
-        own = _run(operation, _request(_TAXPAYER, retencion="10.00"))
+        own = _run(operation, _request(_TAXPAYER, retencion="10.00", directory=files, file="own.pdf"))
         assert isinstance(own, OperationRefusalEvidence)
 
         revision = ModeloRevision(
@@ -186,9 +269,7 @@ def test_recorded_certificates_resolve_to_the_hand_summed_class_credit(
                 ),
             ),
         )
-        repository = RetencionSoportadaCertificadoRepositoryAdapter(
-            objects=secure_object_repository_for_active_bucket()
-        )
+        repository = _repository()
         resolver = RetencionSoportadaSourceResolver(ports=RetencionSoportadaPorts(repository=repository))
         resolution = merge_source_resolutions(
             (
@@ -213,35 +294,216 @@ def test_recorded_certificates_resolve_to_the_hand_summed_class_credit(
 def test_a_payer_id_failing_its_checksum_is_refused_and_nothing_is_stored(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
-        refused, context = _run_in(operation, _request(_PAYER_WRONG_CONTROL, retencion="100.00"))
-        repository = RetencionSoportadaCertificadoRepositoryAdapter(
-            objects=secure_object_repository_for_active_bucket()
+    files = tmp_path / "certificates"
+    files.mkdir()
+    _certificate_file(files, "wrong.pdf")
+    accepted_bytes = _certificate_file(files, "accepted.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        refused, context = _run_in(
+            operation, _request(_PAYER_WRONG_CONTROL, retencion="100.00", directory=files, file="wrong.pdf")
         )
-        stored_after_refusal = repository.list_revisioned(_EJERCICIO)
-        accepted = _run(operation, _request(_PAYER_A, retencion="100.00"))
-        stored_after_success = repository.list_revisioned(_EJERCICIO)
+        stored_after_refusal = _repository().list_revisioned(_EJERCICIO)
+        accepted = _run(operation, _request(_PAYER_A, retencion="100.00", directory=files, file="accepted.pdf"))
+        stored_after_success = _repository().list_revisioned(_EJERCICIO)
+        refused_bytes_kept = _custody().holds(_sha256(b"%PDF-1.4 synthetic payer certificate wrong.pdf"))
 
     assert isinstance(refused, OperationRefusalEvidence)
     assert _refusal_reason(context) == "validation"
     assert stored_after_refusal == ()
+    assert not refused_bytes_kept
     assert not isinstance(accepted, OperationRefusalEvidence)
-    assert len(stored_after_success) == 1
+    assert [record.evidence_fingerprint for record, _revision in stored_after_success] == [_sha256(accepted_bytes)]
 
 
 def test_the_printed_and_bare_forms_of_one_payer_id_name_one_row(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
-        first = _run(operation, _request(_PAYER_A, retencion="100.00"))
+    files = tmp_path / "certificates"
+    files.mkdir()
+    for name in ("first.pdf", "second.pdf"):
+        _certificate_file(files, name)
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        first = _run(operation, _request(_PAYER_A, retencion="100.00", directory=files, file="first.pdf"))
         # The printed form of the same identifier meets the stored row, not an empty slot.
-        printed, context = _run_in(operation, _request("B-0000001-8", retencion="250.00", fingerprint="b" * 64))
-        repository = RetencionSoportadaCertificadoRepositoryAdapter(
-            objects=secure_object_repository_for_active_bucket()
+        printed, context = _run_in(
+            operation, _request("B-0000001-8", retencion="250.00", directory=files, file="second.pdf")
         )
-        stored = repository.list_revisioned(_EJERCICIO)
+        stored = _repository().list_revisioned(_EJERCICIO)
 
     assert not isinstance(first, OperationRefusalEvidence)
     assert isinstance(printed, OperationRefusalEvidence)
     assert _refusal_reason(context) == "stale_revision"
     assert [record.retencion for record, _revision in stored] == [Decimal("100.00")]
+
+
+def test_importing_a_certificate_file_keeps_its_bytes_in_encrypted_custody_and_records_their_sha256(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    data = _certificate_file(files, "payer-a.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE) as profile:
+        outcome, context = _run_in(
+            operation, _request(_PAYER_A, retencion="1200.00", directory=files, file="payer-a.pdf")
+        )
+        ((record, _revision),) = _repository().list_revisioned(_EJERCICIO)
+        kept = AttachmentStore(objects=secure_object_repository_for_active_bucket()).read_bytes(_sha256(data))
+        on_disk = b"".join(path.read_bytes() for path in profile.storage_root.rglob("*") if path.is_file())
+
+    assert not isinstance(outcome, OperationRefusalEvidence)
+    assert context.events.effects[-1] is OperationEffect.UPDATED
+    assert record.evidence_fingerprint == _sha256(data)
+    assert kept == data
+    assert data not in on_disk
+    assert b"synthetic payer certificate" not in on_disk
+
+
+def test_a_fingerprint_alone_is_accepted_only_for_bytes_custody_holds(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    data = _certificate_file(files, "payer-a.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        _run(operation, _request(_PAYER_A, retencion="100.00", directory=files, file="payer-a.pdf"))
+        # The bytes are now in custody, so a second payer can cite them by their sha256.
+        cited = _run(operation, _request(_PAYER_B, retencion="50.00", fingerprint=_sha256(data)))
+        # A well formed sha256 of bytes this profile never kept is refused.
+        invented, context = _run_in(
+            operation, _request("A00000000", retencion="5.00", fingerprint=_sha256(b"never kept"))
+        )
+        stored = _repository().list_revisioned(_EJERCICIO)
+
+    assert not isinstance(cited, OperationRefusalEvidence)
+    assert isinstance(invented, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "certificate_not_in_custody"
+    assert context.events.effects[-1] is OperationEffect.NONE
+    assert len(stored) == 2
+
+
+def test_a_fingerprint_whose_kept_bytes_were_replaced_is_refused(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    genuine = _sha256(_certificate_file(files, "genuine.pdf"))
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        objects = secure_object_repository_for_active_bucket()
+        store = AttachmentStore(objects=objects)
+        substitute = store.put_bytes(b"%PDF-1.4 substituted content")
+        row = objects.load(
+            ATTACHMENT_BLOB_NAMESPACE.namespace,
+            substitute,
+            expected_class=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
+            max_supported_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
+        )
+        assert row is not None
+        # The address of the genuine certificate now holds the substitute's bytes.
+        objects.save(
+            namespace=ATTACHMENT_BLOB_NAMESPACE.namespace,
+            object_key=genuine,
+            classification=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
+            schema_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
+            written_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+            payload=row.payload,
+        )
+        refused, context = _run_in(operation, _request(_PAYER_A, retencion="100.00", fingerprint=genuine))
+        stored = _repository().list_revisioned(_EJERCICIO)
+
+    assert isinstance(refused, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "certificate_not_in_custody"
+    assert stored == ()
+
+
+def test_a_fingerprint_that_is_not_the_files_sha256_is_refused_before_anything_is_kept(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    data = _certificate_file(files, "payer-a.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        refused, context = _run_in(
+            operation,
+            _request(
+                _PAYER_A, retencion="100.00", directory=files, file="payer-a.pdf", fingerprint=_sha256(b"other bytes")
+            ),
+        )
+        kept = _custody().holds(_sha256(data))
+        agreeing = _run(
+            operation,
+            _request(_PAYER_A, retencion="100.00", directory=files, file="payer-a.pdf", fingerprint=_sha256(data)),
+        )
+        stored = _repository().list_revisioned(_EJERCICIO)
+
+    assert isinstance(refused, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "certificate_fingerprint_mismatch"
+    assert context.events.effects[-1] is OperationEffect.NONE
+    assert not kept
+    assert not isinstance(agreeing, OperationRefusalEvidence)
+    assert len(stored) == 1
+
+
+@pytest.mark.parametrize("name", ["missing.pdf", "notes.txt", "empty.pdf"])
+def test_a_certificate_file_the_worker_cannot_read_or_admit_is_refused(
+    tmp_path: Path, operation: PinnedAuthorityOperation, name: str
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    (files / "notes.txt").write_bytes(b"synthetic note")
+    (files / "empty.pdf").write_bytes(b"")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        refused, context = _run_in(operation, _request(_PAYER_A, retencion="100.00", directory=files, file=name))
+        stored = _repository().list_revisioned(_EJERCICIO)
+
+    assert isinstance(refused, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "certificate_file_unreadable"
+    assert stored == ()
+
+
+def test_a_record_the_write_would_refuse_leaves_no_certificate_bytes_in_custody(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    data = _certificate_file(files, "own.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        refused, context = _run_in(operation, _request(_TAXPAYER, retencion="10.00", directory=files, file="own.pdf"))
+        kept = _custody().holds(_sha256(data))
+
+    assert isinstance(refused, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "own_tax_id"
+    assert context.events.effects[-1] is OperationEffect.NONE
+    assert not kept
+
+
+def test_a_refusal_after_the_bytes_were_kept_reports_the_partial_effect(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    data = _certificate_file(files, "payer-a.pdf")
+    rival = _certificate_file(files, "rival.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+
+        def rival_write() -> None:
+            # Another writer records the same payer while this certificate is being kept.
+            assert not isinstance(
+                _run(operation, _request(_PAYER_A, retencion="999.00", directory=files, file="rival.pdf")),
+                OperationRefusalEvidence,
+            )
+
+        refused, context = _run_in(
+            operation,
+            _request(_PAYER_A, retencion="100.00", directory=files, file="payer-a.pdf"),
+            custody=_RacingCustody(_custody(), race=rival_write),
+        )
+        stored = _repository().list_revisioned(_EJERCICIO)
+        kept = _custody().holds(_sha256(data))
+
+    assert isinstance(refused, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "stale_revision"
+    assert context.events.effects[-1] is OperationEffect.PARTIAL
+    assert kept
+    assert [(record.retencion, record.evidence_fingerprint) for record, _revision in stored] == [
+        (Decimal("999.00"), _sha256(rival))
+    ]

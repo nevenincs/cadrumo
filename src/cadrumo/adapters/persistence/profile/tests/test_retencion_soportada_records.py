@@ -35,9 +35,12 @@ from .....domain.calculations.registry.binding_terminal_origin import TerminalOr
 from .....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from .....domain.calculations.registry.schema_references import PeriodSelector
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
+from ...storage.attachment import AttachmentStore
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...storage.secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
+from .retencion_soportada_seed import active_bucket_custody, keep_certificate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -76,6 +79,11 @@ def _repository() -> RetencionSoportadaRecordRepositoryAdapter:
     return RetencionSoportadaRecordRepositoryAdapter(objects=secure_object_repository_for_active_bucket())
 
 
+def _certificate(label: str) -> str:
+    """Keep a synthetic certificate in the active bucket's custody and return its sha256."""
+    return keep_certificate(f"synthetic certificate {label}".encode())
+
+
 def _record(
     repository: RetencionSoportadaRecordRepositoryAdapter,
     *,
@@ -84,7 +92,7 @@ def _record(
     retencion: str = "1200.00",
     ingreso_a_cuenta: str = "300.00",
     repercutido: str = "300.00",
-    fingerprint: str = "1" * 64,
+    fingerprint: str | None = None,
     replaces: str | None = None,
     ejercicio: int = _EJERCICIO,
 ) -> RetencionSoportadaRecord:
@@ -100,7 +108,7 @@ def _record(
         ingreso_a_cuenta=Decimal(ingreso_a_cuenta),
         ingreso_a_cuenta_repercutido=Decimal(repercutido),
         origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
-        evidence_fingerprint=fingerprint,
+        evidence_fingerprint=fingerprint or _certificate("one"),
         replaces_evidence_fingerprint=replaces,
         captured_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
     )
@@ -117,6 +125,7 @@ def _write(
         record,
         repository=repository,
         authority=PinnedRetencionSoportadaWriteAuthority(operation),
+        custody=active_bucket_custody(),
         taxpayer_tax_id=_TAXPAYER,
         expected_revision_id=expected_revision_id,
     )
@@ -224,6 +233,7 @@ def test_the_real_authority_refuses_an_unsupported_ejercicio_and_declares_the_fa
                 _record(repository, ejercicio=unsupported),
                 repository=repository,
                 authority=authority,
+                custody=active_bucket_custody(),
                 taxpayer_tax_id=_TAXPAYER,
                 expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
             )
@@ -241,6 +251,7 @@ def test_an_ejercicio_whose_revision_declares_no_family_member_is_refused(
                 _record(repository),
                 repository=repository,
                 authority=_UndeclaredFamilyAuthority(operation),
+                custody=active_bucket_custody(),
                 taxpayer_tax_id=_TAXPAYER,
                 expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
             )
@@ -270,21 +281,26 @@ def test_an_overwrite_needs_the_stored_revision_and_the_replaced_certificate(
         original = _record(repository)
         _write(repository, original, operation)
         _, stored_revision = repository.load_revisioned(original.identity)
-        correction = _record(repository, retencion="1250.00", fingerprint="2" * 64, replaces="1" * 64)
+        correction = _record(
+            repository, retencion="1250.00", fingerprint=_certificate("two"), replaces=_certificate("one")
+        )
 
         with pytest.raises(RetencionSoportadaRevisionConflictError):
             _write(repository, correction, operation)
         with pytest.raises(RetencionSoportadaWriteRefusedError) as refused:
             _write(
                 repository,
-                _record(repository, retencion="1250.00", fingerprint="2" * 64, replaces="3" * 64),
+                _record(repository, retencion="1250.00", fingerprint=_certificate("two"), replaces="3" * 64),
                 operation,
                 expected_revision_id=stored_revision,
             )
         assert refused.value.reason == "identity_mismatch"
         with pytest.raises(RetencionSoportadaWriteRefusedError):
             _write(
-                repository, _record(repository, fingerprint="2" * 64), operation, expected_revision_id=stored_revision
+                repository,
+                _record(repository, fingerprint=_certificate("two")),
+                operation,
+                expected_revision_id=stored_revision,
             )
         assert repository.load_records(_EJERCICIO) == (original,)
 
@@ -330,6 +346,7 @@ def test_two_payers_of_one_class_sum_and_each_other_class_stays_distinct(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = _repository()
+        certificate = _certificate("one")
         _write(repository, _record(repository, payer=_PAYER_A), operation)
         _write(
             repository,
@@ -355,7 +372,7 @@ def test_two_payers_of_one_class_sum_and_each_other_class_stays_distinct(
     for node in resolution.provenance:
         assert node.resolved_binding_source is BindingSourceKind.RETENCION_SOPORTADA
         assert node.terminal_origin is TerminalOriginClass.PAYER_CERTIFICATE
-        assert node.fingerprint == "1" * 64
+        assert node.fingerprint == certificate
         assert node.source_ref is not None
         assert _PAYER_A not in node.source_ref and _PAYER_B not in node.source_ref
 
@@ -371,3 +388,69 @@ def test_a_zero_record_is_a_proven_zero(tmp_path: Path, operation: PinnedAuthori
         resolution = _resolve(repository, _revision(_binding(_TRABAJO_BINDING, "trabajo")))
     assert resolution.binding_values == {_TRABAJO_BINDING: Decimal("0.00")}
     assert resolution.diagnostics == ()
+
+
+def test_a_fingerprint_custody_does_not_hold_is_refused_and_nothing_is_stored(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = _repository()
+        # Well formed, but the sha256 of no bytes this profile ever kept.
+        with pytest.raises(RetencionSoportadaWriteRefusedError) as refused:
+            _write(repository, _record(repository, fingerprint="9" * 64), operation)
+        assert refused.value.reason == "certificate_not_in_custody"
+        assert repository.load_records(_EJERCICIO) == ()
+
+        kept = _record(repository, fingerprint=_certificate("kept"))
+        _write(repository, kept, operation)
+        assert repository.load_records(_EJERCICIO) == (kept,)
+
+
+def test_certificate_bytes_that_no_longer_hash_to_their_address_are_refused(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = _repository()
+        objects = secure_object_repository_for_active_bucket()
+        store = AttachmentStore(objects=objects)
+        genuine = store.put_bytes(b"synthetic certificate genuine")
+        other = store.put_bytes(b"synthetic certificate substituted")
+        # File the substituted bytes' row under the genuine address: the address now names other content.
+        genuine_row = objects.load(
+            ATTACHMENT_BLOB_NAMESPACE.namespace,
+            other,
+            expected_class=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
+            max_supported_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
+        )
+        assert genuine_row is not None
+        objects.delete(ATTACHMENT_BLOB_NAMESPACE.namespace, genuine)
+        objects.save(
+            namespace=ATTACHMENT_BLOB_NAMESPACE.namespace,
+            object_key=genuine,
+            classification=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
+            schema_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
+            written_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+            payload=genuine_row.payload,
+        )
+        assert store.read_bytes(genuine) == b"synthetic certificate substituted"
+        custody = active_bucket_custody()
+        assert custody.holds(other)
+        assert not custody.holds(genuine)
+
+        with pytest.raises(RetencionSoportadaWriteRefusedError) as refused:
+            _write(repository, _record(repository, fingerprint=genuine), operation)
+        assert refused.value.reason == "certificate_not_in_custody"
+        assert repository.load_records(_EJERCICIO) == ()
+
+
+def test_kept_certificate_bytes_round_trip_and_are_never_plaintext_on_disk(tmp_path: Path) -> None:
+    certificate = b"%PDF-1.4 synthetic payer certificate, retencion 1200.00 for B00000001"
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        digest = keep_certificate(certificate)
+        assert digest == hashlib.sha256(certificate).hexdigest()
+        assert AttachmentStore(objects=secure_object_repository_for_active_bucket()).read_bytes(digest) == certificate
+        assert active_bucket_custody().holds(digest)
+
+        on_disk = b"".join(path.read_bytes() for path in profile.storage_root.rglob("*") if path.is_file())
+        assert certificate not in on_disk
+        assert b"synthetic payer certificate" not in on_disk

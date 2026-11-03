@@ -9,8 +9,10 @@ from pydantic import BaseModel
 from ..ledger.read_access import resolve_ledger_exact_request_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
+    RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES,
     RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+    OperationCapabilities,
 )
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -43,6 +45,8 @@ class _OperationShape:
     projection_type: type[BaseModel]
     refusal_codes: frozenset[str]
     mutation: bool
+    keeps_certificate_bytes: bool = False
+    """Whether the operation can keep certificate bytes in custody before it refuses the record."""
 
 
 _SHAPES: dict[str, _OperationShape] = {
@@ -54,6 +58,7 @@ _SHAPES: dict[str, _OperationShape] = {
         RetencionSoportadaMutationProjection,
         RETENCION_SOPORTADA_REFUSAL_CODES,
         mutation=True,
+        keeps_certificate_bytes=True,
     ),
     RETENCION_SOPORTADA_REMOVE_OPERATION_DEFINITION_ID: _OperationShape(
         RetencionSoportadaRemoveRequest,
@@ -78,6 +83,14 @@ def resolve_retencion_soportada_operation_access(
     )
 
 
+def _capabilities(shape: _OperationShape) -> OperationCapabilities:
+    if shape.keeps_certificate_bytes:
+        return RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
+    if shape.mutation:
+        return RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+    return RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
+
+
 def _definition(
     definition_id: str,
     ports_factory: RetencionSoportadaCertificadoPortsFactory,
@@ -90,11 +103,7 @@ def _definition(
         result_type=RetencionSoportadaOperationExecutionResult,
         executor_type=RetencionSoportadaCertificadoExecutor,
         build=lambda: RetencionSoportadaCertificadoExecutor(ports_factory, definition_id=definition_id),
-        capabilities=(
-            RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-            if shape.mutation
-            else RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
-        ),
+        capabilities=_capabilities(shape),
         refusal_detail_codes=shape.refusal_codes,
     )
 
