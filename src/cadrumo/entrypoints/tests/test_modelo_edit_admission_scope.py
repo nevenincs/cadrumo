@@ -158,7 +158,11 @@ def test_the_surface_classifies_every_address_by_what_can_reach_the_engine(
             elif source is not BindingSourceKind.MANUAL_INPUT and source not in CALLER_OVERRIDABLE_CARRY_SOURCES:
                 assert entry.reason is ModeloEditNonWritableReason.OVERRIDE_POLICY_UNDECIDED
             else:
-                assert entry.reason is ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
+                assert entry.reason in {
+                    ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE,
+                    ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE,
+                    ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION,
+                }
 
 
 def test_a_carry_binding_override_is_admitted_set_and_removed(tmp_path: Path) -> None:

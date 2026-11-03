@@ -13,6 +13,7 @@ import yaml
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import lookup_translation
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -33,6 +34,7 @@ from ....domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ....domain.calculations.registry.schema_base import CasillaDataType
+from ....domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
@@ -45,11 +47,15 @@ from ...operations.subject_reference import OperationSubjectReferenceV1
 from .._edit_execution import _channel_value
 from ..edit_admission import admit_modelo_edit_baseline
 from ..edit_apply_scalar_contracts import wire_scalar_value
+from ..edit_contract import ModeloEditMutationFamily
 from ..edit_models import (
+    ModeloBindingEditIntentV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
     ModeloEditDomainRefusalV1,
+    ModeloEditFindingSeverity,
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
     ModeloEditNonWritableReason,
     ModeloEditNonWritableScalarSurfaceEntryV1,
@@ -58,24 +64,31 @@ from ..edit_models import (
     ModeloEditParseRefusalV1,
     ModeloEditParseRequestV1,
     ModeloEditParseResultV1,
+    ModeloEditPreflightEvaluatedV1,
     ModeloEditRefusalCode,
     ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
+    ModeloEditSubmissionV1,
     ModeloEditValueAddressV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from ..edit_parsing import parse_modelo_edit_lexeme
+from ..edit_preflight import INTENT_NOT_ADMITTED, preflight_modelo_edit
+from ..edit_review_wording import edit_finding_words, edit_refusal_words
+from ..edit_services import validate_binding_intent
 from ..edit_transient_operand import modelo_edit_financial_operand
 from ..edit_value_grammar import ModeloEditValueGrammarV1
 from ..work_form_models import (
+    ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormOrigin,
+    ModeloWorkForm,
     revised_field,
 )
 from ..work_form_scalar_values import comparable_entry
-from .work_form_fixture import built_form
+from .work_form_fixture import built_form, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -83,11 +96,17 @@ _NOW = datetime(2026, 9, 21, 10, 0, tzinfo=UTC)
 _DIGEST = "a" * 64
 
 
-def _recording_operation(prepared: RegistrySnapshot) -> tuple[PinnedAuthorityOperation, list[dict[str, object]]]:
-    """Return a pinned operation serving ``prepared``, and the coordinates it is asked for."""
+def _recording_operation(
+    prepared: RegistrySnapshot, layout: FormLayoutDefinition | None = None
+) -> tuple[PinnedAuthorityOperation, list[dict[str, object]]]:
+    """Return a pinned operation serving ``prepared`` and its form ``layout``, and the coordinates it is asked for."""
     calls: list[dict[str, object]] = []
 
     class _RecordingOperation(PinnedAuthorityOperation):
+        @override
+        def form_layout(self, modelo_id: str | Modelo, revision_id: str) -> FormLayoutDefinition | None:
+            return layout
+
         @override
         def snapshot(
             self,
@@ -580,3 +599,172 @@ def test_a_revision_below_calculation_grade_is_refused_not_raised() -> None:
     assert isinstance(outcome.refusal, ModeloEditDomainRefusalV1)
     assert outcome.refusal.code is ModeloEditRefusalCode.ADMISSION_DENIED
     assert outcome.refusal.facts == ("registry_authority_grade",)
+
+
+def _served_baseline(
+    operation: PinnedAuthorityOperation, modelo: str, *, filing_year: int, code: str
+) -> tuple[ModeloEditBaselineV1, WorkUnitCatalogue]:
+    """Admit an edit baseline over the published revision and its published form layout."""
+    snapshot = form_snapshot(operation, modelo, filing_year, code)
+    period = Period.from_year_and_code(filing_year, code)
+    revision_id = str(snapshot.revision.id)
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id="edit-bucket", modelo=modelo, filing_year=filing_year, period=period, revision_id=revision_id
+        ),
+        bucket_id="edit-bucket",
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=f"{modelo} {filing_year}",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    catalogue = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
+    recording, _ = _recording_operation(snapshot, operation.form_layout(modelo, revision_id))
+    outcome = admit_modelo_edit_baseline(
+        work_unit_id=work_unit.work_unit_id,
+        work_catalogue=catalogue,
+        calculation_catalogue=CalculationRevisionCatalogue(),
+        operation=recording,
+        operation_contracts=_contracts(),
+        issued_at=datetime.now(UTC),
+    )
+    assert isinstance(outcome, ModeloEditAdmittedV1)
+    return outcome.baseline, catalogue
+
+
+def _binding_entry(
+    baseline: ModeloEditBaselineV1, binding_id: str
+) -> ModeloEditWritableBindingOverrideSurfaceEntryV1 | ModeloEditNonWritableBindingOverrideSurfaceEntryV1:
+    return next(
+        entry
+        for entry in baseline.permitted_surface
+        if isinstance(
+            entry, (ModeloEditWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
+        )
+        and entry.binding_id == binding_id
+    )
+
+
+def _form_bindings(form: ModeloWorkForm) -> set[str]:
+    """Every binding a field or answer of the form is addressed to, edits, or is fed by first."""
+    served = {
+        str(address.binding_id)
+        for field in form.fields()
+        for address in (field.address, field.edit_address)
+        if isinstance(address, ModeloFormBindingAddressV1)
+    }
+    return served | {str(field.bindings[0].binding_id) for field in form.fields() if field.bindings}
+
+
+def _override(binding_id: str) -> ModeloBindingEditIntentV1:
+    return ModeloBindingEditIntentV1(
+        address=ModeloEditBindingAddressV1(binding_id=binding_id),
+        kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+        value="12.50",
+    )
+
+
+def _preflight(
+    baseline: ModeloEditBaselineV1, catalogue: WorkUnitCatalogue, intent: ModeloBindingEditIntentV1
+) -> ModeloEditPreflightEvaluatedV1:
+    result = preflight_modelo_edit(
+        ModeloEditSubmissionV1(
+            baseline=baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, binding_intents=(intent,)
+        ),
+        work_catalogue=catalogue,
+        calculation_catalogue=CalculationRevisionCatalogue(),
+        tax_id_format=None,
+    )
+    assert isinstance(result, ModeloEditPreflightEvaluatedV1)
+    return result
+
+
+_FIRST_QUARTER_ANSWER = "irpf.previous_year_economic_activity_net_income"
+_QUARTERLY_ROW_FIELD = "modelo-131.dpa.local-unico"
+_FOREIGN_ASSET_ROW_FIELD = "modelo-720.type_2.numero-de-valores"
+_FOREIGN_ASSET_BASELINE = "modelo-720-prior-year-cuentas-valoracion-baseline"
+
+
+def test_an_override_the_form_serves_an_answer_for_is_admitted(authority_operation: PinnedAuthorityOperation) -> None:
+    baseline, catalogue = _served_baseline(authority_operation, "130", filing_year=2025, code="1T")
+    form = built_form(authority_operation, "130", 2025, "1T", permitted_surface=baseline.permitted_surface)
+    address = ModeloEditBindingAddressV1(binding_id=_FIRST_QUARTER_ANSWER)
+
+    assert isinstance(_binding_entry(baseline, _FIRST_QUARTER_ANSWER), ModeloEditWritableBindingOverrideSurfaceEntryV1)
+    answer = next(
+        field
+        for field in form.answers
+        if field.edit_address == ModeloFormBindingAddressV1(binding_id=_FIRST_QUARTER_ANSWER)
+    )
+    assert answer.editability in {ModeloFormEditability.EDITABLE_OVERRIDE, ModeloFormEditability.OVERRIDABLE_SOURCE}
+    assert validate_binding_intent(baseline, address, ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE) is None
+    assert _preflight(baseline, catalogue, _override(_FIRST_QUARTER_ANSWER)).findings == ()
+
+
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "code", "binding_id", "reason"),
+    [
+        ("131", 2025, "3T", _QUARTERLY_ROW_FIELD, ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE),
+        ("720", 2025, "0A", _FOREIGN_ASSET_ROW_FIELD, ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE),
+        ("720", 2025, "0A", _FOREIGN_ASSET_BASELINE, ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION),
+    ],
+)
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_an_override_the_form_serves_nothing_for_is_refused_in_words(
+    authority_operation: PinnedAuthorityOperation,
+    modelo: str,
+    filing_year: int,
+    code: str,
+    binding_id: str,
+    reason: ModeloEditNonWritableReason,
+    language: OutputLanguage,
+) -> None:
+    baseline, catalogue = _served_baseline(authority_operation, modelo, filing_year=filing_year, code=code)
+    form = built_form(authority_operation, modelo, filing_year, code, permitted_surface=baseline.permitted_surface)
+    address = ModeloEditBindingAddressV1(binding_id=binding_id)
+
+    entry = _binding_entry(baseline, binding_id)
+    assert isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
+    assert entry.reason is reason
+    assert binding_id not in _form_bindings(form), "the form serves a field for an override the surface refuses"
+    refusal = validate_binding_intent(baseline, address, ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE)
+    assert isinstance(refusal, ModeloEditDomainRefusalV1)
+    assert refusal.code is ModeloEditRefusalCode.DISALLOWED_INTENT
+    assert refusal.address == address
+    findings = _preflight(baseline, catalogue, _override(binding_id)).findings
+    assert [(finding.code, finding.severity) for finding in findings] == [
+        (INTENT_NOT_ADMITTED, ModeloEditFindingSeverity.ERROR)
+    ]
+    for words in (edit_finding_words(findings[0], language), edit_refusal_words(refusal, language)):
+        assert words
+        assert "workspace." not in words
+    # The reason the surface records is worded in every language for the form that would show it.
+    reason_words = lookup_translation(f"workspace.modelo.not_writable.{reason.value}", locale=language.value)
+    assert reason_words is not None
+    assert len(reason_words) > 0
+    assert "not_writable" not in reason_words
+
+
+def test_the_surface_and_the_form_agree_on_every_published_override(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    admitted = 0
+    for modelo, filing_year, code in (
+        ("100", 2025, "0A"),
+        ("130", 2025, "1T"),
+        ("131", 2025, "3T"),
+        ("720", 2025, "0A"),
+    ):
+        baseline, _catalogue = _served_baseline(authority_operation, modelo, filing_year=filing_year, code=code)
+        form = built_form(authority_operation, modelo, filing_year, code, permitted_surface=baseline.permitted_surface)
+        writable = {
+            entry.binding_id
+            for entry in baseline.permitted_surface
+            if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        }
+        assert writable <= _form_bindings(form), f"{modelo}: {sorted(writable - _form_bindings(form))}"
+        admitted += len(writable)
+    assert admitted, "no published override was admitted, so the agreement proved nothing"

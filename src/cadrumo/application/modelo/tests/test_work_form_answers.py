@@ -17,7 +17,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
 from ....core.period import Period, accepted_filing_period_codes
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_temporal import binding_applies_to_period
 from ....domain.calculations.registry.errors import EjercicioOrdenNotYetPublishedError, NoRevisionForPeriodError
 from ....domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -30,6 +29,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
 from ..edit_admission import permitted_binding_entry
 from ..edit_models import ModeloEditWritableBindingOverrideSurfaceEntryV1
+from ..row_filled_bindings import row_filled_binding_ids
 from ..work_form import build_modelo_work_form
 from ..work_form_models import (
     ModeloFormBindingAddressV1,
@@ -92,15 +92,16 @@ def _form(
     return form, snapshot
 
 
-def _admitted_overrides(snapshot: RegistrySnapshot, code: str) -> set[str]:
-    """The bindings the admission lets an operator override that the calculation reads for ``code``."""
+def _admitted_overrides(snapshot: RegistrySnapshot, code: str, layout: FormLayoutDefinition | None) -> set[str]:
+    """The bindings the admission lets an operator override for ``code`` on a form laid out as ``layout``."""
     revision = snapshot.revision
+    row_filled = row_filled_binding_ids(revision, layout)
     return {
         str(binding.id)
         for binding in revision.bindings
-        if binding_applies_to_period(binding.applicability, code)
-        and isinstance(
-            permitted_binding_entry(binding, revision=revision), ModeloEditWritableBindingOverrideSurfaceEntryV1
+        if isinstance(
+            permitted_binding_entry(binding, revision=revision, period=code, row_filled=row_filled),
+            ModeloEditWritableBindingOverrideSurfaceEntryV1,
         )
     }
 
@@ -162,16 +163,19 @@ def test_every_admitted_override_of_every_revision_is_taken_by_a_field(operation
             continue
         form, snapshot = _form(operation, modelo, year, code)
         rows = _row_bindings(layout, snapshot)
-        for binding_id in sorted(_admitted_overrides(snapshot, code) - rows):
+        admitted = _admitted_overrides(snapshot, code, layout)
+        # A column of repeated lines has no single override to give, however the registry spells its source.
+        assert not admitted & rows, f"{modelo}/{revision_id}: {sorted(admitted & rows)}"
+        for binding_id in sorted(admitted):
             if not _takers(form, binding_id):
                 untaken.append(f"{modelo}/{revision_id}: {binding_id}")
         answered += len(form.answers)
-        # An answer is one the calculation reads for this period and the admission lets the filer give.
+        # An answer is one the admission lets the filer give for this period.
         assert {
             str(field.address.binding_id)
             for field in form.answers
             if isinstance(field.address, ModeloFormBindingAddressV1)
-        } <= (_admitted_overrides(snapshot, code) - rows), f"{modelo}/{revision_id}"
+        } <= admitted, f"{modelo}/{revision_id}"
     assert not untaken, "\n".join(untaken)
     assert answered, "no revision needed an answer of its own, so the answers were never exercised"
 
@@ -185,7 +189,8 @@ def test_every_answer_of_every_revision_is_named_in_words(
         period = Period.from_year_and_code(year, code)
         snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
         # A revision that admits no override for the period can serve no answer, so its form is not built.
-        if operation.form_layout(modelo, revision_id) is None or not _admitted_overrides(snapshot, code):
+        layout = operation.form_layout(modelo, revision_id)
+        if layout is None or not _admitted_overrides(snapshot, code, layout):
             continue
         form, _snapshot = _form(operation, modelo, year, code, language)
         unnamed.extend(

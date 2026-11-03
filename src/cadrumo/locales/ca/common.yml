@@ -10213,6 +10213,8 @@ workspace:
       capability_unavailable: Editar aquesta casella encara no està disponible en
         aquesta versió.
       computed_by_formula: Cadrumo la calcula a partir d'altres caselles.
+      not_read_by_calculation: El càlcul no fa servir aquest valor en el període d'aquesta
+        declaració, així que aquí no hi ha res a canviar.
       override_policy_undecided: Encara no pots substituir aquest valor aquí. Corregeix-lo
         on s'origina i torna a calcular.
       row_field_template: Aquesta casella representa una columna de línies repetides;

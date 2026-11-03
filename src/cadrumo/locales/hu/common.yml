@@ -10164,6 +10164,8 @@ workspace:
       capability_unavailable: Ennek a rovatnak a szerkesztése ebben a verzióban még
         nem érhető el.
       computed_by_formula: A Cadrumo más rovatokból számítja ki.
+      not_read_by_calculation: A számítás ennek a bevallásnak az időszakában nem használja
+        ezt az értéket, ezért itt nincs mit módosítani.
       override_policy_undecided: Ezt az értéket itt még nem írhatod felül. Javítsd
         ott, ahonnan származik, majd számolj újra.
       row_field_template: Ez a rovat ismétlődő sorok egy oszlopát jelöli; a sorokat

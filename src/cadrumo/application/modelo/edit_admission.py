@@ -28,10 +28,12 @@ from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...core.time.clock import now as clock_now
+from ...domain.calculations.registry.binding_temporal import binding_applies_to_period
 from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import CasillaDataType
+from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
@@ -61,6 +63,7 @@ from .edit_models import (
 )
 from .edit_services import calculation_head_digest, work_unit_record_digest
 from .edit_value_grammar import binding_value_grammar, casilla_value_grammar
+from .row_filled_bindings import row_filled_binding_ids
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -184,7 +187,11 @@ def _scalar_entry(
 
 
 def permitted_binding_entry(
-    binding: BindingDefinition, *, revision: ModeloRevision
+    binding: BindingDefinition,
+    *,
+    revision: ModeloRevision,
+    period: str,
+    row_filled: frozenset[str],
 ) -> ModeloEditPermittedSurfaceEntryV1:
     """Classify one binding's override by its source's grounded override policy.
 
@@ -193,6 +200,13 @@ def permitted_binding_entry(
     ladder locks does not, because the declaration would stop reflecting the
     records it adds up. Every other source kind has no grounded override
     policy yet and stays read-only as undecided rather than guessed.
+
+    The form serves a field or an answer for exactly the overrides this
+    accepts, so an override the form could not show is refused here as well:
+    a binding a repeating group fills line by line (``row_filled``, from
+    :func:`~.row_filled_bindings.row_filled_binding_ids`) stands for a column
+    of lines, and one the calculation does not read for ``period`` changes
+    nothing the declaration shows.
     """
     source = binding.source
     if source in BUCKET_AGGREGATION_LOCK_SOURCES:
@@ -208,6 +222,14 @@ def permitted_binding_entry(
         return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
             binding_id=binding.id, reason=ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
         )
+    if binding.id in row_filled:
+        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
+            binding_id=binding.id, reason=ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
+        )
+    if not binding_applies_to_period(binding.applicability, period):
+        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
+            binding_id=binding.id, reason=ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION
+        )
     return ModeloEditWritableBindingOverrideSurfaceEntryV1(
         binding_id=binding.id,
         allowed_intents=(
@@ -218,14 +240,20 @@ def permitted_binding_entry(
     )
 
 
-def _permitted_surface(snapshot: RegistrySnapshot) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
+def _permitted_surface(
+    snapshot: RegistrySnapshot, *, period: str, layout: FormLayoutDefinition | None
+) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
     """Classify every casilla and binding of the revision as writable or read-only with its reason."""
     revision = snapshot.revision
+    row_filled = row_filled_binding_ids(revision, layout)
     row_field_casilla_ids = frozenset(row_field_template_records_by_casilla(revision))
     entries: list[ModeloEditPermittedSurfaceEntryV1] = [
         _scalar_entry(casilla, row_field_casilla_ids=row_field_casilla_ids) for casilla in revision.casillas
     ]
-    entries.extend(permitted_binding_entry(binding, revision=revision) for binding in revision.bindings)
+    entries.extend(
+        permitted_binding_entry(binding, revision=revision, period=period, row_filled=row_filled)
+        for binding in revision.bindings
+    )
 
     def address_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
         if isinstance(entry, (ModeloEditWritableScalarSurfaceEntryV1, ModeloEditNonWritableScalarSurfaceEntryV1)):
@@ -323,7 +351,11 @@ def admit_modelo_edit_baseline(
     if isinstance(compatibility, ModeloEditRefusedV1):
         return compatibility
     issue_time = issued_at if issued_at is not None else clock_now()
-    surface = _permitted_surface(snapshot)
+    surface = _permitted_surface(
+        snapshot,
+        period=work_unit.period.registry_token,
+        layout=operation.form_layout(str(work_unit.modelo), snapshot.revision.id),
+    )
     if len(surface) > MAX_MODELO_EDIT_SURFACE_ENTRIES:
         return _refused(
             ModeloEditRefusalCode.REGISTRY_SCHEMA_CONFLICT,

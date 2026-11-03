@@ -1430,6 +1430,7 @@
         "cadrumo.application.modelo.revision_replay_inputs",
         "cadrumo.application.modelo.revision_selection_operation",
         "cadrumo.application.modelo.revision_snapshot_operation",
+        "cadrumo.application.modelo.row_filled_bindings",
         "cadrumo.application.modelo.row_source_fingerprint",
         "cadrumo.application.modelo.selectors",
         "cadrumo.application.modelo.semantic_role_resolution",

@@ -9,10 +9,11 @@ admitted binding that no page, working figure or unplaced casilla takes, and no
 repeating group of the layout fills row by row, as an answer of its own.
 
 A binding is taken by a field that is addressed to it, edits it, or is fed by
-it first, since an override of that field replaces exactly that binding. A
-binding the calculation does not read for the target period asks nothing, so
-it is not gathered, and neither is one declared with no calculation consumer:
-its handoff reads the carried observation itself, never an override.
+it first, since an override of that field replaces exactly that binding. The
+admission refuses, and so the form does not gather, a binding the calculation
+does not read for the target period or declares with no calculation consumer
+(its handoff reads the carried observation itself, never an override), and one
+a repeating group fills line by line, which stands for a column of lines.
 """
 
 from __future__ import annotations
@@ -20,10 +21,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
-from ...domain.calculations.registry.binding_temporal import binding_applies_to_period
-from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormRepeatingGroupBlock
+from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from .edit_admission import permitted_binding_entry
 from .edit_models import ModeloEditWritableBindingOverrideSurfaceEntryV1
+from .row_filled_bindings import row_filled_binding_ids
 from .work_form_field_projection import project_binding_field
 from .work_form_models import ModeloFormBindingAddressV1, ModeloFormField
 
@@ -34,17 +35,23 @@ if TYPE_CHECKING:
 def answer_fields(
     layout: FormLayoutDefinition, context: WorkFormContext, shown: Iterable[ModeloFormField]
 ) -> tuple[ModeloFormField, ...]:
-    """The admitted binding overrides no ``shown`` field and no repeating group takes, in declaration order."""
-    taken = _taken_by_fields(shown) | _filled_by_rows(layout, context)
+    """The admitted binding overrides no ``shown`` field takes, in declaration order.
+
+    The admission already leaves out what the form cannot answer: a binding a
+    repeating group fills row by row and one the calculation does not read for
+    the period are not writable entries, so they are not gathered here.
+    """
+    taken = _taken_by_fields(shown)
     revision = context.snapshot.revision
     period = context.review.period.registry_token
+    row_filled = row_filled_binding_ids(revision, layout)
     return tuple(
         project_binding_field(binding.id, context)
         for binding in revision.bindings
         if binding.id not in taken
-        and binding_applies_to_period(binding.applicability, period)
         and isinstance(
-            permitted_binding_entry(binding, revision=revision), ModeloEditWritableBindingOverrideSurfaceEntryV1
+            permitted_binding_entry(binding, revision=revision, period=period, row_filled=row_filled),
+            ModeloEditWritableBindingOverrideSurfaceEntryV1,
         )
     )
 
@@ -58,39 +65,6 @@ def _taken_by_fields(shown: Iterable[ModeloFormField]) -> set[str]:
         if field.bindings:
             taken.add(field.bindings[0].binding_id)
     return taken
-
-
-def _filled_by_rows(layout: FormLayoutDefinition, context: WorkFormContext) -> set[str]:
-    """The bindings a repeating group fills row by row: its row set, its columns and its export record's fields."""
-    groups = [
-        block
-        for page in layout.pages
-        for section in page.sections
-        for block in section.blocks
-        if isinstance(block, FormRepeatingGroupBlock)
-    ]
-    records = {group.export_record_id for group in groups if group.export_record_id is not None}
-    filled: set[str] = set()
-    for group in groups:
-        if group.binding_id is not None:
-            filled.add(group.binding_id)
-        filled.update(column.binding_id for column in group.columns if column.binding_id is not None)
-        filled.update(
-            cell.binding_id
-            for grid in group.grids
-            for row in grid.rows
-            for cell in row.cells
-            if cell.binding_id is not None
-        )
-    filled.update(
-        field.binding
-        for export_layout in context.snapshot.revision.export_layouts
-        for record in export_layout.records
-        if record.id in records
-        for field in record.fields
-        if field.binding is not None
-    )
-    return filled
 
 
 __all__ = ["answer_fields"]

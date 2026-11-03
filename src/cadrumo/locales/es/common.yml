@@ -10222,6 +10222,8 @@ workspace:
       absent_from_admission: Esta casilla no se puede editar aquí.
       capability_unavailable: Editar esta casilla aún no está disponible en esta versión.
       computed_by_formula: Cadrumo la calcula a partir de otras casillas.
+      not_read_by_calculation: El cálculo no usa este valor en el periodo de esta
+        declaración, así que aquí no hay nada que cambiar.
       override_policy_undecided: Aún no puedes sustituir este valor aquí. Corrígelo
         donde se origina y vuelve a calcular.
       row_field_template: Esta casilla representa una columna de líneas repetidas;

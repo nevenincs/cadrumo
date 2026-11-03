@@ -152,6 +152,10 @@ class ModeloEditNonWritableReason(StrEnum):
     deterministic source owns, whose override would make the declaration stop
     reflecting the records it adds up; ``OVERRIDE_POLICY_UNDECIDED`` is a
     binding whose source kind has no grounded override policy yet.
+    ``NOT_READ_BY_CALCULATION`` is a binding the calculation does not read for
+    this declaration's period, so an override of it would change nothing the
+    declaration shows. A binding a repeating group fills row by row is
+    ``ROW_FIELD_TEMPLATE`` as well: it stands for a column of lines.
     """
 
     COMPUTED_BY_FORMULA = "computed_by_formula"
@@ -161,6 +165,7 @@ class ModeloEditNonWritableReason(StrEnum):
     VALUE_CHANNEL_UNAVAILABLE = "value_channel_unavailable"
     SOURCE_LOCKED = "source_locked"
     OVERRIDE_POLICY_UNDECIDED = "override_policy_undecided"
+    NOT_READ_BY_CALCULATION = "not_read_by_calculation"
 
 
 class ModeloEditFindingSeverity(StrEnum):

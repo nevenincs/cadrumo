@@ -151,7 +151,7 @@ def test_the_editor_reports_a_suffered_withholding_binding_as_source_locked() ->
     revision = _m100_revision()
     binding = next(item for item in revision.bindings if item.id == "renta-retencion-soportada-trabajo")
 
-    entry = permitted_binding_entry(binding, revision=revision)
+    entry = permitted_binding_entry(binding, revision=revision, period="0A", row_filled=frozenset())
 
     assert isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
     assert entry.reason is ModeloEditNonWritableReason.SOURCE_LOCKED
