@@ -21,7 +21,7 @@ related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:3582f245c1362e5d9a1b7bb7213a84a16bcb547e04b967b8e7658fd3c99db782'
+body_hash: 'sha256:66d34c5c74d7674de517735a3664aa455d2198138314a9b4ded9b668be56b153'
 ---
 
 # `frontend-polish` plan
@@ -65,7 +65,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S24` - Recover refused Sede dialog answers and viewport updates without replaying uncertain person input; `native/desktop/frontend/src/components/browser/useSedeView.ts, native/desktop/frontend/tests/scenarios/sede-browser.spec.ts, native/desktop/frontend/src/dev/`.
 - [x] `S12` - Complete AEAT and browser workflow review including preparation, progress, outcomes, notifications and calendar interactions; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/components/calendar/`.
 - [x] `S13` - Complete agent conversation, approval, clarification, attachments, documents and skills workflow review; `native/desktop/frontend/src/components/agent/, native/desktop/frontend/src/shell/agentPermission.ts, native/desktop/frontend/src/shell/agentClarification.ts`.
-- [ ] `S14` - Complete settings, provider, model and provisioning workflow review; `native/desktop/frontend/src/components/settings/, native/desktop/frontend/src/components/setup/, native/desktop/frontend/src/shell/provisioning.ts`.
+- [x] `S14` - Complete settings, provider, model and provisioning workflow review; `native/desktop/frontend/src/components/settings/, native/desktop/frontend/src/components/setup/, native/desktop/frontend/src/shell/provisioning.ts`.
 - [ ] `S15` - Complete diagnostics, logs, terminals, documentation, search and command-palette review; `native/desktop/frontend/src/components/RecordList.tsx, native/desktop/frontend/src/components/TerminalPane.tsx, native/desktop/frontend/src/components/DocsFrame.tsx, native/desktop/frontend/src/components/CommandPalette.tsx`.
 - [ ] `S16` - Measure cross-surface read, rendering, subscription and retained-state costs and implement justified improvements; `native/desktop/frontend/src/shell/, native/desktop/frontend/scripts/benchmark.mjs, native/desktop/frontend/tests/`.
 - [ ] `S17` - Verify integrated workflows and close the complete surface coverage audit; `native/desktop/frontend/tests/, native/desktop/tests/, .vault/audit/`.
