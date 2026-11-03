@@ -19,12 +19,15 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { calm } from "../form/FieldRow";
+import { UNPLACED_PAGE, WORKING_FIGURES_PAGE } from "../form/session";
 
 // The form's outline as the read model serves it: its groups in order, the
 // sections each gathers, and what each still asks of the filer. Nothing here
 // knows a modelo. A declaration whose layout declares no outline is served
 // one group per page, and is drawn the same way. Applicability and counts are
 // the read's; the navigator only hides or folds what the filer asks it to.
+// The two lists the form keeps apart from its pages are groups of their own,
+// with no sections: choosing one jumps to the page the form draws that list on.
 
 /** One section of a group, with what the read says of it. */
 type OutlineSection = {
@@ -40,7 +43,23 @@ type OutlineGroup = {
   group: ModeloFormOutlineGroup;
   sections: OutlineSection[];
   inProfile: boolean;
+  /** The page the form draws a list kept apart from its pages on, which a
+   * choice of the group jumps to; null for a group of sections. */
+  target: string | null;
 };
+
+/** The page the form draws the boxes of a group on, when the group gathers a
+ * list kept apart from the pages. */
+function apartPage(group: ModeloFormOutlineGroup): string | null {
+  switch (group.kind) {
+    case "unplaced":
+      return UNPLACED_PAGE;
+    case "working_figures":
+      return WORKING_FIGURES_PAGE;
+    default:
+      return null;
+  }
+}
 
 /** Every box a section draws. */
 function fieldsOf(section: PublicModeloFormSection): PublicModeloFormField[] {
@@ -89,6 +108,7 @@ function outlineOf(form: PublicModeloWorkForm): OutlineGroup[] {
       return section ? [section] : [];
     }),
     inProfile: group.section_ids.some((id) => kept.has(id)),
+    target: apartPage(group),
   }));
 }
 
@@ -200,7 +220,9 @@ export function OutlineNavigator({
     () =>
       new Set(
         groups
-          .filter(({ group }) => group.applies !== false)
+          .filter(
+            ({ group, target }) => target === null && group.applies !== false,
+          )
           .map(({ group }) => group.id),
       ),
   );
@@ -223,30 +245,38 @@ export function OutlineNavigator({
     : groups;
   // Every row the tree shows, in reading order, for the arrow keys.
   const visible: { id: string; parent: string | null }[] = [];
-  for (const { group, sections, inProfile } of shownGroups) {
+  for (const { group, sections, inProfile, target } of shownGroups) {
     const groupItem = itemId("group", group.id);
     visible.push({ id: groupItem, parent: null });
-    if (open.has(group.id)) {
+    if (target === null && open.has(group.id)) {
       for (const section of sections)
         visible.push({ id: itemId("section", section.id), parent: groupItem });
       if (inProfile && onOpenProfile)
         visible.push({ id: itemId("profile", group.id), parent: groupItem });
     }
   }
-  const currentGroup = currentSectionId
-    ? groups.find(({ group }) => group.section_ids.includes(currentSectionId))
-        ?.group.id
+  const currentEntry = currentSectionId
+    ? groups.find(
+        ({ group, target }) =>
+          group.section_ids.includes(currentSectionId) ||
+          target === currentSectionId,
+      )
     : undefined;
+  const currentGroup = currentEntry?.group.id;
+  // The row that marks where the form is: a section, or the group of a list
+  // kept apart, which has no sections.
+  const currentItemId = !currentSectionId
+    ? null
+    : currentEntry?.target === currentSectionId
+      ? itemId("group", currentEntry.group.id)
+      : itemId("section", currentSectionId);
 
   const [focused, setFocused] = useState<string | null>(null);
   const tabStop =
     focused && visible.some((item) => item.id === focused)
       ? focused
-      : currentSectionId &&
-          visible.some(
-            (item) => item.id === itemId("section", currentSectionId),
-          )
-        ? itemId("section", currentSectionId)
+      : currentItemId && visible.some((item) => item.id === currentItemId)
+        ? currentItemId
         : (visible[0]?.id ?? null);
   const items = useRef(new Map<string, HTMLDivElement>());
   const moved = useRef(false);
@@ -268,9 +298,17 @@ export function OutlineNavigator({
       else next.delete(groupId);
       return next;
     });
-  const jump = (sectionId: string) => {
-    setFocused(itemId("section", sectionId));
+  const jump = (sectionId: string, row = itemId("section", sectionId)) => {
+    setFocused(row);
     onJump(sectionId);
+  };
+  // Whether a group gathers sections, which fold, and not a list kept apart.
+  const groupHolds = (groupId: string) =>
+    groups.find(({ group }) => group.id === groupId)?.target === null;
+  const jumpApart = (groupId: string) => {
+    const target = groups.find(({ group }) => group.id === groupId)?.target;
+    if (target) jump(target, itemId("group", groupId));
+    return target != null;
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
@@ -297,7 +335,7 @@ export function OutlineNavigator({
           focusItem(visible.at(-1)?.id);
           return true;
         case "ArrowRight":
-          if (kind === "group") {
+          if (kind === "group" && groupHolds(id)) {
             if (!open.has(id)) toggle(id, true);
             else if (visible[at + 1]?.parent === item.id)
               focusItem(visible[at + 1]?.id);
@@ -310,8 +348,9 @@ export function OutlineNavigator({
           return true;
         case "Enter":
         case " ":
-          if (kind === "group") toggle(id);
-          else if (kind === "profile") onOpenProfile?.();
+          if (kind === "group") {
+            if (!jumpApart(id)) toggle(id);
+          } else if (kind === "profile") onOpenProfile?.();
           else jump(id);
           return true;
         default:
@@ -324,7 +363,8 @@ export function OutlineNavigator({
     }
   };
 
-  const allOpen = shownGroups.every(({ group }) => open.has(group.id));
+  const foldable = shownGroups.filter(({ target }) => target === null);
+  const allOpen = foldable.every(({ group }) => open.has(group.id));
   const row =
     "flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring";
   const keep = (id: string) => (element: HTMLDivElement | null) => {
@@ -359,7 +399,7 @@ export function OutlineNavigator({
             setOpen(
               allOpen
                 ? new Set()
-                : new Set(shownGroups.map(({ group }) => group.id)),
+                : new Set(foldable.map(({ group }) => group.id)),
             )
           }
         >
@@ -372,9 +412,10 @@ export function OutlineNavigator({
         onKeyDown={onKeyDown}
         className="flex flex-col gap-0.5 p-2"
       >
-        {shownGroups.map(({ group, sections, inProfile }) => {
+        {shownGroups.map(({ group, sections, inProfile, target }) => {
           const groupItem = itemId("group", group.id);
-          const expanded = open.has(group.id);
+          const apart = target !== null;
+          const expanded = !apart && open.has(group.id);
           const childList = `${base}-${group.id}-sections`;
           return (
             // The treeitem is the row alone, so its name is the row's words
@@ -384,26 +425,33 @@ export function OutlineNavigator({
                 ref={keep(groupItem)}
                 role="treeitem"
                 aria-level={1}
-                aria-expanded={expanded}
+                aria-expanded={apart ? undefined : expanded}
                 aria-owns={expanded ? childList : undefined}
                 aria-current={
-                  currentGroup === group.id && !expanded
+                  currentGroup === group.id && (apart || !expanded)
                     ? "location"
                     : undefined
                 }
                 data-outline-group={group.id}
+                data-outline-kind={group.kind}
                 data-applies={String(group.applies)}
                 tabIndex={tabStop === groupItem ? 0 : -1}
                 onFocus={() => setFocused(groupItem)}
-                onClick={() => toggle(group.id)}
+                onClick={() =>
+                  apart ? jump(target, groupItem) : toggle(group.id)
+                }
                 className={cn(
                   row,
-                  "cursor-default font-medium",
+                  apart ? "cursor-pointer" : "cursor-default",
+                  "font-medium",
                   group.applies === false ? "text-faint" : "text-foreground",
+                  apart && currentGroup === group.id && "bg-selected",
                 )}
               >
                 <Icon
-                  name={expanded ? "chevronDown" : "forward"}
+                  name={
+                    apart ? "forward" : expanded ? "chevronDown" : "forward"
+                  }
                   size="xs"
                   className="shrink-0 text-faint"
                 />

@@ -318,6 +318,31 @@ test("the outline's counts and applicability are the served ones", async ({
   }
 });
 
+test("the lists kept apart from the pages are reached through the outline", async ({
+  page: target,
+}) => {
+  await openRenta(target);
+  const tree = await openOutline(target);
+  const read = await servedRenta(target);
+  const apart = read.form.form.outline.filter(
+    (group) => group.kind !== "sections",
+  );
+  expect(apart.map((group) => group.kind).sort()).toEqual([
+    "unplaced",
+    "working_figures",
+  ]);
+  for (const group of apart) {
+    const item = tree.locator(`[data-outline-group="${group.id}"]`);
+    await item.click();
+    await expect(item).toHaveAttribute("aria-current", "location");
+    await expect(
+      workspace(target).getByRole("tab", {
+        name: new RegExp(`^${group.heading.text}`),
+      }),
+    ).toHaveAttribute("aria-selected", "true");
+  }
+});
+
 test("withholding credit 0596 routes from the form to the register", async ({
   page: target,
 }) => {

@@ -707,6 +707,12 @@ def confirmable(field: ModeloFormField) -> bool:
 class ModeloFormCounts(ModeloFormBase):
     """How many fields stand in each origin, for a section, a page or the form.
 
+    ``total`` counts the boxes counted: a section's, a page's, or for the form
+    every box on its pages plus its working figures and unplaced casillas. Every
+    tally of the form is the sum of its outline groups' tallies, so a navigator
+    drawn from the outline reaches each box any tally counts, and none it
+    does not.
+
     ``needs_input`` and ``default_to_confirm`` count what is still to do, so a
     declaration recorded as filed counts none of either: nothing on it can be
     entered or confirmed any more, and changing it starts a correction.
@@ -867,20 +873,41 @@ class ModeloFormPage(ModeloFormBase):
     applicability_words: str | None = None
 
 
-class ModeloFormOutlineGroup(ModeloFormBase):
-    """One group of the form's navigation outline: a heading and the sections it gathers, in order.
+class ModeloFormOutlineKind(StrEnum):
+    """What an outline group gathers: sections of the form's pages, or one of the two lists kept apart from them."""
 
-    ``section_ids`` are :attr:`ModeloFormSection.id` values, every section of the
-    form's pages in exactly one group. ``counts`` roll up the boxes of those
-    sections; ``applies`` is ``True`` when any of them applies, ``False`` when
-    none does, and ``None`` otherwise.
+    SECTIONS = "sections"
+    #: The working figures: boxes the calculation produces that the form does not print.
+    WORKING_FIGURES = "working_figures"
+    #: The casillas the layout could not position.
+    UNPLACED = "unplaced"
+
+
+class ModeloFormOutlineGroup(ModeloFormBase):
+    """One group of the form's navigation outline: a heading and what it gathers, in order.
+
+    A ``sections`` group names :attr:`ModeloFormSection.id` values in
+    ``section_ids``, every section of the form's pages in exactly one such
+    group. A ``working_figures`` or ``unplaced`` group gathers the form's list of
+    that name, has no section ids, and is present only when the list is not
+    empty. ``counts`` roll up the boxes the group gathers; ``applies`` is
+    ``True`` when any of its sections applies, ``False`` when none does, and
+    ``None`` otherwise. A list kept apart from the pages always applies.
     """
 
     id: str
     heading: ModeloFormText
+    kind: ModeloFormOutlineKind = ModeloFormOutlineKind.SECTIONS
     section_ids: tuple[str, ...]
     counts: ModeloFormCounts
     applies: bool | None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _only_a_sections_group_names_sections(self) -> ModeloFormOutlineGroup:
+        if self.kind is not ModeloFormOutlineKind.SECTIONS and self.section_ids:
+            raise ValueError("a group of a list kept apart from the pages names no section")
+        return self
 
 
 class ModeloFormUnplacedField(ModeloFormBase):
@@ -1017,6 +1044,13 @@ class ModeloWorkForm(ModeloFormBase):
         outlined = [section_id for group in self.outline for section_id in group.section_ids]
         if sorted(outlined) != sorted(section.id for page in self.pages for section in page.sections):
             raise ValueError("the outline must name every section of the form exactly once")
+        kept_apart = {
+            ModeloFormOutlineKind.WORKING_FIGURES: bool(self.working_figures),
+            ModeloFormOutlineKind.UNPLACED: bool(self.unplaced),
+        }
+        for kind, present in kept_apart.items():
+            if sum(1 for group in self.outline if group.kind is kind) != int(present):
+                raise ValueError(f"the outline holds one {kind.value} group when the form has such boxes, else none")
         return self
 
     @property

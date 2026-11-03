@@ -146,6 +146,29 @@ export const RentaKeptInProfile: Story = {
   },
 };
 
+export const RentaKeptApart: Story = {
+  name: "100 · the lists kept apart from the pages lead to their pages",
+  render: (_, { globals }) => (
+    <Navigator modelo="100" shape="renta" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement }) => {
+    const outline = await tree(canvasElement);
+    const kinds = ["unplaced", "working_figures"];
+    for (const kind of kinds) {
+      const apart = outline.querySelector<HTMLElement>(
+        `[data-outline-kind="${kind}"]`,
+      );
+      expect(apart).not.toBeNull();
+      // A list has no sections to fold: it is chosen, not opened.
+      expect(apart).not.toHaveAttribute("aria-expanded");
+      await userEvent.click(apart!);
+      await waitFor(() =>
+        expect(apart).toHaveAttribute("aria-current", "location"),
+      );
+    }
+  },
+};
+
 export const RentaCollapsed: Story = {
   name: "100 · every group folded",
   render: (_, { globals }) => (

@@ -3,7 +3,9 @@
 The 2025 Modelo 100 declares its outline and the headings of its technical
 parts in reviewed generator input; every other layout falls back to one group
 per page. Either way the outline names every section once and rolls up the
-attention its boxes ask for.
+attention its boxes ask for. The casillas the layout could not position and the
+working figures each stand in a group of their own, so that every tally of the
+form is the sum of its outline groups' tallies.
 """
 
 from __future__ import annotations
@@ -24,9 +26,12 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..work_form import build_modelo_work_form
 from ..work_form_layout import section_applies
 from ..work_form_models import (
+    ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormOrigin,
+    ModeloFormOutlineGroup,
+    ModeloFormOutlineKind,
     ModeloFormStanding,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
@@ -40,6 +45,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 def _fields(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
     return tuple(field for page in form.pages for section in page.sections for field in section_fields(section))
+
+
+def _section_groups(form: ModeloWorkForm) -> tuple[ModeloFormOutlineGroup, ...]:
+    return tuple(group for group in form.outline if group.kind is ModeloFormOutlineKind.SECTIONS)
 
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
@@ -57,6 +66,7 @@ def test_the_2025_renta_names_every_page_section_and_group_in_words(
     ]
     technical += [group.id for group in form.outline if group.heading.disclosure is ModeloFormTextDisclosure.TECHNICAL]
     assert technical == []
+    assert {group.kind for group in form.outline} == set(ModeloFormOutlineKind)
     assert {group.heading.text for group in form.outline}.isdisjoint({group.id for group in form.outline})
 
 
@@ -74,7 +84,7 @@ def test_the_2025_headings_do_not_name_another_editions_part_of_the_same_id(
 
     assert heading(current, "calculoimpuestores-4")[1] is ModeloFormTextDisclosure.LOCALIZED
     assert heading(earlier, "calculoimpuestores-4")[1] is ModeloFormTextDisclosure.TECHNICAL
-    assert [group.id for group in earlier.outline] == [page.id for page in earlier.pages if page.sections]
+    assert [group.id for group in _section_groups(earlier)] == [page.id for page in earlier.pages if page.sections]
 
 
 @pytest.mark.parametrize(("modelo", "year", "code"), [("100", 2025, "0A"), ("303", 2026, "1T"), ("130", 2025, "1T")])
@@ -87,21 +97,21 @@ def test_the_outline_names_every_section_once_and_counts_what_it_holds(
     named = [section_id for group in form.outline for section_id in group.section_ids]
     assert sorted(named) == sorted(sections)
     assert len(named) == len(set(named))
-    for group in form.outline:
+    for group in _section_groups(form):
         members = [field for section_id in group.section_ids for field in section_fields(sections[section_id])]
         assert group.counts.total == len(members)
         assert group.counts.needs_you == sum(1 for field in members if field.standing is ModeloFormStanding.NEEDS_YOU)
         assert group.counts.could_not_calculate == sum(
             1 for field in members if field.origin is ModeloFormOrigin.CALCULATION_FAILED
         )
-    assert sum(group.counts.total for group in form.outline) == len(_fields(form))
+    assert sum(group.counts.total for group in form.outline) == len(form.fields())
 
 
 def test_a_layout_without_an_outline_groups_its_sections_by_page(operation: PinnedAuthorityOperation) -> None:
     form = built_form(operation, "303", 2026, "1T")
 
     assert _layout(operation, "303", form.registry_revision_id).outline == ()
-    assert [(group.id, group.heading) for group in form.outline] == [
+    assert [(group.id, group.heading) for group in _section_groups(form)] == [
         (page.id, page.heading) for page in form.pages if page.sections
     ]
 
@@ -110,9 +120,10 @@ def test_the_renta_outline_follows_the_declared_groups(operation: PinnedAuthorit
     form = built_form(operation, "100", 2025, "0A")
     declared = _layout(operation, "100", form.registry_revision_id).outline
 
-    assert [group.id for group in form.outline] == [group.id for group in declared]
-    assert form.outline[-1].id == "result"
-    result = next(group for group in form.outline if group.id == "result")
+    groups = _section_groups(form)
+    assert [group.id for group in groups] == [group.id for group in declared]
+    assert groups[-1].id == "result"
+    result = next(group for group in groups if group.id == "result")
     assert "datoseconomicos-resultados.ingresodevolucionres" in result.section_ids
 
 
@@ -163,7 +174,7 @@ def test_boxes_the_calculation_could_not_work_out_need_the_filer_until_the_decla
     assert draft.counts.needs_you == sum(
         1 for field in draft.fields() if field.standing is ModeloFormStanding.NEEDS_YOU
     )
-    assert sum(group.counts.could_not_calculate for group in draft.outline) == len(failed)
+    assert sum(group.counts.could_not_calculate for group in _section_groups(draft)) == len(failed)
     assert any(group.counts.could_not_calculate for group in draft.outline)
     assert filed.counts.needs_you == 0
     assert all(group.counts.needs_you == 0 for group in filed.outline)
@@ -200,8 +211,9 @@ def test_a_section_applies_as_its_page_does_unless_every_box_is_proven_not_to(
     not_applying = [page for page in form.pages if page.applies is False and page.sections]
     assert not_applying, "the first-quarter Modelo 303 has no page that does not apply"
     assert all(section.applies is False for page in not_applying for section in page.sections)
-    for group in form.outline:
+    for group in _section_groups(form):
         assert group.applies is pages[group.id].applies
+    assert all(group.applies is True for group in form.outline if group.kind is not ModeloFormOutlineKind.SECTIONS)
 
 
 def _layout(operation: PinnedAuthorityOperation, modelo: str, revision_id: str) -> FormLayoutDefinition:
@@ -233,3 +245,95 @@ def test_the_layout_refuses_an_outline_that_hides_repeats_or_invents_a_section(
     for outline in refused:
         with pytest.raises(ValidationError):
             _with_outline(layout, outline)
+
+
+_PARITY_CONTEXTS = (
+    ("100", 2025, "0A"),
+    ("100", 2024, "0A"),
+    ("130", 2025, "1T"),
+    ("131", 2025, "1T"),
+    ("182", 2025, "0A"),
+    ("184", 2025, "0A"),
+    ("303", 2026, "1T"),
+    ("303", 2025, "1T"),
+    ("390", 2025, "0A"),
+)
+
+
+def _tallies(counts: ModeloFormCounts) -> dict[str, int]:
+    return {name: getattr(counts, name) for name in ModeloFormCounts.model_fields}
+
+
+@pytest.mark.parametrize(("modelo", "year", "code"), _PARITY_CONTEXTS)
+@pytest.mark.parametrize("state", ["uncalculated", "calculated", "filed"])
+def test_every_tally_of_the_form_is_the_sum_of_its_outline_groups(
+    operation: PinnedAuthorityOperation, modelo: str, year: int, code: str, state: str
+) -> None:
+    """A navigator drawn from the outline reaches each box any tally counts, and none it does not."""
+    form = built_form(
+        operation,
+        modelo,
+        year,
+        code,
+        calculated=state != "uncalculated",
+        lifecycle=CalculationRevisionState.PRESENTADO if state == "filed" else None,
+    )
+
+    summed = {name: sum(_tallies(group.counts)[name] for group in form.outline) for name in _tallies(form.counts)}
+    assert _tallies(form.counts) == summed
+    kept_apart = {group.kind: group for group in form.outline if group.kind is not ModeloFormOutlineKind.SECTIONS}
+    assert set(kept_apart) == {
+        kind
+        for kind, listed in (
+            (ModeloFormOutlineKind.WORKING_FIGURES, form.working_figures),
+            (ModeloFormOutlineKind.UNPLACED, form.unplaced),
+        )
+        if listed
+    }
+    if form.working_figures:
+        assert kept_apart[ModeloFormOutlineKind.WORKING_FIGURES].counts.total == len(form.working_figures)
+    if form.unplaced:
+        assert kept_apart[ModeloFormOutlineKind.UNPLACED].counts.total == len(form.unplaced)
+
+
+def test_a_failed_working_figure_is_counted_and_reached_through_the_working_figures_group(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Figures no placed box reads still count as could-not-calculate, in a group the navigator can open."""
+    form = built_form(operation, "100", 2025, "0A", calculated=True)
+    failed = [field for field in form.working_figures if field.origin is ModeloFormOrigin.CALCULATION_FAILED]
+    group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.WORKING_FIGURES)
+
+    assert len(failed) == 2
+    assert group.counts.could_not_calculate == len(failed)
+    assert group.counts.needs_you == len(failed)
+    assert group.section_ids == ()
+    assert form.counts.could_not_calculate == sum(item.counts.could_not_calculate for item in form.outline)
+
+
+def test_unplaced_casillas_that_ask_for_a_value_are_reached_through_the_unplaced_group(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = built_form(operation, "182", 2025, "0A")
+    group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.UNPLACED)
+
+    asked = sum(1 for item in form.unplaced if item.field.origin is ModeloFormOrigin.NEEDS_INPUT)
+    assert asked >= 1
+    assert group.counts.needs_input == asked
+    assert form.counts.needs_input == asked + sum(item.counts.needs_input for item in _section_groups(form))
+
+
+def test_a_group_of_a_list_kept_apart_names_no_section_and_the_form_holds_one_only_for_a_non_empty_list(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = built_form(operation, "182", 2025, "0A")
+    group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.UNPLACED)
+
+    with pytest.raises(ValidationError):
+        ModeloFormOutlineGroup.model_validate({**group.model_dump(), "section_ids": ["page.section"]})
+    with pytest.raises(ValidationError):
+        ModeloWorkForm.model_validate({**form.model_dump(), "unplaced": []})
+    with pytest.raises(ValidationError):
+        ModeloWorkForm.model_validate(
+            {**form.model_dump(), "outline": [item.model_dump() for item in _section_groups(form)]}
+        )

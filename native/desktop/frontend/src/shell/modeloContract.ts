@@ -4429,6 +4429,12 @@ export type ModeloFormCasillaAddressV1 = {
 /**
  * How many fields stand in each origin, for a section, a page or the form.
  *
+ * `total` counts the boxes counted: a section's, a page's, or for the form
+ * every box on its pages plus its working figures and unplaced casillas. Every
+ * tally of the form is the sum of its outline groups' tallies, so a navigator
+ * drawn from the outline reaches each box any tally counts, and none it does
+ * not.
+ *
  * `needs_input` and `default_to_confirm` count what is still to do, so a
  * declaration recorded as filed counts none of either: nothing on it can be
  * entered or confirmed any more, and changing it starts a correction.
@@ -4775,20 +4781,31 @@ export type ModeloFormOrigin =
   | "entered";
 
 /**
- * One group of the form's navigation outline: a heading and the sections it
- * gathers, in order.
+ * One group of the form's navigation outline: a heading and what it gathers,
+ * in order.
  *
- * `section_ids` are `id` values, every section of the form's pages in exactly
- * one group. `counts` roll up the boxes of those sections; `applies` is `True`
- * when any of them applies, `False` when none does, and `None` otherwise.
+ * A `sections` group names `id` values in `section_ids`, every section of the
+ * form's pages in exactly one such group. A `working_figures` or `unplaced`
+ * group gathers the form's list of that name, has no section ids, and is
+ * present only when the list is not empty. `counts` roll up the boxes the
+ * group gathers; `applies` is `True` when any of its sections applies, `False`
+ * when none does, and `None` otherwise. A list kept apart from the pages
+ * always applies.
  */
 export type ModeloFormOutlineGroup = {
   id: string;
   heading: ModeloFormText;
+  kind: ModeloFormOutlineKind;
   section_ids: string[];
   counts: ModeloFormCounts;
   applies: boolean | null;
 };
+
+/**
+ * What an outline group gathers: sections of the form's pages, or one of the
+ * two lists kept apart from them.
+ */
+export type ModeloFormOutlineKind = "sections" | "working_figures" | "unplaced";
 
 /**
  * The unit a rate is stated in.

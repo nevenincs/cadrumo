@@ -2,26 +2,37 @@
 
 The outline is the layout's declared one where the revision declares it, and
 otherwise one group per page, headed as the page is. Either way every section of
-the form's pages stands in exactly one group, so a navigator drawn from it can
-neither hide nor repeat a part of the form, and it counts nothing itself: each
-group carries its boxes' counts and whether any of its sections applies.
+the form's pages stands in exactly one group. The two lists the form keeps apart
+from its pages, the casillas the layout could not position and the working
+figures, each stand in a group of their own when they are not empty. A
+navigator drawn from the outline can therefore neither hide nor repeat a part
+of the form, and the form's counts are the sum of the groups' counts: the outline
+reaches every box any tally counts, and the outline counts nothing else.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import Final
 
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.schema_form_layouts import FormOutlineGroup
 from .work_form_counts import count_work_form_fields
 from .work_form_localization import localized_heading
 from .work_form_models import (
+    ModeloFormField,
     ModeloFormOutlineGroup,
+    ModeloFormOutlineKind,
     ModeloFormPage,
     ModeloFormSection,
     ModeloFormText,
+    ModeloFormUnplacedField,
     section_fields,
 )
+
+#: The headings of the two lists kept apart from the pages, which the form's window also names its pages by.
+_UNPLACED_HEADING_KEY: Final[str] = "workspace.modelo.page.unplaced"
+_WORKING_FIGURES_HEADING_KEY: Final[str] = "workspace.modelo.page.calculation_details"
 
 
 def form_outline(
@@ -30,19 +41,42 @@ def form_outline(
     language: OutputLanguage,
     *,
     filed: bool,
+    unplaced: tuple[ModeloFormUnplacedField, ...] = (),
+    working_figures: tuple[ModeloFormField, ...] = (),
 ) -> tuple[ModeloFormOutlineGroup, ...]:
-    """Group ``pages``' sections by the ``declared`` outline, or by page when the layout declares none."""
+    """Group ``pages``' sections by the ``declared`` outline, or by page when the layout declares none.
+
+    The ``unplaced`` casillas and the ``working_figures`` follow as a group each,
+    in the order the form draws them, when they are not empty.
+    """
     sections = {section.id: section for page in pages for section in page.sections}
     if not declared:
-        return tuple(_group(page.id, page.heading, page.sections, filed=filed) for page in pages if page.sections)
-    return tuple(
-        _group(
-            group.id,
-            localized_heading(group.heading_key, group.official_heading, group.id, language),
-            tuple(sections[f"{item.page_id}.{item.section_id}"] for item in group.sections),
-            filed=filed,
+        grouped = tuple(_group(page.id, page.heading, page.sections, filed=filed) for page in pages if page.sections)
+    else:
+        grouped = tuple(
+            _group(
+                group.id,
+                localized_heading(group.heading_key, group.official_heading, group.id, language),
+                tuple(sections[f"{item.page_id}.{item.section_id}"] for item in group.sections),
+                filed=filed,
+            )
+            for group in declared
         )
-        for group in declared
+    kept_apart = (
+        (ModeloFormOutlineKind.UNPLACED, _UNPLACED_HEADING_KEY, tuple(item.field for item in unplaced)),
+        (ModeloFormOutlineKind.WORKING_FIGURES, _WORKING_FIGURES_HEADING_KEY, working_figures),
+    )
+    return grouped + tuple(
+        ModeloFormOutlineGroup(
+            id=kind.value,
+            heading=localized_heading(key, None, kind.value, language),
+            kind=kind,
+            section_ids=(),
+            counts=count_work_form_fields(fields, filed=filed),
+            applies=True,
+        )
+        for kind, key, fields in kept_apart
+        if fields
     )
 
 

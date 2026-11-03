@@ -330,7 +330,7 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         language=OutputLanguage.ES,
         layout_provenance=ModeloFormLayoutProvenance.GENERATED,
         pages=pages,
-        outline=form_outline((), pages, OutputLanguage.ES, filed=False),
+        outline=form_outline((), pages, OutputLanguage.ES, filed=False, working_figures=(working,)),
         working_figures=(working,),
         result_addresses=("19",),
         counts=form_counts(every),
@@ -342,8 +342,11 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
 
 def with_pages(form: ModeloWorkForm, pages: tuple[ModeloFormPage, ...], **update: object) -> ModeloWorkForm:
     """The form showing ``pages`` instead, its outline grouping their sections page by page."""
-    outline = form_outline((), pages, form.language, filed=False)
-    return form.model_copy(update={**update, "pages": pages, "outline": outline})
+    paged = form.model_copy(update={**update, "pages": pages})
+    outline = form_outline(
+        (), pages, form.language, filed=False, unplaced=paged.unplaced, working_figures=paged.working_figures
+    )
+    return paged.model_copy(update={"outline": outline})
 
 
 @dataclass

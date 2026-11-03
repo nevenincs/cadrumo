@@ -33,7 +33,9 @@ Classification is decided once, here, so every frontend shows the same states:
 * whether the declaration is recorded as filed, which closes it to editing and
   leaves nothing counted as still to do, and
 * the navigation outline: the layout's declared groups of sections, or one
-  group per page, each with its headings, applicability and attention counts.
+  group per page, each with its headings, applicability and attention counts,
+  and a group each for the unplaced casillas and the working figures, so that
+  the form's counts are the sum of the outline's.
 
 "Entered by the filer" is only ever claimed from the operator's own recorded
 entries. A revision that predates them has an unknown operator record, and a
@@ -341,7 +343,14 @@ def _assemble_work_form(
         layout_provenance=provenance,
         seed_source=layout.seed_source,
         pages=pages,
-        outline=form_outline(layout.outline, pages, language, filed=context.filed),
+        outline=form_outline(
+            layout.outline,
+            pages,
+            language,
+            filed=context.filed,
+            unplaced=tuple(unplaced),
+            working_figures=tuple(working),
+        ),
         working_figures=tuple(working),
         unplaced=tuple(unplaced),
         result_addresses=result_casilla_ids(context),
