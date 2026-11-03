@@ -7,7 +7,7 @@ revision_id = "esquema-exterior"
 seed_source = "authored"
 review = { state = "generated", notes = "Authored detail and country-result pages grounded in BOE-A-2021-10161 pp74091-74093.27 EU member-state categories follow the dated registry catalogue; XI is not an Exterior services destination. Country amounts are registry formulas over exact service/correction grid bindings. Positive and negative corrections remain separate; refunds never offset another country payable. Missing rows remain unknown unless explicit source/scenario membership is supplied. Additional-payment page remains unimplemented. No operator review or published authority adoption claimed." }
 generator_version = 1
-source_state_digest = "a5b796073ec3574436b4944f2edb80e1615e95c5267f8e954493fb9361d666fa"
+source_state_digest = "db45bea659f09f332895c933da80a37f3b688b0dd480cb602b227125f4d472ce"
 design_sources = [
     { source_ref = "boe-modelo-369-2021-original-form-pdf", sha256 = "5ec990d839f8505bda2862c3b27b22f120df6b0e02edf345e726f006618eec12" },
     { source_ref = "aeat-dr-369-2021", sha256 = "8bfe61dfb79b5cb2eedb6ec3afc23ddfa48fcf196fb679f6ad359aa9319e0754" },

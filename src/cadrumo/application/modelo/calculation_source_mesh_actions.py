@@ -127,6 +127,8 @@ def resolve_bucket_source_mesh(
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         revision=snapshot.revision,
+        caller_binding_values=dict(binding_values or {}),
+        caller_enum_binding_values=dict(enum_binding_values or {}),
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         profile=profile,

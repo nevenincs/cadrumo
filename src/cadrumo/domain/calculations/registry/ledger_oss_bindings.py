@@ -12,6 +12,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_v
 
 from ....core.aggregation import BindingSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import Period
 from ....core.time.clock import today_madrid
 from ...iva.classification import TransactionKind, require_transaction_kind
 from ...iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
@@ -74,6 +75,8 @@ class OssIossLedgerObservation(BaseModel):
         iva_amount: IVA amount in EUR (already applied at the
             destination MS rate per OSS / IOSS rules).
         effect: Whether the amounts add a supply or take a correction off one.
+        corrected_period: The earlier period the amounts adjust, or ``None`` when they belong
+            to the period being filed. Such a line reaches the return only as a correction row.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -88,6 +91,7 @@ class OssIossLedgerObservation(BaseModel):
     base_amount: Decimal
     iva_amount: Decimal
     effect: OssLineEffect = OssLineEffect.SUPPLY
+    corrected_period: Period | None = None
 
     @property
     def signed_base_amount(self) -> Decimal:
@@ -213,7 +217,8 @@ def _oss_build_matcher(
 
     def matcher(observation: OssIossLedgerObservation) -> bool:
         return (
-            observation.regime == regime
+            observation.corrected_period is None
+            and observation.regime == regime
             and observation.destination_member_state == destination
             and observation.rate_kind == rate_kind
             and observation.invoice_direction is direction

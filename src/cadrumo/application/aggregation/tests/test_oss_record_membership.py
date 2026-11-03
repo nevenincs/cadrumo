@@ -21,12 +21,13 @@ from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .. import oss_ioss
 from ..errors import AggregationValidationError
-from ..source_mesh import CalculationSourceContext
+from ..source_mesh import CalculationSourceContext, CalculationSourceResolution, ClosedRecordRowSet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "2bb5bf4c-ff0d-440c-a428-b075558b3595"
 _DATE = date(2025, 7, 15)
+_CORRECTIONS = "modelo-369-exterior-t36902"
 
 
 class _InvoiceReader:
@@ -49,6 +50,11 @@ class _Transactions:
 
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
+
+
+def _service_rows(resolution: CalculationSourceResolution) -> ClosedRecordRowSet:
+    (closed,) = (row_set for row_set in resolution.closed_record_row_sets if row_set.record_id != _CORRECTIONS)
+    return closed
 
 
 def _invoice(
@@ -115,7 +121,7 @@ def _resolver(reader: _InvoiceReader) -> oss_ioss.OssIossLedgerSourceResolver:
 def test_bound_catalogue_closes_all_declared_service_slots(operation: PinnedAuthorityOperation) -> None:
     reader = _InvoiceReader((_invoice(), _invoice("SYNTHETIC-2", base="200")))
     resolution = _resolver(reader).resolve(_context(operation))
-    (closed,) = resolution.closed_record_row_sets
+    closed = _service_rows(resolution)
     assert reader.reads == 1
     assert len(closed.rows) == 28
     assert all(len(row.binding_ids) == 5 for row in closed.rows)

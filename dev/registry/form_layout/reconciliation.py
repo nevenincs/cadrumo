@@ -13,6 +13,7 @@ from cadrumo.core.atomic_write import hardened_staged_bytes_publication
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportSignPosition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormContextFieldBlock,
@@ -168,6 +169,7 @@ def reconcile_unreferenced_export_producers(before: ModeloRevision, after: Model
     A computed X-or-blank marker may become an already displayed manual casilla,
     and an unseen header slot printing a blank or one constant may become a
     computed marker printing the same constant;
+    an amount may gain the signed shape its design's notes state;
     all geometry, constraints, sources and other declarations must stay identical.
     """
     layout = _validated_producer_form(before, after)
@@ -256,7 +258,7 @@ def _reconcile_producer_field(
     layout: FormLayoutDefinition,
     referenced: set[tuple[str, str, str]],
 ) -> int:
-    changed = 0
+    changed = _admit_note_signed_amount(old_field, new_field)
     if old_field["kind"] == "computed" and new_field["kind"] == "casilla":
         _validate_marker_owner(old_field, new_field, address, before, layout, referenced)
         old_field.update(kind="casilla", casilla_id=new_field["casilla_id"], computed_key=None)
@@ -271,6 +273,26 @@ def _reconcile_producer_field(
         raise RegistryValidationError("producer reconciliation refuses a displayed or non-header change")
     old_field["producer_key"] = new_field["producer_key"]
     return changed + 1
+
+
+def _admit_note_signed_amount(old_field: dict[str, object], new_field: dict[str, object]) -> int:
+    """Admit an unsigned 2-decimal amount gaining the signed shape its design's notes state.
+
+    The bytes of every non-negative value stay the same and the form still reads
+    the same slot, so the draft's presentation is untouched.
+    """
+    if (
+        new_field["sign_position"] != ExportSignPosition.MINUS_DISPLACES_DIGIT.value
+        or old_field["sign_position"] is not None
+        or old_field["signed"] is not False
+        or old_field["data_type"] != "decimal"
+        or old_field["decimals"] != 2
+    ):
+        return 0
+    old_field.update(
+        {key: new_field[key] for key in ("data_type", "decimals", "signed", "sign_position", "design_type")}
+    )
+    return 1
 
 
 def _validate_header_to_marker(

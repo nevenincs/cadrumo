@@ -165,6 +165,16 @@ aggregation:
       consignment_exceeds_ceiling: 'Un enviament supera el valor màxim d''aquest règim:
         el seu valor intrínsec no pot excedir el límit de la llei. Revisa la factura
         o declara''l fora del règim d''importació.'
+      correction_beyond_limit: 'Una correcció OSS/IOSS supera el termini de tres anys,
+        que va acabar el {limit}. Ja no va en un model 369: presenta-la directament
+        davant l''Estat membre de consum.'
+      correction_currency_unsourced: Una factura rectificativa OSS/IOSS en moneda
+        estrangera corregeix un període anterior, i les fonts oficials no diuen el
+        tipus de canvi de quin dia la converteix. Introdueix la correcció en euros
+        com a fila de l'apartat de correccions.
+      correction_row_invalid: Una fila de l'apartat de correccions OSS/IOSS no és
+        vàlida. Necessita l'Estat membre de consum, l'exercici, el tipus de període
+        d'aquesta autoliquidació, un període anterior a ella i la quota corregida.
       detail_consumption_state_excluded: Els serveis del règim de la Unió no es poden
         declarar per a l'Estat membre d'identificació, perquè el règim només cobreix
         els serveis prestats en un Estat membre on no estiguis establert.
@@ -193,20 +203,22 @@ aggregation:
         el tipus de l'Estat membre de consum va canviar durant aquest període, de
         manera que la data d'emissió no permet saber quin tipus s'aplica. Registra
         la data d'operació a la factura.
+      rate_tier_absent: L'Estat membre de destinació no té cap tipus en aquest tram
+        en cap data, així que no es pot escriure la fila. Revisa el tram de la línia
+        de la factura.
       rate_tier_ambiguous: Dos tipus del mateix tram de l'Estat membre de destinació
         donen aquesta mateixa quota, així que no se sap quin tipus escriure a la fila.
         Revisa la línia de la factura.
       rectificativa_above_row: 'Les factures rectificatives OSS/IOSS resten més del
         que declara la fila que corregeixen. Revisa''n els imports: potser indiquen
         el resultat després de la correcció i no la reducció.'
-      rectificativa_outside_period: Una factura rectificativa OSS/IOSS corregeix una
-        factura d'un altre període. Correspon a les correccions de períodes anteriors
-        del model 369, i aquest camp del disseny no admet aquí un import negatiu.
-        No s'ha exportat res; declara-ho directament a la Seu.
       rectificativa_target_differs: Una factura rectificativa OSS/IOSS té un altre
         règim, una altra classe d'operació o un altre Estat membre que la factura
         que corregeix, així que no es pot restar de la seva fila. Revisa les dues
         factures.
+      rectificativa_target_later: Una factura rectificativa OSS/IOSS esmenta una factura
+        d'un període posterior a la seva pròpia data d'expedició. Revisa les dates
+        de les dues factures.
       rectificativa_target_unknown: Una factura rectificativa OSS/IOSS anomena una
         factura que no està registrada, així que no se sap quina fila corregeix. Registra
         aquesta factura o corregeix la referència.

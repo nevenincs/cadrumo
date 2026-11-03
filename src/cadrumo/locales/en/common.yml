@@ -156,6 +156,16 @@ aggregation:
       consignment_exceeds_ceiling: 'A consignment exceeds this regime''s limit: its
         intrinsic value may not pass the ceiling set by law. Check the invoice or
         declare it outside the import scheme.'
+      correction_beyond_limit: 'An OSS/IOSS correction is past the three-year limit,
+        which ended on {limit}. It no longer goes on a Modelo 369: take it directly
+        to the Member State of consumption.'
+      correction_currency_unsourced: An OSS/IOSS corrective invoice in a foreign currency
+        corrects an earlier period, and the official sources don't say which day's
+        rate converts it. Enter the correction in euros as a row of the corrections
+        section.
+      correction_row_invalid: A row of the OSS/IOSS corrections section isn't valid.
+        It needs the Member State of consumption, the year, the period type of this
+        return, a period earlier than this return, and the corrected cuota.
       detail_consumption_state_excluded: Union-scheme services cannot be declared
         for the member state of identification, because the scheme only covers services
         supplied in a member state where you are not established.
@@ -181,19 +191,20 @@ aggregation:
         the rate of the member state of consumption changed during this period, so
         its issue date cannot show which rate applies. Record the operation date on
         the invoice.
+      rate_tier_absent: The destination Member State has no rate in this rate tier
+        at any date, so the row cannot be written. Check the rate tier of the invoice
+        line.
       rate_tier_ambiguous: Two rates in the same tier of the destination Member State
         give this cuota, so the rate to write on the row is not known. Check the invoice
         line.
       rectificativa_above_row: 'OSS/IOSS corrective invoices take off more than the
         row they correct declares. Check their amounts: they may state the result
         after the correction rather than the reduction.'
-      rectificativa_outside_period: An OSS/IOSS corrective invoice corrects an invoice
-        of another period. It belongs in Modelo 369's corrections of earlier periods,
-        and that field of the design does not take a negative amount here. Nothing
-        was exported; declare it directly on the Sede.
       rectificativa_target_differs: An OSS/IOSS corrective invoice has a different
         regime, operation kind or Member State from the invoice it corrects, so it
         cannot come off that row. Check both invoices.
+      rectificativa_target_later: An OSS/IOSS corrective invoice names an invoice
+        of a later period than its own issue date. Check the dates of both invoices.
       rectificativa_target_unknown: An OSS/IOSS corrective invoice names an invoice
         that is not recorded, so the row it corrects is not known. Record that invoice
         or correct the reference.

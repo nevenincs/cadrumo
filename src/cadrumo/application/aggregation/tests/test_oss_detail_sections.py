@@ -251,7 +251,9 @@ def test_union_closes_its_goods_and_establishment_tables_empty_on_the_same_read(
         "modelo-369-union-t36905",
         "modelo-369-union-t36906",
         "modelo-369-union-t36907",
+        "modelo-369-union-t36908",
     ]
+    assert not any(row.occupied for row in closed["modelo-369-union-t36908"].rows)
     for record in ("modelo-369-union-t36905", "modelo-369-union-t36906", "modelo-369-union-t36907"):
         assert len(closed[record].rows) == 28
         assert not any(row.occupied for row in closed[record].rows)

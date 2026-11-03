@@ -18,7 +18,7 @@ def _correction_amount() -> ExportFieldDefinition:
     [record] = [
         record for record in snapshot.revision.export_layouts[0].records if record.id == "modelo-369-exterior-t36902"
     ]
-    [amount, *_] = [field for field in record.fields if field.data_type == "decimal" and field.decimals == 2]
+    [amount, *_] = [field for field in record.fields if field.data_type == "money"]
     assert not amount.required
     assert amount.length == 17
     assert amount.absent_fill == "spaces"
@@ -37,6 +37,34 @@ def test_populated_m369_correction_amount_preserves_zero_and_numeric_padding(amo
     field = _correction_amount()
     assert render_fixed_width_export_field(field, amount) == wire
     assert parse_fixed_width_export_field(field, wire) == amount
+
+
+@pytest.mark.parametrize(
+    ("amount", "wire"),
+    [
+        (Decimal("-15.37"), "-0000000000001537"),
+        (Decimal("-0.01"), "-0000000000000001"),
+        (Decimal("-99999999999999.99"), "-" + "9" * 16),
+    ],
+)
+def test_a_negative_m369_correction_writes_the_minus_in_place_of_the_leading_digit(amount: Decimal, wire: str):
+    """DR369 note 4 prints -15,37 as -0000000000001537."""
+    field = _correction_amount()
+    assert render_fixed_width_export_field(field, amount) == wire
+    assert parse_fixed_width_export_field(field, wire) == amount
+
+
+def test_a_positive_m369_correction_may_fill_the_slot_a_negative_could_not():
+    field = _correction_amount()
+    assert render_fixed_width_export_field(field, Decimal("999999999999999.99")) == "9" * 17
+    with pytest.raises(RegistryValidationError):
+        render_fixed_width_export_field(field, Decimal("-999999999999999.99"))
+
+
+@pytest.mark.parametrize("wire", ["N0000000000001537", "0000000000000-153", "--000000000001537"])
+def test_any_other_mark_in_an_m369_correction_refuses(wire: str):
+    with pytest.raises(RegistryValidationError):
+        parse_fixed_width_export_field(_correction_amount(), wire)
 
 
 def test_m369_blank_rule_does_not_supply_missing_required_amount():

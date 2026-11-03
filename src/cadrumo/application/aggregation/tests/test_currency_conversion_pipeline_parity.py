@@ -361,6 +361,7 @@ def test_renta_income_ledger_reads_converted_eur_amount() -> None:
     result = _classify_income_transaction(
         tx,
         invoices=InvoiceCatalogue(),
+        receipts_by_invoice=None,
         bucket_id="parity-bucket",
         cumulative_start=date(2025, 1, 1),
         cumulative_end=date(2025, 3, 31),

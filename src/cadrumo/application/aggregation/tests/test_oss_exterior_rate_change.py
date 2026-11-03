@@ -37,6 +37,7 @@ from .oss_rate_change_support import (
     variant_pct,
 )
 
+_CORRECTIONS = "modelo-369-exterior-t36902"
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "2bb5bf4c-ff0d-440c-a428-b075558b3595"
@@ -162,7 +163,7 @@ def _row(resolution: CalculationSourceResolution, row: int) -> tuple[str, str, D
 
 
 def _occupied_rows(resolution: CalculationSourceResolution) -> list[int]:
-    (closed,) = resolution.closed_record_row_sets
+    (closed,) = (row_set for row_set in resolution.closed_record_row_sets if row_set.record_id != _CORRECTIONS)
     return [row.row_index for row in closed.rows if row.occupied]
 
 

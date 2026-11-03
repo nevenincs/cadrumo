@@ -16,9 +16,16 @@ legal_refs = [
   "ley-37-1992:art-163-duovicies",
   "ley-37-1992:art-163-septvicies",
 ]
-source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-file-description"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-file-description", "boe-modelo-369-2021-form"]
 review_status = "agent_reviewed"
 ownership = "authored"
+
+# Orden HAC/610/2021 art. 7.5: a filed return adjusts through a later period's return, within three years.
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = [
+  "dentro del plazo de tres años a partir del final del plazo de declaración correspondiente al periodo modificado",
+]
 
 # The file description reads the no-activity row: 0 -> false, 1 -> true.
 [[fact.variants.source_citations]]
@@ -40,6 +47,7 @@ required_text = [
   "5. Prestaciones de servicios desde establecimientos permanentes en otros EM distintos de España",
   "6. Entregas de bienes expedidos o transportados desde otros EM distintos de España",
   "3. Importaciones de bienes de menos de 150",
+  "7. Correcciones de declaraciones de períodos anteriores (máx. 3 años)",
   "Código de país/EM de consumo.28",
 ]
 
@@ -50,6 +58,10 @@ entries = [
   { key = "detail_records.external_scheme", value = "modelo-369-exterior-t36901" },
   { key = "detail_records.union_scheme", value = "modelo-369-union-t36904,modelo-369-union-t36905,modelo-369-union-t36906,modelo-369-union-t36907" },
   { key = "detail_records.import_scheme", value = "modelo-369-importacion-t36910" },
+  { key = "correction_records.external_scheme", value = "modelo-369-exterior-t36902" },
+  { key = "correction_records.union_scheme", value = "modelo-369-union-t36908" },
+  { key = "correction_records.import_scheme", value = "modelo-369-importacion-t36911" },
+  { key = "correction.limit_years", value = "3" },
   { key = "section.external_scheme_services.record", value = "modelo-369-exterior-t36901" },
   { key = "section.external_scheme_services.excluded_consumption_states", value = "xi" },
   { key = "section.oss_union_services.record", value = "modelo-369-union-t36904" },
