@@ -51,6 +51,13 @@ _FORBIDDEN_NOTICE_FIELD_NAMES: Final = frozenset(
 )
 
 
+#: Result fields that carry the command's own answer under a name the notice gate refuses elsewhere.
+#: ``ledger.invoice.match`` answers a question about which movement settles which invoice, and its
+#: ``suggestions`` are those proposed pairs, structured data a window reads field by field, not a hint
+#: about what to do next.
+_STRUCTURED_ANSWER_FIELDS: Final = frozenset({("ledger.invoice.match", "suggestions")})
+
+
 def _is_forbidden_notice_field(name: str) -> bool:
     """Return True when ``name`` is a bespoke notice/advisory result field."""
     return name in _FORBIDDEN_NOTICE_FIELD_NAMES or name.endswith("_advisory") or name.endswith("_advisories")
@@ -93,7 +100,11 @@ def test_no_result_schema_carries_a_bespoke_notice_field() -> None:
     offenders: list[str] = []
     for identity, model in _schema_targets():
         fields = getattr(model, "model_fields", {})
-        bespoke = sorted(name for name in fields if _is_forbidden_notice_field(name))
+        bespoke = sorted(
+            name
+            for name in fields
+            if _is_forbidden_notice_field(name) and (identity, name) not in _STRUCTURED_ANSWER_FIELDS
+        )
         if bespoke:
             offenders.append(f"{identity} ({getattr(model, '__name__', model)}): {bespoke}")
     assert not offenders, (
