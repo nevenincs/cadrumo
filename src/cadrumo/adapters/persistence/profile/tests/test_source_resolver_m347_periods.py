@@ -232,17 +232,20 @@ def test_m347_nets_a_rectificativa_against_the_operation_it_corrects(secure_prof
         Decimal("5000.00"),
         Decimal("-1000.00"),
     )
-    assert _unsettled_reading_refs(resolution) == ["m347-rectificativa:netted-as-reduction"]
-    advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
+    assert _unsettled_reading_refs(resolution) == []
+    advisory = next(
+        item for item in resolution.diagnostics if item.source_ref == "m347-rectificativa:netted-as-reduction"
+    )
+    assert advisory.reason == "source_issue"
     assert "R-2026-001" in advisory.message
-    assert "not related in this ejercicio" not in advisory.message
-    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-34.4",)
+    assert "not in your records" not in advisory.message
+    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-34.4", "rd-1065-2007:art-35")
 
 
-def test_m347_full_rectification_nets_to_nil_and_is_left_out_with_an_advisory(
+def test_m347_full_rectification_nets_to_nil_and_is_left_out_as_settled(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """A sale rectified in full nets to nil: art. 33.1 relates only a party above its floor, so no record."""
+    """A sale rectified in full in its own year nets to nil (art. 34.4), and art. 33.1 relates no party at nil."""
     bucket_id = secure_profile.bucket_id
     sale = _sale(bucket_id, invoice_number="F-2026-002", issued_at=date(2026, 3, 1), gross="5000.00")
     correction = _rectificativa_of(
@@ -255,22 +258,13 @@ def test_m347_full_rectification_nets_to_nil_and_is_left_out_with_an_advisory(
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("0")
     assert resolution.row_binding_values == {}
-    assert _unsettled_reading_refs(resolution) == [
-        "m347-rectificativa:netted-as-reduction",
-        "m347-threshold-bucket:nonpositive-total-left-out",
-    ]
-    left_out = next(
-        item for item in resolution.diagnostics if item.source_ref == "m347-threshold-bucket:nonpositive-total-left-out"
-    )
-    assert "F-2026-002" in left_out.message
-    assert "R-2026-002" in left_out.message
-    assert left_out.asserted_legal_refs == ("rd-1065-2007:art-33", "rd-1065-2007:art-34.4")
+    assert _unsettled_reading_refs(resolution) == []
 
 
 def test_m347_rectificativa_of_an_invoice_outside_the_ejercicio_is_named(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """A rectificativa of a 2025 sale reduces the 2026 total, and the advisory says its original is not in 2026."""
+    """A rectificativa of a 2025 sale enters the 2026 total (RD 1065/2007 art. 35.2) but not its floor comparison."""
     bucket_id = secure_profile.bucket_id
     earlier_sale = _sale(bucket_id, invoice_number="F-2025-099", issued_at=date(2025, 11, 20), gross="2000.00")
     sale = _sale(bucket_id, invoice_number="F-2026-003", issued_at=date(2026, 4, 1), gross="6000.00")
@@ -285,7 +279,9 @@ def test_m347_rectificativa_of_an_invoice_outside_the_ejercicio_is_named(
     advisory = next(
         item for item in resolution.diagnostics if item.source_ref == "m347-rectificativa:netted-as-reduction"
     )
-    assert "R-2026-003 rectify an invoice not related in this ejercicio" in advisory.message
+    assert advisory.reason == "source_issue"
+    assert "R-2026-003" in advisory.message
+    assert "not in your records" not in advisory.message
 
 
 def _regime_profile_facts(

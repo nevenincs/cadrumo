@@ -42,8 +42,7 @@ source_refs = [
 
 [revisions."2019-2023".family_dispositions.parameters]
 reason = """
-A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 123 applies none: every formula it declares is pure aggregation over already-withheld amounts, summing the per-block retencion casillas and subtracting the prior autoliquidacion. The retencion rate on rendimientos del capital mobiliario was applied by the retenedor at payment time and arrives here as a figure, so the rate is spent before this modelo sees it. Contrast modelo 115, \
-which DOES hold one: its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Empty by the shape of this modelo's calculation rather than by omission."""
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 123 applies none: every formula it declares is pure aggregation over already-withheld amounts, summing the per-block retencion casillas and subtracting the prior autoliquidacion. The retencion rate on rendimientos del capital mobiliario was applied by the retenedor at payment time and arrives here as a figure, so the rate is spent before this modelo sees it. Empty by the shape of this modelo's calculation rather than by omission."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
 

@@ -145,10 +145,10 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
     Files four 303 quarters with a real carried-pending chain (1T credit carried,
     2T applies part of it, 4T generates more) as observations, then resolves the
     M390 annual compensation partition through its production source resolver.
-    The two carry-box bindings must carry the FIFO partition
-    (box 97 = 120, box 662 = 0), NOT the per-period relation sums (50 / 100),
-    proving the boxes are not routed through the double-counting per-period
-    relation path.
+    The two carry-box bindings must carry the partition: box 97 the last period's
+    own result (50), box 662 the rest of the year's pending credit (70), together
+    the 120 still pending, proving the boxes are not routed through the
+    double-counting per-period relation path (50 / 100).
     """
     quarter_chain = [
         ("1T", Decimal("-100.00"), Decimal("100.00"), Decimal("0.00"), Decimal("0.00"), Decimal("100.00")),
@@ -193,8 +193,8 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
             )
 
     _4t_disponible = quarter_chain[-1][5]
-    assert resolution.binding_values[_BOX_97_BINDING] == _4t_disponible
-    assert resolution.binding_values[_BOX_662_BINDING] == Decimal("0.00")
+    assert resolution.binding_values[_BOX_97_BINDING] == Decimal("50.00")
+    assert resolution.binding_values[_BOX_662_BINDING] == Decimal("70.00")
     assert resolution.relation_values == {}
     assert not resolution.unresolved_binding_ids
     assert resolution.binding_values[_BOX_97_BINDING] + resolution.binding_values[_BOX_662_BINDING] == _4t_disponible
@@ -481,6 +481,108 @@ def test_modelo_390_known_opening_keeps_all_three_boxes_resolved_with_in_year_co
     assert not resolution.unresolved_binding_ids
     assert resolution.binding_values[_BOX_85_BINDING] == Decimal("1000.00")
     assert resolution.binding_values[_BOX_97_BINDING] + resolution.binding_values[_BOX_662_BINDING] == Decimal("30.00")
+
+
+_ingreso = ResultDisposition.INGRESO
+_compensa = ResultDisposition.COMPENSACION
+_negativa = ResultDisposition.NEGATIVA
+
+
+@pytest.mark.parametrize(
+    ("quarters", "box_85", "box_97", "box_662"),
+    [
+        pytest.param(
+            (
+                (_negativa, _quarter("0.00", aplicada="200.00", posterior="800.00", disponible="800.00")),
+                (_negativa, _quarter("0.00", aplicada="600.00", posterior="200.00", disponible="200.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="200.00", disponible="700.00"),
+                ),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="700.00", disponible="900.00"),
+                ),
+            ),
+            "800.00",
+            "200.00",
+            "500.00",
+            id="manual-iva-2025-p277",
+        ),
+        pytest.param(
+            (
+                (_ingreso, _quarter("100.00", aplicada="0.00", posterior="0.00", disponible="0.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="0.00", disponible="200.00"),
+                ),
+                (_negativa, _quarter("0.00", aplicada="0.00", posterior="200.00", disponible="200.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="200.00", disponible="700.00"),
+                ),
+            ),
+            "0.00",
+            "500.00",
+            "200.00",
+            id="manual-iva-2025-p279",
+        ),
+        pytest.param(
+            (
+                (_negativa, _quarter("0.00", aplicada="100.00", posterior="100.00", disponible="100.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="100.00", disponible="300.00"),
+                ),
+                (_ingreso, _quarter("100.00", aplicada="300.00", posterior="0.00", disponible="0.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="0.00", disponible="500.00"),
+                ),
+            ),
+            "200.00",
+            "500.00",
+            "0.00",
+            id="manual-iva-2025-p280-example-2",
+        ),
+        pytest.param(
+            (
+                (_negativa, _quarter("0.00", aplicada="100.00", posterior="100.00", disponible="100.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="100.00", disponible="300.00"),
+                ),
+                (_negativa, _quarter("0.00", aplicada="0.00", posterior="300.00", disponible="300.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="300.00", disponible="800.00"),
+                ),
+            ),
+            "100.00",
+            "500.00",
+            "200.00",
+            id="manual-iva-2025-p280-example-3",
+        ),
+    ],
+)
+def test_modelo_390_boxes_85_97_and_662_match_the_manual_examples(
+    tmp_path: Path,
+    quarters: tuple[tuple[ResultDisposition, dict[CasillaId, Decimal]], ...],
+    box_85: str,
+    box_97: str,
+    box_662: str,
+) -> None:
+    """Manual IVA 2025 pp. 277-281. Box 97 is the result of the last autoliquidación and box 662 the year's other
+    pending credit: "las cuotas a compensar generadas en el ejercicio en alguno de los períodos de liquidación
+    distintos del último".
+    """
+    resolution = _resolve_partition_for_quarters(tmp_path, quarters)
+
+    assert resolution.binding_values == {
+        _BOX_85_BINDING: Decimal(box_85),
+        _BOX_97_BINDING: Decimal(box_97),
+        _BOX_662_BINDING: Decimal(box_662),
+    }
 
 
 def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_path: Path) -> None:

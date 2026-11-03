@@ -26,14 +26,11 @@ _M115_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
     _M115_ANTERIORES_CASILLA,
     _M115_RESULTADO_CASILLA,
 )
-_M115_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
-    _M115_RETENCIONES_CASILLA,
-    _M115_RESULTADO_CASILLA,
-)
+_M115_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (_M115_RESULTADO_CASILLA,)
 
 
-def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -> None:
-    """Engine recomputes casilla 03 (retenciones) and 05 (resultado) from leaf inputs.
+def test_verification_chain_m115_engine_recomputes_resultado() -> None:
+    """Engine recomputes casilla 05 (resultado) from leaf inputs, casilla 03 among them.
 
     FIXTURE, NOT ORACLE: the specimen at
     src/cadrumo/tests/fixtures/justificantes/115/2024-1T.pdf is
@@ -47,16 +44,15 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
     Chain:
       1. parse_declaracion -> extracted casillas 01 (perceptores), 02 (base),
          03 (retenciones), 04 (anteriores declaraciones), 05 (resultado a ingresar).
-      2. Filter to non-computed casillas (01, 02, 04) -> inputs.
+      2. Filter to non-computed casillas (01, 02, 03, 04) -> inputs.
       3. calculate_registry_snapshot with no binding_values (no previous_filing bindings).
-      4. Assert engine.values["03"] == extracted["03"] (VERIFIED).
-         Assert engine.values["05"] == extracted["05"] (VERIFIED).
+      4. Assert engine.values["05"] == extracted["05"] (VERIFIED).
 
     Legal grounding: RD 439/2007 art.100, art.108; Ley 35/2006 art.99, art.101;
     Orden 2000-11-20 apartado primero.
 
-    Verdict: the percent formula for retenciones and the subtract formula for
-    resultado both close against the fixture's own printed values. Not an
+    Verdict: the subtract formula for resultado closes against the fixture's
+    own printed values. Not an
     AEAT-verified verdict — see FIXTURE, NOT ORACLE above.
     """
     extracted = _parse_extracted_declaracion_values(modelo="115", fixture_stem="2024-1T", year=2024, period="1T")
