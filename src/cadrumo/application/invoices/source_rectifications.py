@@ -28,7 +28,7 @@ from ...domain.modelos.row_models import (
     validate_m349_country_prefix_context,
 )
 from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceDiagnostic
-from .source_observations import ObservedInvoice, invoice_source_kind, is_rectificativa, rectified_invoice
+from .source_observations import ObservedInvoice, invoice_source_kind, is_rectificativa, rectified_invoices
 from .source_resolver_ports import M349FiledDeclaration, M349FiledDeclarationReader
 
 _ZERO = Decimal("0")
@@ -68,12 +68,14 @@ def _mark_m347_earlier_year_modifications(
 ) -> tuple[ObservedInvoice, ...]:
     """Mark the corrections RD 1065/2007 art. 35.2 consigns in this ejercicio though their operation is earlier.
 
-    A correction whose invoice the catalogue does not hold cannot be dated, so it
-    stays with the year's operations and the netting advisory names it.
+    A correction whose invoice the catalogue does not hold, or holds more than once
+    under that number, cannot be dated, so it stays with the year's operations and
+    the netting advisory names it.
     """
     marked: list[ObservedInvoice] = []
     for invoice, observation in observed_items:
-        target = rectified_invoice(invoice, catalogue) if is_rectificativa(invoice) else None
+        candidates = rectified_invoices(invoice, catalogue) if is_rectificativa(invoice) else ()
+        target = candidates[0] if len(candidates) == 1 else None
         earlier = target is not None and target.issued_at.year < context.filing_year
         marked.append(
             (invoice, observation.model_copy(update={"earlier_year_modification": True}) if earlier else observation),
@@ -113,8 +115,22 @@ def _place_m349_rectifications(
         if not is_rectificativa(invoice):
             same_period.append((invoice, observation))
             continue
-        rectified = rectified_invoice(invoice, catalogue)
-        if rectified is None:
+        candidates = rectified_invoices(invoice, catalogue)
+        rectified = candidates[0] if len(candidates) == 1 else None
+        if len(candidates) > 1:
+            diagnostics.append(
+                _m349_refusal(
+                    invoice,
+                    resolver_id=resolver_id,
+                    why=(
+                        f"corrects invoice {invoice.rectifies_invoice_number!r}, a number more than one invoice in "
+                        "your records carries, so the invoice and the period it corrects are unknown"
+                    ),
+                    remedy="Give the corrected invoice a number no other invoice of that customer carries, then "
+                    "calculate again.",
+                ),
+            )
+        elif rectified is None:
             diagnostics.append(
                 _m349_refusal(
                     invoice,

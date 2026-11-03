@@ -681,7 +681,6 @@ def test_every_calculation_fact_moves_the_row_digest(update: dict[str, object]) 
     [
         {"notes": "nota"},
         {"series": "A"},
-        {"invoice_number": "P-999"},
         {"issuer_address": "Calle Mayor 1"},
         {"recipient_address": "Calle Menor 2"},
         {"exemption_reference": "art. 20"},
@@ -696,6 +695,15 @@ def test_every_calculation_fact_moves_the_row_digest(update: dict[str, object]) 
 )
 def test_display_facts_do_not_move_the_row_digest(update: dict[str, object]) -> None:
     assert invoice_row_fingerprint(_edited(update)) == invoice_row_fingerprint(_base_invoice())
+
+
+def test_the_number_a_correction_names_moves_the_current_digest_and_no_older_one() -> None:
+    """Renumbering decides which invoice a correction reduces, so the current digest holds it."""
+    edited = _edited({"invoice_number": "P-999"})
+    assert invoice_row_fingerprint(edited) != invoice_row_fingerprint(_base_invoice())
+    assert invoice_row_fingerprint(edited, field_set_version=3) == invoice_row_fingerprint(
+        _base_invoice(), field_set_version=3
+    )
 
 
 def test_a_stored_older_version_keeps_reading_its_own_fields() -> None:

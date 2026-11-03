@@ -2314,9 +2314,8 @@ application:
         %{period} kiszámítása után (%{changed_count} módosult, %{removed_count} törölve,
         %{added_count} új). Számítsd ki újra az ellenőrzés előtt.
       invoice_fingerprint_narrower_scope: Ez a(z) %{modelo} %{filing_year}, %{period}
-        számítás a banki mozgás nélkül teljesült számlák követése előtt készült, ezért
-        a Cadrumo nem tudja megmondani, változtak-e azóta ezek a számlák. Számítsd
-        ki újra a követés elindításához.
+        számítás kevesebb számlaadatot követ, mint amennyire most szüksége van, ezért
+        nem igazolható, hogy naprakész. Számítsd újra, mielőtt ellenőrzöd.
       invoice_fingerprint_unavailable: A Cadrumo nem tudta beolvasni a számláidat,
         hogy összevesse őket a(z) %{modelo} %{filing_year}, %{period} modellel, ezért
         nem igazolható, hogy a számítás naprakész. Próbáld újra, ha már olvashatók.

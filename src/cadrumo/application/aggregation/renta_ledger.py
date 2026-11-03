@@ -102,7 +102,12 @@ if TYPE_CHECKING:
 
 from .renta_imputation import ImputationCriteria, ImputationUnresolved, expense_incurred_date, impute_ledger_row
 from .renta_income_diagnostics import received_rectificativa_reading
-from .renta_ledger_evidence import iva_amount_for, purchase_invoice_evidence_payload, taxable_base_for
+from .renta_ledger_evidence import (
+    iva_amount_for,
+    purchase_invoice_evidence_payload,
+    refund_left_to_correction_netting,
+    taxable_base_for,
+)
 from .renta_ledger_models import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -909,6 +914,8 @@ def aggregate_renta_ledger_expenses(
             # Operator reviewed and deliberately excluded this row from filing
             # (a final disposition): omit it silently, no observation and no
             # advisory-bearing issue.
+            continue
+        if criteria is not None and refund_left_to_correction_netting(transaction, invoices):
             continue
         outcome = _classify_renta_transaction(
             transaction,

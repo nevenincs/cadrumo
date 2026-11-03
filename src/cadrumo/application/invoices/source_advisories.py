@@ -39,7 +39,7 @@ from .source_observations import (
     invoice_source_kind,
     is_rectificativa,
     m347_category_exclusion,
-    rectified_invoice,
+    rectified_invoices,
 )
 
 
@@ -289,7 +289,7 @@ def _m347_rectificativa_netting_advisory(
     if not rectificativas:
         return None
     undated = sorted(
-        invoice.invoice_number for invoice in rectificativas if rectified_invoice(invoice, catalogue) is None
+        invoice.invoice_number for invoice in rectificativas if len(rectified_invoices(invoice, catalogue)) != 1
     )
     message = (
         f"Modelo 347 nets the rectificativas {', '.join(sorted(item.invoice_number for item in rectificativas))} "
@@ -299,8 +299,8 @@ def _m347_rectificativa_netting_advisory(
     )
     if undated:
         message += (
-            f" {', '.join(undated)} correct an invoice not in your records, so they count with this year's "
-            "operations against the floor."
+            f" {', '.join(undated)} correct an invoice not in your records, or a number more than one invoice "
+            "carries, so they count with this year's operations against the floor."
         )
     return CalculationSourceDiagnostic(
         reason="source_issue",

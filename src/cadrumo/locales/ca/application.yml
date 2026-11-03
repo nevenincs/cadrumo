@@ -2358,9 +2358,8 @@ application:
         %{removed_count} eliminades, %{added_count} afegides). Torna a calcular-lo
         abans de verificar-lo.
       invoice_fingerprint_narrower_scope: Aquest càlcul del model %{modelo} %{filing_year},
-        %{period} és anterior al seguiment de les factures meritades sense moviment
-        bancari, així que Cadrumo no pot saber si han canviat des d'aleshores. Torna
-        a calcular-lo per començar a seguir-les.
+        %{period} segueix menys dades de les factures de les que ara necessita, així
+        que no pot demostrar que estigui al dia. Torna a calcular-lo abans de verificar-lo.
       invoice_fingerprint_unavailable: Cadrumo no ha pogut llegir les teves factures
         per comparar-les amb el model %{modelo} %{filing_year}, %{period}, així que
         no es pot confirmar que aquest càlcul estigui al dia. Torna-ho a provar quan

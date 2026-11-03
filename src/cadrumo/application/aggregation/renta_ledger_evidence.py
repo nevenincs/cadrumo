@@ -13,6 +13,7 @@ from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction
 from ..invoices.source_observations import is_rectificativa
+from ._renta_business_eligibility import is_supplier_refund
 from .currency_predicates import (
     effective_eur_iva_amount,
     effective_eur_taxable_base,
@@ -29,6 +30,14 @@ class _PurchaseInvoiceEvidencePayload(BaseModel):
     invoice_issue_date: date | None = None
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
+
+
+def refund_left_to_correction_netting(transaction: Transaction, invoices: InvoiceCatalogue) -> bool:
+    """Return whether the row is a supplier's refund on a correction, which the correction netting answers for."""
+    if not is_supplier_refund(transaction) or transaction.purchase_invoice_evidence_id is None:
+        return False
+    invoice = invoices.get(transaction.purchase_invoice_evidence_id)
+    return invoice is not None and is_rectificativa(invoice)
 
 
 def purchase_invoice_evidence_payload(

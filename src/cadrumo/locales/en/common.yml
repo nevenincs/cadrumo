@@ -200,6 +200,9 @@ aggregation:
       rectificativa_above_row: 'OSS/IOSS corrective invoices take off more than the
         row they correct declares. Check their amounts: they may state the result
         after the correction rather than the reduction.'
+      rectificativa_target_ambiguous: An OSS/IOSS corrective invoice names a number
+        that more than one recorded invoice carries, so the row it corrects is not
+        known. Make the invoice numbers unique or correct the reference.
       rectificativa_target_differs: An OSS/IOSS corrective invoice has a different
         regime, operation kind or Member State from the invoice it corrects, so it
         cannot come off that row. Check both invoices.

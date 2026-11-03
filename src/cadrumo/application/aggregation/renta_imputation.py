@@ -126,6 +126,12 @@ class ImputationUnresolved(StrEnum):
     RECTIFICATIVA_TARGET_UNKNOWN = "rectificativa_target_unknown"
     """The invoice a correction names is not recorded, so the year it corrects is not known."""
 
+    RECTIFICATIVA_TARGET_AMBIGUOUS = "rectificativa_target_ambiguous"
+    """More than one invoice carries the number a correction names, and it records no more than the number."""
+
+    RECTIFICATIVA_OF_RETENCION = "rectificativa_of_retencion"
+    """A correction lowers an invoice with a retencion, and no bundled source says what is left of the credit."""
+
     RECTIFICATIVA_ABOVE_INVOICE = "rectificativa_above_invoice"
     """Corrections exceed the base they correct, so they state a result or a replacement rather than a reduction."""
 

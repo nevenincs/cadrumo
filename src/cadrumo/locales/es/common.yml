@@ -216,6 +216,9 @@ aggregation:
       rectificativa_above_row: 'Las facturas rectificativas OSS/IOSS restan más de
         lo que declara la fila que corrigen. Revisa sus importes: quizá indiquen el
         resultado tras la corrección y no la reducción.'
+      rectificativa_target_ambiguous: Una factura rectificativa OSS/IOSS nombra un
+        número que llevan varias facturas registradas, así que no se sabe qué fila
+        corrige. Deja un solo número por factura o corrige la referencia.
       rectificativa_target_differs: Una factura rectificativa OSS/IOSS tiene otro
         régimen, otra clase de operación u otro Estado miembro que la factura que
         corrige, así que no puede restarse de su fila. Revisa las dos facturas.

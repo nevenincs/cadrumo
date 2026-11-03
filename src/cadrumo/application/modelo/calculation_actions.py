@@ -116,6 +116,7 @@ from .calculation_resolution import build_calculation_replay_payloads as _build_
 from .calculation_resolution import precedence_tier_issue
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_screen import calculation_screen_stamp
+from .imputation_filings import imputation_filings_from_repositories
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
@@ -198,7 +199,16 @@ def _draft_invoice_fingerprint(
             work_unit=work_unit,
             revision=ports.operation.revision(work_unit.modelo, work_unit.revision_id),
             contributors=draft_contributor_identities(source_transaction_ids, source_issues),
-            criteria=declared_imputation_criteria(profile.record),
+            criteria=declared_imputation_criteria(
+                profile.record,
+                imputation_filings_from_repositories(
+                    bucket_id=work_unit.bucket_id,
+                    year=work_unit.filing_year,
+                    observation_repository=ports.observation_repository,
+                    filing_repository=ports.filing_repository,
+                    authority=ports.operation,
+                ),
+            ),
             ports=ports.invoice_catalogue_read_ports,
             captured_at=captured_at,
         )

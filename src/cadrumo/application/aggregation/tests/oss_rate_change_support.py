@@ -46,7 +46,7 @@ def variant_pct(variant: GovernedFactVariant) -> Decimal:
 def rate_change_inside_a_quarter(operation: PinnedAuthorityOperation) -> RateChange:
     """Find a published change whose two boundary days fall in one exterior quarter."""
     for member_state, variants in sorted(ordinary_general_variants(operation).items()):
-        # These returns are filed from Spain, so a Spanish edition is never their destination rate.
+        # The callers need a foreign change: Spain is an ordinary destination outside the Union scheme, not within it.
         if member_state == "es":
             continue
         by_start = sorted(variants, key=lambda item: item.valid_from or date.min)

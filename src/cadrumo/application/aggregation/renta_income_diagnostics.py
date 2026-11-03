@@ -23,7 +23,7 @@ from ...domain.invoices.service import INVOICE_MATCH_TOLERANCE
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ..invoices.source_observations import is_rectificativa, rectified_invoice
+from ..invoices.source_observations import is_rectificativa, rectified_invoices
 from . import renta_income_evidence
 from .renta_imputation import (
     ActivityImputationCriterion,
@@ -261,8 +261,13 @@ def _read_corrections(
             invoice, kind=kind, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
         ):
             continue
-        target = rectified_invoice(invoice, invoices)
-        refusal = _rectificativa_refusal(invoice, target, window_end=window_end)
+        candidates = rectified_invoices(invoice, invoices)
+        target = candidates[0] if candidates else None
+        refusal = (
+            ImputationUnresolved.RECTIFICATIVA_TARGET_AMBIGUOUS
+            if len(candidates) > 1
+            else _rectificativa_refusal(invoice, target, window_end=window_end)
+        )
         if refusal is not None:
             refused.append(f"{refusal.value}: rectificativa {invoice.invoice_number}")
         elif target is not None and _accrues_by(target, window_end):
@@ -401,6 +406,8 @@ def _rectificativa_refusal(
         return ImputationUnresolved.RECTIFICATIVA_ACROSS_YEARS
     if rectificativa.retention_amount is not None and rectificativa.retention_amount != Decimal("0"):
         return ImputationUnresolved.RECTIFICATIVA_RETENCION_STATED
+    if rectificativa.kind is InvoiceKind.ISSUED and target.retention_amount not in (None, Decimal("0")):
+        return ImputationUnresolved.RECTIFICATIVA_OF_RETENCION
     return None
 
 
