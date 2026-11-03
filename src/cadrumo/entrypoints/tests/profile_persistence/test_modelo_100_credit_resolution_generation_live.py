@@ -36,10 +36,10 @@ from ....application.modelo.calculation_note_gate import (
 from ....application.modelo.credit_resolution import (
     credit_resolution_for_finding,
     credit_resolutions_for_work,
-    disagreement_value_text,
     find_finding,
 )
 from ....application.modelo.credit_resolution_repository import store_credit_resolution
+from ....application.modelo.disagreement_words import disagreement_value_text
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.user_profile.profile_record_repository import close_active_profile_record_session
 from ....core.casilla_id import CasillaId
