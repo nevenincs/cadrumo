@@ -103,19 +103,6 @@ class CalendarCcaaCatalogue:
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
-    def territory_for_tax_residence(self, tax_residence: str) -> CalendarCCAA:
-        """Return the calendar territory the registry relates to one tax-residence token.
-
-        The relation is declared per token rather than matched by member name,
-        because the two vocabularies name some communities differently.
-        """
-        try:
-            return self.tax_residence_territories[tax_residence]
-        except KeyError as exc:
-            raise RegistryValidationError(
-                f"tax residence {tax_residence!r} has no calendar territory in fact {_FACT_ID!r}",
-            ) from exc
-
 
 def _integer(entries: Mapping[str, str], key: str) -> int:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)

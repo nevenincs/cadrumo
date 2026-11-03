@@ -50,7 +50,7 @@ def test_every_declared_tax_residence_relates_to_its_iso_territory() -> None:
         calendar = resolve_calendar_ccaa_catalogue(effective_date=_EFFECTIVE, authority=operation)
 
     assert {str(token) for token in residences} == set(_ISO_3166_2_ES)
-    related = {str(token): str(calendar.territory_for_tax_residence(str(token))) for token in residences}
+    related = {name: str(token) for name, token in calendar.tax_residence_territories.items()}
     assert related == _ISO_3166_2_ES
 
 
@@ -58,16 +58,8 @@ def test_names_that_differ_between_vocabularies_still_relate() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = resolve_calendar_ccaa_catalogue(effective_date=_EFFECTIVE, authority=operation)
 
-    assert calendar.definition(calendar.territory_for_tax_residence("baleares")).member_name == "ILLES_BALEARS"
-    assert calendar.definition(calendar.territory_for_tax_residence("comunidad_valenciana")).member_name == "VALENCIA"
-
-
-def test_unknown_tax_residence_is_refused_rather_than_mapped() -> None:
-    with bundled_indexed_authority().operation() as operation:
-        calendar = resolve_calendar_ccaa_catalogue(effective_date=_EFFECTIVE, authority=operation)
-
-    with pytest.raises(RegistryValidationError):
-        calendar.territory_for_tax_residence("navarra")
+    assert calendar.definition(calendar.tax_residence_territories["baleares"]).member_name == "ILLES_BALEARS"
+    assert calendar.definition(calendar.tax_residence_territories["comunidad_valenciana"]).member_name == "VALENCIA"
 
 
 def _without(entries: Mapping[str, str], key: str) -> dict[str, str]:
