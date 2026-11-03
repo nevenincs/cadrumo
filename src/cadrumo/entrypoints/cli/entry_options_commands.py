@@ -16,6 +16,8 @@ from ...application.ledger.entry_options_operation import (
     LedgerEntryOptionsRequest,
 )
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import emit_envelope
@@ -27,7 +29,9 @@ def entry_options(ctx: typer.Context) -> None:
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
     completed = run_registered_operation(
         client,
-        LedgerEntryOptionsRequest(profile_id=client.profile_id),
+        LedgerEntryOptionsRequest(
+            profile_id=client.profile_id, output_language=OutputLanguage(active_output_language())
+        ),
         definition_id=LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(client.profile_id)),
         result_type=LedgerEntryOptionsProjection,

@@ -10,6 +10,12 @@ stays recordable. The other lists are closed by the writers that read them.
 
 A catalogue the registry dates is read on ``on_date``, and on the registry's own
 default day when none is given; the undated lists ignore it.
+
+The filing periods a window selects among are served beside them, from the one
+period model, so a window does no period arithmetic: the periods of a year with
+their days, neighbours and names in ``output_language``, the periods holding
+``on_date`` (today in Spain when none is given), the period holding a span, and
+the periods holding each day asked.
 """
 
 from __future__ import annotations
@@ -25,6 +31,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
@@ -62,6 +69,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .entry_limits import LedgerEntryLimitsProjection, ledger_entry_limits
 from .invoice_label_vocabulary import CURRENCY_CODES
+from .period_options import LedgerPeriodsProjection, LedgerPeriodsQuery, PeriodDay, ledger_periods
 from .read_access import resolve_ledger_request_read_access
 
 LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID: Final = "ledger.entry-options"
@@ -89,12 +97,18 @@ type EntryOptionFamily = Literal[
 
 
 class LedgerEntryOptionsRequest(BaseModel):
-    """Ask for the vocabularies; they vary by the day a dated one is read on, not by ledger row."""
+    """Ask for the vocabularies; they vary by the day a dated one is read on, not by ledger row.
+
+    ``output_language`` is the language the period names are said in; the worker
+    renders them for this invocation rather than in its own startup language.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    on_date: date | None = None
+    on_date: PeriodDay | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    periods: LedgerPeriodsQuery = LedgerPeriodsQuery()
 
 
 class LedgerEntryOptionProjection(BaseModel):
@@ -136,6 +150,7 @@ class LedgerEntryOptionsProjection(BaseModel):
     families: tuple[LedgerEntryOptionFamilyProjection, ...]
     classifications: tuple[LedgerEntryClassificationProjection, ...]
     limits: LedgerEntryLimitsProjection
+    periods: LedgerPeriodsProjection
 
 
 class LedgerEntryOptionsExecutionResult(BaseModel):
@@ -240,7 +255,12 @@ def _usage_ratio_options(
 
 
 def ledger_entry_options(
-    profile_id: UUID, *, operation: PinnedAuthorityOperation, on_date: date | None = None
+    profile_id: UUID,
+    *,
+    operation: PinnedAuthorityOperation,
+    on_date: date | None = None,
+    periods: LedgerPeriodsQuery | None = None,
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
 ) -> LedgerEntryOptionsProjection:
     """Read every vocabulary from its owner, under one pinned authority generation."""
     prorrata = resolve_prorrata_register_catalogue(effective_date=on_date, authority=operation)
@@ -285,6 +305,7 @@ def ledger_entry_options(
         ),
         classifications=_classification_rules(),
         limits=ledger_entry_limits(),
+        periods=ledger_periods(periods or LedgerPeriodsQuery(), reference_day=on_date, language=language),
     )
 
 
@@ -313,6 +334,8 @@ class LedgerEntryOptionsExecutor:
             request.payload.profile_id,
             operation=context.authority_operation,
             on_date=request.payload.on_date,
+            periods=request.payload.periods,
+            language=request.payload.output_language,
         )
         return await context.operands.put(LedgerEntryOptionsExecutionResult(result=options), written_at=now())
 
