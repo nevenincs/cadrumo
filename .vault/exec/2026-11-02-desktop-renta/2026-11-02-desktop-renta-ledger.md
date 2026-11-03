@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:eba054934533220ebe633ed94f1e2c509b211cebd2c29068cf047e2a83d13ffc'
+body_hash: 'sha256:ecb2c30847a18212d116632002b2291c790bcf4ee1c85547b5704e94d6e96693'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -781,6 +781,41 @@ related:
 - `S50` `verify:` `pytest inventory, modelo, state projection suites` -> `pass`
 - `S50` `verify:` `test_window_holds_no_tax_data` -> `pass`
 - `S50` `by:` `vaultspec-standard-executor`
+- `S49` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S49` `M` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json`
+- `S49` `M` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S49` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.stories.tsx`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`
+- `S49` `M` `native/desktop/frontend/src/components/ledger/assets/assetWrites.ts`
+- `S49` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S49` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S49` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S49` `M` `native/desktop/frontend/src/dev/ledgerWithholdingFixture.ts`
+- `S49` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S49` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S49` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S49` `M` `native/desktop/src-tauri/src/shell/ledger/settle.rs`
+- `S49` `M` `src/cadrumo/locales/en/common.yml`
+- `S49` `M` `src/cadrumo/locales/es/common.yml`
+- `S49` `M` `src/cadrumo/locales/ca/common.yml`
+- `S49` `M` `src/cadrumo/locales/hu/common.yml`
+- `S49` `M` `dev/locales/desktop_ledger_catalogue_keys.py`
+- `S49` `M` `dev/locales/desktop_ledger_workflow_keys.py`
+- `S49` `A` `native/desktop/frontend/src/components/ledger/setup/CertificateFilePicker.tsx`
+- `S49` `verify:` `tsc` -> `pass`
+- `S49` `verify:` `eslint` -> `pass`
+- `S49` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S49` `verify:` `ledger-contract.mjs --check` -> `pass`
+- `S49` `verify:` `relay_contracts.py --check` -> `pass`
+- `S49` `verify:` `storybook:build` -> `pass`
+- `S49` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S49` `verify:` `playwright scenarios` -> `fail`
+- `S49` `verify:` `tauri test-unit` -> `fail`
+- `S49` `verify:` `test_desktop_chrome` -> `fail`
+- `S49` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -838,3 +873,4 @@ related:
 - `S47` Commit 781c65f4aa. 0506 = max(0, min(0460, 0461 - max(0, 0435))) from LIRPF art. 84.2.3 and the AEAT dictionary JREDU21, authored once at 2022. 2026 cases passed after S44 8a53bf9e6f. 2020/2021 below the floor left alone; box 0507 pension remainder is the same kind of gap, out of scope.
 - `S44` Commit 8a53bf9e6f (readers, verification findings, work form, workspace and 8 locale catalogues also in it). A projected year reads at calculation grade through `reading_snapshot;` verify refuses with `registry_filing_year_projected,` export with `errors.snapshot.filing_year_projected.` Wide-suite failures attributed to other lanes (M130, 131, layout). Open: inventory-anexo-d-applicability is authored for 2025 only, blocking box 0177 for any projected year; state-projection readiness still requests filing grade.
 - `S50` Commit 4902820ea6. Anexo D applies from its first authored filing year on `(inventory_anexo_d_applies),` so a projected year resolves 0177/0181/0182. Readiness reads at the reachable grade and refuses in served words. Open: the typed modelo.readiness.summary still carries only the cause token to the window.
+- `S49` Commits af49eeff4c contract and fixtures, e0094299fc custody UI. Disagreement operations admitted in the relay with no UI (S51). Custody refusals show the generic not-saved notice because the backend serves no refusal words for the record; asked the withholding session to serve them. PARTIAL now its own call kind via settle.rs. Failures not from this Step: modelo-workspace.spec.ts:130/:156 (fail on pre-regeneration fixtures), `automation_picker.rs:163` Rust tests, 17 unused chrome keys.
