@@ -186,6 +186,21 @@ export function Credits({
           </Button>
         )}
       </section>
+      {dependents === null && (
+        <section
+          aria-label={t("desktop.modelo.credits.dependents")}
+          data-dependents="unknown"
+          className="flex flex-col gap-2"
+        >
+          <h3 className="text-sm font-medium text-muted-foreground">
+            {t("desktop.modelo.credits.dependents")}
+          </h3>
+          <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+            <Icon name="info" size="xs" className="mt-0.5 shrink-0" />
+            {t("desktop.modelo.credits.dependents_unknown")}
+          </p>
+        </section>
+      )}
       {dependents !== null && dependents.length > 0 && (
         <section
           aria-label={t("desktop.modelo.credits.dependents")}

@@ -335,6 +335,18 @@ aggregation:
         i exercici. Elimina'ls abans de declarar que cap pagador no va practicar retenció.
       stale_revision: Aquesta declaració ha canviat des que la vas llegir. Fes servir
         la revisió amb què està desada ara.
+    served:
+      already_attested: Aquesta classe de renda ja té una declaració activa d'absència
+        de retencions per a aquest exercici.
+      ejercicio_unsupported: Aquest exercici és fora dels anys de presentació que
+        admet Cadrumo.
+      family_not_declared: El Model 100 d'aquest exercici no llegeix retencions suportades,
+        així que una declaració aquí no arribaria mai a un càlcul.
+      not_attested: Aquesta classe de renda no té cap declaració activa per retirar.
+      records_present: Ja hi ha certificats registrats per a aquesta classe de renda,
+        així que no es pot declarar que no té retencions. Elimina'ls primer.
+      stale_revision: Aquesta declaració ha canviat des que la vas llegir. Torna a
+        llegir-la i reintenta-ho.
   retenciones:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès
@@ -4463,6 +4475,8 @@ desktop:
       dependents: Caselles que les llegeixen
       dependents_lead: Una casella que llegeix una retenció sense xifra tampoc no
         té xifra. No és zero.
+      dependents_unknown: Cadrumo no ha pogut determinar quines caselles llegeixen
+        aquestes retencions. Això no vol dir que cap casella no les llegeixi.
       estimate:
         again: Estima de nou
         ask: Fes l'estimació

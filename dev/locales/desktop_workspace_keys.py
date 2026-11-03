@@ -241,6 +241,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.correction.values_label",
         "desktop.modelo.credits.dependents",
         "desktop.modelo.credits.dependents_lead",
+        "desktop.modelo.credits.dependents_unknown",
         "desktop.modelo.credits.estimate.again",
         "desktop.modelo.credits.estimate.ask",
         "desktop.modelo.credits.estimate.extrapolated",

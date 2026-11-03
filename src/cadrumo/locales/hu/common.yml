@@ -319,6 +319,19 @@ aggregation:
         Töröld őket, mielőtt kijelented, hogy egyetlen kifizető sem vont le.
       stale_revision: Ez a nyilatkozat megváltozott, mióta beolvastad. Használd azt
         a változatot, amellyel most mentve van.
+    served:
+      already_attested: Erre a jövedelemosztályra ebben az adóévben már van aktív
+        levonásmentességi nyilatkozat.
+      ejercicio_unsupported: Ez az adóév kívül esik a Cadrumo által támogatott bevallási
+        éveken.
+      family_not_declared: Az adóév Modelo 100 változata nem olvas elszenvedett levonást,
+        így az itteni nyilatkozat soha nem jutna el egy számításhoz.
+      not_attested: Ennek a jövedelemosztálynak nincs aktív nyilatkozata, amelyet
+        vissza lehetne vonni.
+      records_present: Erre a jövedelemosztályra már vannak rögzített igazolások,
+        ezért nem jelenthető ki, hogy nincs levonás. Előbb töröld őket.
+      stale_revision: Ez a nyilatkozat megváltozott, amióta elolvastad. Olvasd be
+        újra, és próbáld meg ismét.
   retenciones:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
@@ -4428,6 +4441,8 @@ desktop:
       dependents: Az ezeket olvasó rovatok
       dependents_lead: Az a rovat, amely egy érték nélküli levonást olvas, szintén
         érték nélküli marad. Nem nulla.
+      dependents_unknown: A Cadrumo nem tudta megállapítani, mely rovatok olvassák
+        ezeket a levonásokat. Ez nem jelenti azt, hogy egyik rovat sem olvassa őket.
       estimate:
         again: Becslés újra
         ask: Becslés készítése

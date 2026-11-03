@@ -341,6 +341,18 @@ aggregation:
         Elimínalos antes de declarar que ningún pagador practicó retención.
       stale_revision: Esta declaración ha cambiado desde que la leíste. Usa la revisión
         con la que está guardada ahora.
+    served:
+      already_attested: Esta clase de renta ya tiene una declaración activa de ausencia
+        de retenciones para este ejercicio.
+      ejercicio_unsupported: Este ejercicio está fuera de los años de presentación
+        que admite Cadrumo.
+      family_not_declared: El Modelo 100 de este ejercicio no lee retenciones soportadas,
+        así que una declaración aquí nunca llegaría a un cálculo.
+      not_attested: Esta clase de renta no tiene ninguna declaración activa que retirar.
+      records_present: Ya hay certificados registrados para esta clase de renta, así
+        que no se puede declarar que no tiene retenciones. Elimínalos primero.
+      stale_revision: Esta declaración cambió desde que la leíste. Vuelve a leerla
+        y reinténtalo.
   retenciones:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
@@ -4467,6 +4479,8 @@ desktop:
       dependents: Casillas que las leen
       dependents_lead: Una casilla que lee una retención sin cifra tampoco tiene cifra.
         No es cero.
+      dependents_unknown: Cadrumo no ha podido determinar qué casillas leen estas
+        retenciones. Eso no significa que ninguna casilla las lea.
       estimate:
         again: Estimar de nuevo
         ask: Hacer la estimación

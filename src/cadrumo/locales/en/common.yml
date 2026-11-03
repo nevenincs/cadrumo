@@ -316,6 +316,17 @@ aggregation:
         Remove them before you attest that no payer withheld.
       stale_revision: This attestation changed since you read it. Use the revision
         it is stored at now.
+    served:
+      already_attested: This income class already has an active statement of no withholding
+        for this year.
+      ejercicio_unsupported: This year is outside the filing years Cadrumo supports.
+      family_not_declared: The Modelo 100 for this year reads no withholding suffered,
+        so a statement here would never reach a calculation.
+      not_attested: This income class has no active statement to withdraw.
+      records_present: Certificates are already recorded for this income class, so
+        it cannot be stated as having none. Remove them first.
+      stale_revision: This statement changed since you read it. Read it again and
+        retry.
   retenciones:
     errors:
       filing_year_out_of_range: Filing year %{filing_year} is outside the supported
@@ -4386,6 +4397,8 @@ desktop:
       dependents: Boxes that read them
       dependents_lead: A box that reads a withholding without a figure has no figure
         either. It is not zero.
+      dependents_unknown: Cadrumo could not work out which boxes read these withholdings.
+        That does not mean no box reads them.
       estimate:
         again: Estimate again
         ask: Make the estimate
