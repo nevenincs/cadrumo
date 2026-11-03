@@ -16,7 +16,7 @@ related:
   - '[[2026-11-02-desktop-renta-renta-family-canonical-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:405013764a4617b076032c297eee3f28d34289fc30f2da403bff54cb9718e861'
+body_hash: 'sha256:3e732ac9a462145cf78090f94483a1e858c013798455d7cb5c40e8f9a98c803f'
 ---
 
 # `desktop-renta` plan
@@ -76,7 +76,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [ ] `P01.S38` - [Sonnet high] declare the filing-mode role on Modelo 100 revisions 2022 to 2024 where their official designs carry the individual or joint declaration type, so the taxation comparison is served for those years; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`.
 - [x] `P01.S39` - [Opus medium] serve every writable binding override a revision's edit surface admits as an answerable field on the work form, placed by the layout or in a served answers group, so a declaration never asks for an answer the window cannot take (such as Modelo 130's previous-year activity income and earlier negative results); `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P01.S40` - [Sonnet high] declare in the registry which declaration owns each household row object's repeat limit, so the profile writer reads the limit directly instead of scanning every modelo's annual revision; `src/cadrumo/application/user_profile/household_row_limit.py`.
-- [ ] `P01.S41` - [Opus medium] place box 0500 before the art. 50.3 compensation as the AEAT design does, compute 1391 from the chain instead of a manual input, and find whether 448b84d73d broke test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses on box 0171, fixing the cause if so; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
+- [x] `P01.S41` - [Opus medium] place box 0500 before the art. 50.3 compensation as the AEAT design does, compute 1391 from the chain instead of a manual input, and find whether 448b84d73d broke test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses on box 0171, fixing the cause if so; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
 - [x] `P01.S42` - [Sonnet high] make modelo edit admission refuse an override the work form serves no field or answer for (such as Modelo 720 baselines and the 131 and 720 row-field bindings), so the writable surface and the served form agree; `src/cadrumo/application/modelo/edit_admission.py`.
 
 ### Phase `P02` - contracts and fixtures

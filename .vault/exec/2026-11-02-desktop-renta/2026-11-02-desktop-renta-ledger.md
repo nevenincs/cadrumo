@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7411d68490c110109c82da2431c4a3d092c98c3733cd74d686ab1f88f9924da3'
+body_hash: 'sha256:0acbb9a87e5ad037d46ddfa7e8b5f477d7f3ecf1d2586c569351503d122c30c6'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -627,6 +627,17 @@ related:
 - `S42` `verify:` `import_gate` -> `fail`
 - `S42` `verify:` `dev/locales/tests` -> `fail`
 - `S42` `by:` `sonnet-high`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py`
+- `S41` `M` `src/cadrumo/domain/calculations/registry/errors.py`
+- `S41` `M` `src/cadrumo/locales/en/errors.yml`
+- `S41` `verify:` `focused 0500/1391/art. 50.3 set` -> `pass`
+- `S41` `verify:` `modelo 100 suite` -> `fail`
+- `S41` `verify:` `registry suites` -> `fail`
+- `S41` `verify:` `check-types` -> `fail`
+- `S41` `by:` `opus-medium`
 
 ## Notes
 
@@ -676,3 +687,4 @@ related:
 - `S39` Commit 7d5c775e76 with 214 re-recorded envelopes against authority a2010d0f71b2. Two modelo.spec.ts failures believed pre-existing, unconfirmed. Edit admission still accepts overrides the form serves no answer for (S42)
 - `S40` Commit 33ff6d607d: fact household-row-limit-owners names the owning form and repeating group (Modelo 100 XSD maxOccurs 15 and 4); first lookup 0.07 s instead of 1.7 s; build check fails if the owner layout stops capping the object
 - `S42` Commit 63bdd87985: one row-filled derivation shared by admission and the form; new reason `not_read_by_calculation.` Import gate unavailable because the tree changed mid-run; dev/locales failures include export settlement and election keys and a non-literal `message_locale_key,` to resolve in S20
+- `S41` Hunks swept into WIP commit 3ab1f97ff4 plus a948bba8b4. 0500 is the base before compensation from 2022, 1391 = max(0, -0500), unobserved prior boxes refuse with typed `errors.calc.previous_filing_casillas_unobserved.` 0171 test failure dates from 0f570046bf (no stated imputation criterion), not 448b84d73d. Open for S20: registry formula parity on renta-resultado-ingresar-o-devolver 2024/2025 and `casilla_record_order` 1997-2148, window guard failure unidentified
