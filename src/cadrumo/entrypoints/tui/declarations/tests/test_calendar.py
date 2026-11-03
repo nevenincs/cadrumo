@@ -10,10 +10,12 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Input, Select, Static
 
+from .....application.modelo.action_errors import ModeloProfileReadinessError
 from .....application.modelo.declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarSource,
 )
+from .....application.operator_actions.preconditions import profile_setup_incomplete_verdict
 from .....application.overview.next_actions import declare_next_action
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
@@ -251,6 +253,41 @@ async def test_recovery_row_requires_explicit_modal_confirmation_before_host_han
         await settle(pilot)
         assert ordinary == []
         assert str(refused.query_one("#declarations-calendar-notice", Static).render())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("language", list(OutputLanguage))
+async def test_a_recovery_refused_for_an_incomplete_profile_setup_shows_the_applications_own_words(
+    language: OutputLanguage,
+) -> None:
+    base = calendar_projection()
+    recovery_row = base.entries[0].model_copy(
+        update={
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
+        }
+    )
+    projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
+
+    def refuse(_action: object, _row: object) -> None:
+        raise ModeloProfileReadinessError(
+            translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
+            context={"bucket_id": "synthetic-profile", "modelo": "130"},
+            profile_precondition_verdict=profile_setup_incomplete_verdict(modelo="130", missing_required_field_count=0),
+        )
+
+    screen = DeclarationsCalendarScreen(calendar_controller(projection, recovery_handoff=refuse))
+    with override_settings(cadrumo_output_language=language.value):
+        async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
+            await settle(pilot)
+            screen.query_one("#declarations-calendar-agenda", DataTable).focus()
+            await pilot.press("enter")
+            await settle(pilot)
+            await pilot.click("#btn-confirm-accept")
+            await settle(pilot)
+            await settle(pilot)
+            shown = str(screen.query_one("#declarations-calendar-notice", Static).render())
+
+        assert shown == tr("application.modelo.errors.profile_readiness_setup_incomplete", locale=language.value)
 
 
 @pytest.mark.asyncio

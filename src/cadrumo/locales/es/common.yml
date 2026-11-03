@@ -6882,10 +6882,6 @@ tui:
     uncertain: Resultado desconocido; conserva el ID de solicitud
     waiting: Enviando solicitud
   declarations:
-    calendar:
-      recovery:
-        setup_incomplete: 'Primero declara completa la configuración del perfil: abre
-          Perfil (F4) y pulsa F8.'
     list:
       new:
         period_selection_hint: Pulsa Enter para elegir el periodo; después, crea y

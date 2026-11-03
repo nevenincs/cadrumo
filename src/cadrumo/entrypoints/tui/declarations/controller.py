@@ -86,18 +86,9 @@ _EVIDENCE_LOCALE_KEYS: Final = {
 }
 
 
-_WORK_CREATE_REFUSAL_LOCALE_KEYS: Final = {
-    # The application's wording names the CLI command; here the same fix is a key away.
-    "application.modelo.errors.profile_readiness_setup_incomplete": (
-        "tui.declarations.calendar.recovery.setup_incomplete"
-    ),
-}
-
-
 def work_create_refusal_message(refusal: CadrumoError) -> str:
-    """Render a work-creation refusal as its own reason, worded for the TUI where the fix differs."""
-    tui_key = _WORK_CREATE_REFUSAL_LOCALE_KEYS.get(refusal.translated_message or "")
-    return tr(tui_key) if tui_key is not None else resolve_error_message(refusal)
+    """Render a work-creation refusal as the reason the application worded."""
+    return resolve_error_message(refusal)
 
 
 def natural_address(modelo: object, year: object, period: object) -> str:

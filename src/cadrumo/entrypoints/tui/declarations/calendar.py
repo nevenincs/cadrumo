@@ -38,13 +38,6 @@ from .controller import (
 )
 from .models import CalendarRecoveryHandoffV1, DeclarationsCalendarScopeV1
 
-_TUI_REFUSAL_LOCALE_KEYS: dict[str, str] = {
-    # The application's wording names the CLI command; here the same fix is a key away.
-    "application.modelo.errors.profile_readiness_setup_incomplete": (
-        "tui.declarations.calendar.recovery.setup_incomplete"
-    ),
-}
-
 
 def _identity(row: DeclarationsCalendarEntryRefV1) -> str:
     modelo, year, period = row.semantic_key()
@@ -399,8 +392,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             # The application's own reason -- setup not complete, the modelo
             # not applying -- tells the operator what to fix; a generic line
             # would not.
-            tui_key = _TUI_REFUSAL_LOCALE_KEYS.get(refusal.translated_message or "")
-            notice.update(tr(tui_key) if tui_key is not None else resolve_error_message(refusal))
+            notice.update(resolve_error_message(refusal))
             return
         except Exception:
             notice.update(tr("workspace.declarations.calendar.recovery.failure"))

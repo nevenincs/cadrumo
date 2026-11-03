@@ -6735,10 +6735,6 @@ tui:
     uncertain: Outcome unknown; retain request ID
     waiting: Submitting request
   declarations:
-    calendar:
-      recovery:
-        setup_incomplete: 'Declare the profile setup complete first: open Profile
-          (F4) and press F8.'
     list:
       new:
         period_selection_hint: Press Enter to select a period, then create and open

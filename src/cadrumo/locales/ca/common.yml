@@ -6876,10 +6876,6 @@ tui:
     uncertain: Resultat desconegut; conserva l'ID de la sol·licitud
     waiting: S'està enviant la sol·licitud
   declarations:
-    calendar:
-      recovery:
-        setup_incomplete: 'Primer declara completa la configuració del perfil: obre
-          Perfil (F4) i prem F8.'
     list:
       new:
         period_selection_hint: Prem Enter per triar el període; després, crea i obre

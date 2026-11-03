@@ -6843,10 +6843,6 @@ tui:
     uncertain: Ismeretlen eredmény; őrizd meg a kérelem azonosítóját
     waiting: Kérelem beküldése folyamatban
   declarations:
-    calendar:
-      recovery:
-        setup_incomplete: 'Előbb fejezd be a profil beállítását: nyisd meg a Profilt
-          (F4), és nyomd meg az F8-at.'
     list:
       new:
         period_selection_hint: Az Enterrel válassz időszakot, majd hozd létre és nyisd
