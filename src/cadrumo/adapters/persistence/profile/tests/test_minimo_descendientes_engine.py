@@ -186,6 +186,7 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         },
         enum_binding_values=resolution.enum_binding_values,
         date_binding_values=resolution.date_binding_values,
