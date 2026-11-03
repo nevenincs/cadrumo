@@ -18,9 +18,11 @@ from ...core.config import Settings
 from ...core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.attachments.protocols import AttachmentStoreProtocol
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from .attachment_review import AttachmentReviewItem
 from .consent_withdrawal import CloudDerivedArtefact, ConsentedDispatch, ConsentWithdrawalSurvey
 from .evidence_followup_types import EvidenceFollowupReference, EvidenceFollowupText
@@ -261,6 +263,12 @@ class EvidenceReviewQueueRowProjection(BaseModel):
     drafted_at: datetime
     blocking_count: NonNegativeInt
     reasons: Annotated[tuple[ConfirmationBlockReason, ...], Field(max_length=64)] = ()
+    #: The sentence served for each reason, in the order of ``reasons``, and the language they are in.
+    reason_words: Annotated[
+        tuple[Annotated[str, Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)], ...],
+        Field(max_length=64),
+    ] = ()
+    reason_words_language: OutputLanguage | None = None
     advisory_count: NonNegativeInt
     advisories: Annotated[tuple[ReviewAdvisoryKind, ...], Field(max_length=16)] = ()
 
@@ -278,6 +286,10 @@ class EvidenceReviewQueueRowProjection(BaseModel):
             raise ValueError("review queue row repeats a kind")
         if self.blocking_count < len(self.reasons):
             raise ValueError("review queue blocker summary exceeds its blocker count")
+        if bool(self.reason_words) != (self.reason_words_language is not None) or (
+            self.reason_words and len(self.reason_words) != len(self.reasons)
+        ):
+            raise ValueError("review queue reason words do not match its reasons")
         return self
 
 

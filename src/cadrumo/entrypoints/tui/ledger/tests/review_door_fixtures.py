@@ -20,6 +20,7 @@ from uuid import UUID
 
 from textual.worker import NoActiveWorker, get_current_worker
 
+from .....application.ledger.confirmation_block_words import served_block_reason_words
 from .....application.ledger.evidence_followup_contracts import (
     EvidenceReviewQueueRowProjection,
     LedgerEvidenceReviewListProjection,
@@ -80,12 +81,15 @@ def synthetic_draft(
     advisories: tuple[ReviewAdvisoryKind, ...] = (),
 ) -> EvidenceReviewQueueRowProjection:
     """One synthetic draft waiting for review, with the blocking reasons and advisories given."""
+    served = tuple(served_block_reason_words(reason) for reason in reasons)
     return EvidenceReviewQueueRowProjection(
         evidence_reference=f"{index:016x}",
         extractor="local-reader",
         drafted_at=_DRAFTED_AT + timedelta(minutes=index),
         blocking_count=len(reasons),
         reasons=reasons,
+        reason_words=tuple(words for words, _language in served),
+        reason_words_language=served[0][1] if served else None,
         advisory_count=len(advisories),
         advisories=advisories,
     )

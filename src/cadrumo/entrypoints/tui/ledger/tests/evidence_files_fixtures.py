@@ -40,6 +40,7 @@ from .....application.ledger.batch_ingest import (
     InferencePause,
     UnresolvedBatchSource,
 )
+from .....application.ledger.confirmation_block_words import served_block_reason_words
 from .....application.ledger.evidence import MediaKind
 from .....application.ledger.evidence_followup_contracts import (
     CloudDerivedArtefactProjection,
@@ -187,6 +188,8 @@ def synthetic_review(
                 blocker_id="0123456789abcdef",
                 reason=ConfirmationBlockReason.AMBIGUOUS_IDENTITY,
                 field="supplier_tax_id",
+                reason_words=served_block_reason_words(ConfirmationBlockReason.AMBIGUOUS_IDENTITY)[0],
+                reason_words_language=served_block_reason_words(ConfirmationBlockReason.AMBIGUOUS_IDENTITY)[1],
             ),
         ),
     )

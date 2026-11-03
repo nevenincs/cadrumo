@@ -226,3 +226,13 @@ async def test_a_thousand_consent_events_render_one_page_at_a_time() -> None:
 def test_attachment_detail_never_names_where_an_attachment_was_fetched_from() -> None:
     item = synthetic_attachment(1).model_copy(update={"provider_locator": "drive:synthetic-folder"})
     assert all("synthetic-folder" not in line for line in attachment_detail_lines(item))
+
+
+def test_a_review_names_a_blocking_question_by_the_words_the_operation_served() -> None:
+    with override_settings(cadrumo_output_language="es"):
+        view = synthetic_review("0" * 16)
+        lines = view_lines(view)
+        served = tr("application.ledger.confirmation_block.served.ambiguous_identity", locale="es")
+
+    assert tr("tui.ledger.evidence_files.review.blocker", reason=served, field="supplier_tax_id") in lines
+    assert view.blockers[0].reason_words == served

@@ -8164,17 +8164,6 @@ tui:
           propio documento; la revisión completa lo muestra. Confirma un borrador
           desde el área de justificantes.
         read_by: Borrador {reference}, leído por {extractor} el {date}.
-        reason:
-          ambiguous_identity: La identidad de la contraparte no está clara
-          closure_discrepancy: Las cifras del propio documento no cuadran
-          contradicted_invoice_class: Su clase de factura y su referencia rectificativa
-            no coinciden
-          contradicted_regime: El régimen indicado contradice el impuesto repercutido
-          undetermined_establishment: No consta dónde está establecida una de las
-            partes
-          unmodelled_invoice_class: La clase de factura que declara no tiene representación
-            aquí
-          unresolved_direction: No está claro qué parte emitió el documento
         reference: Referencia del justificante
         reference_required: Escribe primero la referencia del justificante.
         summary: Resumen

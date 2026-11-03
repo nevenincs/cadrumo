@@ -31,7 +31,6 @@ from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import LedgerWorkspaceController
 from .evidence_files_common import EvidenceFilesPager, paging_controls, paint_paging, short_identity
-from .evidence_files_review import review_reason_label
 from .evidence_records import LedgerEvidenceRecordActions
 from .models import (
     LedgerEvidenceDraftV1,
@@ -78,7 +77,7 @@ def review_queue_detail_lines(row: EvidenceReviewQueueRowProjection) -> tuple[st
             date=row.drafted_at.date().isoformat(),
         ),
         tr("tui.ledger.evidence.review_queue.blocking", count=row.blocking_count),
-        *(f"  - {review_reason_label(reason)}" for reason in row.reasons),
+        *(f"  - {words}" for words in row.reason_words or tuple(reason.value for reason in row.reasons)),
         tr("tui.ledger.evidence.review_queue.advisories", count=row.advisory_count),
         *(f"  - {tr(_ADVISORY_LOCALE_KEYS[advisory])}" for advisory in row.advisories),
     )

@@ -225,17 +225,17 @@ def test_the_review_area_is_not_offered_without_its_review_door() -> None:
 
 @pytest.mark.asyncio
 async def test_the_evidence_area_lists_the_drafts_the_review_list_operation_answers() -> None:
-    drafts = (
-        synthetic_draft(
-            2,
-            reasons=(ConfirmationBlockReason.CLOSURE_DISCREPANCY, ConfirmationBlockReason.AMBIGUOUS_IDENTITY),
-            advisories=(ReviewAdvisoryKind.COUNTRY_CODE_UNASSIGNED,),
-        ),
-        synthetic_draft(1),
-    )
-    door = MemoryEvidenceReviewListDoor(drafts)
-    screen = LedgerEvidenceScreen(_evidence_controller(door))
     with override_settings(cadrumo_output_language="en"):
+        drafts = (
+            synthetic_draft(
+                2,
+                reasons=(ConfirmationBlockReason.CLOSURE_DISCREPANCY, ConfirmationBlockReason.AMBIGUOUS_IDENTITY),
+                advisories=(ReviewAdvisoryKind.COUNTRY_CODE_UNASSIGNED,),
+            ),
+            synthetic_draft(1),
+        )
+        door = MemoryEvidenceReviewListDoor(drafts)
+        screen = LedgerEvidenceScreen(_evidence_controller(door))
         async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             assert _keys(screen, "ledger-evidence-review-queue") == [f"{1:016x}", f"{2:016x}"]
@@ -249,8 +249,8 @@ async def test_the_evidence_area_lists_the_drafts_the_review_list_operation_answ
             detail = text_of(screen, "#ledger-evidence-review-queue-detail")
             assert f"{2:016x}" in detail
             assert tr("tui.ledger.evidence.review_queue.blocking", count=2) in detail
-            assert tr("tui.ledger.evidence_files.review.reason.closure_discrepancy") in detail
-            assert tr("tui.ledger.evidence_files.review.reason.ambiguous_identity") in detail
+            assert tr("application.ledger.confirmation_block.served.closure_discrepancy") in detail
+            assert tr("application.ledger.confirmation_block.served.ambiguous_identity") in detail
             assert tr("tui.ledger.evidence.review_queue.advisories", count=1) in detail
             assert tr("tui.ledger.evidence.review_queue.advisory.country_code_unassigned") in detail
             assert text_of(screen, "#ledger-refusal") == ""

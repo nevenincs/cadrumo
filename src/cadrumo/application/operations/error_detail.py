@@ -252,7 +252,7 @@ def _is_message_key(candidate: str) -> bool:
     )
 
 
-def _words_language() -> OutputLanguage:
+def served_words_language() -> OutputLanguage:
     """The language the worker's catalogue renders in, the one ``tr`` uses here."""
     return OutputLanguage(normalise_supported_language(output_language()) or OutputLanguage.EN.value)
 
@@ -290,7 +290,7 @@ def _registered_error_words(
     owns the public message; then the code's own catalogue sentence; last a
     sentence that names the code. Only the detail's scrubbed context fills them.
     """
-    language = _words_language()
+    language = served_words_language()
     context = {entry.key: entry.value for entry in entries}
     registry_owned = registered.public_message_from_registry or ".canonical_" in registered.message_key
     keys = (registered.message_key,) if registry_owned or error_key is None else (error_key, registered.message_key)
@@ -390,7 +390,7 @@ def operation_catalogue_refusal_words(
     """
     registered = get_registered_error_code_by_code(error_code)
     entries, _omitted = _bounded_context(None if context is None else dict(context))
-    language = _words_language()
+    language = served_words_language()
     words = _worded(message_key, language, {entry.key: entry.value for entry in entries})
     if words is not None:
         return words, language
@@ -424,7 +424,7 @@ def _record_fault_words(error: ValidationError) -> tuple[str, OutputLanguage]:
     words = None if cause is None else operation_refusal_words(cause)
     if words is not None:
         return words
-    language = _words_language()
+    language = served_words_language()
     return tr(RECORD_FAULT_WORDS_LOCALE_KEY, locale=language.value), language
 
 
@@ -539,4 +539,5 @@ __all__ = [
     "operation_error_detail_schema",
     "operation_refusal_words",
     "resolve_operation_error_detail",
+    "served_words_language",
 ]

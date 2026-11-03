@@ -8149,16 +8149,6 @@ tui:
           document; la revisió completa el mostra. Confirma un esborrany des de l'àrea
           de justificants.
         read_by: Esborrany {reference}, llegit per {extractor} el {date}.
-        reason:
-          ambiguous_identity: La identitat de la contrapart no està clara
-          closure_discrepancy: Les xifres del document no quadren
-          contradicted_invoice_class: La seva classe de factura i la referència rectificativa
-            no coincideixen
-          contradicted_regime: El règim indicat contradiu l'impost repercutit
-          undetermined_establishment: No consta on està establerta una de les parts
-          unmodelled_invoice_class: La classe de factura que declara no té representació
-            aquí
-          unresolved_direction: No està clar quina part va emetre el document
         reference: Referència del justificant
         reference_required: Escriu primer la referència del justificant.
         summary: Resum

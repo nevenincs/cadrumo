@@ -20,6 +20,7 @@ from ...core.classifier_input_source import ClassifierInputSource
 from ...core.confirmation_gate import ConfirmationBlockReason
 from ...core.country_code import CountryCodeAlpha2
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.external_constants import OutputLanguage
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.hex import Hex16Str, Hex64Str
@@ -32,6 +33,7 @@ from ..invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ..ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts, MissingClassifierInput
 from ..ledger.classification_category_resolution import IvaCategoryResolution
 from ..ledger.confirm_establishment import ConfirmedEstablishment
+from ..ledger.confirmation_block_words import served_block_reason_words
 from ..ledger.confirmation_gate import ConfirmationBlocker
 from ..ledger.counterparty_establishment import CounterpartyEstablishmentContradiction
 from ..ledger.establishment_ladder import (
@@ -54,6 +56,7 @@ from ..ledger.invoice_draft_records import (
 from ..ledger.structured_invoice_ports import (
     StructuredInvoiceClassificationKind,
 )
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.public_scalar import PublicDecimal
 
 _BoundedText = Annotated[str, Field(max_length=16_384)]
@@ -546,15 +549,27 @@ class ConfirmationBlockerProjectionV1(BaseModel):
     field: _FieldName | None = None
     detail: _ShortText = ""
     candidates: _Candidates = ()
+    #: The sentence a frontend shows for the reason and the language it is in.
+    reason_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    reason_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> ConfirmationBlockerProjectionV1:
+        if (self.reason_words is None) != (self.reason_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
     @classmethod
     def from_blocker(cls, value: ConfirmationBlocker) -> Self:
-        """Copy the blocking question and its candidate evidence."""
+        """Copy the blocking question and its candidate evidence, with the sentence served for its reason."""
+        words, language = served_block_reason_words(value.reason)
         return cls(
             blocker_id=value.blocker_id,
             reason=value.reason,
             field=value.field,
             detail=value.detail,
+            reason_words=words,
+            reason_words_language=language,
             candidates=tuple(FieldAmbiguityCandidateProjectionV1.from_candidate(row) for row in value.candidates),
         )
 

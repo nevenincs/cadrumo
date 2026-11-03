@@ -36,34 +36,14 @@ _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
     InvoiceKind.RECEIVED: "tui.ledger.invoice.kind.received",
     InvoiceKind.ISSUED: "tui.ledger.invoice.kind.issued",
 }
-_REASON_LOCALE_KEYS: Final[dict[ConfirmationBlockReason, str]] = {
-    ConfirmationBlockReason.CLOSURE_DISCREPANCY: "tui.ledger.evidence_files.review.reason.closure_discrepancy",
-    ConfirmationBlockReason.AMBIGUOUS_IDENTITY: "tui.ledger.evidence_files.review.reason.ambiguous_identity",
-    ConfirmationBlockReason.UNRESOLVED_DIRECTION: "tui.ledger.evidence_files.review.reason.unresolved_direction",
-    ConfirmationBlockReason.CONTRADICTED_REGIME: "tui.ledger.evidence_files.review.reason.contradicted_regime",
-    ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT: (
-        "tui.ledger.evidence_files.review.reason.undetermined_establishment"
-    ),
-    ConfirmationBlockReason.UNMODELLED_INVOICE_CLASS: (
-        "tui.ledger.evidence_files.review.reason.unmodelled_invoice_class"
-    ),
-    ConfirmationBlockReason.CONTRADICTED_INVOICE_CLASS: (
-        "tui.ledger.evidence_files.review.reason.contradicted_invoice_class"
-    ),
-}
 
 
 def _amount(value: PublicDecimal | None) -> str:
     return shown(None if value is None else value.decimal)
 
 
-def review_reason_label(reason: ConfirmationBlockReason) -> str:
-    """Name, in the operator's language, why a read draft cannot be confirmed yet."""
-    return tr(_REASON_LOCALE_KEYS[reason])
-
-
-def _blocker_line(reason: ConfirmationBlockReason, field: str | None) -> str:
-    return tr("tui.ledger.evidence_files.review.blocker", reason=review_reason_label(reason), field=shown(field))
+def _blocker_line(words: str | None, reason: ConfirmationBlockReason, field: str | None) -> str:
+    return tr("tui.ledger.evidence_files.review.blocker", reason=words or reason.value, field=shown(field))
 
 
 def summary_lines(summary: LedgerEvidenceReviewSummaryProjection) -> tuple[str, ...]:
@@ -90,7 +70,7 @@ def summary_lines(summary: LedgerEvidenceReviewSummaryProjection) -> tuple[str, 
         ),
         tr("tui.ledger.evidence_files.review.findings", count=len(summary.discrepancies)),
         tr("tui.ledger.evidence_files.review.blockers", count=len(summary.blockers)),
-        *(_blocker_line(blocker.reason, blocker.field) for blocker in summary.blockers),
+        *(_blocker_line(blocker.reason_words, blocker.reason, blocker.field) for blocker in summary.blockers),
     ]
     if summary.text_withheld:
         lines.append(tr("tui.ledger.evidence_files.review.text_withheld"))
@@ -100,7 +80,7 @@ def summary_lines(summary: LedgerEvidenceReviewSummaryProjection) -> tuple[str, 
 def _view_blocker_lines(blockers: tuple[ConfirmationBlockerProjectionV1, ...]) -> tuple[str, ...]:
     return (
         tr("tui.ledger.evidence_files.review.blockers", count=len(blockers)),
-        *(_blocker_line(blocker.reason, blocker.field) for blocker in blockers),
+        *(_blocker_line(blocker.reason_words, blocker.reason, blocker.field) for blocker in blockers),
     )
 
 
@@ -253,4 +233,4 @@ class LedgerEvidenceFilesReviewScreen(EvidenceFilesToolScreen):
         self._paint_review()
 
 
-__all__ = ["LedgerEvidenceFilesReviewScreen", "review_reason_label", "summary_lines", "view_lines"]
+__all__ = ["LedgerEvidenceFilesReviewScreen", "summary_lines", "view_lines"]

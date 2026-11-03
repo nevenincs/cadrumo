@@ -482,6 +482,8 @@ _EXTERNAL_RESULT_FIELDS: dict[str, dict[str, frozenset[str]]] = {
                 "drafted_at",
                 "blocking_count",
                 "reasons",
+                "reason_words",
+                "reason_words_language",
                 "advisory_count",
                 "advisories",
             }
@@ -853,7 +855,15 @@ def test_the_review_summary_declares_only_the_fields_read_for_document_text() ->
         ),
         "EvidenceReviewDiscrepancySummary": frozenset({"kind", "field", "expected", "observed", "detail_withheld"}),
         "EvidenceReviewBlockerSummary": frozenset(
-            {"blocker_id", "reason", "field", "candidate_count", "detail_withheld"}
+            {
+                "blocker_id",
+                "reason",
+                "field",
+                "candidate_count",
+                "detail_withheld",
+                "reason_words",
+                "reason_words_language",
+            }
         ),
         "LabelReadingFallbackProjectionV1": frozenset(
             {"cause", "unread_fields", "reader_error_type", "failed_condition_id"}

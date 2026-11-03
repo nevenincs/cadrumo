@@ -903,6 +903,16 @@ application:
       wallet_local_recurrence_divergence: The AEAT wallet and the local recurrence
         diverge; a review is required before the automatic result is produced.
   ledger:
+    confirmation_block:
+      served:
+        ambiguous_identity: The counterparty's identity is not settled
+        closure_discrepancy: The document's own figures do not add up
+        contradicted_invoice_class: Its invoice class and corrective reference disagree
+        contradicted_regime: The stated regime contradicts the tax charged
+        undetermined_establishment: Where a party is established is not determined
+        unmodelled_invoice_class: The invoice class it declares has no representation
+          here
+        unresolved_direction: It is not clear which party issued the document
     entry_options:
       deduction_fact_kind:
         domestic_current: Domestic purchases, current goods

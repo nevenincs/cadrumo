@@ -8113,16 +8113,6 @@ tui:
           kihagyja a dokumentum saját szövegét, a teljes ellenőrzés megmutatja. Vázlatot
           a Bizonylatok területen erősíthetsz meg.
         read_by: '{reference} vázlat, olvasta: {extractor}, dátum: {date}.'
-        reason:
-          ambiguous_identity: A partner személye nem egyértelmű
-          closure_discrepancy: A dokumentum saját számai nem jönnek ki
-          contradicted_invoice_class: A számlatípus és a helyesbítő hivatkozás ellentmond
-            egymásnak
-          contradicted_regime: A feltüntetett rendszer ellentmond a felszámított adónak
-          undetermined_establishment: Nem állapítható meg, hol van letelepedve az
-            egyik fél
-          unmodelled_invoice_class: A feltüntetett számlatípusnak itt nincs megfelelője
-          unresolved_direction: Nem egyértelmű, melyik fél állította ki a dokumentumot
         reference: Bizonylat hivatkozása
         reference_required: Előbb add meg a bizonylat hivatkozását.
         summary: Összefoglaló

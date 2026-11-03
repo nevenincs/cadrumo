@@ -26,6 +26,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.result_size import refuse_oversized_result
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .attachment_review import get_attachment_review_item, list_attachment_review_queue
+from .confirmation_block_words import served_block_reason_words
 from .confirmation_gate import ConfirmationBlocker, confirmation_blockers
 from .consent_withdrawal import survey_cloud_consent
 from .country_vocabulary_advisory import CountryVocabularyAdvisory, country_vocabulary_advisory
@@ -279,12 +280,15 @@ def _review_row(
         blockers=blockers,
     ):
         return None
+    served = tuple(served_block_reason_words(reason) for reason in reasons)
     return EvidenceReviewQueueRowProjection(
         evidence_reference=stored.evidence_reference,
         extractor=stored.extractor,
         drafted_at=stored.drafted_at,
         blocking_count=len(blockers),
         reasons=reasons,
+        reason_words=tuple(words for words, _language in served),
+        reason_words_language=served[0][1] if served else None,
         advisory_count=len(advisories),
         advisories=advisories,
     )

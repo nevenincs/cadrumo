@@ -959,6 +959,17 @@ application:
       wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
         difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
+    confirmation_block:
+      served:
+        ambiguous_identity: La identitat de la contrapart no està clara
+        closure_discrepancy: Les xifres del document no quadren
+        contradicted_invoice_class: La seva classe de factura i la referència rectificativa
+          no coincideixen
+        contradicted_regime: El règim indicat contradiu l'impost repercutit
+        undetermined_establishment: No consta on està establerta una de les parts
+        unmodelled_invoice_class: La classe de factura que declara no té representació
+          aquí
+        unresolved_direction: No està clar quina part va emetre el document
     entry_options:
       deduction_fact_kind:
         domestic_current: Operacions interiors corrents

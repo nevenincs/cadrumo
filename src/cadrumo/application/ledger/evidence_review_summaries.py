@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 from ...core.confirmation_gate import ConfirmationBlockReason
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.hex import Hex16Str, Hex64Str
@@ -19,6 +20,7 @@ from ...core.time.utc import validate_utc_aware
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from ...domain.iva.schema import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.public_scalar import PublicDecimal
 from .evidence_followup_types import EvidenceFollowupReference, EvidenceFollowupText, EvidenceReviewFieldName
 from .evidence_review_advisories import (
@@ -133,6 +135,15 @@ class EvidenceReviewBlockerSummary(BaseModel):
     field: EvidenceReviewFieldName | None = None
     candidate_count: NonNegativeInt
     detail_withheld: bool
+    #: The sentence a frontend shows for the reason and the language it is in.
+    reason_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    reason_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> EvidenceReviewBlockerSummary:
+        if (self.reason_words is None) != (self.reason_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
     @classmethod
     def from_blocker(cls, row: ConfirmationBlockerProjectionV1) -> Self:
@@ -143,6 +154,8 @@ class EvidenceReviewBlockerSummary(BaseModel):
             field=row.field,
             candidate_count=len(row.candidates),
             detail_withheld=bool(row.detail),
+            reason_words=row.reason_words,
+            reason_words_language=row.reason_words_language,
         )
 
 
