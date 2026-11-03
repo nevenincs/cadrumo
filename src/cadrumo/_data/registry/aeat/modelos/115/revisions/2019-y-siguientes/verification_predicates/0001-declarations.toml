@@ -22,3 +22,12 @@ predicate_id = "modelo-115-base-retenciones-declarada-cuando-perceptores-positiv
 expression = 'implies_nonzero(["01", "02"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "ley-35-2006:art-101"]
+
+# Casilla 02 and casilla 03 are bound separately, so a base with nothing withheld
+# on it is an observation about the filing rather than the engine's arithmetic.
+[[revisions."2019-y-siguientes".verification_predicates]]
+id = "implies-nonzero:retenciones-declaradas-cuando-base-positiva"
+predicate_id = "modelo-115-retenciones-declaradas-cuando-base-positiva"
+expression = 'implies_nonzero(["02", "03"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "ley-35-2006:art-101"]
