@@ -17,7 +17,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:b9a9d70eb6107d868babda8efdd84b18a8331771970682a26dd1548d87df95c3'
+body_hash: 'sha256:27c120f9725d0d4169801e47ddcf2dfceb8289092208dd007fd5a67e6ce79c8e'
 ---
 
 # `desktop-renta` plan
@@ -80,11 +80,13 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S41` - [Opus medium] place box 0500 before the art. 50.3 compensation as the AEAT design does, compute 1391 from the chain instead of a manual input, and find whether 448b84d73d broke test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses on box 0171, fixing the cause if so; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
 - [x] `P01.S42` - [Sonnet high] make modelo edit admission refuse an override the work form serves no field or answer for (such as Modelo 720 baselines and the 131 and 720 row-field bindings), so the writable surface and the served form agree; `src/cadrumo/application/modelo/edit_admission.py`.
 - [x] `P01.S43` - [Sonnet high] resolve the renta-ledger and counterpart declarations through the registry's canonical temporal selection so a filing year without an authored edition projects to the nearest one instead of raising 'no registry revision in force'; `src/cadrumo/application/aggregation/renta_ledger.py`.
-- [ ] `P01.S44` - [Sonnet high] establish what verification and export do with a Modelo 100 year above the newest authored edition, keep a projected year from carrying filing grade as the registry temporal coverage decision requires, and link that decision in the plan; `src/cadrumo/application/modelo/verification_actions.py`.
+- [x] `P01.S44` - [Sonnet high] establish what verification and export do with a Modelo 100 year above the newest authored edition, keep a projected year from carrying filing grade as the registry temporal coverage decision requires, and link that decision in the plan; `src/cadrumo/application/modelo/verification_actions.py`.
 - [ ] `P01.S45` - [Sonnet high] derive the years every Renta test exercises from the support declaration and the authored editions, take the fixture generator year from the registry, and read projection from a served field instead of the revision id; `src/cadrumo/application/modelo/tests/test_modelo_100_art_50_3_compensation_verification.py`.
 - [ ] `P01.S46` - [Opus medium] serve, per withholding credit, the calculated boxes that depend on it so the credits panel stops walking formula operands in the window; `native/desktop/frontend/src/components/modelo/workspace/creditBoxes.ts`.
-- [ ] `P01.S47` - [Opus medium] ground box 0506 in LIRPF art. 84.2.3 and the AEAT design, applying the remainder of the joint reduction to the savings base, so the joint calculation and comparison do not over-tax savings income; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
+- [x] `P01.S47` - [Opus medium] ground box 0506 in LIRPF art. 84.2.3 and the AEAT design, applying the remainder of the joint reduction to the savings base, so the joint calculation and comparison do not over-tax savings income; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
 - [ ] `P01.S48` - [Sonnet high] resolve the low plan-close findings: required authored_year, settlement-unsupported words naming a waived refund in all four locales; `src/cadrumo/application/modelo/profile_derived_facts.py`.
+- [ ] `P01.S49` - [Sonnet high] mirror the merged backend on the desktop: regenerate the modelo and ledger contracts for the disagreement operations and the form note finding id, and give the withholding certificate record a certificate file picker with served words for the custody refusals; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
+- [ ] `P01.S50` - [Sonnet high] let a projected Modelo 100 year resolve the Anexo D inventory applicability through the registry selection instead of an exact year match, and serve state-projection readiness at the grade the year reaches; `src/cadrumo/application/aggregation/inventory.py`.
 
 ### Phase `P02` - contracts and fixtures
 

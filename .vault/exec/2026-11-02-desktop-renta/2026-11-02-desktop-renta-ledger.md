@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:56a7875d2923edbdcf58b651e3692038ed4af29d7c78822f8b22a72aac81f704'
+body_hash: 'sha256:b3b1a750279beafe317452fb8027dc5cbe7f27e49df0c02b64fdfe7634c6d230'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -728,6 +728,38 @@ related:
 - `S20` `verify:` `playwright scenarios modelo/renta` -> `fail`
 - `S20` `verify:` `pytest renta regression` -> `fail`
 - `S20` `by:` `vaultspec-standard-executor`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S47` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S47` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_renta_chain_behaviour.py`
+- `S47` `verify:` `just check-registry` -> `pass`
+- `S47` `verify:` `just check-registry-gate` -> `pass`
+- `S47` `verify:` `just check-bindings` -> `pass`
+- `S47` `verify:` `just report-registry-edition-migration 100` -> `pass`
+- `S47` `verify:` `pytest taxation comparison all years incl projected` -> `pass`
+- `S47` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S47` `by:` `vaultspec-high-executor`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/snapshot.py`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/schema_references.py`
+- `S44` `A` `src/cadrumo/domain/calculations/registry/tests/test_projected_year_filing_grade.py`
+- `S44` `A` `src/cadrumo/application/filing/tests/test_runtime_projected_year.py`
+- `S44` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_projected_year_verification.py`
+- `S44` `verify:` `ruff` -> `pass`
+- `S44` `verify:` `ty` -> `pass`
+- `S44` `verify:` `lint-imports` -> `pass`
+- `S44` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S44` `verify:` `dev.locales audit` -> `pass`
+- `S44` `verify:` `pytest wide suites` -> `fail`
+- `S44` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -782,3 +814,5 @@ related:
 - `S43` Commit 2441755ff6. Every `contains_date` gate replaced by `select_revision_metadata_for_year;` revision carry gate projects within the support span; Madrid deduction gate compares the snapshot's authored year. A 2026 Modelo 100 calculates end to end. Wide run 9988 passed, 83 failed: 81 trace to the Modelo 130 art. 32.1 split and `box_number` length from the renta-withholding merge 24e2cef114, plus `minimo_descendientes` and 2025 prorrata tests, none touching S43 paths. Supported-filing-years floor 2022 left as declared.
 - `S19` Commits 5e0ec02dfc fixtures, 3567b54052 stories and journeys. Final single re-record via the full producer; years from the registry incl. projected 2026 calculated. projectable true only for 2025/2026: the m130 projection mapping is authored for revision 2025 only. Two-earner `individual_lower_result` not recordable: the comparison models a single input set per household. 46 Playwright failures are raw chrome keys `(workspace.modelo.filing.*,` `iva_wallet.*)` from a chrome declaration mismatch shown by `test_desktop_chrome,` plus 2 pre-existing modelo-workspace scenarios; carried to S20.
 - `S20` Commits 058065391e, 991f48bdea, cae85744d0, e499839a18, e9a18f1117, 148173569a, b7da0dbe77, 99d8a52aa8, 17bcee39e3, 5fd7982366. Every failure the plan's commits caused is fixed. Remaining reds belong to other lanes: desktop chrome 17 keys (frontend 6fa9d30093, 975330ea1f, bb0476fd0c); check-types 3 diagnostics outside our files; 130/131 relation-prefill drift (10dcf5c8fc); 0171 (0f570046bf); Modelo 130/131 split regressions (ca59ec5ecb, fb844a52db, 24e2cef114); identity inventory keys of other lanes; 2 Playwright modelo-workspace scenarios. 46 raw-key scenarios were stale build chrome-strings, cleared by regeneration.
+- `S47` Commit 781c65f4aa. 0506 = max(0, min(0460, 0461 - max(0, 0435))) from LIRPF art. 84.2.3 and the AEAT dictionary JREDU21, authored once at 2022. 2026 cases passed after S44 8a53bf9e6f. 2020/2021 below the floor left alone; box 0507 pension remainder is the same kind of gap, out of scope.
+- `S44` Commit 8a53bf9e6f (readers, verification findings, work form, workspace and 8 locale catalogues also in it). A projected year reads at calculation grade through `reading_snapshot;` verify refuses with `registry_filing_year_projected,` export with `errors.snapshot.filing_year_projected.` Wide-suite failures attributed to other lanes (M130, 131, layout). Open: inventory-anexo-d-applicability is authored for 2025 only, blocking box 0177 for any projected year; state-projection readiness still requests filing grade.
