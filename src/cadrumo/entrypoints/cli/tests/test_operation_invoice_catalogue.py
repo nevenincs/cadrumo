@@ -31,6 +31,7 @@ from ....application.invoices.catalogue_read_projection import CatalogueInvoiceS
 from ....application.invoices.catalogue_selection import InvoiceLookupRefusalReason
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition
+from ....domain.invoices.figures import settlement_amount
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from .. import ledger_business_invoice_commands as handler
@@ -75,6 +76,7 @@ def test_snapshot_reconstructs_exact_existing_cli_record_payload() -> None:
         if hasattr(invoice, name)
     }
     expected_fields["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
+    expected_fields["settlement_amount"] = settlement_amount(invoice.grand_total, invoice.retention_amount)
     expected_fields["lines"] = [line.model_dump(mode="python") for line in invoice.lines]
     provenance = invoice.provenance
     expected_fields["source_filename"] = provenance.source_path.name if provenance is not None else None
