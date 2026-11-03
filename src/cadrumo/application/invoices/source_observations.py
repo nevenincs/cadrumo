@@ -46,7 +46,11 @@ from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoic
 from ...domain.invoices.models import Invoice
 from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
 from ...domain.iva.schema import InvoiceKind, IvaCategory
-from ...domain.modelos.row_models import Modelo349OperadorRow, validate_m349_country_prefix_context
+from ...domain.modelos.row_models import (
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    validate_m349_country_prefix_context,
+)
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
 )
@@ -86,6 +90,17 @@ _PAYABLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
     },
 )
 
+
+_M349_RECTIFICACION_ROW_BINDINGS: dict[BindingId, str] = {
+    "iva-349-rectificacion-row-codigo-pais": "codigo_pais",
+    "iva-349-rectificacion-row-nif": "nif_comunitario",
+    "iva-349-rectificacion-row-apellidos": "razon_social",
+    "iva-349-rectificacion-row-clave": "clave_operacion",
+    "iva-349-rectificacion-row-ejercicio": "ejercicio",
+    "iva-349-rectificacion-row-periodo": "periodo",
+    "iva-349-rectificacion-row-base-rectificada": "base_rectificada",
+    "iva-349-rectificacion-row-base-anterior": "base_anterior",
+}
 
 _THIRD_PARTY_COLLECTION = "third_party_collection"
 _OUTSIDE_ECONOMIC_ACTIVITY = "outside_economic_activity"
@@ -249,7 +264,7 @@ def invoice_observation(
     clave = intracommunity_clave(invoice)
     if clave is None:
         return None
-    if context.modelo == form_for_role("iva.intracommunity_summary"):
+    if context.modelo == form_for_role("iva.intracommunity_summary") and not is_rectificativa(invoice):
         validate_m349_country_prefix_context(
             country_code=invoice.counterparty_country,
             clave_operacion=clave,
@@ -445,7 +460,7 @@ def _m347_invoice_observation(
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
         base_amount=_m347_netted_amount(invoice, _eur(invoice.base_total_eur, invoice)),
-        invoice_total_amount=_m347_netted_amount(invoice, _eur(invoice.grand_total_eur, invoice)),
+        invoice_total_amount=_m347_netted_amount(invoice, _m347_contraprestacion_eur(invoice)),
         intracommunity_clave=None,
         operation_clave=clave,
         party_legal_name=party_legal_name,
@@ -532,6 +547,18 @@ def rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue) -> Inv
     )
 
 
+def _m347_contraprestacion_eur(invoice: Invoice) -> Decimal:
+    """The invoice's total as RD 1065/2007 art. 34.2 declares it, which leaves a suplido out.
+
+    Art. 34.2.a declares "el importe total de las contraprestaciones, incluidas
+    las cuotas y recargos", and art. 34.2.c reads that from LIVA arts. 78 to 80,
+    whose art. 78.Tres.3 keeps from the base "las sumas pagadas en nombre y por
+    cuenta del cliente en virtud de mandato expreso del mismo". The stored grand
+    total carries the suplido, so it comes back out here.
+    """
+    return _eur(invoice.grand_total_eur, invoice) - (invoice.suplido_amount_eur or Decimal("0"))
+
+
 def _m347_netted_amount(invoice: Invoice, amount: Decimal) -> Decimal:
     """Give a rectificativa's amount the sign that nets it against the operations it corrects.
 
@@ -541,11 +568,13 @@ def _m347_netted_amount(invoice: Invoice, amount: Decimal) -> Decimal:
     stores every total as a non-negative magnitude with the correction carried
     by its class, so the corrective direction enters here, on the observation
     total, and the one row builder and the one declarable-set summation net it
-    like any other amount: a counterparty's annual and quarterly amounts can
-    fall below zero and render with the record's "N" sign. Which direction a
-    given rectificativa corrects is not on the record, so every rectificativa
-    nets as a reduction and :func:`_m347_rectificativa_netting_advisory` names
-    them.
+    like any other amount. Art. 35.2 brings a correction of an earlier year into
+    the same total: "el importe total de las operaciones realizadas con la misma
+    persona o entidad se declarará teniendo en cuenta dichas modificaciones", so
+    a counterparty's annual and quarterly amounts can fall below zero and render
+    with the record's "N" sign. Art. 34.4 also counts "las alteraciones del
+    precio", which can raise it, but the invoice records no direction, so every
+    rectificativa nets as a reduction and the netting advisory names them.
     """
     return -amount if is_rectificativa(invoice) else amount
 
@@ -771,11 +800,15 @@ def row_values_not_carried_by_detail_rows(
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Keep the row values that reach the revision as row bindings rather than typed detail rows.
 
-    Modelo 349 operador rows travel as :class:`Modelo349OperadorRow` detail rows,
+    Modelo 349 operador and rectification rows travel as typed detail rows,
     where they union with operator-entered rows and replay into the same
     bindings; emitting them here as well would persist one row on two channels.
     """
-    return {key: value for key, value in row_values.items() if key[0] not in _M349_OPERADOR_ROW_BINDINGS}
+    return {
+        key: value
+        for key, value in row_values.items()
+        if key[0] not in _M349_OPERADOR_ROW_BINDINGS and key[0] not in _M349_RECTIFICACION_ROW_BINDINGS
+    }
 
 
 def m349_operador_rows_from_values(
@@ -789,6 +822,33 @@ def m349_operador_rows_from_values(
         )
         for row_index in _m349_operador_row_indexes(row_values)
     )
+
+
+def m349_rectificacion_rows_from_values(
+    row_values: Mapping[tuple[BindingId, int], Decimal | str],
+) -> tuple[Modelo349RectificacionRow, ...]:
+    """Construct Modelo 349 rectification rows from binding values."""
+    indexes = sorted(
+        {row_index for binding_id, row_index in row_values if binding_id in _M349_RECTIFICACION_ROW_BINDINGS},
+    )
+    rows: list[Modelo349RectificacionRow] = []
+    for row_index in indexes:
+        values = {
+            attr: row_values[(binding_id, row_index)]
+            for binding_id, attr in _M349_RECTIFICACION_ROW_BINDINGS.items()
+            if (binding_id, row_index) in row_values
+        }
+        if set(values) != set(_M349_RECTIFICACION_ROW_BINDINGS.values()):
+            raise RegistryValidationError(f"Modelo 349 rectification row {row_index} is incomplete")
+        try:
+            rows.append(
+                Modelo349RectificacionRow.model_validate(
+                    {**values, "nif_comunitario": f"{values['codigo_pais']}{values['nif_comunitario']}"},
+                ),
+            )
+        except ValueError as exc:
+            raise RegistryValidationError(str(exc)) from exc
+    return tuple(rows)
 
 
 def iva_category_for_operation_type(operation_type: IntracomOperationType | None) -> IvaCategory | None:

@@ -298,6 +298,7 @@ def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contr
         "rectified_year",
         "rectified_period",
         "rectified_base_previous",
+        "earlier_year_modification",
     }
     assert set(InvoiceObservation.model_fields) - non_declarable == _DECLARABLE_FACTS | _M347_RECORD_KEY_FACTS
 

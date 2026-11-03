@@ -19,6 +19,7 @@ from ...domain.calculations.registry.invoice_bindings import (
 from ...domain.calculations.registry.iva_category_catalogue import (
     require_iva_category,
 )
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
@@ -49,9 +50,11 @@ from .source_observations import (
     invoice_sources_for_revision,
     is_unconverted_foreign_invoice,
     m349_operador_rows_from_values,
+    m349_rectificacion_rows_from_values,
     resolve_m347_filer,
     row_values_not_carried_by_detail_rows,
 )
+from .source_rectifications import place_rectifications
 from .source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 
 _IncoherentInvoice = tuple[Invoice, InvoiceDecomposition]
@@ -96,9 +99,10 @@ def _observe_invoice_sources(
 def _invoice_resolution_from_observations(
     *,
     context: CalculationSourceContext,
-    catalogue_invoices: Sequence[Invoice],
+    catalogue: InvoiceCatalogue,
     source_invoices: Sequence[Invoice],
     observed_items: tuple[ObservedInvoice, ...],
+    rectification_refusals: tuple[CalculationSourceDiagnostic, ...],
     incoherent: tuple[_IncoherentInvoice, ...],
     withheld_for_conversion: tuple[Invoice, ...],
     resolver_id: str,
@@ -117,7 +121,8 @@ def _invoice_resolution_from_observations(
         binding.source for binding in context.revision.bindings if binding.id in resolved_binding_ids
     )
     declared_invoices = tuple(invoice for invoice, _ in observed_items)
-    diagnostics = _m349_incoherence_diagnostics(incoherent, resolver_id=resolver_id)
+    catalogue_invoices = tuple(catalogue.values())
+    diagnostics = rectification_refusals + _m349_incoherence_diagnostics(incoherent, resolver_id=resolver_id)
     diagnostics += _unconverted_foreign_diagnostics(
         withheld_for_conversion,
         context=context,
@@ -137,7 +142,7 @@ def _invoice_resolution_from_observations(
     )
     diagnostics += m347_declaration_advisories(
         observed_items,
-        source_invoices,
+        catalogue,
         context=context,
         resolver_id=resolver_id,
     )
@@ -154,7 +159,7 @@ def _invoice_resolution_from_observations(
         owned_sources=owned_sources,
         binding_values=binding_values,
         row_binding_values=row_values_not_carried_by_detail_rows(row_values),
-        detail_rows=m349_operador_rows_from_values(row_values),
+        detail_rows=(*m349_operador_rows_from_values(row_values), *m349_rectificacion_rows_from_values(row_values)),
         source_transaction_ids=_source_transaction_ids(observed_items),
         diagnostics=diagnostics,
         provenance=tuple(
@@ -238,11 +243,27 @@ class InvoiceCatalogueSourceResolver:
             context=context,
             m347_filer=m347_filer,
         )
+        try:
+            placed_items, rectification_refusals = place_rectifications(
+                observed_items,
+                catalogue=catalogue,
+                context=context,
+                filed_declarations=self._ports.m349_filed_declarations,
+                resolver_id=self.resolver_id,
+            )
+        except InvoiceSourcePersistenceError as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=tuple(active_sources),
+                error=exc,
+            )
         return _invoice_resolution_from_observations(
             context=context,
-            catalogue_invoices=catalogue_invoices,
+            catalogue=catalogue,
             source_invoices=source_invoices,
-            observed_items=observed_items,
+            observed_items=placed_items,
+            rectification_refusals=rectification_refusals,
             incoherent=incoherent,
             withheld_for_conversion=withheld_for_conversion,
             resolver_id=self.resolver_id,

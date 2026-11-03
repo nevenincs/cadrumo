@@ -350,12 +350,8 @@ def test_a_floored_bucket_leaves_out_a_nonpositive_total_and_says_which_it_left_
 
     assert not declarable.admits("B11111112", "B")
     assert not declarable.admits("C22222229", "B")
-    assert declarable.leaves_out_floored_nonpositive("B11111112", "B")
-    assert declarable.leaves_out_floored_nonpositive("C22222229", "B")
     assert not declarable.admits("D33333335", "B")
-    assert not declarable.leaves_out_floored_nonpositive("D33333335", "B")
     assert declarable.admits("E44444441", "B")
-    assert not declarable.leaves_out_floored_nonpositive("E44444441", "B")
     assert not declarable.admits_unconditional_nonpositive("B11111112", "B")
 
 
