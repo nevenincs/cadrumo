@@ -80,6 +80,8 @@ def test_native_cli_verify_and_file_preserve_settled_results_and_noop_notices(tm
             )
             assert created.exit_code == 0, created.output
             work_unit_id = require_schema_envelope(created.output)["work_unit_id"]
+            # The prior year's income is not supplied: a first-year activity has no earlier Modelo 100,
+            # so the backend derives 0 and casilla 13 is 100 (RIRPF art. 110.3.c, income <= 9000).
             calculated = _protected(
                 "calculate",
                 work_unit_id,
@@ -87,8 +89,6 @@ def test_native_cli_verify_and_file_preserve_settled_results_and_noop_notices(tm
                 "05=0.00",
                 "--casilla",
                 "06=0.00",
-                "--binding",
-                "irpf.previous_year_economic_activity_net_income=13000",
                 "--binding",
                 "modelo-130-resultados-negativos-anteriores=0",
             )
@@ -200,6 +200,7 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
         invoke_cli=run_cadrumo_cli,
     ) as api:
         work_unit_id = api.prepared
+        # Same first-year activity: the backend derives the prior year's income (0), so casilla 13 is 100.
         calculated = api.invoke_password(
             "app",
             "modelo",
@@ -210,8 +211,6 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
             "05=0.00",
             "--casilla",
             "06=0.00",
-            "--binding",
-            "irpf.previous_year_economic_activity_net_income=13000",
             "--binding",
             "modelo-130-resultados-negativos-anteriores=0",
         )

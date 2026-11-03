@@ -155,16 +155,19 @@ _EXPECTED_CUMULATIVE_C01: dict[str, Decimal] = {
 }
 
 # Hand-derived quarterly casilla 19 for this persona (no retenciones, no
-# agrarian income, no vivienda deduction, no minoracion, original filings):
-# cumulative casilla 03 net income of 3500 / 6300 / 8000 / 9600 gives casilla 04
-# (20 per cent) of 700 / 1260 / 1600 / 1920, and casilla 05 subtracts the
-# earlier positive casilla 07 values, leaving 700 / 560 / 340 / 320.
-# oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 03, 04, 05, 07 y 19.
+# agrarian income, no vivienda deduction, no minoracion, original filings). The
+# persona keeps cobros y pagos, so its modality is the simplified one and box 02
+# adds the RIRPF art. 30.2.4.ª provision: 5 per cent of the cumulative previo
+# 3500 / 6300 / 8000 / 9600, which is 175 / 315 / 400 / 480, under the 2.000 cap.
+# Casilla 03 is then 3325 / 5985 / 7600 / 9120, casilla 04 (20 per cent) is
+# 665 / 1197 / 1520 / 1824, and casilla 05 subtracts the earlier positive
+# casilla 07 values, leaving 665 / 532 / 323 / 304.
+# oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 02, 03, 04, 05, 07 y 19.
 _EXPECTED_M130_C19_BY_PERIOD: dict[str, Decimal] = {
-    "1T": Decimal("700.00"),
-    "2T": Decimal("560.00"),
-    "3T": Decimal("340.00"),
-    "4T": Decimal("320.00"),
+    "1T": Decimal("665.00"),
+    "2T": Decimal("532.00"),
+    "3T": Decimal("323.00"),
+    "4T": Decimal("304.00"),
 }
 _EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
 _EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
@@ -378,10 +381,10 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     # Transport invariant #2: the annual M100 0604 credits what the four M130
     # quarters paid (M131 folds as not-applicable zero). Every quarter is an
     # original with a positive casilla 19, so each paid exactly its casilla 19.
-    # oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 18, 19 y (4) Ingreso; 700 + 560 + 340 + 320 = 1920.00,
-    # which is also 20 per cent of the 9600.00 annual net income.
+    # oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 18, 19 y (4) Ingreso; 665 + 532 + 323 + 304 = 1824.00,
+    # which is also 20 per cent of the 9120.00 fourth-quarter casilla 03.
     casilla_0604 = Decimal(annual.casilla_values[_M100_PAGOS_CASILLA])
-    assert casilla_0604 == Decimal("1920.00"), casilla_0604
+    assert casilla_0604 == Decimal("1824.00"), casilla_0604
 
 
 def test_a_locally_filed_quarter_records_the_kind_its_revision_states(

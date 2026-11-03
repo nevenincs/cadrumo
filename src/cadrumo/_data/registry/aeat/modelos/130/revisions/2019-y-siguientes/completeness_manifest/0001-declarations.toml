@@ -97,3 +97,11 @@ number = "saldo-negativo-fin-periodo"
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "rendimiento-neto-reducible-art-32-1"
 number = "rendimiento-neto-reducible-art-32-1"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "gastos-deducibles-previos"
+number = "gastos-deducibles-previos"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "provisiones-gastos-dificil-justificacion"
+number = "provisiones-gastos-dificil-justificacion"

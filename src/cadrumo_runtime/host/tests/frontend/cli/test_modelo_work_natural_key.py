@@ -351,10 +351,11 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
 def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_state(exercise: int) -> None:
     """The reported first-quarter blank-state ledger flow stays on the public CLI path.
 
-    The expected casillas come from the acceptance evidence, not from
-    reimplementing the Modelo 130 formulas in the test: ledger income 3000,
-    deductible expense 600, and first-year activity blank prior state produce
-    the accepted 1T draft values 01=3000, 02=600, 03=2400, 19=380.
+    The expected casillas are worked by hand from the rule, not read from a run.
+    The profile is under estimacion directa simplificada, so casilla 02 is the
+    ledger expense plus the RIRPF art. 30.2.4a provision (5 % of the positive
+    rendimiento previo, 7 % in 2023, at most 2.000 EUR a year). The first year
+    of activity has no prior-year income, so casilla 13 is the 100 EUR reduction.
     """
 
     _create_autonoma_activity_profile(exercise)
@@ -390,10 +391,18 @@ def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_
     assert "validate_construct_closure() missing" not in calculated.output
     assert "Traceback" not in calculated.output
     casillas = _payload(calculated.output)["casilla_values"]
+    # RIRPF art. 30.2.4a, by hand: rendimiento previo = 3000 - 600 = 2400.
+    #   2023 (7 %): provision 2400 x 7 % = 168; 02 = 600 + 168 = 768; 03 = 3000 - 768 = 2232;
+    #               04 = 2232 x 20 % = 446.40; 19 = 446.40 - 100 = 346.40.
+    #   other years (5 %): provision 2400 x 5 % = 120; 02 = 600 + 120 = 720; 03 = 3000 - 720 = 2280;
+    #               04 = 2280 x 20 % = 456; 19 = 456 - 100 = 356.
+    expected_02, expected_03, expected_19 = (
+        ("768.00", "2232.00", "346.40") if exercise == 2023 else ("720.00", "2280.00", "356.00")
+    )
     assert Decimal(casillas["01"]) == Decimal("3000.00")
-    assert Decimal(casillas["02"]) == Decimal("600.00")
-    assert Decimal(casillas["03"]) == Decimal("2400.00")
-    assert Decimal(casillas["19"]) == Decimal("380.00")
+    assert Decimal(casillas["02"]) == Decimal(expected_02)
+    assert Decimal(casillas["03"]) == Decimal(expected_03)
+    assert Decimal(casillas["19"]) == Decimal(expected_19)
 
 
 def test_modelo_130_without_a_declared_criterion_cannot_be_verified_exported_or_filed(tmp_path: Path) -> None:

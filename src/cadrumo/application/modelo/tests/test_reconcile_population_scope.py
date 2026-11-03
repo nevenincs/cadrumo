@@ -19,6 +19,7 @@ import pytest
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -169,6 +170,26 @@ def test_a_carry_binding_is_never_population_evidence() -> None:
     scope = resolve_casilla_population_scope(
         registry_revision=revision,
         calculation=_calculation(binding_overrides={carry_binding_ids[0]: "750.00"}),
+    )
+
+    assert scope.comparable_casilla_ids == ()
+    assert scope.is_empty
+
+
+def test_a_selector_profile_binding_is_never_population_evidence() -> None:
+    """A recorded regime says which rule governs box 02, not that the bucket holds anything it is computed from."""
+    revision = _m130_revision()
+    selectors = enum_consumed_binding_ids(revision)
+    profile_selectors = sorted(
+        binding.id
+        for binding in revision.bindings
+        if binding.id in selectors and binding.source is BindingSourceKind.PROFILE
+    )
+    assert profile_selectors, "subject revision reads no profile selector; the test would be vacuous"
+
+    scope = resolve_casilla_population_scope(
+        registry_revision=revision,
+        calculation=_calculation(binding_overrides={profile_selectors[0]: "directa_simplificada"}),
     )
 
     assert scope.comparable_casilla_ids == ()

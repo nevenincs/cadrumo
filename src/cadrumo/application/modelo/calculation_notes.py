@@ -287,6 +287,7 @@ _INCOME_CLASS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 _OTHER_INCOME_CLASS_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.income_class.other"
 _ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
 _PROFILE_GROUP_VALUE: Final[str] = "group"
+_PROFILE_FIELD_VALUE: Final[str] = "field"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
     {
@@ -400,7 +401,7 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         return format_casilla_value(Decimal(value), data_type="money", language=language)
     if name == _INCOME_CLASS_VALUE:
         return tr(_INCOME_CLASS_LOCALE_KEYS.get(value, _OTHER_INCOME_CLASS_LOCALE_KEY), locale=language.value)
-    if name == _PROFILE_GROUP_VALUE:
+    if name in (_PROFILE_GROUP_VALUE, _PROFILE_FIELD_VALUE):
         section, _, field = value.partition(".")
         return tr(profile_field_label_key(section, field), locale=language.value)
     if name == _CROSS_CHECK_VALUE:

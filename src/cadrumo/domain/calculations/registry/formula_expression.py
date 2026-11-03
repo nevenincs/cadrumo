@@ -360,12 +360,16 @@ def _evaluate_record_row_unused(expression: FormulaExpression, ctx: EvalContext)
     return result
 
 
-def _text_binding_operand(key: BindingId, ctx: EvalContext) -> str | None:
+def _text_binding_operand(key: BindingId, ctx: EvalContext) -> str:
     if key in ctx.unresolved_binding_ids:
         raise _UnresolvedFormulaDependencyError((key,))
     if key in ctx.binding_values or key in ctx.boolean_binding_values or key in ctx.date_binding_values:
         raise RegistryValidationError("text_equal operand has a non-text or ambiguous channel")
     value = ctx.enum_binding_values.get(key)
+    if value is None:
+        # An undeclared fact is unknown, not a malformed operand: the comparison and every
+        # casilla that depends on it stay unresolved until the fact is supplied.
+        raise _UnresolvedFormulaDependencyError((key,))
     ctx.operand_refs.append(key)
     return value
 

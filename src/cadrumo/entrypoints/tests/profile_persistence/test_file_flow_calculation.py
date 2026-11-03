@@ -16,6 +16,7 @@ from cadrumo.application.modelo.calculation_revision_queries import list_calcula
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
@@ -272,9 +273,8 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos: Repos) -> None:
 def test_calculate_runs_registry_formula_engine(repos: Repos) -> None:
     """The bucket calculation runs the registry's formula engine
     over the ledger-sourced inputs and persists the FULL computed
-    casilla map. Modelo 130 1T 2026 declares 9 manual casillas plus
-    10 computed formulas; given inputs for casilla 01 and 02, the
-    engine derives casilla 03 = 01 - 02 (subtract).
+    casilla map. Ledger expenses feed gastos-deducibles-previos; the
+    engine computes casilla 02 and derives casilla 03 = 01 - 02.
 
     The persisted revision carries the ledger-sourced inputs in
     ``input_values_by_casilla_id`` (canonical decimal strings) and the full
@@ -305,7 +305,7 @@ def test_calculate_runs_registry_formula_engine(repos: Repos) -> None:
 
     # Ledger-sourced inputs surface in ``input_values_by_casilla_id``.
     assert revision.input_values_by_casilla_id[M130_INCOME_CASILLA] == "10000"
-    assert revision.input_values_by_casilla_id[M130_EXPENSE_CASILLA] == "3000"
+    assert revision.input_values_by_casilla_id[validated_casilla_id("gastos-deducibles-previos")] == "3000"
     assert M130_NET_RESULT_CASILLA not in revision.input_values_by_casilla_id  # 03 is a formula target, not an input
 
     # Calculation output contains BOTH the ledger-sourced inputs AND every

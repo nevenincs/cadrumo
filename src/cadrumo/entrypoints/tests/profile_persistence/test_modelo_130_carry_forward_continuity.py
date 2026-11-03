@@ -213,8 +213,9 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     *GENERAL_REGIME_NATURAL_PERSON_FACTS,
     UserProfileFact(path="iva.oss_enrolled", value=False),
     UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
-    # The operator declares the cobros y pagos criterion for the quarters this module calculates.
-    *cash_criterion_facts(2026),
+    # The operator declares the cobros y pagos criterion for the quarters this module calculates,
+    # under the normal modality: the expected carry assumes no art. 30.2.4.a provision in box 02.
+    *cash_criterion_facts(2026, estimation_regime="directa_normal"),
 )
 
 

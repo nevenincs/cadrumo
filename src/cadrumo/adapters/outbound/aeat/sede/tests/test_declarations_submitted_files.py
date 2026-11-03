@@ -330,6 +330,12 @@ class TestSubmittedFileObservation:
                 and casilla.id != _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA
                 and casilla.id in observed_values
             }
+            # Box 02 is computed from the expenses behind it plus the simplified-modality provision.
+            # The file prints only the total, so the replay states it as the expenses of a
+            # normal-modality filer, whose box 02 has no provision and recomputes to the printed box.
+            input_values[validated_casilla_id("gastos-deducibles-previos")] = observed_values[
+                validated_casilla_id("02")
+            ]
             binding = next(
                 item
                 for item in snapshot.revision.bindings
@@ -364,13 +370,17 @@ class TestSubmittedFileObservation:
             computed_casillas = {
                 casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED
             }
-            assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA}
+            assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {
+                _M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA,
+                validated_casilla_id("provisiones-gastos-dificil-justificacion"),
+            }
 
             calculated = calculate_registry_snapshot(
                 snapshot,
                 inputs=input_values,
                 date_context={"filing_period": date(2026, 3, 31)},
                 binding_values=binding_values,
+                enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
             )
 
             assert {casilla_id: calculated.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS} == {

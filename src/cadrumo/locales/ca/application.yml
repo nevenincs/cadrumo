@@ -1815,6 +1815,8 @@ application:
         a la casella {box}.'
       possibly_durable_expense: El moviment del {row_date} per {row_amount} es dedueix
         com a despesa corrent i la seva descripció sembla la d'un element durador.
+      profile_fact_unrecorded: 'Per calcular la casella {box}, registra al teu perfil:
+        {field}.'
       register_cost_exceeds_paid: '{elements}: aquests elements indiquen un cost de
         {cost}, i els moviments que anomenen van pagar {paid}.'
       register_owned_acquisition: '{element}: el moviment del {row_date} per {row_amount}

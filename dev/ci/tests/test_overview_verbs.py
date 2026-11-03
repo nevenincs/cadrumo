@@ -56,7 +56,11 @@ pytestmark = [
 ]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
+# The normal modality keeps box 02 equal to the supplied expenses, with no art. 30.2.ª provision.
+_M130_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
@@ -187,6 +191,7 @@ def test_overview_status_period_filter_matches_typed_draft_period(
         operation=operation,
         casilla_values=_valid_modelo_130_inputs(),
         binding_values=_valid_modelo_130_bindings(),
+        text_binding_values=_M130_NORMAL_MODALITY,
         status=ModeloDraftStatus.BORRADOR,
     )
     q2_draft = build_registry_filing_draft(
@@ -195,6 +200,7 @@ def test_overview_status_period_filter_matches_typed_draft_period(
         operation=operation,
         casilla_values=_valid_modelo_130_inputs(),
         binding_values=_valid_modelo_130_bindings(),
+        text_binding_values=_M130_NORMAL_MODALITY,
         status=ModeloDraftStatus.BORRADOR,
     )
     repository = ModeloDraftRepository()
@@ -295,7 +301,7 @@ def test_retired_deadlines_noun_group_is_unknown(invoke_cli: CliInvocation) -> N
 def _valid_modelo_130_inputs() -> dict[CasillaId, Decimal]:
     return {
         _M130_INGRESOS_CASILLA: Decimal("10000"),
-        _M130_GASTOS_CASILLA: Decimal("4000"),
+        _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
         # Casilla 05 (pagos fraccionados anteriores) is previous-filing-bound; its
         # value flows through the matching binding id in _valid_modelo_130_bindings,
         # not as a raw casilla input (which the smuggling guard now rejects).

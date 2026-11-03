@@ -69,6 +69,7 @@ from .verification_substance_support import (
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 # Modelo 180's perceptor base: a registry-required manual input with its own grounding.
 _M180_PERCEPTOR_BASE: CasillaId = validated_casilla_id("perc.base")
+_M130_GASTOS_PREVIOS: CasillaId = validated_casilla_id("gastos-deducibles-previos")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -152,19 +153,21 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
 
     Regression: casilla 02 used to be ``input_kind = manual``,
     so a filer with no gastos was blocked with a MISSING_REQUIRED_CASILLA finding
-    until they hand-entered ``--casilla 02=0``. Casilla 02 is now bound to the
-    ``ledger_renta_gastos_pago_fraccionado_aggregation`` source: the gasto resolver
-    populates it from the ledger (0 when there are no expenses), so the
-    missing-required gate — which fires only for MANUAL required casillas — never
-    flags it. The required=true flag is retained but is inert for a bound casilla.
+    until they hand-entered ``--casilla 02=0``. Casilla 02 is now computed from the
+    expenses bound to the ``ledger_renta_gastos_pago_fraccionado_aggregation``
+    source, which the gasto resolver populates from the ledger (0 when there are
+    no expenses), so the missing-required gate — which fires only for MANUAL
+    required casillas — never flags it.
     """
     wu_repo, _cr_repo, _vr_repo, bv_repo = repos
 
     snap = published_authority_operation().snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next((c for c in snap.revision.casillas if c.id == _CASILLA_02), None)
     assert casilla_02 is not None, "M130 must have casilla 02 in registry"
-    assert str(casilla_02.input_kind) == "bound", "M130 casilla 02 must be ledger-bound (H1 fix)"
-    assert casilla_02.binding == "modelo-130-actividad-economica-gastos-cumulative"
+    assert str(casilla_02.input_kind) == "computed", "box 02 adds the simplified-modality provision to the expenses"
+    prior_expenses = next(c for c in snap.revision.casillas if c.id == _M130_GASTOS_PREVIOS)
+    assert str(prior_expenses.input_kind) == "bound", "the expenses box 02 adds to are ledger-bound"
+    assert prior_expenses.binding == "modelo-130-actividad-economica-gastos-cumulative"
 
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(

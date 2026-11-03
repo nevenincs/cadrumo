@@ -1776,6 +1776,8 @@ application:
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
         költségként kerül levonásra, a leírása pedig tartós eszközre utal.
+      profile_fact_unrecorded: 'A(z) {box} mező kiszámításához rögzítsd a profilodban:
+        {field}.'
       register_cost_exceeds_paid: '{elements}: ezek az eszközök {cost} költséget adnak
         meg, a megnevezett tételek pedig {paid} összeget fizettek.'
       register_owned_acquisition: '{element}: a(z) {row_date} napi, {row_amount} összegű

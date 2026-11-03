@@ -78,3 +78,59 @@ required_text = ["citada reducción no podrá superar el importe de 300.000 euro
 value = "300000"
 date_axis = "filing_period"
 valid_from = 2019-01-01
+
+# RIRPF art. 30.2.ª: the provisiones deducibles and gastos de difícil justificación of
+# the simplified modality are "el porcentaje del 5 por ciento sobre el rendimiento
+# neto, excluido este concepto". LIRPF disposición adicional quincuagésima sexta
+# (Ley 31/2022, art. 60.2) sets that percentage "durante el período impositivo 2023,
+# del 7 por ciento"; the article's 5 per cent governs every other year.
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.art-30-2-provision-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-30", "ley-35-2006:da-56"]
+source_refs = ["aeat-modelo-130-instructions", "aeat-renta-2023-manual-parte1"]
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["gastos de difícil justificación", "artículo 30 del Reglamento"]
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["período impositivo 2023", "7 por 100", "gastos de difícil justificación"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+valid_to = 2022-12-31
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "7"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+# RIRPF art. 30.2.ª and LIRPF art. 30.2.4.ª: the provision "no podrá ser superior a
+# 2.000 euros anuales". Box 02 states the year to date, so the annual cap applies to
+# the cumulative figure of each quarter.
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.art-30-2-provision-annual-cap"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-439-2007:art-30", "ley-35-2006:art-30"]
+source_refs = ["aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["correspondientes al período comprendido entre el primer día del año y el último día del trimestre, determinados conforme a las especialidades establecidas en el artículo 30 del Reglamento"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "2000"
+date_axis = "filing_period"
+valid_from = 2019-01-01

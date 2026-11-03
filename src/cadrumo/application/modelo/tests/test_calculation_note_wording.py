@@ -78,6 +78,7 @@ _VALUES = {
     "year": "2024",
     "count": "2",
     "group": "renta_family.descendiente",
+    "field": "irpf.estimation_regime",
     "stated": "3",
     "recorded": "1",
     "income_class": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD.value,

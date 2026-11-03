@@ -41,7 +41,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
         inputs=_inputs(
             {
                 "01": Decimal("10000"),
-                "02": Decimal("4000"),
+                "gastos-deducibles-previos": Decimal("4000"),
                 "06": Decimal("100"),
                 "08": Decimal("2000"),
                 "10": Decimal("10"),
@@ -54,11 +54,14 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
 
     assert snapshot.revision.id == "2019-y-siguientes"
     assert snapshot.revision.period_selector.year_from == 2019
     assert {entry.target_casilla_id for entry in result.entries} == {
+        "02",
+        "provisiones-gastos-dificil-justificacion",
         "03",
         "04",
         "07",

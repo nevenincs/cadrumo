@@ -63,6 +63,9 @@ def _observation(modelo: str, period: str, result: RegistryCalculationResult) ->
     )
 
 
+_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
+
+
 def _calculate(
     operation: PinnedAuthorityOperation,
     *,
@@ -84,6 +87,8 @@ def _calculate(
             **{_id(key): value for key, value in inputs.items()},
         },
         binding_values=binding_values,
+        # These quarters model a normal-modality activity, whose box 02 carries no art. 30.2.ª provision.
+        enum_binding_values={key: value for key, value in _NORMAL_MODALITY.items() if _declares(snapshot, key)},
         date_context={"filing_period": snapshot.revision.valid_from},
     )
 

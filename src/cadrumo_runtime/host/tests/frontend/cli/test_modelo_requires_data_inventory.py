@@ -97,13 +97,16 @@ def test_requires_classifies_real_m130_sources_with_bound_profile(
     assert result["filing_year"] == _M130_YEAR
     assert result["period"] == _M130_PERIOD
     sections = _numbers_by_section(result)
-    assert {"01", "02"} <= sections["ledger_derivable"]
+    # Casilla 02 is computed (expenses plus the simplified-modality provision), so the ledger
+    # feeds it through the support casilla for the expenses before that provision.
+    assert {"01", "gastos-deducibles-previos"} <= sections["ledger_derivable"]
+    assert "02" not in sections["ledger_derivable"]
     assert result["optional_manual"]
 
     # Ledger-derivable rows carry their binding provenance for the checklist.
     ledger_rows = {row["number"]: row["binding_source"] for row in result["ledger_derivable"]}
     assert ledger_rows["01"] == "ledger_renta_income_aggregation"
-    assert ledger_rows["02"] == "ledger_renta_gastos_pago_fraccionado_aggregation"
+    assert ledger_rows["gastos-deducibles-previos"] == "ledger_renta_gastos_pago_fraccionado_aggregation"
     assert {(row["number"], row["binding_source"]) for row in result["previous_filing"]} >= {
         ("05", "previous_filing"),
     }

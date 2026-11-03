@@ -94,7 +94,11 @@ def _write_minimal_registry_sources(tmp_path: Path) -> tuple[Path, Path, Path]:
 
 _LEGACY_AUTHORITY_CACHE_SCHEMA_VERSION = "casilla-reference-ambiguity-v2"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
+# The normal modality keeps box 02 equal to the supplied expenses, with no art. 30.2.ª provision.
+_M130_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
@@ -137,7 +141,7 @@ def test_authority_snapshot_runs_real_modelo_calculation(registry_authority: Val
         snapshot,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000.00"),
-            _M130_GASTOS_CASILLA: Decimal("4000.00"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000.00"),
             _M130_RETENCIONES_CASILLA: Decimal("50.00"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("5000.00"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("20.00"),
@@ -152,6 +156,7 @@ def test_authority_snapshot_runs_real_modelo_calculation(registry_authority: Val
             "irpf.previous_year_economic_activity_net_income": Decimal("9500.00"),
         },
         date_context={"filing_period": date(2026, 4, 20)},
+        enum_binding_values=_M130_NORMAL_MODALITY,
     )
 
     assert _M130_RESULTADO_CASILLA in result.values

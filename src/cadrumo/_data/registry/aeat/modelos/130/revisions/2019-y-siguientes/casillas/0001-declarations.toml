@@ -16,12 +16,45 @@ number = "02"
 section = ["actividades_economicas_estimacion_directa"]
 semantic_role = "irpf_pf_gastos"
 required = true
-input_kind = "bound"
-binding = "modelo-130-actividad-economica-gastos-cumulative"
+# The instructions put into box 02 the deductible expenses and amortizations of
+# the year to date and, for the simplified modality, the provisiones deducibles
+# and gastos de difícil justificación of RIRPF art. 30.2.ª for the same span.
+input_kind = "computed"
+formula = "modelo-130-gastos"
 # Pago-fraccionado computation provision (art-110) plus the LIRPF articles that
 # ESTABLISH deductible gastos in estimación directa: art-28 (reglas generales)
 # and art-30 (estimación directa, gastos fiscalmente deducibles).
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30", "rd-439-2007:art-30"]
+
+# Working figure for box 02: the year-to-date deductible expenses and amortizations
+# before the simplified-modality provision, which RIRPF art. 30.2.ª measures on the
+# net income "excluido este concepto". The AEAT design has no box for it.
+[[revisions."2019-y-siguientes".casillas]]
+id = "gastos-deducibles-previos"
+number = "gastos-deducibles-previos"
+section = ["actividades_economicas_estimacion_directa"]
+semantic_role = "irpf_pf_gastos_deducibles_previos"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Support casilla for the expenses inside box 02 before the art. 30.2.ª provision; the AEAT design has no box for it."
+input_kind = "bound"
+binding = "modelo-130-actividad-economica-gastos-cumulative"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+
+# Working figure for box 02: the provisiones deducibles and gastos de difícil
+# justificación of the simplified modality, from 1 January to the quarter's end.
+[[revisions."2019-y-siguientes".casillas]]
+id = "provisiones-gastos-dificil-justificacion"
+number = "provisiones-gastos-dificil-justificacion"
+section = ["actividades_economicas_estimacion_directa"]
+semantic_role = "irpf_pf_provisiones_gastos_dificil_justificacion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Support casilla for the art. 30.2.ª provision inside box 02; the AEAT design has no box for it."
+input_kind = "computed"
+formula = "modelo-130-provisiones-gastos-dificil-justificacion"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-30"], source_refs = ["aeat-modelo-130-instructions"] }
+legal_refs = ["rd-439-2007:art-30", "ley-35-2006:art-30", "ley-35-2006:da-56", "rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-130-instructions"]
+export_exemption_reason = "not_in_record_design"
 
 # Working figure for box 03: only the operator can say a yield meets LIRPF art. 32.1,
 # whose last paragraph excludes activities that regularly obtain such yields.

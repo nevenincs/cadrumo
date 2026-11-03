@@ -136,9 +136,10 @@ required_text = [
 ]
 # Casilla 02 — "Gastos" (AEAT M130 instructions): the deductible business
 # expenses (gastos fiscalmente deducibles) accumulated from the start of the
-# fiscal year through the end of the declared quarter, the expense side of the
+# fiscal year through the end of the declared quarter: the expense side of the
 # estimación directa rendimiento neto (ingresos - gastos) per RD 439/2007
-# art. 110.2. IVA soportado is recovered through Modelo 303 and is NOT a Renta
+# art. 110.2. It feeds the working figure gastos-deducibles-previos, to which
+# box 02 adds the simplified-modality provision of RIRPF art. 30.2.ª. IVA soportado is recovered through Modelo 303 and is NOT a Renta
 # gasto, so each transaction contributes its IVA-exclusive base imponible
 # (taxable_base); an untagged transaction is surfaced (MISSING_TAXABLE_BASE)
 # rather than gross-folded. Resolved by the ledger_renta_gastos_pago_fraccionado_aggregation
@@ -146,7 +147,7 @@ required_text = [
 # cumulative — over the same cumulative year-to-date quarterly window.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-actividad-economica-gastos-cumulative"
-provider = { kind = "ledger_renta_gastos_pago_fraccionado_aggregation", modelo = "130", target_casilla_id = "02", fact = "deductible_amount_sum" }
+provider = { kind = "ledger_renta_gastos_pago_fraccionado_aggregation", modelo = "130", target_casilla_id = "gastos-deducibles-previos", fact = "deductible_amount_sum" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
@@ -179,3 +180,19 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:ar
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
 required_text = ["Casilla 10.", "correspondan al mismo trimestre"]
+
+# The direct-estimation modality is a taxpayer-wide fact (the simplified modality
+# determines "el rendimiento neto de todas sus actividades"), so it is read from the
+# profile. Box 02 adds the art. 30.2.ª provision only for the simplified
+# modality; an undeclared modality leaves box 02 unresolved rather than guessed.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-estimacion-directa-modalidad"
+provider = { kind = "profile", profile_key = "irpf.estimation_regime" }
+value = { data_type = "text", channel = "text" }
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Tratándose de actividades a las que resulte aplicable la modalidad simplificada del método de estimación directa"]

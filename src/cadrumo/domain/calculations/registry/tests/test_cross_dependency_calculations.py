@@ -856,10 +856,18 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         "4T": Decimal("1800"),
     }
     for period, inputs in {
-        "1T": _casilla_inputs({"01": Decimal("10000"), "02": Decimal("3000"), "06": Decimal("100")}),
-        "2T": _casilla_inputs({"01": Decimal("16000"), "02": Decimal("6000"), "06": Decimal("250")}),
-        "3T": _casilla_inputs({"01": Decimal("22000"), "02": Decimal("9000"), "06": Decimal("450")}),
-        "4T": _casilla_inputs({"01": Decimal("28000"), "02": Decimal("12000"), "06": Decimal("650")}),
+        "1T": _casilla_inputs(
+            {"01": Decimal("10000"), "gastos-deducibles-previos": Decimal("3000"), "06": Decimal("100")}
+        ),
+        "2T": _casilla_inputs(
+            {"01": Decimal("16000"), "gastos-deducibles-previos": Decimal("6000"), "06": Decimal("250")}
+        ),
+        "3T": _casilla_inputs(
+            {"01": Decimal("22000"), "gastos-deducibles-previos": Decimal("9000"), "06": Decimal("450")}
+        ),
+        "4T": _casilla_inputs(
+            {"01": Decimal("28000"), "gastos-deducibles-previos": Decimal("12000"), "06": Decimal("650")}
+        ),
     }.items():
         modelo_130_results[period] = calculate_registry_snapshot(
             registry_snapshot("130", filing_year, period),
@@ -870,6 +878,8 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
                 "modelo-130-pagos-fraccionados-anteriores": casilla_05_carry[period],
             },
             date_context={"filing_period": registry_filing_date(filing_year, period)},
+            # The M100 side models a normal-modality filer, so box 02 carries no art. 30.2.ª provision.
+            enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
         )
 
     snapshot = registry_snapshot("100", filing_year, "0A")

@@ -56,6 +56,9 @@ def operator_profile_facts(*, activity_start_date: str | None = None) -> dict[st
         # Modelo 111 readiness requires the colegio concertado answer; these
         # tests file 111 work units, so the profile states it.
         "withholding.colegio_concertado": "false",
+        # Modelo 130 box 02 adds the art. 30.2.ª provision only under the simplified modality,
+        # so the activity states its modality; the normal one keeps box 02 as the stated expenses.
+        "irpf.estimation_regime": "directa_normal",
     }
     if activity_start_date is not None:
         facts["censo.activity_start_date"] = activity_start_date

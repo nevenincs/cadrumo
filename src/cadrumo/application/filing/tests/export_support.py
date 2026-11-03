@@ -151,9 +151,9 @@ _M115_RETENCIONES_CASILLA, _M115_PREVIOUS_RESULT_CASILLA = (
     validated_casilla_id("04", surface="test_export.casilla"),
 )
 _M115_RESULTADO_CASILLA = validated_casilla_id("05", surface="test_export.casilla")
-_M130_INGRESOS_CASILLA, _M130_GASTOS_CASILLA = (
+_M130_INGRESOS_CASILLA, _M130_GASTOS_PREVIOS_CASILLA = (
     validated_casilla_id("01", surface="test_export.casilla"),
-    validated_casilla_id("02", surface="test_export.casilla"),
+    validated_casilla_id("gastos-deducibles-previos", surface="test_export.casilla"),
 )
 _M130_PREVIOUS_PAYMENTS_CASILLA, _M130_RETENCIONES_CASILLA = (
     validated_casilla_id("05", surface="test_export.casilla"),
@@ -349,7 +349,8 @@ def _approved_registry_draft():
         ),
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("100"),
-            _M130_GASTOS_CASILLA: Decimal("25"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("25"),
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
             _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
             _M130_RETENCIONES_CASILLA: Decimal("0"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),

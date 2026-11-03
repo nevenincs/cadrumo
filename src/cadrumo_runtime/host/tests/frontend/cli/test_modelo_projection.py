@@ -95,8 +95,9 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
         m130_snapshot,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000.00"),
-            # Casilla 02 (gastos) is no longer a manual input (it is bound/computed);
-            # it resolves to 0 here with no gastos source, so casilla 03 = 01.
+            # Casilla 02 (gastos) is a computed casilla: gastos-deducibles-previos plus the
+            # simplified-modality provision. With no gastos source and the normal modality
+            # it resolves to 0 here, so casilla 03 = 01.
             # Casilla 05 (pagos fraccionados anteriores) is a previous-filing-bound
             # carry; at 1T its expanding span is empty so the engine materialises it
             # as the absent-by-design zero. Supplying it as a raw input is now
@@ -112,6 +113,8 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
+        # The normal modality adds no art. 30.2.4a provision to casilla 02.
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
 
     # The project verb builds casilla_observations from engine_result.entries.

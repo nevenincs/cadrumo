@@ -45,13 +45,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _FILING_YEAR = 2026
 _INGRESOS_CASILLA = validated_casilla_id("01", surface="m130 negative result test")
-_GASTOS_CASILLA = validated_casilla_id("02", surface="m130 negative result test")
+_GASTOS_CASILLA = validated_casilla_id("gastos-deducibles-previos", surface="m130 negative result test")
 _M130_RESULT_CASILLA = validated_casilla_id("19", surface="m130 negative result test")
 # Synthetic quarter: 250.00 of income gives a 50.00 pago fraccionado (casilla
 # 04 = 20% of casilla 03), and a prior-year net income of zero gives the full
 # 100.00 minoracion of casilla 13, so casilla 19 = 50.00 - 100.00 = -50.00.
 _INPUTS = {_INGRESOS_CASILLA: "250.00", _GASTOS_CASILLA: "0.00"}
 _ZERO_PRIOR_BINDINGS: dict[BindingId, str] = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
     "modelo-130-pagos-fraccionados-anteriores": "0",
     "modelo-130-resultados-negativos-anteriores": "0",
     "irpf.previous_year_economic_activity_net_income": "0",
@@ -101,7 +102,7 @@ def _casilla_field(layout: ExportLayoutDefinition, casilla_id: str) -> ExportFie
 
 def _export_negative_m130(tmp_path: Path, *, period: str, activity_start: date) -> tuple[ResultDisposition, bytes]:
     with bundled_indexed_authority().operation() as operation:
-        bucket_id = seed_profile()
+        bucket_id = seed_profile(profile_overrides={"irpf.estimation_regime": "directa_normal"})
         _, revision_id = seed_revision(
             bucket_id=bucket_id,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,

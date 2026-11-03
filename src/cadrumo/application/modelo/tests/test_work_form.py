@@ -72,6 +72,8 @@ _YEAR = 2026
 _PERIOD = "1T"
 _WORKING = "saldo-negativo-fin-periodo"
 _ART_32_WORKING = "rendimiento-neto-reducible-art-32-1"
+_PRIOR_EXPENSES_WORKING = "gastos-deducibles-previos"
+_PROVISION_WORKING = "provisiones-gastos-dificil-justificacion"
 _UNPLACED = "19"
 _SECTION_TWO = ("08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18")
 
@@ -143,10 +145,13 @@ def _layout(
         *(
             FormPlacementDefinition(casilla_id=casilla.id, kind=FormPlacementKind.ON_FORM, box_number=casilla.number)
             for casilla in snapshot.revision.casillas
-            if str(casilla.id) not in {_WORKING, _ART_32_WORKING, _UNPLACED}
+            if str(casilla.id)
+            not in {_WORKING, _ART_32_WORKING, _PRIOR_EXPENSES_WORKING, _PROVISION_WORKING, _UNPLACED}
         ),
         FormPlacementDefinition(casilla_id=_WORKING, kind=FormPlacementKind.WORKING_FIGURE),
         FormPlacementDefinition(casilla_id=_ART_32_WORKING, kind=FormPlacementKind.WORKING_FIGURE),
+        FormPlacementDefinition(casilla_id=_PRIOR_EXPENSES_WORKING, kind=FormPlacementKind.WORKING_FIGURE),
+        FormPlacementDefinition(casilla_id=_PROVISION_WORKING, kind=FormPlacementKind.WORKING_FIGURE),
         FormPlacementDefinition(
             casilla_id=_UNPLACED, kind=FormPlacementKind.UNPLACED, unplaced_reason=FormUnplacedReason.PENDING_REVIEW
         ),
@@ -237,7 +242,7 @@ def test_a_declared_layout_accounts_for_every_casilla_exactly_once(
         str(field.address.casilla_id)
         for field in form.working_figures
         if isinstance(field.address, ModeloFormCasillaAddressV1)
-    ) == sorted([_WORKING, _ART_32_WORKING])
+    ) == sorted([_WORKING, _ART_32_WORKING, _PRIOR_EXPENSES_WORKING, _PROVISION_WORKING])
     assert [item.reason for item in form.unplaced] == [FormUnplacedReason.PENDING_REVIEW]
 
 

@@ -35,8 +35,14 @@ def test_the_two_modelo_130_rows_share_a_box_and_are_named_apart_by_their_asset_
     assert intangible is not None
     assert material.target_casilla_id == intangible.target_casilla_id
     assert material.box_name != intangible.box_name
-    assert material.box_name == "Gastos - Inmovilizado material"
-    assert intangible.box_name == "Gastos - Inmovilizado intangible"
+    # Amortization joins the expenses box 02 is built from, before any simplified-modality provision.
+    assert (
+        material.box_name
+        == "Gastos deducibles antes de la provisión de la modalidad simplificada - Inmovilizado material"
+    )
+    assert intangible.box_name == (
+        "Gastos deducibles antes de la provisión de la modalidad simplificada - Inmovilizado intangible"
+    )
 
 
 def test_the_modelo_100_boxes_are_named_by_the_registry_layout_in_the_language_asked() -> None:
@@ -64,5 +70,7 @@ def test_the_names_reach_the_wire_beside_their_box_and_restore_from_it() -> None
         AssetKind.MATERIAL,
         AssetKind.INTANGIBLE,
     )
-    assert wire.material_m130.box_name == "Expenses - Tangible asset"
+    assert (
+        wire.material_m130.box_name == "Deductible expenses before the simplified-modality provision - Tangible asset"
+    )
     assert wire.to_domain() == handoff

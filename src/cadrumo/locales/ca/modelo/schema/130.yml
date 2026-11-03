@@ -2,6 +2,11 @@ modelo:
   schema:
     '130':
       binding:
+        modelo-130-estimacion-directa-modalidad:
+          help: La modalitat d'estimació directa de la teva activitat, normal o simplificada,
+            presa del teu perfil. En la simplificada, la casella 02 suma la provisió
+            per despeses de difícil justificació.
+          label: Modalitat d'estimació directa
         modelo-130-resultados-negativos-anteriores:
           help: L'import, sense signe, dels resultats negatius de les teves autoliquidacions
             anteriors del model 130 d'aquest exercici que encara no hagis deduït.
@@ -56,7 +61,9 @@ modelo:
               help: Ingressos acumulats de l'activitat econòmica.
               label: Ingressos
             '02':
-              help: Despeses acumulades de l'activitat econòmica.
+              help: Despeses fiscalment deduïbles i amortitzacions acumulades de l'activitat
+                econòmica. En estimació directa simplificada també inclou les provisions
+                deduïbles i les despeses de difícil justificació.
               label: Despeses
             '03':
               help: Rendiment net de les activitats econòmiques en estimació directa,
@@ -124,6 +131,18 @@ modelo:
               help: Import final a ingressar del Model 130 després de totes les deduccions
                 i autoliquidacions anteriors.
               label: Resultat final
+            gastos-deducibles-previos:
+              help: Despeses fiscalment deduïbles i amortitzacions acumulades des
+                de l'1 de gener fins al final del trimestre, sense les provisions
+                deduïbles ni les despeses de difícil justificació. La casella 02 hi
+                suma aquesta provisió.
+              label: Despeses deduïbles abans de la provisió de la modalitat simplificada
+            provisiones-gastos-dificil-justificacion:
+              help: 'Només en estimació directa simplificada: el percentatge que fixa
+                l''article 30 del Reglament de l''IRPF sobre els teus ingressos menys
+                les teves despeses deduïbles acumulades, amb el seu límit anual. És
+                zero si aquesta diferència és negativa.'
+              label: Provisions deduïbles i despeses de difícil justificació
             rendimiento-neto-reducible-art-32-1:
               help: Part del rendiment net acumulat generada en més de dos anys o
                 notòriament irregular, imputada en un únic període. No la indiquis

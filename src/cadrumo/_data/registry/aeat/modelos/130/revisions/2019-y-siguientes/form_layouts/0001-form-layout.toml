@@ -7,7 +7,7 @@ revision_id = "2019-y-siguientes"
 seed_source = "authored"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "afa567ba2755d9cd5e541c6fc744ccb29c05bffcfceadf3a75e2bc43f7e12dde"
+source_state_digest = "956ba0a951c8c41782a8537279d78d8615d14339ab89742320e1aee23a0f27c1"
 design_sources = [
     { source_ref = "aeat-dr-130-2019-v12", sha256 = "a65de1c01a4ac2e8c642270b1401e4e421f41605eb1c76261047f27194ca1921" },
     { source_ref = "boe-2015-1656-modelos-130-131-form", sha256 = "4828839126e33ccab7150d801d1090f3b90cb683c32efc064ab10d7cfcd258de" },
@@ -34,6 +34,8 @@ placements = [
     { casilla_id = "19", kind = "on_form", box_number = "19" },
     { casilla_id = "saldo-negativo-fin-periodo", kind = "working_figure" },
     { casilla_id = "rendimiento-neto-reducible-art-32-1", kind = "working_figure" },
+    { casilla_id = "gastos-deducibles-previos", kind = "working_figure" },
+    { casilla_id = "provisiones-gastos-dificil-justificacion", kind = "working_figure" },
 ]
 
 [[revisions.2019-y-siguientes.form_layouts.pages]]

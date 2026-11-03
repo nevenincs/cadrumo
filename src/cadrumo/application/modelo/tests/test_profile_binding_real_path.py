@@ -47,12 +47,14 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_profile_schema,
     published_snapshot,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.schema import derived_selector_for_path
 from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.inventory import REPO_ROOT
 from ...user_profile.projections import profile_fact_index
+from ..calculation_notes import note_fact_text
 from ..profile_binding import resolve_profile_binding_value, resolve_profile_sourced_bindings
 from ..profile_derived_facts import (
     inject_derived_anualidades_eligibility_facts,
@@ -535,3 +537,80 @@ def test_repeating_selectors_yield_declared_profile_paths() -> None:
         )
         for sel in selectors:
             assert sel in declared, f"binding {binding_id!r}: selector {sel!r} is not declared by the profile schema"
+
+
+_M130_MODALITY_BINDING = "modelo-130-estimacion-directa-modalidad"
+
+
+def _m130_record(*facts: UserProfileFact) -> UserProfileRecord:
+    return _create_profile_record_for_test(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"), *facts),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
+    )
+
+
+def test_an_unrecorded_m130_modality_is_reported_unresolved_with_its_profile_path(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Box 02's provision compares the modality as text, so its absence is an answerable gap, not a crash."""
+    resolved = resolve_profile_sourced_bindings(
+        published_snapshot("130", filing_year=2026, period="1T"),
+        bucket_id=_BUCKET_ID,
+        profile_record=_m130_record(),
+        operation=authority_operation,
+    )
+
+    assert _M130_MODALITY_BINDING not in resolved.enum_binding_values
+    assert _M130_MODALITY_BINDING in resolved.unresolved_binding_ids
+    (diagnostic,) = (item for item in resolved.diagnostics if item.binding_id == _M130_MODALITY_BINDING)
+    assert diagnostic.reason == "unresolved_binding"
+    assert diagnostic.message is not None
+    assert "irpf.estimation_regime" in diagnostic.message
+    # The provision is a working figure; box 02 is the printed box it leaves open.
+    assert diagnostic.casilla_id == "02"
+    assert diagnostic.fact is not None
+    assert diagnostic.fact.sentence is CalculationNoteSentence.PROFILE_FACT_UNRECORDED
+
+
+@pytest.mark.parametrize(
+    ("locale", "words"),
+    [
+        ("es", "Para calcular la casilla 02, registra en tu perfil: Régimen de estimación."),
+        ("en", "To calculate box 02, record in your profile: Estimation regime."),
+        ("ca", "Per calcular la casella 02, registra al teu perfil: Règim d'estimació."),
+        ("hu", "A(z) 02 mező kiszámításához rögzítsd a profilodban: Becslési rendszer."),
+    ],
+)
+def test_the_unrecorded_m130_modality_note_names_the_profile_field_in_every_language(
+    authority_operation: PinnedAuthorityOperation, locale: str, words: str
+) -> None:
+    resolved = resolve_profile_sourced_bindings(
+        published_snapshot("130", filing_year=2026, period="1T"),
+        bucket_id=_BUCKET_ID,
+        profile_record=_m130_record(),
+        operation=authority_operation,
+    )
+    (diagnostic,) = (item for item in resolved.diagnostics if item.binding_id == _M130_MODALITY_BINDING)
+    assert diagnostic.fact is not None
+
+    assert note_fact_text(diagnostic.fact, locale=locale) == words
+
+
+@pytest.mark.parametrize("modality", ["directa_normal", "directa_simplificada"])
+def test_a_recorded_m130_modality_reaches_the_text_channel(
+    authority_operation: PinnedAuthorityOperation, modality: str
+) -> None:
+    resolved = resolve_profile_sourced_bindings(
+        published_snapshot("130", filing_year=2026, period="1T"),
+        bucket_id=_BUCKET_ID,
+        profile_record=_m130_record(UserProfileFact(path="irpf.estimation_regime", value=modality)),
+        operation=authority_operation,
+    )
+
+    assert resolved.enum_binding_values[_M130_MODALITY_BINDING] == modality
+    assert _M130_MODALITY_BINDING not in resolved.unresolved_binding_ids
+    assert not any(item.binding_id == _M130_MODALITY_BINDING for item in resolved.diagnostics)

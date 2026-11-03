@@ -37,7 +37,9 @@ _PROFILE_SEEDED_AT = datetime(2025, 1, 6, 9, 0, 0, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
 
 _M130_CASILLA_01: CasillaId = validated_casilla_id("01", surface="test_filing_persistence.casilla")
-_M130_CASILLA_02: CasillaId = validated_casilla_id("02", surface="test_filing_persistence.casilla")
+_M130_GASTOS_PREVIOS: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="test_filing_persistence.casilla"
+)
 _M130_CASILLA_05: CasillaId = validated_casilla_id("05", surface="test_filing_persistence.casilla")
 _M130_CASILLA_06: CasillaId = validated_casilla_id("06", surface="test_filing_persistence.casilla")
 _M130_CASILLA_08: CasillaId = validated_casilla_id("08", surface="test_filing_persistence.casilla")
@@ -64,7 +66,8 @@ def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
         profile=_profile(),
         inputs={
             _M130_CASILLA_01: Decimal("12500.00"),
-            _M130_CASILLA_02: Decimal("3500.00"),
+            _M130_GASTOS_PREVIOS: Decimal("3500.00"),
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
             _M130_CASILLA_05: Decimal("250"),
             _M130_CASILLA_06: Decimal("100"),
             _M130_CASILLA_08: Decimal("2000"),

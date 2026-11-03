@@ -36,7 +36,9 @@ from ..conformance.registry_schema_support import committed_modelo as _committed
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _GASTOS_BINDING = "modelo-130-actividad-economica-gastos-cumulative"
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
     "03",
     surface="_M130_RENDIMIENTO_NETO_CASILLA",
@@ -67,12 +69,12 @@ def _modelo_130_snapshot():
     )
 
 
-def test_committed_m130_casilla_02_binds_gastos_pago_fraccionado_fact() -> None:
-    """The committed registry routes casilla 02 through deductible_amount_sum."""
+def test_committed_m130_prior_expenses_bind_gastos_pago_fraccionado_fact() -> None:
+    """The committed registry routes the expenses before box 02's provision through deductible_amount_sum."""
     revision = _modelo_130_snapshot().revision
 
-    casilla_02 = next(casilla for casilla in revision.casillas if casilla.id == _M130_GASTOS_CASILLA)
-    assert casilla_02.binding == _GASTOS_BINDING
+    prior_expenses = next(casilla for casilla in revision.casillas if casilla.id == _M130_GASTOS_PREVIOS_CASILLA)
+    assert prior_expenses.binding == _GASTOS_BINDING
 
     binding = next(binding for binding in revision.bindings if binding.id == _GASTOS_BINDING)
     assert binding.source == "ledger_renta_gastos_pago_fraccionado_aggregation"
@@ -98,8 +100,8 @@ def test_resolver_sums_matching_casilla_and_excludes_other_casilla() -> None:
 
     feb_base, apr_base = Decimal("147.93"), Decimal("100.00")
     off_casilla_base = Decimal("63.10")
-    feb = _GastoObservation(target_casilla_id=_M130_GASTOS_CASILLA, deductible_amount=feb_base)
-    apr = _GastoObservation(target_casilla_id=_M130_GASTOS_CASILLA, deductible_amount=apr_base)
+    feb = _GastoObservation(target_casilla_id=_M130_GASTOS_PREVIOS_CASILLA, deductible_amount=feb_base)
+    apr = _GastoObservation(target_casilla_id=_M130_GASTOS_PREVIOS_CASILLA, deductible_amount=apr_base)
     off_casilla = _GastoObservation(
         target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         deductible_amount=off_casilla_base,
@@ -141,7 +143,7 @@ def test_unsupported_flags_non_zero_gasto_routed_to_no_binding() -> None:
     """
     revision = _modelo_130_snapshot().revision
 
-    routed = _GastoObservation(target_casilla_id=_M130_GASTOS_CASILLA, deductible_amount=Decimal("150.00"))
+    routed = _GastoObservation(target_casilla_id=_M130_GASTOS_PREVIOS_CASILLA, deductible_amount=Decimal("150.00"))
     unrouted = _GastoObservation(
         target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         deductible_amount=Decimal("75.00"),
@@ -176,7 +178,7 @@ def test_committed_binding_passes_the_reachability_probe() -> None:
 
     The first-family reachability probe runs inside
     ``validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition``,
-    already exercised by ``test_committed_m130_casilla_02_binds_gastos_pago_
+    already exercised by ``test_committed_m130_prior_expenses_bind_gastos_pago_
     fraccionado_fact`` above -- this test names the probe explicitly so a
     future reader does not have to infer that the committed binding's
     build-time validation now includes it.
@@ -192,8 +194,8 @@ def test_resolver_does_not_coerce_a_mistyped_casilla_id() -> None:
 
     The resolver's matching rule is a pure equality on ``target_casilla_id``,
     so it must compare REAL typed values rather than silently coercing them
-    equal. A supplied observation whose target is the same digits but the
-    WRONG type (``int`` where the registry's ``CasillaId`` is always a
+    equal. A supplied observation whose target is the same characters but the
+    WRONG type (``bytes`` where the registry's ``CasillaId`` is always a
     ``str``) must not feed the binding, exactly as real ledger data typed
     incorrectly upstream would behave.
     """
@@ -201,11 +203,11 @@ def test_resolver_does_not_coerce_a_mistyped_casilla_id() -> None:
     binding = next(binding for binding in revision.bindings if binding.id == _GASTOS_BINDING)
 
     mistyped = _GastoObservation(
-        target_casilla_id=int(_M130_GASTOS_CASILLA),  # ty: ignore[invalid-argument-type]  # wrong type is under test
+        target_casilla_id=_M130_GASTOS_PREVIOS_CASILLA.encode(),  # ty: ignore[invalid-argument-type]  # wrong type is under test
         deductible_amount=Decimal("1.00"),
     )
     resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(revision, (mistyped,))
     assert resolved[binding.id] == Decimal("0"), (
-        "the resolver silently coerced an int casilla id equal to the str selector value -- "
+        "the resolver silently coerced a bytes casilla id equal to the str selector value -- "
         "matching must compare typed values, not their string forms"
     )

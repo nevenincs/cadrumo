@@ -443,7 +443,7 @@ _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_i
 )
 _COMPUTED_CASILLAS_M130: frozenset[CasillaId] = frozenset(
     validated_casilla_id(_v)
-    for _v in ("03", "04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo")
+    for _v in ("02", "03", "04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo")
 )
 
 _COMPUTED_CASILLAS_M111: frozenset[CasillaId] = frozenset(validated_casilla_id(_v) for _v in ("28", "30"))

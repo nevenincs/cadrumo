@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core.aggregation import BindingSourceKind, BindingTypedEnumKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import prefixed_digest
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
@@ -60,10 +61,13 @@ from ...domain.calculations.registry.rental_reduction import require_rental_redu
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
+    expression_casilla_refs,
     expression_date_binding_refs,
 )
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES, CasillaDataType
+from ...domain.calculations.registry.schema_formula import FormulaExpression
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
@@ -74,6 +78,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..user_profile.projections import profile_fact_index
+from .printed_boxes import printed_boxes
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
@@ -574,7 +579,10 @@ def resolve_profile_sourced_bindings(
     with no export address.
 
     A binding the profile cannot satisfy is skipped silently: the engine
-    surfaces the missing-binding error only if a formula needs it.
+    surfaces the missing-binding error only if a formula needs it. The one
+    exception is a fact a ``text_equal`` comparison reads: it is reported
+    unresolved, with a diagnostic naming the profile path, because the
+    comparison cannot be decided and the filer can answer it.
     A bucket with no profile yields an empty result.
 
     Returns a :class:`CalculationSourceResolution` with resolved binding
@@ -612,6 +620,9 @@ def resolve_profile_sourced_bindings(
     )
     decimal_values = channels.decimal_values
     enum_values = channels.enum_values
+    unanswered_text_bindings = _unanswered_text_comparison_bindings(
+        snapshot, selection.bindings, enum_values, caller_binding_ids=caller_binding_ids
+    )
     date_values = channels.date_values
     boolean_values = channels.boolean_values
     sourced = tuple(
@@ -634,7 +645,9 @@ def resolve_profile_sourced_bindings(
         date_binding_values=date_values,
         boolean_binding_values=boolean_values,
         row_binding_values=rows.row_binding_values,
+        unresolved_binding_ids=tuple(binding.id for binding in unanswered_text_bindings),
         diagnostics=(
+            *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
             *_derived_binding_diagnostics(
                 selection.bindings,
                 facts.fact_index,
@@ -659,6 +672,100 @@ def resolve_profile_sourced_bindings(
         )
         + rows.provenance,
     )
+
+
+def _text_compared_binding_ids(snapshot: RegistrySnapshot) -> frozenset[BindingId]:
+    """Return the bindings a ``text_equal`` comparison reads, which have no value to fall back on."""
+    compared: set[BindingId] = set()
+
+    def collect(expression: FormulaExpression) -> None:
+        if expression.op == "text_equal":
+            compared.update(arg.binding for arg in expression.args if arg.binding is not None)
+        for arg in expression.args:
+            collect(arg)
+
+    for formula in snapshot.revision.formulas:
+        collect(formula.expression)
+    return frozenset(compared)
+
+
+def _unanswered_text_comparison_bindings(
+    snapshot: RegistrySnapshot,
+    bindings: tuple[BindingDefinition, ...],
+    enum_values: Mapping[BindingId, str],
+    *,
+    caller_binding_ids: frozenset[BindingId],
+) -> tuple[BindingDefinition, ...]:
+    """Select the compared profile facts the profile leaves unanswered.
+
+    A ``text_equal`` comparison over a fact the profile never recorded cannot be decided, so
+    the boxes that depend on it stay unresolved. Naming the binding lets the filer answer it,
+    in the profile or as a binding value on the work, instead of reading an unexplained gap.
+    """
+    compared = _text_compared_binding_ids(snapshot)
+    return tuple(
+        binding
+        for binding in bindings
+        if binding.id in compared and binding.id not in enum_values and binding.id not in caller_binding_ids
+    )
+
+
+def _first_printed_dependent(snapshot: RegistrySnapshot, binding_id: BindingId) -> CasillaId | None:
+    """The nearest box the form prints whose calculation reads ``binding_id``, directly or through working figures."""
+    printed = printed_boxes(snapshot.revision, None)
+    formulas = snapshot.revision.formulas
+    frontier = sorted(
+        {formula.target_casilla_id for formula in formulas if binding_id in expression_binding_refs(formula.expression)}
+    )
+    seen: set[CasillaId] = set()
+    while frontier:
+        reached = [casilla_id for casilla_id in frontier if printed.prints(casilla_id)]
+        if reached:
+            return reached[0]
+        seen.update(frontier)
+        frontier = sorted(
+            {
+                formula.target_casilla_id
+                for formula in formulas
+                if formula.target_casilla_id not in seen
+                and any(casilla_id in seen for casilla_id in expression_casilla_refs(formula.expression))
+            }
+        )
+    return None
+
+
+def _unanswered_text_binding_diagnostics(
+    snapshot: RegistrySnapshot, bindings: tuple[BindingDefinition, ...], *, bucket_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for binding in bindings:
+        selectors = profile_binding_selectors(binding.provider)
+        box = _first_printed_dependent(snapshot, binding.id)
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="unresolved_binding",
+                source_kind=BindingSourceKind.PROFILE.value,
+                resolver_id=_PROFILE_RESOLVER_ID,
+                binding_id=binding.id,
+                casilla_id=box,
+                source_ref=f"profile:{bucket_id}:binding:{binding.id}",
+                message=(
+                    "the profile records no "
+                    + ", ".join(selectors)
+                    + "; record it, or supply the binding value, to calculate the boxes that depend on it"
+                ),
+                fact=(
+                    CalculationNoteFact.of(
+                        CalculationNoteSentence.PROFILE_FACT_UNRECORDED,
+                        field=selectors[0],
+                        box=printed_boxes(snapshot.revision, None).number(box),
+                    )
+                    if len(selectors) == 1 and box is not None
+                    else None
+                ),
+            )
+        )
+    return tuple(diagnostics)
 
 
 def _derived_binding_diagnostics(

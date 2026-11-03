@@ -21,6 +21,9 @@ MODELO_READY_PROFILE_FACTS: Final[tuple[UserProfileFact, ...]] = (
     UserProfileFact(path="identity.name", value="Ana"),
     UserProfileFact(path="identity.surnames", value="Garcia Lopez"),
     UserProfileFact(path="activities.description", value="Spanish rental income"),
+    # An activity in estimación directa runs under one modality. The normal one keeps Modelo 130
+    # box 02 as the stated expenses, with no art. 30.2.ª provision for gastos de difícil justificación.
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="iva.m303_regime_composition", value="general"),

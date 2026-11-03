@@ -181,6 +181,8 @@ class CalculationNoteSentence(StrEnum):
     """The operator accepted the value in use for a disagreement this calculation persisted."""
     HOUSEHOLD_ROWS_INCOMPLETE = "household_rows_incomplete"
     """A household group states more people than the profile records."""
+    PROFILE_FACT_UNRECORDED = "profile_fact_unrecorded"
+    """A profile fact a calculation compares is unrecorded, so the box built on it stays open."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

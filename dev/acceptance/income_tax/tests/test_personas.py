@@ -58,6 +58,26 @@ def test_the_simplified_quarters_include_the_five_percent_of_dificil_justificaci
     ]
 
 
+def test_the_2023_simplified_quarters_take_seven_percent_of_dificil_justificacion() -> None:
+    quarters = build_autonomo_oracle(2023).quarters
+
+    # oracle: Ley 35/2006 disposicion adicional quincuagesima sexta: 7 % of 3.500 / 6.300 / 8.000 / 9.600.
+    assert [item.difficult_justification for item in quarters] == [
+        Decimal("245.00"),
+        Decimal("441.00"),
+        Decimal("560.00"),
+        Decimal("672.00"),
+    ]
+    # oracle: 20 % of 3.255 less 600; of 5.859 less 51 and 1.125; of 7.440 less 51 and 1.265 (the negative
+    # second quarter adds nothing to the earlier payments); of 8.928 less 223 and 1.440.
+    assert [item.result for item in quarters] == [
+        Decimal("51.00"),
+        Decimal("-4.20"),
+        Decimal("172.00"),
+        Decimal("122.60"),
+    ]
+
+
 def test_the_autonomo_annual_credits_total_the_work_activity_and_fractional_payments() -> None:
     oracle = build_autonomo_oracle(_YEAR)
 
@@ -95,7 +115,7 @@ def test_the_dificil_justificacion_provision_stops_at_two_thousand_euros() -> No
     ) * 4
 
     # oracle: Reglamento del IRPF art. 30.2.4a: 5 % of 100.000,00 is 5.000,00, capped at 2.000,00 a year.
-    assert simplified_quarters(income, expenses)[0].difficult_justification == Decimal("2000.00")
+    assert simplified_quarters(income, expenses, year=_YEAR)[0].difficult_justification == Decimal("2000.00")
 
 
 def test_the_payer_side_retention_is_the_freelancers_credit_not_the_payers() -> None:

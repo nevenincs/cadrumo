@@ -53,6 +53,7 @@ _Q2_2024 = _period(2025, "2T")
 
 
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("gastos-deducibles-previos")
 
 
 # ---------------------------------------------------------------------------
@@ -373,8 +374,8 @@ def test_gasto_observation_rejects_legacy_target_casilla_key() -> None:
     assert "target_casilla" in detail
 
 
-def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_binding() -> None:
-    """The real M130 revision binds casilla 02 to the gasto source and sums the bases.
+def test_domain_resolver_folds_gasto_observations_into_the_m130_prior_expenses_binding() -> None:
+    """The real M130 revision binds the expenses before box 02's provision to the gasto source and sums the bases.
 
     Uses the live registry revision (not a synthetic one) so the binding id,
     selector, and casilla wiring under test are exactly what ships. Expected value
@@ -384,8 +385,10 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     revision = published_revision("130", "2019-y-siguientes")
 
     casilla_02 = next(c for c in revision.casillas if c.id == _M130_GASTOS_CASILLA)
-    assert casilla_02.input_kind is InputKind.BOUND
-    binding = next(b for b in revision.bindings if b.id == casilla_02.binding)
+    assert casilla_02.input_kind is InputKind.COMPUTED, "box 02 adds the simplified-modality provision"
+    prior_expenses = next(c for c in revision.casillas if c.id == _M130_GASTOS_PREVIOS_CASILLA)
+    assert prior_expenses.input_kind is InputKind.BOUND
+    binding = next(b for b in revision.bindings if b.id == prior_expenses.binding)
     assert str(binding.source) == "ledger_renta_gastos_pago_fraccionado_aggregation"
 
     feb_base, apr_base = Decimal("147.93"), Decimal("100.00")
@@ -397,7 +400,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q2_2024,
         modelo="130",
-        target_casilla_id=_M130_GASTOS_CASILLA,
+        target_casilla_id=_M130_GASTOS_PREVIOS_CASILLA,
         accept_activity_marker=True,
     )
 

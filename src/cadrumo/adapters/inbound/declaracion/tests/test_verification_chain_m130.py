@@ -20,6 +20,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("gastos-deducibles-previos")
+# A filed box 02 already holds the whole deduction, provision included, so the replay feeds it
+# in as the prior expenses under the normal modality, which adds nothing to it.
+_M130_REPLAY_MODALITY: dict[BindingId, str] = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03")
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19")
 _M130_FORMULA_CHAIN_CASILLAS: tuple[CasillaId, ...] = (
@@ -60,6 +64,9 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M130)
     if isinstance(extracted_c03, Decimal):
         inputs[_M130_INGRESOS_CASILLA] = extracted_c03
+    extracted_c02 = extracted.get(_M130_GASTOS_CASILLA)
+    if isinstance(extracted_c02, Decimal):
+        inputs[_M130_GASTOS_PREVIOS_CASILLA] = extracted_c02
 
     binding_values: dict[BindingId, Decimal] = {
         "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
@@ -73,10 +80,11 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         label=pdf_stem,
         inputs=inputs,
         binding_values=binding_values,
+        enum_binding_values=_M130_REPLAY_MODALITY,
     )
 
     input_01 = inputs.get(_M130_INGRESOS_CASILLA, Decimal("0"))
-    input_02 = inputs.get(_M130_GASTOS_CASILLA, Decimal("0"))
+    input_02 = inputs.get(_M130_GASTOS_PREVIOS_CASILLA, Decimal("0"))
     engine_03 = engine_values.get(_M130_RENDIMIENTO_NETO_CASILLA)
     assert engine_03 is not None, (
         f"FORMULA-MISMATCH [{pdf_stem}]: casilla '03' absent from engine result "

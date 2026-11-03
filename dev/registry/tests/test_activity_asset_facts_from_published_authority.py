@@ -50,7 +50,8 @@ def test_the_published_2025_edition_supplies_the_boxes_and_the_workforce_cap() -
         )
 
     assert boxes == {AssetKind.MATERIAL: "0208", AssetKind.INTANGIBLE: "0227"}
-    assert (amortization_box, income_box) == ("02", "01")
+    # Amortization feeds the expenses box 02 is built from, before any simplified-modality provision.
+    assert (amortization_box, income_box) == ("gastos-deducibles-previos", "01")
     # 12 months before: 10.00. 24 months after: (12 + 13) / 2 = 12.50. Increase 2.50; 120,000 x 2.50.
     assert authority.free_depreciation_investment_cap == Decimal("300000.00")
 

@@ -58,8 +58,12 @@ _CASES: Final[Mapping[str, tuple[tuple[str, ...], ReferenceQuery]]] = {
         ReferenceQuery(ReferenceRead.DESCRIBE, modelo="303", year=2024, period="1T", as_of=date(2024, 6, 30)),
     ),
     "casillas-filtered": (
-        ("app", "modelo", "casillas", "130", "--input-kind", "bound", "--required"),
-        ReferenceQuery(ReferenceRead.CASILLAS, modelo="130", input_kind="bound", required=True),
+        ("app", "modelo", "casillas", "130", "--input-kind", "bound"),
+        ReferenceQuery(ReferenceRead.CASILLAS, modelo="130", input_kind="bound"),
+    ),
+    "casillas-required": (
+        ("app", "modelo", "casillas", "130", "--required"),
+        ReferenceQuery(ReferenceRead.CASILLAS, modelo="130", required=True),
     ),
     "casillas-scoped": (
         ("app", "modelo", "casillas", "130", "--year", "2024", "--period", "1T", "--number", "01"),

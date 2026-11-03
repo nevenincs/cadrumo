@@ -49,10 +49,13 @@ def evaluate(
 
 PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
 PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING = "modelo-130-resultados-negativos-anteriores"
+# Box 02 adds the art. 30.2.ª provision only under the simplified modality; the normal modality
+# keeps these arithmetic fixtures free of it.
+M130_NORMAL_MODALITY: Mapping[str, str] = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 
 
 M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
-M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("gastos-deducibles-previos")
 M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("04")
 M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
 _M130_DIFERENCIA_ACTIVIDADES_CASILLA: CasillaId = validated_casilla_id("07")

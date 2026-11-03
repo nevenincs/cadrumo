@@ -90,7 +90,9 @@ _RESULT_CASILLAS: tuple[CasillaId, ...] = (
 # Anti-tautology: casilla 02 (gastos) is identical across both years.
 _TAUTOLOGY_CASILLA: CasillaId = validated_casilla_id("02", surface="_TAUTOLOGY_CASILLA")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = _TAUTOLOGY_CASILLA
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
 _M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
@@ -340,7 +342,7 @@ def test_compare_delta_rows_carry_provenance() -> None:
         snap,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
             # Casilla 05 (pagos fraccionados anteriores) is a previous-filing-bound
             # carry; at 1T its expanding span is empty so the engine materialises it
             # as the absent-by-design zero. Supplying it as a raw input is now
@@ -356,6 +358,8 @@ def test_compare_delta_rows_carry_provenance() -> None:
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
+        # The normal modality keeps box 02 equal to the supplied expenses.
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
 
     # Simulate the obs_by_id lookup from modelo_compare.

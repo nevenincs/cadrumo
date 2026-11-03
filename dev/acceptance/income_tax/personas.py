@@ -11,7 +11,8 @@ instructions, never read from a run of the product:
 * Each Modelo 130 quarter is 20 % of the cumulative net income, less the earlier quarters' positive results
   and the cumulative retention (Reglamento, art. 110.3.a). Under the simplified modality the instructions of
   casilla 02 add the gastos de dificil justificacion of Reglamento art. 30.2.4a, 5 % of the net income
-  before them, capped at 2.000,00 a year.
+  before them (7 % for the periodo impositivo 2023, Ley 35/2006 disposicion adicional quincuagesima sexta),
+  capped at 2.000,00 a year.
 """
 
 from __future__ import annotations
@@ -23,6 +24,8 @@ from decimal import Decimal
 from .scenario import CENT, PERIODS, ExpenseInvoice, IssuedInvoice, money
 
 SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE = Decimal("0.05")
+#: Ley 35/2006, disposicion adicional quincuagesima sexta: "durante el periodo impositivo 2023, del 7 por ciento".
+SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE_2023 = Decimal("0.07")
 SIMPLIFIED_DIFFICULT_JUSTIFICATION_CAP = Decimal("2000.00")
 PAGO_FRACCIONADO_RATE = Decimal("0.20")
 
@@ -125,10 +128,16 @@ class AutonomoOracle:
     total_pagos_a_cuenta: Decimal
 
 
+def simplified_difficult_justification_rate(year: int) -> Decimal:
+    """The art. 30.2.4a percentage of the year: 7 % in 2023 by the disposicion adicional, 5 % otherwise."""
+    return SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE_2023 if year == 2023 else SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE
+
+
 def simplified_quarters(
-    income: tuple[IssuedInvoice, ...], expenses: tuple[ExpenseInvoice, ...]
+    income: tuple[IssuedInvoice, ...], expenses: tuple[ExpenseInvoice, ...], *, year: int
 ) -> tuple[SimplifiedQuarter, ...]:
     """Work the four cumulative quarters of a simplified-modality taxpayer from the ledger rows."""
+    rate = simplified_difficult_justification_rate(year)
     rows: list[SimplifiedQuarter] = []
     prior = Decimal()
     for index, period in enumerate(PERIODS, start=1):
@@ -136,7 +145,7 @@ def simplified_quarters(
         spent = sum((item.taxable_base for item in expenses[:index]), Decimal())
         difficult = money(
             min(
-                max((gained - spent) * SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE, Decimal()),
+                max((gained - spent) * rate, Decimal()),
                 SIMPLIFIED_DIFFICULT_JUSTIFICATION_CAP,
             )
         )
@@ -165,7 +174,8 @@ def build_autonomo_oracle(year: int) -> AutonomoOracle:
     withholding is 600,00 + 525,00 + 140,00 + 175,00 = 1.440,00. Expenses are 500,00, 700,00, 300,00 and
     900,00. The employer certifies 3.000,00 on 24.000,00 of pay.
 
-    Hand-worked simplified quarters (income, expenses, 5 % of the difference, cumulative retention):
+    Hand-worked simplified quarters for any year but 2023 (income, expenses, 5 % of the difference,
+    cumulative retention); 2023 takes 7 % of the same differences instead:
 
         1T  4.000  500  175  600  -> 20 % of 3.325 = 665   - 0   - 600   =  65
         2T  7.500 1.200 315 1.125  -> 20 % of 5.985 = 1.197 - 65  - 1.125 =   7
@@ -209,7 +219,7 @@ def build_autonomo_oracle(year: int) -> AutonomoOracle:
             strict=True,
         )
     )
-    quarters = simplified_quarters(income, spent)
+    quarters = simplified_quarters(income, spent, year=year)
     employer = EmployerCertificate(EMPLOYER_A, importe_integro=Decimal("24000.00"), retencion=Decimal("3000.00"))
     withholding = sum((item.withholding for item in income), Decimal())
     payments = sum((max(item.result, Decimal()) for item in quarters), Decimal())

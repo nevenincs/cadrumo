@@ -151,6 +151,7 @@ def _calculated(
         inputs=inputs.casilla_inputs,
         date_context={"filing_period": date(_DECLARED, 4, 20)},
         binding_values=resolved,
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
     return {
         **{str(key): value for key, value in inputs.casilla_inputs.items()},

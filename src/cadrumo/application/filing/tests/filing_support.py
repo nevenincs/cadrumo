@@ -68,6 +68,7 @@ def build_registry_filing_draft(
     profile_tax_id: str = "Y0000001S",
     casilla_values: ModeloInputs,
     binding_values: ModeloInputs | None = None,
+    text_binding_values: Mapping[str, str] | None = None,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     """Build a :class:`ModeloDraft` through the validated registry runtime path.
@@ -83,6 +84,8 @@ def build_registry_filing_draft(
             :func:`application.filing.build_draft`.
         binding_values: Optional registry binding inputs. Keys that duplicate
             ``casilla_values`` are rejected so fixture data cannot shadow itself.
+        text_binding_values: Optional text and enum binding inputs, such as a
+            declared estimation modality, routed beside the Decimal bindings.
         status: Desired final :class:`~domain.submission.ModeloDraftStatus`.
             ``APROBADO`` uses :func:`application.filing.approve_draft`;
             every other status clears approval metadata on the built draft.
@@ -104,7 +107,10 @@ def build_registry_filing_draft(
         filing_year=typed_period.filing_year,
         period=typed_period,
     )
-    duplicate_input_ids = sorted(set(casilla_values).intersection(binding_values or {}))
+    duplicate_input_ids = sorted(
+        set(casilla_values).intersection(binding_values or {})
+        | set(text_binding_values or {}).intersection({**(binding_values or {}), **casilla_values}),
+    )
     if duplicate_input_ids:
         raise ModeloBuilderError(
             f"registry filing test helper received duplicate casilla/binding input ids: {duplicate_input_ids!r}",
@@ -116,7 +122,7 @@ def build_registry_filing_draft(
             tax_id=profile_tax_id,
             display_name="Registry filing test",
         ),
-        inputs={**(binding_values or {}), **casilla_values},
+        inputs={**(text_binding_values or {}), **(binding_values or {}), **casilla_values},
         schema_provider=schema_provider,
     )
     if status is ModeloDraftStatus.APROBADO:
@@ -149,6 +155,7 @@ def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
     profile_tax_id: str = "Y0000001S",
     casilla_decimals: Mapping[CasillaKey, str | Decimal],
     binding_decimals: Mapping[BindingKey, str | Decimal] | None = None,
+    text_binding_values: Mapping[str, str] | None = None,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     """Coerce decimal strings before building through the registry runtime.
@@ -168,6 +175,8 @@ def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
             or decimal strings.
         binding_decimals: Optional binding-id keyed values as
             :class:`Decimal` instances or decimal strings.
+        text_binding_values: Optional text and enum binding inputs, forwarded
+            unchanged to :func:`build_registry_filing_draft`.
         status: Desired final :class:`~domain.submission.ModeloDraftStatus`.
 
     Returns:
@@ -198,6 +207,7 @@ def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
         profile_tax_id=profile_tax_id,
         casilla_values=coerced,
         binding_values=coerced_bindings,
+        text_binding_values=text_binding_values,
         status=status,
     )
 

@@ -211,3 +211,56 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:ar
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
 required_text = ["Casilla 13.", "igual o inferior a 12.000 euros", "Importe de la minoración"]
+
+# RIRPF art. 30.2.ª, for the simplified modality only: the percentage of the year-to-date
+# net income "excluido este concepto" (box 01 less the other deductible expenses and
+# amortizations), never below zero when that income is negative, and at most the
+# 2.000 euros annual cap. The normal modality has no such provision.
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-provisiones-gastos-dificil-justificacion"
+target_casilla_id = "provisiones-gastos-dificil-justificacion"
+expression = { op = "if_then_else", args = [
+    { op = "text_equal", args = [
+        { binding = "modelo-130-estimacion-directa-modalidad" },
+        { text_literal = "directa_simplificada" },
+    ] },
+    { op = "min", args = [
+        { op = "max", args = [
+            { op = "percent", args = [
+                { op = "subtract", args = [
+                    { casilla_id = "01" },
+                    { casilla_id = "gastos-deducibles-previos" },
+                ] },
+                { parameter = "irpf.art-30-2-provision-rate" },
+            ] },
+            { literal = "0" },
+        ] },
+        { parameter = "irpf.art-30-2-provision-annual-cap" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-30", "ley-35-2006:art-30", "ley-35-2006:da-56", "rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+    "Tratándose de actividades a las que resulte aplicable la modalidad simplificada del método de estimación directa",
+    "de las provisiones deducibles y de los gastos de difícil justificación",
+]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-gastos"
+target_casilla_id = "02"
+expression = { op = "add", args = [
+    { casilla_id = "gastos-deducibles-previos" },
+    { casilla_id = "provisiones-gastos-dificil-justificacion" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-28", "ley-35-2006:art-30", "rd-439-2007:art-30"]
+source_refs = ["aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 02.", "se incluirán en esta casilla los importes de las amortizaciones, de las provisiones deducibles y de los gastos de difícil justificación"]

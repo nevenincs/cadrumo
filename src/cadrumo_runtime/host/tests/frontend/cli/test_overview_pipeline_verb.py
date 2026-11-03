@@ -125,13 +125,14 @@ def _create_calculated_130_unit() -> tuple[str, Result]:
     work_unit_id = _payload(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)
 
+    # The prior year's income is not supplied: a first-year activity has no earlier Modelo 100,
+    # so the backend derives 0 and casilla 13 is 100 (RIRPF art. 110.3.c, income <= 9000).
     calculated = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "05=0.00",
             "--casilla", "06=0.00",
-            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],
     )  # fmt: skip

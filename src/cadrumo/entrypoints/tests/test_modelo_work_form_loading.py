@@ -401,6 +401,23 @@ def test_values_a_replayed_aeat_draft_supplied_read_as_aeat_data(tmp_path: Path)
     assert draft_source is not None
     assert draft_source.family is SourceFamily.AEAT_DRAFT
     assert draft_source.binding_id == records_binding
-    other_source = _field(from_draft, "02").source
+    # Box 02 is worked out from the prior expenses; that working figure is the records-fed field.
+    other_source = _field(from_draft, "gastos-deducibles-previos").source
     assert other_source is not None
     assert other_source.family is SourceFamily.RECORDS
+
+
+def test_an_unrecorded_modality_leaves_box_02_open_and_says_so(tmp_path: Path) -> None:
+    """Box 02 under the simplified modality adds a provision, so an unrecorded modality cannot be guessed.
+
+    The calculation still finishes. Box 02 and every box built on it stay open, and the
+    calculation carries a note that withholds filing until the filer records the modality.
+    """
+    with seeded_operator_work(tmp_path, estimation_regime=None) as work:
+        work.recalculate()
+        form = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
+
+    assert _field(form, "02").origin is ModeloFormOrigin.CALCULATION_FAILED
+    assert _field(form, "provisiones-gastos-dificil-justificacion").origin is ModeloFormOrigin.CALCULATION_FAILED
+    assert _field(form, "19").origin is ModeloFormOrigin.CALCULATION_FAILED
+    assert any(note.reason == "unresolved_binding" for note in form.blocking_calculation_notes), form.calculation_notes

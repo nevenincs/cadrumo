@@ -24,7 +24,10 @@ actually consumed ledger transactions. Carry bindings
 :attr:`~core.aggregation.BindingSourceKind.RELATION_PREFILL`) and relation references never
 count, because their values originate in the same filed-observation store the
 comparison's filed side is read from: counting them would let the scope be
-satisfied by the very figures under comparison.
+satisfied by the very figures under comparison. Nor do selector bindings, the
+ones a formula reads as a string to choose which rule applies (a regime or
+modality, a territory): a recorded selector says which rule governs a figure,
+not that the bucket holds anything the figure is computed from.
 
 WHAT THIS DELIBERATELY DOES NOT CATCH. A taxpayer whose true figure is non-zero
 and who supplied nothing leaves the casilla unpopulated, so no divergence is
@@ -60,6 +63,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.runtime_graph import (
+    enum_consumed_binding_ids,
     expression_binding_refs,
     expression_casilla_refs,
 )
@@ -186,7 +190,12 @@ def resolve_casilla_population_scope(
     formula_expressions: dict[CasillaId, FormulaExpression] = {
         formula.target_casilla_id: formula.expression for formula in registry_revision.formulas
     }
-    bindings_by_id: dict[BindingId, BindingDefinition] = revision_bindings_by_id(registry_revision)
+    selectors = enum_consumed_binding_ids(registry_revision)
+    bindings_by_id: dict[BindingId, BindingDefinition] = {
+        binding_id: binding
+        for binding_id, binding in revision_bindings_by_id(registry_revision).items()
+        if binding_id not in selectors
+    }
     casilla_bindings: dict[CasillaId, BindingId] = {
         casilla.id: casilla.binding for casilla in registry_revision.casillas if casilla.binding is not None
     }

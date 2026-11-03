@@ -21,7 +21,7 @@ from .formula_runtime_support import (
     M130_AGRARIAN_WITHHELD_CASILLA as _M130_AGRARIAN_WITHHELD_CASILLA,
 )
 from .formula_runtime_support import (
-    M130_GASTOS_CASILLA as _M130_GASTOS_CASILLA,
+    M130_GASTOS_PREVIOS_CASILLA as _M130_GASTOS_CASILLA,
 )
 from .formula_runtime_support import (
     M130_HOME_DEDUCTION_CASILLA as _M130_HOME_DEDUCTION_CASILLA,
@@ -29,6 +29,7 @@ from .formula_runtime_support import (
 from .formula_runtime_support import (
     M130_INGRESOS_CASILLA as _M130_INGRESOS_CASILLA,
 )
+from .formula_runtime_support import M130_NORMAL_MODALITY
 from .formula_runtime_support import (
     M130_PAGO_FRACCIONADO_CASILLA as _M130_PAGO_FRACCIONADO_CASILLA,
 )
@@ -59,6 +60,7 @@ def test_registry_formula_runtime_rejects_non_decimal_input(
             committed_modelo_130_snapshot,
             inputs={_M130_INGRESOS_CASILLA: 100},
             date_context={"filing_period": date(2026, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
         )
 
 
@@ -73,6 +75,7 @@ def test_registry_formula_runtime_rejects_non_string_input_key_at_entry(
             committed_modelo_130_snapshot,
             inputs={1: Decimal("1"), "bad key": Decimal("2")},
             date_context={"filing_period": date(2026, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
         )
     assert refused.value.translated_message == "errors.calc.unknown_input_casillas"
     assert refused.value.context == {"casilla_ids": "1"}
@@ -86,6 +89,7 @@ def test_registry_formula_runtime_aggregates_malformed_input_keys_with_numeric_i
             committed_modelo_130_snapshot,
             inputs={"bad key": Decimal("1"), "also bad": Decimal("2")},
             date_context={"filing_period": date(2026, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
         )
     assert refused.value.translated_message == "errors.calc.unknown_input_casillas"
     assert refused.value.context == {"casilla_ids": "also bad,bad key"}
@@ -103,6 +107,7 @@ def test_registry_formula_runtime_rejects_noncanonical_text_input_keys_at_entry(
             inputs={},
             text_inputs={1: "general", "bad key": "general"},
             date_context={"filing_period": date(2026, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
         )
     assert refused.value.translated_message == "errors.calc.unknown_text_input_casillas"
     assert refused.value.context == {"casilla_ids": "1"}
@@ -116,6 +121,7 @@ def test_registry_formula_runtime_rejects_noncanonical_text_input_keys_at_entry(
             inputs={},
             text_inputs={"bad key": "general", "also bad": "other"},
             date_context={"filing_period": date(2026, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
         )
     assert refused.value.translated_message == "errors.calc.unknown_text_input_casillas"
     assert refused.value.context == {"casilla_ids": "also bad,bad key"}
@@ -142,6 +148,7 @@ def test_registry_formula_runtime_rejects_binding_id_supplied_as_casilla_input(
             committed_modelo_130_snapshot,
             inputs={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
             date_context={"filing_period": date(2026, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
         )
 
 
@@ -153,6 +160,7 @@ def test_registry_formula_runtime_rejects_unknown_binding_values(
             committed_modelo_130_snapshot,
             inputs={},
             date_context={"filing_period": date(2026, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
             binding_values={
                 _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
                 "unknown-binding": Decimal("1"),
@@ -217,6 +225,7 @@ def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot(
         inputs=_complete_m130_inputs(),
         date_context={},
         binding_values=_complete_m130_bindings(),
+        enum_binding_values=M130_NORMAL_MODALITY,
     )
 
     assert _M130_PAGO_FRACCIONADO_CASILLA in result.values
@@ -241,6 +250,7 @@ def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
             inputs=_complete_m130_inputs(),
             date_context={},
             binding_values=_complete_m130_bindings(),
+            enum_binding_values=M130_NORMAL_MODALITY,
         )
 
 
@@ -288,12 +298,14 @@ def test_zero_numeric_manual_input_preserves_actual_calculation_results(
         committed_modelo_130_snapshot,
         inputs=inputs,
         binding_values=bindings,
+        enum_binding_values=M130_NORMAL_MODALITY,
         date_context={},
     )
     constrained = calculate_registry_snapshot(
         _snapshot_with_zero_range_manual_cost(committed_modelo_130_snapshot),
         inputs=inputs,
         binding_values=bindings,
+        enum_binding_values=M130_NORMAL_MODALITY,
         date_context={},
     )
     assert constrained == original

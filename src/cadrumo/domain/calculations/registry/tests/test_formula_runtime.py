@@ -24,6 +24,7 @@ from .formula_runtime_support import (
     _M130_RESULTADO_FINAL_CASILLA,
     _M130_RESULTADO_POSITIVO_CASILLA,
     _M130_RESULTADO_PREVIO_CASILLA,
+    M130_NORMAL_MODALITY,
 )
 from .formula_runtime_support import (
     M130_AGRARIAN_VOLUME_CASILLA as _M130_AGRARIAN_VOLUME_CASILLA,
@@ -32,7 +33,7 @@ from .formula_runtime_support import (
     M130_AGRARIAN_WITHHELD_CASILLA as _M130_AGRARIAN_WITHHELD_CASILLA,
 )
 from .formula_runtime_support import (
-    M130_GASTOS_CASILLA as _M130_GASTOS_CASILLA,
+    M130_GASTOS_PREVIOS_CASILLA as _M130_GASTOS_CASILLA,
 )
 from .formula_runtime_support import (
     M130_HOME_DEDUCTION_CASILLA as _M130_HOME_DEDUCTION_CASILLA,
@@ -136,6 +137,7 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
         committed_modelo_130_snapshot,
         inputs=_ordinary_quarter_inputs(),
         date_context={"filing_period": date(2026, 3, 31)},
+        enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
             _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
@@ -176,6 +178,7 @@ def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
             committed_modelo_130_snapshot,
             inputs={_M130_PAGO_FRACCIONADO_CASILLA: Decimal("6000")},
             date_context={"filing_period": date(2026, 3, 31)},
+            enum_binding_values=M130_NORMAL_MODALITY,
             binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
         )
 
@@ -258,6 +261,7 @@ def test_registry_formula_runtime_preserves_signed_intermediate_results_from_off
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 3, 31)},
+        enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
             _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
@@ -276,6 +280,7 @@ def test_registry_formula_runtime_calculates_income_reduction_from_previous_year
         committed_modelo_130_snapshot,
         inputs=_ordinary_quarter_inputs(),
         date_context={"filing_period": date(2026, 3, 31)},
+        enum_binding_values=M130_NORMAL_MODALITY,
         binding_values={
             _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("9500"),
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),

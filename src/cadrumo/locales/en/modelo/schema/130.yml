@@ -2,6 +2,11 @@ modelo:
   schema:
     '130':
       binding:
+        modelo-130-estimacion-directa-modalidad:
+          help: The direct estimation modality of your activity, normal or simplified,
+            taken from your profile. Under the simplified modality, box 02 adds the
+            provision for hard-to-justify expenses.
+          label: Direct estimation modality
         modelo-130-resultados-negativos-anteriores:
           help: The amount, without sign, of the negative results of your earlier
             Form 130 returns for this year that you have not deducted before.
@@ -55,7 +60,9 @@ modelo:
               help: Total cumulative business income for the tax year.
               label: Income
             '02':
-              help: Total cumulative business expenses for the tax year.
+              help: Cumulative deductible expenses and amortization of the economic
+                activity. Under simplified direct estimation it also includes the
+                deductible provisions and hard-to-justify expenses.
               label: Expenses
             '03':
               help: Net yield from direct-estimation economic activities, calculated
@@ -123,6 +130,17 @@ modelo:
               help: Final Modelo 130 amount payable after all deductions and prior
                 self-assessments.
               label: Final result
+            gastos-deducibles-previos:
+              help: Deductible expenses and amortization from 1 January to the end
+                of the quarter, without the deductible provisions and hard-to-justify
+                expenses. Box 02 adds that provision to them.
+              label: Deductible expenses before the simplified-modality provision
+            provisiones-gastos-dificil-justificacion:
+              help: 'Simplified direct estimation only: the percentage set by article
+                30 of the IRPF Regulation on your cumulative income less your deductible
+                expenses, up to its annual limit. It is zero when that difference
+                is negative.'
+              label: Deductible provisions and hard-to-justify expenses
             rendimiento-neto-reducible-art-32-1:
               help: The part of the cumulative net income generated over more than
                 two years or notoriously irregular, imputed in a single period. Leave

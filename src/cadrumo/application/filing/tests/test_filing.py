@@ -37,7 +37,8 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 _M130_CASILLA_01: CasillaId = validated_casilla_id("01", surface="test_filing.casilla")
-_M130_CASILLA_02: CasillaId = validated_casilla_id("02", surface="test_filing.casilla")
+_M130_GASTOS_PREVIOS: CasillaId = validated_casilla_id("gastos-deducibles-previos", surface="test_filing.casilla")
+_M130_MODALIDAD = "modelo-130-estimacion-directa-modalidad"
 _M130_CASILLA_05: CasillaId = validated_casilla_id("05", surface="test_filing.casilla")
 _M130_CASILLA_06: CasillaId = validated_casilla_id("06", surface="test_filing.casilla")
 _M130_CASILLA_08: CasillaId = validated_casilla_id("08", surface="test_filing.casilla")
@@ -178,7 +179,8 @@ def _draft(
         profile=_profile(),
         inputs={
             _M130_CASILLA_01: Decimal("12500.00"),
-            _M130_CASILLA_02: Decimal("3500.00"),
+            _M130_GASTOS_PREVIOS: Decimal("3500.00"),
+            _M130_MODALIDAD: "directa_normal",
             _M130_CASILLA_05: Decimal("250"),
             _M130_CASILLA_06: retenciones,
             _M130_CASILLA_08: Decimal("2000"),
@@ -200,7 +202,8 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
         profile=_profile(),
         inputs={
             _M130_CASILLA_01: Decimal("10000"),
-            _M130_CASILLA_02: Decimal("4000"),
+            _M130_GASTOS_PREVIOS: Decimal("4000"),
+            _M130_MODALIDAD: "directa_normal",
             _M130_CASILLA_05: Decimal("250"),
             _M130_CASILLA_06: Decimal("100"),
             _M130_CASILLA_08: Decimal("2000"),
@@ -504,7 +507,8 @@ def test_approve_draft_uses_registry_schema_fingerprint(operation: PinnedAuthori
         profile=_profile(),
         inputs={
             _M130_CASILLA_01: Decimal("100"),
-            _M130_CASILLA_02: Decimal("25"),
+            _M130_GASTOS_PREVIOS: Decimal("25"),
+            _M130_MODALIDAD: "directa_normal",
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },

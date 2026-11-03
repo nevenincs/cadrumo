@@ -35,7 +35,7 @@ from ..compiler.authority import compiled_bundled_authority
 from ..workbook_demo import build_demonstration_plan
 from ..workbook_demo_cases import DEMO_CASES, DemoCase
 from ..workbook_demo_formula_graph import scenario_leaves
-from ..workbook_demo_inputs import demonstration_inputs
+from ..workbook_demo_inputs import demonstration_inputs, demonstration_text_bindings
 from ..workbook_demo_m303 import m303_demonstration_facts
 from ..workbook_demo_records import (
     annual_capital_records,
@@ -1064,9 +1064,13 @@ def test_current_registry_generates_form_geometry_and_xlsx(case: DemoCase) -> No
     elif case.result_casilla is not None:
         with validating_governed_facts(compiled_bundled_authority()):
             inputs, bindings = demonstration_inputs(snapshot, case)
+            text_bindings = demonstration_text_bindings(snapshot, case)
         values = numeric_inputs(inputs)
         assert not {str(c.id) for c in snapshot.revision.casillas if c.formula is not None} & set(values)
-        assert expected_result(snapshot, values, bindings, case.result_casilla) == case.expected_result
+        assert (
+            expected_result(snapshot, values, bindings, case.result_casilla, text_bindings=text_bindings)
+            == case.expected_result
+        )
 
 
 def test_fictional_303_does_not_turn_unrelated_unknown_inputs_into_zero() -> None:
@@ -1119,6 +1123,7 @@ def test_216_nonwithheld_income_changes_its_totals_without_changing_amount_payab
 def test_fictional_130_recalculates_after_an_income_change() -> None:
     snapshot, _ = build_demonstration_plan(DEMO_CASES[0])
     inputs, bindings = demonstration_inputs(snapshot, DEMO_CASES[0])
+    text_bindings = demonstration_text_bindings(snapshot, DEMO_CASES[0])
     values = numeric_inputs(inputs)
     values["01"] += Decimal("100")
-    assert expected_result(snapshot, values, bindings, "19") == Decimal("6393")
+    assert expected_result(snapshot, values, bindings, "19", text_bindings=text_bindings) == Decimal("6393")

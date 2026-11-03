@@ -132,8 +132,12 @@ _PERIOD_CODE = "4T"
 _ACTIVITY_START = date(_FILING_YEAR, 10, 1)
 _SURFACE = "workbench export state test"
 _RESULT_BOX = validated_casilla_id("19", surface=_SURFACE)
-_INPUTS = {validated_casilla_id("01", surface=_SURFACE): "250.00", validated_casilla_id("02", surface=_SURFACE): "0.00"}
+_INPUTS = {
+    validated_casilla_id("01", surface=_SURFACE): "250.00",
+    validated_casilla_id("gastos-deducibles-previos", surface=_SURFACE): "0.00",
+}
 _ZERO_PRIOR_BINDINGS: dict[BindingId, str] = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
     "modelo-130-pagos-fraccionados-anteriores": "0",
     "modelo-130-resultados-negativos-anteriores": "0",
     "irpf.previous_year_economic_activity_net_income": "0",

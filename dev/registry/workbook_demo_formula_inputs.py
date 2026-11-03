@@ -19,8 +19,22 @@ InputValues = dict[str, Decimal | str | bool | None]
 def _seed_130(
     snapshot: RegistrySnapshot, case: DemoCase, values: InputValues, bindings: dict[str, Decimal], binding_ids: set[str]
 ) -> None:
-    values.update({"01": Decimal("70200"), "02": Decimal("10835"), "05": Decimal("2950"), "06": Decimal("2550")})
+    values.update(
+        {
+            "01": Decimal("70200"),
+            "gastos-deducibles-previos": Decimal("10835"),
+            "05": Decimal("2950"),
+            "06": Decimal("2550"),
+        }
+    )
     bindings["irpf.previous_year_economic_activity_net_income"] = Decimal("18000")
+
+
+def text_bindings(snapshot: RegistrySnapshot, case: DemoCase) -> dict[str, str]:
+    """Seed the text-valued bindings of a registered result branch; the normal modality adds no provision."""
+    if case.result_casilla is None or case.modelo != "130":
+        return {}
+    return {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 
 
 def _seed_303(
@@ -286,12 +300,13 @@ def formula_inputs(snapshot: RegistrySnapshot, case: DemoCase) -> tuple[Operator
         return OperatorInputs(), {}
     leaves, binding_ids = scenario_leaves(snapshot, case.result_casilla)
     values: InputValues = dict.fromkeys(leaves, Decimal("0"))
-    bindings = dict.fromkeys(binding_ids, Decimal("0"))
+    text_ids = {str(b.id) for b in snapshot.revision.bindings if b.value.channel == "text"}
+    bindings = dict.fromkeys(binding_ids - text_ids, Decimal("0"))
     seed = _SEEDERS.get(case.modelo)
     if seed is not None:
         seed(snapshot, case, values, bindings, binding_ids)
     known = {str(c.id) for c in snapshot.revision.casillas}
-    if not values.keys() <= known or not bindings.keys() <= binding_ids:
+    if not values.keys() <= known or not bindings.keys() <= binding_ids - text_ids:
         raise ValueError("demonstration assumptions no longer match the registry")
     calculated = {str(c.id) for c in snapshot.revision.casillas if c.formula is not None}
     if calculated & values.keys():

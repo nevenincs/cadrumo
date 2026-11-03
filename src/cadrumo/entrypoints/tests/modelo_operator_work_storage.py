@@ -91,6 +91,9 @@ from .production_operation_registry import production_operation_registry
 SEEDED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "13000000-0000-4000-8000-000000000730"
 _ACTIVITY_START = UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1))
+# An activity in estimación directa always runs under one modality; the normal one leaves box 02
+# as the expenses the filer states, with no art. 30.2.ª provision added.
+_ESTIMATION_REGIME_PATH = "irpf.estimation_regime"
 
 
 @dataclass(slots=True)
@@ -376,11 +379,14 @@ def seeded_operator_work(
     filing_year: int = 2026,
     period_code: str = "1T",
     extra_facts: tuple[UserProfileFact, ...] = (),
+    estimation_regime: str | None = "directa_normal",
 ) -> Generator[SeededOperatorWork]:
     """Yield one seeded, not yet calculated work unit over isolated encrypted storage.
 
     ``extra_facts`` are profile facts the declaration needs beyond the
     modelo-ready baseline, such as an attestation the check reads.
+    ``estimation_regime`` is the activity's IRPF estimation regime; ``None``
+    leaves it unrecorded, as a profile that never answered it.
     """
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
@@ -392,7 +398,16 @@ def seeded_operator_work(
                 context=create_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
-                facts=(*MODELO_READY_PROFILE_FACTS, _ACTIVITY_START, *extra_facts),
+                facts=(
+                    *(fact for fact in MODELO_READY_PROFILE_FACTS if fact.path != _ESTIMATION_REGIME_PATH),
+                    _ACTIVITY_START,
+                    *(
+                        ()
+                        if estimation_regime is None
+                        else (UserProfileFact(path=_ESTIMATION_REGIME_PATH, value=estimation_regime),)
+                    ),
+                    *extra_facts,
+                ),
                 created_at=SEEDED_AT,
                 updated_at=SEEDED_AT,
             )

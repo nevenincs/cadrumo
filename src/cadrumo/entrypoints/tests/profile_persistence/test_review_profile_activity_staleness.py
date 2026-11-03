@@ -112,7 +112,8 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
         profile=ModeloOperatorProfile(tax_id=_TAX_ID, display_name="Profile activity staleness test"),
         inputs={
             "01": Decimal("100"),
-            "02": Decimal("25"),
+            "gastos-deducibles-previos": Decimal("25"),
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },

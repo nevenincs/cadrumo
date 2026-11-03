@@ -37,8 +37,9 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-# AEAT DR 130 Instrucciones worked example (estimación directa). Casillas 01 and 02
-# are the operator leaf inputs; 03/04/07 are computed by the registry formula graph.
+# AEAT DR 130 Instrucciones worked example (estimación directa, modalidad normal). Casilla 01
+# and the expenses behind casilla 02 are the operator leaf inputs; 02/03/04/07 are computed by
+# the registry formula graph, and the normal modality adds no art. 30.2.ª provision to 02.
 _INGRESOS = Decimal("12000.00")  # casilla 01
 _GASTOS = Decimal("4000.00")  # casilla 02
 # Prior-year economic-activity net income > 12.000 EUR -> minoración (casilla 13) = 0,
@@ -56,9 +57,10 @@ def _calculate_m130(*, ingresos: Decimal, gastos: Decimal):
     snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={"01": ingresos, "02": gastos},
+        inputs={"01": ingresos, "gastos-deducibles-previos": gastos},
         date_context={},
         binding_values=_BINDINGS,
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
     return result
 

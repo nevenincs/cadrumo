@@ -19,6 +19,8 @@ from ....application.modelo.declarations_list_projection import worded_list_row
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from ....core.external_constants import OutputLanguage
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.grade_cap_support import recapped_operation
 from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentIdentity
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
@@ -266,11 +268,20 @@ def test_only_the_latest_current_heads_check_supplies_its_blocking_count(persist
     assert checked.state is DeclarationSummaryState.CALCULATED
 
 
-def _next_step(persisted: SeededOperatorWork, head: CalculationRevision, *, recorded: bool = False):
+def _next_step(
+    persisted: SeededOperatorWork,
+    head: CalculationRevision,
+    *,
+    recorded: bool = False,
+    operation: PinnedAuthorityOperation | None = None,
+):
     """The step the real list projection offers for ``head``, through the summary the portfolio computes."""
     declaration = _declaration(persisted).model_copy(update={"has_current_filing": recorded})
     summary = declaration_summary(
-        declaration, revisions={head.calculation_revision_id: head}, verification=None, operation=persisted.operation
+        declaration,
+        revisions={head.calculation_revision_id: head},
+        verification=None,
+        operation=operation or persisted.operation,
     )
     row = DeclarationListRow(
         declaration.work_unit_id,
@@ -347,6 +358,15 @@ def test_a_filed_revision_without_a_screen_stamp_is_not_calculated_again(persist
 _CAPPED_FIGURE = Decimal("510.00")
 
 
+def _capped_withholding_operation(persisted: SeededOperatorWork) -> PinnedAuthorityOperation:
+    """The seeded authority with the casilla 06 withholding binding capped in memory.
+
+    The published Modelo 130 declares no grade cap, so the mechanism under test is declared on a copy
+    of the real binding that feeds casilla 06; the bundled registry is never written.
+    """
+    return recapped_operation(persisted.operation, "130", "modelo-130-actividad-economica-retenciones-cumulative")
+
+
 def _filed_before_the_cap(persisted: SeededOperatorWork, figure: Decimal, *, stamped: bool = False):
     head = persisted.require_head()
     assert head.screen_stamp is not None
@@ -362,7 +382,12 @@ def _filed_before_the_cap(persisted: SeededOperatorWork, figure: Decimal, *, sta
 def test_a_filed_revision_from_before_the_cap_with_a_capped_figure_is_calculated_again(
     persisted: SeededOperatorWork,
 ) -> None:
-    summary, row = _next_step(persisted, _filed_before_the_cap(persisted, _CAPPED_FIGURE), recorded=True)
+    summary, row = _next_step(
+        persisted,
+        _filed_before_the_cap(persisted, _CAPPED_FIGURE),
+        recorded=True,
+        operation=_capped_withholding_operation(persisted),
+    )
 
     assert summary.state is DeclarationSummaryState.RECORDED and summary.filed_before_grade_cap
     assert not summary.calculation_outdated
@@ -376,7 +401,7 @@ def test_a_filed_revision_from_before_the_cap_with_a_zero_or_a_stamp_stays_recor
         _filed_before_the_cap(persisted, Decimal(0)),
         _filed_before_the_cap(persisted, _CAPPED_FIGURE, stamped=True),
     ):
-        summary, row = _next_step(persisted, head, recorded=True)
+        summary, row = _next_step(persisted, head, recorded=True, operation=_capped_withholding_operation(persisted))
 
         assert summary.state is DeclarationSummaryState.RECORDED and not summary.filed_before_grade_cap
         assert row.next_step is DeclarationListNextStep.NONE

@@ -37,7 +37,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _BUCKET_ID = "cf394ec1-128f-4d57-b66d-2d57f35aaf35"
 _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
+# The normal modality keeps box 02 equal to the supplied expenses, with no art. 30.2.ª provision.
+_M130_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 _M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
@@ -46,7 +50,7 @@ _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M
 _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
 _MODELO_130_CASILLA_INPUTS: dict[CasillaId, str] = {
     _M130_INGRESOS_CASILLA: "12500.00",
-    _M130_GASTOS_CASILLA: "3500.00",
+    _M130_GASTOS_PREVIOS_CASILLA: "3500.00",
     _M130_PAGOS_PREVIOS_CASILLA: "250.00",
     _M130_RETENCIONES_CASILLA: "100.00",
     _M130_AGRARIAN_VOLUME_CASILLA: "2000.00",
@@ -127,5 +131,6 @@ def _ready_modelo_130_draft(*, operation: PinnedAuthorityOperation) -> ModeloDra
         operation=operation,
         casilla_decimals=_MODELO_130_CASILLA_INPUTS,
         binding_decimals=_MODELO_130_BINDING_INPUTS,
+        text_binding_values=_M130_NORMAL_MODALITY,
         status=ModeloDraftStatus.LISTO_PARA_PRESENTAR,
     )

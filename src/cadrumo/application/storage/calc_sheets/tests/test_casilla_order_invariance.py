@@ -97,10 +97,11 @@ def test_declaration_order_does_not_change_the_calculation_surface(
         cell.casilla_id for cell in perm_plan.formula_cells
     }, f"modelo {modelo}: reordering changed which casillas carry a live spreadsheet formula"
 
-    # The number format each casilla renders with.
-    assert {item.casilla_id: item.pattern for item in base_plan.number_formats} == {
-        item.casilla_id: item.pattern for item in perm_plan.number_formats
-    }, f"modelo {modelo}: reordering changed a casilla's number format"
+    # The number format each casilla renders with. Binding-input cells carry no casilla id and several
+    # share the key None, so the comparison keeps every entry rather than letting a dict keep one.
+    assert sorted((str(item.casilla_id), item.pattern) for item in base_plan.number_formats) == sorted(
+        (str(item.casilla_id), item.pattern) for item in perm_plan.number_formats
+    ), f"modelo {modelo}: reordering changed a casilla's number format"
 
     # The filing schema collection build_draft projects (sorted by canonical id).
     assert [schema.casilla_id for schema in collection_from_snapshot(baseline).all()] == [

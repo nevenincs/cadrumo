@@ -35,7 +35,9 @@ from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runti
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
 _M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
@@ -107,7 +109,8 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref(operation: Pinned
         profile=_profile(),
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
             _M130_PAGOS_PREVIOS_CASILLA: Decimal("250"),
             _M130_RETENCIONES_CASILLA: Decimal("100"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),

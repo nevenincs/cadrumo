@@ -22,6 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _DECLARED = 2025
 _REDUCIBLE = "rendimiento-neto-reducible-art-32-1"
+_EXPENSES = "gastos-deducibles-previos"
 
 
 def _boxes(operation: PinnedAuthorityOperation, typed: Mapping[str, str]) -> dict[str, Decimal]:
@@ -37,13 +38,15 @@ def _boxes(operation: PinnedAuthorityOperation, typed: Mapping[str, str]) -> dic
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
         },
+        # The normal modality keeps box 02 equal to the typed expenses.
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
     )
     return {str(entry.target_casilla_id): entry.value for entry in result.entries}
 
 
 def test_a_multi_year_yield_is_reduced_before_the_twenty_per_cent(*, operation: PinnedAuthorityOperation) -> None:
     """50000 - 40000 x 0,30 = 38000; 38000 x 0,20 = 7600."""
-    boxes = _boxes(operation, {"01": "50000", "02": "0", _REDUCIBLE: "40000"})
+    boxes = _boxes(operation, {"01": "50000", _EXPENSES: "0", _REDUCIBLE: "40000"})
 
     assert boxes["03"] == Decimal("38000.00"), boxes
     assert boxes["04"] == Decimal("7600.00"), boxes
@@ -51,13 +54,13 @@ def test_a_multi_year_yield_is_reduced_before_the_twenty_per_cent(*, operation: 
 
 def test_the_reduction_stops_at_the_annual_ceiling(*, operation: PinnedAuthorityOperation) -> None:
     """500000 - 300000 x 0,30 = 410000, not 500000 - 400000 x 0,30 = 380000."""
-    boxes = _boxes(operation, {"01": "500000", "02": "0", _REDUCIBLE: "400000"})
+    boxes = _boxes(operation, {"01": "500000", _EXPENSES: "0", _REDUCIBLE: "400000"})
 
     assert boxes["03"] == Decimal("410000.00"), boxes
 
 
 def test_no_typed_figure_reduces_nothing(*, operation: PinnedAuthorityOperation) -> None:
-    boxes = _boxes(operation, {"01": "50000", "02": "0"})
+    boxes = _boxes(operation, {"01": "50000", _EXPENSES: "0"})
 
     assert boxes["03"] == Decimal("50000.00"), boxes
     assert boxes["04"] == Decimal("10000.00"), boxes

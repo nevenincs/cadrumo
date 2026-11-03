@@ -57,10 +57,15 @@ def test_comparison_is_exact(left, right, expected):
     assert _evaluate(left, right) == Decimal(expected)
 
 
-@pytest.mark.parametrize("left,right", [("", "DE"), ("DE", ""), (None, "DE"), (1, "1")])
+@pytest.mark.parametrize("left,right", [("", "DE"), ("DE", ""), ("DE", None), (1, "1")])
 def test_missing_or_nontext_values_never_become_a_false_match(left, right):
     with pytest.raises(RegistryValidationError):
         _evaluate(left, right)
+
+
+def test_an_absent_text_binding_is_unresolved_rather_than_a_false_match():
+    with pytest.raises(UnresolvedFormulaDependencyError):
+        _evaluate(None, "DE")
 
 
 def test_ambiguous_channels_and_unresolved_operands_are_refused():

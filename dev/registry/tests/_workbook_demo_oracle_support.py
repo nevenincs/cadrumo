@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
@@ -18,7 +19,11 @@ def numeric_inputs(inputs: OperatorInputs) -> dict[str, Decimal]:
 
 
 def expected_result(
-    snapshot: RegistrySnapshot, values: dict[str, Decimal], bindings: dict[str, Decimal], target: str
+    snapshot: RegistrySnapshot,
+    values: dict[str, Decimal],
+    bindings: dict[str, Decimal],
+    target: str,
+    text_bindings: Mapping[str, str] | None = None,
 ) -> Decimal:
     """Check fictional arithmetic through the domain interpreter, not sheet formulas."""
     values = values.copy()
@@ -40,6 +45,7 @@ def expected_result(
             formula.expression,
             values=values,
             binding_values=bindings,
+            enum_binding_values=text_bindings,
             parameters=parameters,
             date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
             relation_values={},

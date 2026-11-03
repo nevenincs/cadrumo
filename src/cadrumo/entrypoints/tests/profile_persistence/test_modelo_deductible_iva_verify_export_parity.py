@@ -85,9 +85,10 @@ _IRPF = _Revision(
     modelo="130",
     input_values_by_casilla_id={
         validated_casilla_id("01", surface=_SURFACE): "250.00",
-        validated_casilla_id("02", surface=_SURFACE): "0.00",
+        validated_casilla_id("gastos-deducibles-previos", surface=_SURFACE): "0.00",
     },
     binding_overrides={
+        "modelo-130-estimacion-directa-modalidad": "directa_normal",
         "modelo-130-pagos-fraccionados-anteriores": "0",
         "modelo-130-resultados-negativos-anteriores": "0",
         "irpf.previous_year_economic_activity_net_income": "0",
@@ -208,7 +209,9 @@ def _export_outcome(
 def _verify_and_export(shape: _Revision, expense: Transaction, tmp_path: Path) -> tuple[bool, str, str]:
     """Return (verify blocks, export outcome, export outcome with no ledger contributor)."""
     with bundled_indexed_authority().operation() as operation:
-        bucket_id = seed_profile()
+        bucket_id = seed_profile(
+            profile_overrides={"irpf.estimation_regime": "directa_normal"} if shape.modelo == "130" else None
+        )
         work_unit_id, baseline_id = _seed(shape, bucket_id=bucket_id, operation=operation)
         transactions = TransactionCatalogueRepository(bucket_id=bucket_id)
         transactions.save(TransactionCatalogue.from_transactions((expense,)))

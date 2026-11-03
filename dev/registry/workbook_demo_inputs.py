@@ -9,10 +9,15 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 from .workbook_demo_cases import DemoCase
 from .workbook_demo_direct_inputs import direct_inputs
-from .workbook_demo_formula_inputs import formula_inputs
+from .workbook_demo_formula_inputs import formula_inputs, text_bindings
 
 
 def demonstration_inputs(snapshot: RegistrySnapshot, case: DemoCase) -> tuple[OperatorInputs, dict[str, Decimal]]:
     """Seed fictional figures and declared context; unselected branches remain unknown."""
     direct = direct_inputs(snapshot, case)
     return direct if direct is not None else formula_inputs(snapshot, case)
+
+
+def demonstration_text_bindings(snapshot: RegistrySnapshot, case: DemoCase) -> dict[str, str]:
+    """Seed the text-valued bindings (an estimation modality) beside the Decimal bindings."""
+    return text_bindings(snapshot, case)

@@ -37,7 +37,7 @@ def _calculated(
         snapshot,
         inputs={
             "01": Decimal(income),
-            "02": Decimal(expenses),
+            "gastos-deducibles-previos": Decimal(expenses),
             "06": Decimal(0),
             "08": Decimal(agrarian_base),
             "10": Decimal(agrarian_withheld),
@@ -48,6 +48,8 @@ def _calculated(
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal(0),
         },
+        # The normal modality deducts its expenses as they are, so casilla 02 equals the previos.
+        enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
         date_context={"filing_period": _ON},
     )
     return snapshot, {str(item.casilla_id): item for item in result.observations}

@@ -31,7 +31,9 @@ _ModeloFixture = tuple[ModeloDefinition, RegistryCatalogues]
 
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("gastos-deducibles-previos")
+# The normal modality keeps box 02 equal to the supplied expenses, with no art. 30.2.ª provision.
+_M130_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 _M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
 _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("07")
@@ -72,6 +74,7 @@ _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
         "ley-35-2006:art-99",
         "orden-eha-672-2007:art-1",
         "rd-439-2007:art-110",
+        "rd-439-2007:art-30",
         "rd-439-2007:art-95",
     }
 )
@@ -287,8 +290,9 @@ def test_modelo_130_requires_external_previous_year_income_binding_for_minoracio
     with pytest.raises(RegistryValidationError, match="previous_year_economic_activity_net_income"):
         calculate_registry_snapshot(
             _snapshot_130(modelo_130_registry),
-            inputs={_M130_INGRESOS_CASILLA: Decimal("12000.00"), _M130_GASTOS_CASILLA: Decimal("4000.00")},
+            inputs={_M130_INGRESOS_CASILLA: Decimal("12000.00"), _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000.00")},
             date_context={"filing_period": date(2026, 4, 20)},
+            enum_binding_values=_M130_NORMAL_MODALITY,
             binding_values={"modelo-130-resultados-negativos-anteriores": Decimal("0")},
         )
 
@@ -300,7 +304,7 @@ def test_modelo_130_first_period_carry_forward_defaults_to_zero_for_capped_formu
         _snapshot_130(modelo_130_registry),
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
             _M130_RETENCIONES_CASILLA: Decimal("100"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
@@ -308,6 +312,7 @@ def test_modelo_130_first_period_carry_forward_defaults_to_zero_for_capped_formu
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 4, 20)},
+        enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
         },
@@ -338,7 +343,7 @@ def test_modelo_130_capped_carry_forward_casilla_input_is_rejected(
             _snapshot_130(modelo_130_registry),
             inputs={
                 _M130_INGRESOS_CASILLA: Decimal("10000"),
-                _M130_GASTOS_CASILLA: Decimal("4000"),
+                _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
                 _M130_RETENCIONES_CASILLA: Decimal("100"),
                 _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
                 _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
@@ -347,6 +352,7 @@ def test_modelo_130_capped_carry_forward_casilla_input_is_rejected(
                 _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
             },
             date_context={"filing_period": date(2026, 4, 20)},
+            enum_binding_values=_M130_NORMAL_MODALITY,
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
                 # modelo-130-resultados-negativos-anteriores deliberately omitted
@@ -430,7 +436,7 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
         snapshot,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("20000"),
-            _M130_GASTOS_CASILLA: Decimal("8000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("8000"),
             _M130_RETENCIONES_CASILLA: Decimal("200"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("4000"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("20"),
@@ -444,6 +450,7 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
                 20,
             ),
         },
+        enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             **resolved_bindings,
@@ -467,7 +474,7 @@ def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(model
             _snapshot_130(modelo_130_registry, period="2T"),
             inputs={
                 _M130_INGRESOS_CASILLA: Decimal("10000"),
-                _M130_GASTOS_CASILLA: Decimal("4000"),
+                _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
                 _M130_RETENCIONES_CASILLA: Decimal("100"),
                 _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
                 _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
@@ -476,6 +483,7 @@ def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(model
                 _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
             },
             date_context={"filing_period": date(2026, 7, 20)},
+            enum_binding_values=_M130_NORMAL_MODALITY,
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
                 "modelo-130-pagos-fraccionados-anteriores": Decimal("300"),  # claims 300 — diverges
@@ -523,7 +531,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
         snapshot_2t,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("377"),
-            _M130_GASTOS_CASILLA: Decimal("0"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("0"),
             _M130_RETENCIONES_CASILLA: Decimal("0"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
@@ -531,6 +539,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 7, 20)},
+        enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values=resolved_bindings,
     )
 
@@ -603,7 +612,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
         snapshot_2t,
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("16000"),
-            _M130_GASTOS_CASILLA: Decimal("6000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("6000"),
             _M130_RETENCIONES_CASILLA: Decimal("250"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("3000"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("20"),
@@ -611,6 +620,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 7, 20)},
+        enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             **resolved_bindings,
@@ -646,6 +656,7 @@ def _casilla_17_and_standard_subtraction(
         _snapshot_130(modelo_130_registry),
         inputs=inputs,
         date_context={"filing_period": date(2026, 4, 20)},
+        enum_binding_values=_M130_NORMAL_MODALITY,
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
@@ -671,7 +682,7 @@ def test_modelo_130_high_casilla_06_amount_does_not_zero_casilla_17(
         modelo_130_registry,
         {
             _M130_INGRESOS_CASILLA: Decimal("15000"),
-            _M130_GASTOS_CASILLA: Decimal("5000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("5000"),
             _M130_RETENCIONES_CASILLA: Decimal("10500"),
             _M130_AGRARIAN_VOLUME_CASILLA: Decimal("1000000"),
             _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
@@ -698,7 +709,7 @@ def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amoun
         modelo_130_registry,
         {
             _M130_INGRESOS_CASILLA: Decimal("50000"),
-            _M130_GASTOS_CASILLA: Decimal("10000"),
+            _M130_GASTOS_PREVIOS_CASILLA: Decimal("10000"),
             # c03 (rendimiento neto) is computed via the
             # ``modelo-130-rendimiento-neto`` formula (c01 − c02);
             # supplying it as input would trip the computed-casilla gate.

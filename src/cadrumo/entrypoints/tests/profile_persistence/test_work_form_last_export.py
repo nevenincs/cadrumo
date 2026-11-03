@@ -53,10 +53,11 @@ _MODELO = ModeloCode("130")
 # and the cross-period gate has nothing to demand before the export.
 _ACTIVITY_START = date(_FILING_YEAR, 10, 1)
 _INGRESOS_CASILLA = validated_casilla_id("01", surface="work form last export test")
-_GASTOS_CASILLA = validated_casilla_id("02", surface="work form last export test")
+_GASTOS_CASILLA = validated_casilla_id("gastos-deducibles-previos", surface="work form last export test")
 _FIRST_INPUTS = {_INGRESOS_CASILLA: "250.00", _GASTOS_CASILLA: "0.00"}
 _LATER_INPUTS = {_INGRESOS_CASILLA: "300.00", _GASTOS_CASILLA: "0.00"}
 _ZERO_PRIOR_BINDINGS: dict[BindingId, str] = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
     "modelo-130-pagos-fraccionados-anteriores": "0",
     "modelo-130-resultados-negativos-anteriores": "0",
     "irpf.previous_year_economic_activity_net_income": "0",

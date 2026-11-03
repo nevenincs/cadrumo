@@ -48,7 +48,7 @@ from cadrumo.domain.period import calculation_filing_date
 
 from .compiler.authority import compiled_bundled_authority
 from .workbook_demo_cases import DEMO_CASES, DemoCase
-from .workbook_demo_inputs import demonstration_inputs
+from .workbook_demo_inputs import demonstration_inputs, demonstration_text_bindings
 from .workbook_demo_intracommunity import intracommunity_records
 from .workbook_demo_m303 import m303_demonstration_facts
 from .workbook_demo_members import contribution_member_records
@@ -167,7 +167,11 @@ def demonstration_producer(case: DemoCase) -> FilingProducerSnapshot | None:
 
 
 def _build_form_plan(
-    snapshot: RegistrySnapshot, case: DemoCase, inputs: OperatorInputs, bindings: dict[str, Decimal]
+    snapshot: RegistrySnapshot,
+    case: DemoCase,
+    inputs: OperatorInputs,
+    bindings: dict[str, Decimal],
+    text_bindings: dict[str, str],
 ) -> SheetExportPlan:
     """Build the form with fictional inputs inside the governed registry scope."""
     with (
@@ -183,7 +187,7 @@ def _build_form_plan(
         layout = plan_layout(snapshot.revision, bracket_filter_date=anchor)
         by_address: dict[SheetCellAddress, Decimal | str] = {
             (layout.binding_cells[key] if key in layout.binding_cells else layout.relation_cells[key]): value
-            for key, value in bindings.items()
+            for key, value in {**bindings, **text_bindings}.items()
         }
         if case.modelo == "131":
             activity_values: dict[str, Decimal | str] = {
@@ -260,7 +264,8 @@ def build_demonstration_plan(case: DemoCase) -> tuple[RegistrySnapshot, SheetExp
     snapshot = demonstration_snapshot(case)
     with validating_governed_facts(compiled_bundled_authority()):
         inputs, bindings = demonstration_inputs(snapshot, case)
-    plan = _build_form_plan(snapshot, case, inputs, bindings)
+        text_bindings = demonstration_text_bindings(snapshot, case)
+    plan = _build_form_plan(snapshot, case, inputs, bindings, text_bindings)
     return snapshot, _annotate_demonstration(plan, case)
 
 
