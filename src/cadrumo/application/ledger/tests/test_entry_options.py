@@ -539,11 +539,11 @@ def test_the_rule_category_flag_is_what_a_new_rule_is_held_to(
 
     with_category = _accepts(lambda: require_new_rule_decision(classification, "office_supplies"))
 
-    assert served.rule_requires_category is with_category
+    assert served.rule_may_name_category is with_category
     if classification in RULE_DECIDED_STATES:
         assert _accepts(lambda: require_new_rule_decision(classification, None))
     else:
-        assert served.rule_requires_category is False
+        assert served.rule_may_name_category is False
 
 
 def test_a_split_part_is_told_to_name_a_category_only_where_it_carries_business_figures(

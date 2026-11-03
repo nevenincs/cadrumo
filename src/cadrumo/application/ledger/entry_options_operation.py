@@ -123,7 +123,7 @@ class LedgerEntryClassificationProjection(BaseModel):
 
     classification: BusinessClassification
     takes_business_share: bool
-    rule_requires_category: bool
+    rule_may_name_category: bool
     split_part_requires_category: bool
 
 
@@ -169,7 +169,7 @@ def _classification_rules() -> tuple[LedgerEntryClassificationProjection, ...]:
         LedgerEntryClassificationProjection(
             classification=classification,
             takes_business_share=takes_business_share(classification),
-            rule_requires_category=rule_names_category(classification),
+            rule_may_name_category=rule_names_category(classification),
             split_part_requires_category=split_part_requires_category(classification),
         )
         for classification in BusinessClassification
