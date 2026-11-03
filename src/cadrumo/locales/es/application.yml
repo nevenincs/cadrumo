@@ -1313,6 +1313,11 @@ application:
           que no contiene nada, así que la cifra se mantiene, pero sin contrastar.
         what_to_do: Si esa fuente debería contener esta retención, añádela y vuelve
           a calcular; si no, no tienes que hacer nada.
+      credit_resolution_stale:
+        what: Aceptaste una discrepancia anterior de esta cifra, pero sus fuentes
+          ahora dan otros importes, así que esa aceptación ya no se aplica.
+        what_to_do: Compara de nuevo los importes. Si el importe utilizado sigue siendo
+          correcto, acepta esta discrepancia con su nuevo identificador.
       credit_source_disagreement:
         what: Dos fuentes dan importes distintos para la misma deducción por retenciones,
           así que Cadrumo no puede comprobar, exportar ni registrar la declaración
@@ -1642,6 +1647,9 @@ application:
         casilla {box} solo declara lo registrado.'
       credit_cross_check_absent: 'Casilla {box}: según {cross_check}, no hay nada
         que comparar, así que esta cifra no está contrastada.'
+      credit_resolution_stale: 'Casilla {box}: aceptaste una discrepancia anterior
+        de esta cifra, pero sus fuentes ahora dan otros importes, así que la aceptación
+        ya no se aplica.'
       credit_source_disagreement: 'Casilla {box}: la fuente declarada da {amount};
         según {cross_check}, son {compared_amount}.'
       disposal_claim_gap: '{element}: su baja es el {date} y parte de {year} no tiene
@@ -1819,6 +1827,17 @@ application:
       filed_observation: la declaración que presentaste
       ledger: tu libro de registro
       retencion_soportada: los certificados de los pagadores
+    credit_resolution:
+      errors:
+        already_resolved: Esta discrepancia ya está aceptada.
+        calculation_not_current: Este no es el cálculo actual de la declaración, así
+          que sus discrepancias ya no se pueden aceptar. Usa el cálculo actual.
+        not_resolved: Esta discrepancia no tiene ninguna aceptación activa que retirar.
+        stale_revision: La resolución cambió desde que la leíste; vuelve a leerla
+          antes de guardar.
+        unknown_finding: El cálculo actual de esta declaración no tiene ninguna discrepancia
+          entre fuentes con ese identificador. Vuelve a calcular y copia el identificador
+          de la comprobación.
     edit:
       parse:
         above_maximum: El valor máximo es {bound}.

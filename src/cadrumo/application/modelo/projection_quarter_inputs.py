@@ -73,6 +73,7 @@ def quarter_open_inputs(
         borrador_snapshots=ports.borrador_snapshot_repository,
         bucket_events=ports.bucket_event_repository,
         activity_assets=ports.activity_asset_history_repository,
+        credit_resolutions=ports.credit_resolution_reader,
     )
     named: dict[tuple[str, str], str] = {}
     for field in _open_fields(applicable_fields(loaded.form)):

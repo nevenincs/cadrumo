@@ -1277,6 +1277,11 @@ application:
           ezért az összeg megmarad, de nincs összevetve.
         what_to_do: Ha ennek a forrásnak tartalmaznia kellene ezt a forrásadót, add
           hozzá, és számold újra; különben nincs teendőd.
+      credit_resolution_stale:
+        what: Korábban elfogadtad ennek az összegnek egy eltérését, de a forrásai
+          most más összegeket adnak, ezért az elfogadás már nem érvényes.
+        what_to_do: Vesd össze újra az összegeket. Ha a felhasznált összeg továbbra
+          is helyes, fogadd el ezt az eltérést az új azonosítójával.
       credit_source_disagreement:
         what: Két forrás eltérő összeget ad ugyanarra a forrásadó-jóváírásra, ezért
           a Cadrumo ezzel nem tudja ellenőrizni, exportálni vagy rögzíteni a bevallást.
@@ -1605,6 +1610,9 @@ application:
         mező pedig csak a rögzítettet tartalmazza.'
       credit_cross_check_absent: '{box}. mező: {cross_check} alapján nincs mit összevetni,
         ezért ez az összeg nincs összevetve.'
+      credit_resolution_stale: '{box}. mező: korábban elfogadtad ennek az összegnek
+        egy eltérését, de a forrásai most más összegeket adnak, ezért az elfogadás
+        már nem érvényes.'
       credit_source_disagreement: '{box}. mező: a megadott forrás szerint {amount},
         {cross_check} szerint viszont {compared_amount}.'
       disposal_claim_gap: '{element}: a kivezetése {date} napon történik, és {year}
@@ -1783,6 +1791,16 @@ application:
       filed_observation: a benyújtott bevallásod
       ledger: a nyilvántartásod
       retencion_soportada: a kifizetői igazolások
+    credit_resolution:
+      errors:
+        already_resolved: Ezt az eltérést már elfogadtad.
+        calculation_not_current: Ez nem a bevallás jelenlegi számítása, ezért az eltéréseit
+          már nem lehet elfogadni. Használd a jelenlegi számítást.
+        not_resolved: Ennek az eltérésnek nincs visszavonható, érvényes elfogadása.
+        stale_revision: A feloldás megváltozott, amióta elolvastad; olvasd be újra
+          mentés előtt.
+        unknown_finding: A bevallás jelenlegi számításában nincs ilyen azonosítójú
+          forrás-eltérés. Számolj újra, és másold ki az azonosítót az ellenőrzésből.
     edit:
       parse:
         above_maximum: 'A legnagyobb megengedett érték: {bound}.'

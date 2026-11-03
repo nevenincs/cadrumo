@@ -21,7 +21,11 @@ from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFinding
-from ..calculation_note_gate import calculation_screen_outdated
+from ..calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    SourceDisagreementResolutions,
+    calculation_screen_outdated,
+)
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import (
     ModeloEditDomainRefusalV1,
@@ -57,6 +61,7 @@ def built_form(
     known_truths: Mapping[str, bool] | None = None,
     permitted_surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...] | None = None,
     calculated: bool = False,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> ModeloWorkForm:
     """Build a form whose ``held`` boxes carry the calculation's values; ``entered`` ``None`` is an unknown record.
 
@@ -66,6 +71,7 @@ def built_form(
     ``permitted_surface`` is the edit admission's surface; ``None`` offers nothing for editing.
     ``calculated`` says the work unit has a calculation although no revision is shown: a computed box
     that holds nothing is then one the calculation could not work out.
+    ``resolutions`` are the source disagreements the operator accepted; none by default.
     """
     snapshot = form_snapshot(operation, modelo, year, code)
     values = held or {}
@@ -106,6 +112,7 @@ def built_form(
         overridden_binding_ids=None if entered is None else frozenset(),
         language=language,
         known_truths=known_truths,
+        resolutions=resolutions,
         calculation_screen_outdated=revision is not None
         and calculation_screen_outdated(
             revision, modelo=modelo, filing_year=year, period=Period.from_year_and_code(year, code), operation=operation

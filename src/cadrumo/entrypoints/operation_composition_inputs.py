@@ -139,6 +139,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
         bucket_events=ports.bucket_event_repository,
         filings=ports.filing_repository,
         own_accounts=OwnAccountRepository(objects=objects),
+        credit_resolutions=ports.credit_resolution_reader,
     )
 
 

@@ -104,9 +104,10 @@ from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitNotFoundError,
 )
-from .calculation_note_gate import require_work_unit_calculation_unblocked
+from .calculation_note_gate import SourceDisagreementResolutions, require_work_unit_calculation_unblocked
 from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .credit_resolution import credit_resolutions_for_work
 from .export_accounts import (
     build_export_producer_snapshot,
     export_charge_account,
@@ -761,6 +762,7 @@ def _prepare_modelo_export_schema(
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
     operation: PinnedAuthorityOperation,
+    resolutions: SourceDisagreementResolutions,
 ) -> tuple[Period, RegistrySchemaAccessor]:
     period = resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
@@ -783,7 +785,7 @@ def _prepare_modelo_export_schema(
         operation=operation,
     )
     require_work_unit_calculation_unblocked(
-        work_unit=work_unit, revision=revision, action="export", operation=operation
+        work_unit=work_unit, revision=revision, action="export", operation=operation, resolutions=resolutions
     )
     return period, schema_provider
 
@@ -913,6 +915,7 @@ def _prepare_modelo_export(
         revision=revision,
         workflow_profile=workflow_profile,
         operation=operation,
+        resolutions=credit_resolutions_for_work(export_ports.credit_resolution, work_unit),
     )
     iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,

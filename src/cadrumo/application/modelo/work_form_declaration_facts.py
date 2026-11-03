@@ -37,7 +37,9 @@ class ModeloFormCalculationNote(ModeloFormBase):
     calculation-note gate's own answer: the gate refuses the file and the
     recording while such a note stands, whatever its attention says, so the
     editor withholds them too (:attr:`ModeloWorkForm.blocking_calculation_notes`),
-    as it does for a note at the blocking level. ``fact`` is what this note says
+    as it does for a note at the blocking level. ``finding_id`` names the source
+    disagreement the note states, the id an operator answers with a resolution;
+    it is ``None`` for every other note. ``fact`` is what this note says
     about its own subject, when its reason alone does not. ``message`` is the
     calculation's own account of this note, as its resolver worded it for the
     filer and the calculate result carries it, in the form's language; ``None``
@@ -50,6 +52,7 @@ class ModeloFormCalculationNote(ModeloFormBase):
     casilla_id: CasillaId | None = None
     box: str | None = None
     withholds_filing: bool = False
+    finding_id: str | None = Field(default=None, min_length=16, max_length=16)
     fact: CalculationNoteFact | None = None
     element_names: tuple[tuple[str, str], ...] = ()
     message: str | None = Field(default=None, min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)

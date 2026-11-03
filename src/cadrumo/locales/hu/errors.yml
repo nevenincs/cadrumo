@@ -383,6 +383,8 @@ errors:
     canonical_catalogue_invoice_rate: A számlakatalógus árfolyamlekérdezése meghiúsult.
     canonical_counterparty_establishment_persistence: A partner letelepedési rekordját
       nem sikerült menteni.
+    canonical_credit_resolution_persistence: Az általad elfogadott forrás-eltéréseket
+      nem sikerült beolvasni vagy menteni.
     canonical_diagnostic_run_record: A diagnosztikai futtatás adatait nem sikerült
       beolvasni.
     canonical_evidence_bundle_persistence: A bizonyítékcsomagot nem sikerült menteni.
@@ -890,6 +892,9 @@ errors:
     censal_read_identity: A nyilvántartási olvasás nem ehhez a profilhoz tartozó adózóé.
     clave_credentials_incomplete: A kiválasztott Cl@ve hitelesítési módból hiányzik
       egy szükséges hitelesítő adat.
+    credit_resolution_refused: A feloldás nem lett mentve.
+    credit_resolution_revision_conflict: A feloldás megváltozott, amióta elolvastad;
+      olvasd be újra mentés előtt.
     financial_edit_journal_purge: A korábbi pénzügyi szerkesztési napló biztonságos
       törlése nem sikerült. A művelet nem érhető el. Egyetlen szerkesztési érték sem
       lett betöltve.

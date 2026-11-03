@@ -37,6 +37,7 @@ from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtoco
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.producer_snapshot_m360 import Modelo360SolicitudRegister
+from .credit_resolution_repository import CreditResolutionReader
 
 
 class Modelo360SolicitudRegisterReaderProtocol(Protocol):
@@ -84,6 +85,8 @@ class ModeloExportPorts:
     """Read for the names the export's notes call the taxpayer's elements by."""
     draft_review_ports: DraftReviewPorts
     retencion_observation_ports: RetencionObservationPorts
+    credit_resolution: CreditResolutionReader
+    """Read for the operator's acceptances of disputed figures, which lift the hold on exactly those figures."""
     product_software_identity: AeatProductSoftwareIdentity
     """Program identifier and developer NIF for layouts whose envelope prefix reserves them.
 

@@ -30,6 +30,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -131,6 +132,7 @@ def _source_mesh_ports(
         retencion_soportada_ports=RetencionSoportadaPorts(
             repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
         ),
+        credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
         iva_compensation_history_repository=ports.iva_compensation_history_repository,
         iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
         borrador_snapshot_repository=ports.borrador_snapshot_repository,

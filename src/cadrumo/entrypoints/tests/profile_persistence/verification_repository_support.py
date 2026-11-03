@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -68,6 +69,7 @@ def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
         ledger_membership_ports=build_ledger_membership_ports(
             bucket_id=bucket_id, transaction_repository=transaction_repository
         ),
+        credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
     )
 
 

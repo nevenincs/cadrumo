@@ -49,6 +49,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
 from ...domain.modelos.calculation_revision_sources import (
+    DISAGREEMENT_REASONS,
     CalculationNoteFact,
     CalculationNoteSentence,
     CalculationSourceIssue,
@@ -125,6 +126,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "terminal_origin_mismatch": _C,
         # A credit no second source could confirm: worth checking, never agreement.
         "credit_cross_check_absent": _C,
+        # An accepted disagreement that no longer applies: the figure is disputed afresh.
+        "credit_resolution_stale": _C,
         "unresolved_derived_binding": _C,
         # Something only the filer can supply.
         "source_issue": _M,
@@ -322,16 +325,22 @@ def capped_value_proven_zero(reason: str, outcome: BindingValueOutcome | None) -
     return reason == "advisory_binding_value" and outcome is BindingValueOutcome.PROVEN_ZERO
 
 
-def note_attention(reason: str, *, box: str | None, outcome: BindingValueOutcome | None = None) -> ModeloFormAttention:
+def note_attention(
+    reason: str, *, box: str | None, outcome: BindingValueOutcome | None = None, accepted: bool = False
+) -> ModeloFormAttention:
     """Place one diagnostic reason on the filer's scale; ``box`` is the number the form prints for the box it names.
 
     ``box`` is ``None`` when the reason names no box or a working figure the
     form does not print (:mod:`.printed_boxes`). ``outcome`` is the resolver's
     stated outcome for a capped value: a proven zero is for the filer's
-    information.
+    information. ``accepted`` says an operator resolution covers the source
+    disagreement the note states: it stays listed as worth checking, and no
+    longer blocks.
     """
     if reason in DERIVED_GATE_REASONS:
         return _B
+    if accepted and reason in DISAGREEMENT_REASONS:
+        return _C
     if reason in PRINTED_BOX_REASONS and box is None:
         return _C
     if capped_value_proven_zero(reason, outcome):

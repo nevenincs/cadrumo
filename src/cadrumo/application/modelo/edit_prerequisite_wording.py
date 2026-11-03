@@ -101,6 +101,7 @@ def read_prerequisite_words(
         verification_repository=ports.verifications,
         admission=None,
         language=language,
+        credit_resolutions=ports.credit_resolutions,
     )
     return form_prerequisite_words(loaded.form, casilla_id, source_boxes, language)
 

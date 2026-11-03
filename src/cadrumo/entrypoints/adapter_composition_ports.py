@@ -163,6 +163,7 @@ def build_modelo_export_ports(
         CalculationObservationRepository,
         IvaWalletDecisionRepository,
     )
+    from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
@@ -225,6 +226,7 @@ def build_modelo_export_ports(
             bucket_id=normalized_bucket_id, operation=operation, objects=objects
         ),
         retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
+        credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
         # No AEAT-registered developer identity exists yet; the mock is graded
         # on every export result so no surface presents its file as presentable.
         product_software_identity=development_mock_software_identity(),

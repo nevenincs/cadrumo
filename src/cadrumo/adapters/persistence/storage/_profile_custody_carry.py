@@ -57,6 +57,7 @@ from ..profile.calculation_observations import (
     IvaWalletDecisionRepository,
 )
 from ..profile.counterparty_establishment import CounterpartyEstablishmentRepository
+from ..profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from ..profile.evidence_bundles import EvidenceBundleRepository
 from ..profile.filing_drafts import ModeloDraftRepository
 from ..profile.filing_history import FilingHistoryRepositoryAdapter
@@ -223,6 +224,11 @@ def _natural_key_resolvers(
         return ModeloReconciliationRecordRepository()
 
     resolvers["cadrumo.modelo.reconciliation.records"] = _bound_resolver(_reconciliation_records_repo)
+
+    def _credit_resolution_repo() -> CreditResolutionRepositoryAdapter:
+        return CreditResolutionRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
+
+    resolvers["cadrumo.modelo.credit_resolution.records"] = _bound_resolver(_credit_resolution_repo)
     resolvers["cadrumo.domain.buckets.event_history"] = _fixed_resolver(SECURE_OBJECT_CATALOGUE_KEY)
 
     def _justificante_metadata_repo() -> JustificanteRepository:

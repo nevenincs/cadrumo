@@ -63,6 +63,7 @@ from .action_errors import (
 from .calculation_note_gate import require_work_unit_calculation_unblocked
 from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .credit_resolution import credit_resolutions_for_work
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
@@ -221,7 +222,11 @@ def _prepare_verification_profile(
     )
     try:
         require_work_unit_calculation_unblocked(
-            work_unit=work_unit, revision=target, action="verify", operation=operation
+            work_unit=work_unit,
+            revision=target,
+            action="verify",
+            operation=operation,
+            resolutions=credit_resolutions_for_work(repos.credit_resolution, work_unit),
         )
     except RegistryValidationError as refused:
         # The note gate screens against the filing-grade snapshot. Authority below
