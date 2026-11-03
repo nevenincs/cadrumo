@@ -63,7 +63,7 @@ from ....domain.user_profile.values import create_user_profile_record as _create
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
-from .proven_zero_withholding_support import assert_only_proven_zero_capped_diagnostics
+from .unchecked_credit_note_support import assert_only_unchecked_credit_notes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -258,7 +258,7 @@ def test_objective_estimation_profile_folds_m131_pagos_but_not_its_rendimiento_e
     assert values[_M100_EO_RENDIMIENTO_CASILLA] == Decimal("0")
     assert values[_M100_EO_SUM_CASILLA] == Decimal("0")
     assert values[_M100_EO_TOTAL_CASILLA] == Decimal("0")
-    assert_only_proven_zero_capped_diagnostics(result.source_diagnostics)
+    assert_only_unchecked_credit_notes(result.source_diagnostics)
 
 
 def test_direct_estimation_profile_calculates_without_modelo_131_filings(

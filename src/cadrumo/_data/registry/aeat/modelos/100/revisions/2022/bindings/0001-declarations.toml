@@ -165,13 +165,18 @@ required_text = ["estimación directa", "rendimiento neto"]
 # Modelo 100 renta-income observation is built against the income casilla 0171,
 # and casilla 0599 names this binding directly.
 #
-# The value is ADVISORY, not filing grade. The resolver now dates each row by the
-# declared RIRPF art. 7 criterion and credits only withholding on a linked, wholly
-# paid invoice, and the credit reconciliation compares it with the payer records
-# and the borrador, but the fourth-quarter Modelo 130 casilla 06 cross-check does
-# not yet run over it, and rental activity rows are not yet excluded. The grade
-# cap keeps calculation and preview showing the figure, and refuses checking,
-# export and local filing unless it is a proven zero.
+# Filing grade. Each row's retencion follows the income it was practised on into
+# the ejercicio the declared RIRPF art. 7 criterion imputes that income to,
+# whenever it was paid (LIRPF art. 14.1.b; RIRPF art. 79), and an unknown
+# criterion or accrual date leaves the value unresolved. Only withholding on a
+# linked, wholly paid invoice is credited, and a rental activity's withholding is
+# left to the rental credit 0598. The credit reconciliation compares the value
+# with the payer records by the payer's payment year (DGT V4965-16), with the
+# borrador, and with casilla 06 of the filed fourth-quarter Modelo 130 on that
+# return's own basis; only a difference the itemised timing cannot explain blocks.
+#
+# The operator ruled this promotion on 2026-11-02, once the resolver and the
+# reconciliation held those properties.
 #
 # The borrador may hold this casilla, but only as a cross-check: the credit is the
 # withholding the taxpayer's own invoices declare, never the informative prefill.
@@ -180,9 +185,8 @@ id = "renta-ledger-actividad-retenciones-0599"
 provider = { kind = "ledger_renta_income_aggregation", modelo = "100", target_casilla_id = "0171", fact = "declared_withheld_amount_sum" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-95"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-14", "rd-439-2007:art-7", "rd-439-2007:art-79"]
 source_refs = ["lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 aeat_prefilled = true
 borrador_participation = "cross_check_only"
 

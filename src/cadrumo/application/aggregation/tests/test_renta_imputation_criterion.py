@@ -716,26 +716,15 @@ def test_the_next_quarter_credits_the_retencion_once_paid(operation: PinnedAutho
     assert _paid_after_cut_off_findings(second) == []
 
 
-@pytest.mark.parametrize(
-    ("modelo", "period", "capped", "follow_the_criterion"),
-    [
-        ("100", "0A", "0599", ("0171",)),
-        ("130", "1T", "06", ("01", "02")),
-    ],
-)
-def test_only_the_retencion_credit_stays_capped_beside_the_boxes_the_criterion_places(
-    operation: PinnedAuthorityOperation, modelo: str, period: str, capped: str, follow_the_criterion: tuple[str, ...]
+@pytest.mark.parametrize(("modelo", "period"), [("100", "0A"), ("130", "1T")])
+def test_the_retencion_credit_is_filing_grade_beside_the_boxes_the_criterion_places(
+    operation: PinnedAuthorityOperation, modelo: str, period: str
 ) -> None:
+    """The criterion places each row's retencion with its income, so no box the ledger feeds is capped."""
     snapshot = operation.snapshot(modelo, filing_year=2025, period=period)
-    reached = {
-        str(casilla_id)
-        for entry in capped_binding_reach(
-            snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
-        ).values()
-        for casilla_id in entry.casilla_ids
-    }
-    assert capped in reached
-    assert not reached.intersection(follow_the_criterion)
+    assert not capped_binding_reach(
+        snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+    )
     expense_sources = {
         "ledger_renta_gastos_estimacion_directa_aggregation",
         "ledger_renta_gastos_pago_fraccionado_aggregation",
