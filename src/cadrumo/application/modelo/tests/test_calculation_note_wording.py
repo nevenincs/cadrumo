@@ -196,7 +196,7 @@ def test_a_rename_leaves_the_calculation_and_its_consumption_alone_and_the_sente
     assert [item.fact for item in first.diagnostics] == [item.fact for item in second.diagnostics]
     assert first.provenance == second.provenance
     unit = _work_unit(operation)
-    from ..calculation_bucket_actions import unrouted_source_issues
+    from ..bucket_unrouted_source_issues import unrouted_source_issues
 
     boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
     revision_before = _revision(operation, unit, *unrouted_source_issues(first.diagnostics, boxes))
@@ -214,7 +214,7 @@ def test_a_rename_leaves_the_calculation_and_its_consumption_alone_and_the_sente
 
 
 def test_the_form_shows_the_current_name_from_the_read_it_was_given(operation: PinnedAuthorityOperation) -> None:
-    from ..calculation_bucket_actions import unrouted_source_issues
+    from ..bucket_unrouted_source_issues import unrouted_source_issues
 
     boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
     diagnostics = resolve_m100(_described("Standing desk")).diagnostics
@@ -236,7 +236,7 @@ def test_the_form_shows_the_current_name_from_the_read_it_was_given(operation: P
 
 
 def test_a_recorded_note_arrives_in_words_for_a_reader_that_only_draws_it(operation: PinnedAuthorityOperation) -> None:
-    from ..calculation_bucket_actions import unrouted_source_issues
+    from ..bucket_unrouted_source_issues import unrouted_source_issues
 
     class _Register:
         def load(self) -> ActivityAssetHistory:

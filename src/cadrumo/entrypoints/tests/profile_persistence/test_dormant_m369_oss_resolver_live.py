@@ -30,9 +30,9 @@ from cadrumo.application.aggregation.errors import (
 )
 from cadrumo.application.aggregation.oss_ioss import (
     OssIossLedgerCandidate,
-    OssIossLedgerSourceResolver,
     aggregate_oss_ioss_bindings,
 )
+from cadrumo.application.aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
 )

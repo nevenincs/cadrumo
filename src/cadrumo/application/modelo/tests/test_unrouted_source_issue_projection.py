@@ -17,7 +17,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
-from ..calculation_bucket_actions import unrouted_source_issues
+from ..bucket_unrouted_source_issues import unrouted_source_issues
 from ..printed_boxes import snapshot_printed_boxes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

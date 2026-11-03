@@ -51,15 +51,15 @@ from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.inventory import REPO_ROOT
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from .. import oss_ioss as oss_ioss_module
+from .. import oss_ioss_resolver as oss_ioss_module
 from ..errors import AggregationValidationError
 from ..oss_ioss import (
     OssIossLedgerCandidate,
     aggregate_oss_ioss_bindings,
-    project_oss_ioss_invoices_from_repositories,
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
+from ..oss_ioss_resolver import project_oss_ioss_invoices_from_repositories
 from ..oss_ioss_wire_geometry import record_row_slots
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

@@ -13,9 +13,9 @@ from ...domain.calculations.registry.binding_provider_registration import (
 )
 from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
 from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
+from ..aggregation.impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
 from ..aggregation.inventory import InventorySourceResolver
 from ..aggregation.modelo_bindings import (
-    LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
 )
@@ -25,7 +25,7 @@ from ..aggregation.modelo_bindings_renta_expenses import (
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
 )
 from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+from ..aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
 from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_mesh import (
     ModeloSourceResolver,

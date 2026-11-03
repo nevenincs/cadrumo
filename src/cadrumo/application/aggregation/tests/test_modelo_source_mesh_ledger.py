@@ -28,7 +28,8 @@ from ..errors import (
 from ..iva_ledger import (
     IvaLedgerAggregationIssueReason,
 )
-from ..oss_ioss import OssIossLedgerCandidate, OssIossLedgerSourceResolver, aggregate_oss_ioss_bindings
+from ..oss_ioss import OssIossLedgerCandidate, aggregate_oss_ioss_bindings
+from ..oss_ioss_resolver import OssIossLedgerSourceResolver
 from ..source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

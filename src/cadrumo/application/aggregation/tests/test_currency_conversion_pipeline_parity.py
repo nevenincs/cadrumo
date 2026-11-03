@@ -14,7 +14,7 @@ populated exactly as import populates them) and pushes it through the real
 production classification function for every pipeline that gates on
 ``is_non_eur_without_conversion``:
 
-- ``_renta_ledger._classify_renta_transaction`` (M100 first-slice expense) --
+- ``renta_ledger_classification.classify_renta_transaction`` (M100 first-slice expense) --
   PARTIALLY correct until this module's own coverage gap was found and
   closed. ``gross_amount`` always read ``effective_eur_amount`` correctly, but
   the ``taxable_base``/``iva_amount`` fallback (``_taxable_base_for`` /
@@ -38,7 +38,7 @@ production classification function for every pipeline that gates on
   correct, refuses a converted row outright because its tax substrate
   (``taxable_base``/``iva_amount``) stays native-currency; this is a
   defensible POLICY, not the bug, and this module does not weaken it.
-- ``_renta_income_ledger._classify_income_transaction`` (M130 casilla 01) --
+- ``renta_income_classification.classify_income_transaction`` (M130 casilla 01) --
   fixed here.
 - ``_renta_gasto_ledger._classify_gasto_transaction`` (M130 casilla 02) --
   fixed here.
@@ -121,11 +121,12 @@ from ..impatriado_income_ledger import (
     _classify_impatriado_income_transaction,
 )
 from ..iva_ledger import IvaLedgerAggregationIssueReason
-from ..oss_ioss import _candidate_for_invoice_line
+from ..oss_ioss_resolver import _candidate_for_invoice_line
 from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
-from ..renta_income_ledger import _classify_income_transaction
+from ..renta_income_classification import classify_income_transaction
 from ..renta_income_models import RentaIncomeLedgerAggregationIssue
-from ..renta_ledger import RentaCategoryDeductionRules, _classify_renta_transaction
+from ..renta_ledger import RentaCategoryDeductionRules
+from ..renta_ledger_classification import classify_renta_transaction
 from ..renta_ledger_models import RentaLedgerAggregationIssue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -204,7 +205,7 @@ def test_renta_ledger_m100_expense_reads_converted_eur_amount(operation: PinnedA
         direction=TransactionDirection.OUTGOING,
         category_id=SpendingCategory.from_registry("cuotas_autonomos_ss").value,
     )
-    result = _classify_renta_transaction(
+    result = classify_renta_transaction(
         tx,
         invoices=InvoiceCatalogue(),
         bucket_id="parity-bucket",
@@ -237,7 +238,7 @@ def test_renta_ledger_m100_expense_taxable_base_fallback_is_converted(
         category_id=SpendingCategory.from_registry("cuotas_autonomos_ss").value,
         taxable_base=Decimal("826.45"),
     )
-    result = _classify_renta_transaction(
+    result = classify_renta_transaction(
         tx,
         invoices=InvoiceCatalogue(),
         bucket_id="parity-bucket",
@@ -315,7 +316,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
     tx = Transaction.model_validate(
         {**tx_provisional.model_dump(mode="python"), "purchase_invoice_evidence_id": invoice.invoice_id},
     )
-    result = _classify_renta_transaction(
+    result = classify_renta_transaction(
         tx,
         invoices=invoices,
         bucket_id="parity-bucket",
@@ -358,7 +359,7 @@ def test_renta_income_ledger_reads_converted_eur_amount() -> None:
         direction=TransactionDirection.INCOMING,
         irpf_category="actividad_economica",
     )
-    result = _classify_income_transaction(
+    result = classify_income_transaction(
         tx,
         invoices=InvoiceCatalogue(),
         receipts_by_invoice=None,

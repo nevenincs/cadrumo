@@ -35,9 +35,9 @@ from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtoco
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..modelo.work_profile import ModeloWorkProfile
+from .impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
 from .inventory import InventoryLedgerRepositoryProtocol, InventorySourceResolver
 from .modelo_bindings import (
-    LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
 )
@@ -46,7 +46,7 @@ from .modelo_bindings_renta_expenses import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
 )
-from .oss_ioss import OssIossLedgerSourceResolver
+from .oss_ioss_resolver import OssIossLedgerSourceResolver
 from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, ModeloSourceResolver
 
 _log = get_logger(__name__)

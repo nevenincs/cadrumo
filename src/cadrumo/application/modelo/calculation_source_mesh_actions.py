@@ -520,8 +520,8 @@ def _resolve_ledger_income_families(
     renta_catalogue_read_ports: InvoiceCatalogueReadPorts,
 ) -> tuple[CalculationSourceResolution, ...]:
     """Resolve the Renta expense and income ledger families, then Impatriado and IRNR income."""
+    from ..aggregation.impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
     from ..aggregation.modelo_bindings import (
-        LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIrnrIncomeAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
     )
@@ -595,7 +595,7 @@ def _resolve_observation_families(
     from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
     from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-    from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+    from ..aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
     from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
     from ..aggregation.withholding_source import WithholdingSourceResolver
     from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket

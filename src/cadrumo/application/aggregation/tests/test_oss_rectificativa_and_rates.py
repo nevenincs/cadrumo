@@ -27,7 +27,7 @@ from ....domain.iva.schema import EUMemberState, IvaRateKind
 from ...exchange_rate_provider import bind_exchange_rate_provider_factory
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..errors import AggregationValidationError
-from ..oss_ioss import OssIossLedgerSourceResolver
+from ..oss_ioss_resolver import OssIossLedgerSourceResolver
 from ..oss_ioss_wire_geometry import record_row_slots
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .oss_rate_change_support import ordinary_general_variants, rate_change_inside_a_quarter

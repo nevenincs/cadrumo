@@ -70,7 +70,7 @@ _SENTENCES = {
     OutputLanguage.EN: "records a cuota of 25.00 EUR, but its base of 100.00 EUR at a rate of 21% gives 21.00 EUR",
     OutputLanguage.ES: "registra una cuota de 25,00 EUR, pero su base de 100,00 EUR al tipo del 21 % da 21,00 EUR",
     OutputLanguage.CA: "registra una quota de 25,00 EUR, però la seva base de 100,00 EUR al tipus del 21 % dona 21,00 EUR",
-    OutputLanguage.HU: "25,00 EUR IVA-összeget rögzít, de a(z) 100,00 EUR alap 21%-os kulcs mellett 21,00 EUR-t ad",
+    OutputLanguage.HU: "25,00 EUR IVA-összeget rögzít, de a(z) 100,00 EUR alap 21 százalékos kulcs mellett 21,00 EUR-t ad",
 }
 
 

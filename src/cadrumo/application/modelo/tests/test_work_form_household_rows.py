@@ -31,7 +31,8 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..calculation_bucket_actions import _source_provenance_refs, unrouted_source_issues
+from ..bucket_unrouted_source_issues import unrouted_source_issues
+from ..calculation_bucket_actions import _source_provenance_refs
 from ..calculation_resolution import build_calculation_replay_payloads
 from ..printed_boxes import snapshot_printed_boxes
 from ..profile_binding import resolve_profile_sourced_bindings

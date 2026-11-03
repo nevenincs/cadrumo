@@ -42,7 +42,7 @@ from ..modelo_bindings_renta_expenses import _accrual_coverage_gap
 from ..renta_imputation import ImputationCriteria, ImputationFilingHistory
 from ..renta_income_diagnostics import rectification_diagnostics
 from ..renta_income_evidence import income_withheld_amount
-from ..renta_ledger import _classify_renta_transaction
+from ..renta_ledger_classification import classify_renta_transaction
 from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .ledger_source_mesh_support import BUCKET_ID, InMemoryTransactionCatalogueRepository, cash_criterion_profile
@@ -357,7 +357,7 @@ def _expense(row: Transaction, invoice: Invoice, operation: PinnedAuthorityOpera
             "purchase_invoice_evidence_id": invoice.invoice_id,
         }
     )
-    return _classify_renta_transaction(
+    return classify_renta_transaction(
         linked,
         invoices=build_invoice_catalogue((invoice,)),
         bucket_id=BUCKET_ID,

@@ -117,15 +117,13 @@ from .renta_imputation import (
 )
 from .renta_income_diagnostics import received_rectificativa_reading
 from .renta_ledger import (
-    CategoryRuleRefusal,
     RentaCategoryDeductionRules,
     accepted_row_advisory,
-    refusal_issue_reason,
     resolve_category_deduction_rules,
-    resolve_category_rule,
     resolve_iva_deduction_ratio,
     resolve_residence_ccaa,
 )
+from .renta_ledger_classification import CategoryRuleRefusal, refusal_issue_reason, resolve_category_rule
 from .renta_ledger_evidence import purchase_invoice_evidence_payload, refund_left_to_correction_netting
 from .renta_ledger_models import RentaLedgerAggregationIssue
 

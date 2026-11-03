@@ -27,7 +27,7 @@ from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..errors import AggregationValidationError
-from ..oss_ioss import OssIossLedgerSourceResolver
+from ..oss_ioss_resolver import OssIossLedgerSourceResolver
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .oss_rate_change_support import (
     RateChange,

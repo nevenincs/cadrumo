@@ -461,7 +461,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     from cadrumo.application.aggregation.modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
-    from cadrumo.application.aggregation.oss_ioss import OssIossLedgerSourceResolver
+    from cadrumo.application.aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
 
     catalogue_read_ports = InvoiceCatalogueReadPorts(
         invoice_reader=InvoiceCatalogueReadAdapter(repository=invoice_repo),

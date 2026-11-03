@@ -40,7 +40,7 @@ from ....domain.iva.schema import InvoiceKind, IvaRateKind
 from ...exchange_rate_provider import bind_exchange_rate_provider_factory
 from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
 from ..errors import AggregationValidationError
-from ..oss_ioss import _candidate_for_invoice_line
+from ..oss_ioss_resolver import _candidate_for_invoice_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

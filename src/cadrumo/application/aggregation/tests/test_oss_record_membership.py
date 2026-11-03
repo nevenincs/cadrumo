@@ -20,7 +20,7 @@ from ....domain.iva.schema import InvoiceKind, IvaRateKind
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
-from .. import oss_ioss
+from .. import oss_ioss_resolver
 from ..errors import AggregationValidationError
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 
@@ -113,8 +113,8 @@ def _context(operation: PinnedAuthorityOperation, revision: ModeloRevision | Non
     )
 
 
-def _resolver(reader: _InvoiceReader) -> oss_ioss.OssIossLedgerSourceResolver:
-    return oss_ioss.OssIossLedgerSourceResolver(
+def _resolver(reader: _InvoiceReader) -> oss_ioss_resolver.OssIossLedgerSourceResolver:
+    return oss_ioss_resolver.OssIossLedgerSourceResolver(
         ports=InvoiceCatalogueReadPorts(invoice_reader=reader, transaction_reader=_Transactions())
     )
 
@@ -185,8 +185,8 @@ def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAut
         context = context.model_copy(update={"work_unit_id": None})
     if scenario == "explicit-candidates":
         ports = InvoiceCatalogueReadPorts(invoice_reader=reader, transaction_reader=_Transactions())
-        projection = oss_ioss.project_oss_ioss_invoices_from_repositories(period=context.period, ports=ports)
-        resolver = oss_ioss.OssIossLedgerSourceResolver(ports=ports, candidates=projection.candidates)
+        projection = oss_ioss_resolver.project_oss_ioss_invoices_from_repositories(period=context.period, ports=ports)
+        resolver = oss_ioss_resolver.OssIossLedgerSourceResolver(ports=ports, candidates=projection.candidates)
     resolution = resolver.resolve(context)
     assert resolution.closed_record_row_sets == ()
 

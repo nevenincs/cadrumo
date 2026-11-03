@@ -26,7 +26,8 @@ from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..business_proportion import business_proportion
 from ..errors import AggregationPeriodError
-from ..renta_ledger import _business_fact_amount, _renta_direction_for, _resolve_annual_period
+from ..renta_ledger import _resolve_annual_period
+from ..renta_ledger_classification import business_fact_amount, renta_direction_for
 from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 from .renta_income_aggregation_support import _period
 
@@ -54,32 +55,32 @@ def test_resolve_annual_period_rejects_already_validated_quarterly_period() -> N
 
 
 # ---------------------------------------------------------------------------
-# _renta_direction_for — map ledger direction (+ invoice) to renta direction
+# renta_direction_for — map ledger direction (+ invoice) to renta direction
 # ---------------------------------------------------------------------------
 
 
 def test_renta_direction_for_outgoing_maps_to_outgoing_expense() -> None:
     """OUTGOING flows out — always an expense."""
-    assert _renta_direction_for(TransactionDirection.OUTGOING, None) is RentaExpenseDirection.OUTGOING_EXPENSE
+    assert renta_direction_for(TransactionDirection.OUTGOING, None) is RentaExpenseDirection.OUTGOING_EXPENSE
     assert (
-        _renta_direction_for(TransactionDirection.OUTGOING, "invoice-id-here") is RentaExpenseDirection.OUTGOING_EXPENSE
+        renta_direction_for(TransactionDirection.OUTGOING, "invoice-id-here") is RentaExpenseDirection.OUTGOING_EXPENSE
     )
 
 
 def test_renta_direction_for_incoming_with_invoice_is_a_refund() -> None:
     """An INCOMING row attached to an outbound invoice is a refund."""
-    assert _renta_direction_for(TransactionDirection.INCOMING, "invoice-id-here") is RentaExpenseDirection.REFUND
+    assert renta_direction_for(TransactionDirection.INCOMING, "invoice-id-here") is RentaExpenseDirection.REFUND
 
 
 def test_renta_direction_for_incoming_without_invoice_is_unsupported() -> None:
     """An INCOMING row with no invoice anchor cannot map to a Renta
     expense direction — the helper must return None so the caller can
     flag the row as unsupported."""
-    assert _renta_direction_for(TransactionDirection.INCOMING, None) is None
+    assert renta_direction_for(TransactionDirection.INCOMING, None) is None
 
 
 # ---------------------------------------------------------------------------
-# business_proportion + _business_fact_amount - classify then scale magnitude
+# business_proportion + business_fact_amount - classify then scale magnitude
 # ---------------------------------------------------------------------------
 
 
@@ -89,7 +90,7 @@ def test_business_proportion_business_classification_preserves_magnitude() -> No
 
     assert proportion is not None
     assert proportion == Decimal("1")
-    assert _business_fact_amount(Decimal("100.00"), proportion) == Decimal("100.00")
+    assert business_fact_amount(Decimal("100.00"), proportion) == Decimal("100.00")
 
 
 def test_business_proportion_mixed_classification_scales_by_business_pct() -> None:
@@ -100,14 +101,14 @@ def test_business_proportion_mixed_classification_scales_by_business_pct() -> No
     assert proportion is not None
     assert proportion == Decimal("0.60")
 
-    result = _business_fact_amount(Decimal("100.00"), proportion)
+    result = business_fact_amount(Decimal("100.00"), proportion)
 
     assert result == Decimal("60.00")
 
 
 def test_business_fact_amount_rejects_negative_amount() -> None:
     with pytest.raises(ValueError, match="non-negative magnitude"):
-        _business_fact_amount(Decimal("-100.00"), Decimal("0.30"))
+        business_fact_amount(Decimal("-100.00"), Decimal("0.30"))
 
 
 def test_business_proportion_personal_classification_returns_none() -> None:
