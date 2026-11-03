@@ -321,11 +321,14 @@ class TestSubmittedFileObservation:
             # refuses inputs["05"]/inputs["15"] without matching binding entries.
             prior_payments_value = observed_values.get(_M130_PAGOS_FRACCIONADOS_ANTERIORES_CASILLA, Decimal("0"))
             carry_forward_value = observed_values.get(_M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA, Decimal("0"))
+            # A casilla the AEAT design prints no box for, such as the working figure behind the
+            # art. 32.1 reduction, has no observation in the file and claims nothing.
             input_values = {
                 casilla.id: observed_values[casilla.id]
                 for casilla in snapshot.revision.casillas
                 if casilla.input_kind != InputKind.COMPUTED
                 and casilla.id != _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA
+                and casilla.id in observed_values
             }
             binding = next(
                 item
