@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
-import { screen, userEvent, waitFor } from "storybook/test";
+import { expect, screen, userEvent, waitFor } from "storybook/test";
 import profiles from "@/dev/fixtures/userProfile.json";
 import type {
   ProfileField,
@@ -89,35 +89,46 @@ type Args = Omit<ComponentProps<typeof ProfileEditor>, "draft"> & {
   kind: ProfileDraft["kind"];
   /** Only the start date, where the story is about that one detail. */
   startDateOnly?: boolean;
+  /** Only the detail the profile serves at this path, as a lone detail. */
+  onlyPath?: string;
 };
 
 const draftOf = (
-  { kind, startDateOnly }: Pick<Args, "kind" | "startDateOnly">,
+  {
+    kind,
+    startDateOnly,
+    onlyPath,
+  }: Pick<Args, "kind" | "startDateOnly" | "onlyPath">,
   locale: string,
 ): ProfileDraft => {
-  const fields = startDateOnly
-    ? [
-        detail(
-          locale,
-          "censo.activity_start_date",
-          "start_date",
-          "2026-03-15",
-          {
-            row: false,
-          },
-        ),
-      ]
-    : fieldsIn(locale);
+  const fields = onlyPath
+    ? [detail(locale, onlyPath, "choice", null, { row: false })]
+    : startDateOnly
+      ? [
+          detail(
+            locale,
+            "censo.activity_start_date",
+            "start_date",
+            "2026-03-15",
+            {
+              row: false,
+            },
+          ),
+        ]
+      : fieldsIn(locale);
   const section = sectionIn(locale, fields);
   return { base: baseIn(section), fields, section, kind };
 };
 
 const meta = {
   title: "Shell/Profile/Profile editor",
-  render: ({ kind, startDateOnly, ...args }, { globals }) => (
+  render: ({ kind, startDateOnly, onlyPath, ...args }, { globals }) => (
     <ProfileEditor
       {...args}
-      draft={draftOf({ kind, startDateOnly }, String(globals.locale ?? "en"))}
+      draft={draftOf(
+        { kind, startDateOnly, onlyPath },
+        String(globals.locale ?? "en"),
+      )}
     />
   ),
   parameters: { surface: "chrome" },
@@ -167,6 +178,29 @@ export const UnfinishedDate: Story = {
       }),
     );
     await waitFor(() => screen.getByRole("alert"));
+  },
+};
+
+export const ServedChoices: Story = {
+  name: "A detail the profile serves as a choice: the declaration type, its answers as served",
+  args: { kind: "field", onlyPath: "renta_filing.declaration_type" },
+  play: async ({ globals }) => {
+    const locale = String(globals.locale ?? "en");
+    const served = detail(
+      locale,
+      "renta_filing.declaration_type",
+      "choice",
+      null,
+      { row: false },
+    );
+    // The profile serves the answers; the editor offers exactly those.
+    if (served.choices.length === 0)
+      throw new Error("the profile serves no answers for the declaration type");
+    const offered = (await screen.findAllByRole("option")).map(
+      (option) => option.textContent,
+    );
+    for (const choice of served.choices)
+      expect(offered).toContain(choice.label);
   },
 };
 

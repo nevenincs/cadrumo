@@ -13,8 +13,8 @@ import { useStrings } from "../../../shell/strings";
 // declaration asks, with its answers and, where the answer states amounts,
 // those amounts. A question that cannot be answered says why in the
 // application's words, and the reasons are told apart by their mark: a result
-// not yet known, a settlement the official file cannot state and a period or
-// amount that rules the answer out are not the same thing. A figure the
+// not yet known, a settlement Cadrumo does not compute and a period or amount
+// that rules the answer out are not the same thing. A figure the
 // application worked out where no official rule fixes it is marked advisory
 // and says why. The window words only its own frame and sends the answers it
 // was given choices for.

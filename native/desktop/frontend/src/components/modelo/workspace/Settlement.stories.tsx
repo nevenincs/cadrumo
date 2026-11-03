@@ -159,7 +159,7 @@ export const NothingLeftForTheSecond: Story = {
 };
 
 export const SettlementUnsupported: Story = {
-  name: "A settlement the official file cannot state: refused, not offered",
+  name: "A settlement Cadrumo does not compute: refused, not offered",
   render: (_, { globals }) => (
     <Offer state="unsupported" locale={language(globals)} />
   ),

@@ -20,7 +20,7 @@ import { HOUSEHOLD_SCENARIOS } from "./householdFixture";
 import { BORRADOR_SCENARIOS } from "./borradorFixture";
 import { ELECTION_SCENARIOS } from "./imputationElectionFixture";
 import { LEDGER_SHAPES } from "./ledgerFixture";
-import { MODELO_SHAPES } from "./modeloFixture";
+import { modeloShape } from "./modeloFixture";
 import { findScenario, type Scenario } from "./scenarios";
 import { SETUP_SHAPES } from "./setupFixture";
 
@@ -106,7 +106,7 @@ function readParams() {
       (state) => state === params.get("household"),
     ),
     // How the made-up declarations answer.
-    modelo: MODELO_SHAPES.find((shape) => shape === params.get("modelo")),
+    modelo: modeloShape(params.get("modelo")),
     // What the made-up profile states for the imputation election.
     election: ELECTION_SCENARIOS.find(
       (state) => state === params.get("election"),

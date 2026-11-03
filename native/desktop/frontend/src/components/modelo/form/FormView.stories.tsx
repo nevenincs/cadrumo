@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
-import { waitFor } from "storybook/test";
+import { expect, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
@@ -336,3 +336,69 @@ export const RentaActivityIncome: Story = {
     />
   ),
 };
+
+/** The row of `box` once the form draws it. */
+const rowOf = (canvasElement: HTMLElement, box: string) =>
+  waitFor(
+    () => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        `[data-key="c:${box}"]`,
+      );
+      if (!found) throw new Error(`box ${box} is not drawn yet`);
+      return found;
+    },
+    { timeout: 15_000 },
+  );
+
+/** A Renta story that chooses `box` and checks the row it draws. */
+function renta(
+  name: string,
+  box: string,
+  check: (row: HTMLElement) => void,
+): Story {
+  return {
+    name,
+    render: (_, { globals }) => (
+      <Form
+        modelo="100"
+        shape="renta-pay"
+        locale={language(globals)}
+        setup={(session) => {
+          session.selectBox(box);
+        }}
+      />
+    ),
+    play: async ({ canvasElement }) => check(await rowOf(canvasElement, box)),
+  };
+}
+
+/** A calculated box carries a figure and offers no field to type into. */
+const worked = (row: HTMLElement) =>
+  expect(row.querySelector("input, textarea")).toBeNull();
+/** An answer the filer gives is offered as something to edit. */
+const given = (row: HTMLElement) =>
+  expect(row.querySelector("input, textarea, select, button")).not.toBeNull();
+
+export const RentaBeforeCompensation: Story = renta(
+  "100 · the base before compensation is worked out, not typed",
+  "0500",
+  worked,
+);
+
+export const RentaAmountCompensated: Story = renta(
+  "100 · the amount compensated is worked out from the chain, not typed",
+  "1391",
+  worked,
+);
+
+export const RentaEarlierNegativeBase: Story = renta(
+  "100 · the earlier negative base is the filer's to give",
+  "1388",
+  given,
+);
+
+export const RentaDirectEstimation: Story = renta(
+  "100 · whether direct estimation is normal is the filer's to give",
+  "0168",
+  given,
+);

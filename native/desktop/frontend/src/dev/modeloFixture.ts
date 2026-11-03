@@ -118,7 +118,11 @@ import { hex64 } from "./fixtures/ledger";
  * no child in the household (`renta-alone`) and a couple whose return is not
  * calculated (`renta-uncalculated`) have that comparison refused as the
  * application refused it. The first filer's is refused for want of the family
- * situation. */
+ * situation. `renta-parent` is a single parent who has not said whether they
+ * live with the child's other parent, so the comparison names the box that
+ * depends on it, and `renta-parentapart` is the same parent stating that they
+ * do not, so it compares. `renta-y<year>` is the couple of another supported
+ * filing year, read for that year's own edition. */
 export const MODELO_SHAPES = [
   "wallet",
   "fixture",
@@ -158,12 +162,27 @@ export const MODELO_SHAPES = [
   "renta-spouseless",
   "renta-alone",
   "renta-uncalculated",
+  "renta-parent",
+  "renta-parentapart",
   "refused",
   "unknown",
   "unavailable",
   "slow",
 ] as const;
-export type ModeloShape = (typeof MODELO_SHAPES)[number];
+/** The shapes a scenario names, and `renta-y<year>`: the couple of a filing
+ * year the registry supports, whose own edition decides what its Modelo 100
+ * offers. Which years exist is what the stored envelopes hold, so no year is
+ * listed here. */
+export type ModeloShape = (typeof MODELO_SHAPES)[number] | `renta-y${number}`;
+
+/** The shape a scenario's `modelo` parameter names, if it names one. */
+export function modeloShape(name: string | null): ModeloShape | undefined {
+  if (name === null) return undefined;
+  return (
+    MODELO_SHAPES.find((shape) => shape === name) ??
+    (/^renta-y\d+$/.test(name) ? (name as ModeloShape) : undefined)
+  );
+}
 
 /** The declaration whose later states the `checked` and `filed` shapes read. */
 const LATER_STATES = "130-1T";

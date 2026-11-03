@@ -382,7 +382,7 @@ const REFUSALS: readonly {
     profile: false,
   },
   {
-    state: "undeclared",
+    state: "not-declared",
     token: "not_declared",
     profile: false,
   },
@@ -398,6 +398,11 @@ const REFUSALS: readonly {
   },
   {
     state: "uncredited",
+    token: "unresolved_boxes",
+    profile: false,
+  },
+  {
+    state: "parent",
     token: "unresolved_boxes",
     profile: false,
   },
@@ -469,6 +474,26 @@ export const EntriesUnknown: Story = {
 export const UnresolvedBoxes: Story = {
   ...refusalStory(REFUSALS[7]!),
   name: "Boxes without a value: named, never read as zero",
+};
+
+export const SingleParentCohabitationUnstated: Story = {
+  ...refusalStory(REFUSALS[8]!),
+  name: "Single parent who has not said whether they live with the other parent: the box that depends on it is named, never read as zero",
+  play: async (context) => {
+    await refusalStory(REFUSALS[8]!).play?.(context);
+    const detail = await servedRefusal("parent", language(context.globals));
+    expect(contextOf(detail, "casilla_ids").split(",")).toContain("0461");
+  },
+};
+
+export const SingleParentApart: Story = {
+  name: "Single parent who lives apart from the other parent: the joint reduction is applied and joint filing comes out lower",
+  render: (_, { globals }) => (
+    <Element state="parentapart" locale={language(globals)} kind="answer" />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    await checkAnswer(canvasElement, "parentapart", language(globals), "joint");
+  },
 };
 
 export const WithoutAProfilePage: Story = {

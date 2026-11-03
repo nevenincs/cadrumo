@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
+import type { LedgerErrorDetail } from "../../../shell/ledger";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract";
@@ -14,6 +15,22 @@ import { WorkspaceScreen } from "./WorkspaceScreen";
 // the register, which the workspace opens.
 
 const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
+
+const refusals = import.meta.glob<LedgerErrorDetail>(
+  "../../../dev/fixtures/modelo/refusal-project-quarter-incomplete-*.json",
+  { import: "default" },
+);
+
+/** The refusal the application recorded for the quarter that cannot yet give
+ * its result, in `locale`. */
+async function incomplete(locale: OutputLanguage): Promise<LedgerErrorDetail> {
+  const load =
+    refusals[
+      `../../../dev/fixtures/modelo/refusal-project-quarter-incomplete-${locale}.json`
+    ];
+  if (!load) throw new Error("No refusal is stored for the incomplete quarter");
+  return load();
+}
 
 const language = (globals: Record<string, unknown>) =>
   String(globals.locale ?? "en") as OutputLanguage;
@@ -291,7 +308,7 @@ export const EstimateOffersOpeningTheQuarter: Story = {
   render: (_, { globals }) => (
     <Credits shape="renta" locale={language(globals)} onOpenWork={openedWork} />
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, globals }) => {
     openedWork.mockClear();
     await reachTheIncompleteQuarter(canvasElement);
     const step = await offeredStep(canvasElement, "open_work");
@@ -302,8 +319,13 @@ export const EstimateOffersOpeningTheQuarter: Story = {
       "[data-estimate] [role=status]",
     );
     expect(sentence?.textContent?.trim()).not.toBe("");
-    expect(sentence?.textContent).toMatch(/\b13\b/);
-    expect(sentence?.textContent).toMatch(/\b15\b/);
+    // The sentence is the one the application served, and it names the open
+    // inputs the refusal carries.
+    const served = await incomplete(language(globals));
+    expect(sentence?.textContent?.trim()).toBe(served.refusal_words);
+    const inputs = served.context.find((fact) => fact.key === "inputs");
+    expect(String(inputs?.value)).not.toBe("");
+    expect(sentence?.textContent).toContain(String(inputs?.value));
     expect(step.textContent?.trim()).not.toBe("");
     expect(step.textContent).not.toMatch(/operator\.|`|--/);
     expect(canvasElement.querySelector("[data-estimate-result]")).toBeNull();

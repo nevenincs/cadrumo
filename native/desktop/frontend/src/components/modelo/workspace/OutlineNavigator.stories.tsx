@@ -147,13 +147,13 @@ export const RentaKeptInProfile: Story = {
 };
 
 export const RentaKeptApart: Story = {
-  name: "100 · the lists kept apart from the pages lead to their pages",
+  name: "100 · the lists kept apart from the pages, the answers among them, lead to their pages",
   render: (_, { globals }) => (
     <Navigator modelo="100" shape="renta" locale={language(globals)} />
   ),
   play: async ({ canvasElement }) => {
     const outline = await tree(canvasElement);
-    const kinds = ["unplaced", "working_figures"];
+    const kinds = ["unplaced", "working_figures", "answers"];
     for (const kind of kinds) {
       const apart = outline.querySelector<HTMLElement>(
         `[data-outline-kind="${kind}"]`,
