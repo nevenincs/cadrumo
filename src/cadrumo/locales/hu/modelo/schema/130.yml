@@ -1,6 +1,17 @@
 modelo:
   schema:
     '130':
+      binding:
+        modelo-130-resultados-negativos-anteriores:
+          help: A 130-as nyomtatvány idei korábbi bevallásaidban szereplő, eddig le
+            nem vont negatív eredmények előjel nélküli összege.
+          label: Az év korábbi negyedéveinek még le nem vont negatív eredményei ·
+            15. rovat
+        x-d5p70phee1p6atj9dtqn6nrpclgn4nr5cdnmsrrdd5hluob3ehkncqbkf5fmspbkbtkmsorfdlig:
+          help: A 13. rovat csak akkor csökkenti a befizetést, ha ez a jövedelem legfeljebb
+            12 000 euró volt. Add meg az előző évi bevallásod ezen rovatainak összegét.
+          label: Az előző évi jövedelemadó-bevallás gazdasági tevékenységből származó
+            nettó jövedelme · 100-as nyomtatvány, 0224, 1479, 1553 és 1577 rovat
       construct:
         modelo-130-direct-estimation-instalment:
           field:

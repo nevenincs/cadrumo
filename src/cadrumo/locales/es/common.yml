@@ -10298,6 +10298,7 @@ workspace:
       unknown: Cadrumo no ha podido ver si terminó; puede que sí. No se vuelve a hacer.
         Vuelve a leer la declaración antes de seguir.
     page:
+      answers: Respuestas que usa el cálculo
       calculation_details: Detalles del cálculo, no impresos en el modelo
       does_not_apply: '{page}: no aplica en este periodo'
       only_if_it_applies: solo si se te aplica

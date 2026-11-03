@@ -2,9 +2,10 @@
 
 The outline is the layout's declared one where the revision declares it, and
 otherwise one group per page, headed as the page is. Either way every section of
-the form's pages stands in exactly one group. The two lists the form keeps apart
-from its pages, the casillas the layout could not position and the working
-figures, each stand in a group of their own when they are not empty. A
+the form's pages stands in exactly one group. The lists the form keeps apart
+from its pages, the casillas the layout could not position, the working
+figures and the answers no page takes, each stand in a group of their own when
+they are not empty. A
 navigator drawn from the outline can therefore neither hide nor repeat a part
 of the form, and the form's counts are the sum of the groups' counts: the outline
 reaches every box any tally counts, and the outline counts nothing else.
@@ -30,9 +31,10 @@ from .work_form_models import (
     section_fields,
 )
 
-#: The headings of the two lists kept apart from the pages, which the form's window also names its pages by.
+#: The headings of the lists kept apart from the pages, which the form's window also names its pages by.
 _UNPLACED_HEADING_KEY: Final[str] = "workspace.modelo.page.unplaced"
 _WORKING_FIGURES_HEADING_KEY: Final[str] = "workspace.modelo.page.calculation_details"
+_ANSWERS_HEADING_KEY: Final[str] = "workspace.modelo.page.answers"
 
 
 def form_outline(
@@ -43,18 +45,19 @@ def form_outline(
     filed: bool,
     unplaced: tuple[ModeloFormUnplacedField, ...] = (),
     working_figures: tuple[ModeloFormField, ...] = (),
+    answers: tuple[ModeloFormField, ...] = (),
 ) -> tuple[ModeloFormOutlineGroup, ...]:
     """Group ``pages``' sections by the ``declared`` outline, or by page when the layout declares none.
 
-    The ``unplaced`` casillas and the ``working_figures`` follow as a group each,
-    in the order the form draws them, when they are not empty.
+    The ``unplaced`` casillas, the ``working_figures`` and the ``answers`` follow
+    as a group each, in the order the form draws them, when they are not empty.
     """
     grouped = (
         _declared_groups(declared, pages, language, filed=filed)
         if declared
         else tuple(_group(page.id, page.heading, page.sections, filed=filed) for page in pages if page.sections)
     )
-    return grouped + _kept_apart_groups(unplaced, working_figures, language, filed=filed)
+    return grouped + _kept_apart_groups(unplaced, working_figures, answers, language, filed=filed)
 
 
 def _declared_groups(
@@ -75,6 +78,7 @@ def _declared_groups(
 def _kept_apart_groups(
     unplaced: tuple[ModeloFormUnplacedField, ...],
     working_figures: tuple[ModeloFormField, ...],
+    answers: tuple[ModeloFormField, ...],
     language: OutputLanguage,
     *,
     filed: bool,
@@ -82,6 +86,7 @@ def _kept_apart_groups(
     kept_apart = (
         (ModeloFormOutlineKind.UNPLACED, _UNPLACED_HEADING_KEY, tuple(item.field for item in unplaced)),
         (ModeloFormOutlineKind.WORKING_FIGURES, _WORKING_FIGURES_HEADING_KEY, working_figures),
+        (ModeloFormOutlineKind.ANSWERS, _ANSWERS_HEADING_KEY, answers),
     )
     return tuple(
         ModeloFormOutlineGroup(

@@ -1,6 +1,18 @@
 modelo:
   schema:
     '130':
+      binding:
+        modelo-130-resultados-negativos-anteriores:
+          help: El importe, sin signo, de los resultados negativos de tus autoliquidaciones
+            anteriores del modelo 130 de este ejercicio que no hayas deducido antes.
+          label: Resultados negativos de trimestres anteriores del ejercicio pendientes
+            de deducir · casilla 15
+        x-d5p70phee1p6atj9dtqn6nrpclgn4nr5cdnmsrrdd5hluob3ehkncqbkf5fmspbkbtkmsorfdlig:
+          help: La casilla 13 solo reduce el pago si estos rendimientos fueron iguales
+            o inferiores a 12.000 euros. Indica la suma de estas casillas de tu declaración
+            del ejercicio anterior.
+          label: Rendimientos netos de actividades económicas de la declaración del
+            ejercicio anterior · Modelo 100, casillas 0224, 1479, 1553 y 1577
       construct:
         modelo-130-direct-estimation-instalment:
           field:

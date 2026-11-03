@@ -5,6 +5,12 @@ modelo:
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Yes: normal method (N). No: simplified method (S).'
           label: Do you use normal direct estimation?
+        renta-modelo-130-pagos-fraccionados:
+          help: 'Part of box 0604: what you paid with this year''s Form 130 returns.'
+          label: Instalment payments made this year · Form 130
+        renta-modelo-131-pagos-fraccionados:
+          help: 'Part of box 0604: what you paid with this year''s Form 131 returns.'
+          label: Instalment payments made this year · Form 131
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -8160,12 +8166,6 @@ modelo:
               label: Autonomous Community of residence
             ZRUE2:
               label: EU or EEA country of the spouse
-            eo-agraria-reduccion-irregularidad-base:
-              label: Net income from agricultural, livestock, or forestry activity
-                with a generation period exceeding two years, or classed by regulation
-                as obtained in a markedly irregular manner over time, imputed to this
-                single tax period (the base to which the 30% reduction of article
-                32.1 of the Tax Law applies; amount declared by the filer - see box
             base-liq-neg-general-base-positiva-compensable:
               label: Positive general net taxable base available for offsetting earlier
                 negative bases (art. 50.3 LIRPF) [internal]
@@ -8181,6 +8181,12 @@ modelo:
             base-liq-neg-general-em4-aplicada-maxima:
               label: 'Negative general net taxable base from four years earlier: maximum
                 applicable offset (art. 50.3 LIRPF) [internal]'
+            eo-agraria-reduccion-irregularidad-base:
+              label: Net income from agricultural, livestock, or forestry activity
+                with a generation period exceeding two years, or classed by regulation
+                as obtained in a markedly irregular manner over time, imputed to this
+                single tax period (the base to which the 30% reduction of article
+                32.1 of the Tax Law applies; amount declared by the filer - see box
                 [1554])
           construct:
             renta-dependent-modelos:

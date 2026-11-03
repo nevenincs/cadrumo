@@ -41,6 +41,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormGridColumn,
     ModeloFormGridRow,
     ModeloFormOrigin,
+    ModeloFormOutlineKind,
     ModeloFormRepeatingBlock,
     ModeloFormSection,
     ModeloFormStanding,
@@ -65,6 +66,8 @@ from .grid import CasillaListRecords, GridRowPlace, GridShape, GridSlot
 from .vocabulary import DONE_MARK, AttentionCounts, WorkbenchMark, field_counts
 
 DETAILS_PAGE_ID: Final[str] = "details"
+#: The page of the answers the calculation reads that no page of the form takes.
+ANSWERS_PAGE_ID: Final[str] = "answers"
 _RATIO_DATA_TYPE: Final[str] = "ratio"
 _COLUMN_UNNAMED_LOCALE_KEY: Final[str] = "workspace.modelo.grid.column_unnamed"
 _NAMELESS_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
@@ -128,7 +131,7 @@ class StagedDisplay:
 
 @dataclass(frozen=True, slots=True)
 class WorkbenchPage:
-    """One page of the workbench: an official page, or the calculation details."""
+    """One page of the workbench: an official page, the calculation details, or the answers no page takes."""
 
     id: str
     heading: ModeloFormText
@@ -194,7 +197,7 @@ def _section_record_attention(form: ModeloWorkForm, columns: set[str], *, asked:
 
 
 def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
-    """Return the form's pages, followed by the calculation details when it has any."""
+    """Return the form's pages, then the calculation details and the answers no page takes, each when it has any."""
     recorded = form.filing is not None
     pages = [
         WorkbenchPage(
@@ -218,6 +221,13 @@ def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
                 sections=(),
                 details=details,
                 recorded=recorded,
+            )
+        )
+    answers = next((group for group in form.outline if group.kind is ModeloFormOutlineKind.ANSWERS), None)
+    if answers is not None:
+        pages.append(
+            WorkbenchPage(
+                id=ANSWERS_PAGE_ID, heading=answers.heading, sections=(), details=form.answers, recorded=recorded
             )
         )
     return tuple(pages)
@@ -567,6 +577,7 @@ def _repeating_blocks(page: WorkbenchPage) -> tuple[ModeloFormRepeatingBlock, ..
 
 
 __all__ = [
+    "ANSWERS_PAGE_ID",
     "DETAILS_PAGE_ID",
     "StagedDisplay",
     "WorkbenchFilter",

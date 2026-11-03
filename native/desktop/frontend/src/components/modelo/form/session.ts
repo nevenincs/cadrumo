@@ -262,7 +262,8 @@ export function entrySubmission(
 }
 
 /** Where a box is drawn: the page and section holding it. Boxes not yet
- * placed and working figures have pages of their own. */
+ * placed, working figures and the answers no page takes have pages of their
+ * own. */
 export type PlacedField = {
   field: PublicModeloFormField;
   key: string;
@@ -272,6 +273,7 @@ export type PlacedField = {
 
 export const UNPLACED_PAGE = "unplaced";
 export const WORKING_FIGURES_PAGE = "working-figures";
+export const ANSWERS_PAGE = "answers";
 
 /** Every box of the form in reading order. */
 export function placedFields(form: PublicModeloWorkForm): PlacedField[] {
@@ -296,6 +298,7 @@ export function placedFields(form: PublicModeloWorkForm): PlacedField[] {
     add(unplaced.field, UNPLACED_PAGE, UNPLACED_PAGE);
   for (const field of form.working_figures)
     add(field, WORKING_FIGURES_PAGE, WORKING_FIGURES_PAGE);
+  for (const field of form.answers) add(field, ANSWERS_PAGE, ANSWERS_PAGE);
   return out;
 }
 

@@ -41,9 +41,10 @@ test("the header states the read model's result, deadline and next action", asyn
   const header = workspace(target).locator("header").first();
   await expect(header).toContainText("Result: could not be calculated");
   await expect(header).toContainText("Deadline passed on Apr 20, 2026");
+  // The quarter's earlier-filing answers are still to be given, so filling them in comes first.
   await expect(
     header.getByRole("button", {
-      name: label("workspace.modelo.next_button.resolve"),
+      name: label("workspace.modelo.next_button.fill"),
     }),
   ).toBeVisible();
   // What blocks filing is counted on the Check tab, in words for the reader.
@@ -57,7 +58,8 @@ test("the header states the read model's result, deadline and next action", asyn
 test("resolving opens the check's lines, and a line opens its box", async ({
   page: target,
 }) => {
-  await openDeclaration(target, "130", "checked");
+  // Checked again after its box 06 was typed over the ledger's figure: what blocks filing is that divergence.
+  await openDeclaration(target, "130", "stale");
   await workspace(target)
     .getByRole("button", {
       name: label("workspace.modelo.next_button.resolve"),
@@ -70,10 +72,10 @@ test("resolving opens the check's lines, and a line opens its box", async ({
   const blocks = workspace(target).getByRole("region", {
     name: label("workspace.modelo.level.blocks"),
   });
-  await expect(blocks).toContainText("modelo 100");
+  await expect(blocks).toContainText("Two sources hold different values");
   await blocks
     .getByRole("button")
-    .filter({ has: target.getByText("19", { exact: true }) })
+    .filter({ has: target.getByText("06", { exact: true }) })
     .click();
   await expect(tab(target, "desktop.modelo.view.form")).toHaveAttribute(
     "aria-selected",
@@ -328,6 +330,7 @@ test("the lists kept apart from the pages are reached through the outline", asyn
     (group) => group.kind !== "sections",
   );
   expect(apart.map((group) => group.kind).sort()).toEqual([
+    "answers",
     "unplaced",
     "working_figures",
   ]);

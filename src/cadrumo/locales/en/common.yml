@@ -10100,6 +10100,7 @@ workspace:
       unknown: Cadrumo could not see whether this finished; it may have. It is not
         done again. Read the declaration again before you go on.
     page:
+      answers: Answers the calculation uses
       calculation_details: Calculation details, not printed on the form
       does_not_apply: '{page}: does not apply this period'
       only_if_it_applies: only if it applies to you

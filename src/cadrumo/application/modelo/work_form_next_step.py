@@ -123,6 +123,7 @@ def applicable_fields(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
     ]
     kept.extend(form.working_figures)
     kept.extend(item.field for item in form.unplaced)
+    kept.extend(form.answers)
     return tuple(kept)
 
 

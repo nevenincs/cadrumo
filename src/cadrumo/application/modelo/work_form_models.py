@@ -874,13 +874,15 @@ class ModeloFormPage(ModeloFormBase):
 
 
 class ModeloFormOutlineKind(StrEnum):
-    """What an outline group gathers: sections of the form's pages, or one of the two lists kept apart from them."""
+    """What an outline group gathers: sections of the form's pages, or one of the lists kept apart from them."""
 
     SECTIONS = "sections"
     #: The working figures: boxes the calculation produces that the form does not print.
     WORKING_FIGURES = "working_figures"
     #: The casillas the layout could not position.
     UNPLACED = "unplaced"
+    #: The answers the calculation reads that no field of the pages takes.
+    ANSWERS = "answers"
 
 
 class ModeloFormOutlineGroup(ModeloFormBase):
@@ -888,9 +890,9 @@ class ModeloFormOutlineGroup(ModeloFormBase):
 
     A ``sections`` group names :attr:`ModeloFormSection.id` values in
     ``section_ids``, every section of the form's pages in exactly one such
-    group. A ``working_figures`` or ``unplaced`` group gathers the form's list of
-    that name, has no section ids, and is present only when the list is not
-    empty. ``counts`` roll up the boxes the group gathers; ``applies`` is
+    group. A ``working_figures``, ``unplaced`` or ``answers`` group gathers the
+    form's list of that name, has no section ids, and is present only when the
+    list is not empty. ``counts`` roll up the boxes the group gathers; ``applies`` is
     ``True`` when any of its sections applies, ``False`` when none does, and
     ``None`` otherwise. A list kept apart from the pages always applies.
     """
@@ -991,6 +993,9 @@ class ModeloWorkForm(ModeloFormBase):
     outline: tuple[ModeloFormOutlineGroup, ...]
     working_figures: tuple[ModeloFormField, ...] = ()
     unplaced: tuple[ModeloFormUnplacedField, ...] = ()
+    #: The binding overrides the edit surface admits that no field of the pages, the working figures or the
+    #: unplaced list takes, each as a field of its own, so every answer the declaration can be given has a place.
+    answers: tuple[ModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...] = ()
     counts: ModeloFormCounts
     progress: ModeloWorkProgress
@@ -1051,7 +1056,23 @@ class ModeloWorkForm(ModeloFormBase):
         if self.edit_closure is not None and self.edit_admitted:
             raise ValueError("a form closed to editing admits no edit")
         self._require_outline_to_match_the_form()
+        self._require_answers_to_be_taken_nowhere_else()
         return self
+
+    def _require_answers_to_be_taken_nowhere_else(self) -> None:
+        if not self.answers:
+            return
+        answered = [field.address for field in self.answers]
+        if not all(isinstance(address, ModeloFormBindingAddressV1) for address in answered):
+            raise ValueError("an answer is a binding no other field of the form takes")
+        taken = {
+            address_key(address)
+            for field in self.fields()[: -len(self.answers)]
+            for address in (field.address, field.edit_address)
+        }
+        keys = [address_key(address) for address in answered]
+        if len(set(keys)) != len(keys) or taken.intersection(keys):
+            raise ValueError("an answer is a binding no other field of the form takes")
 
     def _require_outline_to_match_the_form(self) -> None:
         outlined = [section_id for group in self.outline for section_id in group.section_ids]
@@ -1060,6 +1081,7 @@ class ModeloWorkForm(ModeloFormBase):
         kept_apart = {
             ModeloFormOutlineKind.WORKING_FIGURES: bool(self.working_figures),
             ModeloFormOutlineKind.UNPLACED: bool(self.unplaced),
+            ModeloFormOutlineKind.ANSWERS: bool(self.answers),
         }
         for kind, present in kept_apart.items():
             if sum(1 for group in self.outline if group.kind is kind) != int(present):
@@ -1096,13 +1118,14 @@ class ModeloWorkForm(ModeloFormBase):
         )
 
     def fields(self) -> tuple[ModeloFormField, ...]:
-        """Return every field once, in reading order: pages, then working figures, then unplaced."""
+        """Return every field once, in reading order: pages, then working figures, unplaced, then answers."""
         collected: list[ModeloFormField] = []
         for page in self.pages:
             for section in page.sections:
                 collected.extend(section_fields(section))
         collected.extend(self.working_figures)
         collected.extend(item.field for item in self.unplaced)
+        collected.extend(self.answers)
         return tuple(collected)
 
 
@@ -1135,7 +1158,7 @@ def map_section_fields(
 
 
 def map_form_fields(form: ModeloWorkForm, change: Callable[[ModeloFormField], ModeloFormField]) -> ModeloWorkForm:
-    """Return ``form`` with ``change`` applied to every field: on its pages, its working figures and unplaced."""
+    """Return ``form`` with ``change`` applied to every field: on its pages, working figures, unplaced and answers."""
     return form.model_copy(
         update={
             "pages": tuple(
@@ -1144,6 +1167,7 @@ def map_form_fields(form: ModeloWorkForm, change: Callable[[ModeloFormField], Mo
             ),
             "working_figures": tuple(change(field) for field in form.working_figures),
             "unplaced": tuple(item.model_copy(update={"field": change(item.field)}) for item in form.unplaced),
+            "answers": tuple(change(field) for field in form.answers),
         }
     )
 

@@ -46,6 +46,7 @@ import {
   editKey,
   editsAdmitted,
   fieldKey,
+  ANSWERS_PAGE,
   UNPLACED_PAGE,
   WORKING_FIGURES_PAGE,
   type FormSession,
@@ -60,8 +61,8 @@ import type { EditRequest } from "./ValueCell";
 // fields say how each one reads and whether it may be changed. Sections far
 // from the view wait to be drawn.
 
-/** A page as the form draws it: an official page, or one of the two lists
- * the read keeps apart from the pages. */
+/** A page as the form draws it: an official page, or one of the lists the
+ * read keeps apart from the pages. */
 type DrawnPage = {
   id: string;
   heading: string;
@@ -88,10 +89,9 @@ function drawnPages(form: PublicModeloWorkForm, t: Translate): DrawnPage[] {
   }));
   const apart = (
     id: string,
-    key: string,
+    heading: string,
     fields: PublicModeloFormField[],
   ): DrawnPage => {
-    const heading = t(key);
     return {
       id,
       heading,
@@ -117,7 +117,7 @@ function drawnPages(form: PublicModeloWorkForm, t: Translate): DrawnPage[] {
     pages.push(
       apart(
         UNPLACED_PAGE,
-        "workspace.modelo.page.unplaced",
+        t("workspace.modelo.page.unplaced"),
         form.unplaced.map((unplaced) => unplaced.field),
       ),
     );
@@ -125,10 +125,14 @@ function drawnPages(form: PublicModeloWorkForm, t: Translate): DrawnPage[] {
     pages.push(
       apart(
         WORKING_FIGURES_PAGE,
-        "workspace.modelo.page.calculation_details",
+        t("workspace.modelo.page.calculation_details"),
         form.working_figures,
       ),
     );
+  // The answers are headed as the read's outline heads them.
+  const answers = form.outline.find((group) => group.kind === "answers");
+  if (answers && form.answers.length)
+    pages.push(apart(ANSWERS_PAGE, answers.heading.text, form.answers));
   return pages;
 }
 

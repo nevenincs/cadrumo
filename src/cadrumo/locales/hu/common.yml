@@ -10241,6 +10241,7 @@ workspace:
       unknown: A Cadrumo nem látta, hogy ez befejeződött-e; lehet, hogy igen. Nem
         ismétli meg. Mielőtt folytatod, olvasd be újra a bevallást.
     page:
+      answers: A számítás által használt válaszok
       calculation_details: A számítás részletei, a nyomtatványon nem szerepelnek
       does_not_apply: '{page}: ebben az időszakban nem alkalmazandó'
       only_if_it_applies: csak ha rád vonatkozik

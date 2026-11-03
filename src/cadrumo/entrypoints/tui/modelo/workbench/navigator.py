@@ -181,6 +181,7 @@ def presented_form(form: ModeloWorkForm, *, recorded: bool = False) -> ModeloWor
     if recorded:
         update["working_figures"] = tuple(_settled(field) for field in form.working_figures)
         update["unplaced"] = tuple(item.model_copy(update={"field": _settled(item.field)}) for item in form.unplaced)
+        update["answers"] = tuple(_settled(field) for field in form.answers)
     return form.model_copy(update=update)
 
 

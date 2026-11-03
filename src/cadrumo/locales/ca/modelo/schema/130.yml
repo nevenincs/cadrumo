@@ -1,6 +1,18 @@
 modelo:
   schema:
     '130':
+      binding:
+        modelo-130-resultados-negativos-anteriores:
+          help: L'import, sense signe, dels resultats negatius de les teves autoliquidacions
+            anteriors del model 130 d'aquest exercici que encara no hagis deduït.
+          label: Resultats negatius de trimestres anteriors de l'exercici pendents
+            de deduir · casella 15
+        x-d5p70phee1p6atj9dtqn6nrpclgn4nr5cdnmsrrdd5hluob3ehkncqbkf5fmspbkbtkmsorfdlig:
+          help: La casella 13 només redueix el pagament si aquests rendiments van
+            ser iguals o inferiors a 12.000 euros. Indica la suma d'aquestes caselles
+            de la teva declaració de l'exercici anterior.
+          label: Rendiments nets d'activitats econòmiques de la declaració de l'exercici
+            anterior · Model 100, caselles 0224, 1479, 1553 i 1577
       construct:
         modelo-130-direct-estimation-instalment:
           field:

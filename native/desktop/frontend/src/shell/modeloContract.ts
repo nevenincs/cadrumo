@@ -4785,12 +4785,12 @@ export type ModeloFormOrigin =
  * in order.
  *
  * A `sections` group names `id` values in `section_ids`, every section of the
- * form's pages in exactly one such group. A `working_figures` or `unplaced`
- * group gathers the form's list of that name, has no section ids, and is
- * present only when the list is not empty. `counts` roll up the boxes the
- * group gathers; `applies` is `True` when any of its sections applies, `False`
- * when none does, and `None` otherwise. A list kept apart from the pages
- * always applies.
+ * form's pages in exactly one such group. A `working_figures`, `unplaced` or
+ * `answers` group gathers the form's list of that name, has no section ids,
+ * and is present only when the list is not empty. `counts` roll up the boxes
+ * the group gathers; `applies` is `True` when any of its sections applies,
+ * `False` when none does, and `None` otherwise. A list kept apart from the
+ * pages always applies.
  */
 export type ModeloFormOutlineGroup = {
   id: string;
@@ -4803,9 +4803,10 @@ export type ModeloFormOutlineGroup = {
 
 /**
  * What an outline group gathers: sections of the form's pages, or one of the
- * two lists kept apart from them.
+ * lists kept apart from them.
  */
-export type ModeloFormOutlineKind = "sections" | "working_figures" | "unplaced";
+export type ModeloFormOutlineKind =
+  "sections" | "working_figures" | "unplaced" | "answers";
 
 /**
  * The unit a rate is stated in.
@@ -8032,6 +8033,7 @@ export type PublicModeloWorkForm = {
   outline: ModeloFormOutlineGroup[];
   working_figures: PublicModeloFormField[];
   unplaced: PublicModeloFormUnplacedField[];
+  answers: PublicModeloFormField[];
   result_addresses: CasillaId[];
   counts: ModeloFormCounts;
   progress: ModeloWorkProgress;

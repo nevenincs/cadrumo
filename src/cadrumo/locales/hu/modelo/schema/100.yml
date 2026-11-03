@@ -5,6 +5,12 @@ modelo:
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Igen: normál módozat (N). Nem: egyszerűsített módozat (S).'
           label: A közvetlen becslés normál módozatát alkalmazza?
+        renta-modelo-130-pagos-fraccionados:
+          help: 'A 0604. rovat része: amit az idei 130-as bevallásaiddal befizettél.'
+          label: Az évben befizetett előlegek · 130-as nyomtatvány
+        renta-modelo-131-pagos-fraccionados:
+          help: 'A 0604. rovat része: amit az idei 131-es bevallásaiddal befizettél.'
+          label: Az évben befizetett előlegek · 131-es nyomtatvány
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -8343,12 +8349,6 @@ modelo:
               label: Lakóhelyi autonóm közösség
             ZRUE2:
               label: a házastárs EU- vagy EGT-országa
-            eo-agraria-reduccion-irregularidad-base:
-              label: A mezőgazdasági, állattenyésztési vagy erdészeti tevékenységből
-                származó, két évnél hosszabb keletkezési idejű, vagy jogszabályilag
-                nyilvánvalóan rendhagyó módon szerzettnek minősített nettó jövedelmek,
-                ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
-                32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
             base-liq-neg-general-base-positiva-compensable:
               label: Korábbi negatív adóalapokkal kompenzálható pozitív általános
                 nettó adóalap (az LIRPF 50.3. cikke) [belső]
@@ -8364,6 +8364,12 @@ modelo:
             base-liq-neg-general-em4-aplicada-maxima:
               label: 'Negatív általános nettó adóalap a negyedik megelőző évből: alkalmazható
                 maximális kompenzáció (az LIRPF 50.3. cikke) [belső]'
+            eo-agraria-reduccion-irregularidad-base:
+              label: A mezőgazdasági, állattenyésztési vagy erdészeti tevékenységből
+                származó, két évnél hosszabb keletkezési idejű, vagy jogszabályilag
+                nyilvánvalóan rendhagyó módon szerzettnek minősített nettó jövedelmek,
+                ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
+                32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
                 által bevallott összeg - lásd az [1554] rovatot)
           construct:
             renta-dependent-modelos:

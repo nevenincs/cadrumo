@@ -32,10 +32,13 @@ Classification is decided once, here, so every frontend shows the same states:
   not be worked out, which then reads as not calculated rather than as zero,
 * whether the declaration is recorded as filed, which closes it to editing and
   leaves nothing counted as still to do, and
+* every answer the edit surface admits: a binding override no field of the
+  layout takes becomes a field of its own among the answers, so a declaration
+  never asks for a value the filer has nowhere to give, and
 * the navigation outline: the layout's declared groups of sections, or one
   group per page, each with its headings, applicability and attention counts,
-  and a group each for the unplaced casillas and the working figures, so that
-  the form's counts are the sum of the outline's.
+  and a group each for the unplaced casillas, the working figures and the
+  answers, so that the form's counts are the sum of the outline's.
 
 "Entered by the filer" is only ever claimed from the operator's own recorded
 entries. A revision that predates them has an unknown operator record, and a
@@ -46,7 +49,8 @@ Either way the field says the value is unattributed, because a recalculation
 returns it to what the calculation gives.
 
 The form is total: every casilla of the revision appears exactly once, on a
-page, among the working figures, or in the unplaced list with its reason. A
+page, among the working figures, or in the unplaced list with its reason, and
+every admitted binding override is taken by a field once. A
 layout that would drop or repeat a casilla is refused rather than rendered.
 
 See Also:
@@ -76,6 +80,7 @@ from .calculation_notes import UNWORKED_BOX_REASONS
 from .edit_models import (
     ModeloEditPermittedSurfaceEntryV1,
 )
+from .work_form_answers import answer_fields
 from .work_form_context import WorkFormContext
 from .work_form_counts import count_work_form_fields
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure
@@ -213,7 +218,9 @@ def build_modelo_work_form(
     usable_layout = layout
     pages, working, unplaced = _project_layout(usable_layout, context)
     form_fields = [field for page in pages for section in page.sections for field in section_fields(section)]
-    every_field = [*form_fields, *working, *(item.field for item in unplaced)]
+    laid_out = [*form_fields, *working, *(item.field for item in unplaced)]
+    answers = list(answer_fields(usable_layout, context, laid_out))
+    every_field = [*laid_out, *answers]
     form = _assemble_work_form(
         review=review,
         snapshot=snapshot,
@@ -222,6 +229,7 @@ def build_modelo_work_form(
         pages=pages,
         working=working,
         unplaced=unplaced,
+        answers=answers,
         every_field=every_field,
         language=language,
         entered_casilla_ids=entered_casilla_ids,
@@ -319,6 +327,7 @@ def _assemble_work_form(
     pages: tuple[ModeloFormPage, ...],
     working: list[ModeloFormField],
     unplaced: list[ModeloFormUnplacedField],
+    answers: list[ModeloFormField],
     every_field: list[ModeloFormField],
     language: OutputLanguage,
     entered_casilla_ids: frozenset[CasillaId] | None,
@@ -350,9 +359,11 @@ def _assemble_work_form(
             filed=context.filed,
             unplaced=tuple(unplaced),
             working_figures=tuple(working),
+            answers=tuple(answers),
         ),
         working_figures=tuple(working),
         unplaced=tuple(unplaced),
+        answers=tuple(answers),
         result_addresses=result_casilla_ids(context),
         counts=count_work_form_fields(every_field, filed=context.filed),
         progress=review.progress,

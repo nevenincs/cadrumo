@@ -4,8 +4,9 @@ The 2025 Modelo 100 declares its outline and the headings of its technical
 parts in reviewed generator input; every other layout falls back to one group
 per page. Either way the outline names every section once and rolls up the
 attention its boxes ask for. The casillas the layout could not position and the
-working figures each stand in a group of their own, so that every tally of the
-form is the sum of its outline groups' tallies.
+working figures each stand in a group of their own, and so do the answers no
+page takes, so that every tally of the form is the sum of its outline groups'
+tallies.
 """
 
 from __future__ import annotations
@@ -287,6 +288,7 @@ def test_every_tally_of_the_form_is_the_sum_of_its_outline_groups(
         for kind, listed in (
             (ModeloFormOutlineKind.WORKING_FIGURES, form.working_figures),
             (ModeloFormOutlineKind.UNPLACED, form.unplaced),
+            (ModeloFormOutlineKind.ANSWERS, form.answers),
         )
         if listed
     }
@@ -294,6 +296,8 @@ def test_every_tally_of_the_form_is_the_sum_of_its_outline_groups(
         assert kept_apart[ModeloFormOutlineKind.WORKING_FIGURES].counts.total == len(form.working_figures)
     if form.unplaced:
         assert kept_apart[ModeloFormOutlineKind.UNPLACED].counts.total == len(form.unplaced)
+    if form.answers:
+        assert kept_apart[ModeloFormOutlineKind.ANSWERS].counts.total == len(form.answers)
 
 
 def test_a_failed_working_figure_is_counted_and_reached_through_the_working_figures_group(

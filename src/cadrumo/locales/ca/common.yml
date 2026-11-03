@@ -10290,6 +10290,7 @@ workspace:
       unknown: Cadrumo no ha pogut veure si ha acabat; potser sí. No es torna a fer.
         Torna a llegir la declaració abans de continuar.
     page:
+      answers: Respostes que fa servir el càlcul
       calculation_details: Detalls del càlcul, no impresos al model
       does_not_apply: '{page}: no s''aplica en aquest període'
       only_if_it_applies: només si se t'aplica

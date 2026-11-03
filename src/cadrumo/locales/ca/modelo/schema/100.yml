@@ -5,6 +5,14 @@ modelo:
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Sí: modalitat normal (N). No: modalitat simplificada (S).'
           label: Apliques la modalitat normal d'estimació directa?
+        renta-modelo-130-pagos-fraccionados:
+          help: 'Part de la casella 0604: el que vas ingressar amb les autoliquidacions
+            del model 130 d''aquest exercici.'
+          label: Pagaments fraccionats ingressats en l'exercici · Model 130
+        renta-modelo-131-pagos-fraccionados:
+          help: 'Part de la casella 0604: el que vas ingressar amb les autoliquidacions
+            del model 131 d''aquest exercici.'
+          label: Pagaments fraccionats ingressats en l'exercici · Model 131
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -8272,14 +8280,6 @@ modelo:
               label: Comunitat Autònoma de residència
             ZRUE2:
               label: País UE o EEE del cònjuge
-            eo-agraria-reduccion-irregularidad-base:
-              label: Rendiments nets de l'activitat agrícola, ramadera o forestal
-                amb període de generació superior a dos anys, o qualificats reglamentàriament
-                com obtinguts de forma notòriament irregular en el temps, imputats
-                en aquest únic període impositiu (base sobre la qual s'aplica la reducció
-                del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
-                per l'operador - vegeu la casella [1554])
-          construct:
             base-liq-neg-general-base-positiva-compensable:
               label: Base liquidable general positiva compensable amb bases negatives
                 d'exercicis anteriors (art. 50.3 LIRPF) [intern]
@@ -8295,6 +8295,14 @@ modelo:
             base-liq-neg-general-em4-aplicada-maxima:
               label: 'Base liquidable general negativa del quart exercici anterior:
                 compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
+            eo-agraria-reduccion-irregularidad-base:
+              label: Rendiments nets de l'activitat agrícola, ramadera o forestal
+                amb període de generació superior a dos anys, o qualificats reglamentàriament
+                com obtinguts de forma notòriament irregular en el temps, imputats
+                en aquest únic període impositiu (base sobre la qual s'aplica la reducció
+                del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
+                per l'operador - vegeu la casella [1554])
+          construct:
             renta-dependent-modelos:
               field:
                 title: Modelo 100 2022 retencions, pagaments fraccionats i retencions

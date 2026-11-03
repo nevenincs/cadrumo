@@ -1,6 +1,17 @@
 modelo:
   schema:
     '130':
+      binding:
+        modelo-130-resultados-negativos-anteriores:
+          help: The amount, without sign, of the negative results of your earlier
+            Form 130 returns for this year that you have not deducted before.
+          label: Negative results of this year's earlier quarters not yet deducted
+            · box 15
+        x-d5p70phee1p6atj9dtqn6nrpclgn4nr5cdnmsrrdd5hluob3ehkncqbkf5fmspbkbtkmsorfdlig:
+          help: Box 13 reduces the payment only when this income was 12,000 euros
+            or less. Give the sum of these boxes of your return for the previous year.
+          label: Net income from economic activities in last year's income tax return
+            · Form 100, boxes 0224, 1479, 1553 and 1577
       construct:
         modelo-130-direct-estimation-instalment:
           field:

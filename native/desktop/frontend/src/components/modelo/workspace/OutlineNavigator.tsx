@@ -19,7 +19,11 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { calm } from "../form/FieldRow";
-import { UNPLACED_PAGE, WORKING_FIGURES_PAGE } from "../form/session";
+import {
+  ANSWERS_PAGE,
+  UNPLACED_PAGE,
+  WORKING_FIGURES_PAGE,
+} from "../form/session";
 
 // The form's outline as the read model serves it: its groups in order, the
 // sections each gathers, and what each still asks of the filer. Nothing here
@@ -56,6 +60,8 @@ function apartPage(group: ModeloFormOutlineGroup): string | null {
       return UNPLACED_PAGE;
     case "working_figures":
       return WORKING_FIGURES_PAGE;
+    case "answers":
+      return ANSWERS_PAGE;
     default:
       return null;
   }

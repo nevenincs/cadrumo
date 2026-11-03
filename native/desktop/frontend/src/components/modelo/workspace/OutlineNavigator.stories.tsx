@@ -205,8 +205,27 @@ export const PageDefaultHidden: Story = {
 };
 
 export const SinglePage: Story = {
-  name: "130 · one page, one group",
+  name: "130 · one page, one group, then the answers",
   render: (_, { globals }) => (
     <Navigator modelo="130" locale={language(globals)} />
   ),
+};
+
+export const AnswersKeptApart: Story = {
+  name: "130 · the answers no page takes lead to their page",
+  render: (_, { globals }) => (
+    <Navigator modelo="130" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement }) => {
+    const outline = await tree(canvasElement);
+    const answers = outline.querySelector<HTMLElement>(
+      '[data-outline-kind="answers"]',
+    );
+    expect(answers).not.toBeNull();
+    expect(answers).not.toHaveAttribute("aria-expanded");
+    await userEvent.click(answers!);
+    await waitFor(() =>
+      expect(answers).toHaveAttribute("aria-current", "location"),
+    );
+  },
 };

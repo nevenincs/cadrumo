@@ -350,6 +350,7 @@ class PublicModeloWorkForm(BaseModel):
     outline: tuple[ModeloFormOutlineGroup, ...]
     working_figures: tuple[PublicModeloFormField, ...]
     unplaced: tuple[PublicModeloFormUnplacedField, ...]
+    answers: tuple[PublicModeloFormField, ...] = ()
     result_addresses: tuple[CasillaId, ...]
     counts: ModeloFormCounts
     progress: ModeloWorkProgress

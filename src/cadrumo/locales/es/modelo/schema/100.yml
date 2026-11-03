@@ -5,6 +5,14 @@ modelo:
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Sí: modalidad normal (N). No: modalidad simplificada (S).'
           label: ¿Aplicas la modalidad normal de estimación directa?
+        renta-modelo-130-pagos-fraccionados:
+          help: 'Parte de la casilla 0604: lo que ingresaste con las autoliquidaciones
+            del modelo 130 de este ejercicio.'
+          label: Pagos fraccionados ingresados en el ejercicio · Modelo 130
+        renta-modelo-131-pagos-fraccionados:
+          help: 'Parte de la casilla 0604: lo que ingresaste con las autoliquidaciones
+            del modelo 131 de este ejercicio.'
+          label: Pagos fraccionados ingresados en el ejercicio · Modelo 131
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -8383,14 +8391,6 @@ modelo:
               label: Comunidad Autónoma de residencia
             ZRUE2:
               label: País UE o EEE del cónyuge
-            eo-agraria-reduccion-irregularidad-base:
-              label: Rendimientos netos de la actividad agrícola, ganadera o forestal
-                con período de generación superior a dos años, o calificados reglamentariamente
-                como obtenidos de forma notoriamente irregular en el tiempo, imputados
-                en este único período impositivo (base sobre la que se aplica la reducción
-                del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
-                por el operador - véase la casilla [1554])
-          construct:
             base-liq-neg-general-base-positiva-compensable:
               label: Base liquidable general positiva compensable con bases negativas
                 de ejercicios anteriores (art. 50.3 LIRPF) [interno]
@@ -8406,6 +8406,14 @@ modelo:
             base-liq-neg-general-em4-aplicada-maxima:
               label: 'Base liquidable general negativa del cuarto ejercicio anterior:
                 compensación máxima aplicable (art. 50.3 LIRPF) [interno]'
+            eo-agraria-reduccion-irregularidad-base:
+              label: Rendimientos netos de la actividad agrícola, ganadera o forestal
+                con período de generación superior a dos años, o calificados reglamentariamente
+                como obtenidos de forma notoriamente irregular en el tiempo, imputados
+                en este único período impositivo (base sobre la que se aplica la reducción
+                del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
+                por el operador - véase la casilla [1554])
+          construct:
             renta-dependent-modelos:
               field:
                 title: 'Modelo 100 2022: retenciones, pagos fraccionados y retenciones

@@ -228,7 +228,9 @@ def test_a_declared_layout_accounts_for_every_casilla_exactly_once(
 
     keys = [address_key(field.address) for field in form.fields()]
     assert form.layout_provenance is ModeloFormLayoutProvenance.GENERATED
-    assert len(keys) == len(set(keys)) == len(snapshot.revision.casillas)
+    # Every casilla once, and beside them the answers no casilla of this layout takes.
+    assert len(keys) == len(set(keys)) == len(snapshot.revision.casillas) + len(form.answers)
+    assert sum(1 for key in keys if key[0] == "casilla") == len(snapshot.revision.casillas)
     assert [
         str(field.address.casilla_id)
         for field in form.working_figures
@@ -297,7 +299,7 @@ def test_a_declared_alias_is_read_only_and_keeps_one_address(
     assert copied.value == primary.value
     assert copied.label == primary.label
     keys = [address_key(field.address) for field in form.fields()]
-    assert len(keys) == len(set(keys)) == len(snapshot.revision.casillas)
+    assert len(keys) == len(set(keys)) == len(snapshot.revision.casillas) + len(form.answers)
 
 
 def test_before_any_calculation_each_input_kind_reads_its_own_origin(
@@ -406,5 +408,5 @@ def test_counts_roll_up_from_sections_to_the_form(
     page = form.pages[0]
 
     assert page.counts.total == sum(section.counts.total for section in page.sections)
-    assert form.counts.total == len(snapshot.revision.casillas)
+    assert form.counts.total == len(snapshot.revision.casillas) + len(form.answers)
     assert form.counts.needs_input == sum(1 for field in form.fields() if field.origin is ModeloFormOrigin.NEEDS_INPUT)

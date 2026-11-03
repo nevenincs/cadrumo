@@ -12,6 +12,7 @@ from ...domain.calculations.registry.manual_input_selector import ManualInputPro
 from ...domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_form_layouts import FormPlacementDefinition
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.filing.schema import ModeloValueKind
 from .printed_boxes import printed_box_number
@@ -196,7 +197,7 @@ def _binding_value_state(
     elif raw is None:
         origin = (
             ModeloFormOrigin.NEEDS_INPUT
-            if binding_id in context.calculation_required.binding_ids
+            if binding_id in context.calculation_required.binding_ids or _feeds_an_unworked_box(binding_id, context)
             else ModeloFormOrigin.OPTIONAL_EMPTY
         )
     elif binding.source is not BindingSourceKind.MANUAL_INPUT:
@@ -204,6 +205,25 @@ def _binding_value_state(
     else:
         origin = held_value_origin(value, required=binding_id in context.calculation_required.binding_ids)
     return value, origin, typed_unattributed
+
+
+def _feeds_an_unworked_box(binding_id: str, context: WorkFormContext) -> bool:
+    """Whether the calculation could not work out a box this binding feeds, so its empty value is not optional.
+
+    A box the calculation computes that holds nothing after a calculation, or one
+    a calculation note says could not be worked out, waits on what feeds it.
+    """
+    if context.review.calculation_revision_id is None:
+        return False
+    for casilla_id in context.fed_casillas.get(binding_id, ()):
+        row = context.rows.get(casilla_id)
+        if casilla_id in context.unworked or (
+            row is not None
+            and row.declared_input_kind is InputKind.COMPUTED
+            and row.realised_kind is ModeloValueKind.EMPTY
+        ):
+            return True
+    return False
 
 
 def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFormField:
