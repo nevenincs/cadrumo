@@ -67,6 +67,7 @@ from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, 
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ..operations.next_step import OperationNextStepErrorMixin
 from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.projections import fact_value
 from ._calculation_source_staging import add_expected_missing_binding_diagnostics
@@ -83,6 +84,7 @@ from .calculation_source_guards import reject_caller_overrides_of_source_binding
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .profile_binding import resolve_profile_sourced_bindings
 from .profile_readiness_gate import load_modelo_work_profile
+from .projection_next_steps import calculate_work_step, create_work_step
 from .work_lifecycle import list_work_units
 from .work_profile import ModeloWorkProfile
 
@@ -133,18 +135,24 @@ class ModeloProjectionError(CadrumoError):
         )
 
 
-class ModeloProjectNoM130UnitsError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError):
+class ModeloProjectNoM130UnitsError(
+    OperationNextStepErrorMixin, TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError
+):
     """Raised when a year-end projection has no quarterly Modelo 130 work units.
 
-    The verdict names creating the first quarter as the remedy, so a frontend
-    offers that action without any command in the sentence it shows.
+    The verdict names creating the first quarter as the remedy, and the error
+    serves the same remedy as a typed step, so a frontend offers that action
+    without any command in the sentence it shows.
     """
 
 
-class ModeloProjectNoM130RevisionsError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError):
+class ModeloProjectNoM130RevisionsError(
+    OperationNextStepErrorMixin, TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError
+):
     """Raised when Modelo 130 work units exist but have no calculation revisions.
 
-    The verdict names calculating the earliest uncalculated quarter as the remedy.
+    The verdict names calculating the earliest uncalculated quarter as the
+    remedy, and the error serves the same remedy as a typed step.
     """
 
 
@@ -485,11 +493,14 @@ def _no_quarter_remedy(year: int, *, declaration: _ProjectionDeclaration) -> Pre
     ).verdict
 
 
+def _earliest_quarter(units: list[WorkUnit]) -> WorkUnit:
+    return min(units, key=lambda unit: unit.period.quarter_ordinal or 0)
+
+
 def _uncalculated_quarter_remedy(
-    year: int, *, declaration: _ProjectionDeclaration, uncalculated: list[WorkUnit]
+    year: int, *, declaration: _ProjectionDeclaration, earliest: WorkUnit
 ) -> PreconditionVerdict:
     """The verdict that names calculating the earliest quarter that has no calculation."""
-    earliest = min(uncalculated, key=lambda unit: unit.period.quarter_ordinal or 0)
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key="modelo.project",
         scenario_id="modelo.project.m130_quarters.no_calculation",
@@ -526,6 +537,9 @@ def _m130_quarter_revisions(
             context={"year": year},
             translated_message="application.modelo.projection_words.no_m130_units",
             precondition_verdict=_no_quarter_remedy(year, declaration=declaration),
+            next_step=create_work_step(
+                modelo=declaration.source_modelo, period=Period.from_year_and_code(year, StandardPeriodCode.Q1.value)
+            ),
         )
 
     m130_quarters: dict[Period, CalculationRevision] = {}
@@ -535,10 +549,12 @@ def _m130_quarter_revisions(
             m130_quarters[unit.period] = revisions[-1]
 
     if not m130_quarters:
+        earliest = _earliest_quarter(m130_units)
         raise ModeloProjectNoM130RevisionsError(
             context={"year": year},
             translated_message="application.modelo.projection_words.no_m130_revisions",
-            precondition_verdict=_uncalculated_quarter_remedy(year, declaration=declaration, uncalculated=m130_units),
+            precondition_verdict=_uncalculated_quarter_remedy(year, declaration=declaration, earliest=earliest),
+            next_step=calculate_work_step(earliest),
         )
     return m130_quarters
 

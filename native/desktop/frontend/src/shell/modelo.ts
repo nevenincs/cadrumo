@@ -43,6 +43,27 @@ export function isModeloDefinition(id: string): id is ModeloDefinitionId {
  * the TUI names "operator:tui-modelo". */
 export const MODELO_ACTOR = "operator:desktop-modelo";
 
+/** The request that creates the declaration of one modelo, filing year and
+ * period. */
+export function createWorkRequest(target: {
+  modelo: string;
+  filing_year: number;
+  period_code: string;
+}): ModeloRequest<"modelo.work.create"> {
+  return {
+    modelo: target.modelo,
+    period: { filing_year: target.filing_year, code: target.period_code },
+    actor: MODELO_ACTOR,
+  };
+}
+
+/** The request that calculates the declaration one work unit holds. */
+export function calculateWorkRequest(
+  workUnitId: string,
+): ModeloRequest<"modelo.work.calculate"> {
+  return { work_unit_id: workUnitId, actor: MODELO_ACTOR };
+}
+
 /** A definition whose request is the edit's financial body, sent through
  * `edit`, never through `submit`. */
 export type ModeloEditDefinitionId = (typeof MODELO_EDIT_DEFINITIONS)[number];

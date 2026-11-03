@@ -194,3 +194,81 @@ export const EstimateRefused: Story = {
     expect(canvasElement.querySelector("[data-estimate-result]")).toBeNull();
   },
 };
+
+/** The step button a refusal offers, once the estimate has answered. */
+const offeredStep = (canvasElement: HTMLElement, kind: string) =>
+  waitFor(
+    () => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        `[data-estimate-step=${kind}]`,
+      );
+      if (!found) throw new Error(`the ${kind} step is not offered yet`);
+      return found;
+    },
+    { timeout: 15_000 },
+  );
+
+/** The estimate is asked for again: no refusal stands and the ask is on
+ * offer. */
+const askedAgain = (canvasElement: HTMLElement) =>
+  waitFor(
+    () => {
+      const button = canvasElement.querySelector<HTMLButtonElement>(
+        "[data-estimate-ask]",
+      );
+      if (!button || button.disabled)
+        throw new Error("the estimate cannot be asked for again yet");
+      if (canvasElement.querySelector("[data-estimate] [role=status]"))
+        throw new Error("the refusal still stands");
+      expect(canvasElement.querySelector("[data-estimate-step]")).toBeNull();
+    },
+    { timeout: 15_000 },
+  );
+
+export const EstimateOffersCreation: Story = {
+  name: "Estimate: no quarterly declaration, creating the first quarter is offered in the application's words",
+  render: (_, { globals }) => (
+    <Credits shape="renta" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement }) => {
+    await ask(canvasElement);
+    const step = await offeredStep(canvasElement, "create_work");
+    // The sentence on the button is the application's, never an action
+    // identifier or a command.
+    expect(step.textContent?.trim()).not.toBe("");
+    expect(step.textContent).not.toMatch(/operator\.|`|--/);
+    expect(canvasElement.querySelector("[data-estimate-result]")).toBeNull();
+  },
+};
+
+export const EstimateOffersCalculation: Story = {
+  name: "Estimate: the first quarter created, calculating it is offered, and the estimate is asked for again after each step",
+  render: (_, { globals }) => (
+    <Credits shape="renta" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement }) => {
+    await ask(canvasElement);
+    await userEvent.click(await offeredStep(canvasElement, "create_work"));
+    await askedAgain(canvasElement);
+    await userEvent.click(
+      canvasElement.querySelector<HTMLElement>("[data-estimate-ask]")!,
+    );
+    // The declaration just created is the one to calculate.
+    await userEvent.click(await offeredStep(canvasElement, "calculate_work"));
+    await askedAgain(canvasElement);
+    await userEvent.click(
+      canvasElement.querySelector<HTMLElement>("[data-estimate-ask]")!,
+    );
+    // What the quarter still lacks is the application's to say, and it names
+    // no further step.
+    await waitFor(
+      () =>
+        expect(
+          canvasElement.querySelector("[data-estimate] [role=status]"),
+        ).not.toBeNull(),
+      { timeout: 15_000 },
+    );
+    expect(canvasElement.querySelector("[data-estimate-step]")).toBeNull();
+    expect(canvasElement.querySelector("[data-estimate-result]")).toBeNull();
+  },
+};

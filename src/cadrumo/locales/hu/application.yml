@@ -2591,6 +2591,9 @@ application:
           ingresos: Eddigi bevétel (Modelo 130 bevallások)
           pagos_fraccionados: Befizetett előlegfizetések (Modelo 130 bevallások)
           rendimiento_neto: Eddigi nettó jövedelem (Modelo 130 bevallások)
+      next_step:
+        calculate_work: 'Számítsd ki: %{modelo}, %{period}'
+        create_work: 'Hozd létre: %{modelo}, %{period}'
       no_m130_revisions: A(z) %{year} adóév Modelo 130 bevallásait még nem számoltad
         ki, így nincs miből becslést készíteni az éves bevallásról. Számolj ki egy
         negyedévet, majd kérd újra a becslést.

@@ -2637,6 +2637,9 @@ application:
           pagos_fraccionados: Pagaments fraccionats ingressats (declaracions del Modelo
             130)
           rendimiento_neto: Rendiment net fins ara (declaracions del Modelo 130)
+      next_step:
+        calculate_work: Calcula el %{modelo}, %{period}
+        create_work: Crea el %{modelo}, %{period}
       no_m130_revisions: Les declaracions del Modelo 130 de l'exercici %{year} encara
         no s'han calculat, de manera que no hi ha base per estimar la declaració anual.
         Calcula un trimestre i torna a demanar l'estimació.

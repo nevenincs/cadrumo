@@ -136,6 +136,24 @@ const refusalWords = (language: Language) =>
 const ask = (panel: ReturnType<Page["locator"]>) =>
   panel.locator("[data-estimate-ask]");
 
+type ServedStep =
+  | { kind: "create_work"; words: string }
+  | { kind: "calculate_work"; work_unit_id: string; words: string };
+
+/** The step the application named on the refusal recorded as `refusal`. */
+const servedStep = (refusal: string, language: Language): ServedStep =>
+  (
+    JSON.parse(
+      readFileSync(
+        new URL(
+          `../../src/dev/fixtures/modelo/refusal-${refusal}-${language}.json`,
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ) as { next_step: ServedStep }
+  ).next_step;
+
 for (const language of LANGUAGES) {
   test(`credits with no payer record are unresolved and never zero (${language})`, async ({
     page: target,
@@ -320,3 +338,50 @@ for (const language of LANGUAGES) {
     await expect(section.locator("[data-estimate-result]")).toHaveCount(0);
   });
 }
+
+for (const language of LANGUAGES) {
+  test(`a refusal for want of a quarter offers creating it in the application's words (${language})`, async ({
+    page: target,
+  }) => {
+    const panel = await openCredits(target, "renta", language);
+    await ask(panel).click();
+    const section = panel.locator("[data-estimate]");
+    const served = servedStep("project-no-quarters", language);
+    expect(served.kind).toBe("create_work");
+    const step = section.locator("[data-estimate-step=create_work]");
+    await expect(step).toHaveText(served.words);
+    // The words name no command and no action identifier.
+    expect(served.words).not.toMatch(/operator\.|`|--/);
+    await expect(section.locator("[data-estimate-result]")).toHaveCount(0);
+  });
+}
+
+test("choosing the offered steps creates the quarter, calculates it, and offers the estimate again", async ({
+  page: target,
+}) => {
+  const panel = await openCredits(target, "renta");
+  const section = panel.locator("[data-estimate]");
+  // Nothing exists yet: the creation is offered.
+  await ask(panel).click();
+  await expect(section.getByRole("status")).toContainText(refusalWords("en"));
+  await section.locator("[data-estimate-step=create_work]").click();
+  // The step ran; the refusal is gone and the estimate is asked for again.
+  await expect(section.locator("[data-estimate-step]")).toHaveCount(0);
+  await expect(section.getByRole("status")).toHaveCount(0);
+  await expect(ask(panel)).toBeEnabled();
+  // The quarter exists but is not calculated: its calculation is offered.
+  await ask(panel).click();
+  const calculation = servedStep("project-no-calculation", "en");
+  expect(calculation.kind).toBe("calculate_work");
+  const calculate = section.locator("[data-estimate-step=calculate_work]");
+  await expect(calculate).toHaveText(calculation.words);
+  await calculate.click();
+  await expect(section.locator("[data-estimate-step]")).toHaveCount(0);
+  await expect(ask(panel)).toBeEnabled();
+  // The quarter is calculated; what it still lacks is the application's to
+  // say, and no step is offered for it.
+  await ask(panel).click();
+  await expect(section.getByRole("status")).toBeVisible();
+  await expect(section.locator("[data-estimate-step]")).toHaveCount(0);
+  await expect(section.locator("[data-estimate-result]")).toHaveCount(0);
+});

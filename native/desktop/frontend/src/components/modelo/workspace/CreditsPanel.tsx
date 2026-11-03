@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { LedgerNextStep } from "../../../shell/ledger";
 import type {
   ModeloFormAddressV1,
   ModeloWorkbenchFormProjectionV1,
@@ -32,9 +33,14 @@ export function CreditsPanel({
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
-  /** The estimate as asked for so far, and how to ask; held by the workspace
-   * so it stays when another view is shown. */
-  estimate: { read: EstimateRead; ask: (() => void) | null };
+  /** The estimate as asked for so far, how to ask, and how to run the step a
+   * refusal names; held by the workspace so it stays when another view is
+   * shown. */
+  estimate: {
+    read: EstimateRead;
+    ask: (() => void) | null;
+    take: ((step: LedgerNextStep) => void) | null;
+  };
   locale: string;
   onGo(address: ModeloFormAddressV1): void;
   onOpenSurface(surface: OpenableSurface): void;
@@ -72,6 +78,7 @@ export function CreditsPanel({
         <Estimate
           read={estimate.read}
           onAsk={estimate.ask}
+          onStep={estimate.take}
           locale={locale}
           fieldAt={session.fieldAt}
           results={form.result_addresses}

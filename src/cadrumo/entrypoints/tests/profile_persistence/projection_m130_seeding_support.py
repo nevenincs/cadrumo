@@ -20,9 +20,20 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.aggregation.retencion_soportada_repository import record_retencion_soportada
-from cadrumo.application.modelo.projection import ModeloProjectServiceResult, project_modelo_100_from_m130
+from cadrumo.application.modelo.projection import (
+    ModeloProjectNoM130RevisionsError,
+    ModeloProjectNoM130UnitsError,
+    ModeloProjectServiceResult,
+    project_modelo_100_from_m130,
+)
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.operations.next_step import (
+    OperationCalculateWorkStepV1,
+    OperationCreateWorkStepV1,
+    error_next_step,
+)
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
@@ -246,11 +257,78 @@ def run_projection(
             )
 
 
+@dataclass(frozen=True, slots=True)
+class FollowedProjectionSteps:
+    """The steps the projection served at each stage, and the declaration the first one created."""
+
+    create: OperationCreateWorkStepV1
+    created_work_unit_id: str
+    calculate: OperationCalculateWorkStepV1
+
+
+def follow_projection_steps(tmp_path: Path, operation: PinnedAuthorityOperation) -> FollowedProjectionSteps:
+    """Project a profile with no quarter, create the declaration the refusal's step names, and project again.
+
+    The first refusal serves the step that creates the first quarter's declaration. The declaration is created
+    from that step's address alone, through the production lifecycle, and the second refusal then serves the
+    step that calculates the declaration just created.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_profile(profile.bucket_id, income_categories=ACTIVITY_ONLY, profile_facts=(), states_region=True)
+        with bundled_indexed_authority().operation() as projection_operation:
+
+            def project() -> None:
+                project_modelo_100_from_m130(
+                    year=PROJECTION_YEAR,
+                    ccaa=None,
+                    bucket_id=profile.bucket_id,
+                    ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=projection_operation),
+                    operation=projection_operation,
+                )
+
+            try:
+                project()
+            except ModeloProjectNoM130UnitsError as no_quarter:
+                create = error_next_step(no_quarter, OutputLanguage.EN)
+            else:
+                raise AssertionError("a profile with no quarterly declaration was projected")
+            if not isinstance(create, OperationCreateWorkStepV1):
+                raise AssertionError("the missing quarter did not serve a step that creates it")
+            period = Period.from_year_and_code(create.filing_year, create.period_code)
+            created = create_work_unit(
+                bucket_id=profile.bucket_id,
+                modelo=create.modelo,
+                filing_year=create.filing_year,
+                period=period,
+                revision_id=str(
+                    projection_operation.revision_for_context(
+                        create.modelo, filing_year=create.filing_year, period=period.registry_token
+                    ).id
+                ),
+                ports=build_work_lifecycle_ports(bucket_id=profile.bucket_id),
+                clock=_T0,
+                operation=projection_operation,
+            )
+            try:
+                project()
+            except ModeloProjectNoM130RevisionsError as uncalculated:
+                calculate = error_next_step(uncalculated, OutputLanguage.EN)
+            else:
+                raise AssertionError("an uncalculated quarter was projected")
+            if not isinstance(calculate, OperationCalculateWorkStepV1):
+                raise AssertionError("the uncalculated quarter did not serve a step that calculates it")
+            return FollowedProjectionSteps(
+                create=create, created_work_unit_id=created.work_unit_id, calculate=calculate
+            )
+
+
 __all__ = [
     "ACTIVITY_ONLY",
     "M130_Q1_RESULTADO",
     "PROJECTION_YEAR",
+    "FollowedProjectionSteps",
     "PayerRecord",
     "QuarterSeeding",
+    "follow_projection_steps",
     "run_projection",
 ]

@@ -2635,6 +2635,9 @@ application:
             130)
           rendimiento_neto: Rendimiento neto hasta ahora (declaraciones del Modelo
             130)
+      next_step:
+        calculate_work: Calcula el %{modelo}, %{period}
+        create_work: Crea el %{modelo}, %{period}
       no_m130_revisions: Las declaraciones del Modelo 130 del ejercicio %{year} aún
         no se han calculado, así que no hay base para estimar la declaración anual.
         Calcula un trimestre y vuelve a pedir la estimación.

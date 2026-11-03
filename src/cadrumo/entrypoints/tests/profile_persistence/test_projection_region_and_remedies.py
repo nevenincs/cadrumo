@@ -22,6 +22,7 @@ from cadrumo.application.modelo.projection import (
 )
 from cadrumo.application.modelo.projection_operation import ModeloProjectOperationProjection
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
+from cadrumo.application.operations.next_step import OperationCalculateWorkStepV1, OperationCreateWorkStepV1
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
@@ -30,7 +31,12 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import UserProfileFact
 
-from .projection_m130_seeding_support import PROJECTION_YEAR, QuarterSeeding, run_projection
+from .projection_m130_seeding_support import (
+    PROJECTION_YEAR,
+    QuarterSeeding,
+    follow_projection_steps,
+    run_projection,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -50,6 +56,15 @@ def _words_by_language(refusal: BaseException) -> dict[str, str]:
     words = {language: _served(refusal, language).refusal_words for language in SUPPORTED_OUTPUT_LANGUAGES}
     assert all(sentence for sentence in words.values())
     return {language: sentence for language, sentence in words.items() if sentence is not None}
+
+
+def _step_words_by_language(refusal: BaseException) -> dict[str, str]:
+    words: dict[str, str] = {}
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        step = _served(refusal, language).next_step
+        assert step is not None
+        words[language] = step.words
+    return words
 
 
 def _names_no_command(words: str) -> bool:
@@ -133,6 +148,17 @@ def test_a_year_with_no_quarterly_declaration_serves_the_creation_as_an_action(
         "period": "1T",
         "year": PROJECTION_YEAR,
     }
+    # The same remedy travels as a typed step, so a frontend runs it without knowing an action identifier.
+    step = detail.next_step
+    assert isinstance(step, OperationCreateWorkStepV1)
+    assert (step.modelo, step.filing_year, step.period_code) == ("130", PROJECTION_YEAR, "1T")
+    offers = _step_words_by_language(refused.value)
+    assert len(set(offers.values())) == len(SUPPORTED_OUTPUT_LANGUAGES)
+    for sentence in offers.values():
+        assert "130" in sentence and str(PROJECTION_YEAR) in sentence
+        assert _names_no_command(sentence)
+    # The step survives the stored detail's round trip, as the relay releases it.
+    assert OperationErrorDetailV1.model_validate_json(detail.model_dump_json()).next_step == step
 
 
 def test_a_drafted_quarter_nobody_calculated_serves_its_calculation_as_an_action(
@@ -151,6 +177,40 @@ def test_a_drafted_quarter_nobody_calculated_serves_its_calculation_as_an_action
     assert verdict.action.action_id == "operator.modelo.work.calculate"
     (binding,) = verdict.argument_bindings
     assert binding.argument_name == "work_unit_id" and isinstance(binding.value, str) and binding.value
+    step = _served(refused.value, "ca").next_step
+    assert isinstance(step, OperationCalculateWorkStepV1)
+    # The step addresses the very declaration the verdict's action does.
+    assert step.work_unit_id == binding.value
+    offers = _step_words_by_language(refused.value)
+    assert len(set(offers.values())) == len(SUPPORTED_OUTPUT_LANGUAGES)
+    for sentence in offers.values():
+        assert "130" in sentence and _names_no_command(sentence)
+
+
+def test_creating_the_declaration_a_step_names_leads_to_the_step_that_calculates_it(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Following the first refusal's step from its address alone makes the second refusal name that declaration."""
+    followed = follow_projection_steps(tmp_path, operation)
+
+    assert (followed.create.modelo, followed.create.filing_year, followed.create.period_code) == (
+        "130",
+        PROJECTION_YEAR,
+        "1T",
+    )
+    assert followed.calculate.work_unit_id == followed.created_work_unit_id
+
+
+def test_a_refusal_no_action_can_put_right_serves_no_step(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    with pytest.raises(ModeloProjectRegionUnstatedError) as unstated:
+        run_projection(tmp_path / "silent", operation, ccaa=None, states_region=False)
+    with pytest.raises(ModeloProjectRevisionNotMappedError) as unnamed:
+        run_projection(tmp_path / "unnamed", operation, ccaa=None, year=PROJECTION_YEAR - 1)
+
+    for refused in (unstated.value, unnamed.value):
+        assert all(_served(refused, language).next_step is None for language in SUPPORTED_OUTPUT_LANGUAGES)
 
 
 def test_each_figure_of_the_projection_is_named_in_every_language(

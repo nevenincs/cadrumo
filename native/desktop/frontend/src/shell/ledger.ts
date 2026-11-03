@@ -300,7 +300,60 @@ export type LedgerErrorDetail = {
    * language. Absent on a detail recorded before sentences were served. */
   refusal_words?: string | null;
   refusal_words_language?: string | null;
+  /** The registered operation the refusal names for putting it right, where
+   * it names one. */
+  next_step?: LedgerNextStep | null;
 };
+
+/** The step a refusal serves for putting it right: a closed kind, the
+ * declaration it concerns and the words that offer it, in the language of the
+ * refusal's own sentence. The window runs the operation it already knows for
+ * the kind; it holds no table of operator actions. */
+export type LedgerNextStep =
+  | {
+      kind: "create_work";
+      modelo: string;
+      filing_year: number;
+      period_code: string;
+      words: string;
+    }
+  | { kind: "calculate_work"; work_unit_id: string; words: string };
+
+/** The step the backend served on a refusal's detail; null when it served
+ * none, or one of a kind this window does not run. */
+export function servedNextStep(detail: unknown): LedgerNextStep | null {
+  if (typeof detail !== "object" || detail === null) return null;
+  const step = (detail as { next_step?: unknown }).next_step;
+  if (typeof step !== "object" || step === null) return null;
+  const served = step as Record<string, unknown>;
+  const text = (key: string) =>
+    typeof served[key] === "string" && served[key] !== ""
+      ? (served[key] as string)
+      : null;
+  const words = text("words");
+  if (words === null) return null;
+  if (served.kind === "create_work") {
+    const modelo = text("modelo");
+    const period = text("period_code");
+    const year = served.filing_year;
+    return modelo !== null && period !== null && typeof year === "number"
+      ? {
+          kind: "create_work",
+          modelo,
+          filing_year: year,
+          period_code: period,
+          words,
+        }
+      : null;
+  }
+  if (served.kind === "calculate_work") {
+    const unit = text("work_unit_id");
+    return unit === null
+      ? null
+      : { kind: "calculate_work", work_unit_id: unit, words };
+  }
+  return null;
+}
 
 /** The sentence the backend served for a refusal, read from whichever
  * detail it settled with; null when it served none. The window shows it as

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import type { LedgerNextStep } from "../../../shell/ledger";
 import type {
   ModeloFormAddressV1,
   ModeloProjectOperationProjection,
@@ -206,11 +207,14 @@ function Result({
 /**
  * The estimate asked for on request: what it is, what to do to get one, and
  * what came back. The figures and the reasons are the application's; this
- * draws them under the form's own words for each box.
+ * draws them under the form's own words for each box. A refusal can name the
+ * step that puts it right, which is offered in the application's words and
+ * run by the workspace.
  */
 export function Estimate({
   read,
   onAsk,
+  onStep,
   locale,
   fieldAt,
   results,
@@ -218,6 +222,8 @@ export function Estimate({
   read: EstimateRead;
   /** Asks for the estimate, or null where this window cannot. */
   onAsk: (() => void) | null;
+  /** Runs the step a refusal names, or null where this window cannot. */
+  onStep: ((step: LedgerNextStep) => void) | null;
   locale: string;
   fieldAt(address: ModeloFormAddressV1): PublicModeloFormField | null;
   results: readonly string[];
@@ -260,6 +266,16 @@ export function Estimate({
         <Alert tone="warning" icon={<Icon name="alert" />}>
           {read.words ?? t("desktop.modelo.credits.estimate.refused")}
         </Alert>
+      )}
+      {read.phase === "refused" && read.step && onStep && (
+        <Button
+          className="self-start"
+          data-estimate-step={read.step.kind}
+          onClick={() => read.step && onStep(read.step)}
+        >
+          {read.step.words}
+          <Icon name="forward" size="xs" />
+        </Button>
       )}
       {read.phase === "failed" && (
         <Alert tone="warning" icon={<Icon name="alert" />}>

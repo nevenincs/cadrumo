@@ -38,6 +38,7 @@ import {
   type ModeloEditRenewalProjectionV1,
   type ModeloExportPublicResultV3,
   type ModeloFormIssueLine,
+  type ModeloWorkCreateProjection,
   type ModeloWorkbenchFormProjectionV1,
   type PublicModeloFormField,
   type OutputLanguage,
@@ -103,9 +104,13 @@ import { hex64 } from "./fixtures/ledger";
  * certificate in the register, so the employment credit and the totals that
  * read it stay unresolved in it, the second with one. The estimate of every
  * other filer is refused as the application refused it, for want of a
- * quarterly declaration. `renta-instalment` is the salaried filer with a
- * result to pay, read within the filing period, so the settlement offers the
- * result in two instalments and states both amounts. */
+ * quarterly declaration, and the refusal names the step that creates the
+ * first quarter. The port follows the steps it is sent: once the quarter is
+ * created the estimate is refused for want of a calculation and names the
+ * step that calculates it, and once that is calculated it is refused for the
+ * result the quarter does not yet produce. `renta-instalment` is the
+ * salaried filer with a result to pay, read within the filing period, so the
+ * settlement offers the result in two instalments and states both amounts. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
@@ -148,6 +153,14 @@ export type ModeloShape = (typeof MODELO_SHAPES)[number];
 
 /** The declaration whose later states the `checked` and `filed` shapes read. */
 const LATER_STATES = "130-1T";
+
+/** The refusal recorded for an estimate asked for at each stage of the first
+ * quarter's Modelo 130. */
+const PROJECT_REFUSAL = {
+  none: "project-no-quarters",
+  drafted: "project-no-calculation",
+  calculated: "project-quarter-incomplete",
+} as const;
 
 /** The 2025 Modelo 100, whose filer the `renta` shapes choose. */
 const RENTA = "100-0A";
@@ -416,6 +429,9 @@ export function modeloFixture(options: Options): ModeloPort {
   // What the scenario's writes did, as far as they settled.
   let applied = false;
   let recorded = false;
+  // How far the first quarter's Modelo 130 has come for a filer whose
+  // estimate is refused: not created, created, or calculated.
+  let quarter: "none" | "drafted" | "calculated" = "none";
   // How many renewals were answered, granted or refused: after each the
   // window reads the declaration again.
   let renewals = 0;
@@ -695,7 +711,7 @@ export function modeloFixture(options: Options): ModeloPort {
         !catalogue[`project-${rentaForm(shape)}-${spoken}`]
       )
         return (await refusedWith(
-          "project-no-quarters",
+          PROJECT_REFUSAL[quarter],
           spoken,
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
       const result = await (async (): Promise<unknown> => {
@@ -750,6 +766,29 @@ export function modeloFixture(options: Options): ModeloPort {
           case "modelo.reconcile.import":
             issued(request.source_path, true);
             return shape === "filed" ? written("reconcile-130") : unserved();
+          case "modelo.work.create": {
+            // The first quarter, which a refused estimate asks to create.
+            if (quarter !== "none" || !shape.startsWith("renta"))
+              return unserved();
+            const created = await written("create-130");
+            quarter = "drafted";
+            return created;
+          }
+          case "modelo.work.calculate": {
+            // The quarter just created, whose id the refusal that followed
+            // named.
+            const drafted =
+              await envelope<ModeloWorkCreateProjection>("create-130");
+            if (
+              quarter !== "drafted" ||
+              drafted?.outcome.kind !== "success" ||
+              drafted.outcome.unit.work_unit_id !== request.work_unit_id
+            )
+              return unserved();
+            const calculated = await written("calculate-130");
+            quarter = "calculated";
+            return calculated;
+          }
           case "modelo.work.metadata":
             return receiptShape ? written("metadata-130-receipt") : unserved();
           case "modelo.work.amendment_context":

@@ -2491,6 +2491,9 @@ application:
           ingresos: Income so far (Modelo 130 declarations)
           pagos_fraccionados: Instalments paid (Modelo 130 declarations)
           rendimiento_neto: Net income so far (Modelo 130 declarations)
+      next_step:
+        calculate_work: Calculate %{modelo}, %{period}
+        create_work: Create %{modelo}, %{period}
       no_m130_revisions: The Modelo 130 declarations for filing year %{year} have
         not been calculated yet, so there is nothing to base an estimate of the annual
         return on. Calculate a quarter, then ask for the estimate again.

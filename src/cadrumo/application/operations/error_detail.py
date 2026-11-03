@@ -64,6 +64,7 @@ from .frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
+from .next_step import OperationNextStepV1, error_next_step
 from .registry import OperationPublicDefinitionContractV1, OperationRegistry
 from .schema_identity import OperationSchemaIdentityV1
 
@@ -163,6 +164,9 @@ class OperationErrorDetailV1(BaseModel):
     ) = None
     #: The language ``refusal_words`` is in: the one the worker's catalogue rendered.
     refusal_words_language: OutputLanguage | None = None
+    #: The registered operation the refusal names for putting it right, as a closed kind with the declaration
+    #: it concerns and the words that offer it, in ``refusal_words_language``. ``None`` when the refusal names none.
+    next_step: OperationNextStepV1 | None = None
 
     @model_validator(mode="after")
     def _closed_shape(self) -> Self:
@@ -171,11 +175,18 @@ class OperationErrorDetailV1(BaseModel):
             raise ValueError("operation error detail context keys must be unique and ordered")
         if (self.refusal_words is None) != (self.refusal_words_language is None):
             raise ValueError("served words name the language they are in")
+        if self.next_step is not None and self.refusal_words_language is None:
+            raise ValueError("a served step is worded in the language of the refusal's own words")
         if self.kind is OperationErrorDetailKind.REGISTERED_ERROR:
             if self.error_code is None:
                 raise ValueError("a registered error detail requires its registered code")
             get_registered_error_code_by_code(self.error_code)
-        elif self.error_code is not None or self.message_key is not None or self.precondition_verdict_json is not None:
+        elif (
+            self.error_code is not None
+            or self.message_key is not None
+            or self.precondition_verdict_json is not None
+            or self.next_step is not None
+        ):
             raise ValueError("a record validation detail carries only its fault context")
         self.precondition_verdict()
         return self
@@ -321,6 +332,7 @@ def build_operation_error_detail(error: BaseException) -> OperationErrorDetailV1
             precondition_verdict_json=verdict_json,
             refusal_words=words,
             refusal_words_language=language,
+            next_step=error_next_step(error, language),
         )
     if isinstance(error, ValidationError):
         entries, omitted = _bounded_context(scrub_error_context(internal_record_fault_context(error)))

@@ -28,6 +28,9 @@ from cadrumo.application.cli_exception_preconditions import (
 )
 from cadrumo.application.modelo.action_errors import ModeloDomiciliationPastCutoffError
 from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure_for_scenario
+from cadrumo.application.modelo.projection import ModeloProjectNoM130UnitsError
+from cadrumo.application.modelo.projection_next_steps import create_work_step
 from cadrumo.application.modelo.query_read_contracts import ModeloReadinessOperationRequest
 from cadrumo.application.modelo.query_read_operation import (
     build_modelo_readiness_definition,
@@ -53,6 +56,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.next_step import OperationCreateWorkStepV1
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
@@ -70,6 +74,8 @@ from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.i18n.translatable import Translatable as tr
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.invoices.errors import InvoiceValidationError
@@ -584,3 +590,61 @@ def test_a_record_fault_with_no_registered_rule_serves_the_record_fault_sentence
 
     assert detail.refusal_words == lookup_translation(RECORD_FAULT_WORDS_LOCALE_KEY, locale="en")
     assert _OFFENDING_VALUE[:20] not in detail.model_dump_json()
+
+
+def _quarterless_refusal() -> BaseException:
+    """The refusal the Modelo 100 estimate raises for a year with no quarterly declaration, with its step."""
+    year = 2025
+    return ModeloProjectNoM130UnitsError(
+        context={"year": year},
+        translated_message="application.modelo.projection_words.no_m130_units",
+        precondition_verdict=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.project",
+            scenario_id="modelo.project.m130_quarters.no_work_units",
+            evidence_id="modelo.project.m130_quarters",
+            evidence_values={"modelo": "130", "year": year, "work_units_present": False},
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+            action_argument_values={"modelo": "130", "period": "1T", "year": year},
+        ).verdict,
+        next_step=create_work_step(modelo="130", period=Period.from_year_and_code(year, "1T")),
+    )
+
+
+def test_a_refusal_releases_the_step_it_serves_worded_in_the_worker_language(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """The step reads back from the stored detail with the same address in every language and its own words."""
+    served = {
+        language: _served(tmp_path / language, authority_operation, _quarterless_refusal, language=language)
+        for language in ("en", "es", "ca", "hu")
+    }
+
+    words: dict[str, str] = {}
+    for language, detail in served.items():
+        step = detail.next_step
+        assert isinstance(step, OperationCreateWorkStepV1)
+        assert (step.modelo, step.filing_year, step.period_code) == ("130", 2025, "1T")
+        assert detail.refusal_words_language is OutputLanguage(language)
+        assert "130" in step.words and "2025" in step.words
+        words[language] = step.words
+    assert len(set(words.values())) == len(words)
+
+
+def test_a_refusal_with_no_step_releases_none_and_a_record_fault_cannot_carry_one(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    refused = _served(
+        tmp_path / "refused",
+        authority_operation,
+        lambda: _past_cutoff_refusal(**_PAST_CUTOFF_CONTEXT),
+        language="en",
+    )
+    fault = _served(tmp_path / "fault", authority_operation, _record_fault, language="en")
+    carried = _served(tmp_path / "carried", authority_operation, _quarterless_refusal, language="en")
+    assert refused.next_step is None and fault.next_step is None
+    assert carried.next_step is not None
+
+    with pytest.raises(ValidationError):
+        OperationErrorDetailV1.model_validate(
+            {**fault.model_dump(mode="json"), "next_step": carried.next_step.model_dump(mode="json")}
+        )

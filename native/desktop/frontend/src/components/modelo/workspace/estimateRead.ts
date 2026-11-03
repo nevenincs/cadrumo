@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
-import type { LedgerOutcome } from "../../../shell/ledger";
-import type { ModeloPort } from "../../../shell/modelo";
+import type { LedgerNextStep, LedgerOutcome } from "../../../shell/ledger";
+import {
+  calculateWorkRequest,
+  createWorkRequest,
+  type ModeloPort,
+} from "../../../shell/modelo";
 import type {
   ModeloProjectOperationProjection,
   PublicModeloFormField,
@@ -17,8 +21,9 @@ export type EstimateRead =
   | { phase: "idle" }
   | { phase: "reading" }
   | { phase: "ready"; projection: ModeloProjectOperationProjection }
-  /** The application settled it without estimating, in its own words. */
-  | { phase: "refused"; words: string | null }
+  /** The application settled it without estimating, in its own words, and
+   * perhaps naming the step that puts it right. */
+  | { phase: "refused"; words: string | null; step: LedgerNextStep | null }
   /** The request did not reach the application, or its answer was lost. */
   | { phase: "failed" };
 
@@ -26,6 +31,23 @@ export type EstimateRead =
 export type SendWrite = <Result>(
   send: () => Promise<LedgerOutcome<Result>>,
 ) => Promise<OperationRun<Result> | null>;
+
+/** What the estimate shows once a step it offered has run: the step done
+ * leaves it to be asked for again; a step refused says why and offers no
+ * other. */
+function afterStep<Result>(
+  outcome: OperationRun<Result> | null,
+  succeeded: (result: Result) => boolean,
+): EstimateRead {
+  if (!outcome || outcome.kind === "saved_unread") return { phase: "idle" };
+  if (outcome.kind === "settled")
+    return succeeded(outcome.result)
+      ? { phase: "idle" }
+      : { phase: "refused", words: null, step: null };
+  if (outcome.kind === "refused")
+    return { phase: "refused", words: outcome.words, step: null };
+  return { phase: "failed" };
+}
 
 /**
  * The estimate of one declaration's year. `projectable` is the form's own
@@ -60,10 +82,40 @@ export function useEstimate({
     else if (outcome.kind === "settled")
       setRead({ phase: "ready", projection: outcome.result });
     else if (outcome.kind === "refused")
-      setRead({ phase: "refused", words: outcome.words });
+      setRead({ phase: "refused", words: outcome.words, step: outcome.step });
     else setRead({ phase: "failed" });
   }, [port, run, year]);
-  return { read, ask: projectable ? ask : null };
+  // The step the application named, run as the window runs it anywhere else.
+  // Once it has settled the estimate is asked for again, not shown stale.
+  const take = useCallback(
+    async (step: LedgerNextStep) => {
+      setRead({ phase: "reading" });
+      const next =
+        step.kind === "create_work"
+          ? afterStep(
+              await run(() =>
+                port.submit("modelo.work.create", createWorkRequest(step)),
+              ),
+              (result) => result.outcome.kind === "success",
+            )
+          : afterStep(
+              await run(() =>
+                port.submit(
+                  "modelo.work.calculate",
+                  calculateWorkRequest(step.work_unit_id),
+                ),
+              ),
+              () => true,
+            );
+      if (alive.current) setRead(next);
+    },
+    [port, run],
+  );
+  return {
+    read,
+    ask: projectable ? ask : null,
+    take: projectable ? take : null,
+  };
 }
 
 /** The currency a register's figures are in. */

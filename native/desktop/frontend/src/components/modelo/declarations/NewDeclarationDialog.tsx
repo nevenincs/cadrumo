@@ -18,7 +18,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import { MODELO_ACTOR, type ModeloPort } from "../../../shell/modelo";
+import { createWorkRequest, type ModeloPort } from "../../../shell/modelo";
 import {
   creationWriteKey,
   type ModeloWriteHolds,
@@ -192,12 +192,7 @@ function Chooser({
     setAttempt({ kind: "idle" });
     const outcome = await runOperation(
       port,
-      () =>
-        port.submit("modelo.work.create", {
-          modelo: target.modelo,
-          period: { filing_year: target.filing_year, code: target.period_code },
-          actor: MODELO_ACTOR,
-        }),
+      () => port.submit("modelo.work.create", createWorkRequest(target)),
       () => alive.current && mine === generation.current,
     );
     const current = () =>

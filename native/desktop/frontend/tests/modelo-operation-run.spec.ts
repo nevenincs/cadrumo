@@ -135,6 +135,7 @@ test("rejections are told apart by what reached the runtime", async () => {
     operationId: "op-6",
     reason: null,
     words: null,
+    step: null,
   });
   expect(await after(rejection("refused"))).toEqual({
     kind: "not_sent",
@@ -166,5 +167,67 @@ test("a settled refusal names its operation", async () => {
     operationId: "op-8",
     reason: "operation_denied",
     words: null,
+    step: null,
   });
+});
+
+test("a settled refusal carries the step the backend named, and only one of a kind the window runs", async () => {
+  const { port } = observing([]);
+  const refusing = (next_step: unknown) =>
+    runOperation(
+      port,
+      () =>
+        Promise.resolve({
+          kind: "refused",
+          operation_id: "op-9",
+          revision: 2,
+          reason: "refused",
+          detail: { refusal_words: "No quarter yet.", next_step },
+        } as LedgerOutcome),
+      () => true,
+    );
+  expect(
+    await refusing({
+      kind: "create_work",
+      modelo: "130",
+      filing_year: 2025,
+      period_code: "1T",
+      words: "Create the first quarter",
+    }),
+  ).toEqual({
+    kind: "refused",
+    operationId: "op-9",
+    reason: "refused",
+    words: "No quarter yet.",
+    step: {
+      kind: "create_work",
+      modelo: "130",
+      filing_year: 2025,
+      period_code: "1T",
+      words: "Create the first quarter",
+    },
+  });
+  expect(
+    await refusing({
+      kind: "calculate_work",
+      work_unit_id: "a".repeat(64),
+      words: "Calculate it",
+    }),
+  ).toMatchObject({
+    step: {
+      kind: "calculate_work",
+      work_unit_id: "a".repeat(64),
+      words: "Calculate it",
+    },
+  });
+  // A kind this window does not run, an address it cannot run and a step
+  // without words are not offered.
+  for (const unrunnable of [
+    { kind: "file_work", work_unit_id: "a".repeat(64), words: "File it" },
+    { kind: "calculate_work", words: "Calculate it" },
+    { kind: "create_work", modelo: "130", words: "Create it" },
+    { kind: "calculate_work", work_unit_id: "a".repeat(64), words: "" },
+    "calculate_work",
+  ])
+    expect(await refusing(unrunnable)).toMatchObject({ step: null });
 });

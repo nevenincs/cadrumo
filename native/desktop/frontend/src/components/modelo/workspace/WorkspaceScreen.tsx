@@ -20,6 +20,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ledgerFailure, type LedgerOutcome } from "../../../shell/ledger";
 import {
   MODELO_ACTOR,
+  calculateWorkRequest,
   modeloEditBody,
   type ModeloPort,
 } from "../../../shell/modelo";
@@ -370,10 +371,7 @@ function Ready({
 
   const calculate = () =>
     settledThenReread(() =>
-      port.submit("modelo.work.calculate", {
-        work_unit_id: workUnit,
-        actor: MODELO_ACTOR,
-      }),
+      port.submit("modelo.work.calculate", calculateWorkRequest(workUnit)),
     );
   const onRun = (action: ModeloFormNextAction) => {
     if (action === "calculate" || action === "recalculate") {
