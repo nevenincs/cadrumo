@@ -34,7 +34,10 @@ def _shape_candidate_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
 
 
 def _locale_key_dict_names_read_into_a_sink(
-    tree: ast.AST, candidate_names: frozenset[str], wrappers: frozenset[str] = frozenset()
+    tree: ast.AST,
+    candidate_names: frozenset[str],
+    wrappers: frozenset[str] = frozenset(),
+    key_positions: dict[str, frozenset[int]] | None = None,
 ) -> frozenset[str]:
     """Return the candidate dict names actually read into a recognized locale-key sink.
 
@@ -65,7 +68,7 @@ def _locale_key_dict_names_read_into_a_sink(
         for node in ast.walk(func):
             if not isinstance(node, ast.Call):
                 continue
-            for argument in _call_site_key_argument_exprs(node, tr_names):
+            for argument in _call_site_key_argument_exprs(node, tr_names, key_positions):
                 direct = _dict_access_source(argument)
                 if direct in candidate_names:
                     confirmed.add(direct)
@@ -74,7 +77,11 @@ def _locale_key_dict_names_read_into_a_sink(
     return frozenset(confirmed)
 
 
-def _flow_confirmed_locale_key_dicts(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> dict[str, ast.expr]:
+def _flow_confirmed_locale_key_dicts(
+    tree: ast.AST,
+    wrappers: frozenset[str] = frozenset(),
+    key_positions: dict[str, frozenset[int]] | None = None,
+) -> dict[str, ast.expr]:
     """Return shape-candidate locale-key dicts actually read into a translator sink.
 
     Combines :func:`_shape_candidate_locale_key_dicts` (structural
@@ -85,7 +92,7 @@ def _flow_confirmed_locale_key_dicts(tree: ast.AST, wrappers: frozenset[str] = f
     candidates.
     """
     candidates = _shape_candidate_locale_key_dicts(tree)
-    confirmed_names = _locale_key_dict_names_read_into_a_sink(tree, frozenset(candidates), wrappers)
+    confirmed_names = _locale_key_dict_names_read_into_a_sink(tree, frozenset(candidates), wrappers, key_positions)
     return {name: value for name, value in candidates.items() if name in confirmed_names}
 
 

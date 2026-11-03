@@ -18,7 +18,11 @@ from ._ast_key_syntax import (
 )
 
 
-def _flow_confirmed_class_attribute_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+def _flow_confirmed_class_attribute_keys(
+    tree: ast.AST,
+    wrappers: frozenset[str] = frozenset(),
+    key_positions: dict[str, frozenset[int]] | None = None,
+) -> set[str]:
     """Return dotted literals a class declares as an attribute and reads into a translator.
 
     A screen family names its own banner on the subclass and lets the base
@@ -53,13 +57,17 @@ def _flow_confirmed_class_attribute_keys(tree: ast.AST, wrappers: frozenset[str]
     for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
-        for argument in _call_site_key_argument_exprs(node, tr_names):
+        for argument in _call_site_key_argument_exprs(node, tr_names, key_positions):
             if isinstance(argument, ast.Attribute) and argument.attr in candidates:
                 findings |= candidates[argument.attr]
     return findings
 
 
-def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+def _flow_confirmed_local_key_names(
+    tree: ast.AST,
+    wrappers: frozenset[str] = frozenset(),
+    key_positions: dict[str, frozenset[int]] | None = None,
+) -> set[str]:
     """Return dotted literals held in a local that is then translated.
 
     A surface that picks between two labels names the choice before rendering
@@ -93,7 +101,7 @@ def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = fr
     for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
-        for argument in _call_site_key_argument_exprs(node, tr_names):
+        for argument in _call_site_key_argument_exprs(node, tr_names, key_positions):
             if isinstance(argument, ast.Name) and argument.id in candidates:
                 findings |= candidates[argument.id]
     return findings
@@ -146,7 +154,11 @@ def _key_factory_returns(tree: ast.AST) -> dict[str, set[str]]:
     return factories
 
 
-def _flow_confirmed_key_factory_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+def _flow_confirmed_key_factory_keys(
+    tree: ast.AST,
+    wrappers: frozenset[str] = frozenset(),
+    key_positions: dict[str, frozenset[int]] | None = None,
+) -> set[str]:
     """Return key-factory literals whose call result reaches a translator."""
     factories = _key_factory_returns(tree)
     if not factories:
@@ -160,13 +172,17 @@ def _flow_confirmed_key_factory_keys(tree: ast.AST, wrappers: frozenset[str] = f
     for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
-        for argument in _call_site_key_argument_exprs(node, tr_names):
+        for argument in _call_site_key_argument_exprs(node, tr_names, key_positions):
             if isinstance(argument, ast.Name) and argument.id in bound:
                 findings |= bound[argument.id]
     return findings
 
 
-def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+def _extract_locale_constant_keys(
+    tree: ast.AST,
+    wrappers: frozenset[str] = frozenset(),
+    key_positions: dict[str, frozenset[int]] | None = None,
+) -> set[str]:
     """Find dotted locale keys declared in explicit locale-key constants.
 
     Recognizes two independent declaration shapes: a constant NAMED as a
@@ -182,12 +198,12 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
     one dotted identifier to another without ever reaching the translator —
     from being misread as a locale-key declaration.
     """
-    findings: set[str] = _flow_confirmed_class_attribute_keys(tree, wrappers)
-    findings |= _flow_confirmed_local_key_names(tree, wrappers)
-    findings |= _flow_confirmed_key_factory_keys(tree, wrappers)
-    flow_confirmed = _flow_confirmed_locale_key_dicts(tree, wrappers) | _flow_confirmed_locale_key_row_tables(
-        tree, wrappers
-    )
+    findings: set[str] = _flow_confirmed_class_attribute_keys(tree, wrappers, key_positions)
+    findings |= _flow_confirmed_local_key_names(tree, wrappers, key_positions)
+    findings |= _flow_confirmed_key_factory_keys(tree, wrappers, key_positions)
+    flow_confirmed = _flow_confirmed_locale_key_dicts(
+        tree, wrappers, key_positions
+    ) | _flow_confirmed_locale_key_row_tables(tree, wrappers)
     for name, value in flow_confirmed.items():
         # A table written inline has no assignment for the walk below to match
         # against, so its keys are taken from the confirmed expression itself.

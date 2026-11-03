@@ -914,14 +914,12 @@ desktop:
       phone_title: Approve on your phone
       try_again: Try again
     bring_all: Update from AEAT
-    close: Close AEAT data
     count:
       borrador_refused: '{count} can''t be used'
       filed_aeat_only: '{count} only at AEAT'
       filed_differing: '{count} differ'
       unread_notifications: '{count} unread'
     loading: Loading…
-    maximize: Maximize AEAT data
     progress:
       action_failed: Couldn't do that. Try again.
       action_unknown: Can't tell if that went through.
@@ -1212,7 +1210,6 @@ desktop:
       not_observed: No agency receipt seen
       submitted_observed: Submission seen
     as_of: From local records as of {date}. Nothing here was asked of the tax agency.
-    close: Close the calendar
     coverage:
       applicability_undetermined: 'Whether you need to file is undetermined: {modelos}.
         Check your obligations.'
@@ -1233,7 +1230,6 @@ desktop:
       external_baseline_imported: Imported from an earlier filing
       not_ready_to_file: Not ready to file
       ready_to_file: Ready to file
-    maximize: Maximize the calendar
     modelo: Modelo {modelo}
     more: '{count} more'
     moved: Moved from {date}
@@ -1301,7 +1297,6 @@ desktop:
     top: Split above
   docs:
     frame_title: Cadrumo documentation
-    hide: Hide the docs
     loading: Loading the documentation…
     not_bundled: Documentation is not available in this installation.
     show: Show the docs
@@ -2157,7 +2152,6 @@ desktop:
       established: Established
       not_applied: The returned confirmation does not contain every value you entered.
         Your draft has been kept.
-      not_confirmed: Not yet
       note: Note
       proposed: Your proposed value
       scope:
@@ -2315,7 +2309,6 @@ desktop:
         country: Give the country in two letters
         currency: Say the currency
         duplicate: It may already be in the catalogue
-        duplicate_unread: Waiting for the ledger to check the catalogue
         findings: Answer every question first
       in_review: In review
       keep: Keep it
@@ -4539,9 +4532,7 @@ desktop:
     restore: Restore the layout
     tui: Workspace
   panel:
-    hide: Hide the bottom panel
     label: Bottom panel
-    resize: Resize the bottom panel
   profile:
     action:
       about: About {field}
@@ -4626,7 +4617,6 @@ desktop:
         sync; contact support.
       unsupported: This sign-in needs an interaction available in the terminal. Cancel
         this attempt and use Censo sync in the terminal.
-    close: Close profile
     close_dialog: Close
     compact: Compact view
     complete: Finish profile setup
@@ -9387,13 +9377,9 @@ workspace:
         open_it: Open it
         other: Other modelos
         refused: Cadrumo did not create the declaration.
-        saved_unread: The declaration was created, but its answer was not read. The
-          list is read again; open it from there.
         search_placeholder: Search
         show_all: Show all modelos, not only yours
         start_confirm: Start {modelo} for {period}?
-        unknown: Cadrumo could not tell whether the declaration was created.
-        unknown_next: The list is read again. Check it before you try again.
         which_modelo: Which modelo do you want to prepare?
         which_period: Which period is it for?
         which_year: Which year is it for?
@@ -9796,7 +9782,6 @@ workspace:
       not_yet: Not yet
       open_check: Open Check
       other_copies: Other copies
-      receipt_differs: The receipt does not match this declaration.
       receipt_matches: The receipt matches this declaration.
       receipt_missing: Not confirmed by a receipt yet.
       reconciliation:
@@ -10228,8 +10213,6 @@ workspace:
       failed: It could not be done. Try again.
       not_done: It was not done; nothing changed.
       refused: Not done. Nothing changed.
-      unknown: Cadrumo could not see whether this finished; it may have. It is not
-        done again. Read the declaration again before you go on.
     page:
       answers: Answers the calculation uses
       calculation_details: Calculation details, not printed on the form
@@ -10354,9 +10337,6 @@ workspace:
       rebased: 'The declaration changed after you entered these changes, which are
         not applied yet. Check the marked lines again (changed: {count}).'
       title: 'Changes to apply: {count}'
-      unknown: Cadrumo could not see whether your changes were applied; they may have
-        been. They are not sent again. Read the declaration again before you go on;
-        your changes are still here.
     search:
       count: 'Boxes found: {count}'
       empty: No box matches {query}.

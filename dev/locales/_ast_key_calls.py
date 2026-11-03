@@ -57,7 +57,11 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     return frozenset(names)
 
 
-def _call_site_key_argument_exprs(node: ast.Call, tr_names: frozenset[str]) -> list[ast.expr]:
+def _call_site_key_argument_exprs(
+    node: ast.Call,
+    tr_names: frozenset[str],
+    key_positions: dict[str, frozenset[int]] | None = None,
+) -> list[ast.expr]:
     """Return ``node``'s argument expressions that are recognized locale-key sinks.
 
     Mirrors the sink taxonomy :func:`_collect_call_site_keys` already
@@ -71,6 +75,10 @@ def _call_site_key_argument_exprs(node: ast.Call, tr_names: frozenset[str]) -> l
     name = _callee_name(node.func)
     exprs: list[ast.expr] = []
     if name is not None:
+        # Signature analysis also proves key channels beyond a wrapper's first
+        # argument; constants must follow the same positions as literal keys.
+        if key_positions is not None:
+            exprs.extend(node.args[index] for index in key_positions.get(name, ()) if index < len(node.args))
         is_first_arg_sink = (
             _is_translator_call(node.func, tr_names) or name == "failed" or name.endswith(("Error", "Exception"))
         )

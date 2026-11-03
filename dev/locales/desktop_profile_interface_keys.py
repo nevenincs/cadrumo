@@ -78,7 +78,6 @@ DESKTOP_PROFILE_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.profile.maximize",
         "desktop.profile.field_help",
         "desktop.profile.cancel",
-        "desktop.profile.close",
         "desktop.profile.complete",
         "desktop.profile.conflict",
         "desktop.profile.edit_field",

@@ -384,7 +384,6 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.documents.hold.country",
         "desktop.ledger.documents.hold.currency",
         "desktop.ledger.documents.hold.duplicate",
-        "desktop.ledger.documents.hold.duplicate_unread",
         "desktop.ledger.documents.hold.findings",
         "desktop.ledger.documents.in_review",
         "desktop.ledger.documents.keep",

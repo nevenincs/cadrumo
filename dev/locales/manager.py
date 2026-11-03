@@ -1,8 +1,10 @@
 """Locale discovery, guarded catalogue editing, and scaffolding coordination."""
 
 import re
+import sys
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 import yaml
@@ -14,7 +16,7 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.product_identity import normalise_product_identity_references
 from dev._paths import REPO_ROOT
 from dev.first_party_source import is_test_source
-from dev.quality.shared_scan import shared_scan_result
+from dev.quality.shared_scan import scanner_identity, shared_scan_result
 
 from ._subtree_move import (
     LocaleMoveConflict,
@@ -117,6 +119,14 @@ def _codebase_key_inputs(source_roots: Sequence[Path]) -> tuple[Path, ...]:
     for relative in _CODEBASE_KEY_TOOLING:
         found.update(_codebase_key_tooling_inputs(REPO_ROOT / relative))
     return tuple(sorted(found))
+
+
+def _codebase_key_scanner_modules() -> tuple[ModuleType, ...]:
+    """Load the AST implementation before identifying the code that will execute."""
+    from . import _ast_scanner
+
+    prefix = f"{_ast_scanner.__package__}._ast"
+    return tuple(module for name, module in sys.modules.copy().items() if name.startswith(prefix))
 
 
 class LocaleManager:
@@ -230,6 +240,7 @@ class LocaleManager:
                 {
                     "roots": [root.resolve().relative_to(REPO_ROOT).as_posix() for root in source_roots],
                     "committed_catalogues": self.locales_dir == _committed_locales_dir(),
+                    "ast_scanner": scanner_identity(*_codebase_key_scanner_modules()),
                 }
             )
             found, unread = shared_scan_result(

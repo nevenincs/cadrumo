@@ -144,7 +144,7 @@ def scan_source_trees(roots: Iterable[Path]) -> set[str]:
     for _module, tree in modules:
         findings.update(_extract_error_constructor_keys(tree, wrappers))
         findings.update(_membership_guard_keys(tree, translated_names))
-        findings.update(_extract_locale_constant_keys(tree, wrappers))
+        findings.update(_extract_locale_constant_keys(tree, wrappers, key_positions))
         findings.update(_extract_positional_translation_key_arguments(tree, key_positions))
     return findings
 

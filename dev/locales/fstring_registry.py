@@ -281,6 +281,7 @@ def _runtime_registrations(
     from cadrumo.application.prorrata_register.projection_contracts import ProrrataRefusalReason
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
+    from cadrumo.core.confirmation_gate import ConfirmationBlockReason
     from cadrumo.core.errors.error_codes import ErrorCategory
     from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
@@ -293,6 +294,11 @@ def _runtime_registrations(
     from .m303_carry_fstring_registrations import m303_carry_error_registration
 
     return (
+        FStringKeyRegistration(
+            description="application.ledger.confirmation_block.served.* (ConfirmationBlockReason)",
+            key_factory=lambda value: f"application.ledger.confirmation_block.served.{value}",
+            values=_enum_values(ConfirmationBlockReason),
+        ),
         FStringKeyRegistration(
             # The operations modal renders tr(terminal_copy_key), a key the
             # projection selects per terminal condition, plus the partial-success

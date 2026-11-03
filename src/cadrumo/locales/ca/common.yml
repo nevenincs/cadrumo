@@ -947,14 +947,12 @@ desktop:
       phone_title: Aprova al mòbil
       try_again: Torna-ho a provar
     bring_all: Actualitza des de l'AEAT
-    close: Tanca les dades de l'AEAT
     count:
       borrador_refused: '{count} no es poden usar'
       filed_aeat_only: '{count} només a l''AEAT'
       filed_differing: '{count} difereixen'
       unread_notifications: '{count} sense llegir'
     loading: Carregant…
-    maximize: Maximitza les dades de l'AEAT
     progress:
       action_failed: No s'ha pogut fer. Torna-ho a provar.
       action_unknown: No se sap si s'ha fet.
@@ -1256,7 +1254,6 @@ desktop:
       not_observed: Sense justificant observat
       submitted_observed: Presentació observada
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
-    close: Tanca el calendari
     coverage:
       applicability_undetermined: 'No s''ha pogut determinar si has de presentar:
         {modelos}. Comprova les teves obligacions.'
@@ -1279,7 +1276,6 @@ desktop:
       external_baseline_imported: Importat d'una presentació anterior
       not_ready_to_file: Sense preparar
       ready_to_file: A punt per presentar
-    maximize: Maximitza el calendari
     modelo: Modelo {modelo}
     more: '{count} més'
     moved: Traslladat des del {date}
@@ -1347,7 +1343,6 @@ desktop:
     top: Divideix a dalt
   docs:
     frame_title: Documentació de Cadrumo
-    hide: Amaga la documentació
     loading: S'està carregant la documentació…
     not_bundled: La documentació no està disponible en aquesta instal·lació.
     show: Mostra la documentació
@@ -2208,7 +2203,6 @@ desktop:
       established: Establerta
       not_applied: La confirmació retornada no conté tots els valors que has introduït.
         Es conserva el teu esborrany.
-      not_confirmed: Encara no
       note: Nota
       proposed: El valor que proposes
       scope:
@@ -2366,7 +2360,6 @@ desktop:
         country: Indica el país amb dues lletres
         currency: Indica la moneda
         duplicate: Pot ser que ja sigui al catàleg
-        duplicate_unread: S'està esperant que el llibre comprovi el catàleg
         findings: Respon abans totes les preguntes
       in_review: En revisió
       keep: Conserva'l
@@ -4620,9 +4613,7 @@ desktop:
     restore: Restaura la disposició
     tui: Espai de treball
   panel:
-    hide: Amaga el panell inferior
     label: Panell inferior
-    resize: Canvia la mida del panell inferior
   profile:
     action:
       about: Informació sobre {field}
@@ -4707,7 +4698,6 @@ desktop:
         n’iniciïs cap altra; contacta amb suport.
       unsupported: Aquest accés requereix una interacció disponible al terminal. Cancel·la
         aquest intent i sincronitza el Cens des del terminal.
-    close: Tanca el perfil
     close_dialog: Tanca
     compact: Vista compacta
     complete: Finalitza la configuració del perfil
@@ -9571,14 +9561,9 @@ workspace:
         open_it: Obrir-la
         other: Altres models
         refused: Cadrumo no ha creat la declaració.
-        saved_unread: La declaració s'ha creat, però no se n'ha pogut llegir la resposta.
-          La llista es torna a llegir; obre-la des d'allà.
         search_placeholder: Cerca
         show_all: Mostra tots els models, no només els teus
         start_confirm: Començar el {modelo} de {period}?
-        unknown: Cadrumo no ha pogut saber si s'ha creat la declaració.
-        unknown_next: Es torna a llegir la llista. Revisa-la abans de tornar-ho a
-          provar.
         which_modelo: Quin model vols preparar?
         which_period: De quin període és?
         which_year: De quin any és?
@@ -9986,7 +9971,6 @@ workspace:
       not_yet: Encara no
       open_check: Obrir Comprovar
       other_copies: Altres còpies
-      receipt_differs: El justificant no coincideix amb aquesta declaració.
       receipt_matches: El justificant coincideix amb aquesta declaració.
       receipt_missing: Encara no la confirma cap justificant.
       reconciliation:
@@ -10428,8 +10412,6 @@ workspace:
       failed: No s'ha pogut fer. Torna-ho a provar.
       not_done: No s'ha fet; no ha canviat res.
       refused: No s'ha fet. No ha canviat res.
-      unknown: Cadrumo no ha pogut veure si ha acabat; potser sí. No es torna a fer.
-        Torna a llegir la declaració abans de continuar.
     page:
       answers: Respostes que fa servir el càlcul
       calculation_details: Detalls del càlcul, no impresos al model
@@ -10557,9 +10539,6 @@ workspace:
       rebased: 'La declaració va canviar després que escrivissis aquests canvis, que
         encara no estan aplicats. Revisa de nou les línies marcades (canviades: {count}).'
       title: 'Canvis per aplicar: {count}'
-      unknown: Cadrumo no ha pogut veure si els teus canvis s'han aplicat; potser
-        sí. No es tornen a enviar. Torna a llegir la declaració abans de continuar;
-        els teus canvis encara hi són.
     search:
       count: 'Caselles trobades: {count}'
       empty: Cap casella no coincideix amb {query}.

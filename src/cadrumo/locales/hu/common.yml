@@ -924,14 +924,12 @@ desktop:
       phone_title: Hagyd jóvá a telefonodon
       try_again: Próbáld újra
     bring_all: Frissítés az AEAT-ból
-    close: AEAT-adatok bezárása
     count:
       borrador_refused: '{count} nem használható'
       filed_aeat_only: '{count} csak az AEAT-nál van'
       filed_differing: '{count} eltér'
       unread_notifications: '{count} olvasatlan'
     loading: Betöltés…
-    maximize: AEAT-adatok maximalizálása
     progress:
       action_failed: Ez nem sikerült. Próbáld újra.
       action_unknown: Nem tudni, hogy sikerült-e.
@@ -1230,7 +1228,6 @@ desktop:
       submitted_observed: Benyújtás megfigyelve
     as_of: A helyi adatok alapján, {date} állapot szerint. Itt semmit nem kérdeztünk
       le az AEAT-től.
-    close: Naptár bezárása
     coverage:
       applicability_undetermined: 'Nem állapítható meg, hogy kell-e bevallást benyújtanod:
         {modelos}. Ellenőrizd az adókötelezettségeidet.'
@@ -1252,7 +1249,6 @@ desktop:
       external_baseline_imported: Korábbi bevallásból importálva
       not_ready_to_file: Nincs előkészítve
       ready_to_file: Benyújtásra kész
-    maximize: Naptár teljes méretben
     modelo: Modelo {modelo}
     more: még {count}
     moved: 'Áthelyezve erről: {date}'
@@ -1320,7 +1316,6 @@ desktop:
     top: Felosztás felül
   docs:
     frame_title: Cadrumo-dokumentáció
-    hide: Dokumentáció elrejtése
     loading: A dokumentáció betöltése…
     not_bundled: A dokumentáció ebben a telepítésben nem érhető el.
     show: Dokumentáció megjelenítése
@@ -2180,7 +2175,6 @@ desktop:
       established: Székhely
       not_applied: A visszaadott megerősítés nem tartalmazza az összes megadott értéket.
         A piszkozatod megmaradt.
-      not_confirmed: Még nem
       note: Megjegyzés
       proposed: Az általad javasolt érték
       scope:
@@ -2338,7 +2332,6 @@ desktop:
         country: Add meg az országot két betűvel
         currency: Add meg a pénznemet
         duplicate: Lehet, hogy már a katalógusban van
-        duplicate_unread: Várakozás arra, hogy a főkönyv ellenőrizze a katalógust
         findings: Előbb válaszolj minden kérdésre
       in_review: Ellenőrzés alatt
       keep: Megtartás
@@ -4589,9 +4582,7 @@ desktop:
     restore: Elrendezés visszaállítása
     tui: Munkaterület
   panel:
-    hide: Alsó panel elrejtése
     label: Alsó panel
-    resize: Alsó panel átméretezése
   profile:
     action:
       about: 'Tudnivalók: {field}'
@@ -4679,7 +4670,6 @@ desktop:
         Ne indíts másikat; fordulj az ügyfélszolgálathoz.
       unsupported: Ehhez a bejelentkezéshez a terminálban elérhető művelet szükséges.
         Szakítsd meg ezt a próbálkozást, és használd a terminál Censo-szinkronizálását.
-    close: Profil bezárása
     close_dialog: Bezárás
     compact: Tömör nézet
     complete: Profil beállításának befejezése
@@ -9529,13 +9519,9 @@ workspace:
         open_it: Megnyitás
         other: Egyéb modelók
         refused: A Cadrumo nem hozta létre a bevallást.
-        saved_unread: A bevallás elkészült, de a válaszát nem sikerült beolvasni.
-          A lista újra beolvasásra kerül; onnan nyisd meg.
         search_placeholder: Keresés
         show_all: Minden nyomtatvány, nem csak a rád vonatkozók
         start_confirm: 'Elkezdi a(z) {modelo} bevallást erre az időszakra: {period}?'
-        unknown: A Cadrumo nem tudta megállapítani, hogy létrejött-e a bevallás.
-        unknown_next: A lista újra betöltődik. Nézd át, mielőtt újra próbálkozol.
         which_modelo: Melyik modelót szeretnéd elkészíteni?
         which_period: Melyik időszakra szól?
         which_year: Melyik évre szól?
@@ -9939,7 +9925,6 @@ workspace:
       not_yet: Még nem
       open_check: Az Ellenőrzés megnyitása
       other_copies: Egyéb másolatok
-      receipt_differs: Az igazolás nem egyezik ezzel a bevallással.
       receipt_matches: Az igazolás egyezik ezzel a bevallással.
       receipt_missing: Még nem erősíti meg igazolás.
       reconciliation:
@@ -10379,8 +10364,6 @@ workspace:
       failed: Nem sikerült. Próbáld újra.
       not_done: Nem történt meg; semmi sem változott.
       refused: Nem történt meg. Semmi sem változott.
-      unknown: A Cadrumo nem látta, hogy ez befejeződött-e; lehet, hogy igen. Nem
-        ismétli meg. Mielőtt folytatod, olvasd be újra a bevallást.
     page:
       answers: A számítás által használt válaszok
       calculation_details: A számítás részletei, a nyomtatványon nem szerepelnek
@@ -10511,9 +10494,6 @@ workspace:
       rebased: 'A bevallás megváltozott, miután megadtad ezeket a módosításokat, amelyeket
         még nem alkalmaztak. Nézd át újra a megjelölt sorokat (megváltozott: {count}).'
       title: 'Alkalmazandó módosítások: {count}'
-      unknown: A Cadrumo nem látta, hogy a módosításaid életbe léptek-e; lehet, hogy
-        igen. Nem küldi el őket újra. Mielőtt folytatod, olvasd be újra a bevallást;
-        a módosításaid megmaradtak.
     search:
       count: 'Talált rovatok: {count}'
       empty: 'Egy rovat sem felel meg ennek: {query}.'

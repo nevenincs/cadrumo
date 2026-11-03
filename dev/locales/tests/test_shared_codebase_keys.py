@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import re
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -63,3 +65,52 @@ def test_the_shared_key_scan_is_keyed_on_every_kind_of_input_it_reads() -> None:
     assert repository / "dev" / "locales" / "manager.py" in inputs
     assert repository / "dev" / "registry" / "compiler" / "loader.py" in inputs
     assert not any("__pycache__" in path.parts for path in inputs)
+
+
+@pytest.mark.parametrize("constant", [False, True])
+def test_an_import_before_a_scanner_edit_cannot_poison_the_current_implementation_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, constant: bool
+) -> None:
+    repository = tmp_path.resolve()
+    package = repository / "src" / "planted"
+    package.mkdir(parents=True)
+    (package / "module.py").write_text("value = 1\n", encoding="utf-8")
+    tooling = repository / "dev" / "locales"
+    tooling.mkdir(parents=True)
+    helper = tooling / "_ast_planted.py"
+
+    def load(key: str) -> ModuleType:
+        source = (
+            f"KEYS = frozenset({{{key!r}}})\ndef keys(): return KEYS\n"
+            if constant
+            else f"def keys(): return frozenset({{{key!r}}})\n"
+        )
+        helper.write_text(source, encoding="utf-8")
+        spec = spec_from_file_location("planted_scanner", helper)
+        assert spec is not None and spec.loader is not None
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    imported = [load("planted.old")]
+    current = load("planted.current")
+    calls: list[None] = []
+
+    def scan(self: LocaleManager) -> tuple[frozenset[str], tuple[str, ...]]:
+        calls.append(None)
+        keys = imported[0].keys()
+        assert isinstance(keys, frozenset)
+        return frozenset(str(key) for key in keys), ()
+
+    monkeypatch.setattr(manager_module, "REPO_ROOT", repository)
+    monkeypatch.setattr(manager_module, "_codebase_key_scanner_modules", lambda: tuple(imported))
+    monkeypatch.setattr(LocaleManager, "_scan_codebase_keys", scan)
+    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(repository / "run-cache"))
+
+    assert LocaleManager(package, repository / "locales").get_codebase_keys() == {"planted.old"}
+    imported[0] = current
+    monkeypatch.setattr(shared_scan, "_memo", {})
+
+    assert LocaleManager(package, repository / "locales").get_codebase_keys() == {"planted.current"}
+    assert len(calls) == 2, "different loaded implementations must not share a source-only cache entry"

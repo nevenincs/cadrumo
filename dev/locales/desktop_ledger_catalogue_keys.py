@@ -599,7 +599,6 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.counterparty.not_applied",
         "desktop.ledger.counterparty.country",
         "desktop.ledger.counterparty.established",
-        "desktop.ledger.counterparty.not_confirmed",
         "desktop.ledger.counterparty.note",
         "desktop.ledger.counterparty.scope.es_canarias",
         "desktop.ledger.counterparty.scope.es_ceuta_melilla",

@@ -41,10 +41,12 @@ import dataclasses
 import enum
 import hashlib
 import io
+import marshal
 import pickle
+import re
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path, PurePath, PurePosixPath
-from types import MappingProxyType, ModuleType
+from types import FunctionType, MappingProxyType, ModuleType
 from typing import Final, cast, override
 
 from pydantic import BaseModel
@@ -134,14 +136,42 @@ def take_snapshot(paths: Iterable[Path]) -> SourceSnapshot:
 
 
 def scanner_identity(*modules: ModuleType) -> str:
-    """Digest the source of the modules that implement a scan, so a changed scanner is a new key."""
-    entries: list[list[str]] = []
+    """Identify scanner source together with the functions and literal policy actually loaded.
+
+    Reading source alone lets an interpreter imported before an edit publish
+    its old implementation's answer under the edited implementation's key.
+    """
+    entries: list[tuple[str, str, dict[str, str]]] = []
     for module in modules:
         source = module.__file__
         if source is None:
             raise ValueError(f"scanner module {module.__name__} has no source file")
-        entries.append([module.__name__, hash_file(Path(source))[0]])
+        loaded: dict[str, str] = {}
+        for name, value in vars(module).items():
+            if isinstance(value, FunctionType) and value.__module__ == module.__name__:
+                loaded[name] = hashlib.sha256(marshal.dumps(value.__code__)).hexdigest()
+            elif name.isupper():
+                loaded[name] = _scanner_literal_identity(value)
+        entries.append((module.__name__, hash_file(Path(source))[0], loaded))
     return content_hash_hex({"schema": "cadrumo-scanner-identity/v1", "modules": sorted(entries)})
+
+
+def _scanner_literal_identity(value: object) -> str:
+    """Normalize loaded literal policy without process-specific set ordering or object addresses."""
+    if isinstance(value, type(None) | bool | int | float | complex | str | bytes | PurePath):
+        return repr(value)
+    if isinstance(value, re.Pattern):
+        return f"pattern({value.pattern!r}, {value.flags})"
+    if isinstance(value, tuple | list):
+        return f"{type(value).__name__}({[_scanner_literal_identity(item) for item in value]!r})"
+    if isinstance(value, set | frozenset):
+        return f"{type(value).__name__}({sorted(_scanner_literal_identity(item) for item in value)!r})"
+    if isinstance(value, dict | MappingProxyType):
+        items = sorted((_scanner_literal_identity(key), _scanner_literal_identity(item)) for key, item in value.items())
+        return f"mapping({items!r})"
+    if isinstance(value, type):
+        return f"type({value.__module__}.{value.__qualname__})"
+    return f"instance({type(value).__module__}.{type(value).__qualname__})"
 
 
 def _require_immutable_mapping(value: MappingProxyType[object, object], *, path: str) -> None:

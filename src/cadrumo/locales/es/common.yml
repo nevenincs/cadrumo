@@ -954,14 +954,12 @@ desktop:
       phone_title: Aprueba en tu móvil
       try_again: Inténtalo de nuevo
     bring_all: Actualizar desde la AEAT
-    close: Cerrar datos de la AEAT
     count:
       borrador_refused: '{count} no se pueden usar'
       filed_aeat_only: '{count} solo en la AEAT'
       filed_differing: '{count} difieren'
       unread_notifications: '{count} sin leer'
     loading: Cargando…
-    maximize: Maximizar datos de la AEAT
     progress:
       action_failed: No se pudo hacer. Inténtalo de nuevo.
       action_unknown: No se sabe si se hizo.
@@ -1264,7 +1262,6 @@ desktop:
       submitted_observed: Presentación observada
     as_of: Según los registros locales a {date}. Aquí no se ha consultado nada a la
       AEAT.
-    close: Cerrar el calendario
     coverage:
       applicability_undetermined: 'No se ha podido determinar si debes presentar:
         {modelos}. Comprueba tus obligaciones.'
@@ -1287,7 +1284,6 @@ desktop:
       external_baseline_imported: Importado de una presentación anterior
       not_ready_to_file: Sin preparar
       ready_to_file: Listo para presentar
-    maximize: Maximizar el calendario
     modelo: Modelo {modelo}
     more: '{count} más'
     moved: Trasladado desde el {date}
@@ -1355,7 +1351,6 @@ desktop:
     top: Dividir arriba
   docs:
     frame_title: Documentación de Cadrumo
-    hide: Ocultar la documentación
     loading: Cargando la documentación…
     not_bundled: La documentación no está disponible en esta instalación.
     show: Mostrar la documentación
@@ -2206,7 +2201,6 @@ desktop:
       established: Establecida
       not_applied: La confirmación devuelta no contiene todos los valores que has
         introducido. Tu borrador se conserva.
-      not_confirmed: Aún no
       note: Nota
       proposed: Tu valor propuesto
       scope:
@@ -2364,7 +2358,6 @@ desktop:
         country: Indica el país con dos letras
         currency: Indica la moneda
         duplicate: Puede que ya esté en el catálogo
-        duplicate_unread: Esperando a que el libro compruebe el catálogo
         findings: Responde antes a todas las preguntas
       in_review: En revisión
       keep: Conservarlo
@@ -4624,9 +4617,7 @@ desktop:
     restore: Restaurar la disposición
     tui: Espacio de trabajo
   panel:
-    hide: Ocultar el panel inferior
     label: Panel inferior
-    resize: Cambiar el tamaño del panel inferior
   profile:
     action:
       about: Información sobre {field}
@@ -4711,7 +4702,6 @@ desktop:
         inicies otra; contacta con soporte.
       unsupported: Este acceso requiere una interacción disponible en el terminal.
         Cancela este intento y sincroniza el Censo desde el terminal.
-    close: Cerrar perfil
     close_dialog: Cerrar
     compact: Vista compacta
     complete: Finalizar la configuración del perfil
@@ -9590,13 +9580,9 @@ workspace:
         open_it: Abrirla
         other: Otros modelos
         refused: Cadrumo no ha creado la declaración.
-        saved_unread: La declaración se ha creado, pero no se ha podido leer su respuesta.
-          La lista se vuelve a leer; ábrela desde allí.
         search_placeholder: Buscar
         show_all: Mostrar todos los modelos, no solo los tuyos
         start_confirm: ¿Empezar el {modelo} de {period}?
-        unknown: Cadrumo no ha podido saber si se ha creado la declaración.
-        unknown_next: Se vuelve a leer la lista. Revísala antes de volver a intentarlo.
         which_modelo: ¿Qué modelo quieres preparar?
         which_period: ¿De qué periodo es?
         which_year: ¿De qué año es?
@@ -10002,7 +9988,6 @@ workspace:
       not_yet: Todavía no
       open_check: Abrir Comprobar
       other_copies: Otras copias
-      receipt_differs: El justificante no coincide con esta declaración.
       receipt_matches: El justificante coincide con esta declaración.
       receipt_missing: Aún no la confirma ningún justificante.
       reconciliation:
@@ -10437,8 +10422,6 @@ workspace:
       failed: No se ha podido hacer. Inténtalo de nuevo.
       not_done: No se ha hecho; no ha cambiado nada.
       refused: No se ha hecho. No ha cambiado nada.
-      unknown: Cadrumo no ha podido ver si terminó; puede que sí. No se vuelve a hacer.
-        Vuelve a leer la declaración antes de seguir.
     page:
       answers: Respuestas que usa el cálculo
       calculation_details: Detalles del cálculo, no impresos en el modelo
@@ -10566,9 +10549,6 @@ workspace:
       rebased: 'La declaración cambió después de que escribieras estos cambios, que
         aún no están aplicados. Revisa de nuevo las líneas marcadas (cambiadas: {count}).'
       title: 'Cambios por aplicar: {count}'
-      unknown: Cadrumo no ha podido ver si tus cambios se aplicaron; puede que sí.
-        No se vuelven a enviar. Vuelve a leer la declaración antes de seguir; tus
-        cambios siguen aquí.
     search:
       count: 'Casillas encontradas: {count}'
       empty: Ninguna casilla coincide con {query}.
