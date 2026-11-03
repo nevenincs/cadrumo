@@ -327,8 +327,15 @@ def _resolve_holiday_publication(
     if not isinstance(publication, ResolvedEventFact):
         raise DeadlineValidationError("holiday calendar publication must resolve to an event fact")
     # A publication carried over from another year proves nothing about this
-    # one: only an authored publication makes absent holiday events business days.
-    if publication.projection_direction is not TemporalProjectionDirection.AUTHORED:
+    # one: only a publication authored for this very year makes absent holiday
+    # events business days. A year above the support horizon resolves its own
+    # authored variant as a forward projection, so the variant's event date, not
+    # the projection direction, proves it belongs to the year.
+    authored_for_year = (
+        publication.projection_direction is TemporalProjectionDirection.AUTHORED
+        or publication.payload.event_date.year == year
+    )
+    if not authored_for_year:
         raise DeadlineValidationError(f"holiday calendar for {year} has no governed publication")
     return publication
 

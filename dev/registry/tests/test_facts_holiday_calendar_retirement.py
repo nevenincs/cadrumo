@@ -31,7 +31,8 @@ _AUTHORITY_DIGEST = "b" * 64
 _LEGAL_REF = "ley-39-2015:art-30.5"
 
 # This independent master is the published contract: every día inhábil of the
-# Secretaría de Estado de Función Pública resolutions for 2024-2026, extracted
+# Secretaría de Estado de Función Pública resolutions for 2024-2026 and of the
+# Dirección General de Trabajo relación de fiestas laborales for 2027, extracted
 # from boe.es separately from the facts under test, with each national fiesta
 # that falls on a weekend and without sub-territorial days such as the Val
 # d'Aran swap of 26 December.
@@ -50,11 +51,17 @@ _SOURCE_2026 = (
     "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo",
     "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702",
 )
+_SOURCE_2027 = (
+    "boe-fiestas-laborales-2027",
+    "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo",
+    "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254",
+)
 
 _PUBLICATION_MASTER = {
     "holiday-calendar-publication:2024": (date(2024, 1, 1), date(2024, 12, 31), *_SOURCE_2024),
     "holiday-calendar-publication:2025": (date(2025, 1, 1), date(2025, 12, 31), *_SOURCE_2025),
     "holiday-calendar-publication:2026": (date(2026, 1, 1), date(2026, 12, 31), *_SOURCE_2026),
+    "holiday-calendar-publication:2027": (date(2027, 1, 1), date(2027, 12, 31), *_SOURCE_2027),
 }
 
 _EVENT_MASTER = {
@@ -545,6 +552,110 @@ _EVENT_MASTER = {
     ),
     "2026-12-08:national:es": (date(2026, 12, 8), "national", None, "Inmaculada Concepci\u00f3n", *_SOURCE_2026),
     "2026-12-25:national:es": (date(2026, 12, 25), "national", None, "Natividad del Se\u00f1or", *_SOURCE_2026),
+    "2027-01-01:national:es": (date(2027, 1, 1), "national", None, "Año Nuevo", *_SOURCE_2027),
+    "2027-01-06:national:es": (date(2027, 1, 6), "national", None, "Epifanía del Señor", *_SOURCE_2027),
+    "2027-03-26:national:es": (date(2027, 3, 26), "national", None, "Viernes Santo", *_SOURCE_2027),
+    "2027-05-01:national:es": (date(2027, 5, 1), "national", None, "Fiesta del Trabajo", *_SOURCE_2027),
+    "2027-10-12:national:es": (date(2027, 10, 12), "national", None, "Fiesta Nacional de España", *_SOURCE_2027),
+    "2027-11-01:national:es": (date(2027, 11, 1), "national", None, "Todos los Santos", *_SOURCE_2027),
+    "2027-12-06:national:es": (date(2027, 12, 6), "national", None, "Día de la Constitución Española", *_SOURCE_2027),
+    "2027-12-08:national:es": (date(2027, 12, 8), "national", None, "Inmaculada Concepción", *_SOURCE_2027),
+    "2027-12-25:national:es": (date(2027, 12, 25), "national", None, "Natividad del Señor", *_SOURCE_2027),
+    "2027-03-01:ccaa:es-an": (date(2027, 3, 1), "ccaa", "ES-AN", "Día de Andalucía", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-an": (date(2027, 3, 25), "ccaa", "ES-AN", "Jueves Santo", *_SOURCE_2027),
+    "2027-08-16:ccaa:es-an": (
+        date(2027, 8, 16),
+        "ccaa",
+        "ES-AN",
+        "Lunes siguiente a la Asunción de la Virgen",
+        *_SOURCE_2027,
+    ),
+    "2027-03-25:ccaa:es-ar": (date(2027, 3, 25), "ccaa", "ES-AR", "Jueves Santo", *_SOURCE_2027),
+    "2027-04-23:ccaa:es-ar": (date(2027, 4, 23), "ccaa", "ES-AR", "San Jorge/Día de Aragón", *_SOURCE_2027),
+    "2027-08-16:ccaa:es-ar": (
+        date(2027, 8, 16),
+        "ccaa",
+        "ES-AR",
+        "Lunes siguiente a la Asunción de la Virgen",
+        *_SOURCE_2027,
+    ),
+    "2027-03-25:ccaa:es-as": (date(2027, 3, 25), "ccaa", "ES-AS", "Jueves Santo", *_SOURCE_2027),
+    "2027-08-16:ccaa:es-as": (
+        date(2027, 8, 16),
+        "ccaa",
+        "ES-AS",
+        "Lunes siguiente a la Asunción de la Virgen",
+        *_SOURCE_2027,
+    ),
+    "2027-09-08:ccaa:es-as": (date(2027, 9, 8), "ccaa", "ES-AS", "Día de Asturias", *_SOURCE_2027),
+    "2027-03-01:ccaa:es-ib": (date(2027, 3, 1), "ccaa", "ES-IB", "Día de les Illes Balears", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-ib": (date(2027, 3, 25), "ccaa", "ES-IB", "Jueves Santo", *_SOURCE_2027),
+    "2027-03-29:ccaa:es-ib": (date(2027, 3, 29), "ccaa", "ES-IB", "Lunes de Pascua", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-cn": (date(2027, 3, 25), "ccaa", "ES-CN", "Jueves Santo", *_SOURCE_2027),
+    "2027-08-16:ccaa:es-cn": (
+        date(2027, 8, 16),
+        "ccaa",
+        "ES-CN",
+        "Lunes siguiente a la Asunción de la Virgen",
+        *_SOURCE_2027,
+    ),
+    "2027-03-25:ccaa:es-cb": (date(2027, 3, 25), "ccaa", "ES-CB", "Jueves Santo", *_SOURCE_2027),
+    "2027-07-28:ccaa:es-cb": (
+        date(2027, 7, 28),
+        "ccaa",
+        "ES-CB",
+        "Día de las Instituciones de Cantabria",
+        *_SOURCE_2027,
+    ),
+    "2027-09-15:ccaa:es-cb": (date(2027, 9, 15), "ccaa", "ES-CB", "La Bien Aparecida", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-cm": (date(2027, 3, 25), "ccaa", "ES-CM", "Jueves Santo", *_SOURCE_2027),
+    "2027-05-27:ccaa:es-cm": (date(2027, 5, 27), "ccaa", "ES-CM", "Corpus Christi", *_SOURCE_2027),
+    "2027-05-31:ccaa:es-cm": (date(2027, 5, 31), "ccaa", "ES-CM", "Día de Castilla-La Mancha", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-cl": (date(2027, 3, 25), "ccaa", "ES-CL", "Jueves Santo", *_SOURCE_2027),
+    "2027-04-23:ccaa:es-cl": (date(2027, 4, 23), "ccaa", "ES-CL", "Fiesta de Castilla y León", *_SOURCE_2027),
+    "2027-08-16:ccaa:es-cl": (
+        date(2027, 8, 16),
+        "ccaa",
+        "ES-CL",
+        "Lunes siguiente a la Asunción de la Virgen",
+        *_SOURCE_2027,
+    ),
+    "2027-06-24:ccaa:es-ct": (date(2027, 6, 24), "ccaa", "ES-CT", "San Juan", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-ex": (date(2027, 3, 25), "ccaa", "ES-EX", "Jueves Santo", *_SOURCE_2027),
+    "2027-09-08:ccaa:es-ex": (date(2027, 9, 8), "ccaa", "ES-EX", "Día de Extremadura", *_SOURCE_2027),
+    "2027-10-11:ccaa:es-ex": (date(2027, 10, 11), "ccaa", "ES-EX", "Sustitución del 15 de agosto", *_SOURCE_2027),
+    "2027-03-19:ccaa:es-ga": (date(2027, 3, 19), "ccaa", "ES-GA", "San José", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-ga": (date(2027, 3, 25), "ccaa", "ES-GA", "Jueves Santo", *_SOURCE_2027),
+    "2027-05-17:ccaa:es-ga": (date(2027, 5, 17), "ccaa", "ES-GA", "Día de las Letras Gallegas", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-ri": (date(2027, 3, 25), "ccaa", "ES-RI", "Jueves Santo", *_SOURCE_2027),
+    "2027-03-29:ccaa:es-ri": (date(2027, 3, 29), "ccaa", "ES-RI", "Lunes de Pascua", *_SOURCE_2027),
+    "2027-06-09:ccaa:es-ri": (date(2027, 6, 9), "ccaa", "ES-RI", "Día de La Rioja", *_SOURCE_2027),
+    "2027-03-19:ccaa:es-md": (date(2027, 3, 19), "ccaa", "ES-MD", "San José", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-md": (date(2027, 3, 25), "ccaa", "ES-MD", "Jueves Santo", *_SOURCE_2027),
+    "2027-08-16:ccaa:es-md": (
+        date(2027, 8, 16),
+        "ccaa",
+        "ES-MD",
+        "Lunes siguiente a la Asunción de la Virgen",
+        *_SOURCE_2027,
+    ),
+    "2027-03-19:ccaa:es-mc": (date(2027, 3, 19), "ccaa", "ES-MC", "San José", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-mc": (date(2027, 3, 25), "ccaa", "ES-MC", "Jueves Santo", *_SOURCE_2027),
+    "2027-06-09:ccaa:es-mc": (date(2027, 6, 9), "ccaa", "ES-MC", "Día de la Región de Murcia", *_SOURCE_2027),
+    "2027-03-19:ccaa:es-nc": (date(2027, 3, 19), "ccaa", "ES-NC", "San José", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-nc": (date(2027, 3, 25), "ccaa", "ES-NC", "Jueves Santo", *_SOURCE_2027),
+    "2027-03-29:ccaa:es-nc": (date(2027, 3, 29), "ccaa", "ES-NC", "Lunes de Pascua", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-pv": (date(2027, 3, 25), "ccaa", "ES-PV", "Jueves Santo", *_SOURCE_2027),
+    "2027-03-29:ccaa:es-pv": (date(2027, 3, 29), "ccaa", "ES-PV", "Lunes de Pascua", *_SOURCE_2027),
+    "2027-10-07:ccaa:es-pv": (date(2027, 10, 7), "ccaa", "ES-PV", "Aniversario 1er Gobierno Euskadi", *_SOURCE_2027),
+    "2027-03-19:ccaa:es-vc": (date(2027, 3, 19), "ccaa", "ES-VC", "San José", *_SOURCE_2027),
+    "2027-03-29:ccaa:es-vc": (date(2027, 3, 29), "ccaa", "ES-VC", "Lunes de Pascua", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-ce": (date(2027, 3, 25), "ccaa", "ES-CE", "Jueves Santo", *_SOURCE_2027),
+    "2027-05-17:ccaa:es-ce": (date(2027, 5, 17), "ccaa", "ES-CE", "Eidul Adha-Fiesta Sacrificio", *_SOURCE_2027),
+    "2027-08-05:ccaa:es-ce": (date(2027, 8, 5), "ccaa", "ES-CE", "Nuestra Señora de África", *_SOURCE_2027),
+    "2027-03-10:ccaa:es-ml": (date(2027, 3, 10), "ccaa", "ES-ML", "Fiesta del Eid Fitr", *_SOURCE_2027),
+    "2027-03-25:ccaa:es-ml": (date(2027, 3, 25), "ccaa", "ES-ML", "Jueves Santo", *_SOURCE_2027),
+    "2027-05-17:ccaa:es-ml": (date(2027, 5, 17), "ccaa", "ES-ML", "Fiesta Sacrificio-Aid Al Adha", *_SOURCE_2027),
 }
 
 

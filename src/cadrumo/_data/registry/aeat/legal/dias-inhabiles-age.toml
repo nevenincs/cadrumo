@@ -6,6 +6,10 @@
 # Each resolution is bundled as published (BOE holds no consolidated text for it);
 # its ANEXO lists every weekday that is inhábil nationally or in each autonomous
 # community and city, followed by notes on sub-territorial variations.
+#
+# Until the resolution for a year is published, the Dirección General de Trabajo
+# relación de fiestas laborales (RD 2001/1983 art. 45.4) supplies the dates: a
+# day festive in every territory is inhábil nationally (Ley 39/2015 art. 30.2).
 
 [legal."resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 evidence_tier = "legal_authority"
@@ -73,6 +77,28 @@ required_text = [
     "Día 25: Inhábil en todo el territorio nacional.",
 ]
 
+[legal."resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "resolucion"
+corpus_ref = "corpus/normatives/html/boe-a-2026-21254-fiestas-laborales-2027.html#anexo"
+document_id = "BOE-A-2026-21254"
+article = "anexo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+published_at = 2026-10-13
+effective_from = 2026-10-13
+effective_to = 2027-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-03
+reviewed_by = "agent-authored from BOE-A-2026-21254 downloaded from boe.es; operator to re-stamp"
+notes = "Resolución de 8 de octubre de 2026 de la Dirección General de Trabajo: relación de fiestas laborales para 2027 (RD 2001/1983 art. 45.4). Un día festivo en los diecinueve territorios es inhábil en todo el territorio nacional (Ley 39/2015 art. 30.2). La Secretaría de Estado de Función Pública aún no ha publicado el calendario de días inhábiles de 2027."
+required_text = [
+    "Año 2027",
+    "1 Año Nuevo.",
+    "26 Viernes Santo.",
+    "25 Natividad del Señor.",
+]
+
 [sources."boe-dias-inhabiles-age-2024"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
@@ -113,4 +139,18 @@ published_at = 2025-11-24
 applies_from = 2026-01-01
 applies_to = 2026-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+review_status = "pending_review"
+
+[sources."boe-fiestas-laborales-2027"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2026-21254-fiestas-laborales-2027.html"
+sha256 = "fa19cbec74c55b129aa36f2bb0e4866d16bb5a90bfcafbdf410c6f7045a5abe9"
+bytes = 80115
+retrieved_at = 2026-11-03
+published_at = 2026-10-13
+applies_from = 2027-01-01
+applies_to = 2027-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
 review_status = "pending_review"

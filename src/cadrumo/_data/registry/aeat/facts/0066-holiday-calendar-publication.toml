@@ -79,3 +79,29 @@ outputs = [
   { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702" },
   { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
 ]
+
+# 2027: the Secretaría de Estado de Función Pública resolution is not yet published,
+# so the Dirección General de Trabajo relación de fiestas laborales is the source.
+# Every date listed there for all nineteen territories is inhábil nationally
+# (Ley 39/2015 art. 30.2) and the territory lists come from the same annex.
+[[fact.variants]]
+variant_id = "holiday-calendar-publication:2027"
+date_axis = "submission_date"
+valid_from = 2027-01-01
+valid_to = 2027-12-31
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["Año 2027"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
+]

@@ -87,13 +87,10 @@ def _national(year: int, *days: tuple[int, int]) -> HolidayCalendar:
 
 
 # Fiestas laborales de ámbito nacional for the years the authority does not
-# publish. 2022: BOE-A-2021-17113; 2023: BOE-A-2022-17112. Only January matters
-# for 2027: the latest close under test is 1 February 2027, and 1 and 6 January
-# are fixed national holidays.
+# publish. 2022: BOE-A-2021-17113; 2023: BOE-A-2022-17112.
 _SUPPLIED_CALENDARS = (
     _national(2022, (1, 1), (1, 6), (4, 15), (8, 15), (10, 12), (11, 1), (12, 6), (12, 8)),
     _national(2023, (1, 6), (4, 7), (5, 1), (8, 15), (10, 12), (11, 1), (12, 6), (12, 8), (12, 25)),
-    _national(2027, (1, 1), (1, 6)),
 )
 
 # ---------------------------------------------------------------------------
@@ -293,16 +290,29 @@ def test_the_oracle_matches_hand_worked_2028_closes() -> None:
 
 
 def test_a_year_without_a_published_calendar_has_an_unknown_close(operation: PinnedAuthorityOperation) -> None:
-    period = Period.from_year_and_code(2027, "1T")
+    period = Period.from_year_and_code(2028, "1T")
 
-    resolved = resolve_filing_window("303", 2027, period, authority=operation)
+    resolved = resolve_filing_window("303", 2028, period, authority=operation)
 
     assert isinstance(resolved, ProjectedFilingWindowCloseUnavailable)
     assert resolved.reason is FilingWindowCloseUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE
-    assert resolved.opens_on == date(2027, 4, 1)
-    assert resolved.nominal_closes_on == date(2027, 4, 20)
+    assert resolved.opens_on == date(2028, 4, 1)
+    assert resolved.nominal_closes_on == date(2028, 4, 20)
     assert resolved.closes_on is None
     assert resolved.dated_window is None
+
+
+def test_a_2027_window_resolves_against_the_published_2027_calendar(operation: PinnedAuthorityOperation) -> None:
+    # 20 April 2027 is a Tuesday and 30 December 2027 a Thursday, and neither is
+    # a national inhábil day, so each nominal close stands.
+    quarter = resolve_filing_window("303", 2027, Period.from_year_and_code(2027, "1T"), authority=operation)
+    month = resolve_filing_window("303", 2027, Period.from_year_and_code(2027, "11"), authority=operation)
+
+    assert isinstance(quarter, ProjectedFilingWindow)
+    assert quarter.nominal_closes_on == date(2027, 4, 20)
+    assert quarter.closes_on == date(2027, 4, 20)
+    assert isinstance(month, ProjectedFilingWindow)
+    assert month.closes_on == date(2027, 12, 30)
 
 
 def test_a_walk_into_an_unpublished_year_has_an_unknown_close(operation: PinnedAuthorityOperation) -> None:
@@ -343,14 +353,14 @@ def _iva_profile() -> TaxpayerProfile:
 def test_the_engine_reports_an_unknown_close_as_unknown_and_never_overdue(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    # A reference date past every nominal close of 2027.
-    schedule = DeadlineEngine().compute(_iva_profile(), 2027, today=date(2028, 12, 31))
+    # A reference date past every nominal close of 2028.
+    schedule = DeadlineEngine().compute(_iva_profile(), 2028, today=date(2029, 12, 31))
 
     unknown = {(item.modelo, item.period.registry_token): item for item in schedule.close_unknown_obligations}
     first_quarter = unknown[(Modelo("303"), "1T")]
     assert first_quarter.status is ObligationStatus.UNKNOWN
-    assert first_quarter.opens_on == date(2027, 4, 1)
-    assert first_quarter.nominal_closes_on == date(2027, 4, 20)
+    assert first_quarter.opens_on == date(2028, 4, 1)
+    assert first_quarter.nominal_closes_on == date(2028, 4, 20)
     assert first_quarter.close_unavailable_reason == FilingWindowCloseUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE
     dated_303 = [item for item in schedule.obligations if item.modelo in _MODELOS]
-    assert dated_303 == [], "a 2027 Modelo 303 or 390 window has no known close, so none is dated or overdue"
+    assert dated_303 == [], "a 2028 Modelo 303 or 390 window has no known close, so none is dated or overdue"
