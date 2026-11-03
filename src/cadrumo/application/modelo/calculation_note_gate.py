@@ -63,6 +63,10 @@ _FILED_STATES: frozenset[CalculationRevisionState] = frozenset(
 )
 
 
+SOURCE_DISAGREEMENT_FINDING_ID_LENGTH: Final[int] = 16
+"""The leading characters of a finding key an operator reads and types back as the finding id."""
+
+
 @dataclass(frozen=True, slots=True)
 class SourceDisagreementResolutions:
     """The source disagreements an active operator resolution covers, by finding key.
@@ -73,10 +77,12 @@ class SourceDisagreementResolutions:
     """
 
     finding_keys: frozenset[str] = frozenset()
+    unreadable: bool = False
+    """The resolutions could not be read, so none is honoured; an unreadable store never reads as a covering one."""
 
     def covers(self, finding_key: str | None) -> bool:
         """Whether an active resolution covers the disagreement with ``finding_key``."""
-        return finding_key is not None and finding_key in self.finding_keys
+        return not self.unreadable and finding_key is not None and finding_key in self.finding_keys
 
 
 NO_SOURCE_DISAGREEMENT_RESOLUTIONS: Final[SourceDisagreementResolutions] = SourceDisagreementResolutions()
@@ -126,14 +132,19 @@ def _refused_here(
     )
 
 
-def blocking_calculation_issues(revision: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
+def blocking_calculation_issues(
+    revision: CalculationRevision, resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+) -> tuple[CalculationSourceIssue, ...]:
     """The persisted notes of ``revision`` that withhold checking, exporting and recording it.
+
+    A source disagreement that ``resolutions`` covers withholds nothing; every
+    other disagreement still does.
 
     See Also:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
             The stored calculation head carrying values, provenance and lifecycle facts.
     """
-    return tuple(issue for issue in revision.source_issues if _refused_here(issue))
+    return tuple(issue for issue in revision.source_issues if _refused_here(issue, resolutions))
 
 
 def proven_zero_calculation_issues(revision: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
@@ -155,12 +166,16 @@ def require_no_blocking_calculation_notes(
     *,
     action: str,
     boxes: PrintedBoxes | None = None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> None:
     """Refuse ``action`` while ``revision`` carries a persisted blocking note.
 
     The refusal is worded by the first note's own catalogue sentence and
     carries every note's reason in its context. ``boxes`` are the boxes the
     revision's form prints, used to name the note's box by its printed number.
+    A source disagreement is named by its finding id, the id an operator
+    resolution answers; ``resolutions_unreadable`` says the resolutions could
+    not be read, so none was honoured.
 
     Raises:
         ModeloCalculationBlockedError: The revision carries a blocking note.
@@ -169,11 +184,16 @@ def require_no_blocking_calculation_notes(
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
             The stored calculation head carrying values, provenance and lifecycle facts.
     """
-    blocking = blocking_calculation_issues(revision)
+    blocking = blocking_calculation_issues(revision, resolutions)
     if not blocking:
         return
     first = blocking[0]
     box = None if boxes is None or first.casilla_id is None else boxes.number(first.casilla_id)
+    finding_ids = tuple(
+        issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+        for issue in blocking
+        if issue.disagreement is not None
+    )
     raise ModeloCalculationBlockedError(
         translated_message=what_locale_key(first.reason),
         context={
@@ -182,6 +202,8 @@ def require_no_blocking_calculation_notes(
             "reason": first.reason,
             "reasons": ",".join(sorted({issue.reason for issue in blocking})),
             **({} if box is None else {"box": box}),
+            **({} if not finding_ids else {"finding_ids": ",".join(finding_ids)}),
+            **({"resolutions_unreadable": "true"} if resolutions.unreadable and finding_ids else {}),
         },
     )
 
@@ -399,7 +421,12 @@ def require_work_unit_calculation_screen_current(
 
 
 def require_work_unit_calculation_unblocked(
-    *, work_unit: WorkUnit, revision: CalculationRevision, action: str, operation: PinnedAuthorityOperation
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    action: str,
+    operation: PinnedAuthorityOperation,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> None:
     """Refuse ``action`` on ``work_unit`` while its ``revision`` is stale or carries a persisted blocking note.
 
@@ -409,7 +436,8 @@ def require_work_unit_calculation_unblocked(
     are read. A revision already recorded as filed keeps its history and is not
     screened again, but a blocking note it carries still refuses, and so does a
     figure in a capped box of a revision filed before screen stamps existed
-    (:func:`calculation_filed_before_grade_cap`).
+    (:func:`calculation_filed_before_grade_cap`). A source disagreement that
+    ``resolutions`` covers is not a blocking note.
 
     Raises:
         ModeloCalculationBlockedError: The revision is stale, was filed before screens with a capped figure,
@@ -434,17 +462,20 @@ def require_work_unit_calculation_unblocked(
         raise _refuse_filed_before_grade_cap(
             revision, action=action, snapshot=snapshot, operation=operation, capped_box=capped_box
         )
-    if not blocking_calculation_issues(revision):
+    if not blocking_calculation_issues(revision, resolutions):
         return
     if snapshot is None:
         snapshot = _screened_snapshot(
             operation, modelo=str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period
         )
-    require_no_blocking_calculation_notes(revision, action=action, boxes=snapshot_printed_boxes(operation, snapshot))
+    require_no_blocking_calculation_notes(
+        revision, action=action, boxes=snapshot_printed_boxes(operation, snapshot), resolutions=resolutions
+    )
 
 
 __all__ = [
     "NO_SOURCE_DISAGREEMENT_RESOLUTIONS",
+    "SOURCE_DISAGREEMENT_FINDING_ID_LENGTH",
     "ModeloCalculationBlockedError",
     "SourceDisagreementResolutions",
     "blocking_calculation_issues",

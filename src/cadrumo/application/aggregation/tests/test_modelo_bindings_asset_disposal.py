@@ -269,8 +269,9 @@ def test_an_agrarian_excess_is_a_finding_and_reaches_no_box() -> None:
 
     assert _income_box(_income(history, "2T", rows=(row,))) == Decimal("0")
     assert any("agrarian" in note for note in _findings(instalment))
-    # The acquisition row itself is an unclassified expense, which the ledger reports separately.
-    assert _blocks(instalment) == {"source_domain_not_ready"}
+    # Agrarian apartado II is a share of income only (2 % of the quarter's volume of ingresos,
+    # RIRPF art. 110.1.c), so the excess has no box to reach and nothing here refuses the calculation.
+    assert _blocks(instalment) == set()
 
 
 def test_modelo_131_says_the_excess_is_not_routed() -> None:

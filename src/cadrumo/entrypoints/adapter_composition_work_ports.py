@@ -140,6 +140,7 @@ def build_calculation_action_ports(
         migrate_stored_relation_overrides_to_binding_ids,
     )
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+    from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
     from ..adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ..adapters.persistence.profile.invoice_source_resolver import (
@@ -261,6 +262,7 @@ def build_calculation_action_ports(
             repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
             absences=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
         ),
+        credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
         relation_override_migration=RelationOverrideMigration(),
     )
 
@@ -345,6 +347,7 @@ def build_filing_action_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
         CalculationObservationRepository,
         IvaWalletDecisionRepository,
     )
+    from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -394,6 +397,7 @@ def build_filing_action_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
         ),
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
         retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
     )
 
 
@@ -559,6 +563,7 @@ def build_verification_repository_bundle(
         CalculationObservationRepository,
         IvaWalletDecisionRepository,
     )
+    from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -605,6 +610,7 @@ def build_verification_repository_bundle(
         ledger_membership_ports=build_ledger_membership_ports(
             bucket_id=normalized_bucket_id, transaction_repository=transaction_repository, objects=objects
         ),
+        credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
     )
 
 

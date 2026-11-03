@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
@@ -16,6 +16,7 @@ from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from ..operations.public_scalar import PublicDecimal
 
 type _Revision = Annotated[str, Field(min_length=1, max_length=128)]
+type _Path = Annotated[str, Field(min_length=1, max_length=4_096)]
 
 
 class RetencionSoportadaProfileRequest(BaseModel):
@@ -38,6 +39,12 @@ class RetencionSoportadaRecordRequest(RetencionSoportadaProfileRequest):
     ``payer_tax_id`` is a sensitive input: the model never echoes it in a
     validation error. ``expected_revision_id`` is absent for a first record and
     the revision a prior list showed for a replacement.
+
+    The certificate is named by ``source_path`` (resolved against
+    ``source_directory``, the submitting frontend's directory), which the worker
+    reads and keeps in encrypted attachment custody, or by ``evidence_fingerprint``
+    alone for bytes custody already holds. Given with a file, the fingerprint is
+    only an integrity cross-check against the bytes read.
     """
 
     ejercicio: FilingYear
@@ -51,7 +58,15 @@ class RetencionSoportadaRecordRequest(RetencionSoportadaProfileRequest):
     ingreso_a_cuenta_repercutido: PublicDecimal
     origin: RetencionSoportadaOrigen
     evidence_fingerprint: ContentDigest | None = None
+    source_path: _Path | None = None
+    source_directory: _Path | None = None
     expected_revision_id: _Revision | None = None
+
+    @model_validator(mode="after")
+    def _file_is_resolved_against_a_directory(self) -> RetencionSoportadaRecordRequest:
+        if (self.source_path is None) != (self.source_directory is None):
+            raise ValueError("a certificate file is named by a path and the directory it is resolved against")
+        return self
 
 
 class RetencionSoportadaRemoveRequest(RetencionSoportadaProfileRequest):

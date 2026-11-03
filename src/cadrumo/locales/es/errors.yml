@@ -413,6 +413,8 @@ errors:
       catálogo de facturas.
     canonical_counterparty_establishment_persistence: No se pudo guardar el registro
       de establecimiento de la contraparte.
+    canonical_credit_resolution_persistence: No se pudieron leer ni guardar las discrepancias
+      entre fuentes que aceptaste.
     canonical_diagnostic_run_record: No se pudieron leer los registros de la ejecución
       diagnóstica.
     canonical_evidence_bundle_persistence: No se pudo guardar el conjunto de evidencias.
@@ -949,6 +951,9 @@ errors:
       perfil.
     clave_credentials_incomplete: Al modo de autenticación Cl@ve seleccionado le falta
       una credencial que necesita.
+    credit_resolution_refused: No se guardó la resolución.
+    credit_resolution_revision_conflict: La resolución cambió desde que la leíste;
+      vuelve a leerla antes de guardar.
     financial_edit_journal_purge: No se pudo depurar de forma segura este diario antiguo
       de edición financiera. Su operación no está disponible. No se cargó ningún valor
       de edición.

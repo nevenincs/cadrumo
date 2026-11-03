@@ -498,6 +498,23 @@ MODELO_RECONCILIATION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# An operator's acceptance of one disputed Modelo figure. The row restates the
+# amounts the calculation disagreed on, so it is FINANCIAL. The key carries the
+# finding key, the digest of every source's value, the registry revision and the
+# compared declaration, and neither the calculation revision nor the authority
+# generation: a recalculation that reproduces the same amounts keeps the row, and
+# any changed amount names another finding that no row covers. Revocation
+# overwrites the row under its expected revision.
+MODELO_CREDIT_RESOLUTION_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_credit_resolutions",
+    namespace="cadrumo.modelo.credit_resolution.records",
+    owner="cadrumo.application.modelo",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="credit-resolution:{modelo}:{filing_year}:{period}:{finding_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 SYNC_RUN_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="sync_run_records",
     namespace="cadrumo.storage.sync_run.records",

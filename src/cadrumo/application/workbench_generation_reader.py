@@ -70,6 +70,9 @@ from .calculations.verification_report_gate import require_verification_report_c
 from .ledger.workspace import (
     LedgerWorkspaceProjectionV1,
 )
+from .modelo.calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
+from .modelo.credit_resolution import load_credit_resolutions
+from .modelo.credit_resolution_repository import CreditResolutionReader
 from .modelo.declaration_summary import declaration_summary
 from .modelo.declarations_list import DeclarationListInputs
 from .modelo.declarations_portfolio import project_declarations_portfolio
@@ -78,6 +81,7 @@ from .modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionError,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
@@ -356,6 +360,11 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None
+    credit_resolution_reader: CreditResolutionReader | None = None
+    """The profile's accepted source disagreements, so a declaration's row counts a covered one as the gate does.
+
+    Unbound, no acceptance is honoured and every disagreement counts as a blocker, which is the stricter reading.
+    """
     reconciliation_reader: Callable[[], tuple[ModeloReconciliationRecord, ...]] | None = None
     notification_custody_reader: Callable[[], int] | None = None
     """Counts the notification documents this profile already holds locally.
@@ -607,6 +616,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                                     revisions=current_revisions,
                                     verification=verification,
                                     operation=self.operation,
+                                    resolutions=self._resolutions_of(ref),
                                 )
                             }
                         )
@@ -753,6 +763,17 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             verification,
             bucket_events,
         )
+
+    def _resolutions_of(self, declaration: DeclarationsWorkspaceDeclarationRefV1) -> SourceDisagreementResolutions:
+        """The acceptances of one declaration's disagreements; none honoured when no reader is bound or it fails."""
+        if self.credit_resolution_reader is None:
+            return NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+        return load_credit_resolutions(
+            self.credit_resolution_reader,
+            modelo=str(declaration.modelo),
+            filing_year=declaration.filing_year,
+            period=declaration.period.registry_token,
+        ).resolutions
 
     def _load_bucket_events(self) -> BucketEventHistoryCatalogue | None:
         """Read the bucket event log, or nothing when no host bound one."""

@@ -226,21 +226,55 @@ class ImputationCriteria:
         return only if isinstance(only, bool) else None
 
     def election_open(self, year: int) -> bool:
-        """Whether ``year``'s declared criterion is admissible under RIRPF art. 7.2.
+        """Whether ``year``'s declared criterion is admissible under RIRPF art. 7.2."""
+        return self.refusal(year) is None
+
+    def refusal(self, year: int) -> str | None:
+        """Name the provision that shuts ``year``'s declared criterion, or ``None`` when it is open.
 
         Cash needs a declared regime and a declared absence of Codigo de Comercio
         accounting (art. 7.2.3). Returning to accrual inside the three-year
         minimum (art. 7.2.1) conflicts unless the election lost effect (art. 7.2.2).
+        A year that declares nothing has nothing to refuse.
         """
         declared = self.declared(year)
-        if self.filed_conflict(year) is not None:
-            return False
+        if declared is None:
+            return None
+        filed = self.filed_conflict(year)
+        if filed is not None:
+            return filed
         if declared is ActivityImputationCriterion.COBROS_Y_PAGOS:
-            return self._regime_declared(year) and self._commercial_accounting(year) is False
-        if declared is ActivityImputationCriterion.DEVENGO and self._commercial_accounting(year) is not True:
-            first_cash_year = self._first_binding_cash_year(year)
-            return first_cash_year is None or year - first_cash_year >= cash_election_minimum_years(filing_year=year)
-        return True
+            return self._cash_refusal(year)
+        return self._return_to_accrual_refusal(year)
+
+    def _cash_refusal(self, year: int) -> str | None:
+        if not self._regime_declared(year):
+            return f"cobros_y_pagos for {year} needs a declared estimation regime (RIRPF art. 7.2.1)"
+        accounting = self._commercial_accounting(year)
+        if accounting is True:
+            return (
+                f"cobros_y_pagos is closed for {year} because Codigo de Comercio accounting is kept (RIRPF art. 7.2.3)"
+            )
+        if accounting is None:
+            return (
+                f"cobros_y_pagos for {year} needs irpf.codigo_comercio_accounting declared false for that year "
+                "(RIRPF art. 7.2.3)"
+            )
+        return None
+
+    def _return_to_accrual_refusal(self, year: int) -> str | None:
+        if self._commercial_accounting(year) is True:
+            return None
+        first_cash_year = self._first_binding_cash_year(year)
+        if first_cash_year is None:
+            return None
+        minimum_years = cash_election_minimum_years(filing_year=year)
+        if year - first_cash_year >= minimum_years:
+            return None
+        return (
+            f"the cobros_y_pagos criterion first applied in {first_cash_year} binds through "
+            f"{first_cash_year + minimum_years - 1} (RIRPF art. 7.2.1), but the profile declares devengo for {year}"
+        )
 
     def _in_force(self, year: int) -> ActivityImputationCriterion | None:
         """Return the criterion a year ran under: its filed return's when captured, else the declared one."""
@@ -601,10 +635,10 @@ def imputation_blocking_diagnostics(
     undeclared = activity_present and criteria.usable(year) is None
     if not undeclared and not unresolved_details:
         return ()
-    conflict = criteria.filed_conflict(year)
+    refusal = criteria.refusal(year)
     message = (
-        f"ejercicio {year} cannot be placed: {conflict}; correct the declared criterion or rectify that return"
-        if undeclared and conflict is not None
+        f"ejercicio {year} cannot be placed: {refusal}; correct the declared facts or rectify that return"
+        if undeclared and refusal is not None
         else f"ejercicio {year} has no usable income imputation criterion (irpf.activity_income_imputation_criterion, "
         "RIRPF art. 7); declare devengo or cobros_y_pagos dated for that year"
         if undeclared

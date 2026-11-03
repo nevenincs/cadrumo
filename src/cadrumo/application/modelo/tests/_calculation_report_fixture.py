@@ -38,6 +38,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.credit_resolution import CreditResolutionRecord
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_report import ModeloCalculationReport, build_modelo_calculation_report
@@ -205,6 +206,7 @@ def build_fixture_report(
     report_language: OutputLanguage = OutputLanguage.ES,
     exported_at: datetime = EXPORTED_AT,
     provenance_key: CalculationReportProvenanceKey = FIXTURE_PROVENANCE_KEY,
+    credit_resolutions: tuple[CreditResolutionRecord, ...] = (),
 ) -> tuple[ModeloCalculationReport, RegistrySnapshot]:
     """Build the fixture revision's calculation report and return it with its snapshot."""
     snapshot = fixture_snapshot(operation)
@@ -228,6 +230,7 @@ def build_fixture_report(
         provenance_key=provenance_key,
         report_language=report_language,
         exported_at=exported_at,
+        credit_resolutions=credit_resolutions,
     )
     return report, snapshot
 

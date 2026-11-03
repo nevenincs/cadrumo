@@ -245,9 +245,17 @@ aggregation:
       imputacion_derechos_imagen: Income imputed from the assignment of image rights
       trabajo: Employment income
     errors:
-      certificate_needs_fingerprint: A payer certificate needs the SHA-256 of the
-        certificate file (--evidence-sha256). Use the operator declaration origin
-        if you have no certificate.
+      certificate_file_unreadable: 'The certificate file could not be read: check
+        the path, that the file is not empty, and that it is a PDF, an image or an
+        XML document.'
+      certificate_fingerprint_mismatch: The SHA-256 you gave is not the SHA-256 of
+        the certificate file, so nothing was stored. Check that you named the right
+        file.
+      certificate_needs_fingerprint: A payer certificate needs the certificate file
+        (--certificate-file), or the SHA-256 of one you already stored (--evidence-sha256).
+        Use the operator declaration origin if you have no certificate.
+      certificate_not_in_custody: No stored certificate has that SHA-256, or the stored
+        file no longer matches it. Record the certificate with --certificate-file.
       ejercicio_unsupported: The ejercicio of this record is outside the filing years
         Cadrumo supports.
       family_not_declared: The Modelo 100 revision for this ejercicio reads no withholding

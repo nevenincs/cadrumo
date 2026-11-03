@@ -20,6 +20,7 @@ source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 id = "modelo-131-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
+    "11",
     "modulos-pequena-dimension-ignorado-flag",
     "modulos-rendimiento-neto-actividad",
     "modulos-rendimiento-neto-minorado",

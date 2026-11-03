@@ -19,6 +19,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
+from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
 from .calculation_required_inputs import calculation_required_inputs
 from .caller_context import caller_context_of
 from .edit_models import (
@@ -127,9 +128,15 @@ class WorkFormContext:
         unworked_casilla_ids: frozenset[str] = frozenset(),
         element_names: Mapping[str, str] | None = None,
         known_truths: Mapping[BindingId, bool] | None = None,
+        resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
     ) -> None:
-        """Index one work review and its pinned revision for repeated form lookups."""
+        """Index one work review and its pinned revision for repeated form lookups.
+
+        ``resolutions`` are the source disagreements the operator accepted, which
+        the form's hold on filing lifts exactly as the gate does.
+        """
         self.review = review
+        self.resolutions = resolutions
         self.element_names: Mapping[str, str] = element_names or {}
         self.unworked = unworked_casilla_ids
         self.language = language

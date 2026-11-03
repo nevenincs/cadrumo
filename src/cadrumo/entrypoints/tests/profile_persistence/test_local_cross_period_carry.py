@@ -47,6 +47,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -58,6 +59,7 @@ from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
@@ -67,14 +69,20 @@ from ....application.ledger.tests.manual_transaction_support import create_manua
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+from ....application.modelo.calculation_note_gate import (
+    SOURCE_DISAGREEMENT_FINDING_ID_LENGTH,
+    ModeloCalculationBlockedError,
+)
 from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
+from ....application.modelo.credit_resolution import credit_resolution_for_finding, find_finding
+from ....application.modelo.credit_resolution_repository import store_credit_resolution
 from ....application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.iva_wallet_carry_targets import (
@@ -632,6 +640,31 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
     context = refused.value.context
     assert context is not None
     assert "precedence_tier_divergence" in str(context["reasons"]).split(",")
+    assert context["finding_ids"] == finding.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+
+    # Accepting the divergence by the id verify named answers exactly that finding; the value in use does not change.
+    objects = secure_object_repository_for_active_bucket()
+    resolution_repository = CreditResolutionRepositoryAdapter(objects=objects)
+    issue = find_finding(result.revision, str(context["finding_ids"]))
+    store_credit_resolution(
+        credit_resolution_for_finding(issue, reason="Synthetic reason: the carry was checked.", at=_T4, by_session="s"),
+        repository=resolution_repository,
+        expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+    assert Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == casilla_15
+    report = _verify_revision(
+        result.revision.calculation_revision_id,
+        revision=result.revision,
+        work_unit=work_unit_2t,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+    assert report.granted_verificado_completo
 
 
 @pytest.mark.parametrize(

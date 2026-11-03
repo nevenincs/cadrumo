@@ -175,6 +175,10 @@ class CalculationNoteSentence(StrEnum):
     """A credit casilla's value and one of its declared cross-check sources state different amounts."""
     CREDIT_CROSS_CHECK_ABSENT = "credit_cross_check_absent"
     """A declared cross-check source of a credit casilla holds nothing to compare."""
+    CREDIT_RESOLUTION_STALE = "credit_resolution_stale"
+    """A figure the operator accepted is now disputed in another way than the one accepted."""
+    CREDIT_RESOLUTION_APPLIED = "credit_resolution_applied"
+    """The operator accepted the value in use for a disagreement this calculation persisted."""
     HOUSEHOLD_ROWS_INCOMPLETE = "household_rows_incomplete"
     """A household group states more people than the profile records."""
 
@@ -313,7 +317,11 @@ class CalculationSourceIssue(BaseModel):
     the whole :class:`~.source_disagreement.SourceDisagreementFact` in
     ``disagreement`` and withholds filing. ``credit_cross_check_absent`` is a
     declared cross-check source with nothing to compare, which reads "not
-    cross-checked", never agreement, and withholds nothing. ``fact`` states such a note's own row, element, interval and
+    cross-checked", never agreement, and withholds nothing.
+    ``credit_resolution_stale`` is a figure the operator accepted that is now
+    disputed in another way than the one accepted: the resolution no longer
+    covers it, the disagreement it restates still withholds filing, and the note
+    itself withholds nothing. ``fact`` states such a note's own row, element, interval and
     amount. ``binding_source`` is ``None`` only where the condition names no
     binding source kind.
     outcome. ``household_rows_incomplete`` is a household group whose stated
@@ -359,6 +367,7 @@ class CalculationSourceIssue(BaseModel):
         "advisory_binding_value",
         "credit_source_disagreement",
         "credit_cross_check_absent",
+        "credit_resolution_stale",
         "precedence_tier_divergence",
     ]
     binding_source: BindingSourceKind | None

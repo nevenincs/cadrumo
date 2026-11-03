@@ -104,9 +104,11 @@ from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitNotFoundError,
 )
-from .calculation_note_gate import require_work_unit_calculation_unblocked
+from .calculation_note_gate import SourceDisagreementResolutions, require_work_unit_calculation_unblocked
 from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .credit_resolution import applied_resolution_notes, credit_resolutions_for_work, load_credit_resolutions
+from .credit_resolution_repository import CreditResolutionReader
 from .export_accounts import (
     build_export_producer_snapshot,
     export_charge_account,
@@ -317,6 +319,7 @@ def _persist_exported_draft(
         software_identity=software_identity,
         domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
         schema_provider=schema_provider,
+        credit_resolution=export_ports.credit_resolution,
     )
 
 
@@ -417,6 +420,7 @@ def _export_result(
     software_identity: AeatProductSoftwareIdentity | None,
     domiciliation_cutoff_unverified: bool,
     schema_provider: RegistrySchemaAccessor,
+    credit_resolution: CreditResolutionReader,
 ) -> ModeloExportResult:
     # Coverage honesty: a fixed-width fichero-BOE whose revision declares no
     # completeness manifest cannot be structural-parity-verified (the pre-write
@@ -425,7 +429,18 @@ def _export_result(
     completeness_unverified = export_completeness_unverified(work_unit, schema_provider)
 
     return ModeloExportResult(
-        calculation_notes=read_recorded_notes(revision.source_issues, activity_assets),
+        calculation_notes=(
+            *read_recorded_notes(revision.source_issues, activity_assets),
+            *applied_resolution_notes(
+                revision,
+                load_credit_resolutions(
+                    credit_resolution,
+                    modelo=str(work_unit.modelo),
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                ),
+            ),
+        ),
         calculation_revision_id=command.calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
         bucket_id=work_unit.bucket_id,
@@ -761,6 +776,7 @@ def _prepare_modelo_export_schema(
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
     operation: PinnedAuthorityOperation,
+    resolutions: SourceDisagreementResolutions,
 ) -> tuple[Period, RegistrySchemaAccessor]:
     period = resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
@@ -783,7 +799,7 @@ def _prepare_modelo_export_schema(
         operation=operation,
     )
     require_work_unit_calculation_unblocked(
-        work_unit=work_unit, revision=revision, action="export", operation=operation
+        work_unit=work_unit, revision=revision, action="export", operation=operation, resolutions=resolutions
     )
     return period, schema_provider
 
@@ -913,6 +929,7 @@ def _prepare_modelo_export(
         revision=revision,
         workflow_profile=workflow_profile,
         operation=operation,
+        resolutions=credit_resolutions_for_work(export_ports.credit_resolution, work_unit),
     )
     iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,

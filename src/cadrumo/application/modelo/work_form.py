@@ -76,6 +76,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
 )
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
 from .calculation_notes import UNWORKED_BOX_REASONS
 from .edit_models import (
     ModeloEditPermittedSurfaceEntryV1,
@@ -133,6 +134,7 @@ def build_modelo_work_form(
     calculation_screen_outdated: bool = False,
     calculation_filed_before_grade_cap: CasillaId | None = None,
     known_truths: Mapping[BindingId, bool] | None = None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -163,6 +165,10 @@ def build_modelo_work_form(
     (:func:`~.calculation_note_gate.calculation_filed_before_grade_cap`): the
     capped box whose figure keeps its export refused, so the form carries that
     blocking note and offers a recalculation in place of the recorded state.
+
+    ``resolutions`` are the source disagreements the operator accepted. The
+    form holds filing on a disagreement exactly as the gate does, so one a
+    resolution covers is no longer held.
 
     ``known_truths`` are the yes-or-no facts already known for the filer, by
     boolean binding. They decide which guarded inputs the calculation is
@@ -196,11 +202,12 @@ def build_modelo_work_form(
         language=language,
         unworked_casilla_ids=frozenset(
             casilla_id
-            for reason, casilla_id, _, _, _, _ in sources
+            for reason, casilla_id, *_ in sources
             if reason in UNWORKED_BOX_REASONS and casilla_id is not None
         ),
         element_names=element_names,
         known_truths=known_truths,
+        resolutions=resolutions,
     )
     held = calculation_diagnostics is not None
     inspection = _inspection_only_for_unusable_layout(

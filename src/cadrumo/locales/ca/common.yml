@@ -262,9 +262,17 @@ aggregation:
       imputacion_derechos_imagen: Imputació de rendes per la cessió de drets d'imatge
       trabajo: Rendiments del treball
     errors:
-      certificate_needs_fingerprint: Un certificat del pagador necessita el SHA-256
-        del fitxer del certificat (--evidence-sha256). Si no tens certificat, fes
-        servir l'origen declaració de l'operador.
+      certificate_file_unreadable: 'No s''ha pogut llegir el fitxer del certificat:
+        revisa la ruta, que el fitxer no estigui buit i que sigui un PDF, una imatge
+        o un document XML.'
+      certificate_fingerprint_mismatch: El SHA-256 que has indicat no és el del fitxer
+        del certificat, així que no s'ha desat res. Comprova que has indicat el fitxer
+        correcte.
+      certificate_needs_fingerprint: Un certificat del pagador necessita el fitxer
+        del certificat (--certificate-file) o el SHA-256 d'un que ja hagis desat (--evidence-sha256).
+        Si no tens certificat, fes servir l'origen declaració de l'operador.
+      certificate_not_in_custody: Cap certificat desat té aquest SHA-256, o el fitxer
+        desat ja no hi coincideix. Registra el certificat amb --certificate-file.
       ejercicio_unsupported: L'exercici d'aquest registre és fora dels anys de presentació
         que admet Cadrumo.
       family_not_declared: La revisió del Model 100 d'aquest exercici no llegeix retencions

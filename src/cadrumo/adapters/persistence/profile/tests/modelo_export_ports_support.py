@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
@@ -120,6 +121,7 @@ def _compose_modelo_export_ports(
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
         ),
+        credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
         product_software_identity=development_mock_software_identity(),
     )
 

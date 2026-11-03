@@ -1230,11 +1230,23 @@ application:
           so the figure stands but is not cross-checked.
         what_to_do: If that source should hold this withholding, add it and recalculate;
           otherwise there is nothing to do.
+      credit_resolution_applied:
+        what: You accepted the amount in use for a disagreement between sources, so
+          it no longer holds this declaration. The acceptance changes no figure.
+        what_to_do: 'Nothing to do. If a source is corrected later, calculate again:
+          an acceptance covers only the amounts it was made against.'
+      credit_resolution_stale:
+        what: You accepted an earlier disagreement of this figure, but its sources
+          now state other amounts, so that acceptance no longer applies.
+        what_to_do: Compare the amounts again. If the amount in use is still right,
+          accept this disagreement with its new finding id.
       credit_source_disagreement:
         what: Two sources state different amounts for the same withholding credit,
           so Cadrumo cannot check, export or record the declaration with it.
-        what_to_do: Compare the amount with each payer's certificate, correct the
-          source that is wrong, and recalculate.
+        what_to_do: 'Compare the amount with each payer''s certificate, correct the
+          source that is wrong, and recalculate. If you have checked that the amount
+          in use is right, accept it with its finding id: `aeat app modelo work accept-disagreement
+          <finding id> --reason <why>`.'
       deferred_binding_source:
         what: Cadrumo does not fill in one figure of this declaration automatically
           yet.
@@ -1388,8 +1400,10 @@ application:
       precedence_tier_divergence:
         what: Two sources hold different values for a figure that reaches box {box},
           and Cadrumo used the one that takes precedence.
-        what_to_do: Compare the sources and correct the one that is wrong, then calculate
-          again. Checking, exporting and recording wait until they agree.
+        what_to_do: 'Compare the sources and correct the one that is wrong, then calculate
+          again. Checking, exporting and recording wait until they agree, or until
+          you accept the value in use with its finding id: `aeat app modelo work accept-disagreement
+          <finding id> --reason <why>`.'
       precedence_tier_divergence_advisory:
         what: Two sources hold different values for a working figure, and Cadrumo
           used the one that takes precedence.
@@ -1556,6 +1570,11 @@ application:
         and box {box} declares only what is recorded.'
       credit_cross_check_absent: 'Box {box}: there is nothing in {cross_check} to
         compare, so this figure is not cross-checked.'
+      credit_resolution_applied: 'Box {box}: you accepted {accepted} although the
+        sources state {sources} (finding {finding}). Your reason: {reason}'
+      credit_resolution_stale: 'Box {box}: you accepted an earlier disagreement of
+        this figure, but its sources now state other amounts, so the acceptance no
+        longer applies.'
       credit_source_disagreement: 'Box {box}: the declared source gives {amount};
         according to {cross_check}, it is {compared_amount}.'
       disposal_claim_gap: '{element}: its disposal is on {date} and part of {year}
@@ -1685,6 +1704,10 @@ application:
         the official rules show the box does not apply to this period.'
       notice_title: 'Local calculation: not an AEAT receipt'
       page_counter: Page {page} of {pages}
+      resolution_label: Box {box} · finding {finding}
+      resolution_value: 'Accepted {accepted}. The sources state: {sources}. Reason:
+        {reason}'
+      resolutions_heading: Accepted source disagreements
       section_unnamed: Boxes
       signature_meaning: The Cadrumo integrity signature embedded in this PDF attests
         that this profile's key declared that, at the export instant by this installation's
@@ -1728,6 +1751,17 @@ application:
       filed_observation: the return you filed
       ledger: your ledger
       retencion_soportada: the payer certificates
+    credit_resolution:
+      errors:
+        already_resolved: This disagreement is already accepted.
+        calculation_not_current: This is not the declaration's current calculation,
+          so its disagreements cannot be accepted any more. Use the current calculation.
+        not_resolved: This disagreement has no active acceptance to take back.
+        stale_revision: The resolution changed since you read it; read it again before
+          saving.
+        unknown_finding: The current calculation of this declaration has no source
+          disagreement with that finding id. Calculate again and copy the id from
+          the check.
     edit:
       parse:
         above_maximum: The largest value allowed is {bound}.

@@ -983,7 +983,7 @@ def _resolve_bucket_aggregation_run(
 
 
 _CREDIT_RECONCILIATION_REASONS: Final[frozenset[str]] = frozenset(
-    {"credit_source_disagreement", "credit_cross_check_absent"},
+    {"credit_source_disagreement", "credit_cross_check_absent", "credit_resolution_stale"},
 )
 
 
@@ -997,19 +997,28 @@ def credit_reconciliation_diagnostics(
     """
     return tuple(
         CalculationSourceDiagnostic(
-            reason="credit_source_disagreement"
-            if issue.reason == "credit_source_disagreement"
-            else "credit_cross_check_absent",
+            reason=_credit_reconciliation_reason(issue),
             source_kind="credit_reconciliation",
             binding_source=issue.binding_source,
             casilla_id=issue.casilla_id,
             message=issue.message,
             source_ref=issue.source_ref,
             fact=issue.fact,
+            disagreement=issue.disagreement,
         )
         for issue in issues
         if issue.reason in _CREDIT_RECONCILIATION_REASONS
     )
+
+
+def _credit_reconciliation_reason(
+    issue: CalculationSourceIssue,
+) -> Literal["credit_source_disagreement", "credit_cross_check_absent", "credit_resolution_stale"]:
+    if issue.reason == "credit_source_disagreement":
+        return "credit_source_disagreement"
+    if issue.reason == "credit_resolution_stale":
+        return "credit_resolution_stale"
+    return "credit_cross_check_absent"
 
 
 def _durable_invoice_source_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
@@ -1272,6 +1281,7 @@ _DurableSourceIssueReason = Literal[
     "advisory_binding_value",
     "credit_source_disagreement",
     "credit_cross_check_absent",
+    "credit_resolution_stale",
 ]
 
 

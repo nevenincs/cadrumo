@@ -8,9 +8,9 @@ family) all apply. All identifiers and amounts a caller passes are synthetic.
 
 from __future__ import annotations
 
-import hashlib
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 from .....application.aggregation.retencion_soportada_absence_repository import (
     RetencionSoportadaAbsenceWritePorts,
@@ -20,20 +20,43 @@ from .....application.aggregation.retencion_soportada_repository import (
     PinnedRetencionSoportadaWriteAuthority,
     record_retencion_soportada,
 )
+from .....core.bucket_pointer import require_active_bucket_id
+from .....core.identity.bucket import canonical_bucket_id
 from .....core.retencion_soportada import RetencionSoportadaClase
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from .....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
+from ...storage.attachment import AttachmentStore
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..retencion_soportada_evidence_custody import RetencionSoportadaEvidenceCustodyAdapter
 from ..retencion_soportada_records import (
     RetencionSoportadaAbsenceRepositoryAdapter,
     RetencionSoportadaRecordRepositoryAdapter,
 )
 
-__all__ = ["seed_absence_attestation", "seed_payer_certificate"]
+__all__ = ["active_bucket_custody", "keep_certificate", "seed_absence_attestation", "seed_payer_certificate"]
 
 _CAPTURED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+
+
+def active_bucket_custody() -> RetencionSoportadaEvidenceCustodyAdapter:
+    """Return the active bucket's real attachment custody, as the certificate operations compose it."""
+    bucket_id = canonical_bucket_id(require_active_bucket_id())
+    return RetencionSoportadaEvidenceCustodyAdapter(
+        store=AttachmentStore(bucket_id=bucket_id, objects=secure_object_repository_for_active_bucket()),
+        bucket_id=bucket_id,
+    )
+
+
+def keep_certificate(data: bytes) -> str:
+    """Keep synthetic certificate bytes in the active bucket's custody and return their sha256."""
+    return active_bucket_custody().ingest(
+        source_path=Path("synthetic-certificate.pdf"),
+        data=data,
+        mime_type="application/pdf",
+        captured_at=_CAPTURED_AT,
+    )
 
 
 def seed_payer_certificate(
@@ -64,16 +87,17 @@ def seed_payer_certificate(
         ingreso_a_cuenta=ingreso_a_cuenta,
         ingreso_a_cuenta_repercutido=ingreso_a_cuenta_repercutido,
         origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
-        # The sha256 of a synthetic certificate's bytes, one certificate per payer, class and ejercicio.
-        evidence_fingerprint=hashlib.sha256(
+        # The sha256 of a synthetic certificate's bytes, kept in custody: one certificate per payer, class and ejercicio.
+        evidence_fingerprint=keep_certificate(
             f"synthetic certificate {payer_tax_id} {income_class.value} {ejercicio}".encode(),
-        ).hexdigest(),
+        ),
         captured_at=_CAPTURED_AT,
     )
     record_retencion_soportada(
         record,
         repository=repository,
         authority=PinnedRetencionSoportadaWriteAuthority(operation),
+        custody=active_bucket_custody(),
         taxpayer_tax_id=taxpayer_tax_id,
         expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
     )

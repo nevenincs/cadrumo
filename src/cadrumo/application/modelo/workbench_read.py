@@ -29,6 +29,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
+from .credit_resolution_repository import CreditResolutionReader
 from .edit_admission import admit_modelo_edit_baseline
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditRefusedV1
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
@@ -66,7 +67,9 @@ class ModeloWorkbenchReadPorts:
     was created and whether it still matches; ``filings`` is the profile's
     filing records, read to say whether a recorded filing's AEAT receipt is
     verified; ``own_accounts`` is the taxpayer's own-account register, read to
-    offer the accounts AEAT debits and pays a refund into.
+    offer the accounts AEAT debits and pays a refund into; ``credit_resolutions``
+    is the store of accepted source disagreements, read so the form holds filing
+    exactly where the gate does.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -77,6 +80,7 @@ class ModeloWorkbenchReadPorts:
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None
     filings: ModeloRecordCatalogueRepositoryProtocol | None = None
     own_accounts: OwnAccountRegisterReaderProtocol | None = None
+    credit_resolutions: CreditResolutionReader | None = None
 
 
 type ModeloWorkbenchReadPortsFactory = Callable[[str, PinnedAuthorityOperation], ModeloWorkbenchReadPorts]
@@ -205,6 +209,7 @@ def read_modelo_workbench_form(
         borrador_snapshots=ports.borrador_snapshots,
         bucket_events=ports.bucket_events,
         activity_assets=ports.activity_assets,
+        credit_resolutions=ports.credit_resolutions,
     )
     form = loaded.form
     head_id = form.calculation_revision_id

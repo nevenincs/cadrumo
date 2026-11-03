@@ -18,6 +18,7 @@ from cadrumo_client.commands.shared_contracts import (
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
     _POLICY_4,
@@ -184,6 +185,26 @@ LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=TEXT_VALUE,
                 default=_OPTIONAL,
                 help_key="cli.app.ledger.retencion_soportada.payer_name_help",
+            ),
+            OptionSpec(
+                name="certificate_file",
+                declarations=("--certificate-file",),
+                value=ValueContract(DeferredTarget("pathlib", "Path")),
+                default=_OPTIONAL,
+                help_key=TranslationKey("cli.app.ledger.retencion_soportada.certificate_file_help"),
+                metavar=None,
+                is_flag=False,
+                flag_value=None,
+                multiple=False,
+                count=False,
+                eager=False,
+                # Checked where it is parsed, so a mistyped path names itself instead of reaching the worker.
+                constraint=ParameterConstraint(exists=True, dir_okay=False),
+                show_default=True,
+                hidden=False,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             _option(
                 name="evidence_sha256",

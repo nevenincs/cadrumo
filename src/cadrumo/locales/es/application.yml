@@ -1313,12 +1313,25 @@ application:
           que no contiene nada, así que la cifra se mantiene, pero sin contrastar.
         what_to_do: Si esa fuente debería contener esta retención, añádela y vuelve
           a calcular; si no, no tienes que hacer nada.
+      credit_resolution_applied:
+        what: Aceptaste el importe utilizado en una discrepancia entre fuentes, así
+          que ya no retiene esta declaración. La aceptación no cambia ninguna cifra.
+        what_to_do: 'No hay nada que hacer. Si más adelante se corrige una fuente,
+          vuelve a calcular: una aceptación solo cubre los importes con los que se
+          hizo.'
+      credit_resolution_stale:
+        what: Aceptaste una discrepancia anterior de esta cifra, pero sus fuentes
+          ahora dan otros importes, así que esa aceptación ya no se aplica.
+        what_to_do: Compara de nuevo los importes. Si el importe utilizado sigue siendo
+          correcto, acepta esta discrepancia con su nuevo identificador.
       credit_source_disagreement:
         what: Dos fuentes dan importes distintos para la misma deducción por retenciones,
           así que Cadrumo no puede comprobar, exportar ni registrar la declaración
           con ella.
-        what_to_do: Compara el importe con el certificado de cada pagador, corrige
-          la fuente que esté mal y vuelve a calcular.
+        what_to_do: 'Compara el importe con el certificado de cada pagador, corrige
+          la fuente que esté mal y vuelve a calcular. Si has comprobado que el importe
+          utilizado es correcto, acéptalo con su identificador: `aeat app modelo work
+          accept-disagreement <identificador> --reason <motivo>`.'
       deferred_binding_source:
         what: Cadrumo todavía no rellena automáticamente una cifra de esta declaración.
         what_to_do: No tienes que hacer nada, salvo que esa cifra te afecte. Si te
@@ -1471,9 +1484,10 @@ application:
       precedence_tier_divergence:
         what: Dos fuentes tienen valores distintos para una cifra que llega a la casilla
           {box}, y Cadrumo ha usado la que tiene prioridad.
-        what_to_do: Compara las fuentes y corrige la que esté mal; después vuelve
+        what_to_do: 'Compara las fuentes y corrige la que esté mal; después vuelve
           a calcular. La comprobación, la exportación y el registro esperan hasta
-          que coincidan.
+          que coincidan, o hasta que aceptes el valor utilizado con su identificador:
+          `aeat app modelo work accept-disagreement <identificador> --reason <motivo>`.'
       precedence_tier_divergence_advisory:
         what: Dos fuentes tienen valores distintos para una cifra de trabajo, y Cadrumo
           ha usado la que tiene prioridad.
@@ -1642,6 +1656,11 @@ application:
         casilla {box} solo declara lo registrado.'
       credit_cross_check_absent: 'Casilla {box}: según {cross_check}, no hay nada
         que comparar, así que esta cifra no está contrastada.'
+      credit_resolution_applied: 'Casilla {box}: aceptaste {accepted} aunque las fuentes
+        dan {sources} (discrepancia {finding}). Tu motivo: {reason}'
+      credit_resolution_stale: 'Casilla {box}: aceptaste una discrepancia anterior
+        de esta cifra, pero sus fuentes ahora dan otros importes, así que la aceptación
+        ya no se aplica.'
       credit_source_disagreement: 'Casilla {box}: la fuente declarada da {amount};
         según {cross_check}, son {compared_amount}.'
       disposal_claim_gap: '{element}: su baja es el {date} y parte de {year} no tiene
@@ -1775,6 +1794,10 @@ application:
         indica que las reglas oficiales muestran que la casilla no aplica a este periodo.'
       notice_title: 'Cálculo local: no es un justificante de la AEAT'
       page_counter: Página {page} de {pages}
+      resolution_label: Casilla {box} · discrepancia {finding}
+      resolution_value: 'Aceptado {accepted}. Las fuentes indican: {sources}. Motivo:
+        {reason}'
+      resolutions_heading: Discrepancias entre fuentes aceptadas
       section_unnamed: Casillas
       signature_meaning: La firma de integridad de Cadrumo adjunta a este PDF acredita
         que la clave de este perfil declaró que, en el instante de exportación según
@@ -1819,6 +1842,17 @@ application:
       filed_observation: la declaración que presentaste
       ledger: tu libro de registro
       retencion_soportada: los certificados de los pagadores
+    credit_resolution:
+      errors:
+        already_resolved: Esta discrepancia ya está aceptada.
+        calculation_not_current: Este no es el cálculo actual de la declaración, así
+          que sus discrepancias ya no se pueden aceptar. Usa el cálculo actual.
+        not_resolved: Esta discrepancia no tiene ninguna aceptación activa que retirar.
+        stale_revision: La resolución cambió desde que la leíste; vuelve a leerla
+          antes de guardar.
+        unknown_finding: El cálculo actual de esta declaración no tiene ninguna discrepancia
+          entre fuentes con ese identificador. Vuelve a calcular y copia el identificador
+          de la comprobación.
     edit:
       parse:
         above_maximum: El valor máximo es {bound}.

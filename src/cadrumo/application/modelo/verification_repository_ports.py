@@ -33,6 +33,7 @@ from ..calculations.observations_repository import (
 )
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..workflow.run_models import WorkflowResult
+from .credit_resolution_repository import CreditResolutionRepository
 
 if TYPE_CHECKING:
     from ..aggregation.ledger_membership import LedgerMembershipPorts
@@ -75,6 +76,7 @@ class VerificationRepositoryBundle:
     retencion_observation_ports: RetencionObservationPorts
     percepcion_observation_ports: PercepcionObservationPorts
     ledger_membership_ports: LedgerMembershipPorts
+    credit_resolution: CreditResolutionRepository
 
 
 class VerificationRepositoryBundleFactory(Protocol):

@@ -375,6 +375,8 @@ errors:
     canonical_catalogue_invoice_rate: The invoice-catalogue exchange-rate lookup failed.
     canonical_counterparty_establishment_persistence: The counterparty establishment
       record could not be persisted.
+    canonical_credit_resolution_persistence: The accepted source disagreements could
+      not be read or saved.
     canonical_diagnostic_run_record: The diagnostic run records could not be read.
     canonical_evidence_bundle_persistence: The evidence bundle could not be persisted.
     canonical_invoice_catalogue_read_persistence: The invoice catalogue could not
@@ -876,6 +878,9 @@ errors:
     censal_read_identity: The censal read does not belong to this profile's taxpayer.
     clave_credentials_incomplete: The selected Cl@ve authentication mode is missing
       a credential it needs.
+    credit_resolution_refused: The resolution was not saved.
+    credit_resolution_revision_conflict: The resolution changed since you read it;
+      read it again before saving.
     financial_edit_journal_purge: This legacy financial edit journal could not be
       safely purged. Its operation is unavailable. No edit value was loaded.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet

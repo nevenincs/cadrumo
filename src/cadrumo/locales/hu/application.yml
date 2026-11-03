@@ -1277,11 +1277,24 @@ application:
           ezért az összeg megmarad, de nincs összevetve.
         what_to_do: Ha ennek a forrásnak tartalmaznia kellene ezt a forrásadót, add
           hozzá, és számold újra; különben nincs teendőd.
+      credit_resolution_applied:
+        what: Elfogadtad a felhasznált összeget egy forrás-eltérésnél, ezért az már
+          nem tartja vissza ezt a bevallást. Az elfogadás nem változtat egyetlen összegen
+          sem.
+        what_to_do: 'Nincs teendő. Ha később kijavítasz egy forrást, számolj újra:
+          az elfogadás csak azokat az összegeket fedi, amelyekkel készült.'
+      credit_resolution_stale:
+        what: Korábban elfogadtad ennek az összegnek egy eltérését, de a forrásai
+          most más összegeket adnak, ezért az elfogadás már nem érvényes.
+        what_to_do: Vesd össze újra az összegeket. Ha a felhasznált összeg továbbra
+          is helyes, fogadd el ezt az eltérést az új azonosítójával.
       credit_source_disagreement:
         what: Két forrás eltérő összeget ad ugyanarra a forrásadó-jóváírásra, ezért
           a Cadrumo ezzel nem tudja ellenőrizni, exportálni vagy rögzíteni a bevallást.
-        what_to_do: Vesd össze az összeget az egyes kifizetők igazolásával, javítsd
-          a hibás forrást, és számold újra.
+        what_to_do: 'Vesd össze az összeget az egyes kifizetők igazolásával, javítsd
+          a hibás forrást, és számold újra. Ha ellenőrizted, hogy a felhasznált összeg
+          helyes, fogadd el az azonosítójával: `aeat app modelo work accept-disagreement
+          <azonosító> --reason <indoklás>`.'
       deferred_binding_source:
         what: A Cadrumo a nyilatkozat egy értékét még nem tölti ki automatikusan.
         what_to_do: Nincs teendőd, hacsak az az érték nem vonatkozik rád. Ha igen,
@@ -1429,8 +1442,10 @@ application:
       precedence_tier_divergence:
         what: Két forrás eltérő értéket tartalmaz egy olyan számra, amely a(z) {box}
           rovatba kerül, és a Cadrumo az elsőbbséget élvezőt használta.
-        what_to_do: Hasonlítsd össze a forrásokat, javítsd ki a hibásat, majd számolj
-          újra. Az ellenőrzés, az exportálás és a rögzítés megvárja, amíg egyeznek.
+        what_to_do: 'Hasonlítsd össze a forrásokat, javítsd ki a hibásat, majd számolj
+          újra. Az ellenőrzés, az exportálás és a rögzítés megvárja, amíg egyeznek,
+          vagy amíg az azonosítójával el nem fogadod a felhasznált értéket: `aeat
+          app modelo work accept-disagreement <azonosító> --reason <indoklás>`.'
       precedence_tier_divergence_advisory:
         what: Két forrás eltérő értéket tartalmaz egy munkaszámra, és a Cadrumo az
           elsőbbséget élvezőt használta.
@@ -1605,6 +1620,11 @@ application:
         mező pedig csak a rögzítettet tartalmazza.'
       credit_cross_check_absent: '{box}. mező: {cross_check} alapján nincs mit összevetni,
         ezért ez az összeg nincs összevetve.'
+      credit_resolution_applied: '{box}. mező: elfogadtad ezt: {accepted}, bár a források
+        ezt adják: {sources} (eltérés: {finding}). Az indoklásod: {reason}'
+      credit_resolution_stale: '{box}. mező: korábban elfogadtad ennek az összegnek
+        egy eltérését, de a forrásai most más összegeket adnak, ezért az elfogadás
+        már nem érvényes.'
       credit_source_disagreement: '{box}. mező: a megadott forrás szerint {amount},
         {cross_check} szerint viszont {compared_amount}.'
       disposal_claim_gap: '{element}: a kivezetése {date} napon történik, és {year}
@@ -1738,6 +1758,10 @@ application:
         erre az időszakra nem vonatkozik.'
       notice_title: 'Helyi számítás: nem AEAT-bizonylat'
       page_counter: '{page}. oldal / {pages}'
+      resolution_label: '{box}. mező · eltérés {finding}'
+      resolution_value: 'Elfogadva: {accepted}. A források szerint: {sources}. Indoklás:
+        {reason}'
+      resolutions_heading: Elfogadott forrás-eltérések
       section_unnamed: Rovatok
       signature_meaning: 'A PDF-be ágyazott Cadrumo sértetlenségi aláírás azt igazolja,
         hogy ennek a profilnak a kulcsa kijelentette: az exportálás pillanatában,
@@ -1783,6 +1807,16 @@ application:
       filed_observation: a benyújtott bevallásod
       ledger: a nyilvántartásod
       retencion_soportada: a kifizetői igazolások
+    credit_resolution:
+      errors:
+        already_resolved: Ezt az eltérést már elfogadtad.
+        calculation_not_current: Ez nem a bevallás jelenlegi számítása, ezért az eltéréseit
+          már nem lehet elfogadni. Használd a jelenlegi számítást.
+        not_resolved: Ennek az eltérésnek nincs visszavonható, érvényes elfogadása.
+        stale_revision: A feloldás megváltozott, amióta elolvastad; olvasd be újra
+          mentés előtt.
+        unknown_finding: A bevallás jelenlegi számításában nincs ilyen azonosítójú
+          forrás-eltérés. Számolj újra, és másold ki az azonosítót az ellenőrzésből.
     edit:
       parse:
         above_maximum: 'A legnagyobb megengedett érték: {bound}.'

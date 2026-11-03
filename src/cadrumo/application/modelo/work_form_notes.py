@@ -17,7 +17,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, element_names_of
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from .calculation_note_gate import gate_refuses
+from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH, gate_refuses
 from .calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
     CHECK_REFUSED_REASONS,
@@ -80,10 +80,11 @@ type NoteSource = tuple[
     CalculationNoteFact | None,
     BindingValueOutcome | None,
     tuple[str, OutputLanguage] | None,
+    str | None,
 ]
 """One latest-calculation reason, the box it names, the binding source that raised it, its own facts,
-the outcome its resolver stated for a capped value, and the message its resolver worded for the filer
-with the language it is worded in."""
+the outcome its resolver stated for a capped value, the message its resolver worded for the filer
+with the language it is worded in, and the finding key of the source disagreement it states."""
 
 
 def _derived_leading_sources(
@@ -91,12 +92,12 @@ def _derived_leading_sources(
 ) -> tuple[NoteSource, ...]:
     """The reasons derived from the revision's standing, not from a note: they lead every other source."""
     outdated: tuple[NoteSource, ...] = (
-        ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None),)
+        ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None, None),)
         if screen_outdated and revision is not None
         else ()
     )
     capped: tuple[NoteSource, ...] = (
-        ((FILED_BEFORE_GRADE_CAP_REASON, filed_before_grade_cap, None, None, None, None),)
+        ((FILED_BEFORE_GRADE_CAP_REASON, filed_before_grade_cap, None, None, None, None, None),)
         if filed_before_grade_cap is not None and revision is not None
         else ()
     )
@@ -117,6 +118,7 @@ def _diagnostic_source(diagnostic: CalculationSourceDiagnostic) -> NoteSource:
         diagnostic.fact,
         diagnostic.value_outcome,
         worded,
+        None if diagnostic.disagreement is None else diagnostic.disagreement.finding_key,
     )
 
 
@@ -144,7 +146,15 @@ def collect_note_sources(
     # A persisted note keeps the outcome its resolver stated, so a proven zero still reads as one. Its stored
     # message is a technical account in no language of the filer's, so the note is worded by its reason alone.
     return stale + tuple(
-        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, issue.value_outcome, None)
+        (
+            issue.reason,
+            issue.casilla_id,
+            issue.binding_source,
+            issue.fact,
+            issue.value_outcome,
+            None,
+            None if issue.disagreement is None else issue.disagreement.finding_key,
+        )
         for issue in revision.source_issues
     )
 
@@ -184,22 +194,30 @@ def project_calculation_notes(
     """
     checked = context.review.verification_outcome is not None
     boxes = _boxes_by_casilla(fields)
-    notes: dict[tuple[str, str | None, tuple[str, ...]], ModeloFormCalculationNote] = {}
-    for reason, casilla_id, binding_source, fact, outcome, worded in sources:
+    notes: dict[tuple[str, str | None, tuple[str, ...], str], ModeloFormCalculationNote] = {}
+    for reason, casilla_id, binding_source, fact, outcome, worded, finding_key in sources:
         message = _message_in_language(worded, context.language)
-        key = (reason, casilla_id, (message or "",) if fact is None else fact.identity())
+        key = (
+            reason,
+            casilla_id,
+            (message or "",) if fact is None else fact.identity(),
+            "" if finding_key is None else finding_key,
+        )
         if key in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
         if checked and reason in CHECK_REFUSED_REASONS:
             continue
         box = None if casilla_id is None else boxes.get(casilla_id)
-        attention = note_attention(reason, box=box, outcome=outcome)
+        attention = note_attention(reason, box=box, outcome=outcome, accepted=context.resolutions.covers(finding_key))
         notes[key] = ModeloFormCalculationNote(
             reason=reason,
             attention=attention,
             casilla_id=casilla_id,
             box=box,
-            withholds_filing=gate_refuses(reason, binding_source, outcome),
+            withholds_filing=gate_refuses(
+                reason, binding_source, outcome, finding_key=finding_key, resolutions=context.resolutions
+            ),
+            finding_id=None if finding_key is None else finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH],
             fact=fact,
             element_names=element_names_of(fact, context.element_names),
             message=message,

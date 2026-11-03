@@ -580,6 +580,23 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
             )
             InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
 
+        # The profile is in estimacion directa normal without Codigo de Comercio
+        # accounting, so RIRPF art. 7.2 imputes activity income on cobros y pagos.
+        imputation = _cli(
+            profile,
+            "config",
+            "profile",
+            "edit",
+            _PROFILE_LABEL,
+            "--quiet",
+            "--irpf-activity-income-imputation-criterion",
+            "cobros_y_pagos",
+            "--irpf-activity-income-imputation-year",
+            "2024",
+            "--no-irpf-codigo-comercio-accounting",
+        )
+        assert imputation.exit_code == 0, imputation.output
+
         calculated = _cli(
             profile,
             "--format",

@@ -414,6 +414,8 @@ errors:
       catàleg de factures.
     canonical_counterparty_establishment_persistence: No s'ha pogut desar el registre
       d'establiment de la contrapart.
+    canonical_credit_resolution_persistence: No s'han pogut llegir ni desar les discrepàncies
+      entre fonts que vas acceptar.
     canonical_diagnostic_run_record: No s'han pogut llegir els registres de l'execució
       diagnòstica.
     canonical_evidence_bundle_persistence: No s'ha pogut desar el paquet d'evidències.
@@ -957,6 +959,9 @@ errors:
     censal_read_identity: La lectura censal no correspon al contribuent d'aquest perfil.
     clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
       una credencial que necessita.
+    credit_resolution_refused: No s'ha desat la resolució.
+    credit_resolution_revision_conflict: La resolució ha canviat des que la vas llegir;
+      torna a llegir-la abans de desar.
     financial_edit_journal_purge: No s’ha pogut depurar de manera segura aquest diari
       antic d’edició financera. L’operació no està disponible. No s’ha carregat cap
       valor d’edició.

@@ -729,13 +729,18 @@ LedgerRentaIncomeProvider = LedgerRentaIncomeProvider
 def renta_income_target_casilla(revision: ModeloRevision, *, modelo: str) -> CasillaId:
     """Return the one box a :class:`ModeloRevision` gives a modelo's renta income.
 
+    A revision that splits its agrarian activities' quarter out declares a second
+    target for them; that box is not the modelo's renta income, so it is excluded.
+
     Raises:
-        RegistryError: When the revision does not declare exactly one target.
+        RegistryError: When the revision does not declare exactly one non-agrarian target.
     """
     targets = {
         binding.provider.target_casilla_id
         for binding in revision.bindings
-        if isinstance(binding.provider, LedgerRentaIncomeProvider) and str(binding.provider.modelo) == modelo
+        if isinstance(binding.provider, LedgerRentaIncomeProvider)
+        and str(binding.provider.modelo) == modelo
+        and not binding.provider.agrarian_quarter
     }
     if len(targets) != 1:
         raise RegistryError(

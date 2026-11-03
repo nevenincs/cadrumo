@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-01'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d9599beb8a085b4931eea0455696b6fb015cc26c01a5d16c968a869daeb73d4'
+body_hash: 'sha256:059fa3dd072ad85106ee7b4639b3dc8313409e1be24543d90663fab0932dc41b'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
   - "[[2026-11-01-export-parity-suffered-withholding-schemas-reference]]"
@@ -303,3 +303,34 @@ New reasons, kinds and the optional `disagreement` field are additive, so every 
 ## Open questions for the operator
 
 None. The repercutido reading is grounded in the norms (section 3), and absence applicability is decided as fail-closed (section 5) and reversible by a later ruling. The research notes that the datos fiscales timing observation was to be verified when P06.S09 declares the cross-check; section 8 now states the constraint it must satisfy.
+
+## Amendment 2026-11-03
+
+Basis: the operator's rulings of 2026-11-03 on the P03 phase-close review findings of `2026-11-01-export-parity-plan`. The accepted text above is kept as written; where this section differs from it, this section governs sections 1, 3, 4 and 5.
+
+### Terminal origins (sections 1 and 5)
+
+Section 1 says "Terminal origins are `PAYER_CERTIFICATE` and `OPERATOR_INPUT`". It is read as three origins: `PAYER_CERTIFICATE`, `OPERATOR_INPUT` and `PROFILE_FIELD`. The provider registration admits all three.
+
+`PROFILE_FIELD` applies only to a proven zero derived from a declared profile fact, with no payer record and no attestation:
+
+- a class whose income the profile's declared income categories positively exclude (the applicability rule of section 5);
+- the urban-rental-as-activity class when the IAE groups of the declared activities show no urban-rental activity.
+
+It is never the origin of a non-zero value. The origin of the other proven zeros of section 5 is unchanged: a payer record is `PAYER_CERTIFICATE` (or `OPERATOR_INPUT` for an `operator_declaration`), and an absence attestation is `OPERATOR_INPUT`. The "Proven zero" bullet of section 5 therefore has three sources: records whose quantity sums to zero, an absence attestation, and an income class the profile declares absent. The code already stamps these origins.
+
+### Certificate evidence in attachment custody (sections 3 and 4)
+
+- The certificate import takes the certificate file. The request carries `source_path` and `source_directory` (the submitting frontend's directory), and the command line takes `--certificate-file`. The worker admits the file through the ledger evidence admission rule (a missing, unreadable, empty or unsupported file is refused), reads its bytes and keeps them through the existing attachment store and attachment service. No new store, attachment kind or persisted schema is added: the manifest kind is `OTHER` and its metadata names the role `retencion_soportada_certificate`.
+- The sha256 of the stored bytes is the record's `evidence_fingerprint`.
+- `evidence_fingerprint` stays on the request, because the desktop sends it. It names bytes custody already holds, so a second payer can cite a certificate stored by an earlier import. Given together with a file, it is only an integrity cross-check: a value that is not the file's sha256 is refused and nothing is kept.
+- The write port refuses a fourth kind of record: one whose `evidence_fingerprint` names bytes that custody does not hold, or holds in a state that no longer hashes to that address (reason `certificate_not_in_custody`). The check applies to every record that carries a fingerprint, an `operator_declaration` included. The three refusals of section 3 stay.
+- The import adds the reasons `certificate_file_unreadable` and `certificate_fingerprint_mismatch`. The `certificate_fingerprint_required` text now names the file option.
+- Every refusal that does not depend on custody is settled before the bytes are kept, so a refused record leaves nothing behind. If the bytes were kept and a competing write then moves the row, the refusal reports the partial effect, and the record operation's capability profile permits it. The bytes stay in custody; the same file imported again reuses them. A replaced certificate's bytes also stay: they are the evidence of the earlier reading.
+- The payload schema, the namespace and the key grammar of section 4 are unchanged.
+
+This is an approved public contract change: the request fields, the refusal reasons, the effect profile of the record operation and the operation contract manifest. The desktop files that depend on the old contract are `native/desktop/frontend/src/shell/ledgerSetup.ts` (the request and refusal-reason types), `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx` (the form sends a typed fingerprint and offers no file), `native/desktop/frontend/src/dev/ledgerWithholdingFixture.ts` and `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`. They are not edited by this change.
+
+### Same-evidence correction (section 4)
+
+A replacement whose evidence equals the stored row's evidence overwrites the row under `expected_revision_id`. Its `replaces_evidence_fingerprint` is that same fingerprint, which shows the record as a correction against the same evidence. `RetencionSoportadaRecord` no longer refuses equal fingerprints. A replacement made against a different file is unchanged: it records the fingerprint it replaces, and a replaced fingerprint that is not the stored one is still an identity mismatch.

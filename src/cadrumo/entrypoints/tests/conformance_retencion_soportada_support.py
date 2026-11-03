@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from hashlib import sha256
 
 from ...application.aggregation.retencion_soportada_repository import record_retencion_soportada
 from ...application.operations.public_scalar import PublicDecimal
@@ -35,7 +36,9 @@ from .conformance_family_contract import (
 )
 
 _EJERCICIO = 2025
-_PAYER = "B00000001"
+_CERTIFICATE_BYTES = b"%PDF-1.4 synthetic payer certificate"
+_CAPTURED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_PAYER = "B00000018"
 _SEEDING_TAXPAYER = "00000000T"
 
 
@@ -57,13 +60,19 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             ingreso_a_cuenta=Decimal("300.00"),
             ingreso_a_cuenta_repercutido=Decimal("300.00"),
             origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
-            evidence_fingerprint="a" * 64,
-            captured_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+            evidence_fingerprint=ports.custody.ingest(
+                source_path=context.input_root / "certificate.pdf",
+                data=_CERTIFICATE_BYTES,
+                mime_type="application/pdf",
+                captured_at=_CAPTURED_AT,
+            ),
+            captured_at=_CAPTURED_AT,
         )
         record_retencion_soportada(
             record,
             repository=repository,
             authority=ports.authority,
+            custody=ports.custody,
             taxpayer_tax_id=_SEEDING_TAXPAYER,
             expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
         )
@@ -89,6 +98,8 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         )
 
     if definition_id == RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID:
+        # The certificate is a file the worker reads and keeps in custody; its sha256 is the stored fingerprint.
+        (context.input_root / "certificate.pdf").write_bytes(_CERTIFICATE_BYTES)
 
         def verify_record(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(RetencionSoportadaMutationProjection)
@@ -97,6 +108,8 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert result.row is not None
             ((stored, revision_id),) = repository.list_revisioned(_EJERCICIO)
             assert stored.pago_a_cuenta == Decimal("1500.00")
+            assert stored.evidence_fingerprint == sha256(_CERTIFICATE_BYTES).hexdigest()
+            assert ports.custody.holds(stored.evidence_fingerprint)
             assert result.row.revision_id == revision_id
             assert result.row.payer_ref == stored.payer_ref
 
@@ -113,7 +126,8 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
                 ingreso_a_cuenta=PublicDecimal(decimal="300.00"),
                 ingreso_a_cuenta_repercutido=PublicDecimal(decimal="300.00"),
                 origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
-                evidence_fingerprint="a" * 64,
+                source_path="certificate.pdf",
+                source_directory=str(context.input_root),
             ),
             verify=verify_record,
         )

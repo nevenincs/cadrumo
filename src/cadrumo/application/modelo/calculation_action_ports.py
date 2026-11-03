@@ -42,6 +42,7 @@ from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..live.borrador_100 import Borrador100SnapshotRepository
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ..user_profile.profile_read_ports import ProfileReadPorts
+from .credit_resolution_repository import CreditResolutionReader
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 if TYPE_CHECKING:
@@ -106,6 +107,7 @@ class CalculationActionPorts:
     borrador_snapshot_repository: Borrador100SnapshotRepository
     retencion_observation_ports: RetencionObservationPorts
     retencion_soportada_ports: RetencionSoportadaPorts
+    credit_resolution_reader: CreditResolutionReader
     relation_override_migration: CalculationRevisionOverrideMigrationProtocol
 
 

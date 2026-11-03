@@ -74,7 +74,12 @@ class RetencionSoportadaRecord(BaseModel):
     evidence_fingerprint: ContentDigest | None = None
     """The sha256 of the certificate bytes; required for a payer certificate."""
     replaces_evidence_fingerprint: ContentDigest | None = None
-    """The certificate this record's figures correct or replace, when they do."""
+    """The certificate this record's figures correct or replace, when they do.
+
+    Equal to :attr:`evidence_fingerprint` when the figures correct a mistake made
+    in reading the same certificate: the evidence is unchanged and the row is
+    overwritten, so the record shows a correction against the same evidence.
+    """
     captured_at: UtcInstant
 
     @model_validator(mode="after")
@@ -89,10 +94,6 @@ class RetencionSoportadaRecord(BaseModel):
     def _certificate_is_fingerprinted(self) -> Self:
         if self.origin is RetencionSoportadaOrigen.PAYER_CERTIFICATE and self.evidence_fingerprint is None:
             raise RentaValidationError("a payer-certificate record names no certificate fingerprint")
-        if self.replaces_evidence_fingerprint is not None and (
-            self.replaces_evidence_fingerprint == self.evidence_fingerprint
-        ):
-            raise RentaValidationError("a record cannot replace the certificate it rests on")
         return self
 
     @property

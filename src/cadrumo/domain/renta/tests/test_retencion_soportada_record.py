@@ -90,13 +90,18 @@ def test_an_unknown_income_class_is_refused_at_the_record() -> None:
         {"retencion": "-1.00"},
         {"retencion": "1.001"},
         {"origin": "payer_certificate", "evidence_fingerprint": None},
-        {"replaces_evidence_fingerprint": _FINGERPRINT},
         {"payer_ref": "not-a-digest"},
     ],
 )
 def test_the_record_refuses_each_isolated_defect(overrides: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         _record(**overrides)
+
+
+def test_a_correction_may_name_the_certificate_it_rests_on_as_the_one_it_replaces() -> None:
+    record = _record(replaces_evidence_fingerprint=_FINGERPRINT)
+    assert record.replaces_evidence_fingerprint == record.evidence_fingerprint == _FINGERPRINT
+    assert RetencionSoportadaRecord.model_validate_json(record.model_dump_json()) == record
 
 
 def test_an_operator_declaration_needs_no_certificate() -> None:

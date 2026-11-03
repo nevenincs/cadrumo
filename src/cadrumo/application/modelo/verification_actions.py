@@ -25,6 +25,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
+from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     TransactionParticipationIndexRepositoryProtocol,
@@ -63,6 +64,7 @@ from .action_errors import (
 from .calculation_note_gate import require_work_unit_calculation_unblocked
 from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .credit_resolution import applied_resolution_notes, credit_resolutions_for_work, load_credit_resolutions
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
@@ -139,6 +141,7 @@ def _load_verification_context(
 
 def _existing_verification(
     target: CalculationRevision,
+    work_unit: WorkUnit,
     calculation_revision_id: CalculationRevisionId,
     repos: VerificationRepositoryBundle,
     operation: PinnedAuthorityOperation,
@@ -169,9 +172,7 @@ def _existing_verification(
                     existing.findings,
                     failures_by_finding_id={},
                 ),
-                calculation_notes=read_recorded_notes(
-                    target.source_issues, repos.ledger_membership_ports.activity_asset_history_repository
-                ),
+                calculation_notes=_recorded_notes(target, work_unit, repos),
             )
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
@@ -221,7 +222,11 @@ def _prepare_verification_profile(
     )
     try:
         require_work_unit_calculation_unblocked(
-            work_unit=work_unit, revision=target, action="verify", operation=operation
+            work_unit=work_unit,
+            revision=target,
+            action="verify",
+            operation=operation,
+            resolutions=credit_resolutions_for_work(repos.credit_resolution, work_unit),
         )
     except RegistryValidationError as refused:
         # The note gate screens against the filing-grade snapshot. Authority below
@@ -267,7 +272,7 @@ def verify_modelo_revision_with_preconditions(
     revisions, revisions_revision_id, target, work_unit = _load_verification_context(
         calculation_revision_id, repos, operation
     )
-    existing = _existing_verification(target, calculation_revision_id, repos, operation)
+    existing = _existing_verification(target, work_unit, calculation_revision_id, repos, operation)
     if existing is not None:
         return existing
 
@@ -447,9 +452,23 @@ def _finish_verification(
             findings,
             failures_by_finding_id=failures_by_finding_id,
         ),
-        calculation_notes=read_recorded_notes(
-            target.source_issues, repos.ledger_membership_ports.activity_asset_history_repository
-        ),
+        calculation_notes=_recorded_notes(target, work_unit, repos),
+    )
+
+
+def _recorded_notes(
+    target: CalculationRevision, work_unit: WorkUnit, repos: VerificationRepositoryBundle
+) -> tuple[RecordedCalculationNote, ...]:
+    """The notes the calculation kept, then one for each acceptance that covers a disagreement among them."""
+    lookup = load_credit_resolutions(
+        repos.credit_resolution,
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    return (
+        *read_recorded_notes(target.source_issues, repos.ledger_membership_ports.activity_asset_history_repository),
+        *applied_resolution_notes(target, lookup),
     )
 
 

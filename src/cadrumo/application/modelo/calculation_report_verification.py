@@ -81,6 +81,7 @@ if TYPE_CHECKING:
 
 _UTF_8: Final[str] = "utf-8"
 _REPORT_PAYLOAD_KEYS: Final[frozenset[str]] = frozenset({"content_version", "header", "rows"})
+_REPORT_PAYLOAD_KEYS_WITH_RESOLUTIONS: Final[frozenset[str]] = _REPORT_PAYLOAD_KEYS | {"credit_resolutions"}
 
 
 class CalculationSummaryVerificationOutcome(StrEnum):
@@ -299,13 +300,16 @@ def _parse_report(report_bytes: bytes) -> ModeloCalculationReport | None:
         decoded = _strict_json(report_bytes)
     except (UnicodeDecodeError, ValueError):
         return None
-    if not is_str_keyed_dict(decoded) or frozenset(decoded) != _REPORT_PAYLOAD_KEYS:
+    if not is_str_keyed_dict(decoded) or frozenset(decoded) not in (
+        _REPORT_PAYLOAD_KEYS,
+        _REPORT_PAYLOAD_KEYS_WITH_RESOLUTIONS,
+    ):
         return None
     if decoded["content_version"] != CALCULATION_REPORT_CONTENT_VERSION:
         return None
     try:
         return ModeloCalculationReport.model_validate_json(
-            canonical_json_bytes({"header": decoded["header"], "rows": decoded["rows"]}),
+            canonical_json_bytes({key: value for key, value in decoded.items() if key != "content_version"}),
         )
     except (ValidationError, ValueError):
         return None
@@ -378,6 +382,11 @@ def _text_layer_gaps(
         )
         if _compact(value) not in page
     ]
+    gaps.extend(
+        f"resolution {fact.label}"
+        for fact in presentation.resolutions
+        if _compact(fact.label) not in page or _compact(fact.value) not in page
+    )
     cursor = page.find(_compact(presentation.sections[0].heading)) if presentation.sections else 0
     if cursor < 0:
         return (*gaps, "sections")
@@ -581,9 +590,13 @@ def _trace_against_store(
         return tuple(checks.rows)
     # The facts a later lifecycle step legitimately changes are compared by the
     # checks above, so the rebuild is judged as of the export: the recorded
-    # state, verification and filing facts stand in for the current ones.
+    # state, verification and filing facts stand in for the current ones. So do
+    # the resolutions: the document attests to the acceptances applied when it
+    # was produced, and a later revocation neither changes that nor fails the
+    # check; the store is not asked which acceptances are active now.
     as_exported = rebuilt.model_copy(
         update={
+            "credit_resolutions": report.credit_resolutions,
             "header": rebuilt.header.model_copy(
                 update={
                     "calculation_revision_state": statement.calculation_revision_state,

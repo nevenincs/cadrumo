@@ -21,4 +21,4 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
 
 def test_modelo_130_all_casillas_have_shared_localized_labels_and_help() -> None:
     scenarios.check_modelo_130_all_casillas_have_shared_localized_labels_and_help(_modelos_by_id())
-    assert len(_modelos_by_id()["130"].revisions["2019-y-siguientes"].casillas) == 20
+    assert len(_modelos_by_id()["130"].revisions["2019-y-siguientes"].casillas) == 21

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e30eeea60d57c2b177ef035e6439d16bf5c4df54f59d2cc967a9c21bab7acea'
+body_hash: 'sha256:982d94bf58bd1217d7b8c16797419414a408bf1c8bc4fbb30cf5feb1d4b0a322'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -1009,6 +1009,220 @@ related:
 - `S31` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
 - `S31` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
 - `S31` `verify:` `lint-imports --config .importlinter --no-cache` -> `fail`
+- `S21` `M` `src/cadrumo/application/aggregation/renta_imputation.py`
+- `S21` `M` `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`
+- `S21` `verify:` `pytest test_renta_imputation_criterion.py test_renta_imputation_findings.py (96)` -> `pass`
+- `S21` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
+- `S25` `M` `src/cadrumo/application/modelo/m193_settled_row_gate.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_settled_row_export_gate.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/test_m193_settled_row_file_verify_gate.py`
+- `S25` `verify:` `pytest test_m193_settled_row_file_verify_gate.py test_m193_settled_row_export_gate.py -m integration (14)` -> `pass`
+- `S25` `verify:` `pytest test_m193_disclosure_phase_calculation.py (8)` -> `pass`
+- `S17` `M` `src/cadrumo/application/retencion_soportada_certificado/executor.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/conformance_retencion_soportada_support.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S17` `M` `.vault/audit/2026-09-26-export-parity-audit.md`
+- `S17` `verify:` `pytest -m integration test_retencion_soportada_certificado_mesh.py, test_retencion_soportada_cli.py, conformance -k retencion_soportada` -> `pass`
+- `S29` `verify:` `pytest -m integration test_retencion_soportada_absence_cli.py` -> `pass`
+- `S32` `M` `dev/locales/fstring_registry.py`
+- `S32` `M` `dev/locales/tests/test_command_choice_spelling.py`
+- `S32` `M` `dev/registry/edition_export_scenarios.py`
+- `S32` `M` `dev/registry/tests/test_workbook_context.py`
+- `S32` `M` `native/desktop/frontend/src/components/modelo/workspace/CorrectionDialog.tsx`
+- `S32` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S32` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S32` `M` `src/cadrumo/adapters/outbound/aeat/export/tests/test_fixed_width_codec_conformance.py`
+- `S32` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prior_domiciliation_election.py`
+- `S32` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S32` `M` `src/cadrumo/application/filing/tests/export_support.py`
+- `S32` `M` `src/cadrumo/application/filing/tests/test_producer_snapshot.py`
+- `S32` `M` `src/cadrumo/application/modelo/_amendment_kind_resolution.py`
+- `S32` `M` `src/cadrumo/application/modelo/amendment_actions.py`
+- `S32` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S32` `M` `src/cadrumo/application/modelo/amendment_projection.py`
+- `S32` `M` `src/cadrumo/application/modelo/export_amendment_evidence.py`
+- `S32` `M` `src/cadrumo/application/modelo/filing_revision_persistence.py`
+- `S32` `M` `src/cadrumo/application/modelo/prior_domiciliation.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_amend_request_detail_rows.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_work_amend_correction.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_amend_contracts.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_amend_correction.py`
+- `S32` `M` `src/cadrumo/core/amendment_kind_regime.py`
+- `S32` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S32` `M` `src/cadrumo/domain/modelos/calculation_revision_aggregate.py`
+- `S32` `M` `src/cadrumo/domain/modelos/calculation_revision_amendment.py`
+- `S32` `M` `src/cadrumo/domain/modelos/calculation_revision_invariants.py`
+- `S32` `M` `src/cadrumo/domain/modelos/tests/test_filing_kind_evidence.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/common.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/modelo_amend_wizard_commands.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/modelo_amend_wizard_results.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/modelo_commands.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/tests/test_m303_rectificativa_motive_lifecycle.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py`
+- `S32` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard_payload.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/_export_output_paths_support.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_amend_flow.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_amend_kind_resolution.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_amend_pending_chain.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_summary.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths_domiciliacion.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_external_source_import.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_filed_capture_external_baseline.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_import_flow.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_import_flow_mutation_guards.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m369_destination_rows_live.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_modelo_support.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_clock_gate_amendment.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
+- `S32` `A` `src/cadrumo/domain/modelos/tests/test_calculation_revision_amendment_kind.py`
+- `S32` `verify:` `pytest test_calculation_revision_amendment_kind.py test_amend_kind_resolution.py and 294 focused tests` -> `pass`
+- `S32` `verify:` `ruff, ruff format, ty on touched files; dev.operation_contract_manifest.generate --check; lint-imports 30 kept` -> `pass`
+- `S32` `verify:` `desktop tsc, eslint, prettier, modelo-fixtures --check, relay_contracts --check, 4 correction scenarios` -> `pass`
+- `S18` `A` `src/cadrumo/adapters/persistence/profile/retencion_soportada_evidence_custody.py`
+- `S18` `M` `.vault/adr/2026-11-01-export-parity-suffered-withholding-schemas-adr.md`
+- `S18` `M` `.vault/audit/2026-09-26-export-parity-audit.md`
+- `S18` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/tests/retencion_soportada_seed.py`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_soportada_records.py`
+- `S18` `M` `src/cadrumo/application/aggregation/retencion_soportada_repository.py`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/contracts.py`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/ports.py`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/registered_operation.py`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/requests.py`
+- `S18` `M` `src/cadrumo/domain/renta/retencion_soportada.py`
+- `S18` `M` `src/cadrumo/domain/renta/tests/test_retencion_soportada_record.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/_app_ledger_retencion_soportada_command_specs.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/operation_ledger_retencion_soportada.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/retencion_soportada_commands.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S18` `M` `src/cadrumo/entrypoints/retencion_soportada_certificado_composition.py`
+- `S18` `M` `src/cadrumo/entrypoints/tests/conformance_retencion_soportada_support.py`
+- `S18` `M` `src/cadrumo/entrypoints/tests/profile_persistence/projection_m130_seeding_support.py`
+- `S18` `M` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
+- `S18` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/en/cli.yml`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/cli.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `verify:` `pytest -m "" mesh executor (14), records adapter, domain record, native CLI, absence CLI, conformance -k retencion_soportada, live M100 credit files (31)` -> `pass`
+- `S18` `verify:` `dev.locales status --check; ruff; ruff format --check; ty; lint-imports` -> `pass`
+- `S20` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_resolutions.py`
+- `S20` `A` `src/cadrumo/adapters/persistence/profile/credit_resolution_records.py`
+- `S20` `A` `src/cadrumo/adapters/persistence/profile/tests/test_credit_resolution_records.py`
+- `S20` `A` `src/cadrumo/application/modelo/credit_resolution.py`
+- `S20` `A` `src/cadrumo/application/modelo/credit_resolution_contracts.py`
+- `S20` `A` `src/cadrumo/application/modelo/credit_resolution_operation.py`
+- `S20` `A` `src/cadrumo/application/modelo/credit_resolution_repository.py`
+- `S20` `A` `src/cadrumo/application/modelo/tests/test_calculation_report_resolutions.py`
+- `S20` `A` `src/cadrumo/domain/modelos/credit_resolution.py`
+- `S20` `A` `src/cadrumo/domain/modelos/tests/test_credit_resolution.py`
+- `S20` `A` `src/cadrumo/entrypoints/cli/_modelo_work_disagreement_cli.py`
+- `S20` `A` `src/cadrumo/entrypoints/cli/_modelo_work_disagreement_payloads.py`
+- `S20` `A` `src/cadrumo/entrypoints/cli/operation_modelo_credit_resolution.py`
+- `S20` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_disagreement_cli.py`
+- `S20` `A` `src/cadrumo/entrypoints/tests/profile_persistence/credit_resolution_live_support.py`
+- `S20` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_credit_resolution_live.py`
+- `S20` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_credit_resolution_operation.py`
+- `S20` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S20` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S20` `M` `dev/quality/metadata/import_load_targets.json`
+- `S20` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S20` `M` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_layout.py`
+- `S20` `M` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/summary_report_support.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_export_ports_support.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S20` `M` `src/cadrumo/application/aggregation/source_diagnostic_reason.py`
+- `S20` `M` `src/cadrumo/application/export/review_snapshot_loader.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_action_ports.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_bucket_actions.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_note_gate.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_report.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_report_document.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_report_export.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_report_verification.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_summary_presentation.py`
+- `S20` `M` `src/cadrumo/application/modelo/credit_resolution.py`
+- `S20` `M` `src/cadrumo/application/modelo/credit_resolution_repository.py`
+- `S20` `M` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S20` `M` `src/cadrumo/application/modelo/edit_prerequisite_wording.py`
+- `S20` `M` `src/cadrumo/application/modelo/export.py`
+- `S20` `M` `src/cadrumo/application/modelo/export_ports.py`
+- `S20` `M` `src/cadrumo/application/modelo/filing_action_ports.py`
+- `S20` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S20` `M` `src/cadrumo/application/modelo/projection_quarter_inputs.py`
+- `S20` `M` `src/cadrumo/application/modelo/revision_operation_access.py`
+- `S20` `M` `src/cadrumo/application/modelo/tests/_calculation_report_fixture.py`
+- `S20` `M` `src/cadrumo/application/modelo/tests/test_work_form_gate_agreement.py`
+- `S20` `M` `src/cadrumo/application/modelo/tests/work_form_fixture.py`
+- `S20` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S20` `M` `src/cadrumo/application/modelo/verification_repository_ports.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_context.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_declaration_facts.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_notes.py`
+- `S20` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S20` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S20` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S20` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S20` `M` `src/cadrumo/core/errors/registry/_application_ledger.py`
+- `S20` `M` `src/cadrumo/domain/modelos/calculation_revision_sources.py`
+- `S20` `M` `src/cadrumo/entrypoints/adapter_composition_ports.py`
+- `S20` `M` `src/cadrumo/entrypoints/adapter_composition_work_ports.py`
+- `S20` `M` `src/cadrumo/entrypoints/calculation_review_snapshot_composition.py`
+- `S20` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S20` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S20` `M` `src/cadrumo/entrypoints/cli/modelo_work_command_specs.py`
+- `S20` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S20` `M` `src/cadrumo/entrypoints/operation_composition_inputs.py`
+- `S20` `M` `src/cadrumo/entrypoints/operation_composition_modelo.py`
+- `S20` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S20` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_bienes_inversion_regularizacion_source_mesh_enrollment.py`
+- `S20` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_report_export.py`
+- `S20` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_local_cross_period_carry.py`
+- `S20` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_credit_resolution_live.py`
+- `S20` `M` `src/cadrumo/entrypoints/tests/profile_persistence/verification_repository_support.py`
+- `S20` `M` `src/cadrumo/entrypoints/workbench_generation_composition.py`
+- `S20` `M` `src/cadrumo/locales/ca/application.yml`
+- `S20` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S20` `M` `src/cadrumo/locales/en/application.yml`
+- `S20` `M` `src/cadrumo/locales/en/errors.yml`
+- `S20` `M` `src/cadrumo/locales/es/application.yml`
+- `S20` `M` `src/cadrumo/locales/es/errors.yml`
+- `S20` `M` `src/cadrumo/locales/hu/application.yml`
+- `S20` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S20` `verify:` `domain record (6), adapter (10), gate and form agreement (70), live verify (15), operation executor (8), report listing (83), manifest/census/composition/conformance gates (248)` -> `pass`
+- `S20` `verify:` `ruff, ruff format --check, ty on touched files; lint-imports` -> `pass`
+- `S11` `M` `dev/registry/tests/test_modelo_100_drift_detection.py`
+- `S11` `M` `dev/registry/tests/test_registry_locales_parity.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/verification_expectations/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/adapters/inbound/declaracion/tests/_verification_chain_support.py`
+- `S11` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/test_modelo_bindings_asset_disposal.py`
+- `S11` `M` `src/cadrumo/application/modelo/tests/test_work_form.py`
+- `S11` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_form_workbook.py`
+- `S11` `M` `src/cadrumo/core/retencion_soportada_label.py`
+- `S11` `M` `src/cadrumo/core/tests/test_retencion_soportada_label.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_aggregation.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S11` `verify:` `focused tests per fix (drift detection, CLI calculate, 279 asset/target, work form 14, form workbook 46, computed-casilla enrolment twins, workbook demo -k 131, dict naming, label)` -> `pass`
+- `S11` `verify:` `publish-authority --if-stale and registry_status --check` -> `pass`
 
 ## Notes
 
@@ -1053,3 +1267,11 @@ related:
 - `S08` Operator ruling 2026-11-02, recorded in the binding-capability-grade ADR amendment committed with S31. Both promotions were verified against one republished worktree authority. Wide run failures are the 12 S30-baseline failures only. DGT V4965-16 is cited in the binding comment, not `legal_refs:` the catalogue has no DGT consulta kind. Commit 898bc7f5d8.
 - `S07` Implemented by the IVA session on feature/iva-period as 950d71d157 (operator assignment), merged to feature/tui as 11597ef030; the source-disagreement type it reuses is b09654e5bb and 0f41170526. The row for the fixtures directory covers 173 regenerated desktop Modelo fixtures.
 - `S31` Docs refresh basis: operator ruling 2026-11-03, relayed by the orchestrator, to expose the three existing wizard election flags (--irpf-activity-income-imputation-criterion, --irpf-activity-income-imputation-year, --irpf-codigo-comercio-accounting) through the CLI option table, reusing their help keys with no new wizard logic. The criterion choice contract follows the table's import-pure convention: an empty static placeholder, validated by the flow against the profile schema's `enum_values` (a refused token reports choices `cobros_y_pagos,` devengo). The sequences state `directa_simplificada,` `cobros_y_pagos` for 2026 and no Codigo de Comercio accounting, because their rows are payment-dated without accrual documents (devengo leaves them `accrual_unknown)` and cash is admissible only with a declared regime (RIRPF art. 7.2). All five verify frames end COMPLETE with `granted_verificado_completo` true and no blocking finding, with casilla values and notices unchanged from the prior goldens. The CLI reference is a build output under ignored docs/cli and the operation contract manifest is unaffected. CLI suite failures: 3, all pre-existing with this change undone `(test_operation_invoice_catalogue` `settlement_amount` payload, two justificante cotejo persistence tests). lint-imports breaks only on the known undeclared `dev.desktop_*` fixture modules. Commits 70fa5bf1e9 and 77d5436a4c.
+- `S21` Delivered mostly by other lanes: 0f570046bf, 33b3364ed4 (facts, RIRPF art. 7.2 eligibility, 0169 at the 2022 baseline), e9b64e8fb5, d5ca77a721 (wizard), 843833d8da (operations), 54bb1caaee (TUI/desktop), 632b246526, 70fa5bf1e9 (CLI flags). e6bfa3c6ff closes the gap: the blocking refusal now names the provision. Casillas 1443 and 1487 stay manual, since no producer enumerates those blocks per the ADR.
+- `S25` 0d22d4b7c3: hand-declared rows with EJERCICIO DEVENGO before the filing year (Orden EHA/3377/2011 positions 118-121) now count as settled prior-accrual rows in the one gate. Follow-up: the gate opens its own bundled authority instead of the caller's pin.
+- `S17` P03 phase review 2026-11-03 follow-up bc9c230741: the payer NIF is checksum-validated and keyed canonically. Audit fdb20cd89f.
+- `S29` P03 review follow-up 8e15a7a749: `list_absences` class labels render in the --language locale.
+- `S32` Landed on feature/tui in root as 1280b3a4ac (Python half plus the desktop contract mirror and CorrectionDialog, committed together by the tui frontend session) and a8c5811060 (new test). Stored identities parse unchanged because the wire values are identical.
+- `S18` P03 review rulings (operator 2026-11-03), recorded as ADR D Amendment 2026-11-03 (e28d00bbbf): `PROFILE_FIELD` admitted as a terminal origin; certificate bytes are held in attachment custody, with refusals `certificate_not_in_custody,` `certificate_file_unreadable` and `certificate_fingerprint_mismatch` (01a28ab372); a same-evidence correction keeps the lineage (18aa70a39f). 01a28ab372 also carries S20 cli.yml help hunks. The desktop half (ledgerSetup.ts, WithholdingPane.tsx) is pending with the tui frontend session.
+- `S20` Operations `modelo.work.accept_disagreement,` `revoke_disagreement` and disagreements; signed-report `credit_resolutions` section omitted when empty, attesting the acceptances at production time. Open follow-up: no authority-publication survival test yet (stopped by the operator merge order). Two filed-before-screens report tests fail with DID NOT RAISE, cause unconfirmed.
+- `S11` Campaign follow-up fixes from the 2026-11-03 triage of renta-lane failures on tui: the renta-income target lookup excludes agrarian-quarter providers with one definition (4d3ff4c124), M131 box 11 enrolled in `reconcile_when_present` with authored labels (10a7f1cda8), and stale tests realigned. Still open: `test_record_design_modelo_131` offset 692 (98c4cf97f7); ty, lint-imports and `grade_earned` not rerun.

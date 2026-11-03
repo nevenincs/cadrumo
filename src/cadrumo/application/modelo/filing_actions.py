@@ -81,6 +81,7 @@ from .action_errors import (
 )
 from .calculation_note_gate import require_work_unit_calculation_unblocked
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .credit_resolution import credit_resolutions_for_work
 from .filing_action_ports import FilingActionPorts
 from .filing_revision_persistence import (
     persist_filed_revision,
@@ -618,7 +619,13 @@ def _require_filing_preconditions(
     _require_persisted_required_bindings_resolved(
         work_unit=work_unit, revision=target, action="file", operation=operation
     )
-    require_work_unit_calculation_unblocked(work_unit=work_unit, revision=target, action="file", operation=operation)
+    require_work_unit_calculation_unblocked(
+        work_unit=work_unit,
+        revision=target,
+        action="file",
+        operation=operation,
+        resolutions=credit_resolutions_for_work(ports.credit_resolution_reader, work_unit),
+    )
     iva_compensation_decision = _require_iva_compensation_revision_match(
         work_unit,
         target,

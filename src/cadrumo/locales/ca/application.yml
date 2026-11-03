@@ -1308,12 +1308,24 @@ application:
           conté res, així que la xifra es manté, però sense contrastar.
         what_to_do: Si aquesta font hauria de contenir aquesta retenció, afegeix-la
           i torna a calcular; si no, no cal que facis res.
+      credit_resolution_applied:
+        what: Vas acceptar l'import utilitzat en una discrepància entre fonts, així
+          que ja no reté aquesta declaració. L'acceptació no canvia cap xifra.
+        what_to_do: 'No hi ha res a fer. Si més endavant es corregeix una font, torna
+          a calcular: una acceptació només cobreix els imports amb què es va fer.'
+      credit_resolution_stale:
+        what: Vas acceptar una discrepància anterior d'aquesta xifra, però les seves
+          fonts ara donen altres imports, així que aquesta acceptació ja no s'aplica.
+        what_to_do: Compara de nou els imports. Si l'import utilitzat continua sent
+          correcte, accepta aquesta discrepància amb el seu nou identificador.
       credit_source_disagreement:
         what: Dues fonts donen imports diferents per a la mateixa deducció per retencions,
           així que Cadrumo no pot comprovar, exportar ni registrar la declaració amb
           aquesta xifra.
-        what_to_do: Compara l'import amb el certificat de cada pagador, corregeix
-          la font que estigui malament i torna a calcular.
+        what_to_do: 'Compara l''import amb el certificat de cada pagador, corregeix
+          la font que estigui malament i torna a calcular. Si has comprovat que l''import
+          utilitzat és correcte, accepta''l amb el seu identificador: `aeat app modelo
+          work accept-disagreement <identificador> --reason <motiu>`.'
       deferred_binding_source:
         what: Cadrumo encara no emplena automàticament una xifra d'aquesta declaració.
         what_to_do: No has de fer res, tret que aquesta xifra t'afecti. Si t'afecta,
@@ -1467,9 +1479,10 @@ application:
       precedence_tier_divergence:
         what: Dues fonts tenen valors diferents per a una xifra que arriba a la casella
           {box}, i Cadrumo ha fet servir la que té prioritat.
-        what_to_do: Compara les fonts i corregeix la que sigui incorrecta; després
-          torna a calcular. La comprovació, l'exportació i el registre esperen fins
-          que coincideixin.
+        what_to_do: 'Compara les fonts i corregeix la que sigui incorrecta; després
+          torna a calcular. La comprovació, l''exportació i el registre esperen fins
+          que coincideixin, o fins que acceptis el valor utilitzat amb el seu identificador:
+          `aeat app modelo work accept-disagreement <identificador> --reason <motiu>`.'
       precedence_tier_divergence_advisory:
         what: Dues fonts tenen valors diferents per a una xifra de treball, i Cadrumo
           ha fet servir la que té prioritat.
@@ -1640,6 +1653,11 @@ application:
         pot calcular, i la casella {box} només declara el que està registrat.'
       credit_cross_check_absent: 'Casella {box}: segons {cross_check}, no hi ha res
         per comparar, així que aquesta xifra no està contrastada.'
+      credit_resolution_applied: 'Casella {box}: vas acceptar {accepted} tot i que
+        les fonts donen {sources} (discrepància {finding}). El teu motiu: {reason}'
+      credit_resolution_stale: 'Casella {box}: vas acceptar una discrepància anterior
+        d''aquesta xifra, però les seves fonts ara donen altres imports, així que
+        l''acceptació ja no s''aplica.'
       credit_source_disagreement: 'Casella {box}: la font declarada dona {amount};
         segons {cross_check}, són {compared_amount}.'
       disposal_claim_gap: '{element}: la seva baixa és el {date} i part de {year}
@@ -1779,6 +1797,10 @@ application:
         a aquest període.'
       notice_title: 'Càlcul local: no és un justificant de l''AEAT'
       page_counter: Pàgina {page} de {pages}
+      resolution_label: Casella {box} · discrepància {finding}
+      resolution_value: 'Acceptat {accepted}. Les fonts indiquen: {sources}. Motiu:
+        {reason}'
+      resolutions_heading: Discrepàncies entre fonts acceptades
       section_unnamed: Caselles
       signature_meaning: La signatura d'integritat de Cadrumo adjunta a aquest PDF
         acredita que la clau d'aquest perfil va declarar que, en l'instant d'exportació
@@ -1823,6 +1845,18 @@ application:
       filed_observation: la declaració que vas presentar
       ledger: el teu llibre de registre
       retencion_soportada: els certificats dels pagadors
+    credit_resolution:
+      errors:
+        already_resolved: Aquesta discrepància ja està acceptada.
+        calculation_not_current: Aquest no és el càlcul actual de la declaració, així
+          que les seves discrepàncies ja no es poden acceptar. Fes servir el càlcul
+          actual.
+        not_resolved: Aquesta discrepància no té cap acceptació activa per retirar.
+        stale_revision: La resolució ha canviat des que la vas llegir; torna a llegir-la
+          abans de desar.
+        unknown_finding: El càlcul actual d'aquesta declaració no té cap discrepància
+          entre fonts amb aquest identificador. Torna a calcular i copia l'identificador
+          de la comprovació.
     edit:
       parse:
         above_maximum: El valor màxim és {bound}.

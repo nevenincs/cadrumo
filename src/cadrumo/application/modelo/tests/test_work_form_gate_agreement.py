@@ -41,7 +41,13 @@ from ....domain.modelos.source_disagreement import (
 )
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
+from ..calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    SOURCE_DISAGREEMENT_FINDING_ID_LENGTH,
+    ModeloCalculationBlockedError,
+    SourceDisagreementResolutions,
+    require_work_unit_calculation_unblocked,
+)
 from ..calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, PRINTED_BOX_REASONS, note_attention
 from ..calculation_screen import calculation_screen_stamp
 from ..declaration_summary import declaration_summary
@@ -189,20 +195,38 @@ def _every_note() -> list[_Note]:
     return [_Note(reason, _PRINTED_BOX if reason in PRINTED_BOX_REASONS else None) for reason in sorted(reasons)]
 
 
-def _checked_form(operation: PinnedAuthorityOperation, revision: CalculationRevision) -> ModeloWorkForm:
+def _checked_form(
+    operation: PinnedAuthorityOperation,
+    revision: CalculationRevision,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+) -> ModeloWorkForm:
     """A checked form whose result boxes the calculation produced, so only the note can block it."""
     plain = built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset(_HELD))
     results = {str(casilla_id): Decimal("0.00") for casilla_id in result_fields(plain)}
     form = built_form(
-        operation, "210", 2025, "0A", held={**_HELD, **results}, entered=frozenset(_HELD), revision=revision
+        operation,
+        "210",
+        2025,
+        "0A",
+        held={**_HELD, **results},
+        entered=frozenset(_HELD),
+        revision=revision,
+        resolutions=resolutions,
     )
     return form.model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE})
 
 
-def _gate_admits(unit: WorkUnit, revision: CalculationRevision, operation: PinnedAuthorityOperation) -> bool:
+def _gate_admits(
+    unit: WorkUnit,
+    revision: CalculationRevision,
+    operation: PinnedAuthorityOperation,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+) -> bool:
     try:
-        require_work_unit_calculation_unblocked(work_unit=unit, revision=revision, action="export", operation=operation)
-        require_work_unit_calculation_unblocked(work_unit=unit, revision=revision, action="file", operation=operation)
+        for action in ("export", "file"):
+            require_work_unit_calculation_unblocked(
+                work_unit=unit, revision=revision, action=action, operation=operation, resolutions=resolutions
+            )
     except ModeloCalculationBlockedError:
         return False
     return True
@@ -476,3 +500,88 @@ def test_the_declarations_list_and_the_form_agree_for_one_checked_revision(
         assert form_step in _FILE_ACTIONS
         assert listed is DeclarationListNextStep.CREATE_FILE
     assert (listed is DeclarationListNextStep.CREATE_FILE) is _gate_admits(unit, revision, operation)
+
+
+_ANOTHER_FINDING_KEY = "f" * 64
+
+
+@pytest.mark.parametrize("reason", sorted(DISAGREEMENT_REASONS))
+@pytest.mark.parametrize(
+    ("standing", "lifted"),
+    [("open", False), ("resolved", True), ("resolved-another-finding", False), ("resolutions-unreadable", False)],
+)
+def test_a_source_disagreement_is_held_or_lifted_by_the_form_and_the_gates_alike(
+    operation: PinnedAuthorityOperation, reason: str, standing: str, lifted: bool
+) -> None:
+    """An open, a resolved and a stale disagreement are judged identically by the gate and the form."""
+    unit = _work_unit(operation)
+    issue = _Note(reason).issue()
+    assert issue.disagreement is not None
+    key = issue.disagreement.finding_key
+    resolutions = {
+        "open": NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+        "resolved": SourceDisagreementResolutions(finding_keys=frozenset({key})),
+        "resolved-another-finding": SourceDisagreementResolutions(finding_keys=frozenset({_ANOTHER_FINDING_KEY})),
+        "resolutions-unreadable": SourceDisagreementResolutions(finding_keys=frozenset({key}), unreadable=True),
+    }[standing]
+    revision = _revision(operation, unit, issue)
+    form = _checked_form(operation, revision, resolutions)
+
+    admitted = _gate_admits(unit, revision, operation, resolutions)
+    hold = export_hold(form, OutputLanguage.EN, verified=True, recorded=False)
+    step = form_next_step(form, verified=True, filed=False)
+    (note,) = form.calculation_notes
+
+    assert admitted is lifted
+    assert note.withholds_filing is not lifted
+    assert note.finding_id == key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+    if lifted:
+        assert hold is None and step.action in _FILE_ACTIONS
+    else:
+        assert hold is not None and hold.reason is ModeloFormExportHoldReason.BLOCKS
+        assert step.action is ModeloFormNextAction.RESOLVE
+
+
+@pytest.mark.parametrize("reason", sorted(DISAGREEMENT_REASONS))
+def test_the_refusal_names_the_finding_to_answer_and_says_when_the_resolutions_could_not_be_read(
+    operation: PinnedAuthorityOperation, reason: str
+) -> None:
+    unit = _work_unit(operation)
+    issue = _Note(reason).issue()
+    assert issue.disagreement is not None
+    finding_id = issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+    revision = _revision(operation, unit, issue)
+
+    with pytest.raises(ModeloCalculationBlockedError) as open_refusal:
+        require_work_unit_calculation_unblocked(work_unit=unit, revision=revision, action="export", operation=operation)
+    with pytest.raises(ModeloCalculationBlockedError) as unreadable_refusal:
+        require_work_unit_calculation_unblocked(
+            work_unit=unit,
+            revision=revision,
+            action="export",
+            operation=operation,
+            resolutions=SourceDisagreementResolutions(unreadable=True),
+        )
+
+    assert open_refusal.value.context is not None
+    assert open_refusal.value.context["finding_ids"] == finding_id
+    assert "resolutions_unreadable" not in open_refusal.value.context
+    assert unreadable_refusal.value.context is not None
+    assert unreadable_refusal.value.context["finding_ids"] == finding_id
+    assert unreadable_refusal.value.context["resolutions_unreadable"] == "true"
+
+
+@pytest.mark.parametrize("reason", sorted(DISAGREEMENT_REASONS))
+def test_the_check_lists_a_disagreement_with_the_finding_id_an_acceptance_answers_to(
+    operation: PinnedAuthorityOperation, reason: str
+) -> None:
+    unit = _work_unit(operation)
+    issue = _Note(reason).issue()
+    assert issue.disagreement is not None
+    finding_id = issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+    form = _checked_form(operation, _revision(operation, unit, issue))
+
+    (line,) = [line for line in form_issue_lines(form, OutputLanguage.EN) if reason in line.technical]
+
+    assert finding_id in line.technical
+    assert "accept-disagreement" in line.action

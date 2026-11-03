@@ -95,6 +95,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "iva_wallet_reconciliation_decisions",
     "iva_wallet_reconciliation_decision_events",
     "modelo_reconciliation_records",
+    "modelo_credit_resolutions",
     "modelo_edit_receipt",
     "sync_run_records",
     "iva_compensation_history",
@@ -204,6 +205,22 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     assert declaration.namespace == "cadrumo.application.modelo.m036_declaration"
     assert declaration.sensitivity is SensitivityClass.IDENTITY
     assert declaration.object_key_grammar == "m036-declaration:{bucket_id}:{declaration_id}"
+
+
+def test_secure_object_registry_names_the_credit_resolution_namespace() -> None:
+    """An operator's acceptance of a disputed figure restates its amounts, so it is FINANCIAL and profile-local."""
+    from ..secure_object_namespaces import MODELO_CREDIT_RESOLUTION_NAMESPACE
+
+    resolution = lookup_namespace_definition("modelo_credit_resolutions")
+
+    assert resolution == MODELO_CREDIT_RESOLUTION_NAMESPACE
+    assert resolution.namespace == "cadrumo.modelo.credit_resolution.records"
+    assert resolution.owner == "cadrumo.application.modelo"
+    assert resolution.sensitivity is SensitivityClass.FINANCIAL
+    assert resolution.schema_version == 1
+    assert resolution.object_key_grammar == "credit-resolution:{modelo}:{filing_year}:{period}:{finding_key}"
+    assert resolution.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert resolution.custody_disposition is StorageCustodyDisposition.STRUCTURED_CUSTODY
 
 
 def test_secure_object_registry_names_m145_communication_record_namespace() -> None:

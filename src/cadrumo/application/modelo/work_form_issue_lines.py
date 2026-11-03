@@ -429,7 +429,11 @@ def _note_identifiers(
     field = None if address is None else context.shown.get(address_key(address))
     named = None if casilla_id is None else (note.box or context.box_words.get(casilla_id))
     box_text = named or context.say(_UNNUMBERED_BOX_LOCALE_KEY)
-    codes = [note.reason, *([] if casilla_id is None else [casilla_id])]
+    codes = [
+        note.reason,
+        *([] if casilla_id is None else [casilla_id]),
+        *([] if note.finding_id is None else [note.finding_id]),
+    ]
     return field, box_text, codes
 
 

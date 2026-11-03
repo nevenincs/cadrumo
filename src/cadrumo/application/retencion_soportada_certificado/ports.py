@@ -2,23 +2,34 @@
 
 The composition root binds them inside the admitted profile worker: the
 encrypted repository (which alone holds the profile key ``payer_ref`` is
-digested under), the pinned authority's write answers and the profile's own
-tax identifier.
+digested under), the pinned authority's write answers, the profile's attachment
+custody for the certificate bytes and the profile's own tax identifier.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 from typing import Protocol
 from uuid import UUID
 
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.renta.retencion_soportada import RetencionSoportadaIdentity, RetencionSoportadaRecord
 from ..aggregation.retencion_soportada_repository import (
+    RetencionSoportadaEvidenceCustody,
     RetencionSoportadaRecordRepository,
     RetencionSoportadaWriteAuthority,
 )
+
+
+class RetencionSoportadaCertificateCustody(RetencionSoportadaEvidenceCustody, Protocol):
+    """Attachment custody that can also take a certificate file the operator names."""
+
+    def ingest(self, *, source_path: Path, data: bytes, mime_type: str, captured_at: datetime) -> str:
+        """Keep ``data`` in encrypted custody and return the sha256 it is addressed by."""
+        ...
 
 
 class RetencionSoportadaCertificadoRepository(RetencionSoportadaRecordRepository, Protocol):
@@ -43,6 +54,7 @@ class RetencionSoportadaCertificadoPorts:
 
     repository: RetencionSoportadaCertificadoRepository
     authority: RetencionSoportadaWriteAuthority
+    custody: RetencionSoportadaCertificateCustody
     taxpayer_tax_id: Callable[[], str | None]
     """The profile's own tax identifier, or ``None`` when the profile declares none."""
 

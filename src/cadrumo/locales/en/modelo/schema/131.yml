@@ -2,6 +2,11 @@ modelo:
   schema:
     '131':
       binding:
+        modelo-131-resultados-negativos-anteriores:
+          help: The amount, without sign, of the negative results of your earlier
+            Form 131 returns for this year that you have not deducted before.
+          label: Negative results of this year's earlier quarters not yet deducted
+            · box 11
         x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
           label: 'Direct debit: IBAN'
         x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:

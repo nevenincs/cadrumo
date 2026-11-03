@@ -29,6 +29,7 @@ from ..calculations.observations_repository import (
     IvaWalletDecisionRepositoryProtocol,
 )
 from ..filing.draft_review_ports import DraftReviewPorts
+from .credit_resolution_repository import CreditResolutionReader
 from .verification_repository_ports import WorkflowRunRepositoryProtocol
 
 if TYPE_CHECKING:
@@ -54,6 +55,7 @@ class FilingActionPorts:
     draft_review_ports: DraftReviewPorts
     workflow_gate_ports: WorkflowGatePorts
     retencion_observation_ports: RetencionObservationPorts
+    credit_resolution_reader: CreditResolutionReader
 
 
 class FilingActionPortsFactory(Protocol):

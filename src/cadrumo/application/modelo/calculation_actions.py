@@ -117,6 +117,11 @@ from .calculation_resolution import precedence_tier_issue
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_screen import calculation_screen_stamp
 from .credit_reconciliation import credit_reconciliation_issues, load_credit_cross_check_sources
+from .credit_resolution import (
+    credit_resolution_degradation_diagnostics,
+    load_credit_resolutions,
+    stale_resolution_issues,
+)
 from .imputation_filings import imputation_filings_from_repositories
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
@@ -297,8 +302,9 @@ class TrustedMeshCalculation:
     """A persisted calculation and the precedence divergences its binding overlay found.
 
     The blocking divergences are already among the revision's source issues;
-    ``precedence_diagnostics`` also carries the advisory ones, which are shown
-    and not persisted.
+    ``precedence_diagnostics`` also carries the advisory ones and the note that
+    the operator's resolutions could not be read, which are shown and not
+    persisted.
     """
 
     publication: CalculationRevisionPublication
@@ -419,6 +425,16 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
             ),
         ),
     )
+    resolution_lookup = load_credit_resolutions(
+        ports.credit_resolution_reader,
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    revision_source_issues = (
+        *revision_source_issues,
+        *stale_resolution_issues(revision_source_issues, resolution_lookup),
+    )
     ledger_filing_snapshot, invoice_fingerprint = _draft_anchors(
         work_unit=work_unit,
         source_transaction_ids=source_transaction_ids,
@@ -470,7 +486,13 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         bucket_event_repository=ports.bucket_event_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
-    return TrustedMeshCalculation(publication=publication, precedence_diagnostics=channels.precedence_diagnostics)
+    return TrustedMeshCalculation(
+        publication=publication,
+        precedence_diagnostics=(
+            *channels.precedence_diagnostics,
+            *credit_resolution_degradation_diagnostics(resolution_lookup),
+        ),
+    )
 
 
 def evaluate_modelo_revision_with_trusted_mesh_sources(

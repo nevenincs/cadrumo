@@ -40,6 +40,9 @@ from .retencion_soportada_results import (
     RetencionSoportadaRowPayload,
 )
 
+_REFUSAL_EFFECTS = frozenset({OperationEffect.NONE, OperationEffect.PARTIAL})
+"""A refusal leaves nothing, or only the certificate bytes custody kept before the record was refused."""
+
 _REFUSAL_MESSAGE_LOCALE_KEYS = {
     "own_tax_id": "aggregation.retencion_soportada.errors.own_tax_id",
     "ejercicio_unsupported": "aggregation.retencion_soportada.errors.ejercicio_unsupported",
@@ -48,6 +51,9 @@ _REFUSAL_MESSAGE_LOCALE_KEYS = {
     "stale_revision": "aggregation.retencion_soportada.errors.stale_revision",
     "repercutido_exceeds_ingreso_a_cuenta": "aggregation.retencion_soportada.errors.repercutido_exceeds_ingreso",
     "certificate_fingerprint_required": "aggregation.retencion_soportada.errors.certificate_needs_fingerprint",
+    "certificate_not_in_custody": "aggregation.retencion_soportada.errors.certificate_not_in_custody",
+    "certificate_file_unreadable": "aggregation.retencion_soportada.errors.certificate_file_unreadable",
+    "certificate_fingerprint_mismatch": "aggregation.retencion_soportada.errors.certificate_fingerprint_mismatch",
     "taxpayer_tax_id_unknown": "aggregation.retencion_soportada.errors.taxpayer_tax_id_unknown",
     "not_found": "aggregation.retencion_soportada.errors.not_found",
     "validation": "aggregation.retencion_soportada.errors.validation",
@@ -90,7 +96,7 @@ def _raise_refusal(
     if (
         message is None
         or completed.terminal_condition is not OperationTerminalCondition.REFUSED
-        or completed.effect is not OperationEffect.NONE
+        or completed.effect not in _REFUSAL_EFFECTS
         or completed.refusal_code != refusal.code
     ):
         raise invalid_completion_error(completed)

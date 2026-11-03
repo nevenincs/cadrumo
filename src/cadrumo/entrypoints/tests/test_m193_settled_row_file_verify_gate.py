@@ -21,6 +21,8 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_YEAR,
+    manual_capital_row,
+    seed_manual_percepcion_window,
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.aggregation.withholding_source import WithholdingSourceResolver
@@ -211,6 +213,43 @@ def test_file_refuses_a_settled_row_revision_with_a_typed_reason_and_writes_noth
     assert records == {}
     assert work_unit.current_filing_record_id is None
     assert work_unit.filed_calculation_revision_id is None
+    assert filed == []
+
+
+def _persist_prior_accrual_manual_row(bucket: M193Bucket) -> None:
+    seed_manual_percepcion_window(
+        bucket.objects,
+        filing_year=bucket.filing_year,
+        observations=[
+            manual_capital_row(filing_year=bucket.filing_year).model_copy(update={"accrual_year": CAPITAL_YEAR})
+        ],
+    )
+
+
+def test_a_hand_declared_prior_accrual_row_is_reported_and_refused_at_filing(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The devengo year the operator declares makes the row settled, so verify warns and filing refuses it."""
+    with m193_bucket(tmp_path, filing_year=CAPITAL_YEAR + 1, operation=operation) as bucket:
+        _persist_prior_accrual_manual_row(bucket)
+        revision = calculate_m193_revision(bucket)
+        assert _phase_contributors(revision) == ()
+        report = _verify(revision.calculation_revision_id, operation=operation)
+
+        with pytest.raises(Modelo193SettledRowAmountAuthorityUnresolvedError) as exc_info:
+            _file(revision.calculation_revision_id, operation=operation)
+
+        records = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID, objects=bucket.objects).load().records
+        filed = _filed_events(bucket)
+
+    (finding,) = _settled_row_findings(report)
+    assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+    assert finding.message_facts["settled_prior_accrual_rows"] == 1
+    verdict = exc_info.value.terminal_precondition_verdict
+    assert verdict is not None
+    (condition_evidence,) = verdict.evidence
+    assert condition_evidence.values["settled_prior_accrual_rows"] == 1
+    assert records == {}
     assert filed == []
 
 

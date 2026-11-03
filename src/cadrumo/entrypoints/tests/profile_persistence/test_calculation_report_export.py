@@ -22,8 +22,11 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
+from cadrumo.adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
 from cadrumo.adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
+    build_review_package_signing_keypair_reader,
 )
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
@@ -42,12 +45,15 @@ from cadrumo.application.modelo.calculation_report import (
     CalculationReportRowRole,
     CalculationReportValueState,
     ModeloCalculationReport,
+    ModeloCalculationReportResolution,
+    ModeloCalculationReportResolutionSource,
     local_calculation_report_notice,
 )
 from cadrumo.application.modelo.calculation_report_document import (
     CALCULATION_REPORT_CSV_FIELDNAMES,
     CALCULATION_REPORT_CSV_PREAMBLE_PREFIX,
     DOCUMENT_SERIALIZERS,
+    CalculationSummaryPdfRendering,
     calculation_report_csv_row,
     serialize_calculation_report,
 )
@@ -57,9 +63,15 @@ from cadrumo.application.modelo.calculation_report_export import (
     build_modelo_calculation_report_for_revision,
     export_modelo_calculation_report,
 )
+from cadrumo.application.modelo.calculation_report_verification import (
+    CalculationSummaryStoreContext,
+    CalculationSummaryVerificationOutcome,
+    verify_calculation_summary,
+)
 from cadrumo.application.modelo.calculation_screen import calculation_screen_outdated_message_key
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
+from cadrumo.application.modelo.review_package_signing import ensure_review_package_signing_keypair
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
@@ -640,3 +652,56 @@ def test_verified_modelo_303_reports_its_own_casillas_and_publishes_them(
     assert taxpayer_nif.encode("utf-8") in output_path.read_bytes()
     assert {row["row_role"] for row in rows} <= {role.value for role in CalculationReportRowRole}
     assert all(row["row_role"] for row in rows)
+
+
+def test_a_report_of_a_revision_with_no_disagreement_lists_no_acceptance_and_keeps_its_legacy_payload(
+    repos: Repos,
+) -> None:
+    work_unit, revision = _verified_130(repos)
+
+    report = _report(repos, work_unit, revision)
+
+    assert report.credit_resolutions == ()
+    assert set(report.canonical_payload()) == {"content_version", "header", "rows"}
+
+
+def test_a_signed_summary_listing_an_acceptance_stays_verified_whatever_the_store_holds_now(repos: Repos) -> None:
+    """Verification checks the document: the acceptance listed here is in no store, as a revoked one would not be."""
+    work_unit, revision = _verified_130(repos)
+    listed = ModeloCalculationReportResolution(
+        finding_id="0123456789abcdef",
+        box="27",
+        sources=(
+            ModeloCalculationReportResolutionSource(role="value_source", source_family="binding", value="1400.00"),
+            ModeloCalculationReportResolutionSource(role="cross_check", source_family="borrador", value="1399.99"),
+        ),
+        accepted_role="value_source",
+        reason="Synthetic reason: the payer's own copy states this amount.",
+        resolved_at=_EXPORTED_AT,
+    )
+    keypair = ensure_review_package_signing_keypair(
+        bucket_id=work_unit.bucket_id,
+        signing_keypair=build_review_package_signing_keypair_capability(bucket_id=work_unit.bucket_id),
+    )
+    report = _report(repos, work_unit, revision).model_copy(update={"credit_resolutions": (listed,)})
+
+    payload = serialize_calculation_report(
+        report,
+        document_format=CalculationReportDocumentFormat.PDF,
+        pdf_rendering=CalculationSummaryPdfRendering(writer=write_calculation_summary_pdf, keypair=keypair),
+    ).payload
+    verification = verify_calculation_summary(
+        payload,
+        reader=read_calculation_summary_pdf,
+        store=CalculationSummaryStoreContext(
+            active_bucket_id=work_unit.bucket_id,
+            export_ports=_export_ports(repos, work_unit),
+            signing_keypair=build_review_package_signing_keypair_reader(bucket_id=work_unit.bucket_id),
+            operation=published_authority_operation(),
+        ),
+    )
+
+    assert "0123456789abcdef" in read_calculation_summary_pdf(payload).page_text.replace(" ", "")
+    assert verification.store_checked is True
+    assert verification.outcome is CalculationSummaryVerificationOutcome.VERIFIED
+    assert verification.reasons == ()

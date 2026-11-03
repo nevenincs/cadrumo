@@ -2,6 +2,11 @@ modelo:
   schema:
     '131':
       binding:
+        modelo-131-resultados-negativos-anteriores:
+          help: A 131-es nyomtatvány idei korábbi bevallásaidban szereplő, eddig le
+            nem vont negatív eredmények előjel nélküli összege.
+          label: Az év korábbi negyedéveinek még le nem vont negatív eredményei ·
+            11. rovat
         x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
           label: 'Beszedési megbízás: IBAN'
         x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:

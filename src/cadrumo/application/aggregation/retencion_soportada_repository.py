@@ -15,7 +15,9 @@ The write refuses, before anything is stored:
   calculation would ever read or report;
 * a record whose ``payer_ref`` is not this profile's keyed digest of its payer,
   or which names a replaced certificate that is not the one stored;
-* an overwrite under a revision that is no longer the stored row's.
+* an overwrite under a revision that is no longer the stored row's;
+* a record whose evidence fingerprint names bytes the profile's attachment custody
+  does not hold, or holds in a state that no longer hashes to that fingerprint.
 """
 
 from __future__ import annotations
@@ -38,6 +40,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "PinnedRetencionSoportadaWriteAuthority",
+    "RetencionSoportadaEvidenceCustody",
     "RetencionSoportadaPersistenceError",
     "RetencionSoportadaPorts",
     "RetencionSoportadaRecordReader",
@@ -47,6 +50,7 @@ __all__ = [
     "RetencionSoportadaWriteAuthority",
     "RetencionSoportadaWriteRefusedError",
     "record_retencion_soportada",
+    "require_retencion_soportada_writable",
     "retencion_soportada_record_key",
 ]
 
@@ -87,6 +91,7 @@ type RetencionSoportadaRefusalReason = Literal[
     "ejercicio_unsupported",
     "family_not_declared",
     "identity_mismatch",
+    "certificate_not_in_custody",
 ]
 """Why a write was refused before it reached storage."""
 
@@ -149,6 +154,19 @@ class RetencionSoportadaPorts:
     absences: RetencionSoportadaAbsenceReader | None = None
 
 
+class RetencionSoportadaEvidenceCustody(Protocol):
+    """What the profile's attachment custody says about the bytes a record's fingerprint names."""
+
+    def holds(self, fingerprint: str) -> bool:
+        """Return whether custody holds the bytes addressed by ``fingerprint`` and they still hash to it.
+
+        A missing blob and a blob that no longer hashes to its address both answer
+        ``False``: the fingerprint then names no evidence. A storage failure raises
+        :class:`RetencionSoportadaPersistenceError` and is never read as absence.
+        """
+        ...
+
+
 class RetencionSoportadaWriteAuthority(Protocol):
     """What the pinned authority says about the ejercicio a record is written for."""
 
@@ -206,7 +224,7 @@ def _require_identity(record: RetencionSoportadaRecord, stored: RetencionSoporta
         raise RetencionSoportadaWriteRefusedError("identity_mismatch", ejercicio=record.ejercicio)
 
 
-def record_retencion_soportada(
+def require_retencion_soportada_writable(
     record: RetencionSoportadaRecord,
     *,
     repository: RetencionSoportadaRecordRepository,
@@ -214,12 +232,11 @@ def record_retencion_soportada(
     taxpayer_tax_id: str,
     expected_revision_id: str,
 ) -> None:
-    """Store one payer record, or its correction, after every refusal has been checked.
+    """Refuse, before anything is stored, every ground except the evidence's custody.
 
-    ``expected_revision_id`` is the revision the caller read the row at: the
-    absent-row sentinel for a first record, the stored row's revision for a
-    corrected or replacement certificate. A correction names the certificate it
-    replaces in ``replaces_evidence_fingerprint``, which must be the stored one.
+    A caller that must put the certificate bytes in custody first runs this to
+    learn that the record would be accepted, so a refused record leaves no bytes
+    behind. :func:`record_retencion_soportada` runs it again at the write.
 
     Raises:
         RetencionSoportadaWriteRefusedError: The record is refused (see the module).
@@ -236,4 +253,38 @@ def record_retencion_soportada(
     if current_revision_id != expected_revision_id:
         raise RetencionSoportadaRevisionConflictError
     _require_identity(record, stored)
+
+
+def record_retencion_soportada(
+    record: RetencionSoportadaRecord,
+    *,
+    repository: RetencionSoportadaRecordRepository,
+    authority: RetencionSoportadaWriteAuthority,
+    custody: RetencionSoportadaEvidenceCustody,
+    taxpayer_tax_id: str,
+    expected_revision_id: str,
+) -> None:
+    """Store one payer record, or its correction, after every refusal has been checked.
+
+    ``expected_revision_id`` is the revision the caller read the row at: the
+    absent-row sentinel for a first record, the stored row's revision for a
+    corrected or replacement certificate. A correction names the certificate it
+    replaces in ``replaces_evidence_fingerprint``, which must be the stored one;
+    a correction made against the same certificate names that same fingerprint.
+
+    Raises:
+        RetencionSoportadaWriteRefusedError: The record is refused (see the module).
+        RetencionSoportadaRevisionConflictError: The row is no longer at
+            ``expected_revision_id``.
+        RetencionSoportadaPersistenceError: Storage failed.
+    """
+    require_retencion_soportada_writable(
+        record,
+        repository=repository,
+        authority=authority,
+        taxpayer_tax_id=taxpayer_tax_id,
+        expected_revision_id=expected_revision_id,
+    )
+    if record.evidence_fingerprint is not None and not custody.holds(record.evidence_fingerprint):
+        raise RetencionSoportadaWriteRefusedError("certificate_not_in_custody", ejercicio=record.ejercicio)
     repository.save_revisioned(record, expected_revision_id=expected_revision_id)

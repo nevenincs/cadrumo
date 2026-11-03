@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from uuid import UUID
 
 import typer
@@ -55,6 +56,7 @@ def retencion_soportada_record(
     importe_integro_dinerario: str = "0",
     valoracion_especie: str = "0",
     payer_name: str | None = None,
+    certificate_file: Path | None = None,
     evidence_sha256: str | None = None,
     expected_revision: str | None = None,
 ) -> None:
@@ -75,6 +77,8 @@ def retencion_soportada_record(
             payer_legal_name=payer_name,
             origin=origin,
             evidence_fingerprint=evidence_sha256,
+            source_path=None if certificate_file is None else str(certificate_file),
+            source_directory=None if certificate_file is None else str(Path.cwd()),
             expected_revision_id=expected_revision,
             **amounts,
         )

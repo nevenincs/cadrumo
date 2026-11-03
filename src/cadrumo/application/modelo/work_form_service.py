@@ -63,9 +63,15 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.renta_imputation import revision_reads_imputation_criterion
 from ..live.borrador_100_import import borrador_pdf_extraction_profile
-from .calculation_note_gate import calculation_filed_before_grade_cap, calculation_screen_outdated
+from .calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    calculation_filed_before_grade_cap,
+    calculation_screen_outdated,
+)
 from .calculation_notes import CALCULATION_NOTES, read_element_names
 from .caller_context import caller_context_of
+from .credit_resolution import load_credit_resolutions
+from .credit_resolution_repository import CreditResolutionReader
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .effective_deadline import resolve_effective_filing_deadline
 from .profile_binding import resolve_profile_sourced_bindings
@@ -240,6 +246,7 @@ def load_modelo_work_form(
     reference_on: date | None = None,
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None,
     activity_assets: ActivityAssetHistoryRepository | None = None,
+    credit_resolutions: CreditResolutionReader | None = None,
 ) -> ModeloWorkFormLoadV1:
     """Read one declaration's review, layout and operator layer and build its form.
 
@@ -257,6 +264,9 @@ def load_modelo_work_form(
     day the days left are counted from, today in Madrid by default.
     ``bucket_events`` is the profile's event history, read only for the latest
     file exported for this declaration; without it the form states no export.
+    ``credit_resolutions`` is the profile's store of accepted source
+    disagreements; without it none is honoured, so every disagreement holds
+    filing, and one that cannot be read is held the same way.
     """
     review = build_modelo_work_review(
         bucket_id,
@@ -284,6 +294,16 @@ def load_modelo_work_form(
         if isinstance(admission, ModeloEditAdmittedV1) and admission.baseline.work_unit_id == review.work_unit_id
         else None
     )
+    resolutions = (
+        NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+        if credit_resolutions is None
+        else load_credit_resolutions(
+            credit_resolutions,
+            modelo=str(modelo),
+            filing_year=filing_year,
+            period=period.registry_token,
+        ).resolutions
+    )
     form = build_modelo_work_form(
         review=review,
         snapshot=snapshot,
@@ -303,6 +323,7 @@ def load_modelo_work_form(
         calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id),
         element_names=read_element_names(activity_assets),
         known_truths=_known_profile_truths(snapshot, bucket_id, operation=operation),
+        resolutions=resolutions,
         calculation_screen_outdated=head is not None
         and calculation_screen_outdated(
             head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation

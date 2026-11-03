@@ -266,9 +266,18 @@ aggregation:
         imagen
       trabajo: Rendimientos del trabajo
     errors:
-      certificate_needs_fingerprint: Un certificado del pagador necesita el SHA-256
-        del archivo del certificado (--evidence-sha256). Si no tienes certificado,
-        usa el origen declaración del operador.
+      certificate_file_unreadable: 'No se pudo leer el archivo del certificado: revisa
+        la ruta, que el archivo no esté vacío y que sea un PDF, una imagen o un documento
+        XML.'
+      certificate_fingerprint_mismatch: El SHA-256 que indicaste no es el del archivo
+        del certificado, así que no se guardó nada. Comprueba que has indicado el
+        archivo correcto.
+      certificate_needs_fingerprint: Un certificado del pagador necesita el archivo
+        del certificado (--certificate-file) o el SHA-256 de uno que ya hayas guardado
+        (--evidence-sha256). Si no tienes certificado, usa el origen declaración del
+        operador.
+      certificate_not_in_custody: Ningún certificado guardado tiene ese SHA-256, o
+        el archivo guardado ya no coincide con él. Registra el certificado con --certificate-file.
       ejercicio_unsupported: El ejercicio de este registro está fuera de los años
         de presentación que admite Cadrumo.
       family_not_declared: La revisión del Modelo 100 de este ejercicio no lee retenciones

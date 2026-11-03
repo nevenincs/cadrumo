@@ -21,11 +21,14 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
 from ..modelo.calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    SourceDisagreementResolutions,
     blocking_calculation_issues,
     saved_calculation_filed_before_grade_cap,
     saved_calculation_screen_outdated,
 )
 from ..modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON
+from ..modelo.credit_resolution import CREDIT_RESOLUTION_APPLIED_REASON
 from .review_form_data import capture_review_form
 from .review_snapshot import (
     CalculationReviewSelection,
@@ -51,6 +54,7 @@ def build_calculation_review_snapshot(
     work_unit: WorkUnit,
     filing_record: ModeloRecord | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> ReviewSnapshot:
     """Retain saved values and captured evidence, with explicit attribution gaps.
 
@@ -63,6 +67,8 @@ def build_calculation_review_snapshot(
     ``operation``, when given, is the pinned authority the staleness of the
     revision's screen is read under; without it the review states no staleness.
     The ``filing_record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
+    ``resolutions`` are the source disagreements the operator accepted: a covered disagreement is listed as
+    accepted and no longer as withheld, exactly as the calculation's own gate decides it.
     """
     _assert_saved_selection(selection, revision, work_unit)
     assert_revision_snapshot_evidence_coverage(revision)
@@ -71,7 +77,7 @@ def build_calculation_review_snapshot(
     rows = ledger.rows if ledger is not None else ()
     _assert_ledger_fingerprints(revision)
     saved_form = capture_review_form(revision)
-    findings = _review_findings(revision, saved_form is not None)
+    findings = _review_findings(revision, saved_form is not None, resolutions)
     if operation is not None:
         findings.extend(_staleness_findings(revision, work_unit, operation))
     evidence = _excluded_attachment_inventory(revision)
@@ -204,7 +210,9 @@ def _assert_ledger_fingerprints(revision: CalculationRevision) -> None:
             raise ValueError("saved ledger evidence does not match its captured fingerprints")
 
 
-def _review_findings(revision: CalculationRevision, has_saved_form: bool) -> list[ReviewFinding]:
+def _review_findings(
+    revision: CalculationRevision, has_saved_form: bool, resolutions: SourceDisagreementResolutions
+) -> list[ReviewFinding]:
     findings = [
         ReviewFinding(
             code="review.original_authority_generation_unavailable",
@@ -232,7 +240,7 @@ def _review_findings(revision: CalculationRevision, has_saved_form: bool) -> lis
         ]
     if has_saved_form:
         findings = [finding for finding in findings if finding.code != "review.saved_form_layout_unavailable"]
-    findings.extend(calculation_note_findings(revision))
+    findings.extend(calculation_note_findings(revision, resolutions))
     if revision.source_transaction_ids and revision.ledger_filing_evidence is None:
         findings.append(
             ReviewFinding(
@@ -375,16 +383,30 @@ def _filed_before_grade_cap_finding() -> ReviewFinding:
     )
 
 
-def calculation_note_findings(revision: CalculationRevision) -> list[ReviewFinding]:
+def calculation_note_findings(
+    revision: CalculationRevision, resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+) -> list[ReviewFinding]:
     """One finding per persisted note that withholds the revision from checking, exporting and recording.
 
     The review is a preview, so it shows such a value rather than refusing it.
     A note that names a box has that box as its first related id and, when it
     names a source such as the binding whose grade cap holds it, that source
     as the second. A note naming no box is a revision-level finding with no
-    related ids, which the workbook lists among the review findings only.
+    related ids, which the workbook lists among the review findings only. A
+    source disagreement that ``resolutions`` covers withholds nothing, so it is
+    listed as accepted instead.
     """
-    return [
+    accepted = [
+        ReviewFinding(
+            code=CALCULATION_NOTE_FINDING_PREFIX + CREDIT_RESOLUTION_APPLIED_REASON,
+            detail="The operator accepted the value in use for this disagreement between sources; "
+            f"the acceptance changes no figure (finding {issue.disagreement.finding_key[:16]}).",
+            related_ids=() if issue.casilla_id is None else (str(issue.casilla_id),),
+        )
+        for issue in revision.source_issues
+        if issue.disagreement is not None and resolutions.covers(issue.disagreement.finding_key)
+    ]
+    return accepted + [
         ReviewFinding(
             code=CALCULATION_NOTE_FINDING_PREFIX + issue.reason,
             detail="This saved figure is shown for review; the calculation withholds it from checking, "
@@ -393,5 +415,5 @@ def calculation_note_findings(revision: CalculationRevision) -> list[ReviewFindi
             if issue.casilla_id is None
             else (str(issue.casilla_id), *(() if issue.source_ref is None else (issue.source_ref,))),
         )
-        for issue in blocking_calculation_issues(revision)
+        for issue in blocking_calculation_issues(revision, resolutions)
     ]

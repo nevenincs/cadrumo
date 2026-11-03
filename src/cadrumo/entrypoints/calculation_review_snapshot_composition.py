@@ -14,6 +14,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ..application.export.review_snapshot import CalculationReviewSelection, ReviewSnapshot
 from ..application.export.review_snapshot_loader import build_calculation_review_snapshot
+from ..application.modelo.credit_resolution import credit_resolutions_for_work
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.hashing import content_hash_hex
 from ..core.hex import Hex64Str
@@ -93,4 +94,5 @@ def load_calculation_review_snapshot(
         work_unit=unit,
         filing_record=filing_record,
         operation=operation,
+        resolutions=credit_resolutions_for_work(bundle.credit_resolution, unit),
     )

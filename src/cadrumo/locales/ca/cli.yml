@@ -648,8 +648,12 @@ cli:
         attest_absence_help: Declara que cap pagador no va practicar retenció sobre
           una classe de renda en un exercici. És la teva pròpia declaració, no un
           certificat del pagador.
+        certificate_file_help: Fitxer del certificat (PDF o imatge) que es desa xifrat
+          al teu emmagatzematge; el seu SHA-256 passa a ser l'evidència del registre.
         ejercicio_help: Exercici (any) al qual s'imputa la renda.
-        evidence_sha256_help: SHA-256 del fitxer del certificat; obligatori amb payer_certificate.
+        evidence_sha256_help: SHA-256 d'un certificat que ja és al teu emmagatzematge,
+          o comprovació davant de --certificate-file. Un payer_certificate necessita
+          una de les dues coses.
         group_help: Registra les retencions que et certifiquen els teus pagadors.
         importe_integro_help: Renda dinerària que va pagar el pagador, abans de la
           retenció.
@@ -1601,6 +1605,12 @@ cli:
           d'un informe de comprovació
         view_help: Mostrar un informe de comprovació per id
       work:
+        accept_disagreement_help: Accepta l'import que un càlcul va utilitzar en una
+          discrepància entre les seves fonts, amb l'identificador que anomena la comprovació,
+          i indica el teu motiu. La xifra en si no canvia, i l'acceptació caduca tan
+          bon punt qualsevol font doni un altre import.
+        accept_disagreement_reason_required: Indica amb --reason per què acceptes
+          aquest import.
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
         actor_too_long: L'etiqueta --by ha de tenir com a màxim {limit} caràcters;
           se n'han rebut {length}. Identifica l'actor de l'esdeveniment d'auditoria
@@ -1741,6 +1751,16 @@ cli:
         dependencies_help: Mostra dependències d'historial de presentacions entre
           models i els bloquejos clean-state actuals per a una presentació objectiu
         dependencies_period_requires_modelo: L'opció --period requereix --modelo.
+        disagreement_expected_revision_help: Revisió en què es desa l'acceptació,
+          tal com la mostra `work disagreements`; obligatòria
+        disagreement_finding_id_help: L'identificador de 16 caràcters que la comprovació
+          o el càlcul anomena per a la discrepància
+        disagreement_invalid_input: L'identificador ha de tenir 16 caràcters hexadecimals
+          en minúscula, el motiu fins a 512 caràcters i l'actor fins a 128.
+        disagreement_reason_help: Per què acceptes l'import utilitzat; obligatori,
+          fins a 512 caràcters
+        disagreements_help: Llista les discrepàncies que vas acceptar per a una declaració,
+          vigents i retirades, amb la revisió en què es desa cadascuna.
         discard_help: Marcar una declaració com a descartada (el canvi d'estat queda
           al registre d'auditoria)
         discard_requires_yes: El descart és una transició d'estat auditable. Torna
@@ -2016,6 +2036,10 @@ cli:
         revision_verbose_help: Mostrar la traça completa de la fórmula per casella
           (`op`, formula_id, referències i valors dels operands).
         revisions_help: Llistar els càlculs desats, opcionalment filtrats per declaració
+        revoke_disagreement_help: Retira l'acceptació d'una discrepància amb el seu
+          identificador, protegida per la revisió desada que mostra `work disagreements`.
+        revoke_disagreement_revision_required: Indica amb --expected-revision la revisió
+          desada de l'acceptació; `work disagreements` la mostra.
         row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
           format CLAU=VALOR.
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]

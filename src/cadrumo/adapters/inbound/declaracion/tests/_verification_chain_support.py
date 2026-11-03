@@ -586,7 +586,7 @@ _COMPUTED_CASILLAS_M123_2024: frozenset[CasillaId] = frozenset(
 )
 
 _COMPUTED_CASILLAS_M131: frozenset[CasillaId] = frozenset(
-    validated_casilla_id(_v) for _v in ("04", "06", "07", "10", "13", "15", "saldo-negativo-fin-periodo")
+    validated_casilla_id(_v) for _v in ("04", "06", "07", "10", "11", "13", "15", "saldo-negativo-fin-periodo")
 )
 
 

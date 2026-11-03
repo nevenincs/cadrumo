@@ -34,6 +34,7 @@ from ...application.retencion_soportada_absence.results import (
     RetencionSoportadaAbsenceRowProjection,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.retencion_soportada_label import retencion_soportada_clase_label
 from .retencion_soportada_absence_results import (
     RetencionSoportadaAbsencePayload,
     RetencionSoportadaAbsenceRowPayload,
@@ -94,7 +95,7 @@ def _row_payload(row: RetencionSoportadaAbsenceRowProjection) -> RetencionSoport
         attested_at=row.attested_at.isoformat(),
         withdrawn_at=None if row.withdrawn_at is None else row.withdrawn_at.isoformat(),
         revision_id=row.revision_id,
-        income_class_label=row.income_class_label,
+        income_class_label=retencion_soportada_clase_label(row.income_class),
     )
 
 

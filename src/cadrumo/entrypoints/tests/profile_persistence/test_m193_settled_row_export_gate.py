@@ -19,6 +19,8 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_YEAR,
+    manual_capital_row,
+    seed_manual_percepcion_window,
 )
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.application.aggregation.m193_phase_materialization import (
@@ -162,6 +164,65 @@ def test_ordinary_rows_in_a_payment_year_are_not_refused_by_the_settled_row_gate
                 tmp_path / f"modelo-193-{CAPITAL_YEAR + 1}-0A.txt",
                 operation=operation,
             )
+
+
+def test_a_hand_declared_prior_accrual_row_refuses_export_like_a_derived_one(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A row the operator declares with an EJERCICIO DEVENGO before the filing year is a settled prior-accrual row.
+
+    The record design prints that field only for rentas paid in the declaration year whose devengo
+    belongs to an earlier one, so the declared year alone makes the row one, whatever its origin.
+    """
+    export_path = tmp_path / f"modelo-193-{CAPITAL_YEAR + 1}-0A.txt"
+    with m193_bucket(tmp_path, filing_year=CAPITAL_YEAR + 1, operation=operation) as bucket:
+        seed_manual_percepcion_window(
+            bucket.objects,
+            filing_year=CAPITAL_YEAR + 1,
+            observations=[
+                manual_capital_row(filing_year=CAPITAL_YEAR + 1).model_copy(update={"accrual_year": CAPITAL_YEAR})
+            ],
+        )
+        revision = calculate_m193_revision(bucket)
+        assert _phase_contributors(revision) == 0
+
+        with pytest.raises(Modelo193SettledRowAmountAuthorityUnresolvedError) as exc_info:
+            _export(bucket, revision.calculation_revision_id, export_path, operation=operation)
+
+        exported = _exported_events(bucket)
+
+    verdict = exc_info.value.terminal_precondition_verdict
+    assert verdict is not None
+    (condition_evidence,) = verdict.evidence
+    assert condition_evidence.values["settled_prior_accrual_rows"] == 1
+    assert condition_evidence.values["year"] == CAPITAL_YEAR + 1
+    assert not export_path.exists()
+    assert exported == []
+
+
+def test_a_hand_declared_row_beside_a_derived_one_is_counted_beside_it(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Each settled row counts once: the derived one through its phase and the declared one through its devengo year."""
+    with m193_bucket(tmp_path, filing_year=CAPITAL_YEAR + 1, operation=operation) as bucket:
+        capture_coupon_collected_next_year(bucket.objects)
+        seed_manual_percepcion_window(
+            bucket.objects,
+            filing_year=CAPITAL_YEAR + 1,
+            observations=[
+                manual_capital_row(filing_year=CAPITAL_YEAR + 1).model_copy(update={"accrual_year": CAPITAL_YEAR})
+            ],
+        )
+        revision = calculate_m193_revision(bucket)
+        assert _phase_contributors(revision) == 1
+
+        with pytest.raises(Modelo193SettledRowAmountAuthorityUnresolvedError) as exc_info:
+            _export(bucket, revision.calculation_revision_id, tmp_path / "out.txt", operation=operation)
+
+    verdict = exc_info.value.terminal_precondition_verdict
+    assert verdict is not None
+    (condition_evidence,) = verdict.evidence
+    assert condition_evidence.values["settled_prior_accrual_rows"] == 2
 
 
 def test_every_supported_modelo_193_edition_grounds_the_pending_disclosure() -> None:

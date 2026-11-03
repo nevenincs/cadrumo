@@ -146,6 +146,12 @@ CalculationSourceDiagnosticReason = Literal[
     # A declared cross-check source with nothing to compare. It reads "not
     # cross-checked", never agreement, and withholds nothing.
     "credit_cross_check_absent",
+    # A figure the operator accepted is now disputed in another way than the one
+    # accepted, so the resolution no longer covers it. Withholds nothing itself.
+    "credit_resolution_stale",
+    # An operator's acceptance covers a disagreement of this calculation. Raised when a
+    # check or an export restates the calculation's notes, never by a resolver.
+    "credit_resolution_applied",
     # A Modelo 349 clave the resolver INFERRED from the invoice's IVA category
     # because the record stated no operation type. Correct for an ordinary LIVA
     # art. 25 exempt supply, but a supply following an exempt importation (art.
