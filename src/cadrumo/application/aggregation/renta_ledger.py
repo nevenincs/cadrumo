@@ -907,6 +907,54 @@ def aggregate_renta_ledger_expenses(
         ownership_share=ownership_share,
         register_owned_transaction_ids=register_owned_transaction_ids,
     )
+    observations, issues, advisories = _classified_renta_rows(
+        transactions,
+        invoices,
+        bucket_id=bucket_id,
+        resolved_period=resolved_period,
+        resolved_profile_year=resolved_profile_year,
+        rules=rules,
+        activity_key=activity_key,
+        criteria=criteria,
+        definitive_prorrata_pending=definitive_prorrata_pending,
+    )
+
+    if criteria is not None:
+        corrected = received_rectificativa_reading(
+            invoices,
+            transactions,
+            bucket_id=bucket_id,
+            window_start=date(resolved_period.filing_year, 1, 1),
+            window_end=resolved_period.end_date,
+            criteria=criteria,
+        )
+        observations = _net_received_corrections(observations, corrected.fractions)
+    observations = _apply_statutory_cap_trims(observations, rules=rules, transactions=transactions, invoices=invoices)
+    casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
+    return RentaLedgerExpenseAggregation(
+        modelo=modelo,
+        period=resolved_period,
+        profile_year=resolved_profile_year,
+        observations=tuple(observations),
+        issues=tuple(issues),
+        casilla_aggregation=casilla_aggregation,
+        advisories=tuple(advisories),
+    )
+
+
+def _classified_renta_rows(
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    resolved_period: Period,
+    resolved_profile_year: int,
+    rules: RentaCategoryDeductionRules,
+    activity_key: str,
+    criteria: ImputationCriteria | None,
+    definitive_prorrata_pending: bool,
+) -> tuple[list[RentaDeductibleExpenseObservation], list[RentaLedgerAggregationIssue], list[RentaExpenseAdvisory]]:
+    """Place every active ledger row into an accepted observation, an exclusion issue or an advisory."""
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
     advisories: list[RentaExpenseAdvisory] = []
@@ -940,28 +988,7 @@ def aggregate_renta_ledger_expenses(
             advisory = accepted_row_advisory(transaction, rules=rules)
             if advisory is not None:
                 advisories.append(advisory)
-
-    if criteria is not None:
-        corrected = received_rectificativa_reading(
-            invoices,
-            transactions,
-            bucket_id=bucket_id,
-            window_start=date(resolved_period.filing_year, 1, 1),
-            window_end=resolved_period.end_date,
-            criteria=criteria,
-        )
-        observations = _net_received_corrections(observations, corrected.fractions)
-    observations = _apply_statutory_cap_trims(observations, rules=rules, transactions=transactions, invoices=invoices)
-    casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
-    return RentaLedgerExpenseAggregation(
-        modelo=modelo,
-        period=resolved_period,
-        profile_year=resolved_profile_year,
-        observations=tuple(observations),
-        issues=tuple(issues),
-        casilla_aggregation=casilla_aggregation,
-        advisories=tuple(advisories),
-    )
+    return observations, issues, advisories
 
 
 def _classify_renta_transaction(

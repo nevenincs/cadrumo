@@ -118,6 +118,7 @@ from .calculation_resolution import resolve_calculation_inputs as _resolve_calcu
 from .calculation_screen import calculation_screen_stamp
 from .credit_reconciliation import credit_reconciliation_issues, load_credit_cross_check_sources
 from .credit_resolution import (
+    CreditResolutionLookup,
     credit_resolution_degradation_diagnostics,
     load_credit_resolutions,
     stale_resolution_issues,
@@ -138,7 +139,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.bindings import CasillaObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
-    from .calculation_resolution import CalculationReplayPayloads
+    from .calculation_resolution import CalculationReplayPayloads, ResolvedCalculationChannels
 
 
 from .calculation_source_guards import (
@@ -401,14 +402,91 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
     channels = prepared.channels
-    revision_source_issues = (*source_issues, *_precedence_issues(channels.precedence_diagnostics))
-    engine_result = evaluation.engine_result
     replay_payloads = evaluation.replay_payloads
     casilla_values = evaluation.casilla_values
-    typed_observations = evaluation.typed_observations
-    validated_filing_instance_evidence = evaluation.filing_instance_evidence
-    resolved_text_inputs = evaluation.resolved_text_inputs
-    revision_source_issues = (
+    revision_source_issues, resolution_lookup = _with_credit_source_issues(
+        (*source_issues, *_precedence_issues(channels.precedence_diagnostics)),
+        snapshot,
+        work_unit,
+        casilla_values=casilla_values,
+        channels=channels,
+        payment_year_binding_values=payment_year_binding_values,
+        instalment_basis_binding_values=instalment_basis_binding_values,
+        ports=ports,
+    )
+    ledger_filing_snapshot, invoice_fingerprint = _draft_anchors(
+        work_unit=work_unit,
+        source_transaction_ids=source_transaction_ids,
+        source_issues=revision_source_issues,
+        ports=ports,
+        transaction_repository=transaction_repository,
+        profile=prepared.profile,
+        captured_at=now,
+    )
+    publication = persist_calculation_revision(
+        operation=ports.operation,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=snapshot.snapshot_ref,
+        rendering_snapshot=_capture_calculation_rendering(snapshot, operation=ports.operation),
+        screen_stamp=calculation_screen_stamp(snapshot, operation=ports.operation),
+        work_unit=work_unit,
+        work_units=prepared.work_units,
+        work_units_revision_id=prepared.work_units_revision_id,
+        ledger_filing_snapshot=ledger_filing_snapshot,
+        invoice_fingerprint=invoice_fingerprint,
+        input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **evaluation.resolved_text_inputs},
+        binding_overrides=replay_payloads.binding_overrides,
+        row_binding_values=replay_payloads.row_binding_values,
+        row_source_identities=_optional_mapping_as_dict(row_source_identities),
+        closed_record_row_sets=closed_record_row_sets,
+        row_casilla_values=_optional_mapping_as_dict(row_casilla_values),
+        row_casilla_provenance=_optional_mapping_as_dict(row_casilla_provenance),
+        relation_overrides=replay_payloads.relation_overrides,
+        casilla_values=casilla_values,
+        source_transaction_ids=source_transaction_ids,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_source_mode(work_unit, m210_gross_income_source_mode),
+        borrador_snapshot_id=channels.borrador_snapshot_id,
+        bindings_sourced_from_borrador=channels.bindings_sourced_from_borrador,
+        cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
+        observations=evaluation.typed_observations,
+        unresolved_outcomes=evaluation.engine_result.unresolved_outcomes,
+        source_provenance=source_provenance,
+        source_issues=revision_source_issues,
+        filing_instance_evidence=evaluation.filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
+        detail_rows=detail_rows,
+        formula_count=len(evaluation.engine_result.entries),
+        actor=actor,
+        now=now,
+        calculation_repository=ports.calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+    )
+    return TrustedMeshCalculation(
+        publication=publication,
+        precedence_diagnostics=(
+            *channels.precedence_diagnostics,
+            *credit_resolution_degradation_diagnostics(resolution_lookup),
+        ),
+    )
+
+
+def _with_credit_source_issues(
+    revision_source_issues: tuple[CalculationSourceIssue, ...],
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    channels: ResolvedCalculationChannels,
+    payment_year_binding_values: Mapping[BindingId, Decimal] | None,
+    instalment_basis_binding_values: Mapping[BindingId, Decimal] | None,
+    ports: CalculationActionPorts,
+) -> tuple[tuple[CalculationSourceIssue, ...], CreditResolutionLookup]:
+    """Add the credit reconciliation issues and the stale-resolution issues to the revision's source issues."""
+    reconciled = (
         *revision_source_issues,
         *credit_reconciliation_issues(
             snapshot,
@@ -431,68 +509,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )
-    revision_source_issues = (
-        *revision_source_issues,
-        *stale_resolution_issues(revision_source_issues, resolution_lookup),
-    )
-    ledger_filing_snapshot, invoice_fingerprint = _draft_anchors(
-        work_unit=work_unit,
-        source_transaction_ids=source_transaction_ids,
-        source_issues=revision_source_issues,
-        ports=ports,
-        transaction_repository=transaction_repository,
-        profile=prepared.profile,
-        captured_at=now,
-    )
-    publication = persist_calculation_revision(
-        operation=ports.operation,
-        work_unit_id=work_unit_id,
-        registry_snapshot_ref=snapshot.snapshot_ref,
-        rendering_snapshot=_capture_calculation_rendering(snapshot, operation=ports.operation),
-        screen_stamp=calculation_screen_stamp(snapshot, operation=ports.operation),
-        work_unit=work_unit,
-        work_units=prepared.work_units,
-        work_units_revision_id=prepared.work_units_revision_id,
-        ledger_filing_snapshot=ledger_filing_snapshot,
-        invoice_fingerprint=invoice_fingerprint,
-        input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
-        binding_overrides=replay_payloads.binding_overrides,
-        row_binding_values=replay_payloads.row_binding_values,
-        row_source_identities=_optional_mapping_as_dict(row_source_identities),
-        closed_record_row_sets=closed_record_row_sets,
-        row_casilla_values=_optional_mapping_as_dict(row_casilla_values),
-        row_casilla_provenance=_optional_mapping_as_dict(row_casilla_provenance),
-        relation_overrides=replay_payloads.relation_overrides,
-        casilla_values=casilla_values,
-        source_transaction_ids=source_transaction_ids,
-        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
-        m210_gross_income_source_mode=m210_gross_source_mode(work_unit, m210_gross_income_source_mode),
-        borrador_snapshot_id=channels.borrador_snapshot_id,
-        bindings_sourced_from_borrador=channels.bindings_sourced_from_borrador,
-        cleared_casilla_ids=cleared_casilla_ids,
-        operator_layer=operator_layer,
-        observations=typed_observations,
-        unresolved_outcomes=engine_result.unresolved_outcomes,
-        source_provenance=source_provenance,
-        source_issues=revision_source_issues,
-        filing_instance_evidence=validated_filing_instance_evidence,
-        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
-        detail_rows=detail_rows,
-        formula_count=len(engine_result.entries),
-        actor=actor,
-        now=now,
-        calculation_repository=ports.calculation_repository,
-        work_unit_repository=ports.work_unit_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
-    )
-    return TrustedMeshCalculation(
-        publication=publication,
-        precedence_diagnostics=(
-            *channels.precedence_diagnostics,
-            *credit_resolution_degradation_diagnostics(resolution_lookup),
-        ),
-    )
+    return (*reconciled, *stale_resolution_issues(reconciled, resolution_lookup)), resolution_lookup
 
 
 def evaluate_modelo_revision_with_trusted_mesh_sources(

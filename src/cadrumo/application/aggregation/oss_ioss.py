@@ -1393,6 +1393,35 @@ def _projected_rate_diagnostics(
     )
 
 
+def _unrouted_observation_diagnostics(
+    unrouted: Sequence[OssIossLedgerObservation],
+    *,
+    revision_id: str,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return one advisory per declarable observation that no detail table of the revision can take."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="unrouted_observation",
+            source_kind="ledger_oss_aggregation",
+            resolver_id=resolver_id,
+            source_ref=f"transaction:{observation.ledger_id}",
+            message=(
+                f"declarable OSS observation {observation.ledger_id!r} "
+                f"(regime={observation.regime.value!r}, "
+                f"destination={observation.destination_member_state.value!r}, "
+                f"rate_kind={observation.rate_kind.value!r}, "
+                f"invoice_direction={observation.invoice_direction.value!r}, "
+                f"transaction_kind={observation.transaction_kind.value!r}) has no detail table "
+                f"on revision {revision_id!r}: a Union goods line needs its state of "
+                "dispatch, which the invoice does not record, and a line of another regime "
+                "belongs to that regime's revision; its base/cuota is not declared on this calculation"
+            ),
+        )
+        for observation in unrouted
+    )
+
+
 class OssIossLedgerSourceResolver:
     """Source mesh resolver for Modelo 369 OSS / IOSS ledger candidates."""
 
@@ -1536,25 +1565,8 @@ class OssIossLedgerSourceResolver:
                 resolver_id=self.resolver_id,
             )
             + _projected_rate_diagnostics(observations, resolver_id=self.resolver_id, operation=indexed_operation)
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_observation",
-                    source_kind="ledger_oss_aggregation",
-                    resolver_id=self.resolver_id,
-                    source_ref=f"transaction:{observation.ledger_id}",
-                    message=(
-                        f"declarable OSS observation {observation.ledger_id!r} "
-                        f"(regime={observation.regime.value!r}, "
-                        f"destination={observation.destination_member_state.value!r}, "
-                        f"rate_kind={observation.rate_kind.value!r}, "
-                        f"invoice_direction={observation.invoice_direction.value!r}, "
-                        f"transaction_kind={observation.transaction_kind.value!r}) has no detail table "
-                        f"on revision {context.revision.id!r}: a Union goods line needs its state of "
-                        "dispatch, which the invoice does not record, and a line of another regime "
-                        "belongs to that regime's revision; its base/cuota is not declared on this calculation"
-                    ),
-                )
-                for observation in unrouted
+            + _unrouted_observation_diagnostics(
+                unrouted, revision_id=context.revision.id, resolver_id=self.resolver_id
             ),
             provenance=tuple(
                 CalculationSourceProvenance(

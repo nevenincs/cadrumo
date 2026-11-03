@@ -87,7 +87,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ...domain.transactions.tipo_actividad_partitions import agrarian_instalment_activity_codes
 from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons
-from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
+from ._grouping import CumulativeWindow, cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
     RentaExpenseAdvisory,
@@ -457,37 +457,17 @@ def aggregate_renta_gasto_ledger(
         register_owned_transaction_ids=register_owned_transaction_ids,
     )
 
-    observations: list[RentaGastoObservation] = []
-    issues: list[RentaGastoLedgerAggregationIssue] = []
-    advisories: list[RentaExpenseAdvisory] = []
-
-    # Apartado I of the form takes no agrarian figure; apartado II is a share of income alone.
-    agrarian = agrarian_instalment_activity_codes(effective_date=period.end_date, authority=operation)
-    for transaction in transactions.values():
-        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            continue
-        if transaction.tipo_actividad in agrarian:
-            continue
-        outcome = _classify_gasto_transaction(
-            transaction,
-            bucket_id=bucket_id,
-            cumulative_start=window.start,
-            cumulative_end=window.end,
-            target_casilla_id=target_casilla_id,
-            accept_activity_marker=accept_activity_marker,
-            rules=rules,
-            criteria=criteria,
-            invoices=invoices,
-        )
-        if outcome is None:
-            continue
-        if isinstance(outcome, RentaGastoLedgerAggregationIssue):
-            issues.append(outcome.model_copy(update={"category_id": transaction.category_id}))
-        else:
-            observations.append(outcome)
-            advisory = accepted_row_advisory(transaction, rules=rules)
-            if advisory is not None:
-                advisories.append(advisory)
+    observations, issues, advisories = _classified_gasto_rows(
+        transactions,
+        bucket_id=bucket_id,
+        window=window,
+        target_casilla_id=target_casilla_id,
+        accept_activity_marker=accept_activity_marker,
+        rules=rules,
+        criteria=criteria,
+        invoices=invoices,
+        operation=operation,
+    )
 
     if criteria is not None and invoices is not None:
         observations = _net_received_corrections(
@@ -516,6 +496,53 @@ def aggregate_renta_gasto_ledger(
         casilla_aggregation=casilla_aggregation,
         advisories=tuple(advisories),
     )
+
+
+def _classified_gasto_rows(
+    transactions: TransactionCatalogue,
+    *,
+    bucket_id: str,
+    window: CumulativeWindow,
+    target_casilla_id: CasillaId,
+    accept_activity_marker: bool,
+    rules: RentaCategoryDeductionRules,
+    criteria: ImputationCriteria | None,
+    invoices: InvoiceCatalogue | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[list[RentaGastoObservation], list[RentaGastoLedgerAggregationIssue], list[RentaExpenseAdvisory]]:
+    """Place every active, non-agrarian ledger row into the target casilla, an issue or an advisory."""
+    observations: list[RentaGastoObservation] = []
+    issues: list[RentaGastoLedgerAggregationIssue] = []
+    advisories: list[RentaExpenseAdvisory] = []
+
+    # Apartado I of the form takes no agrarian figure; apartado II is a share of income alone.
+    agrarian = agrarian_instalment_activity_codes(effective_date=window.period.end_date, authority=operation)
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if transaction.tipo_actividad in agrarian:
+            continue
+        outcome = _classify_gasto_transaction(
+            transaction,
+            bucket_id=bucket_id,
+            cumulative_start=window.start,
+            cumulative_end=window.end,
+            target_casilla_id=target_casilla_id,
+            accept_activity_marker=accept_activity_marker,
+            rules=rules,
+            criteria=criteria,
+            invoices=invoices,
+        )
+        if outcome is None:
+            continue
+        if isinstance(outcome, RentaGastoLedgerAggregationIssue):
+            issues.append(outcome.model_copy(update={"category_id": transaction.category_id}))
+        else:
+            observations.append(outcome)
+            advisory = accepted_row_advisory(transaction, rules=rules)
+            if advisory is not None:
+                advisories.append(advisory)
+    return observations, issues, advisories
 
 
 def _classify_gasto_transaction(

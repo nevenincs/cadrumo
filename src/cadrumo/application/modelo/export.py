@@ -245,26 +245,19 @@ def _persist_exported_draft(
         export_layout,
         product_software_identity=export_ports.product_software_identity,
     )
-    dictionary_values = _dictionary_values_for_export(
-        approved,
-        producer_snapshot,
-        work_unit,
-        operation,
-        export_subview,
-        export_layout,
+    dictionary_values = _dictionary_values_with_settlement(
+        command,
+        approved=approved,
+        producer_snapshot=producer_snapshot,
+        work_unit=work_unit,
+        operation=operation,
+        export_subview=export_subview,
+        export_layout=export_layout,
+        settlement=settlement,
+        disposition=resolved_result_disposition,
+        charge_account=export_charge_account(accounts),
+        refund_account=export_refund_account(accounts),
     )
-    if dictionary_values is not None:
-        dictionary_values.update(
-            _settlement_values_for_export(
-                command,
-                settlement=settlement,
-                work_unit=work_unit,
-                disposition=resolved_result_disposition,
-                charge_account=export_charge_account(accounts),
-                refund_account=export_refund_account(accounts),
-                operation=operation,
-            )
-        )
     emit_event = functools.partial(
         _emit_export_event,
         command=command,
@@ -321,6 +314,44 @@ def _persist_exported_draft(
         schema_provider=schema_provider,
         credit_resolution=export_ports.credit_resolution,
     )
+
+
+def _dictionary_values_with_settlement(
+    command: ModeloExportCommand,
+    *,
+    approved: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+    export_subview: RegistryModeloSubview,
+    export_layout: ExportLayoutDefinition | None,
+    settlement: DeclaredSettlement,
+    disposition: ResultDisposition | None,
+    charge_account: ChargeAccount | None,
+    refund_account: RefundAccount | None,
+) -> dict[str, object] | None:
+    """Return the export dictionary values with the declared settlement values merged in."""
+    dictionary_values = _dictionary_values_for_export(
+        approved,
+        producer_snapshot,
+        work_unit,
+        operation,
+        export_subview,
+        export_layout,
+    )
+    if dictionary_values is not None:
+        dictionary_values.update(
+            _settlement_values_for_export(
+                command,
+                settlement=settlement,
+                work_unit=work_unit,
+                disposition=disposition,
+                charge_account=charge_account,
+                refund_account=refund_account,
+                operation=operation,
+            )
+        )
+    return dictionary_values
 
 
 def _stage_publish_and_record_export(
