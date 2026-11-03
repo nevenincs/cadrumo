@@ -19,8 +19,13 @@ from pydantic import BaseModel
 
 from cadrumo.application import workbench_generation_contracts as generation_contracts
 from cadrumo.application.modelo.declaration_summary import DeclarationSummary
+from cadrumo.application.modelo.work_form_export_offer import ModeloFormExportOffer
 from cadrumo.application.modelo.work_form_service import ModeloWorkFormLoadV1
-from cadrumo.application.modelo.workbench_projection import PublicModeloWorkFormLoadV1, PublicSpanishTaxIdFormat
+from cadrumo.application.modelo.workbench_projection import (
+    PublicModeloFormExportOffer,
+    PublicModeloWorkFormLoadV1,
+    PublicSpanishTaxIdFormat,
+)
 from cadrumo.application.operations._dataclass_fields import dataclass_type_hints
 from cadrumo.application.operations.public_mirror import PublicScalarValueV1, bare_annotation
 from cadrumo.application.workbench_generation_public_contracts import (
@@ -37,6 +42,7 @@ _APPLICATION_ROOT = Path(generation_contracts.__file__).resolve().parent
 _ENROLLED: tuple[tuple[object, object], ...] = (
     (generation_contracts.WorkbenchGenerationV1, PublicWorkbenchGenerationV1),
     (ModeloWorkFormLoadV1, PublicModeloWorkFormLoadV1),
+    (ModeloFormExportOffer, PublicModeloFormExportOffer),
     (SpanishTaxIdFormat, PublicSpanishTaxIdFormat),
 )
 _REVIEWED_OMISSIONS: Mapping[type, frozenset[str]] = {PublicSearchGenerationStateV1: frozenset({"projection"})}
