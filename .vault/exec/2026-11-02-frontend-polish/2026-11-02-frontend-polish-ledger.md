@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e3c02f1b84310f1acfcdfff88c79e7a5fb7a33219b8d683f86b190443d78d6ca'
+body_hash: 'sha256:f41c30b449cfd2ccda3738bab48399ce8b4e1d2934efd1b449974f047e607b25'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -282,6 +282,10 @@ related:
 - `S43` `verify:` `docking model 10 cases` -> `pass`
 - `S43` `verify:` `TypeScript and scoped ESLint Prettier` -> `pass`
 - `S43` `verify:` `docking and inspector browser 41 cases` -> `pass`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S10` `verify:` `ledger model contract scheduler staged-check product cases` -> `pass`
+- `S10` `verify:` `four prior ledger regression repairs verified` -> `pass`
+- `S10` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
 
 ## Notes
 

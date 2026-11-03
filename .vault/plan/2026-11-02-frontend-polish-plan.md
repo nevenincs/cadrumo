@@ -21,7 +21,7 @@ related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:8f94c80c7ddc7242b175dfed2ec5b962bfcc4d2156dd164093052c44fcaf6e6b'
+body_hash: 'sha256:24bce60690eda894e3a8538c9bdeb437a637b9b2f11de86151ad9c2c096553c0'
 ---
 
 # `frontend-polish` plan
@@ -56,7 +56,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S18` - Repair shared suggestion visibility and combobox keyboard escape, and verify grid focus when an active column is hidden; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/tests/scenarios/`.
 - [x] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.
 - [x] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
-- [ ] `S10` - Complete remaining ledger workflow review across movements, invoices, documents, assets, registers and transfers; `native/desktop/frontend/src/components/ledger/`.
+- [x] `S10` - Complete remaining ledger workflow review across movements, invoices, documents, assets, registers and transfers; `native/desktop/frontend/src/components/ledger/`.
 - [x] `S19` - Keep declaration creation outcome holds across selection and navigation, and require authoritative completion plus a successful list refresh; `native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/src/components/modelo/WriteHoldNotice.tsx, native/desktop/frontend/src/components/modelo/declarations/, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts, native/desktop/frontend/tests/live/modelo-write-holds.unit.ts, dev/locales/desktop_workspace_keys.py, src/cadrumo/locales/`.
 - [x] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/tests/scenarios/modelo*.spec.ts, native/desktop/frontend/tests/live/modelo-write-holds.unit.ts`.
 - [x] `S21` - Expose returned reconciliation differences and advisory limitations using the Sol design brief and localized labels; `native/desktop/frontend/src/components/modelo/dialogs/, native/desktop/frontend/src/dev/, dev/locales/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.

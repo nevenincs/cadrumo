@@ -316,6 +316,20 @@ All ten docking model cases pass, covering nested, swapped, stacked, active/hidd
 
 The coordinator queued feature/tui `da19339268`, which includes IVA merge `11597ef030` and the operation-contract manifest repair, for a separate frontend integration window. No merge into this frontend worktree is authorized by that queue update. IVA reports 137 focused S07 tests and canonical Modelo/contract checks passing in its own worktree; those reports are not frontend verification evidence. Current frontend source remains unchanged by that snapshot, serial checks remain owned here, and Dev15370 remains running.
 
+### S10 ledger workflow coverage, 2026-11-03
+
+The inventory covers movements and transfers, invoices and document intake/review, setup and registers, assets and stock, and import/export recovery. The 175-case integration run passed 171; its four failures were addressed and verified in focused runs: delayed document-match focus, a virtualized expense row that the test now searches before editing, the dock-tab title assertion, and compressed inspector geometry. S42 verifies the focus repair; S43 passes all 33 inspector and eight docking scenarios. The product batch `20261103T005541Z-30132` adds passing ledger contract, read scheduler, invoices/documents models and staged-check cases. That overall batch passed 210 of 218; its eight failures were outside ledger and are recorded below.
+
+Terra's bounded coverage review found no remaining demonstrated ledger candidate. The invoice-catalogue unmount candidate was retired based on its actual ownership, and no separate supported cash/opening-balance UI capability was established. Earlier matching/invoice, transfer/pause, read-lifecycle and accessibility evidence remains applicable. These are scenario-host and product-test results, not proof of packaged native behavior. The original 175-case batch was not rerun wholly green; closure uses the specifically repaired cases and affected suites.
+
+### S11 Modelo workflow coverage and test boundaries, 2026-11-03
+
+The inventory covers declaration creation/reopening, form edits and review, calculation, filing exports and records, reconciliation and IVA wallet management. Earlier evidence includes 117 passing Modelo scenarios. The later 103-case run passed 98 and exposed five creation-navigation regressions; all five passed after correction, together with nine wallet cases in the focused 14-case run. A further 24 declaration/workspace/profile cases passed.
+
+The first product batch stopped during collection: the form-model test imported the pure renewal guard through a React hook that now reaches Vite-only strings. The unchanged guard now lives in the existing operation module, imported by both hook and test; Terra found no semantic change or runtime cycle. The next product batch `20261103T005541Z-30132` passed 210 of 218, including the form guard, operation runner, served fields/dates, agent, provisioning, Docs origin and terminal rendering/theme cases. Its eight failures were the fixture's unconditional browser `window` assignment when used in Node. Guarding only that browser interception seam preserves the fixture data and browser behavior. The focused follow-up passed all 12 Modelo port cases and three existing stale-baseline browser cases: renewal with retained edits, refused renewal followed by reread, and stopping after another stale read. No case was skipped or weakened.
+
+The focused follow-up is `20261103T005744Z-67816`. These runs close the identified frontend workflow gaps within their scenario and product-test boundaries. Write uncertainty stays held until authoritative settlement and successful fresh reads; local exports, reconciliation and records do not assert AEAT submission or acceptance. The 218-case run is not recorded as a wholly passing run; its eight failures are resolved by the focused follow-up. Packaged-host verification and final integrated/performance work remain separate.
+
 ## Recommendations
 
 
