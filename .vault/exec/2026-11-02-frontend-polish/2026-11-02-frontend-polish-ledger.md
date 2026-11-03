@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:819981b267cc0ef0190b47f49c2d4f5854c3642a13499913d64f00f27be8f6e7'
+body_hash: 'sha256:6f2f7c7b976a3ff010edf2923d71f0aaf67c027409544e4027664f3db0d63bf4'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -300,6 +300,9 @@ related:
 - `S44` `verify:` `Docs docking bridge terminal preferences 25 cases` -> `pass`
 - `S44` `verify:` `npm run check` -> `pass`
 - `S44` `verify:` `Sol brief and Terra bounded review` -> `pass`
+- `S13` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S13` `verify:` `agent conversation attachments history drops submission and contract cases` -> `pass`
+- `S13` `verify:` `prior skills prompts and owner lifecycle evidence retained` -> `pass`
 
 ## Notes
 
