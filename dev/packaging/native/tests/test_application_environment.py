@@ -28,13 +28,16 @@ _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
 
 def _declared_kdf_child_module() -> str:
     """Return the module the declaration's POSIX child invocations launch with ``-m``."""
-    modules = {
-        invocation["arguments"][position + 1]["literal"]
-        for invocation in tomllib.loads(_SOURCE)["invocations"]
-        if invocation["profile"] == "kdf-child" and invocation["platform"] == "posix"
-        for position, argument in enumerate(invocation["arguments"])
-        if argument == {"literal": "-m"}
-    }
+    modules: set[str] = set()
+    for invocation in tomllib.loads(_SOURCE)["invocations"]:
+        if invocation["profile"] != "kdf-child" or invocation["platform"] != "posix":
+            continue
+        arguments = invocation["arguments"]
+        for position, argument in enumerate(arguments):
+            if argument == {"literal": "-m"}:
+                module = arguments[position + 1]["literal"]
+                assert isinstance(module, str)
+                modules.add(module)
     assert len(modules) == 1
     return modules.pop()
 
