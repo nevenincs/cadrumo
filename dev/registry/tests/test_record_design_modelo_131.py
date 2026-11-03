@@ -6,6 +6,7 @@ from functools import lru_cache
 
 import pytest
 
+from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 
@@ -208,6 +209,23 @@ def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
             )
             for _binding, selector in _fixed_export_selectors(snapshot.revision.bindings, revision=snapshot.revision)
             if selector.record == "page_1"
+        }
+        # The official design fills the Complementaria byte at offset 692 from the
+        # filing's amendment evidence, not from an operator-answered binding, so it
+        # is covered by the page-one render rather than by a binding selector.
+        official_types = {
+            (field_offset, field_length): data_type for field_offset, field_length, data_type in official_fields
+        }
+        amendment_evidence_offsets = {
+            (field.offset, field.length)
+            for record in resolve_export_layout(snapshot).layout.records
+            for field in record.fields
+            if field.kind is CasillaFieldKind.HEADER
+            and field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
+        }
+        assert amendment_evidence_offsets == {(692, 1)}, filing_year
+        registry_fields |= {
+            (offset, length, official_types[(offset, length)]) for offset, length in amendment_evidence_offsets
         }
 
         assert registry_fields == official_fields, filing_year
