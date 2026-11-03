@@ -1041,6 +1041,10 @@ class ModeloWorkForm(ModeloFormBase):
             raise ValueError("an inspection reason belongs to, and only to, an inspection-only form")
         if self.edit_closure is not None and self.edit_admitted:
             raise ValueError("a form closed to editing admits no edit")
+        self._require_outline_to_match_the_form()
+        return self
+
+    def _require_outline_to_match_the_form(self) -> None:
         outlined = [section_id for group in self.outline for section_id in group.section_ids]
         if sorted(outlined) != sorted(section.id for page in self.pages for section in page.sections):
             raise ValueError("the outline must name every section of the form exactly once")
@@ -1051,7 +1055,6 @@ class ModeloWorkForm(ModeloFormBase):
         for kind, present in kept_apart.items():
             if sum(1 for group in self.outline if group.kind is kind) != int(present):
                 raise ValueError(f"the outline holds one {kind.value} group when the form has such boxes, else none")
-        return self
 
     @property
     def calculation_out_of_date(self) -> bool:

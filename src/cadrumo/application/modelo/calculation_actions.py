@@ -381,7 +381,6 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff,
     )
-
     ledger_filing_snapshot, invoice_fingerprint = _draft_anchors(
         work_unit=work_unit,
         source_transaction_ids=source_transaction_ids,

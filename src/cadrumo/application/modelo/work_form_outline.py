@@ -49,24 +49,41 @@ def form_outline(
     The ``unplaced`` casillas and the ``working_figures`` follow as a group each,
     in the order the form draws them, when they are not empty.
     """
+    grouped = (
+        _declared_groups(declared, pages, language, filed=filed)
+        if declared
+        else tuple(_group(page.id, page.heading, page.sections, filed=filed) for page in pages if page.sections)
+    )
+    return grouped + _kept_apart_groups(unplaced, working_figures, language, filed=filed)
+
+
+def _declared_groups(
+    declared: tuple[FormOutlineGroup, ...], pages: tuple[ModeloFormPage, ...], language: OutputLanguage, *, filed: bool
+) -> tuple[ModeloFormOutlineGroup, ...]:
     sections = {section.id: section for page in pages for section in page.sections}
-    if not declared:
-        grouped = tuple(_group(page.id, page.heading, page.sections, filed=filed) for page in pages if page.sections)
-    else:
-        grouped = tuple(
-            _group(
-                group.id,
-                localized_heading(group.heading_key, group.official_heading, group.id, language),
-                tuple(sections[f"{item.page_id}.{item.section_id}"] for item in group.sections),
-                filed=filed,
-            )
-            for group in declared
+    return tuple(
+        _group(
+            group.id,
+            localized_heading(group.heading_key, group.official_heading, group.id, language),
+            tuple(sections[f"{item.page_id}.{item.section_id}"] for item in group.sections),
+            filed=filed,
         )
+        for group in declared
+    )
+
+
+def _kept_apart_groups(
+    unplaced: tuple[ModeloFormUnplacedField, ...],
+    working_figures: tuple[ModeloFormField, ...],
+    language: OutputLanguage,
+    *,
+    filed: bool,
+) -> tuple[ModeloFormOutlineGroup, ...]:
     kept_apart = (
         (ModeloFormOutlineKind.UNPLACED, _UNPLACED_HEADING_KEY, tuple(item.field for item in unplaced)),
         (ModeloFormOutlineKind.WORKING_FIGURES, _WORKING_FIGURES_HEADING_KEY, working_figures),
     )
-    return grouped + tuple(
+    return tuple(
         ModeloFormOutlineGroup(
             id=kind.value,
             heading=localized_heading(key, None, kind.value, language),
