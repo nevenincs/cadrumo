@@ -4410,6 +4410,17 @@ desktop:
       close: Close details
       hide: Hide details
       show: Show details
+    disagreement:
+      accept: Accept with a reason
+      accept_title: Accept this disagreement
+      confirm_accept: Accept
+      confirm_revoke: Revoke
+      list_failed: Your answers to disagreements could not be read.
+      list_title: Your answers to disagreements
+      reason_label: Reason
+      revoke: Revoke the acceptance
+      revoke_title: Revoke the acceptance
+      your_reason: 'Your reason: {reason}'
     discard:
       confirm: Discard
       lead: It leaves your list of declarations. Its history is kept.

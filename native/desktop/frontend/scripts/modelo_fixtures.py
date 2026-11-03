@@ -511,6 +511,7 @@ def _read_ports(bucket_id: str, operation: Any) -> Any:
         verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
         bucket_events=ports.bucket_event_repository,
         filings=ports.filing_repository,
+        credit_resolutions=ports.credit_resolution_reader,
     )
 
 
@@ -2088,6 +2089,141 @@ def _write_edits(directory: Path, work: Any) -> None:
     _write_check(directory, work, form, staged_on=form, staged=STAGED_130, intents=EDIT_130)
     _write(directory, f"apply-{form}.json", _expect_model(_write_apply(directory, work, form, EDIT_130)))
     _write_form(directory, work, "modelo-130-1T-applied")
+    _write_disagreement_answers(directory, work, "130-1T-applied")
+
+
+#: Why the operator accepts the typed figure over the ledger's, as the filer says it.
+DISAGREEMENT_REASON = "The ledger figure misses an invoice booked after the quarter closed."
+#: A revision the stored acceptance was never at, as a window holding an older read would send it.
+STALE_RESOLUTION_REVISION = "0" * 64
+
+
+def _resolve(work: Any, definition_id: str, document: dict[str, Any]) -> BaseModel:
+    """Run one disagreement operation in the language the request names; see :func:`_resolve_in_worker`.
+
+    The worker renders a refusal's sentence in its own catalogue language, which
+    the host runs in the window's language, so the worker's language is the one
+    the request names.
+    """
+    from cadrumo.core.config import override_settings
+
+    with override_settings(cadrumo_output_language=str(document["output_language"])):
+        return _resolve_in_worker(work, definition_id, document)
+
+
+def _resolve_in_worker(work: Any, definition_id: str, document: dict[str, Any]) -> BaseModel:
+    """Run one disagreement operation through its production executor; its public result or typed refusal.
+
+    A refusal settles with the registered refusal detail its definition
+    declares, which the host hands the window as the refusal's detail; it is
+    published through the same projector a refused receipt releases it with.
+    """
+    from cadrumo.application.operations.models import (
+        OperationIdentity,
+        OperationRequest,
+        OperationTerminalReceipt,
+    )
+    from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
+    from cadrumo.core.operations import OperationTerminalCondition
+    from cadrumo.core.time.clock import now
+
+    request = _request(definition_id, {"profile_id": work.work_unit.bucket_id, **document})
+    subject = work.work_unit_id
+    identity = OperationIdentity(operation_id="e" * 64, definition_id=definition_id, subject_ref=subject)
+    context = _ReadContext(identity=identity, authority_operation=work.operation)
+    executor = _registry().lookup(definition_id).executor_factory.create()
+    settled = asyncio.run(
+        executor.execute(
+            OperationRequest(definition_id=definition_id, subject_ref=subject, payload=request), cast(Any, context)
+        )
+    )
+    (result,) = context.results
+    if not isinstance(settled, OperationRefusalEvidence):
+        effect = OperationEffect.NONE if definition_id == "modelo.work.disagreements" else OperationEffect.UPDATED
+        return _published(definition_id, result, subject, effect=effect)
+    projector = _registry().lookup_public_registration(definition_id).result_projector
+    if projector is None:
+        raise SystemExit(f"{definition_id} publishes no refusal detail")
+    receipt = OperationTerminalReceipt(
+        identity=identity,
+        revision=1,
+        condition=OperationTerminalCondition.REFUSED,
+        effect=OperationEffect.NONE,
+        settled_at=now(),
+        refusal_ref=settled.refusal_code,
+        refusal_detail_ref="f" * 64,
+    )
+    return projector(result, receipt)
+
+
+def _outcome(result: BaseModel, expected: str, reason: str | None = None) -> BaseModel:
+    """``result``, after checking it came to ``expected`` and, for a refusal, for ``reason``."""
+    outcome = getattr(result, "outcome", None)
+    refusal = getattr(result, "refusal", None)
+    if outcome != expected or (reason is not None and getattr(refusal, "reason", None) != reason):
+        raise SystemExit(f"a disagreement answer came to {outcome} ({refusal!r}), not {expected} {reason or ''}")
+    return result
+
+
+def _write_disagreements(directory: Path, work: Any, revision_id: str, form: str) -> list[Any]:
+    """Write the answers the declaration holds as read beside ``form``, in every language; the rows."""
+    rows: list[Any] = []
+    for language in LANGUAGES:
+        listed = _resolve(
+            work,
+            "modelo.work.disagreements",
+            {"calculation_revision_id": revision_id, "output_language": language},
+        )
+        _write(directory, f"disagreements-{form}-{language}.json", listed)
+        rows = list(getattr(listed, "resolutions", ()))
+    return rows
+
+
+def _write_disagreement_answers(directory: Path, work: Any, form: str) -> None:
+    """Accept the disagreement the form's check offers to accept, then take the acceptance back.
+
+    The form's box 06 holds a typed figure over a different ledger figure, so
+    its check line states a tier disagreement and offers to accept it. The
+    acceptance is written, the form and the answers held are read again, and a
+    second acceptance and a revocation at a revision the acceptance was never
+    at are refused in every language; the acceptance is then revoked at the
+    revision it is stored at and the form read once more, so the declaration
+    leaves as it came: its disagreement open and withholding the check.
+    """
+    envelope = _form_envelope(directory, form)
+    offered = [line for line in envelope["issue_lines"] if line.get("resolution_answer") == "accept"]
+    if len(offered) != 1:
+        raise SystemExit(f"the form {form} offers {len(offered)} disagreements to accept, not one")
+    finding_id = offered[0]["finding_id"]
+    revision_id = envelope["calculation_revision_id"]
+    target = {"calculation_revision_id": revision_id, "finding_id": finding_id}
+    accepted, revoked = "130-1T-accepted", "130-1T-revoked"
+    _write_disagreements(directory, work, revision_id, form)
+    accept = {**target, "reason": DISAGREEMENT_REASON}
+    _write(
+        directory,
+        f"accept-{form}.json",
+        _outcome(_resolve(work, "modelo.work.accept_disagreement", {**accept, "output_language": "en"}), "accepted"),
+    )
+    _write_form(directory, work, f"modelo-{accepted}")
+    (row,) = _write_disagreements(directory, work, revision_id, accepted)
+    for language in LANGUAGES:
+        again = _resolve(work, "modelo.work.accept_disagreement", {**accept, "output_language": language})
+        _write(directory, f"accept-{accepted}-refused-{language}.json", _outcome(again, "refused", "already_resolved"))
+        stale = _resolve(
+            work,
+            "modelo.work.revoke_disagreement",
+            {**target, "expected_revision_id": STALE_RESOLUTION_REVISION, "output_language": language},
+        )
+        _write(directory, f"revoke-{accepted}-stale-{language}.json", _outcome(stale, "refused", "stale_revision"))
+    revoke = {**target, "expected_revision_id": row.revision_id, "output_language": "en"}
+    _write(
+        directory,
+        f"revoke-{accepted}.json",
+        _outcome(_resolve(work, "modelo.work.revoke_disagreement", revoke), "revoked"),
+    )
+    _write_form(directory, work, f"modelo-{revoked}")
+    _write_disagreements(directory, work, revision_id, revoked)
 
 
 def _write_prerequisite(directory: Path, first: Any) -> None:
@@ -2798,6 +2934,9 @@ _WRITE_ENVELOPES: tuple[tuple[str, str], ...] = (
     ("metadata-*.json", "modelo.work.metadata"),
     ("amendment-context-*.json", "modelo.work.amendment_context"),
     ("amend-[0-9]*.json", "modelo.work.amend"),
+    ("disagreements-*.json", "modelo.work.disagreements"),
+    ("accept-*.json", "modelo.work.accept_disagreement"),
+    ("revoke-*.json", "modelo.work.revoke_disagreement"),
 )
 
 

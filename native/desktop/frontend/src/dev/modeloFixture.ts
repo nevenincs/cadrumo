@@ -30,6 +30,7 @@ import {
 } from "../shell/modelo";
 import { RELAY_PAYLOAD_LIMIT } from "../shell/relayBounds";
 import {
+  type CreditResolutionListProjection,
   type ModeloCasillaHelpProjectionV1,
   type ModeloDeclarationsListProjectionV1,
   type ModeloEditOperatorInputV2,
@@ -91,6 +92,14 @@ import { hex64 } from "./fixtures/ledger";
  * `list-notes` lists the first quarter's Modelo 130 with the sentences of the
  * asset notes as what its calculation noted that withholds nothing: the
  * application's list of these synthetic declarations notes none.
+ * `disagreement` reads the first quarter after a value typed over box 06
+ * replaced a different ledger figure, so its check states that disagreement
+ * and offers to accept it: an acceptance with a reason is answered as the
+ * application answered it, the form read again offers to revoke it, a
+ * revocation at the revision the list served takes it back, and one at
+ * another revision is refused as stale. `disagreement-raced` refuses the
+ * acceptance as another session's already made, and the form read again
+ * shows that acceptance; `disagreement-unknown` loses its settlement.
  *
  * The `renta` shapes list the declarations of a synthetic filer whose 2025
  * Modelo 100 is open, each read whole as the application served it.
@@ -150,6 +159,9 @@ export const MODELO_SHAPES = [
   "moving",
   "read-only-boxes",
   "list-notes",
+  "disagreement",
+  "disagreement-raced",
+  "disagreement-unknown",
   "renta",
   "renta-pay",
   "renta-refund",
@@ -263,6 +275,8 @@ function withAssetNotes(
         surface: null,
         from_calculation: true,
         recalculates: false,
+        finding_id: null,
+        resolution_answer: null,
       })),
     ],
   };
@@ -291,6 +305,8 @@ function withWithholdingLine(
         surface: "withholding",
         from_calculation: false,
         recalculates: false,
+        finding_id: null,
+        resolution_answer: null,
       },
       ...form.issue_lines,
     ],
@@ -473,6 +489,8 @@ export function modeloFixture(options: Options): ModeloPort {
 
   // What the scenario's writes did, as far as they settled.
   let applied = false;
+  // How far the answer to the disagreement the applied 130 states has come.
+  let answered: "open" | "accepted" | "revoked" = "open";
   let recorded = false;
   // How far the first quarter's Modelo 130 has come for a filer whose
   // estimate is refused: not created, created, or calculated.
@@ -507,6 +525,10 @@ export function modeloFixture(options: Options): ModeloPort {
         return recorded ? "130-1T-filed" : "130-1T-exported";
       case "edit":
         return applied ? "130-1T-applied" : "130-1T-exported";
+      case "disagreement":
+      case "disagreement-raced":
+      case "disagreement-unknown":
+        return answered === "open" ? "130-1T-applied" : `130-1T-${answered}`;
       // Read half an hour ago; read again after its renewal, it admits a
       // fresh baseline.
       case "renewal":
@@ -580,6 +602,42 @@ export function modeloFixture(options: Options): ModeloPort {
     };
     outcomes.set(operation, outcome);
     return outcome;
+  };
+  /** A write the backend refused once it ran with the typed refusal its
+   * definition declares: it settles without writing, carrying the refusal
+   * stored under `name`. */
+  const refusedAs = async (name: string): Promise<LedgerOutcome> => {
+    const detail = await envelope<{ refusal?: { code?: unknown } }>(name);
+    if (!detail) return unserved();
+    const operation = nextOperation();
+    const outcome: LedgerOutcome = {
+      kind: "refused",
+      operation_id: operation,
+      revision: 3,
+      reason:
+        typeof detail.refusal?.code === "string" ? detail.refusal.code : null,
+      detail: detail as unknown as LedgerErrorDetail,
+    };
+    outcomes.set(operation, outcome);
+    return outcome;
+  };
+  const disagreementShape =
+    shape === "disagreement" ||
+    shape === "disagreement-raced" ||
+    shape === "disagreement-unknown";
+  /** The disagreement the applied 130's check offers to answer, as its form
+   * states it, and the calculation it was read for. */
+  const disagreementTarget = async () => {
+    const form = await envelope<ModeloWorkbenchFormProjectionV1>(
+      "modelo-130-1T-applied-en",
+    );
+    const line = form?.issue_lines.find((each) => each.finding_id !== null);
+    return form && line
+      ? {
+          finding_id: line.finding_id,
+          calculation_revision_id: form.calculation_revision_id,
+        }
+      : null;
   };
   /** A file the host issued for `picked` (a pick) or not (a save). */
   const issued = (token: unknown, picked: boolean) => {
@@ -765,6 +823,58 @@ export function modeloFixture(options: Options): ModeloPort {
           spoken,
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
       if (
+        disagreementShape &&
+        (definition === "modelo.work.accept_disagreement" ||
+          definition === "modelo.work.revoke_disagreement")
+      ) {
+        const target = await disagreementTarget();
+        if (
+          !target ||
+          request.finding_id !== target.finding_id ||
+          request.calculation_revision_id !== target.calculation_revision_id
+        )
+          return unserved();
+        if (definition === "modelo.work.accept_disagreement") {
+          if (typeof request.reason !== "string" || !request.reason.trim())
+            reject("invalid");
+          if (shape === "disagreement-unknown")
+            reject("unknown", { operation_id: nextOperation() });
+          // Another session accepted it first: this one is refused, and the
+          // declaration read again shows the acceptance.
+          if (shape === "disagreement-raced" || answered === "accepted") {
+            answered = "accepted";
+            return (await refusedAs(
+              `accept-130-1T-accepted-refused-${language}`,
+            )) as LedgerOutcome<ModeloResult<typeof definition>>;
+          }
+          if (answered !== "open") return unserved();
+          const accepted = await written("accept-130-1T-applied");
+          answered = "accepted";
+          return settle(accepted) as LedgerOutcome<
+            ModeloResult<typeof definition>
+          >;
+        }
+        if (answered !== "accepted") return unserved();
+        const held = await envelope<CreditResolutionListProjection>(
+          `disagreements-130-1T-accepted-${language}`,
+        );
+        const stored = held?.resolutions.find(
+          (row) => row.finding_id === target.finding_id,
+        );
+        if (!stored) return unserved();
+        // A revocation at a revision the acceptance is no longer at is
+        // refused as stale.
+        if (request.expected_revision_id !== stored.revision_id)
+          return (await refusedAs(
+            `revoke-130-1T-accepted-stale-${language}`,
+          )) as LedgerOutcome<ModeloResult<typeof definition>>;
+        const revoked = await written("revoke-130-1T-accepted");
+        answered = "revoked";
+        return settle(revoked) as LedgerOutcome<
+          ModeloResult<typeof definition>
+        >;
+      }
+      if (
         definition === "modelo.work.compare_taxation" &&
         shape.startsWith("renta") &&
         !catalogue[`compare-${rentaForm(shape)}-${spoken}`]
@@ -895,6 +1005,10 @@ export function modeloFixture(options: Options): ModeloPort {
             quarter = "calculated";
             return calculated;
           }
+          case "modelo.work.disagreements":
+            return disagreementShape
+              ? written(`disagreements-${laterState()}-${language}`)
+              : unserved();
           case "modelo.work.metadata":
             return receiptShape ? written("metadata-130-receipt") : unserved();
           case "modelo.work.amendment_context":

@@ -27,12 +27,14 @@ function Line({
   onOpenSurface,
   canOpenSurface,
   onRecalculate,
+  onAnswer,
 }: {
   line: ModeloFormIssueLine;
   onGo(line: ModeloFormIssueLine): void;
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface(surface: OpenableSurface): boolean;
   onRecalculate: (() => void) | null;
+  onAnswer: ((line: ModeloFormIssueLine) => void) | null;
 }) {
   const t = useStrings();
   const surface =
@@ -53,7 +55,12 @@ function Line({
       {line.address && <Icon name="forward" size="xs" className="text-faint" />}
     </>
   );
-  const actions = (surface || (line.recalculates && onRecalculate)) && (
+  // The answer a line offers is the application's: accept its
+  // disagreement, or revoke the acceptance that covers it.
+  const offered = onAnswer ? (line.resolution_answer ?? null) : null;
+  const actions = (surface ||
+    (line.recalculates && onRecalculate) ||
+    offered) && (
     <div className="flex flex-wrap gap-3 px-4 pb-3">
       {surface && (
         <Button size="sm" variant="link" onClick={() => onOpenSurface(surface)}>
@@ -65,6 +72,20 @@ function Line({
         <Button size="sm" variant="link" onClick={onRecalculate}>
           {t("workspace.modelo.next_button.recalculate")}
           <Icon name="forward" size="xs" />
+        </Button>
+      )}
+      {offered && onAnswer && (
+        <Button
+          size="sm"
+          variant="link"
+          data-answer-offered={offered}
+          onClick={() => onAnswer(line)}
+        >
+          {t(
+            offered === "revoke"
+              ? "desktop.modelo.disagreement.revoke"
+              : "desktop.modelo.disagreement.accept",
+          )}
         </Button>
       )}
     </div>
@@ -106,6 +127,8 @@ export function CheckView({
   onOpenSurface,
   canOpenSurface,
   onRecalculate,
+  onAnswer = null,
+  answers,
 }: {
   verdict: ModeloFormVerdict;
   lines: ModeloFormIssueLine[];
@@ -117,6 +140,12 @@ export function CheckView({
   canOpenSurface(surface: OpenableSurface): boolean;
   /** Calculates again, or null while that cannot be done from here. */
   onRecalculate: (() => void) | null;
+  /** Opens the answer a disagreement's line offers, or null while none can
+   * be sent from here. */
+  onAnswer?: ((line: ModeloFormIssueLine) => void) | null;
+  /** The answers given to the declaration's disagreements, drawn under the
+   * lines. */
+  answers?: ReactNode;
 }) {
   const t = useStrings();
   // The read model lists the lines most urgent first; the sections follow
@@ -163,12 +192,14 @@ export function CheckView({
                   onOpenSurface={onOpenSurface}
                   canOpenSurface={canOpenSurface}
                   onRecalculate={onRecalculate}
+                  onAnswer={onAnswer}
                 />
               ))}
             </ul>
           </section>
         );
       })}
+      {answers}
     </div>
   );
 }

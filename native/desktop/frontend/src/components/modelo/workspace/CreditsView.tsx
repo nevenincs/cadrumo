@@ -43,7 +43,14 @@ function Figure({ field }: { field: PublicModeloFormField }) {
   );
 }
 
-function Notes({ lines }: { lines: readonly ModeloFormIssueLine[] }) {
+function Notes({
+  lines,
+  onAnswer,
+}: {
+  lines: readonly ModeloFormIssueLine[];
+  onAnswer?: ((line: ModeloFormIssueLine) => void) | null;
+}) {
+  const t = useStrings();
   return (
     <>
       {lines.map((line) => (
@@ -57,8 +64,25 @@ function Notes({ lines }: { lines: readonly ModeloFormIssueLine[] }) {
             size="xs"
             className={cn("mt-0.5 shrink-0", ATTENTION_TONE[line.level])}
           />
-          <span>
-            {line.message} {line.action}
+          <span className="flex flex-col items-start gap-1">
+            <span>
+              {line.message} {line.action}
+            </span>
+            {onAnswer && line.resolution_answer && (
+              <Button
+                size="xs"
+                variant="link"
+                className="h-auto p-0 text-sm"
+                data-answer-offered={line.resolution_answer}
+                onClick={() => onAnswer(line)}
+              >
+                {t(
+                  line.resolution_answer === "revoke"
+                    ? "desktop.modelo.disagreement.revoke"
+                    : "desktop.modelo.disagreement.accept",
+                )}
+              </Button>
+            )}
           </span>
         </span>
       ))}
@@ -71,11 +95,13 @@ function CreditRow({
   lines,
   extra,
   onGo,
+  onAnswer,
 }: {
   field: PublicModeloFormField;
   lines: readonly ModeloFormIssueLine[];
   extra?: ReactNode;
   onGo(address: ModeloFormAddressV1): void;
+  onAnswer?: ((line: ModeloFormIssueLine) => void) | null;
 }) {
   const t = useStrings();
   return (
@@ -99,7 +125,7 @@ function CreditRow({
             {field.editability_words}
           </span>
         )}
-        <Notes lines={lines} />
+        <Notes lines={lines} onAnswer={onAnswer} />
         {extra}
       </span>
       <span className="flex flex-col items-end gap-1">
@@ -136,6 +162,7 @@ export function Credits({
   canOpenSurface,
   estimate,
   extraOf,
+  onAnswer = null,
 }: {
   credits: readonly PublicModeloFormField[];
   /** The boxes the application works out from a credit, directly or through
@@ -149,6 +176,9 @@ export function Credits({
   estimate?: ReactNode;
   /** What the estimate says of one box, drawn under its words. */
   extraOf?: (field: PublicModeloFormField) => ReactNode;
+  /** Opens the answer a disagreement's line offers, or null while none can
+   * be sent from here. */
+  onAnswer?: ((line: ModeloFormIssueLine) => void) | null;
 }) {
   const t = useStrings();
   const linesOf = (field: PublicModeloFormField) =>
@@ -171,6 +201,7 @@ export function Credits({
               lines={linesOf(field)}
               extra={extraOf?.(field)}
               onGo={onGo}
+              onAnswer={onAnswer}
             />
           ))}
         </ul>
@@ -222,6 +253,7 @@ export function Credits({
                 lines={linesOf(field)}
                 extra={extraOf?.(field)}
                 onGo={onGo}
+                onAnswer={onAnswer}
               />
             ))}
           </ul>

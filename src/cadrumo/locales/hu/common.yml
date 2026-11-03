@@ -4454,6 +4454,17 @@ desktop:
       close: Részletek bezárása
       hide: Részletek elrejtése
       show: Részletek megjelenítése
+    disagreement:
+      accept: Elfogadás indoklással
+      accept_title: Az eltérés elfogadása
+      confirm_accept: Elfogadás
+      confirm_revoke: Visszavonás
+      list_failed: Az eltérésekre adott válaszaidat nem sikerült beolvasni.
+      list_title: Válaszaid az eltérésekre
+      reason_label: Indoklás
+      revoke: Elfogadás visszavonása
+      revoke_title: Elfogadás visszavonása
+      your_reason: 'Indoklásod: {reason}'
     discard:
       confirm: Elvetés
       lead: Kikerül a bevallásaid listájából. Az előzményei megmaradnak.

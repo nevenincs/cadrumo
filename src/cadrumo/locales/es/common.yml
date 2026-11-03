@@ -4494,6 +4494,17 @@ desktop:
       close: Cerrar detalles
       hide: Ocultar detalles
       show: Mostrar detalles
+    disagreement:
+      accept: Aceptar con un motivo
+      accept_title: Aceptar esta discrepancia
+      confirm_accept: Aceptar
+      confirm_revoke: Retirar
+      list_failed: No se han podido leer tus respuestas a discrepancias.
+      list_title: Tus respuestas a discrepancias
+      reason_label: Motivo
+      revoke: Retirar la aceptación
+      revoke_title: Retirar la aceptación
+      your_reason: 'Tu motivo: {reason}'
     discard:
       confirm: Descartar
       lead: Sale de tu lista de declaraciones. Su historial se conserva.

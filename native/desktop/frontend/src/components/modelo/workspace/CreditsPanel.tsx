@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { LedgerNextStep } from "../../../shell/ledger";
 import type {
   ModeloFormAddressV1,
+  ModeloFormIssueLine,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
 } from "../../../shell/modeloContract";
@@ -33,6 +34,7 @@ export function CreditsPanel({
   onGo,
   onOpenSurface,
   canOpenSurface,
+  onAnswer = null,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
@@ -48,6 +50,9 @@ export function CreditsPanel({
   onGo(address: ModeloFormAddressV1): void;
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface(surface: OpenableSurface): boolean;
+  /** Opens the answer a disagreement's line offers, or null while none can
+   * be sent from here. */
+  onAnswer?: ((line: ModeloFormIssueLine) => void) | null;
 }) {
   const t = useStrings();
   const form = envelope.form.form;
@@ -80,6 +85,7 @@ export function CreditsPanel({
           onOpenSurface={onOpenSurface}
           canOpenSurface={canOpenSurface}
           extraOf={inEstimate}
+          onAnswer={onAnswer}
           estimate={
             <Estimate
               read={estimate.read}

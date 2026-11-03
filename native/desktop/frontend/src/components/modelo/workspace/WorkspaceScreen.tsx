@@ -26,6 +26,7 @@ import {
 } from "../../../shell/modelo";
 import type {
   ModeloAmendmentCorrectionContextV1,
+  ModeloFormIssueLine,
   ModeloWorkHistoryEntryV1,
   ModeloFormNextAction,
   ModeloWorkbenchFormProjectionV1,
@@ -64,6 +65,17 @@ import {
 } from "./calculationEvidence";
 import type { CorrectionAnswer, CorrectionResult } from "./CorrectionDialog";
 import { CreditsPanel } from "./CreditsPanel";
+import { DisagreementAnswers } from "./DisagreementAnswers";
+import {
+  DisagreementDialog,
+  type DisagreementAnswer,
+  type DisagreementResult,
+} from "./DisagreementDialog";
+import {
+  activeAnswer,
+  refusalWords,
+  useDisagreements,
+} from "./disagreementRead";
 import { useEstimate } from "./estimateRead";
 import { hasIvaWallet } from "./ivaWalletRead";
 import { HistoryView, type HistoryNotice } from "./HistoryView";
@@ -394,6 +406,68 @@ function Ready({
     }
   };
 
+  // A disagreement's line offers its answer; the dialog sends it once and
+  // the declaration is read again, whatever it came to.
+  const [answering, setAnswering] = useState<ModeloFormIssueLine | null>(null);
+  const disagreements = useDisagreements({
+    port,
+    envelope,
+    language,
+    wanted: view === "check" || answering !== null,
+  });
+  const answerDisagreement = async (
+    answer: DisagreementAnswer,
+  ): Promise<DisagreementResult> => {
+    // No answer may bypass the declaration's shared write hold.
+    if (held) return { kind: "unknown" };
+    const revision = envelope.calculation_revision_id;
+    if (revision === null) return { kind: "not_sent" };
+    const outcome = await run(() =>
+      answer.kind === "accept"
+        ? port.submit(
+            "modelo.work.accept_disagreement",
+            {
+              calculation_revision_id: revision,
+              finding_id: answer.finding_id,
+              reason: answer.reason,
+              output_language: language,
+            },
+            workUnit,
+          )
+        : port.submit(
+            "modelo.work.revoke_disagreement",
+            {
+              calculation_revision_id: revision,
+              finding_id: answer.finding_id,
+              expected_revision_id: answer.expected_revision,
+              output_language: language,
+            },
+            workUnit,
+          ),
+    );
+    if (outcome === null) return { kind: "unknown" };
+    switch (outcome.kind) {
+      case "settled": {
+        if (outcome.result.outcome !== "refused") return { kind: "done" };
+        const words = refusalWords(outcome.result);
+        return words ? { kind: "said", words } : { kind: "refused" };
+      }
+      // Committed: the declaration is read again, read answer or not.
+      case "saved_unread":
+        return { kind: "done" };
+      case "refused": {
+        const words = refusalWords(outcome.detail) ?? outcome.words;
+        if (words) setNotice({ tone: "warning", words });
+        return words ? { kind: "said", words } : { kind: "refused" };
+      }
+      case "not_sent":
+        return { kind: "not_sent" };
+      case "unknown":
+        return { kind: "unknown" };
+    }
+  };
+  const onAnswer = held ? null : setAnswering;
+
   const sameCalculation = (shown: ModeloWorkbenchFormProjectionV1) => {
     const latest = latestEnvelope.current;
     return (
@@ -643,6 +717,8 @@ function Ready({
                 ? () => onRun("recalculate")
                 : null
             }
+            onAnswer={onAnswer}
+            answers={<DisagreementAnswers read={disagreements} />}
           />
         ),
         creditsLabel: hasIvaWallet(envelope)
@@ -662,6 +738,7 @@ function Ready({
               }}
               onOpenSurface={onOpenSurface}
               canOpenSurface={canOpenSurface}
+              onAnswer={onAnswer}
             />
           ) : undefined,
         compare: offersComparison(envelope, borrador) ? (
@@ -721,6 +798,19 @@ function Ready({
         ),
         dialogs: (
           <>
+            <DisagreementDialog
+              key={answering?.finding_id ?? "none"}
+              line={answering}
+              answer={activeAnswer(
+                disagreements,
+                answering?.finding_id ?? null,
+              )}
+              onOpenChange={(open) => {
+                if (!open) setAnswering(null);
+              }}
+              onAnswer={answerDisagreement}
+              disabled={busy}
+            />
             <ReviewDialog
               open={reviewing}
               onOpenChange={setReviewing}

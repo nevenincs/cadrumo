@@ -4489,6 +4489,17 @@ desktop:
       close: Tancar els detalls
       hide: Amagar els detalls
       show: Mostrar els detalls
+    disagreement:
+      accept: Acceptar amb un motiu
+      accept_title: Acceptar aquesta discrepància
+      confirm_accept: Acceptar
+      confirm_revoke: Retirar
+      list_failed: No s'han pogut llegir les teves respostes a discrepàncies.
+      list_title: Les teves respostes a discrepàncies
+      reason_label: Motiu
+      revoke: Retirar l'acceptació
+      revoke_title: Retirar l'acceptació
+      your_reason: 'El teu motiu: {reason}'
     discard:
       confirm: Descartar
       lead: Surt de la teva llista de declaracions. Se'n conserva l'historial.

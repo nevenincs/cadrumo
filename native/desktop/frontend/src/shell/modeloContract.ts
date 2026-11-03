@@ -931,6 +931,7 @@ export type CoverageAdviceReason =
 export type CreditResolutionAcceptRequest = {
   profile_id: string;
   calculation_revision_id: CalculationRevisionId;
+  output_language: OutputLanguage;
   finding_id: string;
   reason: string;
 };
@@ -950,6 +951,7 @@ export type CreditResolutionListProjection = {
 export type CreditResolutionListRequest = {
   profile_id: string;
   calculation_revision_id: CalculationRevisionId;
+  output_language: OutputLanguage;
 };
 
 /**
@@ -978,6 +980,8 @@ export type CreditResolutionRefusalProjection = {
     "REFUSED_CREDIT_RESOLUTION" | "REFUSED_CREDIT_RESOLUTION_REVISION_CONFLICT";
   reason: CreditResolutionOperationRefusalReason;
   finding_id: string;
+  refusal_words: string | null;
+  refusal_words_language: OutputLanguage | null;
 };
 
 /**
@@ -987,6 +991,7 @@ export type CreditResolutionRefusalProjection = {
 export type CreditResolutionRevokeRequest = {
   profile_id: string;
   calculation_revision_id: CalculationRevisionId;
+  output_language: OutputLanguage;
   finding_id: string;
   expected_revision_id: string;
 };
@@ -1009,6 +1014,8 @@ export type CreditResolutionRowProjection = {
   revoked_by_session: string | null;
   revision_id: string;
   applies: boolean;
+  answer_words: string;
+  answer_words_language: OutputLanguage;
 };
 
 /**
@@ -4521,11 +4528,13 @@ export type ModeloFormBlocker = {
  * (`blocking_calculation_notes`), as it does for a note at the blocking level.
  * `finding_id` names the source disagreement the note states, the id an
  * operator answers with a resolution; it is `None` for every other note.
- * `fact` is what this note says about its own subject, when its reason alone
- * does not. `message` is the calculation's own account of this note, as its
- * resolver worded it for the filer and the calculate result carries it, in the
- * form's language; `None` when it wrote none in that language, or when only
- * the note that persists with the calculation is known.
+ * `resolution_answer` is the answer the note offers for that disagreement,
+ * accepting it or taking an acceptance back; it is `None` exactly when
+ * `finding_id` is. `fact` is what this note says about its own subject, when
+ * its reason alone does not. `message` is the calculation's own account of
+ * this note, as its resolver worded it for the filer and the calculate result
+ * carries it, in the form's language; `None` when it wrote none in that
+ * language, or when only the note that persists with the calculation is known.
  */
 export type ModeloFormCalculationNote = {
   reason: string;
@@ -4534,6 +4543,7 @@ export type ModeloFormCalculationNote = {
   box: string | null;
   withholds_filing: boolean;
   finding_id: string | null;
+  resolution_answer: ModeloFormResolutionAnswer | null;
   fact: CalculationNoteFact | null;
   element_names: [string, string][];
   message: string | null;
@@ -4804,6 +4814,8 @@ export type ModeloFormIssueLine = {
   surface: SourceSurface | null;
   from_calculation: boolean;
   recalculates: boolean;
+  finding_id: string | null;
+  resolution_answer: ModeloFormResolutionAnswer | null;
 };
 
 /**
@@ -4917,6 +4929,12 @@ export type ModeloFormReceipt = {
   verified_at: string | null;
   words: string;
 };
+
+/**
+ * Which answer a source disagreement's line offers the operator, decided from
+ * the resolutions held.
+ */
+export type ModeloFormResolutionAnswer = "accept" | "revoke";
 
 /**
  * Which way the declaration's result settles, as its official design declares
