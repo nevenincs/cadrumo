@@ -53,7 +53,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
     """
     sheet = tmp_path / "m100-2024.csv"
     sheet.write_text(
-        "casilla_code,value\n1391,0\n0224,0\n1479,0\n1553,0\n1577,0\n",
+        "casilla_code,value\n1384,0\n1387,0\n1390,0\n1391,0\n0224,0\n1479,0\n1553,0\n1577,0\n",
         encoding="utf-8",
     )
 
@@ -92,6 +92,9 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
     assert payload["aeat_accepted"] is False
     assert payload["casilla_values"] == {
         "0224": "0",
+        "1384": "0",
+        "1387": "0",
+        "1390": "0",
         "1391": "0",
         "1479": "0",
         "1553": "0",
@@ -119,7 +122,13 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
             iva_history_repository=IvaCompensationHistoryRepository(),
             operation=operation,
         )
-        assert m100_prefill.binding_values["renta-base-liquidable-negativa-general-anterior"] == Decimal("0")
+        for binding_id in (
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-anterior",
+        ):
+            assert m100_prefill.binding_values[binding_id] == Decimal("0")
 
 
 def test_observe_local_from_xlsx_spreadsheet_persists_values(

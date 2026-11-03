@@ -44,6 +44,12 @@ _CALCULATE_FLAGS: tuple[str, ...] = (
     "0003=24000",
     "--binding",
     "renta-base-liquidable-negativa-general-anterior=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
 )
 
 

@@ -32,6 +32,9 @@ def neutral_binding_values() -> dict[str, Decimal]:
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
         # Art. 75 Ley 19/1994 / Art. 7.p) LIRPF maritime-worker exemption operands;
         # neutral zero when the chain under test is unrelated (the path itself is false).

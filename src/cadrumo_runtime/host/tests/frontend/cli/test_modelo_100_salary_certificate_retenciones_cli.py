@@ -119,7 +119,7 @@ def _seed_prior_year_zero_carry(profile_id: UUID) -> None:
                     modelo="100",
                     filing_year=_REVIEWED_EDITION - 1,
                     period="0A",
-                    casilla_values={"1391": Decimal("0")},
+                    casilla_values=dict.fromkeys(("1384", "1387", "1390", "1391"), Decimal("0")),
                 ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,

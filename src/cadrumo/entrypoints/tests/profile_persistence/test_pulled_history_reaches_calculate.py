@@ -115,9 +115,8 @@ _PULLED_C19_TOTAL = Decimal("1416.00")
 _M130_SOURCE_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA")
 _M130_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RESULT_CASILLA")
 _M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_PAGOS_CASILLA")
-_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
-    "1391",
-    surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
+_M100_ANEXO_C_CARRY_CASILLAS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_M100_ANEXO_C_CARRY_CASILLAS") for box in ("1384", "1387", "1390", "1391")
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _M130_PAGOS_RELATION_ID = "renta-modelo-130-pagos-fraccionados"
@@ -238,7 +237,7 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
                 modelo=Modelo("100").value,
                 filing_year=_YEAR - 1,
                 period=_M100_ANNUAL_PERIOD,
-                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                casilla_values=dict.fromkeys(_M100_ANEXO_C_CARRY_CASILLAS, Decimal("0")),
             ),
         ),
         source_kind=ObservationSourceKind.APP_FILING,

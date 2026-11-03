@@ -178,6 +178,9 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             # Parte autonómica: non-Madrid profile mirrors the estatal zero.
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-modelo-130-pagos-fraccionados": Decimal("0"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },

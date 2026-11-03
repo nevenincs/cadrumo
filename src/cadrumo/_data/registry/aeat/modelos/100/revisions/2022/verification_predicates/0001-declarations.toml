@@ -127,3 +127,68 @@ predicate_id = "modelo-100-2022-eo-agraria-indice-forestal-excluye-pequena-empre
 expression = 'at_most_one_positive(["1547", "1546"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+
+# Ley 35/2006 art. 50.3 - compensation of pending negative bases liquidables
+# generales, one pair of BLOCKING gates per Anexo C origin row. "Si la base
+# liquidable general resultase negativa, su importe podrá ser compensado con
+# los de las bases liquidables generales positivas que se obtengan en los
+# cuatro años siguientes. La compensación deberá efectuarse en la cuantía
+# máxima que permita cada uno de los ejercicios siguientes." The applied amount
+# of each row (which casilla 0501 sums) is therefore fixed by law, not elected.
+#
+# Stock gate: a positive applied amount needs that row's pending stock and
+# cannot exceed it. A stated zero stock admits nothing; an unknown stock is not
+# read as zero.
+#
+# Cuantía-máxima gate: the applied amount must equal the row's computed
+# maximum, the lesser of its stock and the positive base the older rows leave.
+# Applying less or more refuses, and so does a maximum the calculation could
+# not resolve, because the required amount is then unknown.
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-base-neg-general-em4-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-base-neg-general-em4-no-excede-stock"
+expression = 'positive_application_le_present_stock(["1381", "1380"])'
+legal_refs = ["ley-35-2006:art-50"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-base-neg-general-em4-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-base-neg-general-em4-cuantia-maxima"
+expression = 'application_equals_present_maximum(["1381", "base-liq-neg-general-em4-aplicada-maxima"])'
+legal_refs = ["ley-35-2006:art-50"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-base-neg-general-em3-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-base-neg-general-em3-no-excede-stock"
+expression = 'positive_application_le_present_stock(["1383", "1382"])'
+legal_refs = ["ley-35-2006:art-50"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-base-neg-general-em3-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-base-neg-general-em3-cuantia-maxima"
+expression = 'application_equals_present_maximum(["1383", "base-liq-neg-general-em3-aplicada-maxima"])'
+legal_refs = ["ley-35-2006:art-50"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-base-neg-general-em2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-base-neg-general-em2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["1386", "1385"])'
+legal_refs = ["ley-35-2006:art-50"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-base-neg-general-em2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-base-neg-general-em2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["1386", "base-liq-neg-general-em2-aplicada-maxima"])'
+legal_refs = ["ley-35-2006:art-50"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-base-neg-general-em1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-base-neg-general-em1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["1389", "1388"])'
+legal_refs = ["ley-35-2006:art-50"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-base-neg-general-em1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-base-neg-general-em1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["1389", "base-liq-neg-general-em1-aplicada-maxima"])'
+legal_refs = ["ley-35-2006:art-50"]

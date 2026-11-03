@@ -765,7 +765,7 @@ _AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
 }
 _NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
     ("resultados", "anexo_a_res"): 173,
-    ("resultados", "anexo_c_res"): 180,
+    ("resultados", "anexo_c_res"): 184,
     ("resultados", "base_imponible_res"): 25,
     ("resultados", "base_liquidable_res"): 13,
     ("resultados", "calculo_impuesto_res"): 110,

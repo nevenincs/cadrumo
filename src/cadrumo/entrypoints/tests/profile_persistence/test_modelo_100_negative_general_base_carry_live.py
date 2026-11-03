@@ -83,6 +83,10 @@ _QUARTERS = ("1T", "2T", "3T", "4T")
 _OPENING_PENDING: CasillaId = validated_casilla_id("1388", surface="_OPENING_PENDING")
 _APPLIED_PENDING: CasillaId = validated_casilla_id("1389", surface="_APPLIED_PENDING")
 _GENERATED_PENDING: CasillaId = validated_casilla_id("1391", surface="_GENERATED_PENDING")
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 _CASILLA_0501: CasillaId = validated_casilla_id("0501", surface="_CASILLA_0501")
 _TRABAJO_INGRESOS: CasillaId = validated_casilla_id("0003", surface="_TRABAJO_INGRESOS")
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
@@ -148,7 +152,7 @@ def _seed_prior_m100_generated_pending(
         modelo="100",
         filing_year=source_year,
         period=_PERIOD,
-        casilla_values={_GENERATED_PENDING: value},
+        casilla_values={_GENERATED_PENDING: value, **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0"))},
     )
 
 
@@ -283,7 +287,7 @@ def test_m100_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> None:
     for casilla_id in ("1388", "1391", "0501"):
         assert casillas[casilla_id].legal_refs[0] == art_50
         assert art_48 not in casillas[casilla_id].legal_refs
-    prior_aplicada_maxima = f"renta-base-liquidable-negativa-general-{_NEWEST_EDITION - 1}-aplicada-maxima"
+    prior_aplicada_maxima = "renta-base-liquidable-negativa-general-em1-aplicada-maxima"
     assert formulas[prior_aplicada_maxima].legal_refs == (art_50,)
     assert formulas["renta-base-liquidable-negativa-general-compensacion-total"].legal_refs == (art_50,)
     assert formulas["renta-base-imponible-general"].legal_refs[0] == art_48

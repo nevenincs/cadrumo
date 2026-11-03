@@ -8166,6 +8166,21 @@ modelo:
                 as obtained in a markedly irregular manner over time, imputed to this
                 single tax period (the base to which the 30% reduction of article
                 32.1 of the Tax Law applies; amount declared by the filer - see box
+            base-liq-neg-general-base-positiva-compensable:
+              label: Positive general net taxable base available for offsetting earlier
+                negative bases (art. 50.3 LIRPF) [internal]
+            base-liq-neg-general-em1-aplicada-maxima:
+              label: 'Negative general net taxable base from the previous year: maximum
+                applicable offset (art. 50.3 LIRPF) [internal]'
+            base-liq-neg-general-em2-aplicada-maxima:
+              label: 'Negative general net taxable base from two years earlier: maximum
+                applicable offset (art. 50.3 LIRPF) [internal]'
+            base-liq-neg-general-em3-aplicada-maxima:
+              label: 'Negative general net taxable base from three years earlier:
+                maximum applicable offset (art. 50.3 LIRPF) [internal]'
+            base-liq-neg-general-em4-aplicada-maxima:
+              label: 'Negative general net taxable base from four years earlier: maximum
+                applicable offset (art. 50.3 LIRPF) [internal]'
                 [1554])
           construct:
             renta-dependent-modelos:
@@ -17676,9 +17691,6 @@ modelo:
               label: Autonomous Community of the return
             ZRUE2:
               label: Spouse's country of residence, EU or EEA
-            base-liq-neg-general-2024-aplicada-maxima:
-              label: 'Negative general net taxable base, FY 2024: maximum applicable
-                offset (limit under art. 50.3 LIRPF) [internal]'
             trabajo-mar-renta-exenta:
               label: Exempt employment income of maritime workers (art. 7.p) LIRPF
                 or Law 19/1994) [internal]

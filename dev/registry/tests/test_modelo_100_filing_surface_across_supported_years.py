@@ -75,6 +75,9 @@ _LEDGER_CASILLA_BINDINGS: Mapping[str, str] = {
             "0217",
         )
     },
+    "1380": "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    "1382": "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+    "1385": "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "1388": "renta-base-liquidable-negativa-general-anterior",
 }
 

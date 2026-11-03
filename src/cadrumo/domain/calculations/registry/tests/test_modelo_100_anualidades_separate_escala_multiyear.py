@@ -144,6 +144,9 @@ def _run(
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         # Casillas 0245-0247 are computed from the marriage facts in every edition
         # from 2022; an unmarried filer supplies them as neutral zeros.
         "renta-profile-marriage-full-year": Decimal("0"),

@@ -40,6 +40,9 @@ _EVERY_EDITION = frozenset(
         "renta-retencion-soportada-trabajo",
         "renta-retencion-soportada-capital-mobiliario",
         "renta-retencion-soportada-ganancia-patrimonial",
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
         "renta-base-liquidable-negativa-general-anterior",
     }
 )

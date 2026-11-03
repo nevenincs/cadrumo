@@ -80,6 +80,9 @@ _BINDINGS_2024: dict[str, Decimal] = {
     # BIN-pendiente fresh-filer baseline: previous_filing binding for
     # casilla 1388 (LIRPF Art. 48) resolves to zero with no prior filing.
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
 }
 
 _ENUM_BINDINGS_2024 = {"renta-profile-tax-residence-ccaa": "madrid"}
@@ -274,6 +277,9 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
         # facts; neutral zero when the chain under test is unrelated.
         "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),

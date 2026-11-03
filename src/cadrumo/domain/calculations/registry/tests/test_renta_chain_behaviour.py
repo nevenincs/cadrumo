@@ -43,6 +43,9 @@ _C0467 = validated_casilla_id("0467", surface="test_renta_chain_behaviour casill
 _C0468 = validated_casilla_id("0468", surface="test_renta_chain_behaviour casilla id")
 _C0499 = validated_casilla_id("0499", surface="test_renta_chain_behaviour casilla id")
 _C0500 = validated_casilla_id("0500", surface="test_renta_chain_behaviour casilla id")
+_C1381 = validated_casilla_id("1381", surface="test_renta_chain_behaviour casilla id")
+_C1383 = validated_casilla_id("1383", surface="test_renta_chain_behaviour casilla id")
+_C1386 = validated_casilla_id("1386", surface="test_renta_chain_behaviour casilla id")
 _C1389 = validated_casilla_id("1389", surface="test_renta_chain_behaviour casilla id")
 _C0505 = validated_casilla_id("0505", surface="test_renta_chain_behaviour casilla id")
 _C0506 = validated_casilla_id("0506", surface="test_renta_chain_behaviour casilla id")
@@ -201,6 +204,9 @@ def _scenario_2025(
             "renta-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
@@ -338,8 +344,11 @@ def test_base_liquidable_general_applies_reductions() -> None:
             "renta-profile-marriage-full-year": Decimal("1"),
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
-            # Anexo C opening pending balance for the applied €1,000 amount.
+            # Anexo C opening pending balance for the applied €1,000 amount; no older year is pending.
             "renta-base-liquidable-negativa-general-anterior": Decimal("1000"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
@@ -358,8 +367,8 @@ def test_base_liquidable_general_applies_reductions() -> None:
             _expected_output(
                 target_casilla_id=validated_casilla_id("0501", surface="test_renta_chain_behaviour casilla id"),
                 value=Decimal("1000.00"),
-                operand_refs=(_C1389,),
-                operand_casilla_refs=(_C1389,),
+                operand_refs=(_C1381, _C1383, _C1386, _C1389),
+                operand_casilla_refs=(_C1381, _C1383, _C1386, _C1389),
             ),
             # 0500 = 0435 - 0461 - 0501 = 40000 - 3400 - 1000 = 35600
             _expected_output(target_casilla_id=_C0500, value=Decimal("35600.00")),

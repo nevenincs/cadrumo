@@ -117,6 +117,10 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
     "1391",
     surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
 )
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _M130_PAGOS_BINDING_ID: BindingId = "renta-modelo-130-pagos-fraccionados"
 _M130_PAGOS_RELATION_ID = "renta-modelo-130-pagos-fraccionados"
@@ -185,7 +189,10 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_M100_ANNUAL_PERIOD,
-                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                casilla_values={
+                    _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                    **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0")),
+                },
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,

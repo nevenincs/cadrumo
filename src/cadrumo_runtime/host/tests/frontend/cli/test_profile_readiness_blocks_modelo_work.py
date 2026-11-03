@@ -229,6 +229,9 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
                 "--modelo", "100", "--year", "2025", "--period", "0A",
                 "--casilla", "0003=27000", "--casilla", "0102=8400",
                 "--binding", "renta-base-liquidable-negativa-general-anterior=0",
+                "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+                "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+                "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
             ],
         )  # fmt: skip
         assert calculated.exit_code == 0, calculated.output
@@ -322,6 +325,9 @@ def test_economic_activity_m100_still_requires_the_direct_estimation_modality() 
                 "--modelo", "100", "--year", "2025", "--period", "0A",
                 "--casilla", "0003=27000",
                 "--binding", "renta-base-liquidable-negativa-general-anterior=0",
+                "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+                "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+                "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
             ],
         )  # fmt: skip
         # The registered missing-input calculation error is ERROR (exit 1).

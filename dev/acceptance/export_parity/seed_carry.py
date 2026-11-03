@@ -57,7 +57,7 @@ class CarrySeedStage(SeedState):
             self.artifact_dir.mkdir(parents=True, exist_ok=True)
             manifest = self.artifact_dir / f"modelo-100-{prior}-synthetic-aeat-register.csv"
             manifest.write_text(
-                f"casilla_code;value\n0224;{_money(activity_year(prior).net)}\n1391;0.00\n",
+                f"casilla_code;value\n0224;{_money(activity_year(prior).net)}\n1384;0.00\n1387;0.00\n1390;0.00\n1391;0.00\n",
                 encoding="utf-8",
             )
             imported = self._result(

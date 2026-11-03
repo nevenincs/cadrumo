@@ -248,6 +248,9 @@ def base_binding_values() -> dict[BindingId, Decimal]:
         # resolves to zero when no prior Modelo 100 filing exists in the
         # test corpus. Test fixtures with no carry exercise this baseline.
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         # LIRPF art. 64/75 anualidades separate-escala eligibility flag.
         # 1 = the non-custodial payer without the mínimo por
         # descendientes (the form-faithful default). Only read inside the

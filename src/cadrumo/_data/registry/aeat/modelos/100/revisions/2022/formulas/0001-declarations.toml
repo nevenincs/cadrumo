@@ -860,3 +860,125 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 [[revisions."2022".formulas.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["4ª Fase: Determinación del rendimiento neto de la actividad"]
+# Ley 35/2006 art. 50.3 compensation chain of Anexo C, oldest origin row
+# first. The positive base liquidable general before compensation is
+# max(0, 0435 − 0461 − 0468), the amount 0500 holds before it subtracts 0501.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-base-positiva-compensable"
+target_casilla_id = "base-liq-neg-general-base-positiva-compensable"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ op = "subtract", args = [{ casilla_id = "0435" }, { casilla_id = "0461" }] }, { casilla_id = "0468" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Maximum applicable from the fourth year back (1380 pending): the lesser of
+# its stock and the whole positive base, since it is the oldest row.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-em4-aplicada-maxima"
+target_casilla_id = "base-liq-neg-general-em4-aplicada-maxima"
+expression = { op = "min", args = [{ casilla_id = "1380" }, { casilla_id = "base-liq-neg-general-base-positiva-compensable" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Maximum from the third year back (1382 pending): the lesser of its stock and
+# the positive base the fourth-year row leaves.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-em3-aplicada-maxima"
+target_casilla_id = "base-liq-neg-general-em3-aplicada-maxima"
+expression = { op = "min", args = [{ casilla_id = "1382" }, { op = "subtract", args = [{ casilla_id = "base-liq-neg-general-base-positiva-compensable" }, { casilla_id = "base-liq-neg-general-em4-aplicada-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Maximum from the second year back (1385 pending): the lesser of its stock
+# and the positive base the two older rows leave.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-em2-aplicada-maxima"
+target_casilla_id = "base-liq-neg-general-em2-aplicada-maxima"
+expression = { op = "min", args = [{ casilla_id = "1385" }, { op = "subtract", args = [{ casilla_id = "base-liq-neg-general-base-positiva-compensable" }, { op = "add", args = [{ casilla_id = "base-liq-neg-general-em4-aplicada-maxima" }, { casilla_id = "base-liq-neg-general-em3-aplicada-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Maximum from the previous year (1388 pending): the lesser of its stock and
+# the positive base the three older rows leave.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-em1-aplicada-maxima"
+target_casilla_id = "base-liq-neg-general-em1-aplicada-maxima"
+expression = { op = "min", args = [{ casilla_id = "1388" }, { op = "subtract", args = [{ casilla_id = "base-liq-neg-general-base-positiva-compensable" }, { op = "sum", args = [{ casilla_id = "base-liq-neg-general-em4-aplicada-maxima" }, { casilla_id = "base-liq-neg-general-em3-aplicada-maxima" }, { casilla_id = "base-liq-neg-general-em2-aplicada-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Casilla 0501, the compensation the base liquidable general 0500 subtracts,
+# is the sum of the amounts applied from every origin row of Anexo C. The
+# carry never alters the separate Art. 48 base-imponible calculation.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-compensacion-total"
+target_casilla_id = "0501"
+expression = { op = "sum", args = [{ casilla_id = "1381" }, { casilla_id = "1383" }, { casilla_id = "1386" }, { casilla_id = "1389" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the third-year-back row carried to later years (1384 =
+# 1382 − 1383). The stock gate refuses an application above the stock, so the
+# clamp only guards the arithmetic. The fourth-year row has no remainder.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-em3-pendiente-fin"
+target_casilla_id = "1384"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1382" }, { casilla_id = "1383" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the second-year-back row carried to later years (1387 =
+# 1385 − 1386). The stock gate refuses an application above the stock, so the
+# clamp only guards the arithmetic. The fourth-year row has no remainder.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-em2-pendiente-fin"
+target_casilla_id = "1387"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1385" }, { casilla_id = "1386" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the previous year's row carried to later years (1390 =
+# 1388 − 1389). The stock gate refuses an application above the stock, so the
+# clamp only guards the arithmetic. The fourth-year row has no remainder.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-em1-pendiente-fin"
+target_casilla_id = "1390"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1388" }, { casilla_id = "1389" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]

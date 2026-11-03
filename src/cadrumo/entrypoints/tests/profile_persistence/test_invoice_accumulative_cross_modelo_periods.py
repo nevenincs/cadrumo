@@ -191,6 +191,10 @@ _M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479", 
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553", surface="test casilla id")
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577", surface="test casilla id")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id("1391", surface="test casilla id")
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
@@ -357,6 +361,7 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
                         _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
                         _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
                         _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                        **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0")),
                     },
                 ),
             ),

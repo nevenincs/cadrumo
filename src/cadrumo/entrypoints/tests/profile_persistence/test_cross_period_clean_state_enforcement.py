@@ -661,6 +661,9 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                 binding_values={
                     "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
                     zero_binding: Decimal("0"),
+                    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+                    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+                    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
                 },
                 clock=_CLOCK,
             ).revision

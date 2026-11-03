@@ -71,6 +71,9 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
+    "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+    "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+    "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
 )  # fmt: skip
 
 

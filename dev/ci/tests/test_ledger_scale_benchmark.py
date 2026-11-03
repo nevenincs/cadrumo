@@ -214,6 +214,9 @@ _M100_RENDIMIENTO_SOURCE_1479_CASILLA = validated_casilla_id("1479", surface="be
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA = validated_casilla_id("1553", surface="bench M100 1553")
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA = validated_casilla_id("1577", surface="bench M100 1577")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA = validated_casilla_id("1391", surface="bench M100 BIN")
+_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_OLDER_REMAINDERS = tuple(
+    validated_casilla_id(box, surface="bench M100 BIN remainder") for box in ("1384", "1387", "1390")
+)
 _PRIOR_YEAR_NET_INCOME = Decimal("50000")
 _TRANSACTION_REPOSITORY_LOGGER = "cadrumo.adapters.persistence.profile.transactions"
 _PARTITION_LOG_MARKERS = (
@@ -304,6 +307,7 @@ def _seed_prior_year_m130_minoracion(objects: SecureObjectRepository) -> None:
                     _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
                     _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
                     _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                    **dict.fromkeys(_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_OLDER_REMAINDERS, Decimal("0")),
                 },
             ),
         )

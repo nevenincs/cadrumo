@@ -1,7 +1,7 @@
 :seed: renta-2025
 @setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
 @setup aeat --format json app ledger retencion-soportada record B00000026 --ejercicio 2025 --income-class trabajo --origin operator_declaration --retencion 2400 --ingreso-a-cuenta 0 --importe-integro 24000 --payer-name "Pagador Sintetico SL"
-@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-base-liquidable-negativa-general-anterior=0
+@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-base-liquidable-negativa-general-anterior=0 --binding renta-base-liquidable-negativa-general-em4-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em3-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em2-pendiente-inicio=0
 @setup aeat --format json app modelo work verify --modelo 100 --year 2025 --period 0A
 @step Export the checked declaration to a local file; it is labelled as not an AEAT receipt.
 @result aeat --format json app modelo export --modelo 100 --year 2025 --period 0A --output ./modelo-100.boe

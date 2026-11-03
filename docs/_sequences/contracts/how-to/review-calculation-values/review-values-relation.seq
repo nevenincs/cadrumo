@@ -5,6 +5,6 @@ aeat config profile edit --quiet --accept-defaults --irpf-income-categories trab
 @setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
 @setup aeat --format json app ledger retencion-soportada record B00000000 --ejercicio 2025 --income-class trabajo --origin operator_declaration --retencion 2400 --ingreso-a-cuenta 0 --importe-integro 24000 --payer-name "Pagador Sintetico SL"
 @step Supply a registry relation value during calculation.
-@result aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-base-liquidable-negativa-general-anterior=0 --binding renta-modelo-100-estimacion-directa-es-normal=0 --relation renta-modelo-130-pagos-fraccionados=450
+@result aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-base-liquidable-negativa-general-anterior=0 --binding renta-base-liquidable-negativa-general-em4-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em3-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em2-pendiente-inicio=0 --binding renta-modelo-100-estimacion-directa-es-normal=0 --relation renta-modelo-130-pagos-fraccionados=450
 @expect result.relation_overrides["renta-modelo-130-pagos-fraccionados"] == "450"
 @expect exit_code == 0

@@ -46,12 +46,43 @@ source_refs = [
     "aeat-dr-100-2022-xsd",
     "aeat-renta-2022-manual-parte1",
     "boe-modelo-100-2022-form",
+    "lirpf-cuota-chain-authority",
 ]
 casilla_ids = [
+    "1380",
+    "1381",
+    "1382",
+    "1383",
+    "1384",
+    "1385",
+    "1386",
+    "1387",
     "1388",
+    "1389",
+    "1390",
+    "0501",
+    "base-liq-neg-general-base-positiva-compensable",
+    "base-liq-neg-general-em4-aplicada-maxima",
+    "base-liq-neg-general-em3-aplicada-maxima",
+    "base-liq-neg-general-em2-aplicada-maxima",
+    "base-liq-neg-general-em1-aplicada-maxima",
 ]
 bindings = [
     "renta-base-liquidable-negativa-general-anterior",
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+]
+formulas = [
+    "renta-base-liquidable-negativa-general-base-positiva-compensable",
+    "renta-base-liquidable-negativa-general-em4-aplicada-maxima",
+    "renta-base-liquidable-negativa-general-em3-aplicada-maxima",
+    "renta-base-liquidable-negativa-general-em2-aplicada-maxima",
+    "renta-base-liquidable-negativa-general-em1-aplicada-maxima",
+    "renta-base-liquidable-negativa-general-compensacion-total",
+    "renta-base-liquidable-negativa-general-em3-pendiente-fin",
+    "renta-base-liquidable-negativa-general-em2-pendiente-fin",
+    "renta-base-liquidable-negativa-general-em1-pendiente-fin",
 ]
 dependency_classifications = ["renta-dep-100"]
 [[revisions."2022".constructs]]

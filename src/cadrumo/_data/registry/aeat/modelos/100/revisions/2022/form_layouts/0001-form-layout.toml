@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "5d4917de35f6675f731a74c367c45690f1b9bc410f532af90ab8319f20199230"
+source_state_digest = "ad7cbb02f84b052d6224ff9e47d0c3a7aa06838a4b75f1871ffb7cdd892fac1e"
 design_sources = [
     { source_ref = "aeat-dr-100-2022-dictionary", sha256 = "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc" },
     { source_ref = "aeat-dr-100-2022-input-dictionary", sha256 = "78dec12e9028fe009d65f56188fedf74f7b5187378a67fe2b35ae0e1a4e54a36" },
@@ -1896,6 +1896,11 @@ placements = [
     { casilla_id = "TIPOTRIBUTACION", kind = "on_form" },
     { casilla_id = "ZCCAD", kind = "on_form" },
     { casilla_id = "ZRUE2", kind = "on_form" },
+    { casilla_id = "base-liq-neg-general-base-positiva-compensable", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em1-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em2-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em3-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em4-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
 

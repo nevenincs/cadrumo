@@ -93,9 +93,8 @@ _M100_EO_RENDIMIENTO_CASILLA: CasillaId = validated_casilla_id("1481", surface="
 _M100_EO_SUM_CASILLA: CasillaId = validated_casilla_id("1482", surface="_M100_EO_SUM_CASILLA")
 _M100_EO_TOTAL_CASILLA: CasillaId = validated_casilla_id("1484", surface="_M100_EO_TOTAL_CASILLA")
 _M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_PAGOS_CASILLA")
-_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
-    "1391",
-    surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
+_M100_ANEXO_C_CARRY_CASILLAS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_M100_ANEXO_C_CARRY_CASILLAS") for box in ("1384", "1387", "1390", "1391")
 )
 
 #: Casilla 01 restates the same annual estimate every quarter.
@@ -152,7 +151,7 @@ def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_M100_ANNUAL_PERIOD,
-                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                casilla_values=dict.fromkeys(_M100_ANEXO_C_CARRY_CASILLAS, Decimal("0")),
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,

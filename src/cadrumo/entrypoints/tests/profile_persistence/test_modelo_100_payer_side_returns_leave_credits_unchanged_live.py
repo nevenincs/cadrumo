@@ -118,6 +118,10 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
     "1391",
     surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
 )
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 
 # The withholding the taxpayer's own employer certifies as borne. Perceptor-side
 # evidence, so this is the only work-income credit the declaration may carry.
@@ -317,7 +321,10 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_ANNUAL_PERIOD,
-                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                casilla_values={
+                    _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                    **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0")),
+                },
             ),
         )
 

@@ -304,7 +304,7 @@ def test_a_failed_working_figure_is_counted_and_reached_through_the_working_figu
     failed = [field for field in form.working_figures if field.origin is ModeloFormOrigin.CALCULATION_FAILED]
     group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.WORKING_FIGURES)
 
-    assert len(failed) == 2
+    assert len(failed) == 6
     assert group.counts.could_not_calculate == len(failed)
     assert group.counts.needs_you == len(failed)
     assert group.section_ids == ()

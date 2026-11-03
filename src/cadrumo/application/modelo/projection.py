@@ -107,6 +107,9 @@ _VERB_BASELINE_DECIMAL_BINDINGS: Mapping[str, Decimal] = {
     "renta-profile-marriage-month-start": Decimal("0"),
     "renta-profile-marriage-month-end": Decimal("0"),
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
 }
 _VERB_BASELINE_BOOLEAN_BINDINGS: Mapping[str, bool] = {
     "renta-modelo-100-estimacion-directa-es-normal": True,

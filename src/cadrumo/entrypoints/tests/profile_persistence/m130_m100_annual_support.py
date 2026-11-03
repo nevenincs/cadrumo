@@ -144,6 +144,10 @@ M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
 M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
 
 M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id("1391")
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 
 # Prior-year (2023) actividad-económica net income. M130's casilla-13 minoración
 # reads ``irpf.previous_year_economic_activity_net_income`` — a previous_filing
@@ -369,6 +373,7 @@ def seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
                     M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
                     M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
                     M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                    **dict.fromkeys(PRIOR_ANEXO_C_REMAINDERS, Decimal("0")),
                 },
             ),
         ),

@@ -1180,27 +1180,6 @@ additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025
 # records. The conformance comparison reported it as declared by the
 # dictionary and absent from the registry.
 
-# Internal computed ceiling (Ley 35/2006 art. 50.3): the maximum
-# ejercicio-2024 negative base liquidable general compensable this period.
-# The positive base liquidable general before this carry is
-# max(0, 0435 − 0461 − 0468), so the ceiling is the lesser of that amount
-# and the opening pending balance in 1388.
-#
-# This is NOT an AEAT form box (no export_refs, internal_only): it is the
-# app-internal maximum consumed by the BLOCKING verification predicate that
-# requires the applied 1389 to equal it, since Art. 50.3 fixes the compensation
-# at the largest amount each year allows.
-[[revisions."2025".casillas]]
-id = "base-liq-neg-general-2024-aplicada-maxima"
-number = "base-liq-neg-general-2024-aplicada-maxima"
-section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
-semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
-input_kind = "computed"
-formula = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
-internal_only = true
-data_type = "decimal"
-legal_refs = ["ley-35-2006:art-50"]
-additional_source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 # Exempt employment income of a trabajador del mar: the art. 7.p) LIRPF
 # pathway (work abroad, capped annually) or the REBECA pathway (Ley 19/1994
 # arts. 73 and 75, a fraction of the navigation income). Both are plain

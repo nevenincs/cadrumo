@@ -63,7 +63,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _BASE_LIQUIDABLE_ART_50_REF = "ley-35-2006:art-50"
 _GENERAL_BASE_ART_48_REF = "ley-35-2006:art-48"
 _SAVINGS_BASE_ART_49_REF = "ley-35-2006:art-49"
-_APLICADA_MAXIMA_FORMULA_ID = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
+_APLICADA_MAXIMA_FORMULA_ID = "renta-base-liquidable-negativa-general-em1-aplicada-maxima"
 _COMPENSACION_TOTAL_FORMULA_ID = "renta-base-liquidable-negativa-general-compensacion-total"
 _ANEXO_C_BASE_NEGATIVA_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 
@@ -78,10 +78,12 @@ _FILING_YEAR = 2025
 _PENDIENTE_INICIO: CasillaId = validated_casilla_id("1388")  # opening pending (bound from prior 1391)
 _APLICADO: CasillaId = validated_casilla_id("1389")  # Anexo C applied amount
 _PENDIENTE_FIN: CasillaId = validated_casilla_id("1390")  # remainder rolled forward = 1388 − 1389
-_APLICADA_MAXIMA: CasillaId = validated_casilla_id("base-liq-neg-general-2024-aplicada-maxima")  # Art. 50.3 ceiling
+_APLICADA_MAXIMA: CasillaId = validated_casilla_id("base-liq-neg-general-em1-aplicada-maxima")  # Art. 50.3 ceiling
 _BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435")
 _BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500")
 _PRIOR_NEGATIVE_BASE_CASILLA: CasillaId = validated_casilla_id("1391")
+#: The prior return's remainders that open the three older Anexo C rows (1380, 1382, 1385).
+_PRIOR_OLDER_REMAINDERS: tuple[CasillaId, ...] = tuple(validated_casilla_id(box) for box in ("1384", "1387", "1390"))
 
 #: Trabajo income leaf (Retribuciones dinerarias, importe íntegro) — a manual
 #: input that produces a positive base liquidable general before the Art. 50.3 carry.
@@ -119,7 +121,7 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
     """Record the prior-year (2024) generated negative general base (casilla 1391).
 
     The ``previous_filing`` carry binding resolves this into the current year's
-    opening pending (casilla 1388).
+    opening pending (casilla 1388). The prior return carries no older remainder.
     """
     save_stamped_observation(
         obs_repo,
@@ -127,14 +129,22 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
             modelo=_MODELO,
             filing_year=_FILING_YEAR - 1,
             period=_PERIOD,
-            casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
+            casilla_values={
+                _PRIOR_NEGATIVE_BASE_CASILLA: saldo,
+                **dict.fromkeys(_PRIOR_OLDER_REMAINDERS, Decimal("0")),
+            },
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
     )
 
 
-_PRIOR_NEGATIVE_BASE_BINDING = "renta-base-liquidable-negativa-general-anterior"
+_PRIOR_NEGATIVE_BASE_BINDINGS: tuple[BindingId, ...] = (
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+    "renta-base-liquidable-negativa-general-anterior",
+)
 
 
 def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:
@@ -307,12 +317,12 @@ def test_no_prior_negative_base_leaves_result_unchanged(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
         _seed_taxpayer_unit_profile()
-        # No prior-year 1391 is recorded, so the carry stays unresolved until the
-        # operator states the prior pending negative base was zero.
+        # No prior return is recorded, so each carry stays unresolved until the
+        # operator states every prior pending negative base was zero.
         result = _calculate(
             casilla_inputs={_TRABAJO_INGRESO: ingreso, _APLICADO: Decimal("0")},
             obs_repo=obs_repo,
-            binding_overrides={_PRIOR_NEGATIVE_BASE_BINDING: Decimal("0")},
+            binding_overrides=dict.fromkeys(_PRIOR_NEGATIVE_BASE_BINDINGS, Decimal("0")),
         )
 
     assert _v(result, _PENDIENTE_INICIO) == Decimal("0")

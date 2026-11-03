@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "32d19871f30730147fecdb933143a4c99cc2bfe66c6e758b920eed7a8c36c318"
+source_state_digest = "20dbdaec5fc7a07137a1d44faaf13e5ac77cfddafcbe2c407ee5d1a9e8899044"
 design_sources = [
     { source_ref = "aeat-dr-100-2025-dictionary", sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b" },
     { source_ref = "aeat-dr-100-2025-input-dictionary", sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade" },
@@ -2259,7 +2259,11 @@ placements = [
     { casilla_id = "TIPOTRIBUTACION", kind = "on_form" },
     { casilla_id = "ZCCAD", kind = "on_form" },
     { casilla_id = "ZRUE2", kind = "on_form" },
-    { casilla_id = "base-liq-neg-general-2024-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-base-positiva-compensable", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em1-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em2-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em3-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "base-liq-neg-general-em4-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "prestacion-inss-maternidad-paternidad-exenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "trabajo-mar-renta-exenta", kind = "working_figure" },

@@ -64,6 +64,10 @@ _M347_DECLARATION_KIND: CasillaId = validated_casilla_id("decl.tipo-declaracion"
 _M100_YEAR = 2024
 _ANNUAL = "0A"
 _BASE_LIQUIDABLE_NEGATIVA_GENERAL: CasillaId = validated_casilla_id("1391", surface="_BASE_LIQUIDABLE_NEGATIVA")
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 _PAGOS_OUTPUT_BY_SOURCE: dict[str, CasillaId] = {
     "130": validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT"),
     "131": validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT"),
@@ -114,9 +118,9 @@ def _seed_filed(
     modelo: str,
     filing_year: int,
     period: str,
-    casilla_id: CasillaId,
+    casilla_ids: tuple[CasillaId, ...],
 ) -> None:
-    """Persist one filed zero-valued source casilla through the production observation store."""
+    """Persist one filing's zero-valued source casillas through the production observation store."""
     observation = RegistryModeloObservation(
         modelo=modelo,
         filing_year=filing_year,
@@ -125,7 +129,7 @@ def _seed_filed(
             modelo=modelo,
             filing_year=filing_year,
             period=period,
-            casilla_values={casilla_id: Decimal("0")},
+            casilla_values=dict.fromkeys(casilla_ids, Decimal("0")),
         ),
     )
     repository = CalculationObservationRepository(objects=secure_objects)
@@ -171,11 +175,13 @@ def _calculate_m100(secure_objects: SecureObjectRepository) -> BucketAggregation
         modelo="100",
         filing_year=_M100_YEAR - 1,
         period=_ANNUAL,
-        casilla_id=_BASE_LIQUIDABLE_NEGATIVA_GENERAL,
+        casilla_ids=(_BASE_LIQUIDABLE_NEGATIVA_GENERAL, *_PRIOR_ANEXO_C_REMAINDERS),
     )
     for source, casilla_id in _PAGOS_OUTPUT_BY_SOURCE.items():
         for quarter in ("1T", "2T", "3T", "4T"):
-            _seed_filed(secure_objects, modelo=source, filing_year=_M100_YEAR, period=quarter, casilla_id=casilla_id)
+            _seed_filed(
+                secure_objects, modelo=source, filing_year=_M100_YEAR, period=quarter, casilla_ids=(casilla_id,)
+            )
     snapshot = published_authority_operation().snapshot("100", filing_year=_M100_YEAR, period=_ANNUAL)
     zero_bindings = {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _SOURCED_ELSEWHERE

@@ -100,6 +100,10 @@ _PERIOD = "0A"
 
 _GENERATED_SALDO: CasillaId = validated_casilla_id("1391")
 _PENDIENTE_INICIO: CasillaId = validated_casilla_id("1388")
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 1391.
 _YEAR_N = 2024
@@ -127,7 +131,7 @@ def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: Calcul
             modelo=_MODELO,
             filing_year=source_year,
             period=_PERIOD,
-            casilla_values={_GENERATED_SALDO: saldo},
+            casilla_values={_GENERATED_SALDO: saldo, **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0"))},
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,

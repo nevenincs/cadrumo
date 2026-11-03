@@ -180,19 +180,24 @@ def test_m100_pagos_fraccionados_scopes_out_mutually_exclusive_m131(tmp_path: Pa
 def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp_path: Path) -> None:
     """An explicit zero prior BIN does not require prior M100 evidence."""
     zero_binding = "renta-base-liquidable-negativa-general-anterior"
+    older_zero_bindings = (
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+    )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
         verdict = _evaluate_clean_state(
             snapshot,
             taxpayer_files_economic_activity=False,
-            zero_value_previous_filing_binding_ids=frozenset({zero_binding}),
+            zero_value_previous_filing_binding_ids=frozenset({zero_binding, *older_zero_bindings}),
         )
 
     zero_carry = next(
         item
         for item in verdict.dependencies
         if item.requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
-        and item.requirement.origin_ids == (zero_binding,)
+        and item.requirement.origin_ids == tuple(sorted({zero_binding, *older_zero_bindings}))
     )
     zero_binding_definition = next(binding for binding in snapshot.revision.bindings if binding.id == zero_binding)
     assert zero_carry.clean

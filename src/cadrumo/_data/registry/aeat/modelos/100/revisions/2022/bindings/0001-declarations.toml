@@ -1044,3 +1044,45 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "aeat-rent
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["criterio de cobros y pagos"]
+# Ley 35/2006 art. 50.3 - the older origin rows of Anexo C. Each row the prior
+# year's return carried as "Pendiente de aplicación en ejercicios futuros"
+# opens this year one row older as "Pendiente de aplicación al principio del
+# periodo": the prior 1384 (third year back) opens 1380 (fourth year back),
+# the prior 1387 opens 1382 and the prior 1390 opens 1385, exactly as the prior
+# 1391 opens 1388. The design keeps the same rows and order in every edition.
+# The prior fourth-year row has no remainder because the four-year window ends.
+[[revisions."2022".bindings]]
+id = "renta-base-liquidable-negativa-general-em4-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1384", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]
+
+[[revisions."2022".bindings]]
+id = "renta-base-liquidable-negativa-general-em3-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1387", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]
+
+[[revisions."2022".bindings]]
+id = "renta-base-liquidable-negativa-general-em2-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1390", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]

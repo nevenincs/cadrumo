@@ -37,6 +37,13 @@ _YEAR = 2025
 _SALARY: CasillaId = validated_casilla_id("0003", surface="_SALARY")
 _EARLIER_NEGATIVE_BASE_BOX = "1388"
 _EARLIER_NEGATIVE_BASE: BindingId = "renta-base-liquidable-negativa-general-anterior"
+#: The pending stocks of the three older origin years, each carried from its own box of the prior return.
+_OLDER_NEGATIVE_BASES: dict[str, BindingId] = {
+    "1380": "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    "1382": "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+    "1385": "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+}
+_NEGATIVE_BASE_BOXES = frozenset({_EARLIER_NEGATIVE_BASE_BOX, *_OLDER_NEGATIVE_BASES})
 _DIRECT_ESTIMATION_BOX = "0168"
 _DIRECT_ESTIMATION: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _ECONOMIC_ACTIVITY: BindingId = "renta-profile-has-economic-activity"
@@ -92,13 +99,14 @@ def test_the_engine_runs_when_every_answer_is_given(operation: PinnedAuthorityOp
     _calculate_without(_calculation_snapshot(operation), activity=True, omitted=None)
 
 
-def test_the_engine_refuses_without_the_earlier_negative_base_whoever_the_filer_is(
+def test_the_engine_refuses_without_any_earlier_negative_base_whoever_the_filer_is(
     operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot = _calculation_snapshot(operation)
 
-    for activity in (True, False):
-        assert _refused_binding(snapshot, activity=activity, omitted=_EARLIER_NEGATIVE_BASE) == _EARLIER_NEGATIVE_BASE
+    for binding_id in (_EARLIER_NEGATIVE_BASE, *_OLDER_NEGATIVE_BASES.values()):
+        for activity in (True, False):
+            assert _refused_binding(snapshot, activity=activity, omitted=binding_id) == binding_id
 
 
 def test_the_engine_refuses_without_the_direct_estimation_answer_only_for_a_filer_with_an_activity(
@@ -122,9 +130,9 @@ def test_the_inputs_named_are_the_ones_the_engine_refused_without(operation: Pin
             for item in calculation_required_inputs(revision, registry_period="0A", known_truths=truths).casilla_ids
         }
 
-    assert named(None) == {_EARLIER_NEGATIVE_BASE_BOX}
-    assert named({_ECONOMIC_ACTIVITY: False}) == {_EARLIER_NEGATIVE_BASE_BOX}
-    assert named({_ECONOMIC_ACTIVITY: True}) == {_EARLIER_NEGATIVE_BASE_BOX, _DIRECT_ESTIMATION_BOX}
+    assert named(None) == _NEGATIVE_BASE_BOXES
+    assert named({_ECONOMIC_ACTIVITY: False}) == _NEGATIVE_BASE_BOXES
+    assert named({_ECONOMIC_ACTIVITY: True}) == {*_NEGATIVE_BASE_BOXES, _DIRECT_ESTIMATION_BOX}
 
 
 def test_a_carry_between_periods_of_one_year_is_not_named(operation: PinnedAuthorityOperation) -> None:
@@ -152,12 +160,13 @@ def test_the_earlier_negative_base_needs_the_filer_instead_of_waiting_for_an_imp
 ) -> None:
     form = built_form(operation, "100", _YEAR, "0A")
 
-    field = form_casilla(form, _EARLIER_NEGATIVE_BASE_BOX)
-    assert field.origin is ModeloFormOrigin.NEEDS_INPUT
-    assert field.standing is ModeloFormStanding.NEEDS_YOU
-    # Verification's own set is unchanged: the form asks for what the calculation needs, not more of the check.
-    assert not field.required
-    assert _EARLIER_NEGATIVE_BASE_BOX in _needs_you(form)
+    for box in sorted(_NEGATIVE_BASE_BOXES):
+        field = form_casilla(form, box)
+        assert field.origin is ModeloFormOrigin.NEEDS_INPUT, box
+        assert field.standing is ModeloFormStanding.NEEDS_YOU, box
+        # Verification's own set is unchanged: the form asks for what the calculation needs, not more of the check.
+        assert not field.required, box
+    assert _needs_you(form) >= _NEGATIVE_BASE_BOXES
 
 
 def test_the_direct_estimation_answer_is_asked_of_a_filer_with_an_activity_only(
@@ -184,14 +193,15 @@ def test_a_held_answer_is_confirmed_not_asked_again(operation: PinnedAuthorityOp
         "100",
         _YEAR,
         "0A",
-        held={_EARLIER_NEGATIVE_BASE_BOX: Decimal("0"), _DIRECT_ESTIMATION_BOX: "N"},
+        held={**dict.fromkeys(_NEGATIVE_BASE_BOXES, Decimal("0")), _DIRECT_ESTIMATION_BOX: "N"},
         entered=frozenset({_DIRECT_ESTIMATION_BOX}),
         known_truths={_ECONOMIC_ACTIVITY: True},
     )
 
-    assert form_casilla(form, _EARLIER_NEGATIVE_BASE_BOX).origin is ModeloFormOrigin.IMPORTED
+    for box in _NEGATIVE_BASE_BOXES:
+        assert form_casilla(form, box).origin is ModeloFormOrigin.IMPORTED, box
     assert form_casilla(form, _DIRECT_ESTIMATION_BOX).origin is ModeloFormOrigin.ENTERED
-    assert not {_EARLIER_NEGATIVE_BASE_BOX, _DIRECT_ESTIMATION_BOX} & _needs_you(form)
+    assert not {*_NEGATIVE_BASE_BOXES, _DIRECT_ESTIMATION_BOX} & _needs_you(form)
 
 
 def test_the_answers_feed_the_attention_counts_of_the_form_and_its_outline(operation: PinnedAuthorityOperation) -> None:

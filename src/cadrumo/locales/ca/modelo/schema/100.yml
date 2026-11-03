@@ -8280,6 +8280,21 @@ modelo:
                 del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
                 per l'operador - vegeu la casella [1554])
           construct:
+            base-liq-neg-general-base-positiva-compensable:
+              label: Base liquidable general positiva compensable amb bases negatives
+                d'exercicis anteriors (art. 50.3 LIRPF) [intern]
+            base-liq-neg-general-em1-aplicada-maxima:
+              label: 'Base liquidable general negativa de l''exercici anterior: compensació
+                màxima aplicable (art. 50.3 LIRPF) [intern]'
+            base-liq-neg-general-em2-aplicada-maxima:
+              label: 'Base liquidable general negativa del segon exercici anterior:
+                compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
+            base-liq-neg-general-em3-aplicada-maxima:
+              label: 'Base liquidable general negativa del tercer exercici anterior:
+                compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
+            base-liq-neg-general-em4-aplicada-maxima:
+              label: 'Base liquidable general negativa del quart exercici anterior:
+                compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
             renta-dependent-modelos:
               field:
                 title: Modelo 100 2022 retencions, pagaments fraccionats i retencions
@@ -18057,9 +18072,6 @@ modelo:
               label: Comunitat autònoma de la declaració
             ZRUE2:
               label: Cònjuge país de residència UE o EEE
-            base-liq-neg-general-2024-aplicada-maxima:
-              label: 'Base liquidable general negativa ej. 2024: compensació màxima
-                aplicable (límit art.. 50.3 LIRPF) [interno]'
             trabajo-mar-renta-exenta:
               label: Rendiments del treball exempts dels treballadors del mar (art.
                 7.p) LIRPF o Llei 19/1994) [intern]

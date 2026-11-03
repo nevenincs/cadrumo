@@ -128,6 +128,9 @@ def binding_values() -> dict[BindingId, Decimal]:
         "renta-profile-marriage-month-end": Decimal("0"),
         # BIN-pendiente fresh-filer baseline.
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
     }
 
 

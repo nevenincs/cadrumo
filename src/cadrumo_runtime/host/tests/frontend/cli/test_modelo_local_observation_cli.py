@@ -104,6 +104,12 @@ def _record_local_prior_observation() -> None:
             "--by",
             "sofia-local",
             "--set",
+            "1384=0",
+            "--set",
+            "1387=0",
+            "--set",
+            "1390=0",
+            "--set",
             "1391=0",
             "--set",
             "0224=0",
@@ -133,6 +139,9 @@ def _record_local_prior_observation() -> None:
     assert payload["aeat_accepted"] is False
     assert payload["casilla_values"] == {
         "0224": "0",
+        "1384": "0",
+        "1387": "0",
+        "1390": "0",
         "1391": "0",
         "1479": "0",
         "1553": "0",
@@ -165,7 +174,13 @@ def _assert_prior_filing_prefills(runtime_profile: TestRuntimeProfile, operation
             iva_history_repository=IvaCompensationHistoryRepository(),
             operation=operation,
         )
-        assert m100_prefill.binding_values["renta-base-liquidable-negativa-general-anterior"] == Decimal("0")
+        for binding_id in (
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+            "renta-base-liquidable-negativa-general-anterior",
+        ):
+            assert m100_prefill.binding_values[binding_id] == Decimal("0")
 
         m130_snapshot = published_snapshot("130", filing_year=2025, period="1T")
         m130_prefill = resolve_bindings_from_local_store(

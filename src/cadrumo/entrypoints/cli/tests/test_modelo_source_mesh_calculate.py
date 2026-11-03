@@ -430,7 +430,10 @@ def _seed_prior_m100_zero_carry() -> None:
                     period="0A",
                     casilla_values={
                         "0224": Decimal("0"),
+                        "1384": Decimal("0"),
+                        "1387": Decimal("0"),
                         "1388": Decimal("0"),
+                        "1390": Decimal("0"),
                         "1391": Decimal("0"),
                         "1479": Decimal("0"),
                         "1553": Decimal("0"),

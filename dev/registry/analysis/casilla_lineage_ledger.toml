@@ -17116,13 +17116,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2025"
-casilla = "base-liq-neg-general-2024-aplicada-maxima"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2025"
 casilla = "eo-agraria-reduccion-irregularidad-base"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"

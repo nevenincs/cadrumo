@@ -84,6 +84,12 @@ _M100_ANNUAL_ANSWERS = (
     "renta-modelo-100-estimacion-directa-es-normal=1",
     "--binding",
     "renta-base-liquidable-negativa-general-anterior=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+    "--binding",
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
 )
 
 #: No earlier Modelo 130 was filed, so the carried prior-payment figure is zero.

@@ -104,6 +104,10 @@ _GANANCIA_CASILLA: CasillaId = validated_casilla_id("0603", surface="_GANANCIA_C
 _PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_PAGOS_FRACCIONADOS_CASILLA")
 _TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id("0609", surface="_TOTAL_PAGOS_A_CUENTA_CASILLA")
 _BASE_LIQUIDABLE_NEGATIVA_CASILLA: CasillaId = validated_casilla_id("1391", surface="_BASE_LIQUIDABLE_NEGATIVA")
+#: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
+_PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
 
@@ -182,8 +186,7 @@ def _save_filing(
     *,
     modelo: str,
     period: str,
-    casilla_id: CasillaId,
-    value: Decimal,
+    casilla_values: dict[CasillaId, Decimal],
     filing_year: int,
 ) -> None:
     save_stamped_observation(
@@ -193,7 +196,7 @@ def _save_filing(
             filing_year=filing_year,
             period=period,
             observations=registry_grounded_observations(
-                modelo=modelo, filing_year=filing_year, period=period, casilla_values={casilla_id: value}
+                modelo=modelo, filing_year=filing_year, period=period, casilla_values=casilla_values
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -211,8 +214,7 @@ def _seed_filed_history(secure_objects: SecureObjectRepository) -> None:
         repository,
         modelo="100",
         period=_ANNUAL_PERIOD,
-        casilla_id=_BASE_LIQUIDABLE_NEGATIVA_CASILLA,
-        value=Decimal("0"),
+        casilla_values=dict.fromkeys((_BASE_LIQUIDABLE_NEGATIVA_CASILLA, *_PRIOR_ANEXO_C_REMAINDERS), Decimal("0")),
         filing_year=_YEAR - 1,
     )
     for period in _QUARTERS:
@@ -220,16 +222,14 @@ def _seed_filed_history(secure_objects: SecureObjectRepository) -> None:
             repository,
             modelo="130",
             period=period,
-            casilla_id=_M130_PAGOS_OUTPUT,
-            value=_M130_QUARTER,
+            casilla_values={_M130_PAGOS_OUTPUT: _M130_QUARTER},
             filing_year=_YEAR,
         )
         _save_filing(
             repository,
             modelo="131",
             period=period,
-            casilla_id=_M131_PAGOS_OUTPUT,
-            value=Decimal("0"),
+            casilla_values={_M131_PAGOS_OUTPUT: Decimal("0")},
             filing_year=_YEAR,
         )
 

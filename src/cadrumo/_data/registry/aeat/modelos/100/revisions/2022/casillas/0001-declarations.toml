@@ -1689,3 +1689,87 @@ semantic_role_cardinality_reason = "EO-agraria art. 32.1 irregularidad reducció
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-32-2015"], source_refs = ["aeat-renta-2022-manual-parte1"] }
 legal_refs = ["ley-35-2006:art-32-2015"]
 source_refs = ["aeat-renta-2022-manual-parte1"]
+# Working figures of the Ley 35/2006 art. 50.3 compensation (Anexo C, bases
+# liquidables generales negativas). "La compensación deberá efectuarse en la
+# cuantía máxima que permita cada uno de los ejercicios siguientes", and each
+# origin year expires after four years, so the positive base is consumed oldest
+# row first: each row's applied amount must equal the lesser of its pending
+# stock and the positive base the older rows leave. None is an AEAT box; each is
+# internal and read only by the blocking gates that require every applied row
+# (1381, 1383, 1386, 1389) to equal its maximum.
+#
+# The positive base before compensation: casilla 0500 subtracts the
+# compensation 0501 from 0435 − 0461 − 0468, so this is that difference before
+# the compensation, floored at zero because only a positive base compensates.
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-base-positiva-compensable"
+continuidad_id = "irpf-anexo-c-base-liq-neg-base-positiva-compensable"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-base-positiva-compensable]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-base-positiva-compensable"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_base_positiva_compensable"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Art. 50.3 positive base liquidable general before compensation; no AEAT box carries it, and one figure feeds every origin row's maximum."
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-base-positiva-compensable"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-em4-aplicada-maxima"
+continuidad_id = "irpf-anexo-c-base-liq-neg-em4-aplicada-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-em4-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-em4-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-em4-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-em3-aplicada-maxima"
+continuidad_id = "irpf-anexo-c-base-liq-neg-em3-aplicada-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-em3-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-em3-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-em3-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-em2-aplicada-maxima"
+continuidad_id = "irpf-anexo-c-base-liq-neg-em2-aplicada-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-em2-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-em2-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-em2-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+[[revisions."2022".casillas]]
+id = "base-liq-neg-general-em1-aplicada-maxima"
+continuidad_id = "irpf-anexo-c-base-liq-neg-em1-aplicada-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [base-liq-neg-general-em1-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "base-liq-neg-general-em1-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-em1-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
