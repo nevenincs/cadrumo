@@ -527,8 +527,9 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         (
             _a("finding_id", help_name="disagreement_finding_id", required=True),
             _o("calculation_revision_id", "--calculation-revision-id"),
-            *_ADDRESS,
+            *_ADDRESS[:4],
             _o("work_unit_id", "--work-unit-id"),
+            _o("bucket_id", "--bucket-id"),
             _o("reason", "--reason", help_name="disagreement_reason"),
             _LANG,
         ),
@@ -542,8 +543,9 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         (
             _a("finding_id", help_name="disagreement_finding_id", required=True),
             _o("calculation_revision_id", "--calculation-revision-id"),
-            *_ADDRESS,
+            *_ADDRESS[:4],
             _o("work_unit_id", "--work-unit-id"),
+            _o("bucket_id", "--bucket-id"),
             _o("expected_revision", "--expected-revision", help_name="disagreement_expected_revision"),
             _LANG,
         ),
@@ -556,8 +558,9 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "._modelo_work_disagreement_cli",
         (
             _o("calculation_revision_id", "--calculation-revision-id"),
-            *_ADDRESS,
+            *_ADDRESS[:4],
             _o("work_unit_id", "--work-unit-id"),
+            _o("bucket_id", "--bucket-id"),
             _LANG,
         ),
         _MODEL_READ,

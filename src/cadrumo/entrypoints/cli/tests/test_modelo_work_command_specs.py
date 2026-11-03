@@ -30,10 +30,12 @@ from .command_runtime_support import build_command_subtree
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 EXPECTED_TOKENS = {
+    "accept-disagreement",
     "attest-m303-exonerado-390",
     "calculate",
     "create",
     "dependencies",
+    "disagreements",
     "discard",
     "file",
     "list",
@@ -47,6 +49,7 @@ EXPECTED_TOKENS = {
     "run-details",
     "revision",
     "revisions",
+    "revoke-disagreement",
     "runs",
     "select",
     "status",
@@ -236,7 +239,7 @@ def _semantic_annotation(annotation: object) -> object:
 
 
 def test_modelo_work_specs_are_the_exact_owned_leaf_set() -> None:
-    assert len(MODELO_WORK_COMMAND_SPECS) == 22
+    assert len(MODELO_WORK_COMMAND_SPECS) == 25
     assert {spec.token for spec in MODELO_WORK_COMMAND_SPECS} == EXPECTED_TOKENS
     assert {spec.parent_key for spec in MODELO_WORK_COMMAND_SPECS} == {"app_modelo_work"}
     assert {spec.key for spec in MODELO_WORK_COMMAND_SPECS} == {
