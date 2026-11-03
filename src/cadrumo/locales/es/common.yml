@@ -1304,7 +1304,7 @@ desktop:
     fullscreen: Pantalla completa
     left: Dividir a la izquierda
     move: Mover panel flotante
-    resize: Redimensionar panel flotante
+    resize: Cambiar el tamaño del panel flotante
     restore: Restaurar tamaño del panel
     right: Dividir a la derecha
     tab: Mover a pestañas
@@ -4363,7 +4363,7 @@ desktop:
     minimum_level: Nivel mínimo
     no_match: Ningún registro coincide con estos filtros.
     origin: Origen
-    reconnect: Reconectar registros
+    reconnect: Volver a conectar los registros
     rejected: Se han omitido {count} registros con un formato de diagnóstico no válido.
     reveal: Mostrar la ubicación de los registros
     selected: '{count} entradas seleccionadas'

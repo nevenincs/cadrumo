@@ -8801,8 +8801,8 @@ tui:
       title: Modelo 303 filing facts
     m360_solicitud:
       account_kind:
-        own_account: One of my own accounts (solicitante)
-        representante: The representante's account
+        own_account: One of my own accounts (the solicitante)
+        representante: The account of the representante
       action:
         declare: Declare a solicitud
         remove: Remove a solicitud
@@ -8832,7 +8832,7 @@ tui:
       list: Declared solicitudes
       prompt: Every Modelo 360 solicitud you have declared, by filing year. Choose
         to declare or remove one, review it, then confirm. The facts come from a file
-        you name; the account is one of your own accounts or a representante's account.
+        you name; the account is one of your own accounts or the account of the representante.
       source: 'Facts read from: %{path}'
       source_invalid: 'The file %{path} is not valid solicitud facts: %{count} problems
         were found.'

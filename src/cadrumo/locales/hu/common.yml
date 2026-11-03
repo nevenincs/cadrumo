@@ -161,7 +161,7 @@ aggregation:
     errors:
       consignment_exceeds_ceiling: 'Egy küldemény meghaladja e rendszer korlátját:
         belső értéke nem lépheti túl a törvényi felső határt. Ellenőrizd a számlát,
-        vagy vallsd be az importrendszeren kívül.'
+        vagy jelentsd be az importrendszeren kívül.'
       correction_beyond_limit: 'Egy OSS/IOSS-helyesbítés túllépte a hároméves határidőt,
         amely {limit} napon lejárt. Már nem a 369-es modellbe tartozik: nyújtsd be
         közvetlenül a fogyasztás szerinti tagállamnál.'
