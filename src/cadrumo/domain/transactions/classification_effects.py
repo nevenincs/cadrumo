@@ -16,6 +16,7 @@ from .enums import (
     BusinessClassification,
     TransactionDirection,
     TransactionLifecycleState,
+    carries_business_figures,
     takes_business_share,
 )
 
@@ -50,9 +51,19 @@ def fields_cleared_by_classification(classification: BusinessClassification) -> 
     cleared = frozenset[str]()
     if not takes_business_share(classification):
         cleared |= SHARE_DEPENDENT_FIELDS
-    if classification not in BUSINESS_BEARING_STATES:
+    if not carries_business_figures(classification):
         cleared |= BUSINESS_DEPENDENT_FIELDS
     return cleared
+
+
+def keeps_category(classification: BusinessClassification) -> bool:
+    """Return whether a write of ``classification`` keeps the row's spending category."""
+    return "category_id" not in fields_cleared_by_classification(classification)
+
+
+def takes_usage_ratio(classification: BusinessClassification) -> bool:
+    """Return whether a write of ``classification`` keeps the row's usage ratio reference."""
+    return "usage_ratio_id" not in fields_cleared_by_classification(classification)
 
 
 def takes_expense_category(direction: TransactionDirection, *, has_purchase_evidence: bool) -> bool:
@@ -154,6 +165,7 @@ __all__ = [
     "advises_purchase_evidence",
     "awaits_invoice",
     "fields_cleared_by_classification",
+    "keeps_category",
     "lifecycle_actions_taken",
     "takes_capital_good_acquisition",
     "takes_changes",
@@ -161,4 +173,5 @@ __all__ = [
     "takes_expense_category",
     "takes_invoice",
     "takes_m210_income",
+    "takes_usage_ratio",
 ]

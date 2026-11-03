@@ -526,48 +526,72 @@
     {
       "classification": "BUSINESS",
       "takes_business_share": false,
+      "takes_usage_ratio": false,
+      "carries_business_figures": true,
+      "keeps_category": true,
       "rule_may_name_category": true,
       "split_part_requires_category": true
     },
     {
       "classification": "PERSONAL",
       "takes_business_share": false,
+      "takes_usage_ratio": false,
+      "carries_business_figures": false,
+      "keeps_category": false,
       "rule_may_name_category": false,
       "split_part_requires_category": false
     },
     {
       "classification": "MIXED",
       "takes_business_share": true,
+      "takes_usage_ratio": true,
+      "carries_business_figures": true,
+      "keeps_category": true,
       "rule_may_name_category": false,
       "split_part_requires_category": false
     },
     {
       "classification": "NOT_YET_PROCESSED",
       "takes_business_share": false,
+      "takes_usage_ratio": false,
+      "carries_business_figures": false,
+      "keeps_category": false,
       "rule_may_name_category": false,
       "split_part_requires_category": false
     },
     {
       "classification": "PROCESSED_UNCLASSIFIED",
       "takes_business_share": false,
+      "takes_usage_ratio": false,
+      "carries_business_figures": false,
+      "keeps_category": false,
       "rule_may_name_category": false,
       "split_part_requires_category": false
     },
     {
       "classification": "SKIPPED_BY_RULE",
       "takes_business_share": false,
+      "takes_usage_ratio": false,
+      "carries_business_figures": false,
+      "keeps_category": false,
       "rule_may_name_category": false,
       "split_part_requires_category": false
     },
     {
       "classification": "FAILED_VALIDATION",
       "takes_business_share": false,
+      "takes_usage_ratio": false,
+      "carries_business_figures": false,
+      "keeps_category": false,
       "rule_may_name_category": false,
       "split_part_requires_category": false
     },
     {
       "classification": "REVIEWED_EXCLUDED",
       "takes_business_share": false,
+      "takes_usage_ratio": false,
+      "carries_business_figures": false,
+      "keeps_category": false,
       "rule_may_name_category": false,
       "split_part_requires_category": false
     }

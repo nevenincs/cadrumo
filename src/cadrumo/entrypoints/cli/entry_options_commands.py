@@ -60,6 +60,12 @@ def entry_options(ctx: typer.Context) -> None:
             for family in result.families
             for option in family.options
         )
+        + tuple(
+            f"classification\t{row.classification}\t{row.takes_business_share}\t{row.takes_usage_ratio}"
+            f"\t{row.carries_business_figures}\t{row.keeps_category}"
+            f"\t{row.rule_may_name_category}\t{row.split_part_requires_category}"
+            for row in result.classifications
+        )
         + tuple(f"limit\t{rule.rule}\t{rule.decimals}\t{rule.zero}" for rule in result.limits.decimal_rules),
     )
 

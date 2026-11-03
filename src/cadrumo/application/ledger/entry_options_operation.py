@@ -46,8 +46,10 @@ from ...domain.categories.spending_category_catalogue import resolve_spending_ca
 from ...domain.invoices.business_premises import SituacionInmueble
 from ...domain.invoices.enums import default_invoice_class, invoice_class_rectificativa, invoice_class_simplificada
 from ...domain.iva.establishment import catalogued_country_codes
+from ...domain.transactions.classification_effects import keeps_category, takes_usage_ratio
 from ...domain.transactions.enums import (
     BusinessClassification,
+    carries_business_figures,
     rule_names_category,
     split_part_requires_category,
     takes_business_share,
@@ -137,6 +139,9 @@ class LedgerEntryClassificationProjection(BaseModel):
 
     classification: BusinessClassification
     takes_business_share: bool
+    takes_usage_ratio: bool
+    carries_business_figures: bool
+    keeps_category: bool
     rule_may_name_category: bool
     split_part_requires_category: bool
 
@@ -184,6 +189,9 @@ def _classification_rules() -> tuple[LedgerEntryClassificationProjection, ...]:
         LedgerEntryClassificationProjection(
             classification=classification,
             takes_business_share=takes_business_share(classification),
+            takes_usage_ratio=takes_usage_ratio(classification),
+            carries_business_figures=carries_business_figures(classification),
+            keeps_category=keeps_category(classification),
             rule_may_name_category=rule_names_category(classification),
             split_part_requires_category=split_part_requires_category(classification),
         )

@@ -226,6 +226,20 @@ def takes_business_share(state: BusinessClassification) -> bool:
     return state in SHARE_BEARING_STATES
 
 
+def carries_business_figures(state: BusinessClassification) -> bool:
+    """Return whether a row with this classification carries business figures.
+
+    Args:
+        state: A :class:`BusinessClassification` value.
+
+    Returns:
+        ``True`` iff the row keeps a spending category, taxable base, IVA and
+        the other figures of :data:`~BUSINESS_BEARING_STATES`; a classification
+        with no business component has them dropped on write.
+    """
+    return state in BUSINESS_BEARING_STATES
+
+
 def rule_names_category(state: BusinessClassification) -> bool:
     """Return whether a new rule deciding this classification may name a spending category.
 

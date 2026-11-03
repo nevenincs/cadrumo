@@ -70,6 +70,18 @@ class LedgerEntryOptionFamilyPayload(OutputSchema):
     options: list[LedgerEntryOptionPayload]
 
 
+class LedgerEntryClassificationPayload(OutputSchema):
+    """What one classification takes: a business share, a category on a new rule, a category on a split part."""
+
+    classification: str
+    takes_business_share: bool
+    takes_usage_ratio: bool
+    carries_business_figures: bool
+    keeps_category: bool
+    rule_may_name_category: bool
+    split_part_requires_category: bool
+
+
 class LedgerEntryDecimalRulePayload(OutputSchema):
     """How many decimals one kind of figure takes, and whether zero is a value."""
 
@@ -104,6 +116,7 @@ class LedgerEntryLimitsPayload(OutputSchema):
     percent_bare_fraction_ceiling: str
     document_percent_fields: list[LedgerEntryPercentFieldPayload]
     rule_pattern_max: int
+    payment_id_pattern: str
     text_limits: list[LedgerEntryTextLimitPayload]
 
 
@@ -111,6 +124,7 @@ class LedgerEntryOptionsResult(OutputSchema):
     """JSON envelope for ``aeat app ledger entry-options``."""
 
     families: list[LedgerEntryOptionFamilyPayload]
+    classifications: list[LedgerEntryClassificationPayload]
     limits: LedgerEntryLimitsPayload
     periods: LedgerPeriodsPayload
 
@@ -1096,6 +1110,7 @@ __all__ = [
     "LedgerClassifyResult",
     "LedgerClassifySingleResult",
     "LedgerDetachResult",
+    "LedgerEntryClassificationPayload",
     "LedgerEntryDecimalRulePayload",
     "LedgerEntryLimitsPayload",
     "LedgerEntryOptionFamilyPayload",

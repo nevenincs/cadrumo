@@ -44,6 +44,7 @@ from ....domain.transactions.errors import ClassificationRuleError, TransactionV
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue, require_ledger_irpf_category
 from ....domain.transactions.m210_income_classification import M210IncomeClassification
 from ....domain.transactions.model_validation import validate_business_pct_coupling
+from ....domain.transactions.models import Transaction
 from ....domain.usage_ratios.errors import UsageRatioValidationError
 from ....domain.usage_ratios.model import UsageRatioProfile, eligible_usage_ratio_categories
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -61,6 +62,9 @@ from ..entry_options_operation import (
     build_ledger_entry_options_registration,
     ledger_entry_options,
 )
+from ..manual_update import command_from_patch
+from ..models import ManualLedgerTransactionPatch
+from .transaction_row_support import outgoing_manual_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -566,3 +570,49 @@ def test_the_recorded_classification_rules_are_what_the_backend_answers(operatio
     served = ledger_entry_options(_PROFILE, operation=operation).classifications
 
     assert recorded["classifications"] == [item.model_dump(mode="json") for item in served]
+
+
+def _row_keeping_everything() -> Transaction:
+    """A mixed row that holds every fact a classification write may drop."""
+    row = outgoing_manual_row(
+        "kept",
+        amount=Decimal("100.00"),
+        currency="EUR",
+        counterparty="Proveedor SL",
+        description="compra",
+        classification=BusinessClassification.BUSINESS,
+    )
+    return row.model_copy(
+        update={
+            "business_classification": BusinessClassification.MIXED,
+            "business_pct": Decimal("0.5"),
+            "usage_ratio_id": "ratio-1",
+            "category_id": "office_supplies",
+            "taxable_base": Decimal("82.64"),
+        },
+    )
+
+
+@pytest.mark.parametrize("classification", list(BusinessClassification))
+def test_the_figure_flags_are_what_a_classification_write_keeps(
+    classification: BusinessClassification, operation: PinnedAuthorityOperation
+) -> None:
+    served = next(
+        item
+        for item in ledger_entry_options(_PROFILE, operation=operation).classifications
+        if item.classification is classification
+    )
+
+    rebuilt = command_from_patch(
+        bucket_id="b" * 36,
+        current=_row_keeping_everything(),
+        patch=ManualLedgerTransactionPatch(business_classification=classification),
+        actor="operator",
+        source_command="aeat app ledger classify",
+    )
+
+    assert (rebuilt.business_pct is not None) is served.takes_business_share
+    assert (rebuilt.usage_ratio_id is not None) is served.takes_usage_ratio
+    assert (rebuilt.category_id is not None) is served.keeps_category
+    assert (rebuilt.taxable_base is not None) is served.carries_business_figures
+    assert served.carries_business_figures is (classification in BUSINESS_BEARING_STATES)
