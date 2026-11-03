@@ -291,7 +291,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     assert entries["06"].operand_refs == ("05", "irpf.objective_agriculture_fractional_payment_rate")
     assert entries["07"].operand_refs == ("02", "04", "06")
     assert entries["10"].operand_refs == ("07", "08", "09")
-    assert entries["11"].operand_refs == ("10", "modelo-131-resultados-negativos-anteriores")
+    assert entries["11"].operand_refs == ("modelo-131-resultados-negativos-anteriores", "10")
     assert entries["13"].operand_refs == ("10", "11", "12")
     assert entries["15"].operand_refs == ("13", "14")
     assert source_ref in snapshot.sources
