@@ -8475,20 +8475,9 @@ tui:
           prorrata_inicial_pct: Initial prorrata percentage
           prorrata_sector_id: Prorrata sector (optional)
         list: Declared goods
-        missing:
-          regime: 'Missing: the disposal regime.'
-          year: 'Missing: the disposal year.'
         prompt: Every capital good declared for the IVA regularisation. Fill in a
           new good, review it, then confirm. The deduction shown is the one the register
           works out.
-        refusal:
-          disposal_incomplete: 'The register refused the declaration: a disposal needs
-            both its year and its regime.'
-          duplicate_identifier: 'The register refused the declaration: a good with
-            this identifier is already declared.'
-          validation: 'The register refused the declaration: it does not pass the
-            register''s validation.'
-        refusal_identifier: 'Identifier: %{identifier}'
         title: Capital goods register (bienes de inversión)
         tool: Capital goods (bienes de inversión)
       confirm: Confirm

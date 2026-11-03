@@ -7,8 +7,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.bienes_inversion.register import BienInversionIvaRecord
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.public_scalar import PublicDecimal
 from .registered_contracts import BienesInversionRefusalReason
 
@@ -73,6 +75,15 @@ class BienesInversionRefusalProjection(BaseModel):
     reason: BienesInversionRefusalReason
     missing: Literal["year", "regime"] | None = None
     identifier: str | None = None
+    #: The finished sentence a frontend shows for the refusal and the language it is in.
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> BienesInversionRefusalProjection:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
 
 class BienesInversionListProjection(BaseModel):

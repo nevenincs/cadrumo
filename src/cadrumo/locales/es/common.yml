@@ -8666,20 +8666,9 @@ tui:
           prorrata_inicial_pct: Porcentaje de prorrata inicial
           prorrata_sector_id: Sector de prorrata (opcional)
         list: Bienes declarados
-        missing:
-          regime: 'Falta: el régimen de la transmisión.'
-          year: 'Falta: el año de la transmisión.'
         prompt: Cada bien de inversión declarado para la regularización del IVA. Rellena
           un bien nuevo, revísalo y confírmalo. La deducción que ves es la que calcula
           el registro.
-        refusal:
-          disposal_incomplete: 'El registro ha rechazado la declaración: una transmisión
-            necesita su año y su régimen.'
-          duplicate_identifier: 'El registro ha rechazado la declaración: ya hay un
-            bien declarado con este identificador.'
-          validation: 'El registro ha rechazado la declaración: no supera la validación
-            del registro.'
-        refusal_identifier: 'Identificador: %{identifier}'
         title: Registro de bienes de inversión
         tool: Bienes de inversión
       confirm: Confirmar

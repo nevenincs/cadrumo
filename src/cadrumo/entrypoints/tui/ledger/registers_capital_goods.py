@@ -56,15 +56,6 @@ _SCREEN_LOCALE_KEYS: Final[dict[str, str]] = {
     "tool": "tui.ledger.registers.capital_goods.tool",
     "list": "tui.ledger.registers.capital_goods.list",
 }
-_REFUSAL_LOCALE_KEYS: Final[dict[str, str]] = {
-    "validation": "tui.ledger.registers.capital_goods.refusal.validation",
-    "disposal_incomplete": "tui.ledger.registers.capital_goods.refusal.disposal_incomplete",
-    "duplicate_identifier": "tui.ledger.registers.capital_goods.refusal.duplicate_identifier",
-}
-_MISSING_LOCALE_KEYS: Final[dict[str, str]] = {
-    "year": "tui.ledger.registers.capital_goods.missing.year",
-    "regime": "tui.ledger.registers.capital_goods.missing.regime",
-}
 _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "identifier": "tui.ledger.registers.capital_goods.field.identifier",
     "description": "tui.ledger.registers.capital_goods.field.description",
@@ -118,13 +109,8 @@ class LedgerCapitalGoodsDoorV1(Protocol):
 
 
 def capital_goods_refusal_text(refusal: BienesInversionRefusalProjection) -> str:
-    """The operation's own refusal, its reason in words with what it named."""
-    lines = [tr(_REFUSAL_LOCALE_KEYS[refusal.reason])]
-    if refusal.identifier is not None:
-        lines.append(tr("tui.ledger.registers.capital_goods.refusal_identifier", identifier=refusal.identifier))
-    if refusal.missing is not None:
-        lines.append(tr(_MISSING_LOCALE_KEYS[refusal.missing]))
-    return "\n".join(lines)
+    """The sentence the operation served for its own refusal."""
+    return refusal.refusal_words or refusal.code
 
 
 def _record_line(record: BienInversionRecordProjection) -> str:

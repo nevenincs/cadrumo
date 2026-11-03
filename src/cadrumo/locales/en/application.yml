@@ -159,6 +159,16 @@ application:
         requirements_missing: 'AEAT synchronization requires: {required_fields}. Open
           authentication settings beside synchronization to complete or edit them.
           {reasons}'
+  bienes_inversion:
+    served:
+      disposal_regime_missing: 'The register refused the declaration: a disposal needs
+        its regime as well as its year.'
+      disposal_year_missing: 'The register refused the declaration: a disposal needs
+        its year as well as its regime.'
+      duplicate_identifier: 'The register refused the declaration: a good with the
+        identifier %{identifier} is already declared.'
+      validation: 'The register refused the declaration: it does not pass the register''s
+        validation.'
   calculations:
     bienes_inversion_regularizacion:
       register_advisory: '%{count} capital good(s) in the regularisation period (LIVA

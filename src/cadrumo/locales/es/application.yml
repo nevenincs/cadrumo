@@ -171,6 +171,16 @@ application:
         requirements_missing: 'La sincronización AEAT requiere: {required_fields}.
           Abre los ajustes de autenticación junto a la sincronización para completar
           o editar estos datos. {reasons}'
+  bienes_inversion:
+    served:
+      disposal_regime_missing: 'El registro ha rechazado la declaración: una transmisión
+        necesita su régimen además de su año.'
+      disposal_year_missing: 'El registro ha rechazado la declaración: una transmisión
+        necesita su año además de su régimen.'
+      duplicate_identifier: 'El registro ha rechazado la declaración: ya hay un bien
+        declarado con el identificador %{identifier}.'
+      validation: 'El registro ha rechazado la declaración: no supera la validación
+        del registro.'
   calculations:
     bienes_inversion_regularizacion:
       register_advisory: '%{count} bien(es) de inversión en periodo de regularización

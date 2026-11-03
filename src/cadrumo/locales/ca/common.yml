@@ -8648,20 +8648,9 @@ tui:
           prorrata_inicial_pct: Percentatge de prorrata inicial
           prorrata_sector_id: Sector de prorrata (opcional)
         list: Béns declarats
-        missing:
-          regime: 'Falta: el règim de la transmissió.'
-          year: 'Falta: l''any de la transmissió.'
         prompt: Cada bé declarat com a bienes de inversión per a la regularització
           de l'IVA. Omple un bé nou, revisa'l i confirma'l. La deducció que veus és
           la que calcula el registre.
-        refusal:
-          disposal_incomplete: 'El registre ha rebutjat la declaració: una transmissió
-            necessita l''any i el règim.'
-          duplicate_identifier: 'El registre ha rebutjat la declaració: ja hi ha un
-            bé declarat amb aquest identificador.'
-          validation: 'El registre ha rebutjat la declaració: no supera la validació
-            del registre.'
-        refusal_identifier: 'Identificador: %{identifier}'
         title: Registre de bienes de inversión
         tool: Bienes de inversión
       confirm: Confirma

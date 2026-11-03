@@ -163,6 +163,16 @@ application:
         requirements_missing: 'Az AEAT-szinkronizálás feltételei: {required_fields}.
           Nyisd meg a hitelesítési beállításokat a szinkronizálás mellett az adatok
           kitöltéséhez vagy szerkesztéséhez. {reasons}'
+  bienes_inversion:
+    served:
+      disposal_regime_missing: 'A nyilvántartás elutasította a bejelentést: az átruházáshoz
+        az éven kívül a rendszer is kell.'
+      disposal_year_missing: 'A nyilvántartás elutasította a bejelentést: az átruházáshoz
+        a rendszeren kívül az év is kell.'
+      duplicate_identifier: 'A nyilvántartás elutasította a bejelentést: a(z) %{identifier}
+        azonosítóval már van bejelentett eszköz.'
+      validation: 'A nyilvántartás elutasította a bejelentést: nem felel meg a nyilvántartás
+        ellenőrzésének.'
   calculations:
     bienes_inversion_regularizacion:
       register_advisory: '%{count} beruházási tárgyi eszköz a korrekciós időszakban

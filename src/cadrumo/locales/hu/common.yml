@@ -8608,20 +8608,9 @@ tui:
           prorrata_inicial_pct: Kezdeti prorrata százalék
           prorrata_sector_id: Prorrata-ágazat (nem kötelező)
         list: Bejelentett eszközök
-        missing:
-          regime: 'Hiányzik: az átruházási rendszer.'
-          year: 'Hiányzik: az átruházás éve.'
         prompt: Az IVA-korrekcióhoz bejelentett összes bienes de inversión. Töltsd
           ki az új eszközt, nézd át, majd erősítsd meg. A látható levonást a nyilvántartás
           számolja ki.
-        refusal:
-          disposal_incomplete: 'A nyilvántartás elutasította a bejelentést: az átruházáshoz
-            az év és a rendszer is kell.'
-          duplicate_identifier: 'A nyilvántartás elutasította a bejelentést: ezzel
-            az azonosítóval már van bejelentett eszköz.'
-          validation: 'A nyilvántartás elutasította a bejelentést: nem felel meg a
-            nyilvántartás ellenőrzésének.'
-        refusal_identifier: 'Azonosító: %{identifier}'
         title: Bienes de inversión nyilvántartás
         tool: Bienes de inversión (tárgyi eszközök)
       confirm: Megerősítés

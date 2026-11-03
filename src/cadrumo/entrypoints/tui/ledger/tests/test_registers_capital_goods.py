@@ -113,8 +113,9 @@ async def test_a_duplicate_identifier_shows_the_registered_refusal() -> None:
             await _press(pilot, screen, "register-review")
             await _press(pilot, screen, "register-confirm")
             refusal = _text(screen, "#ledger-refusal")
-            assert tr("tui.ledger.registers.capital_goods.refusal.duplicate_identifier") in refusal
-            assert tr("tui.ledger.registers.capital_goods.refusal_identifier", identifier="BI-01") in refusal
+            served = tr("application.bienes_inversion.served.duplicate_identifier", identifier="BI-01")
+            assert refusal == served
+            assert "BI-01" in refusal
             assert isinstance(screen.staged, BienesInversionDeclareRequest)
             assert len(door.records) == 1
 

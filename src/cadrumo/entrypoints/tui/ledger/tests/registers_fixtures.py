@@ -17,6 +17,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from .....application.bienes_inversion.refusal_words import served_refusal_words
 from .....application.bienes_inversion.registered_requests import (
     BienesInversionDeclareRequest,
     BienesInversionListRequest,
@@ -446,6 +447,11 @@ class MemoryCapitalGoodsDoor:
         if self.expired:
             raise AccountSessionExpiredError()
         if any(record.identifier == request.identifier for record in self.records):
+            words, language = served_refusal_words(
+                "duplicate_identifier",
+                error_code="REFUSED_PROFILE_BIENES_INVERSION_VALIDATION",
+                identifier=request.identifier,
+            )
             return BienesInversionDeclareProjection(
                 outcome="refused",
                 profile_id=request.profile_id,
@@ -453,6 +459,8 @@ class MemoryCapitalGoodsDoor:
                     code="REFUSED_PROFILE_BIENES_INVERSION_VALIDATION",
                     reason="duplicate_identifier",
                     identifier=request.identifier,
+                    refusal_words=words,
+                    refusal_words_language=language,
                 ),
             )
         disposal = (
