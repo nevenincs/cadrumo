@@ -653,6 +653,21 @@ modelo:
             label: import total de les quantitats invertides amb dret a deducció
           irpf-anexo-b-vivienda-reinversion-aplicado:
             label: Import satisfet el 2021 i/o 2022 que s'aplica en l'exercici
+          irpf-anexo-c-base-liq-neg-base-positiva-compensable:
+            label: Base liquidable general positiva compensable amb bases negatives
+              d'exercicis anteriors (art. 50.3 LIRPF) [intern]
+          irpf-anexo-c-base-liq-neg-em1-aplicada-maxima:
+            label: 'Base liquidable general negativa de l''exercici anterior: compensació
+              màxima aplicable (art. 50.3 LIRPF) [intern]'
+          irpf-anexo-c-base-liq-neg-em2-aplicada-maxima:
+            label: 'Base liquidable general negativa del segon exercici anterior:
+              compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
+          irpf-anexo-c-base-liq-neg-em3-aplicada-maxima:
+            label: 'Base liquidable general negativa del tercer exercici anterior:
+              compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
+          irpf-anexo-c-base-liq-neg-em4-aplicada-maxima:
+            label: 'Base liquidable general negativa del quart exercici anterior:
+              compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
           irpf-anexo-c-base-liq-neg-generado:
             label: Base liquidable general negativa de 2020 pendent de compensar en
               els 4 exercicis següents
@@ -8280,21 +8295,6 @@ modelo:
               label: Comunitat Autònoma de residència
             ZRUE2:
               label: País UE o EEE del cònjuge
-            base-liq-neg-general-base-positiva-compensable:
-              label: Base liquidable general positiva compensable amb bases negatives
-                d'exercicis anteriors (art. 50.3 LIRPF) [intern]
-            base-liq-neg-general-em1-aplicada-maxima:
-              label: 'Base liquidable general negativa de l''exercici anterior: compensació
-                màxima aplicable (art. 50.3 LIRPF) [intern]'
-            base-liq-neg-general-em2-aplicada-maxima:
-              label: 'Base liquidable general negativa del segon exercici anterior:
-                compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
-            base-liq-neg-general-em3-aplicada-maxima:
-              label: 'Base liquidable general negativa del tercer exercici anterior:
-                compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
-            base-liq-neg-general-em4-aplicada-maxima:
-              label: 'Base liquidable general negativa del quart exercici anterior:
-                compensació màxima aplicable (art. 50.3 LIRPF) [intern]'
             eo-agraria-reduccion-irregularidad-base:
               label: Rendiments nets de l'activitat agrícola, ramadera o forestal
                 amb període de generació superior a dos anys, o qualificats reglamentàriament

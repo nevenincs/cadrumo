@@ -656,6 +656,21 @@ modelo:
             label: Importe total de las cantidades invertidas con derecho a deducción
           irpf-anexo-b-vivienda-reinversion-aplicado:
             label: Importe satisfecho en 2021 y/o 2022 que se aplica en el ejercicio
+          irpf-anexo-c-base-liq-neg-base-positiva-compensable:
+            label: Base liquidable general positiva compensable con bases negativas
+              de ejercicios anteriores (art. 50.3 LIRPF) [interno]
+          irpf-anexo-c-base-liq-neg-em1-aplicada-maxima:
+            label: 'Base liquidable general negativa del ejercicio anterior: compensación
+              máxima aplicable (art. 50.3 LIRPF) [interno]'
+          irpf-anexo-c-base-liq-neg-em2-aplicada-maxima:
+            label: 'Base liquidable general negativa del segundo ejercicio anterior:
+              compensación máxima aplicable (art. 50.3 LIRPF) [interno]'
+          irpf-anexo-c-base-liq-neg-em3-aplicada-maxima:
+            label: 'Base liquidable general negativa del tercer ejercicio anterior:
+              compensación máxima aplicable (art. 50.3 LIRPF) [interno]'
+          irpf-anexo-c-base-liq-neg-em4-aplicada-maxima:
+            label: 'Base liquidable general negativa del cuarto ejercicio anterior:
+              compensación máxima aplicable (art. 50.3 LIRPF) [interno]'
           irpf-anexo-c-base-liq-neg-generado:
             label: Base liquidable general negativa de 2020 pendiente de compensar
               en los 4 ejercicios siguientes
@@ -8391,21 +8406,6 @@ modelo:
               label: Comunidad Autónoma de residencia
             ZRUE2:
               label: País UE o EEE del cónyuge
-            base-liq-neg-general-base-positiva-compensable:
-              label: Base liquidable general positiva compensable con bases negativas
-                de ejercicios anteriores (art. 50.3 LIRPF) [interno]
-            base-liq-neg-general-em1-aplicada-maxima:
-              label: 'Base liquidable general negativa del ejercicio anterior: compensación
-                máxima aplicable (art. 50.3 LIRPF) [interno]'
-            base-liq-neg-general-em2-aplicada-maxima:
-              label: 'Base liquidable general negativa del segundo ejercicio anterior:
-                compensación máxima aplicable (art. 50.3 LIRPF) [interno]'
-            base-liq-neg-general-em3-aplicada-maxima:
-              label: 'Base liquidable general negativa del tercer ejercicio anterior:
-                compensación máxima aplicable (art. 50.3 LIRPF) [interno]'
-            base-liq-neg-general-em4-aplicada-maxima:
-              label: 'Base liquidable general negativa del cuarto ejercicio anterior:
-                compensación máxima aplicable (art. 50.3 LIRPF) [interno]'
             eo-agraria-reduccion-irregularidad-base:
               label: Rendimientos netos de la actividad agrícola, ganadera o forestal
                 con período de generación superior a dos años, o calificados reglamentariamente

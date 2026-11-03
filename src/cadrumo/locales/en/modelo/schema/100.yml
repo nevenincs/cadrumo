@@ -647,6 +647,21 @@ modelo:
             label: Total amount of the sums invested eligible for the deduction
           irpf-anexo-b-vivienda-reinversion-aplicado:
             label: Amount paid in 2021 and/or 2022 applied in the tax year
+          irpf-anexo-c-base-liq-neg-base-positiva-compensable:
+            label: Positive general net taxable base available for offsetting earlier
+              negative bases (art. 50.3 LIRPF) [internal]
+          irpf-anexo-c-base-liq-neg-em1-aplicada-maxima:
+            label: 'Negative general net taxable base from the previous year: maximum
+              applicable offset (art. 50.3 LIRPF) [internal]'
+          irpf-anexo-c-base-liq-neg-em2-aplicada-maxima:
+            label: 'Negative general net taxable base from two years earlier: maximum
+              applicable offset (art. 50.3 LIRPF) [internal]'
+          irpf-anexo-c-base-liq-neg-em3-aplicada-maxima:
+            label: 'Negative general net taxable base from three years earlier: maximum
+              applicable offset (art. 50.3 LIRPF) [internal]'
+          irpf-anexo-c-base-liq-neg-em4-aplicada-maxima:
+            label: 'Negative general net taxable base from four years earlier: maximum
+              applicable offset (art. 50.3 LIRPF) [internal]'
           irpf-anexo-c-base-liq-neg-generado:
             label: Negative general net taxable base for 2020 pending offset over
               the following 4 years
@@ -8166,21 +8181,6 @@ modelo:
               label: Autonomous Community of residence
             ZRUE2:
               label: EU or EEA country of the spouse
-            base-liq-neg-general-base-positiva-compensable:
-              label: Positive general net taxable base available for offsetting earlier
-                negative bases (art. 50.3 LIRPF) [internal]
-            base-liq-neg-general-em1-aplicada-maxima:
-              label: 'Negative general net taxable base from the previous year: maximum
-                applicable offset (art. 50.3 LIRPF) [internal]'
-            base-liq-neg-general-em2-aplicada-maxima:
-              label: 'Negative general net taxable base from two years earlier: maximum
-                applicable offset (art. 50.3 LIRPF) [internal]'
-            base-liq-neg-general-em3-aplicada-maxima:
-              label: 'Negative general net taxable base from three years earlier:
-                maximum applicable offset (art. 50.3 LIRPF) [internal]'
-            base-liq-neg-general-em4-aplicada-maxima:
-              label: 'Negative general net taxable base from four years earlier: maximum
-                applicable offset (art. 50.3 LIRPF) [internal]'
             eo-agraria-reduccion-irregularidad-base:
               label: Net income from agricultural, livestock, or forestry activity
                 with a generation period exceeding two years, or classed by regulation
