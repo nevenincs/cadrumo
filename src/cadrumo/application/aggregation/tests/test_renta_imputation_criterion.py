@@ -526,6 +526,58 @@ def test_cash_without_a_declared_accounting_state_is_not_usable() -> None:
     assert criteria.usable(_LATER) is None
 
 
+def _blocking_messages(resolution: CalculationSourceResolution) -> list[str]:
+    return [
+        item.message
+        for item in resolution.diagnostics
+        if item.reason == "unresolved_binding" and str(item.binding_id) == _INCOME_0171
+    ]
+
+
+@pytest.mark.parametrize(
+    ("facts", "named"),
+    [
+        pytest.param(
+            (
+                _in_year(_CRITERION, _CASH, _LATER),
+                _in_year(_REGIME, "directa_simplificada", _LATER),
+                _in_year(_ACCOUNTING, True, _LATER),
+            ),
+            "art. 7.2.3",
+            id="codigo-de-comercio-accounting-kept",
+        ),
+        pytest.param(
+            (_in_year(_CRITERION, _CASH, _LATER), _in_year(_REGIME, "directa_simplificada", _LATER)),
+            "irpf.codigo_comercio_accounting declared false",
+            id="accounting-undeclared",
+        ),
+        pytest.param(
+            (_in_year(_CRITERION, _CASH, _LATER), _in_year(_ACCOUNTING, False, _LATER)),
+            "declared estimation regime",
+            id="regime-undeclared",
+        ),
+        pytest.param(
+            _declared((_EARLIER, _CASH), (_LATER, _DEVENGO)),
+            f"first applied in {_EARLIER} binds through {_EARLIER + 2}",
+            id="returning-to-accrual-inside-three-years",
+        ),
+    ],
+)
+def test_an_inadmissible_declaration_blocks_and_names_the_provision(
+    operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, ...], named: str
+) -> None:
+    resolution = _resolve(operation, facts, invoices=(_issued(date(_LATER, 3, 1)),), year=_LATER)
+    messages = _blocking_messages(resolution)
+    assert messages
+    assert all("RIRPF art. 7" in message and named in message for message in messages)
+    assert resolution.binding_values.get(_INCOME_0171) != _BASE
+
+
+def test_a_declaration_the_provisions_admit_blocks_nothing(operation: PinnedAuthorityOperation) -> None:
+    resolution = _resolve(operation, _declared((_LATER, _CASH)), rows=(_receipt(date(_LATER, 3, 1)),), year=_LATER)
+    assert _blocking_messages(resolution) == []
+
+
 def test_contradictory_criteria_in_one_year_read_as_undeclared() -> None:
     criteria = ImputationCriteria(facts=(_in_year(_CRITERION, _CASH, _LATER), _in_year(_CRITERION, _DEVENGO, _LATER)))
     assert criteria.declared(_LATER) is None
