@@ -6,7 +6,7 @@ import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
   ModeloFormElection,
-  ModeloFormExportOffer,
+  PublicModeloFormExportOffer,
   OutputLanguage,
 } from "../../../shell/modeloContract";
 import { Settlement } from "./Settlement";
@@ -20,7 +20,7 @@ import { WorkspaceScreen } from "./WorkspaceScreen";
 
 const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 
-const offers = import.meta.glob<ModeloFormExportOffer>(
+const offers = import.meta.glob<PublicModeloFormExportOffer>(
   "../../../dev/fixtures/modelo/settlement-100-0A-*.json",
   { import: "default" },
 );
@@ -30,7 +30,7 @@ const language = (globals: Record<string, unknown>) =>
 
 /** The offer the application served for `state`, in `locale`, once read. */
 function Offer({ state, locale }: { state: string; locale: OutputLanguage }) {
-  const [offer, setOffer] = useState<ModeloFormExportOffer | null>(null);
+  const [offer, setOffer] = useState<PublicModeloFormExportOffer | null>(null);
   const [answers, setAnswers] = useState<
     Partial<Record<ModeloFormElection, string>>
   >({});

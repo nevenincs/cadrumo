@@ -1993,14 +1993,14 @@ type RebaseEntry = {
  * on the box printed `box`, as the application judged it. */
 function rebaseOf(box: string): RebaseEntry["outcome"] {
   const entry = envelope<{ rebase: RebaseEntry[] }>(
-    "preflight-130-1T-rebased-review-06clear-08set-10set-from-130-1T-rebase",
+    "preflight-130-1T-rebased-review-06clear-16set-18set-from-130-1T-rebase",
   ).rebase.find((item) => item.address.casilla_id === box);
   if (!entry) throw new Error(`the review says nothing of box ${box}`);
   return entry.outcome;
 }
 
 /** Stages, on the read the declaration then moves under, a clear of box 06
- * and typed values in boxes 08 and 10, and opens their review. */
+ * and typed values in boxes 16 and 18, and opens their review. */
 async function stageUnderRebase(target: Page) {
   await openDeclaration(target, "130", { shape: "rebase" });
   // The filer's own value comes out of a box with Delete on its row.
@@ -2009,15 +2009,15 @@ async function stageUnderRebase(target: Page) {
   await expect(boxRow(target, "06")).toContainText(
     label("workspace.modelo.staged.clear"),
   );
-  await stage(target, "08", "250");
-  await stage(target, "10", "75");
+  await stage(target, "16", "250");
+  await stage(target, "18", "75");
   return review(target, 3);
 }
 
 test("a declaration that moved under the staged edits says what became of them", async ({
   page: target,
 }) => {
-  expect([rebaseOf("06"), rebaseOf("08"), rebaseOf("10")]).toEqual([
+  expect([rebaseOf("06"), rebaseOf("16"), rebaseOf("18")]).toEqual([
     "dropped",
     "changed",
     "kept",
@@ -2063,14 +2063,14 @@ test("a staged edit the renewal kept is staged again against the box as it now s
   page: target,
 }) => {
   const now = fields(form("130-1T-rebased").form.form.pages).find(
-    (field) => field.box === "10",
+    (field) => field.box === "18",
   );
-  if (!now) throw new Error("the moved 130 holds no box 10");
+  if (!now) throw new Error("the moved 130 holds no box 18");
   const dialog = await stageUnderRebase(target);
   await dialog
     .getByRole("button", { name: label("workspace.modelo.review.back") })
     .click();
-  const row = boxRow(target, "10");
+  const row = boxRow(target, "18");
   await expect(row).toContainText(label("workspace.modelo.attention.staged"));
   await expect(row).toContainText(
     label("workspace.modelo.was", { value: now.value_text ?? "—" }),
@@ -2081,7 +2081,7 @@ test("a changed edit stays marked until the filer acknowledges it", async ({
   page: target,
 }) => {
   const dialog = await stageUnderRebase(target);
-  const changed = dialog.getByRole("listitem").filter({ hasText: "08" });
+  const changed = dialog.getByRole("listitem").filter({ hasText: "16" });
   await expect(changed).toContainText(
     label("workspace.modelo.review.before_changed"),
   );
@@ -2092,7 +2092,7 @@ test("a changed edit stays marked until the filer acknowledges it", async ({
     .click();
   const again = await review(target, 2);
   await expect(
-    again.getByRole("listitem").filter({ hasText: "08" }),
+    again.getByRole("listitem").filter({ hasText: "16" }),
   ).toContainText(label("workspace.modelo.review.before_changed"));
   await expect(applyButton(again)).toBeDisabled();
   await again
@@ -2149,7 +2149,7 @@ test("a stale check whose renewal is refused reads the declaration again once, a
   await expect(dialog).toContainText(
     label("workspace.modelo.rebase.dropped", { count: 1 }),
   );
-  const changed = dialog.getByRole("listitem").filter({ hasText: "08" });
+  const changed = dialog.getByRole("listitem").filter({ hasText: "16" });
   await expect(changed).toContainText(
     label("workspace.modelo.review.before_changed"),
   );
@@ -2182,8 +2182,8 @@ test("a declaration still changing after it was read again stops after that one 
   await openDeclaration(target, "130", { shape: "moving" });
   await boxRow(target, "06").getByRole("gridcell").nth(1).click();
   await target.keyboard.press("Delete");
-  await stage(target, "08", "250");
-  await stage(target, "10", "75");
+  await stage(target, "16", "250");
+  await stage(target, "18", "75");
   await target
     .getByRole("button", { name: label("workspace.modelo.next_button.apply") })
     .first()
@@ -2214,7 +2214,7 @@ test("a declaration still changing after it was read again stops after that one 
   await dialog
     .getByRole("button", { name: label("workspace.modelo.review.back") })
     .click();
-  await expect(boxRow(target, "08")).toContainText(
+  await expect(boxRow(target, "16")).toContainText(
     label("workspace.modelo.attention.staged"),
   );
 });
@@ -2225,8 +2225,8 @@ async function stillMoving(target: Page) {
   await openDeclaration(target, "130", { shape: "moving" });
   await boxRow(target, "06").getByRole("gridcell").nth(1).click();
   await target.keyboard.press("Delete");
-  await stage(target, "08", "250");
-  await stage(target, "10", "75");
+  await stage(target, "16", "250");
+  await stage(target, "18", "75");
   await target
     .getByRole("button", { name: label("workspace.modelo.next_button.apply") })
     .first()
@@ -2315,7 +2315,7 @@ test("reopening the review after the declaration is still changing reads it agai
   await again
     .getByRole("button", { name: label("workspace.modelo.review.back") })
     .click();
-  await expect(boxRow(target, "08")).toContainText(
+  await expect(boxRow(target, "16")).toContainText(
     label("workspace.modelo.attention.staged"),
   );
 });

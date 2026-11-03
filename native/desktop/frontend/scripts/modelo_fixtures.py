@@ -106,12 +106,13 @@ CORRECTED_130 = ("06", "150.00")
 TYPED_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
 EDIT_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
 #: The changes the filer stages on the rebase scenario's earlier read: a clear, and two typed values.
-REBASE_STAGED: tuple[tuple[str, str], ...] = (("06", "clear"), ("08", "set"), ("10", "set"))
+REBASE_STAGED: tuple[tuple[str, str], ...] = (("06", "clear"), ("16", "set"), ("18", "set"))
 #: The typed values the filer stages there, as the desktop sends them.
-REBASE_TYPED: tuple[tuple[str, str], ...] = (("08", "250"), ("10", "75"))
-#: How the declaration moves under them: box 06's typed value is taken back and a figure typed into box 08.
+REBASE_TYPED: tuple[tuple[str, str], ...] = (("16", "250"), ("18", "75"))
+#: Boxes 16 and 18 admit scalar entries; the activity's source-fed boxes 08 and 10 do not.
+#: How the declaration moves under them: box 06's typed value is taken back and a figure typed into box 16.
 REBASE_RESTORED: tuple[str, ...] = ("06",)
-REBASE_MOVE: tuple[tuple[str, str], ...] = (("08", "500"),)
+REBASE_MOVE: tuple[tuple[str, str], ...] = (("16", "500"),)
 #: How it moves once more, after the window read it again, and again after the next read.
 REBASE_MOVE_AGAIN: tuple[tuple[str, str], ...] = (("16", "40"),)
 REBASE_MOVE_ONCE_MORE: tuple[tuple[str, str], ...] = (("18", "30"),)
@@ -126,7 +127,7 @@ UNWRITABLE_130: tuple[str, str] = ("01", "doce")
 STAGED_130: tuple[tuple[str, str], ...] = (("06", "set"),)
 STAGED_303: tuple[tuple[str, str], ...] = (("42", "set"),)
 #: The entries the rebase scenario types, as typed.
-REBASE_TYPED_ENTRIES: tuple[tuple[str, str], ...] = (("08", "250"), ("10", "75"))
+REBASE_TYPED_ENTRIES: tuple[tuple[str, str], ...] = (("16", "250"), ("18", "75"))
 #: The declaration whose apply waits on filings this profile does not hold.
 PREREQUISITE_130 = ("130", "3T")
 #: A declaration whose file design carries no completeness manifest, and which checks cleanly when empty.

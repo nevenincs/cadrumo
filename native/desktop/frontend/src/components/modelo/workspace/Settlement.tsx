@@ -3,8 +3,8 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { NativeSelect } from "@/components/ui/native-select";
 import type {
   ModeloFormElection,
-  ModeloFormElectionFigure,
-  ModeloFormElectionQuestion,
+  PublicModeloFormElectionFigure,
+  PublicModeloFormElectionQuestion,
   ModeloFormElectionReason,
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
@@ -34,7 +34,7 @@ const REASON_MARK: Record<ModeloFormElectionReason, IconName> = {
   second_instalment_nothing: "info",
 };
 
-function Figure({ figure }: { figure: ModeloFormElectionFigure }) {
+function Figure({ figure }: { figure: PublicModeloFormElectionFigure }) {
   const t = useStrings();
   return (
     <li
@@ -66,7 +66,7 @@ function Question({
   onAnswer,
   disabled,
 }: {
-  question: ModeloFormElectionQuestion;
+  question: PublicModeloFormElectionQuestion;
   /** The answer the filer chose; none leaves the question's default. */
   answer: string | undefined;
   onAnswer(value: string): void;
@@ -145,7 +145,7 @@ export function Settlement({
   onAnswer,
   disabled = false,
 }: {
-  questions: readonly ModeloFormElectionQuestion[];
+  questions: readonly PublicModeloFormElectionQuestion[];
   answers: Partial<Record<ModeloFormElection, string>>;
   onAnswer(election: ModeloFormElection, value: string): void;
   disabled?: boolean;

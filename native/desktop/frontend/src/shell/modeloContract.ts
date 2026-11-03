@@ -399,6 +399,8 @@ export type CalculationNoteSentence =
   | "advisory_value_proven_zero"
   | "retencion_soportada_evidence_required"
   | "retencion_soportada_absence_contradicted"
+  | "credit_source_disagreement"
+  | "credit_cross_check_absent"
   | "household_rows_incomplete";
 
 /**
@@ -501,6 +503,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "inferred_retencion_excluded_from_credit"
     | "unresolved_retencion_substrate"
     | "advisory_binding_value"
+    | "credit_source_disagreement"
+    | "credit_cross_check_absent"
     | "m349_clave_inferred_from_category"
     | "unconverted_foreign_currency"
     | "unclassified_declarant_role_fact"
@@ -616,16 +620,23 @@ export type CalculationSourceDiagnosticSnapshot = {
  * is what the resolver stated beside that value: a proven zero persists too,
  * so a reopened declaration still shows the zero was proven, and withholds
  * nothing; a capped note without a stated outcome withholds. Only that reason
- * carries an outcome. `household_rows_incomplete` is a household group whose
- * stated count is larger than the rows the profile records: the recorded rows
- * are used and the group is not proven complete; it withholds nothing. `fact`
- * states such a note's own row, element, interval and amount. `binding_source`
- * is `None` only where the condition names no binding source kind.
- * `precedence_tier_divergence` is a filed figure for which a higher source
- * tier replaced a different value a lower tier held; `disagreement` states
- * every tier's value and which one the calculation used, and it withholds
- * filing until the sources agree. `disagreement` is carried by exactly the
- * reasons in `DISAGREEMENT_REASONS`.
+ * carries an outcome. `credit_source_disagreement` is a credit casilla whose
+ * value source and a declared cross-check source differ by any amount; it
+ * carries the whole `SourceDisagreementFact` in `disagreement` and withholds
+ * filing. `credit_cross_check_absent` is a declared cross-check source with
+ * nothing to compare, which reads "not cross-checked", never agreement, and
+ * withholds nothing. `fact` states such a note's own row, element, interval
+ * and amount. `binding_source` is `None` only where the condition names no
+ * binding source kind. outcome. `household_rows_incomplete` is a household
+ * group whose stated count is larger than the rows the profile records: the
+ * recorded rows are used and the group is not proven complete; it withholds
+ * nothing. `fact` states such a note's own row, element, interval and amount.
+ * `binding_source` is `None` only where the condition names no binding source
+ * kind. `precedence_tier_divergence` is a filed figure for which a higher
+ * source tier replaced a different value a lower tier held; `disagreement`
+ * states every tier's value and which one the calculation used, and it
+ * withholds filing until the sources agree. `disagreement` is carried by
+ * exactly the reasons in `DISAGREEMENT_REASONS`.
  */
 export type CalculationSourceIssue = {
   reason:
@@ -655,6 +666,8 @@ export type CalculationSourceIssue = {
     | "ledger_expense_may_be_durable"
     | "household_rows_incomplete"
     | "advisory_binding_value"
+    | "credit_source_disagreement"
+    | "credit_cross_check_absent"
     | "precedence_tier_divergence";
   binding_source: BindingSourceKind | null;
   message: string;
@@ -4546,47 +4559,6 @@ export type ModeloFormElectionChoice = {
 };
 
 /**
- * One amount an election states, in the filer's words, and whether it is
- * advisory.
- *
- * `amount` is the exact decimal text of a non-negative amount in cents, so the
- * served contract carries the figure as written rather than a number a reader
- * may round. An advisory figure is one Cadrumo works out where no official
- * rule fixes it; `advisory_words` then says why, and only then.
- */
-export type ModeloFormElectionFigure = {
-  instalment: ModeloFormInstalment;
-  amount: string;
-  words: string;
-  advisory: boolean;
-  advisory_words: string | null;
-};
-
-/**
- * One election the export asks, its state, and its answers pre-set to the
- * neutral default.
- *
- * An available question carries its choices; its `default` is one of them, or
- * `None` when no answer is neutral (an account nothing designates), and the
- * export then resolves the register's designation. A question that is not
- * applicable or unavailable carries its reason and its words instead, no
- * choices and no default, and is not sent. `request_field` is the export
- * request field an answer is sent in.
- */
-export type ModeloFormElectionQuestion = {
-  election: ModeloFormElection;
-  request_field: ModeloExportRequestField;
-  words: string;
-  state: ModeloFormElectionState;
-  reason: ModeloFormElectionReason | null;
-  state_words: string | null;
-  help: string | null;
-  default: string | null;
-  choices: ModeloFormElectionChoice[];
-  figures: ModeloFormElectionFigure[];
-};
-
-/**
  * Why an election is not applicable or cannot be answered now.
  */
 export type ModeloFormElectionReason =
@@ -4635,24 +4607,6 @@ export type ModeloFormExportHold = {
  * Why the file for the AEAT is withheld, most pressing first.
  */
 export type ModeloFormExportHoldReason = "blocks" | "confirm" | "verify";
-
-/**
- * What the declaration may export, whether the export asks elections, and the
- * file its revision writes.
- *
- * `elections` is empty exactly when `asks_elections` is false; the export then
- * carries each election's neutral default. `file_format` is `None` when the
- * revision declares no export layout.
- */
-export type ModeloFormExportOffer = {
-  artefacts: ModeloFormArtefactOption[];
-  record: ModeloFormAvailability;
-  review_package: ModeloFormReviewPackageOffer;
-  asks_elections: boolean;
-  elections: ModeloFormElectionQuestion[];
-  file_format: ExportLayoutFormat | null;
-  file_format_words: string | null;
-};
 
 /**
  * The latest file for the AEAT, and whether it no longer matches the
@@ -7226,7 +7180,7 @@ export type ModeloWorkbenchFormProjectionV1 = {
   registry_revision_id: string;
   tax_id_format: PublicSpanishTaxIdFormat;
   typing_effects: ModeloFormTypingEffect[];
-  export_offer: ModeloFormExportOffer | null;
+  export_offer: PublicModeloFormExportOffer | null;
   receipt: ModeloFormReceipt | null;
 };
 
@@ -7815,6 +7769,46 @@ export type PublicModeloFormEarlierFiling = {
 };
 
 /**
+ * Public figure preserving the canonical exact amount and advisory validation.
+ */
+export type PublicModeloFormElectionFigure = {
+  instalment: ModeloFormInstalment;
+  amount: string;
+  words: string;
+  advisory: boolean;
+  advisory_words: string | null;
+};
+
+/**
+ * Public election question whose figures preserve their decimal precision.
+ */
+export type PublicModeloFormElectionQuestion = {
+  election: ModeloFormElection;
+  request_field: ModeloExportRequestField;
+  words: string;
+  state: ModeloFormElectionState;
+  reason: ModeloFormElectionReason | null;
+  state_words: string | null;
+  help: string | null;
+  default: string | null;
+  choices: ModeloFormElectionChoice[];
+  figures: PublicModeloFormElectionFigure[];
+};
+
+/**
+ * Public export offer carrying decimal-safe election questions.
+ */
+export type PublicModeloFormExportOffer = {
+  artefacts: ModeloFormArtefactOption[];
+  record: ModeloFormAvailability;
+  review_package: ModeloFormReviewPackageOffer;
+  asks_elections: boolean;
+  elections: PublicModeloFormElectionQuestion[];
+  file_format: ExportLayoutFormat | null;
+  file_format_words: string | null;
+};
+
+/**
  * Typed local-human workbench view of ModeloFormField.
  */
 export type PublicModeloFormField = {
@@ -8056,6 +8050,7 @@ export type PublicModeloWorkForm = {
   asks_imputation_election: boolean;
   compares_taxation: boolean;
   compares_borrador: boolean;
+  offers_iva_wallet: boolean;
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;

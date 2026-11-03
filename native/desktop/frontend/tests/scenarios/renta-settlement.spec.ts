@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { ModeloFormElectionQuestion } from "../../src/shell/modeloContract";
+import type { PublicModeloFormElectionQuestion } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
 
 // How the 2025 Modelo 100's result is settled, in the export view: the
@@ -58,7 +58,7 @@ async function openFiling(target: Page, shape: string, language: Language) {
 async function servedQuestions(
   target: Page,
   language: Language,
-): Promise<ModeloFormElectionQuestion[]> {
+): Promise<PublicModeloFormElectionQuestion[]> {
   return target.evaluate(async (asked) => {
     const port = window.__fixtureModelo!;
     const list = await port.declarations(asked);
