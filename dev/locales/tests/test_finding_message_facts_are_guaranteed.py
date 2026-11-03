@@ -236,7 +236,12 @@ def _literal_locale_keys(node: ast.expr | None, module: ast.Module | None = None
         return tuple(
             dict.fromkeys((*_literal_locale_keys(node.body, module), *_literal_locale_keys(node.orelse, module)))
         )
-    if module is not None and isinstance(node, ast.Name) and (constant := _module_string_constant(module, node.id)):
+    if (
+        module is not None
+        and isinstance(node, ast.Name)
+        and (constant := _module_string_constant(module, node.id)) is not None
+        and constant != ""
+    ):
         return (constant,)
     raise _UnresolvedFactsError("message_locale_key is not a literal string or conditional of literal strings")
 

@@ -270,7 +270,12 @@ def _locale_keys(node: ast.expr | None, locator: str, module: ast.Module | None 
         return tuple(
             dict.fromkeys((*_locale_keys(node.body, locator, module), *_locale_keys(node.orelse, locator, module)))
         )
-    if module is not None and isinstance(node, ast.Name) and (constant := _constant_locale_key(module, node.id)):
+    if (
+        module is not None
+        and isinstance(node, ast.Name)
+        and (constant := _constant_locale_key(module, node.id)) is not None
+        and constant != ""
+    ):
         return (constant,)
     pytest.fail(f"{locator}: a finding built without a literal catalogue key")
 

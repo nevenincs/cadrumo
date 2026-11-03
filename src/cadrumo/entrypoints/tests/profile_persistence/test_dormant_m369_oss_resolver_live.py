@@ -683,7 +683,7 @@ def _exterior_row_for_rate_kind(rate_kind: IvaRateKind) -> OssIossLedgerObservat
 def test_m369_exterior_refuses_rate_kind_outside_official_standard_reduced_vocabulary() -> None:
     """Exterior never guesses an R/S wire token for an unsupported classification."""
     with pytest.raises(AggregationValidationError) as exc_info, bundled_indexed_authority().operation() as operation:
-        oss_ioss_module._detail_binding_values(
+        oss_ioss_module.detail_binding_values(
             _revision("369", "esquema-exterior"),
             (_exterior_row_for_rate_kind(IvaRateKind("zero")),),
             operation=operation,
@@ -697,7 +697,7 @@ def test_m369_exterior_refuses_rate_kind_outside_official_standard_reduced_vocab
 def test_m369_exterior_refuses_a_rate_tier_the_destination_state_never_had() -> None:
     """Germany has no super-reduced tier at any date, so the row is refused, not an uncaught lookup failure."""
     with pytest.raises(AggregationValidationError) as exc_info, bundled_indexed_authority().operation() as operation:
-        oss_ioss_module._detail_binding_values(
+        oss_ioss_module.detail_binding_values(
             _revision("369", "esquema-exterior"),
             (_exterior_row_for_rate_kind(IvaRateKind("super_reduced")),),
             operation=operation,

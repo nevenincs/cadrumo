@@ -120,7 +120,9 @@ def _calculated_work_unit() -> tuple[str, str]:
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_CALCULATE_FLAGS]
     )
     assert calculated.exit_code == 0, calculated.output
-    return work_unit_id, require_schema_envelope(calculated.output)["calculation_revision_id"]
+    revision_id = require_schema_envelope(calculated.output)["calculation_revision_id"]
+    assert isinstance(revision_id, str)
+    return work_unit_id, revision_id
 
 
 def _verified_work_unit() -> str:
