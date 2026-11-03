@@ -17,12 +17,15 @@ from ..credit_reconciliation import (
     CreditReconciliationEntry,
     CreditReconciliationOperand,
     CreditReconciliationValueSource,
+    FiledObservationCrossCheck,
     LedgerCrossCheck,
     RetencionSoportadaCrossCheck,
+    WithholdingSide,
 )
 from ..credit_reconciliation_checks import (
     credit_reconciliation_digest,
     credit_reconciliation_revision_failures,
+    filed_observation_source_failures,
     revision_declares_credit_reconciliation,
 )
 from ..errors import RegistryValidationError
@@ -174,3 +177,52 @@ def test_the_digest_moves_with_any_declaration_and_only_with_one(revision: Model
         revision, _trabajo_entry(RetencionSoportadaCrossCheck(income_class=RetencionSoportadaClase.TRABAJO))
     )
     assert credit_reconciliation_digest(changed) != digest
+
+
+_M130_RETENCIONES = validated_casilla_id("06")
+
+
+@pytest.fixture
+def m130_fourth_quarter(operation: PinnedAuthorityOperation) -> ModeloRevision:
+    return operation.snapshot("130", filing_year=newest_authored_edition("100"), period="4T").revision
+
+
+def _filed(casilla: str) -> FiledObservationCrossCheck:
+    return FiledObservationCrossCheck.model_validate(
+        {"kind": "filed_observation", "modelo": "130", "casilla": casilla, "period": "4T"}
+    )
+
+
+def test_a_filed_casilla_of_withholding_suffered_may_corroborate_a_credit(m130_fourth_quarter: ModeloRevision) -> None:
+    assert filed_observation_source_failures(_filed("06"), (m130_fourth_quarter,), owner="0599") == ()
+
+
+def test_a_filed_casilla_with_no_declared_withholding_side_is_refused(m130_fourth_quarter: ModeloRevision) -> None:
+    (failure,) = filed_observation_source_failures(_filed("01"), (m130_fourth_quarter,), owner="0599")
+    assert "withholding_side = suffered" in failure
+
+
+def test_a_filed_casilla_of_withholding_practised_is_refused(m130_fourth_quarter: ModeloRevision) -> None:
+    practised = m130_fourth_quarter.model_copy(
+        update={
+            "casillas": tuple(
+                casilla.model_copy(update={"withholding_side": WithholdingSide.PRACTISED})
+                if casilla.id == _M130_RETENCIONES
+                else casilla
+                for casilla in m130_fourth_quarter.casillas
+            )
+        }
+    )
+    (failure,) = filed_observation_source_failures(_filed("06"), (practised,), owner="0599")
+    assert "withholding_side = suffered" in failure
+
+
+def test_a_filed_casilla_no_revision_declares_is_refused(m130_fourth_quarter: ModeloRevision) -> None:
+    (failure,) = filed_observation_source_failures(_filed("99"), (m130_fourth_quarter,), owner="0599")
+    assert "is not declared" in failure
+
+
+def test_the_published_0599_reconciliation_reads_the_fourth_quarter_retenciones(revision: ModeloRevision) -> None:
+    (entry,) = [item for item in revision.credit_reconciliation if str(item.casilla_id) == "0599"]
+    filed = [check for check in entry.cross_checks if isinstance(check, FiledObservationCrossCheck)]
+    assert filed == [_filed("06")]

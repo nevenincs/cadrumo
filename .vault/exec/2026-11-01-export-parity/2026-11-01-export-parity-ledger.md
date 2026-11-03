@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:eaf933ecf1bac6a48b3b3811612f5b120ef0778c81875eb4487d28b6ea4ed8ee'
+body_hash: 'sha256:665913100052f31a04bd21f709f0bf2e9fdf7810903e8a8639f5a1d3bada8e0b'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -915,6 +915,31 @@ related:
 - `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_suffered_withholding_credits.py`
 - `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_payer_side_returns_leave_credits_unchanged_live.py`
 - `S19` `verify:` `pytest test_projection_suffered_withholding_credits.py test_modelo_100_payer_side_returns_leave_credits_unchanged_live.py` -> `pass`
+- `S30` `M` `dev/registry/compiler/registry_scope.py`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/credit_reconciliation/0001-declarations.toml`
+- `S30` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S30` `M` `src/cadrumo/application/aggregation/renta_income_ledger.py`
+- `S30` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S30` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_bucket_actions.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S30` `M` `src/cadrumo/application/modelo/credit_reconciliation.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/credit_reconciliation.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/credit_reconciliation_checks.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/tests/test_credit_reconciliation_checks.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_retencion_soportada_credits_live.py`
+- `S30` `M` `src/cadrumo/locales/ca/application.yml`
+- `S30` `M` `src/cadrumo/locales/en/application.yml`
+- `S30` `M` `src/cadrumo/locales/es/application.yml`
+- `S30` `M` `src/cadrumo/locales/hu/application.yml`
+- `S30` `A` `dev/registry/compiler/_validate_credit_filed_observation_sources.py`
+- `S30` `M` `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`
+- `S30` `verify:` `pytest test_modelo_100_retencion_soportada_credits_live.py test_credit_reconciliation_checks.py test_renta_imputation_criterion.py` -> `pass`
+- `S30` `verify:` `registry_status --check --json` -> `pass`
+- `S30` `verify:` `grade_earned under_supported=0` -> `pass`
+- `S30` `verify:` `lint-imports` -> `fail`
+- `S30` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -954,3 +979,4 @@ related:
 - `S19` ty and lint-imports fail only in tui-owned files from 3be7987f95, c9d6d73b82 and b1cafbb63d; M100 2024 export refusals come from the settlement suspension rule of 3be7987f95
 - `S22` Casilla 06 cut-off: a declared retencion whose receipt is dated after the M130 window stays out of that window's 06 and is reported. Primary text: RIRPF art. 110.3.a deducts 'las retenciones practicadas ... correspondientes al periodo ... hasta el ultimo dia del trimestre' `(src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-110.html.extracted.md,` apartado 3.a); art. 78.1 makes withholding arise when the income is paid; TEAC 00/03187/2011 allows no deduction before payment; DGT V3298-15 places it in the window of its income's imputation. Research 2026-11-01-export-parity-withholding-legal-readings-research finds a payment after quarter end but before filing not excluded by any text, and limiting inclusion to payments by the window end lawful; the next quarter's cumulative 06 and annual 0599 pick it up. The V4965-16 payer-year comparison covers the `retencion_soportada` certificate cross-check; `datos_fiscales` does not exist yet and the borrador is not payer-year compared, as the ADR names certificate and `datos_fiscales` only. Wide-run failures present at 553bba5402 and untouched by S22: `test_projection` and payer-side credit tests (S19 regressions, fixed in b7450a5dd6), `test_local_cross_period_carry` (6, tier-divergence screen), 7 dev/registry date-window tests; tui settlement failures (3) unchanged.
 - `S19` Post-close fix b7450a5dd6: the S19 rental-activity credit asks for payer evidence when no IAE epigraph is declared; these scenarios now declare a non-rental epigraph 844.
+- `S30` lint-imports fails only on the tui tooling lane `(dev.desktop_household_fixture,` `dev.desktop_imputation_election_fixture).` The wide run over application/aggregation, application/modelo, domain/calculations/registry, `entrypoints/tests/profile_persistence` and dev/registry/tests shows no credit or filed-observation failure; its failures are pre-existing or another lane's: M100 export settlement refusal (tui 3be7987f95, failing before S30), `precedence_tier_divergence` on M130 06, OSS year window, desktop frontend deps, registry date windows. The filed-observation comparison restates rows on the fourth-quarter basis (RIRPF art. 110.3.a), keeping A01 withholding and dropping withholding paid after 31 December; this itemised-basis tolerance follows the ADR principle but is not spelled out in its wording.

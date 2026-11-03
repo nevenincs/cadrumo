@@ -792,6 +792,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         row_binding_values=channels.source_resolution.row_binding_values,
         row_source_identities=channels.source_resolution.row_source_identities,
         payment_year_binding_values=channels.source_resolution.payment_year_binding_values,
+        instalment_basis_binding_values=channels.source_resolution.instalment_basis_binding_values,
         closed_record_row_sets=channels.source_resolution.closed_record_row_sets,
         row_casilla_values=channels.source_resolution.row_casilla_values,
         row_casilla_provenance=channels.source_resolution.row_casilla_provenance,

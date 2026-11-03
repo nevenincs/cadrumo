@@ -21,6 +21,11 @@ source states its figure by payment year as well, a payer-record cross-check is
 compared with that figure: a difference that the receipts' own payment dates
 explain is timing, not disagreement, and any remaining difference still blocks.
 
+A filed return is compared in the same way. The year's last pago fraccionado
+credits only the retención practised by its window's end, and keeps a rental
+activity's, so a filed-observation cross-check is compared with the value
+source's figure restated on that basis, row by row.
+
 A credit casilla whose own value is unresolved is not compared: its missing value
 is already reported, and no cross-check can stand in for it. No modelo name or
 casilla number is read here; everything comes from the revision's declarations.
@@ -37,6 +42,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
+from ...core.period import Period
 from ...core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.credit_reconciliation import (
@@ -45,6 +51,7 @@ from ...domain.calculations.registry.credit_reconciliation import (
     CreditCrossCheckKind,
     CreditReconciliationEntry,
     CreditReconciliationOperand,
+    FiledObservationCrossCheck,
     LedgerCrossCheck,
     RetencionSoportadaCrossCheck,
 )
@@ -85,6 +92,7 @@ _CROSS_CHECK_SOURCE_FAMILIES: Final[Mapping[CreditCrossCheckKind, str]] = Mappin
         CreditCrossCheckKind.RETENCION_SOPORTADA: "retencion_soportada",
         CreditCrossCheckKind.BORRADOR: "borrador",
         CreditCrossCheckKind.LEDGER: "ledger",
+        CreditCrossCheckKind.FILED_OBSERVATION: "filed_observation",
     }
 )
 
@@ -100,13 +108,21 @@ class CreditCrossCheckSources:
     snapshot was selected. ``borrador_snapshot_id`` locates those values.
     ``payment_year_binding_values`` holds a value-source binding's figure with
     its rows placed on the payer's payment date, stated only for an accrual
-    ejercicio.
+    ejercicio. ``filed_observation_values`` holds, per filed-observation
+    cross-check, the casilla value its effective observation states and where it
+    was read; a return never captured or filed is absent.
+    ``instalment_basis_binding_values`` holds a value-source binding's figure
+    restated as the year's last pago fraccionado credits it.
     """
 
     retencion_soportada_totals: Mapping[RetencionSoportadaClase, Decimal]
     borrador_values: Mapping[BindingId, Decimal]
     borrador_snapshot_id: str | None = None
     payment_year_binding_values: Mapping[BindingId, Decimal] = field(default_factory=lambda: MappingProxyType({}))
+    filed_observation_values: Mapping[FiledObservationCrossCheck, tuple[Decimal, str]] = field(
+        default_factory=lambda: MappingProxyType({})
+    )
+    instalment_basis_binding_values: Mapping[BindingId, Decimal] = field(default_factory=lambda: MappingProxyType({}))
 
 
 def retencion_soportada_class_totals(
@@ -145,6 +161,33 @@ def _payer_record_totals(
     return retencion_soportada_class_totals(records)
 
 
+def _filed_observation_values(
+    snapshot: RegistrySnapshot, work_unit: WorkUnit, ports: CalculationActionPorts
+) -> dict[FiledObservationCrossCheck, tuple[Decimal, str]]:
+    """Read the casilla each filed-observation cross-check names from its effective observation.
+
+    The same ejercicio's return is read: a filed-observation cross-check names a
+    modelo and period, never a year. A store that cannot be read, or a return
+    never captured or filed, leaves the cross-check without a value, which is
+    noted as not cross-checked and never read as agreement.
+    """
+    values: dict[FiledObservationCrossCheck, tuple[Decimal, str]] = {}
+    for entry in snapshot.revision.credit_reconciliation:
+        for cross_check in entry.cross_checks:
+            if not isinstance(cross_check, FiledObservationCrossCheck) or cross_check in values:
+                continue
+            try:
+                envelope = ports.observation_repository.load_observation(
+                    cross_check.modelo, Period.from_year_and_code(work_unit.filing_year, cross_check.period)
+                )
+            except PersistenceDegradationError:
+                continue
+            value = None if envelope is None else envelope.observation.casilla_values.get(cross_check.casilla)
+            if envelope is not None and value is not None:
+                values[cross_check] = (value, f"observation:{envelope.source_kind}:{envelope.captured_at.isoformat()}")
+    return values
+
+
 def load_credit_cross_check_sources(
     snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
@@ -152,6 +195,7 @@ def load_credit_cross_check_sources(
     ports: CalculationActionPorts,
     borrador_snapshot_id: str | None,
     payment_year_binding_values: Mapping[BindingId, Decimal],
+    instalment_basis_binding_values: Mapping[BindingId, Decimal],
 ) -> CreditCrossCheckSources:
     """Read every cross-check source the revision's credit reconciliation names, and nothing else."""
     borrador_values: dict[BindingId, Decimal] = {}
@@ -173,6 +217,8 @@ def load_credit_cross_check_sources(
         borrador_values=borrador_values,
         borrador_snapshot_id=borrador_snapshot_id if borrador_values else None,
         payment_year_binding_values=payment_year_binding_values,
+        filed_observation_values=_filed_observation_values(snapshot, work_unit, ports),
+        instalment_basis_binding_values=instalment_basis_binding_values,
     )
 
 
@@ -213,26 +259,38 @@ def _cross_check_value(
             f"binding:{cross_check.binding}",
             None if sources.borrador_snapshot_id is None else f"borrador:{sources.borrador_snapshot_id}",
         )
+    if isinstance(cross_check, FiledObservationCrossCheck):
+        stated = sources.filed_observation_values.get(cross_check)
+        return (
+            None if stated is None else stated[0],
+            f"filed:{cross_check.modelo}:{cross_check.period}:{cross_check.casilla}",
+            None if stated is None else stated[1],
+        )
     ledger: LedgerCrossCheck = cross_check
     return binding_values.get(ledger.binding), f"binding:{ledger.binding}", None
 
 
-def _payer_year_value(
+def _comparison_basis(
     entry: CreditReconciliationEntry,
     cross_check: CreditCrossCheck,
     *,
     value: Decimal,
     sources: CreditCrossCheckSources,
 ) -> Decimal:
-    """Return the figure a payer record is compared with: the payment-year figure where one is stated."""
+    """Return the figure a cross-check is compared with, on the basis its source states the credit.
+
+    A payer record is compared by the payer's payment year and a filed pago
+    fraccionado by its own basis, where the value source states that figure;
+    every other cross-check is compared with the value itself.
+    """
     binding_id = entry.value_source.binding
-    if (
-        not isinstance(cross_check, RetencionSoportadaCrossCheck)
-        or cross_check.operand is not None
-        or binding_id is None
-    ):
+    if cross_check.operand is not None or binding_id is None:
         return value
-    return sources.payment_year_binding_values.get(binding_id, value)
+    if isinstance(cross_check, RetencionSoportadaCrossCheck):
+        return sources.payment_year_binding_values.get(binding_id, value)
+    if isinstance(cross_check, FiledObservationCrossCheck):
+        return sources.instalment_basis_binding_values.get(binding_id, value)
+    return value
 
 
 def _value_source_family(entry: CreditReconciliationEntry) -> str:
@@ -364,7 +422,7 @@ def credit_reconciliation_issues(
             )
             if compared is None:
                 issues.append(_absent_issue(snapshot, entry, cross_check, compared_ref))
-            elif compared != _payer_year_value(entry, cross_check, value=value, sources=sources):
+            elif compared != _comparison_basis(entry, cross_check, value=value, sources=sources):
                 issues.append(
                     _disagreement_issue(
                         snapshot,

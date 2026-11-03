@@ -576,6 +576,34 @@ def payment_dated_renta_m100_income_observations(
     return _screen_rental_activity(projected.observations, paid, rental).observations
 
 
+def instalment_basis_observations(
+    observations: Sequence[RentaIncomeObservation],
+    transactions: TransactionCatalogue,
+    *,
+    cut_off: date,
+) -> tuple[RentaIncomeObservation, ...]:
+    """Restate the ejercicio's activity rows as the year's last pago fraccionado credits their retención.
+
+    That pago fraccionado deducts only the retención practised by the window's
+    end, and keeps a rental activity's (RIRPF art. 110.3.a), while the annual
+    activity credit counts any payment date and leaves the rental's to the
+    rental credit. Each row is restated by its own payment date and tipo de
+    actividad, so a difference the two credits owe to that itemisation is visible.
+    """
+    restated: list[RentaIncomeObservation] = []
+    for observation in observations:
+        transaction = transactions.get(observation.transaction_id)
+        if transaction is None:
+            restated.append(observation)
+            continue
+        if observation.withheld_derivation is LedgerWithholdingDerivation.RENTAL_ACTIVITY_COMPONENT:
+            observation = observation.model_copy(
+                update={"withheld_derivation": LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE}
+            )
+        restated.append(_held_past_cut_off(observation, transaction, cut_off=cut_off))
+    return tuple(restated)
+
+
 class RentalActivityScreen(NamedTuple):
     """Which activity rows the annual activity credit hands to the rental credit.
 
@@ -1255,5 +1283,6 @@ __all__ = [
     "aggregate_renta_income_ledger_from_repositories",
     "aggregate_renta_m100_income_ledger",
     "aggregate_renta_m100_income_ledger_from_repositories",
+    "instalment_basis_observations",
     "payment_dated_renta_m100_income_observations",
 ]

@@ -1780,6 +1780,7 @@ application:
       verification_none: Nincs rögzített ellenőrzés
     credit_cross_check_source:
       borrador: az AEAT-tervezet
+      filed_observation: a benyújtott bevallásod
       ledger: a nyilvántartásod
       retencion_soportada: a kifizetői igazolások
     edit:

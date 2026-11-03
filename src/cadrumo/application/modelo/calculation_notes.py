@@ -304,6 +304,7 @@ _CROSS_CHECK_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "retencion_soportada": "application.modelo.credit_cross_check_source.retencion_soportada",
         "borrador": "application.modelo.credit_cross_check_source.borrador",
         "ledger": "application.modelo.credit_cross_check_source.ledger",
+        "filed_observation": "application.modelo.credit_cross_check_source.filed_observation",
     }
 )
 """How a note names the source a credit was compared with, by its cross-check kind."""

@@ -28,13 +28,18 @@ cross_checks = [{ kind = "retencion_soportada", income_class = "arrendamiento_in
 
 # Casilla 0599 is the withholding the taxpayer's own invoices declare. Each
 # payer's certificate of the activity class states the same figure from the
-# payer's side, and the borrador states it as AEAT received it.
+# payer's side, and the borrador states it as AEAT received it. The fourth
+# quarter's Modelo 130 casilla 06 states the withholding of the activity
+# income from 1 January to 31 December (RIRPF art. 110.3.a; Modelo 130
+# instructions, casilla 06), so it states the same figure for the same rows,
+# compared on that return's own basis.
 [[revisions."2022".credit_reconciliation]]
 casilla_id = "0599"
 value_source = { binding = "renta-ledger-actividad-retenciones-0599" }
 cross_checks = [
     { kind = "retencion_soportada", income_class = "actividad_economica" },
     { kind = "borrador", binding = "renta-ledger-actividad-retenciones-0599" },
+    { kind = "filed_observation", modelo = "130", casilla = "06", period = "4T" },
 ]
 
 [[revisions."2022".credit_reconciliation]]

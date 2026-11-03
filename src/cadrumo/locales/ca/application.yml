@@ -1820,6 +1820,7 @@ application:
       verification_none: Sense comprovació registrada
     credit_cross_check_source:
       borrador: l'esborrany de l'AEAT
+      filed_observation: la declaració que vas presentar
       ledger: el teu llibre de registre
       retencion_soportada: els certificats dels pagadors
     edit:

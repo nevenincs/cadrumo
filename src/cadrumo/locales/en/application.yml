@@ -1725,6 +1725,7 @@ application:
       verification_none: No check recorded
     credit_cross_check_source:
       borrador: the AEAT borrador
+      filed_observation: the return you filed
       ledger: your ledger
       retencion_soportada: the payer certificates
     edit:

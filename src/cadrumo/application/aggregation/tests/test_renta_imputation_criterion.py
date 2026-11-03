@@ -264,6 +264,17 @@ def test_under_accrual_the_withholding_is_also_stated_by_the_year_the_payer_paid
     assert later.payment_year_binding_values == {_CREDIT_0599: _RETENCION}
 
 
+def test_the_fourth_quarter_basis_leaves_out_withholding_paid_after_the_year(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Issued 20 December, paid 10 January: 0599 credits the 150,00, the fourth quarter could not."""
+    row, invoice = _paid_invoice(*_BOTH_YEARS)
+    facts = _declared((_EARLIER, _DEVENGO), (_LATER, _DEVENGO))
+    earlier = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_EARLIER)
+    assert earlier.binding_values[_CREDIT_0599] == _RETENCION
+    assert earlier.instalment_basis_binding_values == {_CREDIT_0599: _ZERO}
+
+
 _IN_YEAR = (date(_LATER, 3, 2), date(_LATER, 3, 20))
 _ALSO_IN_YEAR = (date(_LATER, 6, 2), date(_LATER, 6, 20))
 
@@ -352,6 +363,14 @@ def test_a_quarterly_return_keeps_a_rental_activity_withholding(operation: Pinne
         period="1T",
     )
     assert resolution.binding_values[_CREDIT_M130_06] == _RETENCION
+
+
+def test_the_fourth_quarter_basis_keeps_a_rental_activity_withholding(operation: PinnedAuthorityOperation) -> None:
+    """The activity credit leaves the A01 150,00 to the rental credit; the fourth quarter deducts it."""
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-A01", TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES)
+    resolution = _resolve(operation, _declared((_LATER, _DEVENGO)), rows=(row,), invoices=(invoice,), year=_LATER)
+    assert resolution.binding_values[_CREDIT_0599] == _ZERO
+    assert resolution.instalment_basis_binding_values == {_CREDIT_0599: _RETENCION}
 
 
 def test_under_cash_no_payment_year_figure_is_stated(operation: PinnedAuthorityOperation) -> None:

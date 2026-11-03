@@ -14,6 +14,8 @@ casilla numbers or modelos:
 * a borrador cross-check must name a binding a borrador snapshot may hold;
 * a ledger cross-check must name a ledger binding that is not a withholding
   agent's own payer-side figure;
+* a filed-observation cross-check must name a casilla that records withholding
+  suffered (:func:`filed_observation_source_failures`, run over the whole tree);
 * an operand must be an operand of the value source's formula.
 """
 
@@ -33,8 +35,10 @@ from .credit_reconciliation import (
     BorradorCrossCheck,
     CreditReconciliationEntry,
     CreditReconciliationOperand,
+    FiledObservationCrossCheck,
     LedgerCrossCheck,
     RetencionSoportadaCrossCheck,
+    WithholdingSide,
 )
 from .retencion_soportada_bindings import RETENCION_SOPORTADA_CREDIT_ROLES, credit_casilla_ids
 from .runtime_graph import expression_binding_refs, expression_casilla_refs
@@ -47,6 +51,7 @@ if TYPE_CHECKING:
 __all__ = [
     "credit_reconciliation_digest",
     "credit_reconciliation_revision_failures",
+    "filed_observation_source_failures",
     "revision_declares_credit_reconciliation",
 ]
 
@@ -127,6 +132,8 @@ def _cross_check_failures(
                     f"with role {casilla.semantic_role!r}",
                 )
             continue
+        if isinstance(cross_check, FiledObservationCrossCheck):
+            continue
         binding = bindings.get(str(cross_check.binding))
         if binding is None:
             failures.append(f"{owner}: cross-check binding {cross_check.binding!r} is not declared")
@@ -182,6 +189,35 @@ def _duplicate_entry_failures(entries: Iterable[CreditReconciliationEntry]) -> l
             failures.append(f"credit reconciliation declares casilla {entry.casilla_id!r} twice")
         seen.add(entry.casilla_id)
     return failures
+
+
+def filed_observation_source_failures(
+    cross_check: FiledObservationCrossCheck,
+    source_revisions: Iterable[ModeloRevision],
+    *,
+    owner: str,
+) -> tuple[str, ...]:
+    """Refuse a filed-observation cross-check whose casilla does not record withholding suffered.
+
+    ``source_revisions`` are the revisions of the source modelo that declare the
+    cross-check's period. The casilla must be declared by at least one of them,
+    and every one that declares it must mark it ``suffered``: an undeclared or
+    practised side is a withholding agent's figure and never a credit.
+    """
+    declaring = [
+        casilla for revision in source_revisions for casilla in revision.casillas if casilla.id == cross_check.casilla
+    ]
+    if not declaring:
+        return (
+            f"{owner}: filed-observation casilla {cross_check.casilla!r} of modelo {cross_check.modelo} "
+            f"period {cross_check.period!r} is not declared by any revision of that modelo",
+        )
+    if any(casilla.withholding_side is not WithholdingSide.SUFFERED for casilla in declaring):
+        return (
+            f"{owner}: filed-observation casilla {cross_check.casilla!r} of modelo {cross_check.modelo} is not "
+            "declared withholding_side = suffered, so it cannot corroborate a credit",
+        )
+    return ()
 
 
 def credit_reconciliation_revision_failures(revision: ModeloRevision) -> tuple[str, ...]:

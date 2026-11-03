@@ -1816,6 +1816,7 @@ application:
       verification_none: Sin comprobación registrada
     credit_cross_check_source:
       borrador: el borrador de la AEAT
+      filed_observation: la declaración que presentaste
       ledger: tu libro de registro
       retencion_soportada: los certificados de los pagadores
     edit:

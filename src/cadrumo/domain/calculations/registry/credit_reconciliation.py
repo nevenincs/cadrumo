@@ -12,8 +12,9 @@ decides which sources corroborate a credit::
 
 ``value_source`` names the binding bound to the casilla, or the formula that
 computes it. Each cross-check is one closed member: the payer records of an
-income class, the value a borrador snapshot holds for a binding, or a ledger
-binding's value. A cross-check may name one operand of the value source's
+income class, the value a borrador snapshot holds for a binding, a ledger
+binding's value, or one casilla of a return the declarant filed for the same
+ejercicio. A cross-check may name one operand of the value source's
 formula instead of the whole casilla, so a casilla summing two independently
 evidenced parts compares each part with the source that states that part.
 
@@ -48,6 +49,7 @@ __all__ = [
     "CreditReconciliationEntry",
     "CreditReconciliationOperand",
     "CreditReconciliationValueSource",
+    "FiledObservationCrossCheck",
     "LedgerCrossCheck",
     "RetencionSoportadaCrossCheck",
     "WithholdingSide",
@@ -74,6 +76,7 @@ class CreditCrossCheckKind(StrEnum):
     RETENCION_SOPORTADA = "retencion_soportada"
     BORRADOR = "borrador"
     LEDGER = "ledger"
+    FILED_OBSERVATION = "filed_observation"
 
 
 class _ExactlyOneReference(RegistryModel):
@@ -134,8 +137,23 @@ class LedgerCrossCheck(RegistryModel):
     operand: CreditReconciliationOperand | None = None
 
 
+class FiledObservationCrossCheck(RegistryModel):
+    """One casilla of a return the declarant filed for the same ejercicio, read from its effective observation.
+
+    The source casilla must record withholding the declarant suffered; the
+    registry build refuses a casilla whose ``withholding_side`` is undeclared
+    or practised, so a withholding agent's own return never corroborates a credit.
+    """
+
+    kind: Literal[CreditCrossCheckKind.FILED_OBSERVATION] = CreditCrossCheckKind.FILED_OBSERVATION
+    modelo: str = Field(min_length=1, max_length=8, pattern=r"^[0-9A-Z]+$")
+    casilla: CasillaId
+    period: str = Field(min_length=1, max_length=8, pattern=r"^[0-9A-Z]+$")
+    operand: CreditReconciliationOperand | None = None
+
+
 CreditCrossCheck = Annotated[
-    RetencionSoportadaCrossCheck | BorradorCrossCheck | LedgerCrossCheck,
+    RetencionSoportadaCrossCheck | BorradorCrossCheck | LedgerCrossCheck | FiledObservationCrossCheck,
     Field(discriminator="kind"),
 ]
 """Every source a credit casilla may be cross-checked against, discriminated on ``kind``."""

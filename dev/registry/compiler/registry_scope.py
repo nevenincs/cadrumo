@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates as _duplicates
 
 from . import validate_cross_revision as cross_revision_validation
+from ._validate_credit_filed_observation_sources import credit_filed_observation_source_failures
 from ._validate_previous_filing_sources import validate_previous_filing_binding_closure
 from ._validate_semantic_role_required import required_role_declaration_failures as _validate_required_role_declarations
 from .validate_cross_revision import (
@@ -49,6 +50,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     if len(modelos_by_id) == len(modelo_tuple):
         failures.extend(_validate_dependency_classification_source_modelos(modelo_tuple, modelos_by_id))
         failures.extend(validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
+        failures.extend(credit_filed_observation_source_failures(modelo_tuple, modelos_by_id))
 
     failures.extend(_validate_binding_selector_shapes(modelo_tuple))
     failures.extend(_validate_semantic_role_consistency(modelo_tuple))

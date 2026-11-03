@@ -31,6 +31,7 @@ calculation engine; no mocks. Every identifier and figure is synthetic.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -79,6 +80,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.retencion_soportada import RetencionSoportadaClase
+from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
@@ -131,6 +133,7 @@ _TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id("0609", surface=
 _BASE_LIQUIDABLE_NEGATIVA_CASILLA: CasillaId = validated_casilla_id("1391", surface="_BASE_LIQUIDABLE_NEGATIVA")
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
+_M130_RETENCIONES: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES")
 
 _TRABAJO_BINDING: BindingId = "renta-retencion-soportada-trabajo"
 _CAPITAL_BINDING: BindingId = "renta-retencion-soportada-capital-mobiliario"
@@ -216,6 +219,7 @@ def _save_filing(
     casilla_id: CasillaId,
     value: Decimal,
     filing_year: int,
+    extra_values: Mapping[CasillaId, Decimal] | None = None,
 ) -> None:
     save_stamped_observation(
         repository,
@@ -224,7 +228,10 @@ def _save_filing(
             filing_year=filing_year,
             period=period,
             observations=registry_grounded_observations(
-                modelo=modelo, filing_year=filing_year, period=period, casilla_values={casilla_id: value}
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                casilla_values={casilla_id: value, **(extra_values or {})},
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -235,8 +242,14 @@ def _save_filing(
     )
 
 
-def _seed_filed_history(secure_objects: SecureObjectRepository) -> None:
-    """The prior year's zero carry and this year's locally filed pagos fraccionados."""
+def _seed_filed_history(
+    secure_objects: SecureObjectRepository, *, fourth_quarter_retenciones: Decimal | None = None
+) -> None:
+    """The prior year's zero carry and this year's locally filed pagos fraccionados.
+
+    ``fourth_quarter_retenciones`` is the retencion the filed fourth-quarter
+    Modelo 130 deducted in casilla 06; without it that return states none.
+    """
     repository = CalculationObservationRepository(objects=secure_objects)
     _save_filing(
         repository,
@@ -254,6 +267,11 @@ def _seed_filed_history(secure_objects: SecureObjectRepository) -> None:
             casilla_id=_M130_PAGOS_OUTPUT,
             value=_M130_QUARTER,
             filing_year=_YEAR,
+            extra_values=(
+                {_M130_RETENCIONES: fourth_quarter_retenciones}
+                if period == "4T" and fourth_quarter_retenciones is not None
+                else None
+            ),
         )
         _save_filing(
             repository,
@@ -557,8 +575,11 @@ def test_activity_withholding_agreeing_with_the_borrador_and_without_payer_recor
 
     assert not _credit_issues(revision, "credit_source_disagreement", _ACTIVIDAD_CASILLA)
     # No payer of activity income is recorded, so that comparison has nothing to read.
-    (absent,) = _credit_issues(revision, "credit_cross_check_absent", _ACTIVIDAD_CASILLA)
-    assert absent.source_ref == "income_class:actividad_economica"
+    assert [
+        issue
+        for issue in _credit_issues(revision, "credit_cross_check_absent", _ACTIVIDAD_CASILLA)
+        if issue.source_ref == "income_class:actividad_economica"
+    ]
 
 
 _ARRENDAMIENTO_CASILLA: CasillaId = validated_casilla_id("0598", surface="_ARRENDAMIENTO_CASILLA")
@@ -766,13 +787,13 @@ def _accrual_facts() -> tuple[UserProfileFact, ...]:
     )
 
 
-def _boundary_receipt(invoice_id: str | None) -> Transaction:
+def _boundary_receipt(invoice_id: str | None, *, paid: date = _BOUNDARY_PAID) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
                 provider_transaction_id="cobro-boundary",
-                booked_date=_BOUNDARY_PAID,
-                value_date=_BOUNDARY_PAID,
+                booked_date=paid,
+                value_date=paid,
                 amount=_BOUNDARY_BASE + _BOUNDARY_IVA - _BOUNDARY_RETENCION,
                 currency="EUR",
                 counterparty="Cliente SL",
@@ -801,12 +822,12 @@ def _boundary_receipt(invoice_id: str | None) -> Transaction:
     )
 
 
-def _boundary_invoice(receipt_id: str) -> Invoice:
+def _boundary_invoice(receipt_id: str, *, issued: date = _BOUNDARY_ISSUED) -> Invoice:
     return Invoice.model_validate(
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": "F-BOUNDARY",
-            "issued_at": _BOUNDARY_ISSUED,
+            "issued_at": issued,
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
@@ -834,10 +855,12 @@ def _boundary_invoice(receipt_id: str) -> Invoice:
     )
 
 
-def _seed_boundary_invoice(secure_objects: SecureObjectRepository) -> None:
-    invoice = _boundary_invoice(_boundary_receipt(None).transaction_id)
+def _seed_boundary_invoice(
+    secure_objects: SecureObjectRepository, *, issued: date = _BOUNDARY_ISSUED, paid: date = _BOUNDARY_PAID
+) -> None:
+    invoice = _boundary_invoice(_boundary_receipt(None, paid=paid).transaction_id, issued=issued)
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((_boundary_receipt(invoice.invoice_id),))
+        TransactionCatalogue.from_transactions((_boundary_receipt(invoice.invoice_id, paid=paid),))
     )
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(build_invoice_catalogue((invoice,)))
 
@@ -890,3 +913,110 @@ def test_a_certificate_the_payment_dates_do_not_explain_still_withholds_filing(
     stated = {entry.role: entry.value for entry in issue.disagreement.sources}
     assert stated[SourceDisagreementRole.VALUE_SOURCE] == DisagreementDecimalValue.of(Decimal("0"))
     assert stated[SourceDisagreementRole.CROSS_CHECK] == DisagreementDecimalValue.of(Decimal("200.00"))
+
+
+_FILED_RETENCIONES_REF = "filed:130:4T:06"
+
+
+def _filed_issues(revision: CalculationRevision, reason: str) -> list[CalculationSourceIssue]:
+    return [
+        issue
+        for issue in _credit_issues(revision, reason, _ACTIVIDAD_CASILLA)
+        if issue.source_ref == _FILED_RETENCIONES_REF
+    ]
+
+
+def test_the_activity_credit_agreeing_with_the_filed_fourth_quarter_retenciones_raises_no_finding(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """No activity income bears withholding, and the filed fourth quarter deducted none."""
+    _seed_profile(income_categories="trabajo,actividad_economica")
+    _seed_filed_history(secure_objects, fourth_quarter_retenciones=Decimal("0"))
+    _seed_work_payers(operation)
+
+    revision = _calculate(secure_objects, operation=operation).revision
+
+    assert Decimal(revision.casilla_values[_ACTIVIDAD_CASILLA]) == Decimal("0")
+    assert not _filed_issues(revision, "credit_source_disagreement")
+    assert not _filed_issues(revision, "credit_cross_check_absent")
+
+
+def test_filed_fourth_quarter_retenciones_the_records_do_not_explain_withhold_filing(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The filed fourth quarter deducted 100,00 that no activity income of the year bears."""
+    _seed_profile(income_categories="trabajo,actividad_economica")
+    _seed_filed_history(secure_objects, fourth_quarter_retenciones=Decimal("100.00"))
+    _seed_work_payers(operation)
+
+    revision = _calculate(secure_objects, operation=operation).revision
+
+    (issue,) = _filed_issues(revision, "credit_source_disagreement")
+    assert issue in blocking_calculation_issues(revision)
+    assert issue.disagreement is not None
+    stated = {entry.role: entry.value for entry in issue.disagreement.sources}
+    assert stated[SourceDisagreementRole.VALUE_SOURCE] == DisagreementDecimalValue.of(Decimal("0"))
+    assert stated[SourceDisagreementRole.CROSS_CHECK] == DisagreementDecimalValue.of(Decimal("100.00"))
+
+
+def _seed_rental_activity_receipt(secure_objects: SecureObjectRepository) -> None:
+    """A rental activity (A01) invoice of the year, paid in the year with 150,00 withheld."""
+    invoice = _boundary_invoice(_boundary_receipt(None, paid=_IN_YEAR_PAID).transaction_id, issued=_IN_YEAR_ISSUED)
+    receipt = _boundary_receipt(invoice.invoice_id, paid=_IN_YEAR_PAID).model_copy(
+        update={"tipo_actividad": TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES}
+    )
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((receipt,))
+    )
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(build_invoice_catalogue((invoice,)))
+
+
+_IN_YEAR_ISSUED = date(_YEAR, 6, 10)
+_IN_YEAR_PAID = date(_YEAR, 6, 20)
+
+
+def test_a_fourth_quarter_that_deducted_the_rental_activity_retenciones_is_itemisation(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The annual activity credit leaves the 150,00 to the rental credit; the pago fraccionado deducts it."""
+    _seed_profile(income_categories="trabajo,actividad_economica")
+    _seed_filed_history(secure_objects, fourth_quarter_retenciones=_BOUNDARY_RETENCION)
+    _seed_work_payers(operation)
+    _seed_rental_activity_receipt(secure_objects)
+
+    revision = _calculate(secure_objects, operation=operation).revision
+
+    assert Decimal(revision.casilla_values[_ACTIVIDAD_CASILLA]) == Decimal("0")
+    assert not _filed_issues(revision, "credit_source_disagreement")
+    assert not _filed_issues(revision, "credit_cross_check_absent")
+
+
+def test_a_fourth_quarter_that_left_out_the_rental_activity_retenciones_withholds_filing(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The records bear 150,00 the pago fraccionado could deduct; the filed return deducted none."""
+    _seed_profile(income_categories="trabajo,actividad_economica")
+    _seed_filed_history(secure_objects, fourth_quarter_retenciones=Decimal("0"))
+    _seed_work_payers(operation)
+    _seed_rental_activity_receipt(secure_objects)
+
+    revision = _calculate(secure_objects, operation=operation).revision
+
+    (issue,) = _filed_issues(revision, "credit_source_disagreement")
+    assert issue in blocking_calculation_issues(revision)
+    assert issue.disagreement is not None
+    stated = {entry.role: entry.value for entry in issue.disagreement.sources}
+    assert stated[SourceDisagreementRole.CROSS_CHECK] == DisagreementDecimalValue.of(Decimal("0"))
+
+
+def test_a_filed_fourth_quarter_without_its_retenciones_is_noted_as_not_cross_checked(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    _seed_profile(income_categories="trabajo,actividad_economica")
+    _seed_filed_history(secure_objects)
+    _seed_work_payers(operation)
+
+    revision = _calculate(secure_objects, operation=operation).revision
+
+    (absent,) = _filed_issues(revision, "credit_cross_check_absent")
+    assert absent not in blocking_calculation_issues(revision)

@@ -137,6 +137,7 @@ from .renta_income_ledger import (
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
     aggregate_renta_m131_agrario_income_ledger_from_repositories,
+    instalment_basis_observations,
     payment_dated_renta_m100_income_observations,
 )
 from .renta_income_models import RentaIncomeLedgerAggregationIssue, RentaIncomeLedgerAggregationIssueReason
@@ -319,6 +320,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             self._imputation_filings(context) if self._imputation_filings is not None else None,
         )
         payment_year_values: dict[BindingId, Decimal] = {}
+        instalment_basis_values: dict[BindingId, Decimal] = {}
         with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = _activity_category_matcher(operation)
@@ -346,6 +348,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
                     )
+                    instalment_basis_values = self._instalment_basis_withholding(context, aggregation)
                 elif context.modelo == form_for_role("renta.objective_instalment"):
                     agrarian_activity_codes = frozenset(
                         TipoActividad(code)
@@ -397,7 +400,27 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 )
         return self._assemble_resolution(
             context, aggregation, profile_decode_context, disposal_excess, criteria
-        ).model_copy(update={"payment_year_binding_values": payment_year_values})
+        ).model_copy(
+            update={
+                "payment_year_binding_values": payment_year_values,
+                "instalment_basis_binding_values": instalment_basis_values,
+            }
+        )
+
+    def _instalment_basis_withholding(
+        self, context: CalculationSourceContext, aggregation: RentaIncomeLedgerAggregation
+    ) -> dict[BindingId, Decimal]:
+        """State each declared retención binding as the year's last pago fraccionado would credit it."""
+        withholding_ids = declared_withholding_binding_ids(context.revision)
+        if not withholding_ids:
+            return {}
+        restated = instalment_basis_observations(
+            aggregation.observations,
+            self._ports.transaction_reader.load(),
+            cut_off=context.period.end_date,
+        )
+        values = resolve_ledger_renta_income_aggregation_binding_values(context.revision, restated)
+        return {binding_id: value for binding_id, value in values.items() if binding_id in withholding_ids}
 
     def _payment_year_withholding(
         self,
