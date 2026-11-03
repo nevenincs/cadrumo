@@ -2669,6 +2669,7 @@ desktop:
         együtt.
       'no': Nem
       none: Nincs
+      partial: Csak egy része mentődött el. Frissíts, hogy lásd, mi maradt meg.
       reading: Beolvasás…
       refused: Nincs mentve.
       reread: Frissítés
@@ -4238,12 +4239,20 @@ desktop:
         state: Állapot
       correct_hint: Egy igazolás javításához távolítsd el, és rögzítsd újra.
       document: Az igazolás dokumentuma (nem kötelező)
-      document_hint: A Dokumentumokban tárolt dokumentum. Az ujjlenyomatát úgy rögzítjük,
-        ahogy megadod, és a tárolt dokumentummal még nem vetjük össze.
+      document_hint: A Dokumentumokban tárolt dokumentum. A rögzítést elutasítjuk,
+        ha a Cadrumo nem őrzi ezt a dokumentumot, vagy ha a kiválasztott fájl nem
+        egyezik vele.
       document_none: Még nincs tárolt dokumentum
       document_not: Nincs dokumentum
       ejercicio: Év
       empty: Nincs rögzített igazolás a(z) {ejercicio} évre.
+      file: Az igazolás fájlja
+      file_change: Másik fájl kiválasztása
+      file_choose: Fájl kiválasztása
+      file_clear: Ne használd ezt a fájlt
+      file_failed: A fájlválasztó nem nyitható meg.
+      file_hint: A Cadrumo a kiválasztott fájlt a titkosított dokumentumaid között
+        őrzi meg.
       form:
         attest: Nincs levonás jelzése a(z) {ejercicio} évre
         record: Igazolás rögzítése a(z) {ejercicio} évre

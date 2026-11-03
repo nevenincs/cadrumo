@@ -2697,6 +2697,7 @@ desktop:
         los archivos que pida.
       'no': 'No'
       none: Ninguno
+      partial: Solo se guardó una parte. Actualiza para comprobar qué se conservó.
       reading: Leyendo…
       refused: No guardado.
       reread: Actualizar
@@ -4275,12 +4276,19 @@ desktop:
         state: Estado
       correct_hint: Para corregir un certificado, quítalo y anótalo de nuevo.
       document: Documento del certificado (opcional)
-      document_hint: Un documento guardado en Documentos. Su huella se anota tal como
-        la das y todavía no se comprueba con el documento guardado.
+      document_hint: Un documento guardado en Documentos. Se rechaza el registro si
+        Cadrumo no tiene ese documento o si el archivo que elegiste no coincide con
+        él.
       document_none: Aún no hay documentos guardados
       document_not: Sin documento
       ejercicio: Año
       empty: No hay certificados anotados para {ejercicio}.
+      file: Archivo del certificado
+      file_change: Elegir otro archivo
+      file_choose: Elegir archivo
+      file_clear: No usar este archivo
+      file_failed: No se pudo abrir el selector de archivos.
+      file_hint: Cadrumo guarda el archivo que elijas entre tus documentos cifrados.
       form:
         attest: Indicar sin retenciones en {ejercicio}
         record: Anotar un certificado de {ejercicio}

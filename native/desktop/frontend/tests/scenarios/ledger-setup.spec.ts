@@ -48,6 +48,7 @@ async function openLedger(
   target: Page,
   scheme?: "light" | "dark",
   language = "en",
+  shape?: string,
 ) {
   if (scheme)
     await target.addInitScript((appearance) => {
@@ -57,7 +58,7 @@ async function openLedger(
       );
     }, scheme);
   await target.goto(
-    `/scenarios.html?scenario=ledger&latency=0&bar=off&lang=${language}`,
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&lang=${language}${shape ? `&ledger=${shape}` : ""}`,
   );
   await target.locator("[data-rail=ledger]").click();
   await expect(page(target).getByRole("grid")).toBeVisible();
@@ -1367,8 +1368,8 @@ for (const scheme of ["light", "dark"] as const)
   });
 
 /** Opens Setup › Registers › Withholding. */
-async function openWithholding(target: Page) {
-  await openLedger(target);
+async function openWithholding(target: Page, shape?: string) {
+  await openLedger(target, undefined, "en", shape);
   await openSetup(target, "registers");
   await area(target, "desktop.ledger.registers.area.withholding");
   await expect(
@@ -1537,6 +1538,142 @@ test("a refused certificate shows the backend's words, or the pane's own when it
     ),
   );
   await expect(form).toBeVisible();
+});
+
+/** Starts a certificate record the way a payer's certificate is: a class, a
+ * payer, the payer-certificate source. The figures stay at zero. */
+async function startCertificate(target: Page) {
+  await button(target, "desktop.ledger.withholding.action.record").click();
+  const form = withholdingForm(target);
+  await field(form, "desktop.ledger.withholding.income_class").selectOption(
+    "capital_mobiliario",
+  );
+  await field(form, "desktop.ledger.withholding.payer_tax_id").fill(
+    PAYER_TAX_ID,
+  );
+  await field(form, "desktop.ledger.withholding.payer_legal_name").fill(
+    "Banco de Ejemplo SA",
+  );
+  await field(form, "desktop.ledger.withholding.origin_label").selectOption(
+    "payer_certificate",
+  );
+  return form;
+}
+
+/** Chooses the certificate file in the made-up computer's dialog. */
+async function chooseCertificateFile(form: Locator) {
+  await form
+    .getByRole("button", {
+      name: `${label("desktop.ledger.withholding.file")}: ${label("desktop.ledger.withholding.file_choose")}`,
+      exact: true,
+    })
+    .click();
+  await expect(form.locator(".ledger-withholding-file-name")).toHaveText(
+    "ticket-gasolinera-ruta7.jpg",
+  );
+}
+
+test("a certificate file is picked, kept by the backend and recorded under the fingerprint it answers", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  const form = await startCertificate(target);
+  await expect(form.locator(".ledger-withholding-file-name")).toHaveCount(0);
+  await chooseCertificateFile(form);
+  await button(form, "desktop.ledger.withholding.action.record").click();
+  await expect(form).toBeHidden();
+  const row = target.locator(".ledger-withholding-table tr", {
+    hasText: "Banco de Ejemplo SA",
+  });
+  // The document column holds the fingerprint the backend answered for the
+  // bytes it kept: the window never computed one.
+  await expect(row.locator(".font-mono")).toHaveText(/^[0-9a-f]{12}$/);
+  // Neither the file's path nor its token stays in the window.
+  const held = await target.evaluate(() =>
+    /file-[0-9a-f]{32}/.test(document.documentElement.outerHTML),
+  );
+  expect(held).toBe(false);
+});
+
+test("a certificate file that cannot be read is refused without the token, and the form keeps the file", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  const form = await startCertificate(target);
+  await chooseCertificateFile(form);
+  await target.evaluate(() =>
+    window.__scenarioWithholding!.nextRecords(["unreadable"]),
+  );
+  await button(form, "desktop.ledger.withholding.action.record").click();
+  const line = target.locator(".setup-call-line");
+  // The backend serves no words for this refusal, so the pane says so in its
+  // generic notice and never prints the reason's token.
+  await expect(line).toContainText(label("desktop.ledger.form.refused"));
+  await expect(line).not.toContainText("certificate_file_unreadable");
+  await expect(form).toBeVisible();
+  await expect(form.locator(".ledger-withholding-file-name")).toBeVisible();
+  // Sent again, the same file is recorded.
+  await button(form, "desktop.ledger.withholding.action.record").click();
+  await expect(form).toBeHidden();
+  await expect(
+    target.locator(".ledger-withholding-table tr", {
+      hasText: "Banco de Ejemplo SA",
+    }),
+  ).toBeVisible();
+});
+
+test("a stored document that is not the chosen file, or that custody does not hold, is refused in the generic notice", async ({
+  page: target,
+}) => {
+  await openWithholding(target, "documents");
+  const form = await startCertificate(target);
+  const stored = field(form, "desktop.ledger.withholding.document");
+  await expect.poll(() => stored.locator("option").count()).toBeGreaterThan(1);
+  await stored.selectOption({ index: 1 });
+  const record = button(form, "desktop.ledger.withholding.action.record");
+  const line = target.locator(".setup-call-line");
+  // The register's custody holds no such document.
+  await record.click();
+  await expect(line).toContainText(label("desktop.ledger.form.refused"));
+  await expect(line).not.toContainText("certificate_not_in_custody");
+  // A file chosen beside it must be that document.
+  await chooseCertificateFile(form);
+  await record.click();
+  await expect(line).toContainText(label("desktop.ledger.form.refused"));
+  await expect(line).not.toContainText("certificate_fingerprint_mismatch");
+  await expect(form).toBeVisible();
+  await expect(
+    target.locator(".ledger-withholding-table tr", {
+      hasText: "Banco de Ejemplo SA",
+    }),
+  ).toHaveCount(0);
+});
+
+test("a refusal that kept the file is shown as partial, apart from a write whose outcome is unknown", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  const form = await startCertificate(target);
+  await chooseCertificateFile(form);
+  await target.evaluate(() =>
+    window.__scenarioWithholding!.nextRecords(["kept_in_part"]),
+  );
+  await button(form, "desktop.ledger.withholding.action.record").click();
+  const line = target.locator(".setup-call-line");
+  await expect(line).toContainText(label("desktop.ledger.form.partial"));
+  await expect(line).not.toContainText(label("desktop.ledger.form.unknown"));
+  // The outcome is known, so there is nothing to refresh to find out.
+  await expect(line.locator(".setup-call-reread")).toHaveCount(0);
+  await expect(form).toBeVisible();
+  await expect(
+    target.locator(".ledger-withholding-table tr", {
+      hasText: "Banco de Ejemplo SA",
+    }),
+  ).toHaveCount(0);
+  // The form keeps its fields to send again.
+  await expect(
+    field(form, "desktop.ledger.withholding.payer_tax_id"),
+  ).toHaveValue(PAYER_TAX_ID);
 });
 
 test("a certificate is removed only once the person confirms, against the revision listed", async ({

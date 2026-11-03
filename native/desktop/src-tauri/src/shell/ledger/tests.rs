@@ -17,6 +17,10 @@ fn the_window_names_no_profile_directory_or_account_secret() {
             json!({"source_directory":"C:\\"}),
         ),
         (
+            "ledger.retencion_soportada.record",
+            json!({"source_directory":"C:\\"}),
+        ),
+        (
             "ledger.own_account",
             json!({"action":"update","own_account_id":"acc-01","iban":"ES00"}),
         ),
@@ -95,12 +99,34 @@ fn file_tokens_become_paths_only_where_the_definition_reads_a_file() {
     assert_eq!(import["verify_source"], Value::Null);
     assert!(!import.contains_key("source_directory"));
 
-    for id in ["ledger.evidence.add", "ledger.inventory.evidence.add"] {
+    for id in [
+        "ledger.evidence.add",
+        "ledger.inventory.evidence.add",
+        "ledger.retencion_soportada.record",
+    ] {
         let mut add = object(json!({"source_path":receipt}));
         let folders = substitute(&files, &session, definition(id), &mut add).unwrap();
         assert_eq!(folders, [root.to_str().unwrap()]);
         assert_eq!(add["source_path"], text(root.join("receipt.pdf")));
         assert_eq!(add["source_directory"], text(root.clone()));
+    }
+
+    // A certificate already in custody is named by its fingerprint alone: no
+    // file is read and no directory is filled.
+    for payload in [
+        json!({"source_path":null,"evidence_fingerprint":"ab"}),
+        json!({"evidence_fingerprint":"ab"}),
+    ] {
+        let mut kept = object(payload);
+        let folders = substitute(
+            &files,
+            &session,
+            definition("ledger.retencion_soportada.record"),
+            &mut kept,
+        )
+        .unwrap();
+        assert!(folders.is_empty());
+        assert!(!kept.contains_key("source_directory"));
     }
 
     let mut book_import = object(json!({"source_path":book,"kind":"RECEIVED"}));
@@ -125,9 +151,19 @@ fn file_tokens_become_paths_only_where_the_definition_reads_a_file() {
             json!({"source_path":root.join("receipt.pdf").to_str().unwrap()}),
             "invalid",
         ),
+        (
+            "ledger.retencion_soportada.record",
+            json!({"source_path":root.join("receipt.pdf").to_str().unwrap()}),
+            "invalid",
+        ),
         // A token picked for another purpose.
         (
             "ledger.inventory.evidence.add",
+            json!({"source_path":statement.clone()}),
+            "invalid",
+        ),
+        (
+            "ledger.retencion_soportada.record",
             json!({"source_path":statement.clone()}),
             "invalid",
         ),

@@ -48,7 +48,7 @@ struct PathField {
     purpose: Purpose,
     shape: Shape,
 }
-const PATH_FIELDS: [PathField; 7] = [
+const PATH_FIELDS: [PathField; 8] = [
     PathField {
         definition: "ledger.evidence.add",
         field: "source_path",
@@ -91,12 +91,20 @@ const PATH_FIELDS: [PathField; 7] = [
         purpose: Purpose::InvoiceBooks,
         shape: Shape::One,
     },
+    // A certificate already in custody is named by its fingerprint alone.
+    PathField {
+        definition: "ledger.retencion_soportada.record",
+        field: "source_path",
+        purpose: Purpose::Documents,
+        shape: Shape::Optional,
+    },
 ];
 /// Definitions that also read the directory their sources are under.
-const SOURCE_DIRECTORY: [&str; 3] = [
+const SOURCE_DIRECTORY: [&str; 4] = [
     "ledger.evidence.add",
     "ledger.evidence.batch",
     "ledger.inventory.evidence.add",
+    "ledger.retencion_soportada.record",
 ];
 const EXPORT: &str = "ledger.export";
 /// An own account's change, JSON-escaped, within its contract's bounds.

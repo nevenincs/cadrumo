@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import type { LedgerShape } from "@/dev/ledgerFixture";
 import {
   STORY_PERIOD,
   STORY_READER,
@@ -13,15 +14,16 @@ import { WithholdingPane } from "./WithholdingPane";
 
 // The withholding register of Setup › Registers over the scenario's ledger:
 // the payers' certificates by income class, a year with none, the statements
-// that a class had no withholding with the withdrawn ones kept as history, and
-// a refusal said in the words the backend served for it. The scenario's payer
-// and tax ID are made up.
+// that a class had no withholding with the withdrawn ones kept as history, a
+// refusal said in the words the backend served for it, and a certificate file
+// picked and kept, with the refusals the backend serves no words for and the
+// one that kept the file. The scenario's payer and tax ID are made up.
 
-type Args = { locale: string };
+type Args = { locale: string; shape?: LedgerShape };
 
 /** The page's own reads, held as the page holds them, for the register. */
-function Register({ locale }: Args) {
-  const port = useLedgerPort();
+function Register({ locale, shape }: Args) {
+  const port = useLedgerPort(shape);
   const read = useLedgerRead(port, STORY_PERIOD);
   const { stage, onStage } = useStoryStage();
   const pause = usePagePause({
@@ -53,7 +55,10 @@ const meta: Meta<Args> = {
     <Register {...args} locale={String(globals.locale ?? "en")} />
   ),
   args: { locale: "en" },
-  argTypes: { locale: { table: { disable: true } } },
+  argTypes: {
+    locale: { table: { disable: true } },
+    shape: { table: { disable: true } },
+  },
   parameters: { fill: true, layout: "fullscreen" },
 };
 export default meta;
@@ -198,6 +203,153 @@ export const RefusedWithServedWords: Story = {
         name: word("desktop.ledger.withholding.action.record"),
       }),
     );
+  },
+};
+
+/** Starts a payer certificate: a class, a payer and the payer-certificate
+ * source, with the figures left at zero. */
+const startCertificate = async (canvasElement: HTMLElement) => {
+  await openForm(canvasElement, "record");
+  const form = canvasElement.querySelector<HTMLElement>(
+    ".ledger-withholding-form",
+  )!;
+  const inside = within(form);
+  const [incomeClass, origin] = inside.getAllByRole("combobox");
+  await userEvent.selectOptions(incomeClass!, "capital_mobiliario");
+  await userEvent.type(
+    inside.getByLabelText(word("desktop.ledger.withholding.payer_tax_id")),
+    "A58818501",
+  );
+  await userEvent.type(
+    inside.getByLabelText(word("desktop.ledger.withholding.payer_legal_name")),
+    "Banco de Ejemplo SA",
+  );
+  await userEvent.selectOptions(origin!, "payer_certificate");
+  return inside;
+};
+
+/** Chooses the certificate file in the made-up computer's dialog. */
+const chooseFile = async (inside: ReturnType<typeof within>) => {
+  await userEvent.click(
+    inside.getByRole("button", {
+      name: `${word("desktop.ledger.withholding.file")}: ${word("desktop.ledger.withholding.file_choose")}`,
+    }),
+  );
+  await waitFor(() => inside.getByText("ticket-gasolinera-ruta7.jpg"));
+};
+
+const sendCertificate = (inside: ReturnType<typeof within>) =>
+  userEvent.click(
+    inside.getByRole("button", {
+      name: word("desktop.ledger.withholding.action.record"),
+    }),
+  );
+
+/** The certificate file chosen with the system dialog, shown by its name. */
+export const CertificateFilePicked: Story = {
+  name: "Certificate file picked",
+  play: async ({ canvasElement }) => {
+    const inside = await startCertificate(canvasElement);
+    await chooseFile(inside);
+    await expect(
+      inside.getByRole("button", {
+        name: `${word("desktop.ledger.withholding.file")}: ${word("desktop.ledger.withholding.file_change")}`,
+      }),
+    ).toBeVisible();
+  },
+};
+
+/** The picked file recorded: the register lists the fingerprint the backend
+ * answered for the bytes it kept. */
+export const CertificateFileRecorded: Story = {
+  name: "Certificate file recorded",
+  play: async ({ canvasElement }) => {
+    const inside = await startCertificate(canvasElement);
+    await chooseFile(inside);
+    await sendCertificate(inside);
+    await waitFor(() => within(canvasElement).getByText("Banco de Ejemplo SA"));
+  },
+};
+
+/** A file that could not be read: the backend serves no words for it, so the
+ * pane's generic notice stands and the file stays chosen. */
+export const CertificateFileUnreadable: Story = {
+  name: "Certificate file unreadable",
+  play: async ({ canvasElement }) => {
+    window.__scenarioWithholding!.nextRecords(["unreadable"]);
+    const inside = await startCertificate(canvasElement);
+    await chooseFile(inside);
+    await sendCertificate(inside);
+    await waitFor(() =>
+      within(canvasElement).getByText(word("desktop.ledger.form.refused")),
+    );
+  },
+};
+
+/** A stored document custody does not hold: the same generic notice. */
+export const CertificateNotInCustody: Story = {
+  name: "Certificate not in custody",
+  args: { shape: "documents" },
+  play: async ({ canvasElement }) => {
+    const inside = await startCertificate(canvasElement);
+    const stored = inside.getByLabelText(
+      word("desktop.ledger.withholding.document"),
+    );
+    await waitFor(() => {
+      if (stored.querySelectorAll("option").length < 2)
+        throw new Error("the stored documents are not listed yet");
+    });
+    await userEvent.selectOptions(
+      stored,
+      stored.querySelectorAll("option")[1]!.value,
+    );
+    await sendCertificate(inside);
+    await waitFor(() =>
+      within(canvasElement).getByText(word("desktop.ledger.form.refused")),
+    );
+  },
+};
+
+/** A stored document beside a file that is not that document. */
+export const CertificateFingerprintMismatch: Story = {
+  name: "Certificate does not match its fingerprint",
+  args: { shape: "documents" },
+  play: async ({ canvasElement }) => {
+    const inside = await startCertificate(canvasElement);
+    const stored = inside.getByLabelText(
+      word("desktop.ledger.withholding.document"),
+    );
+    await waitFor(() => {
+      if (stored.querySelectorAll("option").length < 2)
+        throw new Error("the stored documents are not listed yet");
+    });
+    await userEvent.selectOptions(
+      stored,
+      stored.querySelectorAll("option")[1]!.value,
+    );
+    await chooseFile(inside);
+    await sendCertificate(inside);
+    await waitFor(() =>
+      within(canvasElement).getByText(word("desktop.ledger.form.refused")),
+    );
+  },
+};
+
+/** A refusal after the file was kept: partial, which is known, and not the
+ * unknown outcome that asks to be refreshed. */
+export const CertificateKeptInPart: Story = {
+  name: "Refused after the file was kept",
+  play: async ({ canvasElement }) => {
+    window.__scenarioWithholding!.nextRecords(["kept_in_part"]);
+    const inside = await startCertificate(canvasElement);
+    await chooseFile(inside);
+    await sendCertificate(inside);
+    await waitFor(() =>
+      within(canvasElement).getByText(word("desktop.ledger.form.partial")),
+    );
+    await expect(
+      within(canvasElement).queryByText(word("desktop.ledger.form.unknown")),
+    ).toBeNull();
   },
 };
 

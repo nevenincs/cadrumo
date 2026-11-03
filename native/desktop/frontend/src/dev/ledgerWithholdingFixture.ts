@@ -24,7 +24,23 @@ type Tools = {
   hex64: (text: string) => string;
   invalid: () => never;
   stop: (reason: string, detail: JsonObject) => never;
+  /** Settles refused after part of the work was kept. */
+  keptInPart: (reason: string, detail: JsonObject) => never;
+  /** The file a token the window was given stands for. */
+  fileOf: (token: JsonValue | undefined) => { name: string };
 };
+
+/** What the made-up register cannot cause itself, which a scenario asks the
+ * next certificate record to meet: a file that cannot be read once chosen,
+ * or a record refused after its file was kept, as a race would leave it. */
+export type CertificateFault = "unreadable" | "kept_in_part";
+declare global {
+  interface Window {
+    __scenarioWithholding?: {
+      nextRecords(faults: CertificateFault[]): void;
+    };
+  }
+}
 
 const WRITE_CODE = "REFUSED_RETENCION_SOPORTADA_WRITE";
 const ABSENCE_CODE = "REFUSED_RETENCION_SOPORTADA_ABSENCE";
@@ -70,7 +86,16 @@ type Attestation = {
 
 /** The withholding operations over a small synthetic register. */
 export function withholdingOperations(tools: Tools) {
-  const { profileId, today, now, hex64, invalid, stop } = tools;
+  const { profileId, today, now, hex64, invalid, stop, keptInPart, fileOf } =
+    tools;
+  const faults: CertificateFault[] = [];
+  window.__scenarioWithholding = {
+    nextRecords: (next) => faults.push(...next),
+  };
+  /** The fingerprints of the bytes custody holds: the seeded certificate,
+   * and each file a record has kept. */
+  const custody = new Set<string>([hex64("certificate:employer")]);
+  const fileDigest = (name: string) => hex64(`certificate-file:${name}`);
   const year = Number(today.slice(0, 4));
   const decimal = (value: string) => ({ decimal: value });
   const stored: Stored[] = [
@@ -204,6 +229,19 @@ export function withholdingOperations(tools: Tools) {
       refusal: { code, reason, ejercicio },
       ...(SERVED_WORDS[reason] ? { refusal_words: SERVED_WORDS[reason] } : {}),
     });
+  const keptInPartRefusal = (
+    code: string,
+    reason: string,
+    ejercicio: number,
+  ): never =>
+    keptInPart(code, {
+      outcome: "refused",
+      profile_id: profileId,
+      ejercicio,
+      row: null,
+      count: null,
+      refusal: { code, reason, ejercicio },
+    });
   const absenceRefusal = (
     code: string,
     reason: string,
@@ -266,6 +304,7 @@ export function withholdingOperations(tools: Tools) {
         ...AMOUNTS,
         "origin",
         "evidence_fingerprint",
+        "source_path",
         "expected_revision_id",
       ]);
       const ejercicio = whole(request.ejercicio);
@@ -279,9 +318,28 @@ export function withholdingOperations(tools: Tools) {
       const figures = Object.fromEntries(
         AMOUNTS.map((name) => [name, figure(request[name])]),
       ) as Stored["figures"];
-      const fingerprint = text(request.evidence_fingerprint);
-      if (fingerprint !== null && !/^[0-9a-f]{64}$/.test(fingerprint))
-        return invalid();
+      const given = text(request.evidence_fingerprint);
+      if (given !== null && !/^[0-9a-f]{64}$/.test(given)) return invalid();
+      const picked = text(request.source_path);
+      const file = picked === null ? null : fileOf(picked);
+      const fault = file === null ? undefined : faults.shift();
+      // The file is read first, and a fingerprint given with it only
+      // cross-checks the bytes read.
+      if (file !== null) {
+        if (fault === "unreadable")
+          return certificateRefusal(
+            WRITE_CODE,
+            "certificate_file_unreadable",
+            ejercicio,
+          );
+        if (given !== null && given !== fileDigest(file.name))
+          return certificateRefusal(
+            WRITE_CODE,
+            "certificate_fingerprint_mismatch",
+            ejercicio,
+          );
+      }
+      const fingerprint = file === null ? given : fileDigest(file.name);
       if (origin === WITHHOLDING_ORIGINS[0] && fingerprint === null)
         return certificateRefusal(
           WRITE_CODE,
@@ -297,6 +355,13 @@ export function withholdingOperations(tools: Tools) {
           "repercutido_exceeds_ingreso_a_cuenta",
           ejercicio,
         );
+      // A fingerprint with no file names bytes custody must already hold.
+      if (file === null && fingerprint !== null && !custody.has(fingerprint))
+        return certificateRefusal(
+          WRITE_CODE,
+          "certificate_not_in_custody",
+          ejercicio,
+        );
       const payerRef = hex64(`payer:${taxId}`);
       if (
         stored.some(
@@ -307,6 +372,11 @@ export function withholdingOperations(tools: Tools) {
         )
       )
         return certificateRefusal(REVISION_CODE, "stale_revision", ejercicio);
+      if (file !== null) custody.add(fileDigest(file.name));
+      // The file is kept, and the record is then refused: the register
+      // changed between the checks and the write.
+      if (fault === "kept_in_part")
+        return keptInPartRefusal(REVISION_CODE, "stale_revision", ejercicio);
       revisions += 1;
       const row: Stored = {
         ejercicio,

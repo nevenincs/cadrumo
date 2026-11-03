@@ -2697,6 +2697,7 @@ desktop:
         els fitxers que demani.
       'no': 'No'
       none: Cap
+      partial: Només s'ha desat una part. Actualitza per comprovar què s'ha conservat.
       reading: S'està llegint…
       refused: No desat.
       reread: Actualitza
@@ -4272,12 +4273,18 @@ desktop:
         state: Estat
       correct_hint: Per corregir un certificat, treu-lo i anota'l de nou.
       document: Document del certificat (opcional)
-      document_hint: Un document desat a Documents. La seva empremta s'anota tal com
-        la dónes i encara no es comprova amb el document desat.
+      document_hint: Un document desat a Documents. Es rebutja el registre si Cadrumo
+        no té aquest document o si el fitxer que has triat no hi coincideix.
       document_none: Encara no hi ha documents desats
       document_not: Sense document
       ejercicio: Any
       empty: No hi ha cap certificat anotat per a {ejercicio}.
+      file: Fitxer del certificat
+      file_change: Tria un altre fitxer
+      file_choose: Tria un fitxer
+      file_clear: No facis servir aquest fitxer
+      file_failed: No s'ha pogut obrir el selector de fitxers.
+      file_hint: Cadrumo desa el fitxer que triïs entre els teus documents xifrats.
       form:
         attest: Indica sense retencions a {ejercicio}
         record: Anota un certificat de {ejercicio}

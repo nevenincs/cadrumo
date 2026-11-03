@@ -641,6 +641,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.form.failed",
         "desktop.ledger.form.no",
         "desktop.ledger.form.none",
+        "desktop.ledger.form.partial",
         "desktop.ledger.form.reading",
         "desktop.ledger.form.refused",
         "desktop.ledger.form.reread",

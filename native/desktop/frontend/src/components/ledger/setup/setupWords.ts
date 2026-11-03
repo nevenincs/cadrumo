@@ -28,6 +28,8 @@ export function callText<R>(
   refusal?: (reason: string | null) => string | null,
 ): string | null {
   if (!call || call.kind === "done") return null;
+  if (call.kind === "partial")
+    return call.words ?? t("desktop.ledger.form.partial");
   if (call.kind === "unknown") return t("desktop.ledger.form.unknown");
   if (call.kind === "saved_unread")
     return t("desktop.ledger.apply.outcome.saved_unread");

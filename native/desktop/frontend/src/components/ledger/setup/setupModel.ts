@@ -35,6 +35,10 @@ export type SetupCall<Result> =
   /** Settled without changing anything; `detail` is the refusal's own
    * result, where the definition declares one. */
   | { kind: "refused"; reason: string | null; detail: JsonObject | null }
+  /** A write the backend settled as refused after it had kept part of what
+   * it was asked for: the part is kept and the rest is not, which is known,
+   * unlike `unknown`. `words` is the sentence it served, if it served one. */
+  | { kind: "partial"; words: string | null }
   /** A write sent and not seen to settle: it may have been saved. */
   | { kind: "unknown" }
   /** A write that saved, whose answer was not read. */
@@ -64,7 +68,10 @@ export function callOutcome<Result>(
 /** The same for a call that was rejected before it answered. */
 export function callFailure<Result>(error: unknown): SetupCall<Result> {
   const failure = ledgerFailure(error);
-  if (failure.code === "unknown") return { kind: "unknown" };
+  if (failure.code === "unknown")
+    return failure.terminal_failure?.effect === "partial"
+      ? { kind: "partial", words: failure.terminal_failure.refusal_words }
+      : { kind: "unknown" };
   if (failure.code === "saved_unread") return { kind: "saved_unread" };
   return {
     kind: "failed",

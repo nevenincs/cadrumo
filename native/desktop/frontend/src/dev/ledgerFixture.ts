@@ -75,6 +75,7 @@ import {
   movementActionOperations,
 } from "./ledgerMovementActionFixture";
 import {
+  SetupKeptInPart,
   SetupRequestInvalid,
   SetupStopped,
   setupOperations,
@@ -327,11 +328,14 @@ class Refusal extends Error {
   readonly code: LedgerFailureCode;
   readonly operation_id: string | null;
   readonly reason?: string;
+  readonly terminal_failure?: LedgerFailure["terminal_failure"];
   constructor(readonly failure: LedgerFailure) {
     super(failure.code);
     this.code = failure.code;
     this.operation_id = failure.operation_id;
     if (failure.reason !== undefined) this.reason = failure.reason;
+    if (failure.terminal_failure !== undefined)
+      this.terminal_failure = failure.terminal_failure;
   }
 }
 const reject = (
@@ -2318,6 +2322,19 @@ export function ledgerFixture(options: Options): LedgerPort {
       )
         return invalid();
       if (error instanceof SetupRequestInvalid) return invalid();
+      if (error instanceof SetupKeptInPart) {
+        // The refusal settled with a partial effect, which the host reports
+        // as a write that stopped, not as a refusal that wrote nothing.
+        return reject("unknown", {
+          operation_id: operation,
+          terminal_failure: {
+            operation_id: operation,
+            definition_id: definition,
+            effect: "partial",
+            refusal_words: null,
+          },
+        });
+      }
       if (error instanceof SetupStopped) {
         const refused: LedgerOutcome = {
           kind: "refused",

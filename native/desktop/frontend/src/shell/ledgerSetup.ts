@@ -490,6 +490,9 @@ export type WithholdingRefusalReason =
   | "stale_revision"
   | "repercutido_exceeds_ingreso_a_cuenta"
   | "certificate_fingerprint_required"
+  | "certificate_not_in_custody"
+  | "certificate_file_unreadable"
+  | "certificate_fingerprint_mismatch"
   | "taxpayer_tax_id_unknown"
   | "not_found"
   | "validation";
@@ -509,7 +512,13 @@ export type WithholdingMutationResult = {
   } | null;
 };
 /** Records a payer's certificate. `payer_tax_id` is private input: it goes
- * in this request only and the backend never returns it. */
+ * in this request only and the backend never returns it. The certificate is
+ * named by `source_path`, a token for the file the person picked, which the
+ * backend reads and keeps in the profile's encrypted custody (the host fills
+ * `source_directory`), or by `evidence_fingerprint` alone for bytes custody
+ * already holds. Given with a file, the fingerprint only cross-checks the
+ * bytes read. A refusal can leave the kept bytes behind: the operation
+ * settles refused with a partial effect. */
 export type WithholdingRecordRequest = {
   ejercicio: number;
   income_class: WithholdingIncomeClass;
@@ -522,6 +531,7 @@ export type WithholdingRecordRequest = {
   ingreso_a_cuenta_repercutido: PublicDecimal;
   origin: WithholdingOrigin;
   evidence_fingerprint?: string | null;
+  source_path?: FileToken | null;
   expected_revision_id?: string | null;
 };
 export type WithholdingRemoveRequest = {

@@ -386,11 +386,14 @@ pub(super) fn reduced(document: &Value, keys: &[&str], folders: &[String]) -> Va
     document
 }
 
-/// Only native-observed terminal failure carries this evidence. Missing,
-/// malformed or other terminal conditions cannot enable calculation review.
+/// Only native-observed terminal failure carries this evidence, and a refusal
+/// that settled with a partial effect: execution stopped for good after it
+/// had kept part of what it was asked for. Missing, malformed or other
+/// terminal conditions cannot enable calculation review.
 fn terminal_failure(p: &Value, tracked: &Tracked) -> Option<TerminalFailure> {
+    let kept_in_part = p["terminal_condition"] == "refused" && p["effect"] == "partial";
     if p["lifecycle"] != "terminal"
-        || p["terminal_condition"] != "failed"
+        || !(p["terminal_condition"] == "failed" || kept_in_part)
         || p["operation_id"] != tracked.operation
         || p["definition_id"] != tracked.definition.id
     {
@@ -1284,6 +1287,53 @@ mod tests {
                 TerminalFailureEffect::Partial
             );
             assert!(lost.terminal_failure.unwrap().refusal_words.is_none());
+        }
+
+        #[tokio::test]
+        async fn a_refusal_that_kept_part_of_the_work_is_partial_and_any_other_refused_effect_stays_unknown()
+         {
+            for (effect, kept) in [
+                ("partial", Some(TerminalFailureEffect::Partial)),
+                ("unknown", None),
+                ("updated", None),
+            ] {
+                let held = holder(|_| {
+                    vec![
+                        step(
+                            "operation_observe",
+                            json!([["operation_id", OPERATION]]),
+                            observed(
+                                REVIEWED.id,
+                                &subject(),
+                                "terminal",
+                                json!({"terminal_condition":"refused","effect":effect,
+                                    "refusal_ref":"REFUSED_EXAMPLE"}),
+                            ),
+                            false,
+                        ),
+                        step(
+                            "operation_result",
+                            json!([]),
+                            json!({"kind":"operation_refused","code":"no_result"}),
+                            false,
+                        ),
+                    ]
+                });
+                let mut events = held.events.subscribe();
+                let lost = settle(
+                    &mut events,
+                    &tracked(REVIEWED, &held.identity),
+                    &held.person,
+                )
+                .await
+                .unwrap_err();
+                assert_eq!(lost.code, "unknown", "{effect}");
+                assert_eq!(
+                    lost.terminal_failure.map(|failure| failure.effect),
+                    kept,
+                    "{effect}"
+                );
+            }
         }
 
         #[tokio::test]

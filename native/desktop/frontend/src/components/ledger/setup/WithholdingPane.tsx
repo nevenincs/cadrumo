@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
-import { servedRefusalWords } from "../../../shell/ledger";
+import { servedRefusalWords, type PickedFile } from "../../../shell/ledger";
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,
@@ -21,9 +21,10 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { formatAmount } from "../../../shared/numbers";
 import { formatInstantDay } from "../../../shared/dateFormats";
-import { useStrings } from "../../../shell/strings";
+import { tokensOf, useStrings } from "../../../shell/strings";
 import { PeriodSelector } from "../PeriodSelector";
 import { WriteHold, type Landing, type LandingCheck } from "../WritePause";
+import { CertificateFilePicker } from "./CertificateFilePicker";
 import { EditorField } from "./EditorField";
 import { setupCall, type SetupCall } from "./setupModel";
 import type { SetupProps } from "./setupProps";
@@ -109,12 +110,17 @@ export function WithholdingPane({
   const [amounts, setAmounts] = useState<Amounts>(NO_AMOUNTS);
   const [origin, setOrigin] = useState("");
   const [fingerprint, setFingerprint] = useState("");
+  /** The certificate file the person picked: sent as the host's token, so
+   * the backend reads it and keeps its bytes. A stored document chosen with
+   * it is only checked against the bytes read. */
+  const [file, setFile] = useState<PickedFile | null>(null);
   const [note, setNote] = useState("");
   /** The row the person is asked to confirm removing. */
   const [removing, setRemoving] = useState<WithholdingRow | null>(null);
   useSetupDraft(
     action !== null &&
       ([taxId, legalName, fingerprint, note].some(Boolean) ||
+        file !== null ||
         AMOUNTS.some((name) => amounts[name] !== NO_AMOUNTS[name])),
   );
 
@@ -186,6 +192,8 @@ export function WithholdingPane({
   const parsedOf = (name: Amount) =>
     parsed.find((found) => found.name === name)!.parsed;
   const clean = () => {
+    if (file) void port.forgetFiles([file.token]).catch(() => undefined);
+    setFile(null);
     setIncomeClass("");
     setTaxId("");
     setLegalName("");
@@ -214,10 +222,12 @@ export function WithholdingPane({
     rows.filter((row) => row.income_class === value);
   const told = (saved: boolean): Landing => (saved ? "saved" : "not_saved");
 
-  /** Whether a call was turned back with nothing stored, so that the form
-   * stays for the person to fix and send again. */
+  /** Whether a call was turned back without its record, so that the form
+   * stays for the person to fix and send again. A partial one kept the file
+   * but stored no record. */
   const sendAgain = (done: SetupCall<{ outcome: string }>) =>
     done.kind === "refused" ||
+    done.kind === "partial" ||
     done.kind === "failed" ||
     (done.kind === "done" && done.result.outcome === "refused");
 
@@ -262,6 +272,7 @@ export function WithholdingPane({
               ),
               origin: WITHHOLDING_ORIGINS.find((value) => value === origin)!,
               evidence_fingerprint: fingerprint || null,
+              source_path: file ? file.token : null,
             },
             true,
           ),
@@ -378,13 +389,16 @@ export function WithholdingPane({
   };
 
   /** A refusal said in the words the backend served for it, else in this
-   * pane's own words for its reason. */
+   * pane's own words for a reason it has some for. A reason it has none for
+   * (the custody refusals, which the backend serves no words for) gets the
+   * generic notice, never the token. */
+  const ownWords = tokensOf("desktop.ledger.withholding.refusal.");
   const refusalIn = (detail: unknown): string | null => {
     const served = servedRefusalWords(detail);
     if (served) return served;
     const found = (detail as Partial<WithholdingMutationResult> | null)
       ?.refusal;
-    return found
+    return found && ownWords.includes(found.reason)
       ? t(`desktop.ledger.withholding.refusal.${found.reason}`)
       : null;
   };
@@ -764,6 +778,12 @@ export function WithholdingPane({
                     value,
                     label: originWords(value),
                   }))}
+                />
+                <CertificateFilePicker
+                  port={port}
+                  file={file}
+                  onFile={setFile}
+                  disabled={write.busy}
                 />
                 <ChoiceField
                   label={t("desktop.ledger.withholding.document")}

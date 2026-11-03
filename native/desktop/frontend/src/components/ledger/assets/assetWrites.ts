@@ -407,6 +407,9 @@ export function viewOf(
   }
   if (call.kind === "refused")
     return { kind: "refused", reason: call.reason, ...refusalOf(call.detail) };
+  // This form has no line for a write that kept part of its work, so it asks
+  // the person to check what was saved, as for a write it could not follow.
+  if (call.kind === "partial") return { kind: "unknown" };
   return { kind: call.kind };
 }
 

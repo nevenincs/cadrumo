@@ -58,6 +58,16 @@ import type {
 
 /** A request its registered contract would not decode. */
 export class SetupRequestInvalid extends Error {}
+/** Settled refused after it had kept part of what it was asked for: the
+ * operation's effect is partial, neither none nor unknown. */
+export class SetupKeptInPart extends Error {
+  constructor(
+    readonly reason: string,
+    readonly detail: JsonObject | null = null,
+  ) {
+    super(reason);
+  }
+}
 /** Settled without writing, with the refusal's code and its detail. */
 export class SetupStopped extends Error {
   constructor(
@@ -2272,6 +2282,10 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     stop: (reason, detail) => {
       throw new SetupStopped(reason, detail);
     },
+    keptInPart: (reason, detail) => {
+      throw new SetupKeptInPart(reason, detail);
+    },
+    fileOf: tools.fileOf,
   });
   const reads: Partial<Record<LedgerDefinitionId, Handler>> = {
     "ledger.rule.list": (request) => {

@@ -2647,6 +2647,7 @@ desktop:
         files it asks for.
       'no': 'No'
       none: None
+      partial: Only part of this was saved. Refresh to check what was kept.
       reading: Reading…
       refused: Not saved.
       reread: Refresh
@@ -4203,12 +4204,18 @@ desktop:
         state: State
       correct_hint: To correct a certificate, remove it and record it again.
       document: Certificate document (optional)
-      document_hint: A document stored under Documents. Its fingerprint is recorded
-        as given and is not yet checked against the stored document.
+      document_hint: A document stored under Documents. The record is refused if Cadrumo
+        does not hold that document, or if a file you chose does not match it.
       document_none: No documents stored yet
       document_not: No document
       ejercicio: Year
       empty: No certificates recorded for {ejercicio}.
+      file: Certificate file
+      file_change: Choose another file
+      file_choose: Choose file
+      file_clear: Don't use this file
+      file_failed: The file dialog could not be opened.
+      file_hint: Cadrumo keeps the file you choose among your encrypted documents.
       form:
         attest: State no withholding for {ejercicio}
         record: Record a certificate for {ejercicio}
