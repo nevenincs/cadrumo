@@ -79,6 +79,14 @@ def test_an_owner_that_is_not_a_declared_form_is_refused(_worker_compiled_author
     assert "not a declared form" in failure
 
 
+def test_a_tree_that_reads_no_household_object_does_not_judge_its_owner(_worker_compiled_authority: Any) -> None:
+    others = tuple(modelo for modelo in _worker_compiled_authority.modelos if str(modelo.id) != "100")
+
+    assert others
+    assert household_row_owner_failures(others, row_limit_owners()) == []
+    assert validate_household_row_owners(others) == ()
+
+
 def test_an_owner_no_revision_reads_the_object_through_is_refused(_worker_compiled_authority: Any) -> None:
     owners = {"renta_family.not_a_household": _owner(_DESCENDANTS)}
 

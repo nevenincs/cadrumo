@@ -3,7 +3,10 @@
 The registry names one form and one layout group per stored profile row object. A reader
 takes the object's repeat limit from that group alone, so the build refuses an owner that
 is not a declared form, that no revision reads the object through, or whose layout leaves a
-reading revision without the named group reading the object and declaring a limit.
+reading revision without the named group reading the object and declaring a limit. A tree in
+which no revision reads the object cannot judge its owner, so an owner form that tree does not
+hold is refused only where the tree reads the object: an isolated candidate of one other
+modelo carries the shared facts without the owning form.
 """
 
 from __future__ import annotations
@@ -31,7 +34,12 @@ def household_row_owner_failures(modelos: Iterable[ModeloDefinition], owners: Ma
     for object_path, owner in owners.items():
         modelo = by_id.get(owner.form)
         if modelo is None:
-            failures.append(f"row object {object_path!r} names owner {owner.form!r}, which is not a declared form")
+            if any(
+                row_reading_binding_ids(revision, object_path)
+                for candidate in by_id.values()
+                for revision in candidate.revisions.values()
+            ):
+                failures.append(f"row object {object_path!r} names owner {owner.form!r}, which is not a declared form")
             continue
         reading_revisions = 0
         for revision_id, revision in modelo.revisions.items():
