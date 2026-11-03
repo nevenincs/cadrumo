@@ -437,6 +437,8 @@ class TransactionPayload(OutputSchema):
     iva_rate: str | None = None
     iva_amount: str | None = None
     iva_category: str | None = None
+    deduction_fact_kind: str | None = None
+    investment_asset_id: str | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: str | None = None
     irpf_category: str | None = None
@@ -779,6 +781,8 @@ class LedgerListRowPayload(OutputSchema):
     iva_rate: str | None = None
     iva_amount: str | None = None
     iva_category: str | None = None
+    deduction_fact_kind: str | None = None
+    investment_asset_id: str | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: str | None = None
     irpf_category: str | None = None
