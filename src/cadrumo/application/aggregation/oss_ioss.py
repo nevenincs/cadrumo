@@ -452,6 +452,8 @@ def _detail_binding_values(
     """
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
+    # Each line answers for its own placement first: a folded row cannot name the line a refusal is about.
+    _group_detail_observations(revision, observations, operation=operation)
     at_row_level = _observations_at_row_level(observations, operation=operation)
     for record_id, all_rows in _group_detail_observations(revision, at_row_level, operation=operation).items():
         slots = _record_row_slots(revision, record_id)
