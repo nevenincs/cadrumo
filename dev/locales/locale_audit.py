@@ -134,7 +134,7 @@ def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool
     Form layout headings the committed layouts declare are the third: they are
     optional translations with a declared fallback chain.
     """
-    from ._registry_scanner import is_form_layout_heading_candidate, scan_form_layout_heading_keys
+    from .form_layout_heading_scan import is_form_layout_heading_candidate, scan_form_layout_heading_keys
 
     return (
         is_delta_keyed_leaf(key)

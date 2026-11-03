@@ -155,15 +155,19 @@ def test_precedence_merge_lets_a_later_tier_overlay_a_truth_value() -> None:
 
     overlay = merge_source_resolutions_by_precedence(
         (
-            PrecedenceTier(SourceDisagreementRole.PROFILE, lower, "profile"),
-            PrecedenceTier(SourceDisagreementRole.CALLER, higher, "operator_input"),
+            PrecedenceTier(role=SourceDisagreementRole.PROFILE, resolution=lower, source_family="profile"),
+            PrecedenceTier(role=SourceDisagreementRole.CALLER, resolution=higher, source_family="operator_input"),
         )
     )
-    merged = overlay.resolution
 
-    assert merged.boolean_binding_values[_ANUALIDADES_BINDING] is False
+    assert overlay.resolution.boolean_binding_values[_ANUALIDADES_BINDING] is False
+    assert overlay.selected_binding_roles[_ANUALIDADES_BINDING] is SourceDisagreementRole.CALLER
     (divergence,) = overlay.divergences
-    assert divergence.selected_role is SourceDisagreementRole.CALLER
+    assert divergence.value_channel == "boolean"
+    assert [source.role for source in divergence.sources] == [
+        SourceDisagreementRole.PROFILE,
+        SourceDisagreementRole.CALLER,
+    ]
     assert tuple(source.value for source in divergence.sources) == (
         DisagreementBooleanValue(value=True),
         DisagreementBooleanValue(value=False),

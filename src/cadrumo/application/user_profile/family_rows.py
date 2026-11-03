@@ -26,7 +26,8 @@ count of zero; ``incomplete`` means the profile states more people than it
 records (three stated, one recorded), so the stored rows are served but the group
 is not complete. ``stated_count`` and ``row_count`` stay visible beside it, and
 ``incomplete_words`` says the two numbers in the output language. None of these
-may be drawn alike.
+may be drawn alike. ``max_rows`` is the most rows the declaration's design holds for the group,
+so a surface offers no more people than the declaration can carry.
 """
 
 from __future__ import annotations
@@ -47,6 +48,7 @@ from ...domain.user_profile.schema import ProfileFieldType
 from ..flows.copy import resolve_copy, resolve_optional_copy
 from ..wizard.descendant_group import build_descendant_group
 from .completeness import profile_value_is_present
+from .household_row_limit import declared_household_row_limit
 from .overview import ProfileFieldChoice, mask_profile_field
 
 if TYPE_CHECKING:
@@ -126,6 +128,8 @@ class ProfileViewFamilyGroupItem(BaseModel):
     row_count: int = Field(ge=0)
     #: "N stated, M recorded" in the output language; served only for an incomplete group.
     incomplete_words: str | None = None
+    #: The most rows the declaration's own design lets the group hold; ``None`` when the design declares none.
+    max_rows: int | None = Field(default=None, ge=1)
     leaves: tuple[ProfileFamilyLeaf, ...] = ()
 
 
@@ -231,47 +235,30 @@ def _ascendant_leaves() -> tuple[ProfileFamilyLeaf, ...]:
     )
 
 
-def _group_items(
-    values: Mapping[str, str],
-    schema: ProfileSchemaDefinition,
-    *,
-    field_key: str,
-    count_path: str,
-    leaves: tuple[ProfileFamilyLeaf, ...],
-) -> tuple[ProfileFamilyItem, ...]:
-    declared = _declared_field(schema, field_key)
-    if declared is None:
-        return ()
-    prefix = f"{_SECTION_KEY}.{field_key}."
-    stored = _stored_rows(values, prefix=prefix, leaves=frozenset(leaf.leaf for leaf in leaves))
-    stated = values.get(count_path)
-    count = stated if profile_value_is_present(stated) else None
-    incomplete = _stated_exceeds_rows(count, len(stored))
+def _group_state(
+    stored: Mapping[int, Mapping[str, str]], count: str | None, *, incomplete: bool
+) -> ProfileFamilyGroupState:
     if incomplete:
-        state = ProfileFamilyGroupState.INCOMPLETE
-    elif stored:
-        state = ProfileFamilyGroupState.ROWS
-    elif count is not None and count.strip() == "0":
-        state = ProfileFamilyGroupState.NONE_DECLARED
-    else:
-        state = ProfileFamilyGroupState.UNKNOWN
-    group = ProfileViewFamilyGroupItem(
-        group_key=f"{_SECTION_KEY}.{field_key}",
-        label=tr(profile_field_label_key(_SECTION_KEY, field_key)),
-        state=state,
-        stated_count=count,
-        row_count=len(stored),
-        incomplete_words=(
-            tr(_INCOMPLETE_WORDS_LOCALE_KEY, stated=count.strip(), recorded=len(stored))
-            if incomplete and count is not None
-            else None
-        ),
-        leaves=leaves,
-    )
+        return ProfileFamilyGroupState.INCOMPLETE
+    if stored:
+        return ProfileFamilyGroupState.ROWS
+    if count is not None and count.strip() == "0":
+        return ProfileFamilyGroupState.NONE_DECLARED
+    return ProfileFamilyGroupState.UNKNOWN
+
+
+def _row_items(
+    values: Mapping[str, str],
+    stored: Mapping[int, Mapping[str, str]],
+    *,
+    group_key: str,
+    leaves: tuple[ProfileFamilyLeaf, ...],
+    declared: ProfileFieldDefinition,
+) -> tuple[ProfileViewFamilyRowItem, ...]:
     order = [leaf.leaf for leaf in leaves]
-    rows = tuple(
+    return tuple(
         ProfileViewFamilyRowItem(
-            group_key=group.group_key,
+            group_key=group_key,
             row_index=str(index),
             facts=tuple(
                 ProfileFamilyRowFact(
@@ -288,6 +275,41 @@ def _group_items(
         )
         for index, row in sorted(stored.items())
     )
+
+
+def _group_items(
+    values: Mapping[str, str],
+    schema: ProfileSchemaDefinition,
+    *,
+    field_key: str,
+    count_path: str,
+    leaves: tuple[ProfileFamilyLeaf, ...],
+    operation: PinnedAuthorityOperation,
+) -> tuple[ProfileFamilyItem, ...]:
+    declared = _declared_field(schema, field_key)
+    if declared is None:
+        return ()
+    prefix = f"{_SECTION_KEY}.{field_key}."
+    stored = _stored_rows(values, prefix=prefix, leaves=frozenset(leaf.leaf for leaf in leaves))
+    stated = values.get(count_path)
+    count = stated if profile_value_is_present(stated) else None
+    incomplete = _stated_exceeds_rows(count, len(stored))
+    state = _group_state(stored, count, incomplete=incomplete)
+    group = ProfileViewFamilyGroupItem(
+        group_key=f"{_SECTION_KEY}.{field_key}",
+        label=tr(profile_field_label_key(_SECTION_KEY, field_key)),
+        state=state,
+        stated_count=count,
+        row_count=len(stored),
+        incomplete_words=(
+            tr(_INCOMPLETE_WORDS_LOCALE_KEY, stated=count.strip(), recorded=len(stored))
+            if incomplete and count is not None
+            else None
+        ),
+        max_rows=declared_household_row_limit(operation, object_path=f"{_SECTION_KEY}.{field_key}"),
+        leaves=leaves,
+    )
+    rows = _row_items(values, stored, group_key=group.group_key, leaves=leaves, declared=declared)
     return (group, *rows)
 
 
@@ -305,6 +327,7 @@ def family_row_items(
             field_key=_DESCENDANT_FIELD_KEY,
             count_path=_DESCENDANT_COUNT_PATH,
             leaves=tuple(_leaf(page) for page in build_descendant_group(operation).pages),
+            operation=operation,
         ),
         *_group_items(
             values,
@@ -312,5 +335,6 @@ def family_row_items(
             field_key=_ASCENDANT_FIELD_KEY,
             count_path=_ASCENDANT_COUNT_PATH,
             leaves=_ascendant_leaves(),
+            operation=operation,
         ),
     )

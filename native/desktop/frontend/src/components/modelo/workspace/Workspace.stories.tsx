@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
+import { userEvent, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
@@ -52,6 +53,7 @@ function Screen({
         locale={locale}
         onBack={noop}
         onOpenSurface={noop}
+        canOpenSurface={() => true}
         openLink={noop}
         initialView={view}
       />
@@ -151,14 +153,62 @@ export const History: Story = {
 export const Modelo100Unresolved: Story = {
   name: "100 · salaried, withholding credits unresolved",
   render: (_, { globals }) => (
-    <Screen modelo="100" locale={language(globals)} />
+    <Screen modelo="100" shape="renta" locale={language(globals)} />
   ),
+};
+
+/** Opens the outline beside the form, once the workspace has read it. */
+const showOutline = async ({
+  canvasElement,
+}: {
+  canvasElement: HTMLElement;
+}) => {
+  const tabs = await waitFor(
+    () => {
+      const found = canvasElement.querySelectorAll<HTMLElement>(
+        "aside [role=tablist] [role=tab]",
+      );
+      if (found.length < 2) throw new Error("the rail is not drawn yet");
+      return found;
+    },
+    { timeout: 15_000 },
+  );
+  await userEvent.click(tabs[1]!);
+};
+
+export const Modelo100Outline: Story = {
+  name: "100 · salaried, the outline beside the form",
+  render: (_, { globals }) => (
+    <Screen modelo="100" shape="renta" locale={language(globals)} />
+  ),
+  play: showOutline,
+};
+
+export const Modelo100ActivityOutline: Story = {
+  name: "100 · self-employed, the outline with what needs you",
+  render: (_, { globals }) => (
+    <Screen modelo="100" shape="renta-activity" locale={language(globals)} />
+  ),
+  play: showOutline,
+};
+
+export const Modelo303Outline: Story = {
+  name: "303 · the page outline beside the form",
+  render: (_, { globals }) => (
+    <Screen modelo="303" locale={language(globals)} />
+  ),
+  play: showOutline,
 };
 
 export const Modelo100Check: Story = {
   name: "100 · Check view with the credits unresolved",
   render: (_, { globals }) => (
-    <Screen modelo="100" view="check" locale={language(globals)} />
+    <Screen
+      modelo="100"
+      shape="renta"
+      view="check"
+      locale={language(globals)}
+    />
   ),
 };
 

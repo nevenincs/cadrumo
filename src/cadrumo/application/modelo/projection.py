@@ -22,7 +22,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -40,7 +40,7 @@ from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
-from ...domain.calculations.registry.bindings import CasillaObservation, resolve_available_bound_inputs_by_casilla_id
+from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -52,7 +52,6 @@ from ...domain.calculations.registry.ids import (
     FormulaId,
     LegalRefId,
     RelationId,
-    RevisionId,
     SourceRefId,
 )
 from ...domain.calculations.registry.runtime_graph import (
@@ -61,10 +60,9 @@ from ...domain.calculations.registry.runtime_graph import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
+from ...domain.modelos.work_unit import WorkUnitState
 from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from ._calculation_source_staging import add_expected_missing_binding_diagnostics
@@ -92,6 +90,21 @@ _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
 # so a caller figure would stand in for the evidence the calculation refuses to
 # take from a caller; the projection refuses it the same way.
 _PROJECTION_SOURCE_OWNED_KINDS: frozenset[BindingSourceKind] = frozenset({BindingSourceKind.RETENCION_SOPORTADA})
+
+# The verb baseline: bindings a projection supplies itself rather than reading
+# from the taxpayer profile.
+_VERB_BASELINE_DECIMAL_BINDINGS: Mapping[str, Decimal] = {
+    "renta-profile-declaration-type": Decimal("1"),
+    "renta-profile-family-minor-children-in-unit": Decimal("0"),
+    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+    "renta-profile-marriage-month-start": Decimal("0"),
+    "renta-profile-marriage-month-end": Decimal("0"),
+    "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+}
+_VERB_BASELINE_BOOLEAN_BINDINGS: Mapping[str, bool] = {
+    "renta-modelo-100-estimacion-directa-es-normal": True,
+    "renta-profile-marriage-full-year": False,
+}
 
 
 class ModeloProjectionError(CadrumoError):
@@ -122,22 +135,6 @@ class ModeloProjectNoM130RevisionsError(ModeloProjectionError):
 
 class ModeloProjectInvalidDecimalOverrideError(ModeloProjectionError):
     """Raised when a projection override cannot be parsed as a decimal."""
-
-
-class ModeloCompareNeedTwoYearsError(ModeloProjectionError):
-    """Raised when comparison is not addressed to exactly two filing years."""
-
-
-class ModeloCompareNoWorkUnitsError(ModeloProjectionError):
-    """Raised when comparison finds no work units for a filing year."""
-
-
-class ModeloCompareNoRevisionsError(ModeloProjectionError):
-    """Raised when comparison finds work units but no calculation revisions."""
-
-
-class ModeloCompareNoUsableRevisionsError(ModeloProjectionError):
-    """Raised when comparison finds no verified or draft revisions."""
 
 
 def _required_casilla_value(
@@ -247,86 +244,6 @@ class ModeloProjectServiceResult(BaseModel):
     m100_projection: ModeloProjectM100Projection
     unresolved_bindings: tuple[ModeloProjectionUnresolvedBinding, ...] = ()
     unresolved_casillas: tuple[ModeloProjectionUnresolvedCasilla, ...] = ()
-
-
-class ModeloCompareDeltaRow(BaseModel):
-    """One casilla delta row in a modelo year comparison."""
-
-    model_config = _STRICT_FROZEN
-
-    casilla_id: CasillaId
-    label: str
-    section: str
-    year_a_value: Decimal
-    year_b_value: Decimal
-    delta: Decimal
-    pct_change: Decimal | None
-    formula_id: FormulaId | None = None
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
-
-
-class ModeloCompareSection(BaseModel):
-    """One section grouping for a modelo comparison."""
-
-    model_config = _STRICT_FROZEN
-
-    section: str
-    rows: tuple[ModeloCompareDeltaRow, ...]
-
-
-class ModeloCompareServiceResult(BaseModel):
-    """Year-over-year comparison result for one modelo."""
-
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1)
-    year_a: int
-    year_b: int
-    year_a_revision_id: RevisionId
-    year_b_revision_id: RevisionId
-    year_a_is_draft: bool
-    year_b_is_draft: bool
-    sections: tuple[ModeloCompareSection, ...]
-    delta_rows: tuple[ModeloCompareDeltaRow, ...]
-
-
-def _compare_row_provenance(
-    *,
-    modelo: str,
-    year_a: int,
-    year_b: int,
-    casilla_id: CasillaId,
-    casilla_meta: Mapping[CasillaId, CasillaDefinition],
-    observation: CasillaObservation | None,
-) -> tuple[str | None, tuple[str, ...], tuple[str, ...]]:
-    cdef = casilla_meta.get(casilla_id)
-    if cdef is None:
-        raise ModeloProjectionError(
-            translated_message="errors.error.modelo_projection",
-            context={
-                "modelo": modelo,
-                "year_a": year_a,
-                "year_b": year_b,
-                "casilla_id": casilla_id,
-            },
-        )
-    formula_id = observation.formula_id if observation is not None else None
-    if formula_id is None and cdef.formula is not None:
-        formula_id = cdef.formula
-    legal_refs = observation.legal_refs if observation is not None else tuple(cdef.legal_refs)
-    source_refs = observation.source_refs if observation is not None else tuple(cdef.source_refs)
-    if not legal_refs or not source_refs:
-        raise ModeloProjectionError(
-            translated_message="errors.error.modelo_projection",
-            context={
-                "modelo": modelo,
-                "year_a": year_a,
-                "year_b": year_b,
-                "casilla_id": casilla_id,
-            },
-        )
-    return formula_id, legal_refs, source_refs
 
 
 def _decimal_overrides(
@@ -641,39 +558,20 @@ def _verb_baseline_projection_bindings(
     would put a stand-in value on a second channel beside the profile's typed
     one, and would turn an absent profile fact into a supplied zero or false.
     """
-    declared_binding_ids = {binding.id for binding in revision.bindings}
-    profile_sourced_ids = {binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PROFILE}
+    declared = {binding.id for binding in revision.bindings}
+    profile_sourced = {binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PROFILE}
+    owned = declared - profile_sourced
 
-    def binding(value: str) -> BindingId:
-        return _binding_id(value, surface="project modelo 100 baseline binding id")
+    def baseline[Value](table: Mapping[str, Value], allowed: set[BindingId]) -> dict[BindingId, Value]:
+        keyed = {
+            _binding_id(raw, surface="project modelo 100 baseline binding id"): value for raw, value in table.items()
+        }
+        return {key: value for key, value in keyed.items() if key in allowed}
 
-    verb_baseline_bindings: dict[BindingId, Decimal] = {
-        binding("renta-profile-declaration-type"): Decimal("1"),
-        binding("renta-profile-family-minor-children-in-unit"): Decimal("0"),
-        binding("renta-profile-cotizaciones-ss-madre"): Decimal("0"),
-        binding("renta-profile-marriage-month-start"): Decimal("0"),
-        binding("renta-profile-marriage-month-end"): Decimal("0"),
-        binding("renta-base-liquidable-negativa-general-anterior"): Decimal("0"),
-    }
-    verb_baseline_enum_bindings: dict[BindingId, str] = {
-        binding("renta-profile-tax-residence-ccaa"): ccaa,
-    }
-    verb_baseline_boolean_bindings: dict[BindingId, bool] = {
-        binding("renta-modelo-100-estimacion-directa-es-normal"): True,
-        binding("renta-profile-marriage-full-year"): False,
-    }
     return (
-        {
-            key: value
-            for key, value in verb_baseline_bindings.items()
-            if key in declared_binding_ids and key not in profile_sourced_ids
-        },
-        {key: value for key, value in verb_baseline_enum_bindings.items() if key in declared_binding_ids},
-        {
-            key: value
-            for key, value in verb_baseline_boolean_bindings.items()
-            if key in declared_binding_ids and key not in profile_sourced_ids
-        },
+        baseline(_VERB_BASELINE_DECIMAL_BINDINGS, owned),
+        baseline({"renta-profile-tax-residence-ccaa": ccaa}, declared),
+        baseline(_VERB_BASELINE_BOOLEAN_BINDINGS, owned),
     )
 
 
@@ -721,6 +619,60 @@ def _absent_profile_binding_ids(revision: ModeloRevision, *, supplied: set[Bindi
     )
 
 
+def _unresolved_formula_expressions(
+    engine_result: RegistryCalculationResult,
+    revision: ModeloRevision,
+) -> dict[CasillaId, str]:
+    """Return the serialized expression of each formula target the engine produced no observation for."""
+    observed = {observation.casilla_id for observation in engine_result.observations}
+    return {
+        formula.target_casilla_id: formula.expression.model_dump_json()
+        for formula in revision.formulas
+        if formula.target_casilla_id not in observed
+    }
+
+
+def _expressions_reached_from(
+    expression_by_target: Mapping[CasillaId, str],
+    required: tuple[CasillaId, ...],
+) -> list[str]:
+    """Return the expressions of the unresolved formulas the required boxes transitively read.
+
+    Only the unresolved formulas the required boxes actually read are followed,
+    so an unrelated undeclared fact is not blamed for the refusal.
+    """
+    pending = [casilla_id for casilla_id in required if casilla_id in expression_by_target]
+    reached: dict[CasillaId, str] = {}
+    while pending:
+        casilla_id = pending.pop()
+        if casilla_id in reached:
+            continue
+        reached[casilla_id] = expression_by_target[casilla_id]
+        pending.extend(
+            target for target in expression_by_target if target not in reached and f'"{target}"' in reached[casilla_id]
+        )
+    return list(reached.values())
+
+
+def _blocking_profile_fact_paths(
+    revision: ModeloRevision,
+    *,
+    absent_profile_binding_ids: tuple[BindingId, ...],
+    unresolved_expressions: list[str],
+) -> list[str]:
+    """Name the profile fact behind each absent binding an unresolved expression reads, once each."""
+    bindings_by_id = revision_bindings_by_id(revision)
+    fact_paths: list[str] = []
+    for binding_id in absent_profile_binding_ids:
+        if not any(f'"{binding_id}"' in expression for expression in unresolved_expressions):
+            continue
+        profile_key = selector_as_dict(bindings_by_id[binding_id]).get("profile_key")
+        fact_path = profile_key if isinstance(profile_key, str) else str(binding_id)
+        if fact_path not in fact_paths:
+            fact_paths.append(fact_path)
+    return fact_paths
+
+
 def _raise_if_absent_profile_facts_block_projection(
     engine_result: RegistryCalculationResult,
     revision: ModeloRevision,
@@ -745,35 +697,13 @@ def _raise_if_absent_profile_facts_block_projection(
     )
     if all(casilla_id in engine_result.values for casilla_id in required):
         return
-    observed = {observation.casilla_id for observation in engine_result.observations}
-    expression_by_target = {
-        formula.target_casilla_id: formula.expression.model_dump_json()
-        for formula in revision.formulas
-        if formula.target_casilla_id not in observed
-    }
-    # Follow only the unresolved formulas the required boxes actually read, so an
-    # unrelated undeclared fact is not blamed for the refusal.
-    pending = [casilla_id for casilla_id in required if casilla_id in expression_by_target]
-    reached: dict[CasillaId, str] = {}
-    while pending:
-        casilla_id = pending.pop()
-        if casilla_id in reached:
-            continue
-        reached[casilla_id] = expression_by_target[casilla_id]
-        pending.extend(
-            target for target in expression_by_target if target not in reached and f'"{target}"' in reached[casilla_id]
-        )
-    unresolved_expressions = list(reached.values())
-    bindings_by_id = revision_bindings_by_id(revision)
-    fact_paths: list[str] = []
-    for binding_id in absent_profile_binding_ids:
-        if not any(f'"{binding_id}"' in expression for expression in unresolved_expressions):
-            continue
-        selector = selector_as_dict(bindings_by_id[binding_id])
-        profile_key = selector.get("profile_key")
-        fact_path = profile_key if isinstance(profile_key, str) else str(binding_id)
-        if fact_path not in fact_paths:
-            fact_paths.append(fact_path)
+    fact_paths = _blocking_profile_fact_paths(
+        revision,
+        absent_profile_binding_ids=absent_profile_binding_ids,
+        unresolved_expressions=_expressions_reached_from(
+            _unresolved_formula_expressions(engine_result, revision), required
+        ),
+    )
     if not fact_paths:
         return
     raise ModeloProjectionError(
@@ -952,6 +882,83 @@ def _m100_projection_result(
     )
 
 
+def _calculate_projection(
+    m100_snapshot: RegistrySnapshot,
+    *,
+    year: int,
+    ccaa: str,
+    inputs: Mapping[CasillaId, Decimal],
+    bindings: Mapping[BindingId, Decimal],
+    enum_bindings: Mapping[BindingId, str],
+    relations: Mapping[RelationId, Decimal],
+    date_bindings: Mapping[BindingId, date],
+    boolean_bindings: Mapping[BindingId, bool],
+    unresolved_binding_ids: tuple[BindingId, ...],
+) -> RegistryCalculationResult:
+    """Run the annual Modelo 100 engine, logging the channels it was given when the registry refuses them."""
+    try:
+        return calculate_registry_snapshot(
+            m100_snapshot,
+            inputs=inputs,
+            date_context={"filing_period": date(year, 12, 31)},
+            binding_values=bindings,
+            enum_binding_values=enum_bindings,
+            relation_values=relations,
+            unresolved_binding_ids=unresolved_binding_ids,
+            date_binding_values=date_bindings or None,
+            boolean_binding_values=boolean_bindings or None,
+        )
+    except RegistryValidationError:
+        _LOG.exception(
+            "modelo.project failed year=%s ccaa=%s inputs=%r bindings=%r "
+            "enum_bindings=%r relations=%r date_bindings=%r",
+            year,
+            ccaa,
+            inputs,
+            bindings,
+            enum_bindings,
+            relations,
+            date_bindings,
+        )
+        raise
+
+
+def _projection_service_result(
+    *,
+    year: int,
+    ccaa: str,
+    annual: _M130AnnualProjection,
+    engine_result: RegistryCalculationResult,
+    credits: CalculationSourceResolution,
+    revision: ModeloRevision,
+    declaration: _ProjectionDeclaration,
+) -> ModeloProjectServiceResult:
+    """Assemble the projection result from the annual M130 figures and the engine's observations."""
+    return ModeloProjectServiceResult(
+        year=year,
+        ccaa=ccaa,
+        quarters_filed=annual.quarters_filed,
+        quarters_available=tuple(
+            period.registry_token
+            for period in sorted(annual.m130_quarters, key=lambda period: period.quarter_ordinal or 0)
+        ),
+        is_extrapolated=annual.is_extrapolated,
+        m130_accumulated=ModeloProjectM130Accumulated(
+            ingresos=annual.total_ingresos,
+            gastos=annual.total_gastos,
+            rendimiento_neto=annual.total_rendimiento_neto,
+            pagos_fraccionados=annual.total_pagos_fraccionados,
+        ),
+        casilla_observations=_projection_observations(
+            engine_result,
+            source_casilla_ids=_source_resolved_casilla_ids(credits, revision),
+        ),
+        m100_projection=_m100_projection_result(engine_result.values, declaration=declaration),
+        unresolved_bindings=_unresolved_bindings(credits, revision),
+        unresolved_casillas=_unresolved_casillas(engine_result, revision),
+    )
+
+
 def project_modelo_100_from_m130(
     *,
     year: int,
@@ -1056,320 +1063,37 @@ def project_modelo_100_from_m130(
         },
     )
 
-    try:
-        engine_result = calculate_registry_snapshot(
-            m100_snapshot,
-            inputs=m100_inputs,
-            date_context={"filing_period": date(year, 12, 31)},
-            binding_values=merged_bindings,
-            enum_binding_values=merged_enum_bindings,
-            relation_values=m100_relations,
-            unresolved_binding_ids=(*credits.unresolved_binding_ids, *absent_profile_binding_ids),
-            date_binding_values=merged_date_bindings or None,
-            boolean_binding_values=merged_boolean_bindings or None,
-        )
-    except RegistryValidationError:
-        _LOG.exception(
-            "modelo.project failed year=%s ccaa=%s inputs=%r bindings=%r "
-            "enum_bindings=%r relations=%r date_bindings=%r",
-            year,
-            ccaa,
-            m100_inputs,
-            merged_bindings,
-            merged_enum_bindings,
-            m100_relations,
-            merged_date_bindings,
-        )
-        raise
-
+    engine_result = _calculate_projection(
+        m100_snapshot,
+        year=year,
+        ccaa=ccaa,
+        inputs=m100_inputs,
+        bindings=merged_bindings,
+        enum_bindings=merged_enum_bindings,
+        relations=m100_relations,
+        date_bindings=merged_date_bindings,
+        boolean_bindings=merged_boolean_bindings,
+        unresolved_binding_ids=(*credits.unresolved_binding_ids, *absent_profile_binding_ids),
+    )
     _raise_if_absent_profile_facts_block_projection(
         engine_result,
         m100_snapshot.revision,
         absent_profile_binding_ids=absent_profile_binding_ids,
         declaration=declaration,
     )
-    return ModeloProjectServiceResult(
+    return _projection_service_result(
         year=year,
         ccaa=ccaa,
-        quarters_filed=annual.quarters_filed,
-        quarters_available=tuple(
-            period.registry_token
-            for period in sorted(annual.m130_quarters, key=lambda period: period.quarter_ordinal or 0)
-        ),
-        is_extrapolated=annual.is_extrapolated,
-        m130_accumulated=ModeloProjectM130Accumulated(
-            ingresos=annual.total_ingresos,
-            gastos=annual.total_gastos,
-            rendimiento_neto=annual.total_rendimiento_neto,
-            pagos_fraccionados=annual.total_pagos_fraccionados,
-        ),
-        casilla_observations=_projection_observations(
-            engine_result,
-            source_casilla_ids=_source_resolved_casilla_ids(credits, m100_snapshot.revision),
-        ),
-        m100_projection=_m100_projection_result(engine_result.values, declaration=declaration),
-        unresolved_bindings=_unresolved_bindings(credits, m100_snapshot.revision),
-        unresolved_casillas=_unresolved_casillas(engine_result, m100_snapshot.revision),
-    )
-
-
-def _best_revision_for_compare(
-    *,
-    modelo: str,
-    filing_year: int,
-    ports: CalculationActionPorts,
-) -> tuple[CalculationRevision, bool, str]:
-    units_for_year = _comparison_work_units(modelo=modelo, filing_year=filing_year, ports=ports)
-    if not units_for_year:
-        raise ModeloCompareNoWorkUnitsError(
-            context={"modelo": modelo, "filing_year": filing_year},
-            translated_message="cli.app.modelo.compare.no_work_units",
-        )
-
-    period_by_unit = {unit.work_unit_id: unit.period.registry_token for unit in units_for_year}
-    all_revisions = _comparison_revisions_for_units(units_for_year, ports=ports)
-
-    if not all_revisions:
-        raise ModeloCompareNoRevisionsError(
-            context={"modelo": modelo, "filing_year": filing_year},
-            translated_message="cli.app.modelo.compare.no_revisions",
-        )
-
-    best = _latest_comparison_revision(all_revisions, state=CalculationRevisionState.VERIFICADO_COMPLETO)
-    if best is not None:
-        return best, False, period_by_unit.get(best.work_unit_id, "0A")
-
-    best = _latest_comparison_revision(all_revisions, state=CalculationRevisionState.BORRADOR)
-    if best is not None:
-        return best, True, period_by_unit.get(best.work_unit_id, "0A")
-
-    raise ModeloCompareNoUsableRevisionsError(
-        context={"modelo": modelo, "filing_year": filing_year},
-        translated_message="cli.app.modelo.compare.no_usable_revisions",
-    )
-
-
-def _comparison_work_units(*, modelo: str, filing_year: int, ports: CalculationActionPorts) -> list[WorkUnit]:
-    """Return persisted work units matching one comparison coordinate."""
-    return [
-        unit
-        for unit in list_work_units(ports=ports.work_lifecycle_ports)
-        if str(unit.modelo) == modelo and unit.filing_year == filing_year
-    ]
-
-
-def _comparison_revisions_for_units(
-    units: Iterable[WorkUnit],
-    *,
-    ports: CalculationActionPorts,
-) -> list[CalculationRevision]:
-    """Flatten the revisions belonging to comparison work units in unit order."""
-    revisions: list[CalculationRevision] = []
-    for unit in units:
-        revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id, ports=ports))
-    return revisions
-
-
-def _latest_comparison_revision(
-    revisions: Iterable[CalculationRevision],
-    *,
-    state: CalculationRevisionState,
-) -> CalculationRevision | None:
-    """Return the newest revision in one state, or ``None`` when absent."""
-    candidates = [revision for revision in revisions if revision.state is state]
-    if not candidates:
-        return None
-    return max(candidates, key=lambda revision: revision.created_at)
-
-
-def _comparison_year_pair(years: Iterable[int]) -> tuple[int, int]:
-    """Validate and order the two filing years addressed by a comparison."""
-    requested_years = sorted(years)
-    try:
-        year_a, year_b = requested_years
-    except ValueError:
-        raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years") from None
-    return year_a, year_b
-
-
-def _comparison_static_revisions(
-    *,
-    modelo: str,
-    year_a: int,
-    year_b: int,
-    period_a: str,
-    period_b: str,
-    operation: PinnedAuthorityOperation,
-) -> tuple[ModeloRevision, ModeloRevision]:
-    """Resolve both law-version revisions in the historical comparison order."""
-    rev_b_static = operation.revision_for_context(
-        modelo,
-        filing_year=year_b,
-        period=period_b,
-    )
-    rev_a_static = operation.revision_for_context(
-        modelo,
-        filing_year=year_a,
-        period=period_a,
-    )
-    return rev_a_static, rev_b_static
-
-
-def _comparison_casilla_metadata(
-    rev_a_static: ModeloRevision,
-    rev_b_static: ModeloRevision,
-) -> dict[CasillaId, CasillaDefinition]:
-    """Index casilla metadata in the same A-then-B overwrite order."""
-    casilla_meta: dict[CasillaId, CasillaDefinition] = {}
-    for static_revision in (rev_a_static, rev_b_static):
-        for cdef in static_revision.casillas:
-            casilla_meta[cdef.id] = cdef
-    return casilla_meta
-
-
-def _comparison_casilla_label_section(
-    casilla_id: CasillaId,
-    casilla_meta: Mapping[CasillaId, CasillaDefinition],
-) -> tuple[str, str]:
-    """Return the static label and first section for one comparison row."""
-    cdef = casilla_meta.get(casilla_id)
-    if cdef is None:
-        return casilla_id, ""
-    sections = cdef.section
-    return cdef.label, sections[0] if sections else ""
-
-
-def _comparison_delta_rows(
-    rev_a: CalculationRevision,
-    rev_b: CalculationRevision,
-    *,
-    modelo: str,
-    year_a: int,
-    year_b: int,
-    casilla_meta: Mapping[CasillaId, CasillaDefinition],
-) -> list[ModeloCompareDeltaRow]:
-    """Build exact own-arithmetic deltas and retain registry provenance."""
-    obs_by_id = {obs.casilla_id: obs for revision in (rev_a, rev_b) for obs in revision.observations}
-    delta_rows: list[ModeloCompareDeltaRow] = []
-    for casilla_id in sorted(set(rev_a.casilla_values) | set(rev_b.casilla_values)):
-        value_a = rev_a.casilla_values.get(casilla_id, Decimal("0"))
-        value_b = rev_b.casilla_values.get(casilla_id, Decimal("0"))
-        delta = value_b - value_a
-        label, section = _comparison_casilla_label_section(casilla_id, casilla_meta)
-        pct_change = (delta / value_a * Decimal("100")).quantize(Decimal("0.01")) if value_a != Decimal("0") else None
-        formula_id, legal_refs, source_refs = _compare_row_provenance(
-            modelo=modelo,
-            year_a=year_a,
-            year_b=year_b,
-            casilla_id=casilla_id,
-            casilla_meta=casilla_meta,
-            observation=obs_by_id.get(casilla_id),
-        )
-        delta_rows.append(
-            ModeloCompareDeltaRow(
-                casilla_id=casilla_id,
-                label=label,
-                section=section,
-                year_a_value=value_a,
-                year_b_value=value_b,
-                delta=delta,
-                pct_change=pct_change,
-                formula_id=formula_id,
-                legal_refs=legal_refs,
-                source_refs=source_refs,
-            ),
-        )
-    return delta_rows
-
-
-def _comparison_sections(
-    delta_rows: Iterable[ModeloCompareDeltaRow],
-) -> tuple[list[str], dict[str, list[ModeloCompareDeltaRow]]]:
-    """Group comparison rows while preserving their first-seen section order."""
-    sections_seen: list[str] = []
-    by_section: dict[str, list[ModeloCompareDeltaRow]] = {}
-    for row in delta_rows:
-        if row.section not in by_section:
-            sections_seen.append(row.section)
-            by_section[row.section] = []
-        by_section[row.section].append(row)
-    return sections_seen, by_section
-
-
-def compare_modelo_years(
-    *,
-    modelo: str,
-    years: Iterable[int],
-    ports: CalculationActionPorts,
-    operation: PinnedAuthorityOperation,
-) -> ModeloCompareServiceResult:
-    """Compare the best persisted revision for two filing years.
-
-    Verified :class:`CalculationRevision` rows win over drafts. Each emitted
-    :class:`ModeloCompareDeltaRow` is grounded against the compared
-    :class:`ModeloRevision` casilla metadata or the revision's recorded
-    observation provenance before the :class:`ModeloCompareServiceResult` is
-    returned; comparing two already-persisted revisions is not itself a
-    filing act, so the registry side is read structurally.
-    """
-    year_a, year_b = _comparison_year_pair(years)
-
-    rev_a, draft_a, period_a = _best_revision_for_compare(modelo=modelo, filing_year=year_a, ports=ports)
-    rev_b, draft_b, period_b = _best_revision_for_compare(modelo=modelo, filing_year=year_b, ports=ports)
-
-    rev_a_static, rev_b_static = _comparison_static_revisions(
-        modelo=modelo,
-        year_a=year_a,
-        year_b=year_b,
-        period_a=period_a,
-        period_b=period_b,
-        operation=operation,
-    )
-    casilla_meta = _comparison_casilla_metadata(rev_a_static, rev_b_static)
-
-    # Both sides are the application's OWN arithmetic, which is what separates
-    # this from the tree's other per-casilla comparators. A money tolerance
-    # would be wrong here rather than merely unnecessary: two of our own
-    # revisions differing by a cent differ by a cent, and absorbing that
-    # would hide a real change. Absence is zero for the same reason -- a
-    # casilla one revision never resolved contributes nothing to it.
-    # ``detect_casilla_divergences`` compares against AEAT, where rounding IS
-    # an artefact, and
-    # ``casillas_a_recapture_would_change`` skips absence entirely.
-    delta_rows = _comparison_delta_rows(
-        rev_a,
-        rev_b,
-        modelo=modelo,
-        year_a=year_a,
-        year_b=year_b,
-        casilla_meta=casilla_meta,
-    )
-    sections_seen, by_section = _comparison_sections(delta_rows)
-
-    return ModeloCompareServiceResult(
-        modelo=modelo,
-        year_a=year_a,
-        year_b=year_b,
-        year_a_revision_id=rev_a.calculation_revision_id,
-        year_b_revision_id=rev_b.calculation_revision_id,
-        year_a_is_draft=draft_a,
-        year_b_is_draft=draft_b,
-        sections=tuple(
-            ModeloCompareSection(section=section, rows=tuple(by_section[section])) for section in sections_seen
-        ),
-        delta_rows=tuple(delta_rows),
+        annual=annual,
+        engine_result=engine_result,
+        credits=credits,
+        revision=m100_snapshot.revision,
+        declaration=declaration,
     )
 
 
 __all__ = [
     "UNRESOLVED_OPERAND_REASON",
-    "ModeloCompareDeltaRow",
-    "ModeloCompareNeedTwoYearsError",
-    "ModeloCompareNoRevisionsError",
-    "ModeloCompareNoUsableRevisionsError",
-    "ModeloCompareNoWorkUnitsError",
-    "ModeloCompareSection",
-    "ModeloCompareServiceResult",
     "ModeloProjectInvalidDecimalOverrideError",
     "ModeloProjectM100Projection",
     "ModeloProjectM130Accumulated",
@@ -1382,6 +1106,5 @@ __all__ = [
     "ModeloProjectionUnresolvedCasilla",
     "RegistrySnapshotError",
     "RegistryValidationError",
-    "compare_modelo_years",
     "project_modelo_100_from_m130",
 ]

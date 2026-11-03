@@ -4340,6 +4340,38 @@ desktop:
       kind_label: Tipo de corrección
       motive_label: Motivo de la rectificación
       values_label: Valores corregidos
+    credits:
+      dependents: Casillas que las leen
+      dependents_lead: Una casilla que lee una retención sin cifra tampoco tiene cifra.
+        No es cero.
+      estimate:
+        again: Estimar de nuevo
+        ask: Hacer la estimación
+        extrapolated: Los ingresos de los trimestres posteriores al último se extrapolan
+          a partir de él.
+        failed: No se hizo la estimación. Inténtalo de nuevo.
+        in_estimate: 'En la estimación: {amount}'
+        lead: Una estimación de la declaración anual, proyectada a partir de las declaraciones
+          trimestrales que tienes. No es el cálculo de tu declaración y no cambia
+          nada en ella.
+        mark: Estimación
+        needs_region: Tu perfil no indica la comunidad autónoma en la que vives y
+          la estimación la necesita. Añádela a tu perfil y vuelve a pedirla.
+        nothing_left: En esta estimación no queda ninguna retención ni casilla sin
+          cifra.
+        quarters: 'Declaraciones trimestrales usadas: {count}.'
+        refused: No se pudo hacer la estimación.
+        title: Estimación a partir de tus declaraciones trimestrales
+        unresolved_boxes: Casillas sin cifra
+        unresolved_credits: Retenciones sin cifra
+        words_language: Estas explicaciones están escritas en {language}.
+      lead: Estas casillas se rellenan con tus registros de retenciones y nunca se
+        escriben aquí. Para cambiar una, corrígela en tus registros de retenciones
+        y vuelve a calcular.
+      list: Retenciones
+      show: Ver en el formulario
+      show_box: Ver la casilla {box} en el formulario
+      title: Retenciones practicadas sobre tus ingresos
     details:
       close: Cerrar detalles
       hide: Ocultar detalles
@@ -4374,6 +4406,7 @@ desktop:
       label: Junto al formulario
       outline: Esquema
     view:
+      credits: Retenciones
       form: Formulario
     views:
       label: Vistas de la declaración
@@ -4560,6 +4593,36 @@ desktop:
     entries_none: Aún no hay registros
     entry_required: '* obligatorio en cada registro'
     field_help: Sobre este campo
+    household:
+      add: Añadir persona
+      blocked_hidden: Algunos valores de este grupo están ocultos, así que aquí no
+        se pueden cambiar sus personas.
+      cap_reached: Este grupo está lleno, así que no se pueden añadir más personas.
+      declare_none: Indicar que no hay ninguna
+      edit_person: Editar persona {number}
+      hidden: Valor oculto
+      lead: Las personas que figuran en tu declaración. Un grupo que no has respondido
+        es desconocido, que no es lo mismo que ninguno.
+      limit: '{count} de un máximo de {max} personas'
+      people: 'Personas: {count}'
+      reading: Leyendo tu familia…
+      remove: Quitar persona
+      remove_help: ¿Quitar a esta persona de tu familia? El recuento se actualiza
+        con ella.
+      remove_person: Quitar persona {number}
+      retry: Reintentar
+      saved: Familia guardada.
+      state:
+        incomplete: Incompleto
+        none_declared: Ninguna declarada
+        none_declared_help: Has indicado que no hay ninguna.
+        not_served: No disponible aquí
+        not_served_help: Tu perfil no ofrece este grupo.
+        rows: Personas registradas
+        unknown: Aún sin indicar
+        unknown_help: No hay nada registrado para este grupo. Eso no es lo mismo que
+          ninguna.
+      title: Familia
     keys:
       actions: Abrir la paleta con las acciones del perfil
       clear: Borrar la búsqueda
@@ -9752,6 +9815,20 @@ workspace:
       save: Dejar para revisar
       save_next: Dejar y pasar a la siguiente
       unreadable: No se ha podido leer este valor.
+    election:
+      clear: Borrar {year}
+      contradictory: Tu perfil indica más de una respuesta para {year}. Elige la correcta
+        y guárdala, o borra el ejercicio.
+      other_years: Otros años que indica tu perfil
+      reading: Leyendo lo que indica tu perfil…
+      retry: Volver a leer
+      save: Guardar para {year}
+      saved: Guardado para {year}.
+      state:
+        contradictory: Indicado más de una vez para {year}, con respuestas distintas
+        declared: Indicado para {year}
+        undeclared: Sin indicar para {year}
+      title: Criterio de ingresos de tu actividad en {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma los valores supuestos antes de generar el fichero o
@@ -9770,6 +9847,8 @@ workspace:
         past_filing_window: El plazo de presentación ha terminado, y pagar en dos
           plazos exige presentar la declaración dentro de él.
         result_unknown: 'Calcula antes la declaración: su resultado lo decide.'
+        second_instalment_nothing: Este importe es tan pequeño que el segundo plazo
+          quedaría en cero, así que se paga de una sola vez.
         settlement_unsupported: El importe que liquida esta declaración no va en el
           mismo sentido que su resultado, como cuando suspendes todo el importe a
           ingresar con cargo a la devolución de tu cónyuge. El fichero oficial no
@@ -9973,6 +10052,10 @@ workspace:
     in_spanish: (en español)
     issues:
       action:
+        at_source: Añade o corrige los registros o datos de los que procede y vuelve
+          a calcular.
+        at_source_if_applies: No hace falta hacer nada, salvo que esa cifra te afecte.
+          Si es así, añade o corrige los registros de los que procede y vuelve a calcular.
         confirm: Abre cada casilla y confirma su valor, o escribe el correcto.
         confirm_by_section: Abre cada sección y confirma sus valores, o escribe los
           correctos.

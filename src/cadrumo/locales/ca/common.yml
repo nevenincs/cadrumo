@@ -4338,6 +4338,38 @@ desktop:
       kind_label: Tipus de correcció
       motive_label: Motiu de la rectificació
       values_label: Valors corregits
+    credits:
+      dependents: Caselles que les llegeixen
+      dependents_lead: Una casella que llegeix una retenció sense xifra tampoc no
+        té xifra. No és zero.
+      estimate:
+        again: Estima de nou
+        ask: Fes l'estimació
+        extrapolated: Els ingressos dels trimestres posteriors a l'últim s'extrapolen
+          a partir d'ell.
+        failed: No s'ha fet l'estimació. Torna-ho a provar.
+        in_estimate: 'A l''estimació: {amount}'
+        lead: Una estimació de la declaració anual, projectada a partir de les declaracions
+          trimestrals que tens. No és el càlcul de la teva declaració i no hi canvia
+          res.
+        mark: Estimació
+        needs_region: El teu perfil no indica la comunitat autònoma on vius i l'estimació
+          la necessita. Afegeix-la al teu perfil i torna-ho a demanar.
+        nothing_left: En aquesta estimació no queda cap retenció ni casella sense
+          xifra.
+        quarters: 'Declaracions trimestrals utilitzades: {count}.'
+        refused: No s'ha pogut fer l'estimació.
+        title: Estimació a partir de les teves declaracions trimestrals
+        unresolved_boxes: Caselles sense xifra
+        unresolved_credits: Retencions sense xifra
+        words_language: Aquestes explicacions estan escrites en {language}.
+      lead: Aquestes caselles s'omplen amb els teus registres de retencions i mai
+        s'escriuen aquí. Per canviar-ne una, corregeix-la als teus registres de retencions
+        i torna a calcular.
+      list: Retencions
+      show: Mostra-ho al formulari
+      show_box: Mostra la casella {box} al formulari
+      title: Retencions practicades sobre els teus ingressos
     details:
       close: Tancar els detalls
       hide: Amagar els detalls
@@ -4372,6 +4404,7 @@ desktop:
       label: Al costat del formulari
       outline: Esquema
     view:
+      credits: Retencions
       form: Formulari
     views:
       label: Vistes de la declaració
@@ -4559,6 +4592,36 @@ desktop:
     entries_none: Encara no hi ha registres
     entry_required: '* obligatori a cada registre'
     field_help: Sobre aquest camp
+    household:
+      add: Afegeix una persona
+      blocked_hidden: Alguns valors d'aquest grup estan amagats, així que aquí no
+        se'n poden canviar les persones.
+      cap_reached: Aquest grup és ple, així que no es poden afegir més persones.
+      declare_none: Indica que no n'hi ha cap
+      edit_person: Edita la persona {number}
+      hidden: Valor amagat
+      lead: Les persones que consten a la teva declaració. Un grup que no has respost
+        és desconegut, que no és el mateix que cap.
+      limit: '{count} d''un màxim de {max} persones'
+      people: 'Persones: {count}'
+      reading: Llegint la teva família…
+      remove: Treu la persona
+      remove_help: Vols treure aquesta persona de la teva família? El recompte s'actualitza
+        amb ella.
+      remove_person: Treu la persona {number}
+      retry: Torna-ho a provar
+      saved: Família desada.
+      state:
+        incomplete: Incomplet
+        none_declared: Cap declarada
+        none_declared_help: Has indicat que no n'hi ha cap.
+        not_served: No disponible aquí
+        not_served_help: El teu perfil no ofereix aquest grup.
+        rows: Persones registrades
+        unknown: Encara sense indicar
+        unknown_help: No hi ha res registrat per a aquest grup. Això no és el mateix
+          que cap.
+      title: Família
     keys:
       actions: Obre la paleta amb les accions del perfil
       clear: Esborra la cerca
@@ -9737,6 +9800,20 @@ workspace:
       save: Deixar per revisar
       save_next: Deixar i passar a la següent
       unreadable: No s'ha pogut llegir aquest valor.
+    election:
+      clear: Esborra el {year}
+      contradictory: El teu perfil indica més d'una resposta per al {year}. Tria la
+        correcta i desa-la, o esborra l'exercici.
+      other_years: Altres anys que indica el teu perfil
+      reading: Llegint el que indica el teu perfil…
+      retry: Torna a llegir
+      save: Desa per al {year}
+      saved: Desat per al {year}.
+      state:
+        contradictory: Indicat més d'un cop per al {year}, amb respostes diferents
+        declared: Indicat per al {year}
+        undeclared: Sense indicar per al {year}
+      title: Criteri dels ingressos de la teva activitat el {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma els valors suposats abans de generar el fitxer o registrar
@@ -9755,6 +9832,8 @@ workspace:
         past_filing_window: El termini de presentació ha acabat, i pagar en dos terminis
           exigeix presentar la declaració dins d'aquest termini.
         result_unknown: 'Calcula abans la declaració: el seu resultat ho decideix.'
+        second_instalment_nothing: Aquest import és tan petit que el segon termini
+          quedaria a zero, així que es paga d'una sola vegada.
         settlement_unsupported: L'import que liquida aquesta declaració no va en el
           mateix sentit que el seu resultat, com quan suspens tot l'import a ingressar
           a càrrec de la devolució del teu cònjuge. El fitxer oficial no permet indicar-ho,
@@ -9957,6 +10036,11 @@ workspace:
     in_spanish: (en castellà)
     issues:
       action:
+        at_source: Afegeix o corregeix els registres o dades dels quals procedeix
+          i torna a calcular.
+        at_source_if_applies: No cal fer res, tret que aquesta xifra t'afecti. Si
+          és així, afegeix o corregeix els registres dels quals procedeix i torna
+          a calcular.
         confirm: Obre cada casella i confirma'n el valor, o escriu el correcte.
         confirm_by_section: Obre cada secció i confirma'n els valors, o escriu els
           correctes.

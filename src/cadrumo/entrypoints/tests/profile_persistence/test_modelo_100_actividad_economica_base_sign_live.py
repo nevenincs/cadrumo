@@ -37,12 +37,11 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.entrypoints.tests.profile_persistence.m130_m100_annual_support import BUCKET_ID, seed_prior_year_m100
 from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters_to_m100_annual import (
-    _BUCKET_ID,
     _EXPECTED_M100_ACTIVITY_NET,
     _calculate_m100_annual,
     _persist_autonoma_style_ledger,
-    _seed_prior_year_m100,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -62,10 +61,10 @@ def test_positive_actividad_economica_income_yields_non_negative_base_imponible(
 ) -> None:
     """A positive actividad-economica rendimiento must not invert into a
     negative base imponible general."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         secure_objects: SecureObjectRepository = profile.repository
         _persist_autonoma_style_ledger(secure_objects)
-        _seed_prior_year_m100(secure_objects)
+        seed_prior_year_m100(secure_objects)
 
         annual = _calculate_m100_annual(secure_objects)
         casilla_values = annual.casilla_values

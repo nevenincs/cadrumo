@@ -47,7 +47,8 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -83,6 +84,8 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint, draft_contributor_identities
+from ..aggregation.renta_imputation import declared_imputation_criteria
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
 from ..user_profile.projections import profile_fact_index, record_to_path_values
 from ._calculation_helpers import (
@@ -110,6 +113,7 @@ from .calculation_action_ports import (
 )
 from .calculation_publication import CalculationRevisionPublication
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
+from .calculation_resolution import precedence_tier_issue
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_screen import calculation_screen_stamp
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
@@ -181,6 +185,7 @@ def _draft_invoice_fingerprint(
     source_transaction_ids: tuple[str, ...],
     source_issues: tuple[CalculationSourceIssue, ...],
     ports: CalculationActionPorts,
+    profile: ModeloWorkProfile,
     captured_at: datetime,
 ) -> InvoiceFingerprintSnapshot | None:
     """Pin the invoices this draft read; an unreadable catalogue leaves it unknown.
@@ -193,11 +198,42 @@ def _draft_invoice_fingerprint(
             work_unit=work_unit,
             revision=ports.operation.revision(work_unit.modelo, work_unit.revision_id),
             contributors=draft_contributor_identities(source_transaction_ids, source_issues),
+            criteria=declared_imputation_criteria(profile.record),
             ports=ports.invoice_catalogue_read_ports,
             captured_at=captured_at,
         )
     except InvoiceCatalogueReadPersistenceError:
         return None
+
+
+def _draft_anchors(
+    *,
+    work_unit: WorkUnit,
+    source_transaction_ids: tuple[str, ...],
+    source_issues: tuple[CalculationSourceIssue, ...],
+    ports: CalculationActionPorts,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    profile: ModeloWorkProfile,
+    captured_at: datetime,
+) -> tuple[LedgerFilingSnapshot | None, InvoiceFingerprintSnapshot | None]:
+    """Pin the ledger rows and invoices a draft was computed from, so verify can detect that they moved."""
+    ledger_filing_snapshot = _draft_ledger_anchor(
+        work_unit=work_unit,
+        source_transaction_ids=source_transaction_ids,
+        transaction_repository=transaction_repository
+        if transaction_repository is not None
+        else ports.transaction_repository,
+        captured_at=captured_at,
+    )
+    invoice_fingerprint = _draft_invoice_fingerprint(
+        work_unit=work_unit,
+        source_transaction_ids=source_transaction_ids,
+        source_issues=source_issues,
+        ports=ports,
+        profile=profile,
+        captured_at=captured_at,
+    )
+    return ledger_filing_snapshot, invoice_fingerprint
 
 
 def _optional_mapping_as_dict[OptionalMappingKey, OptionalMappingValue](
@@ -224,9 +260,27 @@ def _trusted_backend_casilla_inputs(
     }
 
 
+@dataclass(frozen=True, slots=True)
+class TrustedMeshCalculation:
+    """A persisted calculation and the precedence divergences its binding overlay found.
+
+    The blocking divergences are already among the revision's source issues;
+    ``precedence_diagnostics`` also carries the advisory ones, which are shown
+    and not persisted.
+    """
+
+    publication: CalculationRevisionPublication
+    precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...]
+
+
 def _trusted_calculation_clock(clock: datetime | None) -> datetime:
     """Resolve the timestamp shared by ledger anchoring and persistence."""
     return clock or _utc_now()
+
+
+def _precedence_issues(diagnostics: Iterable[CalculationSourceDiagnostic]) -> tuple[CalculationSourceIssue, ...]:
+    """Persist every blocking divergence the binding overlay found as a source issue."""
+    return tuple(issue for diagnostic in diagnostics if (issue := precedence_tier_issue(diagnostic)) is not None)
 
 
 def calculate_modelo_revision_with_trusted_mesh_sources(
@@ -268,8 +322,12 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
     profile: ModeloWorkProfile | None,
-) -> CalculationRevisionPublication:
-    """Calculate and persist a revision using trusted source evidence."""
+) -> TrustedMeshCalculation:
+    """Calculate and persist a revision using trusted source evidence.
+
+    Every blocking divergence the binding overlay found is persisted as a
+    source issue on the revision beside ``source_issues``.
+    """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     now = _trusted_calculation_clock(clock)
     prepared = _prepare_calculation(
@@ -295,9 +353,10 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         unresolved_binding_ids=unresolved_binding_ids,
         profile=profile,
     )
-    work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
+    channels = prepared.channels
+    revision_source_issues = (*source_issues, *_precedence_issues(channels.precedence_diagnostics))
     (
         engine_result,
         replay_payloads,
@@ -322,20 +381,14 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         m303_regimen_simplificado_annual_summary_handoff,
     )
 
-    source_issues = (
-        *source_issues,
-        *(
-            CalculationSourceIssue(
-                reason="precedence_tier_divergence",
-                binding_source=None,
-                message=diagnostic.message,
-                resolver_id=diagnostic.resolver_id,
-                casilla_id=diagnostic.casilla_id,
-                disagreement=diagnostic.disagreement,
-            )
-            for diagnostic in prepared.channels.source_diagnostics
-            if diagnostic.reason == "precedence_tier_divergence"
-        ),
+    ledger_filing_snapshot, invoice_fingerprint = _draft_anchors(
+        work_unit=work_unit,
+        source_transaction_ids=source_transaction_ids,
+        source_issues=revision_source_issues,
+        ports=ports,
+        transaction_repository=transaction_repository,
+        profile=prepared.profile,
+        captured_at=now,
     )
     publication = persist_calculation_revision(
         operation=ports.operation,
@@ -344,23 +397,10 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         rendering_snapshot=_capture_calculation_rendering(snapshot, operation=ports.operation),
         screen_stamp=calculation_screen_stamp(snapshot, operation=ports.operation),
         work_unit=work_unit,
-        work_units=work_units,
+        work_units=prepared.work_units,
         work_units_revision_id=prepared.work_units_revision_id,
-        ledger_filing_snapshot=_draft_ledger_anchor(
-            work_unit=work_unit,
-            source_transaction_ids=source_transaction_ids,
-            transaction_repository=(
-                transaction_repository if transaction_repository is not None else ports.transaction_repository
-            ),
-            captured_at=now,
-        ),
-        invoice_fingerprint=_draft_invoice_fingerprint(
-            work_unit=work_unit,
-            source_transaction_ids=source_transaction_ids,
-            source_issues=source_issues,
-            ports=ports,
-            captured_at=now,
-        ),
+        ledger_filing_snapshot=ledger_filing_snapshot,
+        invoice_fingerprint=invoice_fingerprint,
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,
@@ -373,14 +413,14 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         source_transaction_ids=source_transaction_ids,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_source_mode(work_unit, m210_gross_income_source_mode),
-        borrador_snapshot_id=prepared.channels.borrador_snapshot_id,
-        bindings_sourced_from_borrador=prepared.channels.bindings_sourced_from_borrador,
+        borrador_snapshot_id=channels.borrador_snapshot_id,
+        bindings_sourced_from_borrador=channels.bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
         observations=typed_observations,
         unresolved_outcomes=engine_result.unresolved_outcomes,
         source_provenance=source_provenance,
-        source_issues=source_issues,
+        source_issues=revision_source_issues,
         filing_instance_evidence=validated_filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         detail_rows=detail_rows,
@@ -392,12 +432,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         bucket_event_repository=ports.bucket_event_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
-    return CalculationRevisionPublication(
-        revision=publication.revision,
-        work_unit=publication.work_unit,
-        published=publication.published,
-        source_diagnostics=prepared.channels.source_diagnostics,
-    )
+    return TrustedMeshCalculation(publication=publication, precedence_diagnostics=channels.precedence_diagnostics)
 
 
 def _reject_clears_of_source_fed_casillas(

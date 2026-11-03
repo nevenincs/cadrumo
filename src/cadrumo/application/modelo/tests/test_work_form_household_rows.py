@@ -5,7 +5,9 @@ profile resolver, its row values and source traces are persisted onto a
 calculation the way the calculation persists them, and the generated form
 projects that calculation. A household the filer has not answered stays
 unknown; one declared empty (a stated zero count) is known-empty; stored rows
-are rows, up to the design's limit of 15 children.
+are rows, up to the design's limit of 15 children. A stated count larger than
+the stored rows serves the stored rows and raises a finding saying how many were
+stated and how many recorded, in every language, leading to the profile.
 """
 
 from __future__ import annotations
@@ -16,6 +18,7 @@ import pytest
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
@@ -28,10 +31,14 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..calculation_bucket_actions import _source_provenance_refs
+from ..calculation_bucket_actions import _source_provenance_refs, unrouted_source_issues
 from ..calculation_resolution import build_calculation_replay_payloads
+from ..printed_boxes import snapshot_printed_boxes
 from ..profile_binding import resolve_profile_sourced_bindings
-from ..work_form_models import ModeloFormRepeatingBlock
+from ..source_policy import SourceSurface
+from ..work_form_findings import ModeloFormAttention
+from ..work_form_issue_lines import ModeloFormIssueLine, form_issue_lines
+from ..work_form_models import ModeloFormRepeatingBlock, ModeloWorkForm
 from .work_form_fixture import built_form, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -96,6 +103,9 @@ def _calculated(operation: PinnedAuthorityOperation, record: UserProfileRecord) 
         update={
             "row_binding_values": payloads.row_binding_values,
             "source_provenance": _source_provenance_refs(resolution),
+            "source_issues": unrouted_source_issues(
+                resolution.diagnostics, snapshot_printed_boxes(operation, snapshot)
+            ),
         }
     )
 
@@ -103,14 +113,26 @@ def _calculated(operation: PinnedAuthorityOperation, record: UserProfileRecord) 
 def _group(
     operation: PinnedAuthorityOperation, revision: CalculationRevision, group_id: str
 ) -> ModeloFormRepeatingBlock:
-    form = built_form(operation, "100", 2025, "0A", revision=revision)
     return next(
         block
-        for page in form.pages
+        for page in _form(operation, revision).pages
         for section in page.sections
         for block in section.blocks
         if isinstance(block, ModeloFormRepeatingBlock) and block.id == group_id
     )
+
+
+def _form(
+    operation: PinnedAuthorityOperation, revision: CalculationRevision, language: OutputLanguage = OutputLanguage.EN
+) -> ModeloWorkForm:
+    return built_form(operation, "100", 2025, "0A", revision=revision, language=language)
+
+
+def _incomplete_lines(
+    operation: PinnedAuthorityOperation, revision: CalculationRevision, language: OutputLanguage = OutputLanguage.EN
+) -> list[ModeloFormIssueLine]:
+    form = _form(operation, revision, language)
+    return [line for line in form_issue_lines(form, language) if "household_rows_incomplete" in line.technical]
 
 
 def _cells(block: ModeloFormRepeatingBlock) -> list[dict[str | None, object]]:
@@ -171,6 +193,10 @@ def test_a_stated_non_zero_count_without_rows_stays_unknown(operation: PinnedAut
     for group_id in ("hijo-rows", "ascendiente-rows"):
         group = _group(operation, revision, group_id)
         assert (group.rows_known, group.rows) == (False, ())
+    assert sorted(line.message for line in _incomplete_lines(operation, revision)) == [
+        f"Ascendant: {count} stated, 0 recorded.",
+        f"Descendant: {count} stated, 0 recorded.",
+    ]
 
 
 def test_a_zero_count_that_is_not_plain_text_zero_still_proves_the_group_empty(
@@ -187,7 +213,9 @@ def test_a_zero_count_that_is_not_plain_text_zero_still_proves_the_group_empty(
     assert _group(operation, revision, "ascendiente-rows").rows_known is False
 
 
-def test_a_count_larger_than_the_stored_rows_serves_the_stored_rows(operation: PinnedAuthorityOperation) -> None:
+def test_a_count_larger_than_the_stored_rows_serves_the_stored_rows_and_says_the_group_is_incomplete(
+    operation: PinnedAuthorityOperation,
+) -> None:
     child = DescendantInfo(birth_date=date(2019, 3, 14), convive_con_contribuyente=True, nif="12345678Z")
     facts = (
         *_descendant_facts(operation, (child,)),
@@ -199,6 +227,87 @@ def test_a_count_larger_than_the_stored_rows_serves_the_stored_rows(operation: P
     group = _group(operation, revision, "hijo-rows")
     assert group.rows_known is True
     assert [row.index for row in group.rows] == [1]
+    (line,) = _incomplete_lines(operation, revision)
+    assert line.message == "Descendant: 3 stated, 1 recorded."
+    assert line.level is ModeloFormAttention.MISSING
+    assert line.surface is SourceSurface.PROFILE
+    assert line.where == "In your profile"
+    assert line.address is None and line.box is None
+    # A note that asks for the household to be completed withholds nothing from filing.
+    notes = [
+        note for note in _form(operation, revision).calculation_notes if note.reason == "household_rows_incomplete"
+    ]
+    assert [note.withholds_filing for note in notes] == [False]
+
+
+def test_the_incomplete_finding_is_worded_in_every_language(operation: PinnedAuthorityOperation) -> None:
+    child = DescendantInfo(birth_date=date(2019, 3, 14), convive_con_contribuyente=True)
+    facts = (
+        *_descendant_facts(operation, (child,)),
+        UserProfileFact(path="renta_family.descendientes_count", value="3"),
+    )
+    revision = _calculated(operation, _record(*facts))
+
+    words = {language: _incomplete_lines(operation, revision, language) for language in OutputLanguage}
+
+    for language, lines in words.items():
+        assert len(lines) == 1, language
+        assert "3" in lines[0].message and "1" in lines[0].message, language
+        assert lines[0].where not in (None, ""), language
+        assert lines[0].detail not in (None, ""), language
+        assert lines[0].action, language
+    assert len({lines[0].message for lines in words.values()}) == len(OutputLanguage)
+
+
+def test_a_count_equal_to_the_stored_rows_or_a_household_without_a_count_raises_nothing(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    child = DescendantInfo(birth_date=date(2019, 3, 14), convive_con_contribuyente=True, nif="12345678Z")
+    rows = _descendant_facts(operation, (child,))
+    counted = _calculated(
+        operation, _record(*rows, UserProfileFact(path="renta_family.descendientes_count", value="1"))
+    )
+    uncounted = _calculated(
+        operation, _record(*(fact for fact in rows if fact.path != "renta_family.descendientes_count"))
+    )
+
+    for revision in (counted, uncounted):
+        assert _incomplete_lines(operation, revision) == []
+        assert [row.index for row in _group(operation, revision, "hijo-rows").rows] == [1]
+
+
+def test_an_ascendant_group_with_a_larger_count_is_incomplete_like_a_descendant_group(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    record = _record(
+        UserProfileFact(path="renta_family.ascendientes_count", value="2"),
+        UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
+        UserProfileFact(path="renta_family.descendientes_count", value="0"),
+    )
+
+    revision = _calculated(operation, record)
+
+    (line,) = _incomplete_lines(operation, revision)
+    assert line.message == "Ascendant: 2 stated, 1 recorded."
+    assert [row.index for row in _group(operation, revision, "ascendiente-rows").rows] == [1]
+    children = _group(operation, revision, "hijo-rows")
+    assert (children.rows_known, children.rows) == (True, ())
+
+
+def test_each_incomplete_group_is_one_finding_not_one_per_box(operation: PinnedAuthorityOperation) -> None:
+    record = _record(
+        UserProfileFact(path="renta_family.descendientes_count", value="4"),
+        UserProfileFact(path="renta_family.ascendientes_count", value="2"),
+        UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
+        UserProfileFact(path="renta_family.descendiente.0.birth_date", value="2019-03-14"),
+    )
+
+    lines = _incomplete_lines(operation, _calculated(operation, record))
+
+    assert sorted(line.message for line in lines) == [
+        "Ascendant: 2 stated, 1 recorded.",
+        "Descendant: 4 stated, 1 recorded.",
+    ]
 
 
 def test_one_descendant_is_one_row_with_its_stored_facts_and_unknown_cells_elsewhere(

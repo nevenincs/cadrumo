@@ -6,7 +6,9 @@ engine evaluates its :class:`ModeloRevision`.
 Profile, backend mesh, borrador, and caller values are normalised as
 :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution` tiers, then
 the calculation assembly layer overlays them by precedence: profile, backend
-mesh, borrador, and finally caller overrides.
+mesh, borrador, and finally caller overrides. Each tier resolves every key it
+can without looking at the tiers above it, so the overlay alone decides which
+value is used and can see every value it replaces.
 
 Projecting resolved binding values onto bound
 :class:`~cadrumo.core.casilla_id.CasillaId` inputs is registry-owned rather than an
@@ -67,8 +69,6 @@ def resolve_borrador_source_tier(
     filing_year: int,
     period: _Period,
     borrador_snapshot_id: str | None,
-    caller_binding_values: Mapping[BindingId, Decimal],
-    caller_enum_binding_values: Mapping[BindingId, str],
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
@@ -82,9 +82,8 @@ def resolve_borrador_source_tier(
     persistence boundary consumes.
 
     Caller-supplied :class:`~cadrumo.domain.calculations.registry.ids.BindingId` values
-    remain higher precedence than the snapshot, so the resolver receives both
-    decimal and enum caller channels and omits any borrador value already owned
-    by the caller.
+    remain higher precedence than the snapshot, but the borrador still states
+    every value it holds: the overlay keeps the caller's and compares the two.
 
     See Also:
         :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution`:
@@ -98,8 +97,6 @@ def resolve_borrador_source_tier(
         filing_year=filing_year,
         period=period,
         borrador_snapshot_id=borrador_snapshot_id,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
         registry_snapshot=snapshot,
         snapshot_repository=borrador_snapshot_repository,
         operation=operation,
@@ -110,10 +107,6 @@ def resolve_profile_source_tier(
     *,
     bucket_id: str,
     snapshot: RegistrySnapshot,
-    caller_binding_values: Mapping[BindingId, Decimal],
-    caller_enum_binding_values: Mapping[BindingId, str],
-    borrador_resolution: CalculationSourceResolution,
-    backend_binding_values: Mapping[BindingId, Decimal],
     operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile,
 ) -> CalculationSourceResolution:
@@ -121,14 +114,11 @@ def resolve_profile_source_tier(
 
     The :class:`RegistrySnapshot` identifies
     the revision whose ``source = "profile"`` bindings are enrolled through the
-    source mesh. Profile is the LOWEST precedence tier, so every binding the
-    caller, borrador, or mesh backend already supplied is excluded here (the
-    profile resolver never overrides a higher tier).
-
-    The ``borrador_resolution`` and backend values are passed only as ownership
-    exclusions. They do not change profile facts; they prevent the profile tier
-    from claiming a :class:`~cadrumo.domain.calculations.registry.ids.BindingId` that a
-    higher-precedence source already supplied.
+    source mesh. Profile is the LOWEST precedence tier, yet it resolves every
+    binding it can, including those a higher tier also supplies: the overlay
+    keeps the higher tier's value and compares it with the profile's. A fact
+    the profile does not hold is absent from the tier rather than refused, so
+    a binding a higher tier was meant to supply never fails here.
 
     See Also:
         :class:`~cadrumo.application.aggregation.source_profile.ProfileSourceResolver`:
@@ -138,24 +128,12 @@ def resolve_profile_source_tier(
 
     Returns:
         A :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution`
-        carrying the profile-owned bindings not already claimed by
-        higher-precedence tiers.
+        carrying every profile-sourced binding the profile holds a fact for.
     """
     from ..aggregation.source_mesh import CalculationSourceContext
     from ..aggregation.source_profile import ProfileSourceResolver
 
-    caller_owned = (
-        set(caller_binding_values)
-        | set(caller_enum_binding_values)
-        | set(borrador_resolution.binding_values)
-        | set(borrador_resolution.enum_binding_values)
-        | set(backend_binding_values)
-    )
-    resolver = ProfileSourceResolver(
-        caller_binding_ids=caller_owned,
-        registry_snapshot=snapshot,
-        operation=operation,
-    )
+    resolver = ProfileSourceResolver(registry_snapshot=snapshot, operation=operation)
     require_calculation_route_resolver("pre_mesh", resolver)
     return resolver.resolve(
         CalculationSourceContext(
@@ -350,8 +328,6 @@ def _resolve_borrador_bindings_for_calculation(
     filing_year: int,
     period: _Period,
     borrador_snapshot_id: str | None,
-    caller_binding_values: Mapping[BindingId, Decimal],
-    caller_enum_binding_values: Mapping[BindingId, str],
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None,
     operation: PinnedAuthorityOperation,
@@ -367,8 +343,6 @@ def _resolve_borrador_bindings_for_calculation(
 
     resolver = Modelo100BorradorSourceResolver(
         borrador_snapshot_id=borrador_snapshot_id,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
         registry_snapshot=registry_snapshot,
         snapshot_repository=snapshot_repository,
         operation=operation,

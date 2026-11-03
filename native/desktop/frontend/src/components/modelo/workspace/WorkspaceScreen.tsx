@@ -58,7 +58,14 @@ import {
   type CalculationEvidenceAnswer,
 } from "./calculationEvidence";
 import type { CorrectionAnswer, CorrectionResult } from "./CorrectionDialog";
+import { creditFields } from "./creditBoxes";
+import { CreditsPanel } from "./CreditsPanel";
+import { useEstimate } from "./estimateRead";
 import { HistoryView, type HistoryNotice } from "./HistoryView";
+import {
+  ProfileCompanions,
+  type ProfileCompanionKit,
+} from "./ProfileCompanions";
 import { SourcesView } from "./SourcesView";
 import { ModeloWorkspace, type WorkspaceView } from "./Workspace";
 
@@ -101,6 +108,8 @@ function Ready({
   openLink,
   initialView,
   onLeaveGuard,
+  profileCompanions,
+  readRegion,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   port: ModeloPort;
@@ -115,6 +124,8 @@ function Ready({
   openLink(url: string): void;
   initialView: WorkspaceView;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
+  profileCompanions?: ProfileCompanionKit;
+  readRegion?: () => Promise<string | null>;
 }) {
   const t = useStrings();
   const session: FormSession = useFormSession({ envelope, port, language });
@@ -216,6 +227,12 @@ function Ready({
       );
     return current() ? outcome : null;
   };
+  const estimate = useEstimate({
+    port,
+    year: envelope.form.form.filing_year,
+    region: readRegion,
+    run,
+  });
   const settledThenReread = async <Result,>(
     send: () => Promise<LedgerOutcome<Result>>,
   ) => (await run(send))?.kind === "settled";
@@ -555,6 +572,10 @@ function Ready({
             session={session}
             detailsOpen={detailsOpen}
             onDetailsOpenChange={setDetailsOpen}
+            onOpenSurface={(surface) => {
+              if (surface !== "none") onOpenSurface(surface);
+            }}
+            canOpenSurface={canOpenSurface}
           />
         ),
         rail: (
@@ -606,6 +627,21 @@ function Ready({
             }
           />
         ),
+        credits:
+          creditFields(session.placed).length > 0 ? (
+            <CreditsPanel
+              envelope={envelope}
+              session={session}
+              estimate={estimate}
+              locale={locale}
+              onGo={(address) => {
+                setView("form");
+                session.selectAddress(address);
+              }}
+              onOpenSurface={onOpenSurface}
+              canOpenSurface={canOpenSurface}
+            />
+          ) : undefined,
         sources: (
           <SourcesView
             groups={envelope.form.form.source_groups}
@@ -616,6 +652,16 @@ function Ready({
             }}
             onOpenSurface={onOpenSurface}
             canOpenSurface={canOpenSurface}
+            profileCompanions={
+              profileCompanions && (
+                <ProfileCompanions
+                  kit={profileCompanions}
+                  profile={envelope.profile_id}
+                  taxYear={envelope.form.form.filing_year}
+                  language={language}
+                />
+              )
+            }
           />
         ),
         history: (
@@ -765,6 +811,8 @@ export function WorkspaceScreen({
   onLeaveGuard,
   onWritten,
   holds: suppliedHolds,
+  profileCompanions,
+  readRegion,
 }: {
   port: ModeloPort;
   workUnitId: string;
@@ -784,6 +832,13 @@ export function WorkspaceScreen({
   /** Told whenever the workspace sends a write, whatever its outcome. */
   onWritten?: () => void;
   holds?: ModeloWriteHolds;
+  /** The profile's reads and write door, for the elements a profile source
+   * group holds; none are drawn without it. */
+  profileCompanions?: ProfileCompanionKit;
+  /** Reads the region the profile states, which the estimate from the
+   * quarterly declarations is made for; the estimate is not offered without
+   * it. */
+  readRegion?: () => Promise<string | null>;
 }) {
   const t = useStrings();
   const [localHolds] = useState(createModeloWriteHolds);
@@ -855,6 +910,8 @@ export function WorkspaceScreen({
         openLink={openLink}
         initialView={initialView}
         onLeaveGuard={onLeaveGuard}
+        profileCompanions={profileCompanions}
+        readRegion={readRegion}
       />
     );
   return (

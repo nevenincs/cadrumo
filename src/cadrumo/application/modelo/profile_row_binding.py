@@ -30,10 +30,10 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider, ProfileRowsSelector
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceProvenance, RowBindingValue
 
 if TYPE_CHECKING:
@@ -126,6 +126,45 @@ def _bound_casillas(snapshot: RegistrySnapshot, binding_id: BindingId) -> tuple[
     )
 
 
+def _stored_row_values(
+    binding_id: BindingId,
+    selector: ProfileRowsSelector,
+    indexes: tuple[int, ...],
+    fact_index: Mapping[str, UserProfileFactValue],
+) -> dict[RowBindingKey, RowBindingValue]:
+    """Read the stored rows of one object, keyed by binding and one-based row position."""
+    values: dict[RowBindingKey, RowBindingValue] = {}
+    for position, index in enumerate(indexes, start=1):
+        raw = fact_index.get(selector.row_path(index))
+        value = None if raw is None else _row_value(raw)
+        if value is not None:
+            values[(binding_id, position)] = value
+    return values
+
+
+def _row_provenance(
+    snapshot: RegistrySnapshot,
+    binding_id: BindingId,
+    *,
+    bucket_id: str,
+    fingerprint: str | None,
+    resolver_id: str,
+) -> CalculationSourceProvenance:
+    """Trace one row binding back to the profile object it was read from."""
+    return CalculationSourceProvenance(
+        resolver_id=resolver_id,
+        resolved_binding_source=BindingSourceKind.PROFILE,
+        contributor_source_kind=BindingSourceKind.PROFILE.value,
+        contributor_binding_source=BindingSourceKind.PROFILE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        source_ref=f"profile:{bucket_id}:rows:{binding_id}",
+        parent_source_ref=None,
+        terminal_origin=TerminalOriginClass.PROFILE_FIELD,
+        fingerprint=fingerprint,
+        source_casilla_ids=_bound_casillas(snapshot, binding_id),
+    )
+
+
 def resolve_profile_row_values(
     snapshot: RegistrySnapshot,
     fact_index: Mapping[str, UserProfileFactValue],
@@ -151,11 +190,7 @@ def resolve_profile_row_values(
             continue
         selector = provider.rows
         indexes = _row_indexes(selector, fact_index)
-        for position, index in enumerate(indexes, start=1):
-            raw = fact_index.get(selector.row_path(index))
-            value = None if raw is None else _row_value(raw)
-            if value is not None:
-                values[(binding.id, position)] = value
+        values.update(_stored_row_values(binding.id, selector, indexes, fact_index))
         stated = _stated_count(selector, fact_index)
         if stated is not None and stated > len(indexes) and selector.object_path not in diagnostics:
             diagnostics[selector.object_path] = _incomplete_diagnostic(
@@ -164,18 +199,7 @@ def resolve_profile_row_values(
         if not indexes and stated != 0:
             continue
         provenance.append(
-            CalculationSourceProvenance(
-                resolver_id=resolver_id,
-                resolved_binding_source=BindingSourceKind.PROFILE,
-                contributor_source_kind=BindingSourceKind.PROFILE.value,
-                contributor_binding_source=BindingSourceKind.PROFILE,
-                lineage_role=CalculationSourceLineageRole.PRIMARY,
-                source_ref=f"profile:{bucket_id}:rows:{binding.id}",
-                parent_source_ref=None,
-                terminal_origin=TerminalOriginClass.PROFILE_FIELD,
-                fingerprint=fingerprint,
-                source_casilla_ids=_bound_casillas(snapshot, binding.id),
-            )
+            _row_provenance(snapshot, binding.id, bucket_id=bucket_id, fingerprint=fingerprint, resolver_id=resolver_id)
         )
     return ProfileRowResolution(
         row_binding_values=values,

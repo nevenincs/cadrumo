@@ -4304,6 +4304,35 @@ desktop:
       kind_label: A helyesbítés fajtája
       motive_label: A helyesbítés oka
       values_label: Helyesbített értékek
+    credits:
+      dependents: Az ezeket olvasó rovatok
+      dependents_lead: Az a rovat, amely egy érték nélküli levonást olvas, szintén
+        érték nélküli marad. Nem nulla.
+      estimate:
+        again: Becslés újra
+        ask: Becslés készítése
+        extrapolated: Az utolsó utáni negyedévek jövedelmét ebből extrapoláljuk.
+        failed: A becslés nem készült el. Próbáld újra.
+        in_estimate: 'A becslésben: {amount}'
+        lead: Az éves bevallás becslése a meglévő negyedéves bevallásaidból vetítve.
+          Nem a bevallásod kiszámítása, és semmit nem változtat rajta.
+        mark: Becslés
+        needs_region: A profilod nem tartalmazza az autonóm közösséget, ahol élsz,
+          a becsléshez pedig szükség van rá. Add meg a profilodban, és kérd újra.
+        nothing_left: Ebben a becslésben nem maradt érték nélküli levonás vagy rovat.
+        quarters: 'Felhasznált negyedéves bevallások: {count}.'
+        refused: A becslést nem lehetett elkészíteni.
+        title: Becslés a negyedéves bevallásaidból
+        unresolved_boxes: Érték nélküli rovatok
+        unresolved_credits: Érték nélküli levonások
+        words_language: 'Ezek a magyarázatok ezen a nyelven íródtak: {language}.'
+      lead: Ezeket a rovatokat a levonási nyilvántartásaid töltik ki, itt soha nem
+        írod be őket. Ha módosítani akarsz egyet, javítsd a levonási nyilvántartásaidban,
+        majd számolj újra.
+      list: Levonások
+      show: Megjelenítés az űrlapon
+      show_box: A(z) {box} rovat megjelenítése az űrlapon
+      title: A jövedelmedből levont összegek
     details:
       close: Részletek bezárása
       hide: Részletek elrejtése
@@ -4339,6 +4368,7 @@ desktop:
       label: A nyomtatvány mellett
       outline: Vázlat
     view:
+      credits: Levonások
       form: Nyomtatvány
     views:
       label: Bevallásnézetek
@@ -4532,6 +4562,36 @@ desktop:
     entries_none: Még nincs bejegyzés
     entry_required: '* minden bejegyzésben kötelező'
     field_help: A mezőről
+    household:
+      add: Személy hozzáadása
+      blocked_hidden: Ennek a csoportnak néhány értéke rejtett, ezért a személyei
+        itt nem módosíthatók.
+      cap_reached: Ez a csoport megtelt, ezért nem adhatsz hozzá több személyt.
+      declare_none: Nincs egy sem
+      edit_person: '{number}. személy szerkesztése'
+      hidden: Rejtett érték
+      lead: A bevallásodban szereplő személyek. Egy csoport, amelyre nem válaszoltál,
+        ismeretlen, ami nem azonos azzal, hogy nincs egy sem.
+      limit: '{count} személy, legfeljebb {max} közül'
+      people: 'Személyek: {count}'
+      reading: A családod beolvasása…
+      remove: Személy eltávolítása
+      remove_help: Eltávolítod ezt a személyt a családodból? A létszám vele együtt
+        frissül.
+      remove_person: '{number}. személy eltávolítása'
+      retry: Próbáld újra
+      saved: A család mentve.
+      state:
+        incomplete: Hiányos
+        none_declared: Egy sincs megadva
+        none_declared_help: Azt adtad meg, hogy nincs egy sem.
+        not_served: Itt nem érhető el
+        not_served_help: A profilod nem kínálja ezt a csoportot.
+        rows: Rögzített személyek
+        unknown: Még nincs megadva
+        unknown_help: Ehhez a csoporthoz semmi sincs rögzítve. Ez nem azonos azzal,
+          hogy nincs egy sem.
+      title: Család
     keys:
       actions: A paletta megnyitása a profilműveletekkel
       clear: Keresés törlése
@@ -9692,6 +9752,20 @@ workspace:
       save: Megtartás átnézésre
       save_next: Megtartás és tovább
       unreadable: Ez az érték nem olvasható.
+    election:
+      clear: A(z) {year}. év törlése
+      contradictory: A profilod több választ is tartalmaz a(z) {year}. évre. Válaszd
+        ki a helyeset, és mentsd el, vagy töröld az évet.
+      other_years: Más évek, amelyeket a profilod megad
+      reading: A profilod adatainak beolvasása…
+      retry: Olvasás újra
+      save: Mentés a(z) {year}. évre
+      saved: Elmentve a(z) {year}. évre.
+      state:
+        contradictory: A(z) {year}. évre többször is meg van adva, eltérő válasszal
+        declared: Megadva a(z) {year}. évre
+        undeclared: Nincs megadva a(z) {year}. évre
+      title: A vállalkozói bevétel elszámolási módja, {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt erősítsd
@@ -9709,6 +9783,8 @@ workspace:
         past_filing_window: A benyújtási határidő lejárt, a két részletben fizetéshez
           pedig azon belül kell benyújtanod a bevallást.
         result_unknown: 'Előbb számold ki a bevallást: az eredménye dönt erről.'
+        second_instalment_nothing: Ez az összeg olyan kicsi, hogy a második részlet
+          nulla lenne, ezért egy összegben fizetendő.
         settlement_unsupported: A bevallás által rendezett összeg nem az eredményével
           azonos irányú, például ha a teljes fizetendő összeget a házastársad visszatérítésének
           terhére felfüggeszted. A hivatalos fájl ezt nem tudja rögzíteni, ezért itt
@@ -9912,6 +9988,11 @@ workspace:
     in_spanish: (spanyolul)
     issues:
       action:
+        at_source: Add meg vagy javítsd ki azokat a nyilvántartásokat vagy adatokat,
+          amelyekből származik, majd számolj újra.
+        at_source_if_applies: Nincs teendőd, kivéve ha ez az összeg rád vonatkozik.
+          Ha igen, add meg vagy javítsd ki azokat a nyilvántartásokat, amelyekből
+          származik, majd számolj újra.
         confirm: Nyisd meg a rovatokat egyenként, és erősítsd meg az értéküket, vagy
           írd be a helyeset.
         confirm_by_section: Nyisd meg a szakaszokat egyenként, és erősítsd meg az

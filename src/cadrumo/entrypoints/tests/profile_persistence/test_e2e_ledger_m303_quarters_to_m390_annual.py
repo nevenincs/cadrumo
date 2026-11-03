@@ -594,7 +594,7 @@ def test_calculation_persists_the_selected_precedence_value_and_its_disagreement
     _store_profile(secure_objects)
     persist_year_of_invoices(secure_objects)
     work, _revision = _calculate_m303_quarter_revision(secure_objects, period="1T", operation=operation)
-    publication = calculate_modelo_revision_with_trusted_mesh_sources(
+    calculation = calculate_modelo_revision_with_trusted_mesh_sources(
         work.work_unit_id,
         ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         actor="operator",
@@ -608,12 +608,13 @@ def test_calculation_persists_the_selected_precedence_value_and_its_disagreement
         profile=None,
         clock=_FILE_AT,
     )
+    publication = calculation.publication
     assert publication.revision.binding_overrides[binding] == caller_value
     if expected_reason is None:
-        assert publication.source_diagnostics == ()
+        assert calculation.precedence_diagnostics == ()
         assert publication.revision.source_issues == ()
         return
-    (diagnostic,) = publication.source_diagnostics
+    (diagnostic,) = calculation.precedence_diagnostics
     assert diagnostic.reason == expected_reason
     assert diagnostic.disagreement is not None
     assert diagnostic.disagreement.selected_role is SourceDisagreementRole.CALLER

@@ -49,7 +49,7 @@ from ...operations.public_mirror import project_public_mirror, restore_public_mi
 from ...operations.registry_schema_validation import strict_model_json_schema
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
-from ..settlement_casilla import declaration_settlement_casilla_id
+from ..settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_suspension_casilla_id
 from ..work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormDeadline, ModeloFormExport
 from ..work_form_export_offer import (
     EXPORT_ARTEFACT_LOCALE_KEYS,
@@ -105,16 +105,18 @@ def _offer(operation: PinnedAuthorityOperation, modelo: str, year: int, code: st
 def test_elections_are_asked_where_a_design_declares_a_carry_or_the_law_a_split(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Modelo 303 declares carrying a credit or refunding it; Modelo 100's 2025 result may be paid in two instalments.
+    """Modelo 303 declares carrying a credit or refunding it; Modelo 100's result may be paid in two instalments.
 
-    The split is a dated registry fact first stated for the 2025 ejercicio, so a
-    2024 Modelo 100 asks nothing.
+    The split is a dated registry fact that holds for every ejercicio the registry supports, so a Modelo
+    100 asks its settlement elections in each of them.
     """
     renta_2025 = Period.from_year_and_code(2025, "0A")
     asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo, renta_2025)}
+    support = operation.supported_filing_years()
 
     assert asked == {"100", "303"}
-    assert not asks_export_elections("100", Period.from_year_and_code(2024, "0A"))
+    for year in range(support.floor, support.horizon + 1):
+        assert asks_export_elections("100", Period.from_year_and_code(year, "0A")), year
 
 
 def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
@@ -268,8 +270,8 @@ def test_the_split_states_both_instalments_of_the_amount_left_to_pay_as_advisory
 
     assert instalment.state is ModeloFormElectionState.AVAILABLE
     first, second = instalment.figures
-    assert (first.instalment, first.amount) == (ModeloFormInstalment.FIRST, Decimal("600.01"))
-    assert (second.instalment, second.amount) == (ModeloFormInstalment.SECOND, Decimal("400.00"))
+    assert (first.instalment, first.amount) == (ModeloFormInstalment.FIRST, "600.01")
+    assert (second.instalment, second.amount) == (ModeloFormInstalment.SECOND, "400.00")
     assert all(figure.advisory and figure.advisory_words for figure in instalment.figures)
     assert "60%" in first.words and "600.01" in first.words
     assert "40%" in second.words and "400.00" in second.words
@@ -278,11 +280,19 @@ def test_the_split_states_both_instalments_of_the_amount_left_to_pay_as_advisory
 def test_an_advisory_figure_carries_its_reason_and_only_then() -> None:
     with pytest.raises(ValueError, match="advisory"):
         ModeloFormElectionFigure(
-            instalment=ModeloFormInstalment.FIRST, amount=Decimal("1"), words="x", advisory=True, advisory_words=None
+            instalment=ModeloFormInstalment.FIRST, amount="1.00", words="x", advisory=True, advisory_words=None
         )
     with pytest.raises(ValueError, match="advisory"):
         ModeloFormElectionFigure(
-            instalment=ModeloFormInstalment.FIRST, amount=Decimal("1"), words="x", advisory=False, advisory_words="y"
+            instalment=ModeloFormInstalment.FIRST, amount="1.00", words="x", advisory=False, advisory_words="y"
+        )
+
+
+@pytest.mark.parametrize("amount", ["-1.00", "1.001", "1,00", ""])
+def test_a_figure_amount_is_the_decimal_text_of_cents(amount: str) -> None:
+    with pytest.raises(ValueError):
+        ModeloFormElectionFigure(
+            instalment=ModeloFormInstalment.FIRST, amount=amount, words="x", advisory=True, advisory_words="y"
         )
 
 
@@ -307,10 +317,7 @@ def test_public_workbench_schema_and_instalment_amounts_survive_strict_transport
     amounts = next(
         question.figures for question in restored.elections if question.election is ModeloFormElection.INSTALMENT
     )
-    assert tuple(figure.amount.as_tuple() for figure in amounts) == (
-        Decimal("600.01").as_tuple(),
-        Decimal("400.00").as_tuple(),
-    )
+    assert tuple(figure.amount for figure in amounts) == ("600.01", "400.00")
 
 
 def test_a_settled_box_without_a_value_withholds_the_settlement_as_unknown(
@@ -340,7 +347,92 @@ def test_a_result_to_pay_with_nothing_left_to_pay_offers_no_settlement(operation
     for election in (ModeloFormElection.PAYMENT, ModeloFormElection.INSTALMENT, ModeloFormElection.CHARGE_ACCOUNT):
         assert questions[election].state is ModeloFormElectionState.UNAVAILABLE, election
         assert questions[election].reason is ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED, election
-        assert bool(questions[election].state_words) and questions[election].figures == ()
+        assert questions[election].state_words is not None and questions[election].figures == ()
+
+
+def test_the_least_amount_whose_second_instalment_is_a_cent_is_split_and_one_cent_less_is_not(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """60 per cent of 0,01 rounds to 0,01 and leaves nothing for the second; 0,02 leaves the least second, 0,01."""
+    split = _calculated(operation, "100", 2025, "0A", Decimal("0.02"), deadline=_deadline(30))
+    single = _calculated(operation, "100", 2025, "0A", Decimal("0.01"), deadline=_deadline(30))
+
+    least = _questions(operation, split)
+    only = _questions(operation, single)
+
+    first, second = least[ModeloFormElection.INSTALMENT].figures
+    assert (first.amount, second.amount) == ("0.01", "0.01")
+    instalment = only[ModeloFormElection.INSTALMENT]
+    assert instalment.state is ModeloFormElectionState.UNAVAILABLE
+    assert instalment.reason is ModeloFormElectionReason.SECOND_INSTALMENT_NOTHING
+    assert instalment.state_words is not None and instalment.figures == () and instalment.choices == ()
+    # Paying it at once stays open.
+    assert only[ModeloFormElection.PAYMENT].state is ModeloFormElectionState.AVAILABLE
+
+
+_NOTHING_LEFT_FOR_THE_SECOND = {
+    OutputLanguage.EN: "This amount is so small that the second instalment would come to nothing, so it is paid in one payment.",
+    OutputLanguage.ES: "Este importe es tan pequeño que el segundo plazo quedaría en cero, así que se paga de una sola vez.",
+    OutputLanguage.CA: "Aquest import és tan petit que el segon termini quedaria a zero, així que es paga d'una sola vegada.",
+    OutputLanguage.HU: "Ez az összeg olyan kicsi, hogy a második részlet nulla lenne, ezért egy összegben fizetendő.",
+}
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_the_reason_a_cent_cannot_be_split_is_worded_in_every_language(
+    operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    form = _calculated(operation, "100", 2025, "0A", Decimal("0.01"), deadline=_deadline(30))
+    snapshot = form_snapshot(operation, "100", 2025, "0A")
+
+    offer = form_export_offer("100", snapshot, language, form=form, verified=False, filed=False)
+
+    (instalment,) = [q for q in offer.elections if q.election is ModeloFormElection.INSTALMENT]
+    assert instalment.reason is ModeloFormElectionReason.SECOND_INSTALMENT_NOTHING
+    assert instalment.state_words == _NOTHING_LEFT_FOR_THE_SECOND[language]
+
+
+def test_every_supported_year_without_a_settled_box_offers_the_split_of_its_result_and_refuses_a_suspension(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A revision that computes no box of the settled role settles from 0670 while 0693, held at nothing, says so."""
+    support = operation.supported_filing_years()
+    checked = 0
+    for year in range(support.floor, support.horizon + 1):
+        snapshot = form_snapshot(operation, "100", year, "0A")
+        if declaration_settlement_suspension_casilla_id("100", snapshot.revision) is None:
+            continue
+        blank = built_form(operation, "100", year, "0A", entered=frozenset())
+        assert blank.result is not None
+        result = str(blank.result.casilla_id)
+        plain = built_form(
+            operation, "100", year, "0A", held={result: Decimal("1000.00"), "0693": Decimal("0")}, entered=frozenset()
+        ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
+        suspended = built_form(
+            operation,
+            "100",
+            year,
+            "0A",
+            held={result: Decimal("1000.00"), "0693": Decimal("200.00")},
+            entered=frozenset(),
+        ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
+        unstated = built_form(
+            operation, "100", year, "0A", held={result: Decimal("1000.00")}, entered=frozenset()
+        ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
+
+        offered = _questions(operation, plain)[ModeloFormElection.INSTALMENT]
+        refused = _questions(operation, suspended)[ModeloFormElection.INSTALMENT]
+        unknown = _questions(operation, unstated)[ModeloFormElection.INSTALMENT]
+
+        first, second = offered.figures
+        assert offered.state is ModeloFormElectionState.AVAILABLE, year
+        assert (first.amount, second.amount) == ("600.00", "400.00"), year
+        assert refused.state is ModeloFormElectionState.UNAVAILABLE, year
+        assert refused.reason is ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED, year
+        assert unknown.state is ModeloFormElectionState.UNAVAILABLE, year
+        assert unknown.reason is ModeloFormElectionReason.RESULT_UNKNOWN, year
+        checked += 1
+    assert checked
 
 
 def test_an_account_is_offered_by_its_label_and_mask_never_its_number(operation: PinnedAuthorityOperation) -> None:

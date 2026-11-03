@@ -10,7 +10,7 @@ from .....core.aggregation import RelationAggregationOp
 from .....core.casilla_id import validated_casilla_id
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import RegistryValidationError
-from ..observation_fold import resolve_observed_requirement_value
+from ..observation_fold import fold_observed_requirement_values, gather_observed_requirement_values
 from ..relations import RegistryFoldRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -35,6 +35,12 @@ def _requirement(periods: tuple[str, ...]) -> RegistryFoldRequirement:
     )
 
 
+def _resolve(requirement: RegistryFoldRequirement, filings: tuple[RegistryModeloObservation, ...]) -> Decimal:
+    return fold_observed_requirement_values(
+        requirement, gather_observed_requirement_values(requirement, filings).values
+    )
+
+
 def _filing(period: str, value: str) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="111",
@@ -54,31 +60,31 @@ def _filing(period: str, value: str) -> RegistryModeloObservation:
 def test_a_quarterly_filer_folds_its_four_quarters() -> None:
     filings = tuple(_filing(period, value) for period, value in zip(_QUARTERS, ("10", "20", "30", "40"), strict=True))
 
-    assert resolve_observed_requirement_value(_requirement(_QUARTERS + _MONTHS), filings) == Decimal("100")
+    assert _resolve(_requirement(_QUARTERS + _MONTHS), filings) == Decimal("100")
 
 
 def test_a_monthly_filer_folds_its_twelve_months() -> None:
     filings = tuple(_filing(month, "5") for month in _MONTHS)
 
-    assert resolve_observed_requirement_value(_requirement(_QUARTERS + _MONTHS), filings) == Decimal("60")
+    assert _resolve(_requirement(_QUARTERS + _MONTHS), filings) == Decimal("60")
 
 
 def test_an_incomplete_cadence_is_not_folded() -> None:
     filings = tuple(_filing(period, "10") for period in _QUARTERS[:3])
 
     with pytest.raises(RegistryValidationError, match="exactly one completely filed cadence"):
-        resolve_observed_requirement_value(_requirement(_QUARTERS + _MONTHS), filings)
+        _resolve(_requirement(_QUARTERS + _MONTHS), filings)
 
 
 def test_two_complete_cadences_are_ambiguous_and_refused() -> None:
     filings = tuple(_filing(period, "10") for period in _QUARTERS) + tuple(_filing(month, "5") for month in _MONTHS)
 
     with pytest.raises(RegistryValidationError, match="found 2"):
-        resolve_observed_requirement_value(_requirement(_QUARTERS + _MONTHS), filings)
+        _resolve(_requirement(_QUARTERS + _MONTHS), filings)
 
 
 def test_a_single_cadence_declaration_still_requires_every_period() -> None:
     filings = tuple(_filing(period, "10") for period in _QUARTERS[:3])
 
     with pytest.raises(RegistryValidationError, match="expected one observed filing"):
-        resolve_observed_requirement_value(_requirement(_QUARTERS), filings)
+        _resolve(_requirement(_QUARTERS), filings)

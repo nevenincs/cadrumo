@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_adoption_token
 from ....domain.calculations.registry.tests.modelo_100_profile_binding_tables import FAMILY_ROW_BINDINGS
@@ -139,3 +140,99 @@ def test_stored_ascendants_are_rows_holding_only_the_leaves_they_state() -> None
 def test_stored_ascendants_beat_a_stated_zero_count() -> None:
     group, rows = _ascendant_group({_ASCENDANT_COUNT: "0", f"{_ASCENDANT_OBJECT}.0.birth_date": "1950-02-03"})
     assert group.state is ProfileFamilyGroupState.ROWS and len(rows) == 1
+
+
+_DESCENDANT_OBJECT = "renta_family.descendiente"
+_DESCENDANT_COUNT = "renta_family.descendientes_count"
+
+
+def _incomplete_words(*, stated: str, recorded: int) -> str:
+    words = tr("application.user_profile.family_rows.incomplete", stated=stated, recorded=recorded)
+    assert stated in words and str(recorded) in words
+    return words
+
+
+def _descendant_group(
+    values: dict[str, str],
+) -> tuple[ProfileViewFamilyGroupItem, tuple[ProfileViewFamilyRowItem, ...]]:
+    with bundled_indexed_authority().operation() as authority:
+        items = family_row_items(values, schema=authority.profile_schema(), operation=authority)
+    group = next(
+        item for item in items if isinstance(item, ProfileViewFamilyGroupItem) and item.group_key == _DESCENDANT_OBJECT
+    )
+    rows = tuple(
+        item for item in items if isinstance(item, ProfileViewFamilyRowItem) and item.group_key == _DESCENDANT_OBJECT
+    )
+    return group, rows
+
+
+def test_a_stated_count_larger_than_the_stored_rows_is_incomplete_and_still_serves_the_rows() -> None:
+    group, rows = _descendant_group({_DESCENDANT_COUNT: "3", f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14"})
+
+    assert group.state is ProfileFamilyGroupState.INCOMPLETE
+    assert (group.stated_count, group.row_count) == ("3", 1)
+    assert group.incomplete_words == _incomplete_words(stated="3", recorded=1)
+    assert [row.row_index for row in rows] == ["0"]
+
+
+def test_a_stated_count_with_no_stored_row_is_incomplete_not_unknown() -> None:
+    group, rows = _descendant_group({_DESCENDANT_COUNT: "2"})
+
+    assert group.state is ProfileFamilyGroupState.INCOMPLETE
+    assert (group.stated_count, group.row_count, group.incomplete_words) == (
+        "2",
+        0,
+        _incomplete_words(stated="2", recorded=0),
+    )
+    assert not rows
+
+
+def test_a_count_equal_to_the_stored_rows_is_rows_and_says_nothing_more() -> None:
+    group, rows = _descendant_group({_DESCENDANT_COUNT: "1", f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14"})
+
+    assert group.state is ProfileFamilyGroupState.ROWS
+    assert (group.stated_count, group.row_count, group.incomplete_words) == ("1", 1, None)
+    assert len(rows) == 1
+
+
+def test_stored_rows_with_no_stated_count_are_rows_and_not_incomplete() -> None:
+    group, rows = _descendant_group({f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14"})
+
+    assert group.state is ProfileFamilyGroupState.ROWS
+    assert (group.stated_count, group.row_count, group.incomplete_words) == (None, 1, None)
+    assert len(rows) == 1
+
+
+def test_a_count_below_the_stored_rows_or_not_a_number_is_not_incomplete() -> None:
+    below, _ = _descendant_group(
+        {
+            _DESCENDANT_COUNT: "1",
+            f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14",
+            f"{_DESCENDANT_OBJECT}.1.birth_date": "2021-05-17",
+        }
+    )
+    garbled, _ = _descendant_group({_DESCENDANT_COUNT: "several", f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14"})
+
+    assert below.state is ProfileFamilyGroupState.ROWS
+    assert garbled.state is ProfileFamilyGroupState.ROWS
+    assert below.incomplete_words is None and garbled.incomplete_words is None
+
+
+def test_a_stated_ascendant_count_larger_than_its_rows_is_incomplete_like_descendants() -> None:
+    group, rows = _ascendant_group({_ASCENDANT_COUNT: "3", f"{_ASCENDANT_OBJECT}.0.birth_date": "1950-02-03"})
+
+    assert group.state is ProfileFamilyGroupState.INCOMPLETE
+    assert (group.stated_count, group.row_count, group.incomplete_words) == (
+        "3",
+        1,
+        _incomplete_words(stated="3", recorded=1),
+    )
+    assert len(rows) == 1
+
+
+def test_each_group_serves_the_most_rows_the_design_holds() -> None:
+    # The 2025 Modelo 100 design repeats Hijo 15 times and Ascendiente 4 times, whatever the household holds.
+    for values in ({}, {_ASCENDANT_COUNT: "0", _DESCENDANT_COUNT: "0"}):
+        descendants, _ = _descendant_group(values)
+        ascendants, _ = _ascendant_group(values)
+        assert (descendants.max_rows, ascendants.max_rows) == (15, 4)

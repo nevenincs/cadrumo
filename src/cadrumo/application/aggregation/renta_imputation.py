@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING, Final
 from ...core.aggregation import BindingValueOutcome
 from ...core.parsing.utils import parse_bool
 from ...core.period import Period
+from ...domain.calculations.registry.cash_election_minimum_years import cash_election_minimum_years
+from ...domain.calculations.registry.errors import GovernedFactNotApplicableError
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
@@ -52,15 +54,28 @@ def invoice_accrual_date(invoice: Invoice) -> date | None:
 
 
 def accruing_invoices(
-    invoices: Iterable[Invoice], *, kind: InvoiceKind, bucket_id: str, start: date, end: date
+    invoices: Iterable[Invoice],
+    *,
+    kind: InvoiceKind,
+    bucket_id: str,
+    start: date,
+    end: date,
+    criteria: ImputationCriteria,
 ) -> tuple[Invoice, ...]:
-    """Return the bucket's invoices of ``kind`` that accrue in the window, an unknown accrual read at its issue date."""
+    """Return the bucket's invoices of ``kind`` accruing in the window, or carried into it by a change of criterion.
+
+    An unknown accrual is read at its issue date.
+    """
+
+    def reaches_window(invoice: Invoice) -> bool:
+        accrual = invoice_accrual_date(invoice) or invoice.issued_at
+        entry = accrual_entry_date(accrual, criteria, through_year=end.year)
+        return start <= accrual <= end or (entry is not None and start <= entry <= end)
+
     return tuple(
         invoice
         for invoice in invoices
-        if invoice.kind is kind
-        and invoice.bucket_id == bucket_id
-        and start <= (invoice_accrual_date(invoice) or invoice.issued_at) <= end
+        if invoice.kind is kind and invoice.bucket_id == bucket_id and reaches_window(invoice)
     )
 
 
@@ -105,11 +120,25 @@ class ImputationUnresolved(StrEnum):
     EUR_VALUE_UNKNOWN = "eur_value_unknown"
     """A foreign invoice accrues with no rate stamped on it, so what it adds to the box is not known."""
 
+    RECTIFICATIVA_ACROSS_YEARS = "rectificativa_across_years"
+    """A correction accrues outside the year of its invoice, and no source says which year it reduces."""
+
+    RECTIFICATIVA_TARGET_UNKNOWN = "rectificativa_target_unknown"
+    """The invoice a correction names is not recorded, so the year it corrects is not known."""
+
+    RECTIFICATIVA_ABOVE_INVOICE = "rectificativa_above_invoice"
+    """Corrections exceed the base they correct, so they state a result or a replacement rather than a reduction."""
+
+    RECTIFICATIVA_RETENCION_STATED = "rectificativa_retencion_stated"
+    """A correction states a retencion, and what that does to the credit already taken is not settled."""
+
+    RECTIFICATIVA_WITH_RECEIPT = "rectificativa_with_receipt"
+    """Money came in on a correction, which contradicts reading it as a reduction of accrued income."""
+
 
 _CRITERION_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
 _COMMERCIAL_ACCOUNTING_PATH: Final[str] = "irpf.codigo_comercio_accounting"
 _ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
-_MINIMUM_ELECTION_YEARS: Final[int] = 3
 
 
 def _dated_values(facts: Iterable[UserProfileFact], path: str, year: int) -> set[object]:
@@ -181,7 +210,7 @@ class ImputationCriteria:
             return self._regime_declared(year) and self._commercial_accounting(year) is False
         if declared is ActivityImputationCriterion.DEVENGO and self._commercial_accounting(year) is not True:
             first_cash_year = self._first_binding_cash_year(year)
-            return first_cash_year is None or year - first_cash_year >= _MINIMUM_ELECTION_YEARS
+            return first_cash_year is None or year - first_cash_year >= cash_election_minimum_years(filing_year=year)
         return True
 
     def _in_force(self, year: int) -> ActivityImputationCriterion | None:
@@ -191,7 +220,11 @@ class ImputationCriteria:
     def _first_binding_cash_year(self, year: int) -> int | None:
         """Return the first year of the cash run reaching into the two years before ``year``, if any."""
         cash = ActivityImputationCriterion.COBROS_Y_PAGOS
-        for back in range(1, _MINIMUM_ELECTION_YEARS):
+        try:
+            minimum_years = cash_election_minimum_years(filing_year=year)
+        except GovernedFactNotApplicableError:
+            return None
+        for back in range(1, minimum_years):
             first = year - back
             if self._in_force(first) is cash:
                 while self._in_force(first - 1) is cash:
@@ -218,7 +251,10 @@ class ImputationCriteria:
         if declared is not ActivityImputationCriterion.DEVENGO or self._commercial_accounting(year) is True:
             return None
         first_cash_year = self._first_binding_cash_year(year)
-        if first_cash_year is None or year - first_cash_year >= _MINIMUM_ELECTION_YEARS:
+        if first_cash_year is None:
+            return None
+        minimum_years = cash_election_minimum_years(filing_year=year)
+        if year - first_cash_year >= minimum_years:
             return None
         filed = sorted(
             on_file
@@ -229,7 +265,7 @@ class ImputationCriteria:
             return None
         return (
             f"the filed return of {filed[0]} states cobros_y_pagos, which binds through "
-            f"{first_cash_year + _MINIMUM_ELECTION_YEARS - 1} (RIRPF art. 7.2.1), but the profile declares "
+            f"{first_cash_year + minimum_years - 1} (RIRPF art. 7.2.1), but the profile declares "
             f"{declared.value} for {year}"
         )
 
@@ -254,8 +290,6 @@ _CASH_ELECTION_ROLES: Final[frozenset[str]] = frozenset(
 """The semantic roles of the cash-election boxes: estimacion directa, objetiva and its agricultural block.
 
 A box is named by its role in the revision that edition declares, never by its number."""
-
-_ELECTION_LOOKBACK_YEARS: Final[int] = 3
 
 _RECORD_DESIGN_FLAG_MARK: Final[str] = "X"
 """The mark a record design prints in a checked box; any other affirmative is a yes/no word."""
@@ -288,24 +322,59 @@ def imputation_filing_history(
     supported_years = authority.supported_filing_years().years
     stated: dict[int, ActivityImputationCriterion] = {}
     filed_on: dict[int, date] = {}
-    for past in range(year - _ELECTION_LOOKBACK_YEARS, year + 1):
+    lookback_years = cash_election_minimum_years(filing_year=year, authority=authority)
+    for past in range(year - lookback_years, year + 1):
         period = Period.from_year_and_code(past, annual_period_code)
         record = filing_records.current_for(bucket_id=bucket_id, modelo=annual_form, filing_year=past, period=period)
         if record is not None:
             filed_on[past] = record.filed_at.date()
         observation = load_observation(annual_form, period)
-        flags: tuple[Decimal | str, ...] = ()
         if observation is not None and past in supported_years:
-            revision = authority.revision_for_context(annual_form, filing_year=past, period=annual_period_code)
-            boxes = {str(box.id) for box in revision.casillas if str(box.semantic_role) in _CASH_ELECTION_ROLES}
-            flags = tuple(row.value for row in observation.observations if str(row.casilla_id) in boxes)
-        if flags:
-            stated[past] = (
-                ActivityImputationCriterion.COBROS_Y_PAGOS
-                if any(_marked(flag) for flag in flags)
-                else ActivityImputationCriterion.DEVENGO
-            )
+            criterion = _criterion_stated_by(observation, annual_form, past, annual_period_code, authority)
+            if criterion is not None:
+                stated[past] = criterion
     return ImputationFilingHistory(stated=stated, filed_on=filed_on)
+
+
+def _criterion_stated_by(
+    observation: RegistryModeloObservation,
+    annual_form: str,
+    past: int,
+    annual_period_code: str,
+    authority: PinnedAuthorityOperation,
+) -> ActivityImputationCriterion | None:
+    """Return the criterion a captured return states through its cash-election boxes, or ``None`` when it has none."""
+    revision = authority.revision_for_context(annual_form, filing_year=past, period=annual_period_code)
+    boxes = {str(box.id) for box in revision.casillas if str(box.semantic_role) in _CASH_ELECTION_ROLES}
+    flags = tuple(row.value for row in observation.observations if str(row.casilla_id) in boxes)
+    if not flags:
+        return None
+    if any(_marked(flag) for flag in flags):
+        return ActivityImputationCriterion.COBROS_Y_PAGOS
+    return ActivityImputationCriterion.DEVENGO
+
+
+def accrual_entry_date(accrual: date, criteria: ImputationCriteria, *, through_year: int) -> date | None:
+    """Return when income accrued on ``accrual`` enters computation under accrual, looking up to ``through_year``.
+
+    Under accrual that is the accrual date. Accrued under cash and still uncollected when
+    accrual begins, RIRPF art. 7.4 forbids leaving it uncomputed, so it enters the first
+    accrual year on its first day: :func:`impute_row` places a banked row the same way. A
+    year that states no usable criterion, or a cash run reaching ``through_year``, gives
+    ``None``.
+    """
+    at_accrual = criteria.usable(accrual.year)
+    if at_accrual is ActivityImputationCriterion.DEVENGO:
+        return accrual
+    if at_accrual is None:
+        return None
+    for year in range(accrual.year + 1, through_year + 1):
+        between = criteria.usable(year)
+        if between is None:
+            return None
+        if between is ActivityImputationCriterion.DEVENGO:
+            return date(year, 1, 1)
+    return None
 
 
 def _quarter(on: date) -> int:
@@ -421,12 +490,19 @@ def rows_touching_window(
     invoice_id_of: Callable[[Transaction], str | None],
     start: date,
     end: date,
+    criteria: ImputationCriteria,
 ) -> TransactionCatalogue:
-    """Keep the rows banked in the window or linked to an invoice accruing in it.
+    """Keep the rows banked in the window or linked to an invoice accruing in it or carried into it.
 
     A date stated on the row counts as its invoice's does. Only these can land in
-    the window, so other years' rows raise no refusal here.
+    the window, so other years' rows raise no refusal here. Every receipt of a carried
+    invoice stays, including one banked in an earlier cash year, because what it settled
+    decides the rest the window computes.
     """
+
+    def carried_in(accrual: date | None) -> bool:
+        entry = None if accrual is None else accrual_entry_date(accrual, criteria, through_year=end.year)
+        return entry is not None and start <= entry <= end
 
     def touches(row: Transaction) -> bool:
         cash = row.raw.value_date or row.raw.booked_date
@@ -436,7 +512,7 @@ def rows_touching_window(
             return True
         invoice_id = invoice_id_of(row)
         accrual = linked_accrual_date(None if invoice_id is None else invoices.get(invoice_id), kind=kind)
-        return accrual is not None and start <= accrual <= end
+        return (accrual is not None and start <= accrual <= end) or carried_in(accrual) or carried_in(row.accrual_date)
 
     return TransactionCatalogue.from_transactions(tuple(row for row in transactions.values() if touches(row)))
 
@@ -501,6 +577,7 @@ __all__ = [
     "ImputationCriteria",
     "ImputationFilingHistory",
     "ImputationUnresolved",
+    "accrual_entry_date",
     "accruing_invoices",
     "declared_imputation_criteria",
     "imputation_blocking_diagnostics",

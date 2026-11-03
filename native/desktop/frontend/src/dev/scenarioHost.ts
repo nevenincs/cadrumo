@@ -24,7 +24,12 @@ import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import { translator } from "../shell/strings";
 import { sedeViewFixture } from "./sedeViewFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
-import { userProfileFixture } from "./userProfileFixture";
+import { householdFixture, type HouseholdScenario } from "./householdFixture";
+import {
+  imputationElectionFixture,
+  type ElectionScenario,
+} from "./imputationElectionFixture";
+import { userProfileFixture, type ProfileFixture } from "./userProfileFixture";
 import { aeatSyncFixture } from "./aeatSyncFixture";
 import { aeatSyncPrepareFixture } from "./aeatSyncPrepareFixture";
 import { aeatSyncResultsFixture } from "./aeatSyncResultsFixture";
@@ -119,6 +124,12 @@ export type ScenarioHostOptions = {
   ledger?: LedgerShape | null;
   /** How the made-up declarations answer. */
   modelo?: ModeloShape | null;
+  /** What the made-up profile states for the imputation election; where it
+   * is left out, nothing is stated. */
+  election?: ElectionScenario | null;
+  /** What the made-up profile states for the household; where it is left
+   * out, nothing is stated. */
+  household?: HouseholdScenario | null;
   /** Offer a made-up window port whose close is guarded as the native
    * host guards it, so a close the system raised can be played. */
   window?: boolean;
@@ -680,7 +691,34 @@ export function scenarioHost(
       completeLanguageSet = null;
     },
   };
-  const userProfile = userProfileFixture(scenario.censo);
+  const election = imputationElectionFixture(
+    options.election ?? "undeclared",
+    options.language,
+  );
+  // A Renta shape's filers live in Madrid, which the estimate asks the profile
+  // for.
+  const profile = userProfileFixture(
+    scenario.censo,
+    options.modelo?.startsWith("renta")
+      ? { "tax_residence.ccaa": "madrid" }
+      : undefined,
+  );
+  const household = householdFixture(
+    options.household ?? "unknown",
+    options.language,
+  );
+  // The election and the household have their own revision witnesses; every
+  // other edit is the profile fixture's.
+  const userProfile: ProfileFixture = {
+    ...profile,
+    change: (change) =>
+      change.edit.kind === "imputation_election"
+        ? election.change(change)
+        : change.edit.kind === "descendants" ||
+            change.edit.kind === "ascendants"
+          ? household.change(change)
+          : profile.change(change),
+  };
   return {
     language: {
       read: () => {
@@ -728,6 +766,10 @@ export function scenarioHost(
       },
     },
     userProfile,
+    profileCompanions: {
+      household: household.reads.household,
+      imputationElection: election.reads.imputationElection,
+    },
     censo: censoFixture(userProfile, scenario.censo),
     available: true,
     ...(options.window ? { window: windowFixture() } : {}),

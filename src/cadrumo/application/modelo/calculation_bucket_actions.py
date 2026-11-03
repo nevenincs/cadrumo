@@ -8,7 +8,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Literal
@@ -93,6 +93,12 @@ if TYPE_CHECKING:
 
 
 from .calculation_actions import calculate_modelo_revision_with_trusted_mesh_sources
+from .calculation_resolution import (
+    operator_over_source_divergences,
+    precedence_divergence_diagnostics,
+    precedence_screen_context,
+    precedence_tier_issue,
+)
 from .calculation_source_guards import (
     assert_no_novel_source_kinds,
     m210_gross_source_mode,
@@ -207,6 +213,8 @@ class _CallerOverrideReconciliation:
     unresolved_relation_ids: tuple[RelationId, ...]
     unresolved_binding_ids: tuple[BindingId, ...]
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...]
+    operator_relation_values: dict[RelationId, Decimal]
+    """Every relation value the operator set, through ``--relation`` or a ``--binding`` of its fold slot."""
 
 
 def _caller_relation_values_from_bindings(
@@ -356,6 +364,7 @@ def _reconcile_caller_overrides(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         source_diagnostics=source_diagnostics,
+        operator_relation_values={**caller_relation_values_from_bindings, **dict(caller_relation_values or {})},
     )
 
 
@@ -510,6 +519,7 @@ def _resolve_bucket_aggregation_source_resolution(
 def _bucket_aggregation_channels(
     *,
     preparation: _BucketAggregationPreparation,
+    operation: PinnedAuthorityOperation,
     source_resolution: CalculationSourceResolution,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     detail_rows: tuple[ModeloDetailRow, ...],
@@ -543,11 +553,6 @@ def _bucket_aggregation_channels(
         casilla_inputs=preparation.casilla_inputs,
         bound_inputs=backend_source_inputs,
     )
-    override_diagnostics = collect_operator_override_divergence_diagnostics(
-        preparation.snapshot.revision,
-        casilla_inputs=preparation.casilla_inputs,
-        bound_inputs=backend_source_inputs,
-    )
     reconciliation = _reconcile_caller_overrides(
         revision=preparation.snapshot.revision,
         target_period=preparation.work_unit.period.registry_token,
@@ -556,14 +561,71 @@ def _bucket_aggregation_channels(
         caller_relation_values=preparation.relation_values,
         detail_row_binding_values=detail_row_binding_values,
     )
+    screen_diagnostics = _operator_over_source_diagnostics(
+        preparation,
+        operation=operation,
+        source_relations=source_resolution.relation_values,
+        operator_relations={
+            # A fold slot the operator set by ``--binding`` over a binding the mesh also
+            # resolved is compared once, in the binding overlay, not again as a relation.
+            relation_id: value
+            for relation_id, value in reconciliation.operator_relation_values.items()
+            if relation_id in preparation.relation_values or relation_id not in backend_binding_values
+        },
+        source_casillas=backend_source_inputs,
+    )
+    filing_bound_boxes = frozenset(
+        diagnostic.casilla_id
+        for diagnostic in screen_diagnostics
+        if diagnostic.casilla_id is not None and diagnostic.relation_id is None
+    )
+    override_diagnostics = tuple(
+        diagnostic
+        for diagnostic in collect_operator_override_divergence_diagnostics(
+            preparation.snapshot.revision,
+            casilla_inputs=preparation.casilla_inputs,
+            bound_inputs=backend_source_inputs,
+        )
+        if diagnostic.casilla_id not in filing_bound_boxes
+    )
     return _BucketAggregationChannels(
         source_resolution=source_resolution,
         detail_rows=all_detail_rows,
         backend_binding_values=backend_binding_values,
         backend_casilla_inputs=backend_casilla_inputs,
         override_diagnostics=override_diagnostics,
-        reconciliation=reconciliation,
+        reconciliation=replace(
+            reconciliation, source_diagnostics=reconciliation.source_diagnostics + screen_diagnostics
+        ),
     )
+
+
+def _operator_over_source_diagnostics(
+    preparation: _BucketAggregationPreparation,
+    *,
+    operation: PinnedAuthorityOperation,
+    source_relations: Mapping[RelationId, Decimal],
+    operator_relations: Mapping[RelationId, Decimal],
+    source_casillas: Mapping[CasillaId, Decimal],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """The divergences between the operator's relations and boxes and the mesh's, that a filer must see.
+
+    A box that reaches no exported box keeps the operator-override advisory
+    the merge always raised, so only its filing-bound divergence is kept here;
+    a relation's divergence is kept either way.
+    """
+    divergences = operator_over_source_divergences(
+        source_relations=source_relations,
+        operator_relations=operator_relations,
+        source_casillas=source_casillas,
+        operator_casillas=preparation.casilla_inputs,
+    )
+    if not divergences:
+        return ()
+    diagnostics = precedence_divergence_diagnostics(
+        divergences, screen=precedence_screen_context(preparation.work_unit, preparation.snapshot, operation=operation)
+    )
+    return tuple(diagnostic for diagnostic in diagnostics if diagnostic.reason != _OPERATOR_OVERRIDE_ADVISORY_REASON)
 
 
 def _source_bound_casilla_inputs(
@@ -603,6 +665,45 @@ def _caller_operator_layer(
             **dict(enum_binding_values or {}),
         },
     )
+
+
+def _bucket_aggregation_source_diagnostics(
+    *,
+    preparation: _BucketAggregationPreparation,
+    channels: _BucketAggregationChannels,
+    precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...],
+    revision: CalculationRevision,
+    ports: CalculationActionPorts,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Join the mesh, precedence, override, advisory and profile-text diagnostics a calculation reports."""
+    advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
+        preparation.snapshot.revision,
+        revision.casilla_values,
+        modelo=preparation.work_unit.modelo,
+        period_token=preparation.work_unit.period.registry_token,
+        filing_year=preparation.work_unit.filing_year,
+        bucket_id=preparation.work_unit.bucket_id,
+        bienes_inversion_repository=ports.bienes_inversion_repository,
+        observation_repository=ports.observation_repository,
+        prorrata_register_repository=ports.prorrata_register_repository,
+        transaction_repository=transaction_repository,
+        operation=ports.operation,
+        profile=preparation.profile,
+    )
+    profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
+        preparation.snapshot.revision,
+        profile_fact_index(preparation.profile.record, preparation.profile.profile_decode_context.schema),
+        supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
+    )
+    source_diagnostics = (
+        channels.reconciliation.source_diagnostics
+        + precedence_diagnostics
+        + channels.override_diagnostics
+        + advisory_diagnostics
+        + profile_text_diagnostics
+    )
+    return with_element_names(source_diagnostics, ports.activity_asset_history_repository)
 
 
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -662,11 +763,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     )
     channels = _bucket_aggregation_channels(
         preparation=preparation,
+        operation=ports.operation,
         source_resolution=source_resolution,
         transaction_repository=memoized_transaction_repository,
         detail_rows=detail_rows,
     )
-    publication = calculate_modelo_revision_with_trusted_mesh_sources(
+    calculation = calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
         ports=ports,
         actor=actor,
@@ -719,34 +821,16 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         profile=preparation.profile,
         transaction_repository=memoized_transaction_repository,
     )
+    publication = calculation.publication
     revision = publication.revision
-    advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
-        preparation.snapshot.revision,
-        revision.casilla_values,
-        modelo=preparation.work_unit.modelo,
-        period_token=preparation.work_unit.period.registry_token,
-        filing_year=preparation.work_unit.filing_year,
-        bucket_id=preparation.work_unit.bucket_id,
-        bienes_inversion_repository=ports.bienes_inversion_repository,
-        observation_repository=ports.observation_repository,
-        prorrata_register_repository=ports.prorrata_register_repository,
+    source_diagnostics = _bucket_aggregation_source_diagnostics(
+        preparation=preparation,
+        channels=channels,
+        precedence_diagnostics=calculation.precedence_diagnostics,
+        revision=revision,
+        ports=ports,
         transaction_repository=memoized_transaction_repository,
-        operation=ports.operation,
-        profile=preparation.profile,
     )
-    profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
-        preparation.snapshot.revision,
-        profile_fact_index(preparation.profile.record, preparation.profile.profile_decode_context.schema),
-        supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
-    )
-    source_diagnostics = (
-        channels.reconciliation.source_diagnostics
-        + publication.source_diagnostics
-        + channels.override_diagnostics
-        + advisory_diagnostics
-        + profile_text_diagnostics
-    )
-    source_diagnostics = with_element_names(source_diagnostics, ports.activity_asset_history_repository)
     # Held for the editor form until the next calculation of this declaration; those that withhold filing and
     # the activity-asset notes also persist on the revision, so a reopened declaration still shows them.
     CALCULATION_NOTES.record(revision.work_unit_id, revision.calculation_revision_id, source_diagnostics)
@@ -868,34 +952,40 @@ def unrouted_source_issues(
     the published layout: a working figure that could not be worked out is worth
     checking, not a filed figure missing.
     """
-    issues: list[CalculationSourceIssue] = []
-    for diagnostic in source_diagnostics:
-        reason = _durable_source_issue_reason(diagnostic)
-        if reason is None:
-            continue
-        binding_source = durable_binding_source(diagnostic)
-        if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
-            continue
-        casilla_id = None if diagnostic.casilla_id is None else diagnostic.casilla_id
-        if reason in PRINTED_BOX_REASONS and not boxes.prints(casilla_id):
-            continue
-        issues.append(
-            CalculationSourceIssue(
-                reason=reason,
-                binding_source=binding_source,
-                casilla_id=diagnostic.casilla_id,
-                message=(
-                    "selected-scope IVA evidence failure"
-                    if reason == "iva_selected_scope_evidence_failure"
-                    else diagnostic.message[:CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT]
-                ),
-                resolver_id=diagnostic.resolver_id,
-                source_ref=diagnostic.source_ref,
-                fact=diagnostic.fact,
-                value_outcome=diagnostic.value_outcome if reason == "advisory_binding_value" else None,
-            ),
-        )
-    return tuple(issues)
+    issues = (_unrouted_source_issue(diagnostic, boxes) for diagnostic in source_diagnostics)
+    return tuple(issue for issue in issues if issue is not None)
+
+
+def _unrouted_source_issue(
+    diagnostic: CalculationSourceDiagnostic,
+    boxes: PrintedBoxes,
+) -> CalculationSourceIssue | None:
+    """Return the durable issue one source diagnostic persists as, or ``None`` when it persists nothing."""
+    precedence_issue = precedence_tier_issue(diagnostic)
+    if precedence_issue is not None:
+        return precedence_issue
+    reason = _durable_source_issue_reason(diagnostic)
+    if reason is None:
+        return None
+    binding_source = durable_binding_source(diagnostic)
+    if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
+        return None
+    if reason in PRINTED_BOX_REASONS and not boxes.prints(diagnostic.casilla_id):
+        return None
+    return CalculationSourceIssue(
+        reason=reason,
+        binding_source=binding_source,
+        casilla_id=diagnostic.casilla_id,
+        message=(
+            "selected-scope IVA evidence failure"
+            if reason == "iva_selected_scope_evidence_failure"
+            else diagnostic.message[:CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT]
+        ),
+        resolver_id=diagnostic.resolver_id,
+        source_ref=diagnostic.source_ref,
+        fact=diagnostic.fact,
+        value_outcome=diagnostic.value_outcome if reason == "advisory_binding_value" else None,
+    )
 
 
 def _merge_detail_row_binding_values(
@@ -1011,6 +1101,10 @@ _DurableSourceIssueReason = Literal[
     "household_rows_incomplete",
     "advisory_binding_value",
 ]
+
+
+_OPERATOR_OVERRIDE_ADVISORY_REASON: Final = "operator_override_diverges_from_computed"
+"""The advisory a box the operator set keeps where it reaches no exported box."""
 
 
 _BINDING_SOURCE_KEYED_REASONS: Final[frozenset[str]] = frozenset(

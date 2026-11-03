@@ -658,38 +658,6 @@ class RegularizacionProrrataDireccion(StrEnum):
     NINGUNA = "ninguna"
 
 
-class RegularizacionProrrataResult(_ProrrataStrictFrozen):
-    """Outcome of the annual prorrata-general regularisation (LIVA art. 105.Cuatro).
-
-    Attributes:
-        cuotas_soportadas_deducibles: The regularised periods' gross deductible
-            input IVA the definitive percentage applies to (art. 105.Seis: the
-            sum of the cuotas soportadas, excluding the arts. 95/96
-            non-deductibles, before any percentage).
-        prorrata_provisional_pct: The provisional percentage applied during the
-            year (art. 105.Uno: normally the prior year's definitive percentage).
-        prorrata_definitiva_pct: The definitive percentage computed at year-end
-            from the year's actual operations (art. 104).
-        deduccion_provisional: The deductions actually practised on those cuotas
-            across the regularised provisional liquidations.
-        deduccion_definitiva: ``cuotas × definitiva% / 100`` — the deduction that
-            definitively applies.
-        importe: ``deduccion_definitiva − deduccion_provisional``, rounded to
-            cents. The signed value proposed for Modelo 303 casilla 44 / the
-            Modelo 390 annual regularisation field. Positive = additional
-            deduction; negative = repayment.
-        direccion: :class:`RegularizacionProrrataDireccion` describing the sign.
-    """
-
-    cuotas_soportadas_deducibles: Decimal = Field(..., ge=Decimal("0"))
-    prorrata_provisional_pct: Percentage
-    prorrata_definitiva_pct: Percentage
-    deduccion_provisional: Decimal
-    deduccion_definitiva: Decimal
-    importe: Decimal
-    direccion: RegularizacionProrrataDireccion
-
-
 class RegularizacionProrrataParticion(_ProrrataStrictFrozen):
     """One slice of the regularised cuotas that carries its own definitive percentage.
 
@@ -812,89 +780,6 @@ def compute_prorrata_definitiva_anual(
     )
 
 
-def compute_regularizacion_prorrata_anual(
-    *,
-    cuotas_soportadas_deducibles: Decimal,
-    deducciones_provisionales_practicadas: Decimal,
-    prorrata_provisional_pct: Decimal,
-    prorrata_definitiva_pct: Decimal,
-) -> RegularizacionProrrataResult:
-    """Compute the annual prorrata-general regularisation cuota (LIVA art. 105.Cuatro).
-
-    A taxpayer under prorrata general deducts at a PROVISIONAL percentage during
-    the year (art. 105.Uno: "el porcentaje de deducción provisionalmente
-    aplicable cada año natural será el fijado como definitivo para el año
-    precedente"); in the last liquidation of the year it computes the DEFINITIVA
-    percentage from the year's actual operations (art. 104) and "practicará la
-    consiguiente regularización de las deducciones provisionales"
-    (art. 105.Cuatro). The definitive percentage applies to "la suma de las
-    cuotas soportadas" (art. 105.Seis), so it is applied once to the summed
-    gross cuotas the regularisation covers, and the deductions actually
-    practised on them are subtracted::
-
-        deduccion_definitiva = round(cuotas × definitiva% / 100)
-        importe              = deduccion_definitiva − deducciones_practicadas
-
-    ``cuotas_soportadas_deducibles`` is GROSS: the deductible cuotas after the
-    arts. 95/96 exclusions and BEFORE any percentage. The deductions practised
-    are what the regularised liquidations actually declared, never re-derived
-    from the provisional percentage, because each liquidation rounded its own
-    boxes. Which liquidations the call covers is the caller's split: the AEAT
-    manual applies the definitive percentage directly to the settlement
-    period's own cuotas and regularises only the earlier periods here.
-
-    Unlike the capital-goods regularisation (arts. 107-110), the prorrata-general
-    regularisation carries **no >10-point gate**: art. 105.Cuatro practises it in
-    every year the two percentages differ.
-
-    Args:
-        cuotas_soportadas_deducibles: The regularised periods' summed gross
-            deductible input IVA (art. 105.Seis), non-negative.
-        deducciones_provisionales_practicadas: The deductions those periods
-            actually practised at the provisional percentage.
-        prorrata_provisional_pct: Provisional deduction percentage applied during
-            the year (0-100), recorded on the result.
-        prorrata_definitiva_pct: Definitive deduction percentage for the year
-            (0-100).
-
-    Returns:
-        A :class:`RegularizacionProrrataResult` carrying the signed casilla-44
-        importe and its :class:`RegularizacionProrrataDireccion`.
-
-    Raises:
-        ProrrataInputError: on a negative cuota or an out-of-range percentage.
-    """
-    if cuotas_soportadas_deducibles < 0:
-        raise ProrrataInputError(
-            f"cuotas_soportadas_deducibles must be non-negative, got {cuotas_soportadas_deducibles}",
-        )
-    for label, pct in (
-        ("prorrata_provisional_pct", prorrata_provisional_pct),
-        ("prorrata_definitiva_pct", prorrata_definitiva_pct),
-    ):
-        if pct < Decimal("0") or pct > Decimal("100"):
-            raise ProrrataInputError(f"{label} out of range 0..100, got {pct}")
-
-    particionada = compute_regularizacion_prorrata_particionada(
-        particiones=(
-            RegularizacionProrrataParticion(
-                cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
-                prorrata_definitiva_pct=prorrata_definitiva_pct,
-            ),
-        ),
-        deducciones_provisionales_practicadas=deducciones_provisionales_practicadas,
-    )
-    return RegularizacionProrrataResult(
-        cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
-        prorrata_provisional_pct=prorrata_provisional_pct,
-        prorrata_definitiva_pct=prorrata_definitiva_pct,
-        deduccion_provisional=particionada.deduccion_provisional,
-        deduccion_definitiva=particionada.deduccion_definitiva,
-        importe=particionada.importe,
-        direccion=particionada.direccion,
-    )
-
-
 # ---------------------------------------------------------------------------
 # Helpers for caller-side rollups
 # ---------------------------------------------------------------------------
@@ -913,10 +798,8 @@ __all__ = (
     "RegularizacionProrrataDireccion",
     "RegularizacionProrrataParticion",
     "RegularizacionProrrataParticionadaResult",
-    "RegularizacionProrrataResult",
     "compute_prorrata_definitiva_anual",
     "compute_prorrata_general",
-    "compute_regularizacion_prorrata_anual",
     "compute_regularizacion_prorrata_particionada",
     "deductible_percentage_for",
     "especial_mandatory_rule",

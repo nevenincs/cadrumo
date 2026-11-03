@@ -71,6 +71,7 @@ enum Item {
         stated_count: Option<String>,
         row_count: usize,
         incomplete_words: Option<String>,
+        max_rows: Option<usize>,
         leaves: Vec<Leaf>,
     },
     FamilyRow {
@@ -94,6 +95,8 @@ pub struct Group {
     stated_count: Option<String>,
     row_count: usize,
     incomplete_words: Option<String>,
+    /// The most people the declaration's design lets the group hold.
+    max_rows: Option<usize>,
     leaves: Vec<Leaf>,
     rows: Vec<Row>,
 }
@@ -149,14 +152,18 @@ impl Family {
                     stated_count,
                     row_count,
                     incomplete_words,
+                    max_rows,
                     leaves,
                 } if self.keys.insert(group_key.clone()) => {
                     let leaf_keys: BTreeSet<_> = leaves.iter().map(|leaf| &leaf.leaf).collect();
                     if leaf_keys.len() != leaves.len()
                         || (state == GroupState::NotServed
                             && (!leaves.is_empty() || row_count != 0 || stated_count.is_some()))
+                        || max_rows == Some(0)
                         || (state == GroupState::Incomplete)
-                            != incomplete_words.as_deref().is_some_and(|words| !words.is_empty())
+                            != incomplete_words
+                                .as_deref()
+                                .is_some_and(|words| !words.is_empty())
                     {
                         return Err(protocol());
                     }
@@ -167,6 +174,7 @@ impl Family {
                         stated_count,
                         row_count,
                         incomplete_words,
+                        max_rows,
                         leaves,
                         rows: vec![],
                     });
@@ -353,11 +361,17 @@ mod tests {
         assert_eq!(shown["groups"][0]["state"], "incomplete");
         assert_eq!(shown["groups"][0]["stated_count"], "3");
         assert_eq!(shown["groups"][0]["row_count"], 1);
-        assert_eq!(shown["groups"][0]["incomplete_words"], "3 stated, 1 recorded");
+        assert_eq!(
+            shown["groups"][0]["incomplete_words"],
+            "3 stated, 1 recorded"
+        );
         assert_eq!(shown["groups"][0]["rows"][0]["row_index"], "0");
         // Nothing recorded under a stated count is still an incomplete group, not an unknown one.
         let none = read(vec![incomplete(0)]).unwrap();
-        assert_eq!(serde_json::to_value(&none).unwrap()["groups"][0]["rows"], json!([]));
+        assert_eq!(
+            serde_json::to_value(&none).unwrap()["groups"][0]["rows"],
+            json!([])
+        );
     }
 
     #[test]
@@ -373,6 +387,19 @@ mod tests {
         assert!(read(vec![blank, row("0", "nombre")]).is_err());
         // The count of rows it holds must still be the number it states.
         assert!(read(vec![incomplete(2), row("0", "nombre")]).is_err());
+    }
+
+    #[test]
+    fn a_group_keeps_the_most_people_the_design_holds_and_refuses_a_cap_of_none() {
+        let mut capped = group("rows", 1);
+        capped["max_rows"] = 4.into();
+        let shown = serde_json::to_value(read(vec![capped, row("0", "nombre")]).unwrap()).unwrap();
+        assert_eq!(shown["groups"][0]["max_rows"], 4);
+        let shown = serde_json::to_value(read(vec![group("unknown", 0)]).unwrap()).unwrap();
+        assert_eq!(shown["groups"][0]["max_rows"], Value::Null);
+        let mut empty = group("unknown", 0);
+        empty["max_rows"] = 0.into();
+        assert!(read(vec![empty]).is_err());
     }
 
     #[test]

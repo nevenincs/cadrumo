@@ -6,11 +6,11 @@ from collections.abc import Callable, Mapping
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.period import Period
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export import export_fields_overlap
+from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from ...domain.calculations.registry.fixed_width_codec import (
     render_empty_block_slot,
@@ -271,6 +271,32 @@ def _render_field(
     return format_field(field, raw)
 
 
+def _scheme_period_field_value(
+    field: ExportFieldDefinition,
+    draft: ModeloDraft,
+    binding_values: dict[tuple[BindingId, int | None], object],
+    row_index: int | None,
+) -> object | None:
+    """Return the value the scheme's period gives the field, refusing a bound value that contradicts it."""
+    derived_period_value = scheme_period_value(field, draft.period)
+    if derived_period_value is None:
+        return None
+    if contradicts_scheme_period(field, draft.period, binding_values.get((field.binding, row_index))):
+        raise FilingExportValidationError(f"export field {field.id!r} contradicts the period being filed")
+    return derived_period_value
+
+
+def _computed_slot_value(
+    field: ExportFieldDefinition,
+    draft: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    render_context: FilingRecordRenderContext | None,
+) -> object:
+    computed = _computed_field_value(field, draft, producer_snapshot, render_context)
+    # The blank is the slot's populated negative answer, not a missing byte.
+    return " " if computed is None and field.presence_marker is not None else computed
+
+
 def _field_value(
     field: ExportFieldDefinition,
     *,
@@ -283,9 +309,9 @@ def _field_value(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
 ) -> object:
-    scheme_period_value = _scheme_period_value(field, draft.period)
-    if scheme_period_value is not None:
-        return scheme_period_value
+    derived_period_value = _scheme_period_field_value(field, draft, binding_values, row_index)
+    if derived_period_value is not None:
+        return derived_period_value
     match field.kind:
         case CasillaFieldKind.LITERAL:
             return field.literal
@@ -302,24 +328,9 @@ def _field_value(
         case CasillaFieldKind.DRAFT:
             return _draft_value(field, draft)
         case CasillaFieldKind.COMPUTED:
-            computed = _computed_field_value(field, draft, producer_snapshot, render_context)
-            # The blank is the slot's populated negative answer, not a missing byte.
-            return " " if computed is None and field.presence_marker is not None else computed
+            return _computed_slot_value(field, draft, producer_snapshot, render_context)
         case _:
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
-
-
-def _scheme_period_value(field: ExportFieldDefinition, period: Period) -> object | None:
-    """Project a scheme-qualified filing period into the part its design row prints."""
-    if field.scheme_period_part is None or period.scheme_quarter is None:
-        return None
-    match field.scheme_period_part:
-        case "filing_year":
-            return period.filing_year
-        case "period_type":
-            return field.scheme_period_type
-        case "quarter_ordinal":
-            return period.scheme_quarter_ordinal
 
 
 def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[CasillaId, object]) -> object:

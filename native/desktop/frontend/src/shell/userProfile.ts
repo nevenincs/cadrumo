@@ -348,3 +348,18 @@ export const profileText = (value: string) =>
 export const fieldValue = (field: ProfileField) =>
   field.choices.find((choice) => choice.value === field.value)?.label ??
   field.value;
+
+/** The profile fact that states the region the filer lives in. */
+const REGION_FACT = "tax_residence.ccaa";
+
+/** Reads the region the profile states, which the estimate from the quarterly
+ * declarations is made for, or null where the profile states none. */
+export const regionReader =
+  (port: UserProfilePort, language: string) =>
+  async (): Promise<string | null> => {
+    const data = await port.read(language);
+    const fact = data.sections
+      .flatMap((section) => section.fields)
+      .find((field) => field.path === REGION_FACT);
+    return fact?.value ?? null;
+  };
