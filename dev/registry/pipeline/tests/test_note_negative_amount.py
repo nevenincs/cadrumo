@@ -60,8 +60,14 @@ def test_only_the_correction_amounts_of_a_revision_are_signed(revision: str, per
     assert all(field.sign_position is ExportSignPosition.MINUS_DISPLACES_DIGIT for _, field in signed)
 
 
-_UNSIGNED = {"data_type": "decimal", "decimals": 2, "signed": False, "sign_position": None, "design_type": "Num"}
-_SIGNED = {
+_UNSIGNED: dict[str, object] = {
+    "data_type": "decimal",
+    "decimals": 2,
+    "signed": False,
+    "sign_position": None,
+    "design_type": "Num",
+}
+_SIGNED: dict[str, object] = {
     "data_type": "money",
     "decimals": None,
     "signed": True,

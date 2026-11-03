@@ -23,6 +23,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection
@@ -242,7 +243,7 @@ def test_native_projection_denies_revoke_after_worker_before_parent_guard(
         host: RuntimeProfileHost,
         connection: ProfileConnection,
         selected: OperationResult | OperationResultPage,
-    ) -> tuple[OperationReply, WorkerAuthorityRequest]:
+    ) -> tuple[OperationReply, WorkerAuthorityRequest, OperationId | None]:
         prepared = original_prepare(host, connection, selected)
         if selected.request_id == request.request_id:
             subject.assert_projection(prepared[0])
