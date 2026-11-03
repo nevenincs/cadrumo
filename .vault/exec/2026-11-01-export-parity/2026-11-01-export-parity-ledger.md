@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:334f5eaccc2b96842dca2ba4023c6e8ab2696056cfa76de4efb91a32c54b0cf1'
+body_hash: 'sha256:1e30eeea60d57c2b177ef035e6439d16bf5c4df54f59d2cc967a9c21bab7acea'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -989,6 +989,26 @@ related:
 - `S07` `verify:` `137 focused tests (resolution precedence, overlay screen, note gate, ladder conformance, repository roundtrip, local cross-period carry, e2e M303 to M390)` -> `pass`
 - `S07` `verify:` `operation contract manifest, desktop modelo fixtures and contract checks` -> `pass`
 - `S07` `by:` `CADRUMO-IVA`
+- `S31` `M` `src/cadrumo/entrypoints/cli/config/profile_command_specs.py`
+- `S31` `A` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_profile_imputation_election_cli.py`
+- `S31` `M` `docs/_sequences/contracts/how-to/quickstart/quickstart-modelo-130.seq`
+- `S31` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S31` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/modelo-130-first-quarter.seq`
+- `S31` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S31` `M` `docs/_sequences/contracts/how-to/irpf-lifecycle/irpf-lifecycle-q1.seq`
+- `S31` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S31` `M` `docs/_sequences/contracts/how-to/modelo-130/modelo-130-quarterly.seq`
+- `S31` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S31` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-review-saved.seq`
+- `S31` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S31` `verify:` `pytest test_profile_imputation_election_cli.py` -> `pass`
+- `S31` `verify:` `pytest entrypoints/cli/tests, runtime cli config tests, wizard tests` -> `fail`
+- `S31` `verify:` `python -m dev.docs.sequences refresh (five Modelo 130 sequences)` -> `pass`
+- `S31` `verify:` `python -m dev.docs.sequences check (five Modelo 130 sequences)` -> `pass`
+- `S31` `verify:` `pytest dev/docs/sequences/tests and sequence golden tests` -> `pass`
+- `S31` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S31` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S31` `verify:` `lint-imports --config .importlinter --no-cache` -> `fail`
 
 ## Notes
 
@@ -1032,3 +1052,4 @@ related:
 - `S31` Operator ruling 2026-11-02 recorded as an ADR amendment. Wide run: 2857 passed, 12 failed, all 12 in the S30 baseline (cross-period carry precedence, OSS year 2012, M100 export settlement refusal, Sonnet-owned imputation e2e). lint-imports breaks only on the pre-existing undeclared `dev.desktop_*` fixture modules. Docs sequence refresh stays open: verify exits 2 with `unresolved_binding` because the seeds declare no imputation criterion and no operator CLI flag sets `irpf.activity_income_imputation_criterion;` no golden was changed. Commit 76a3922534.
 - `S08` Operator ruling 2026-11-02, recorded in the binding-capability-grade ADR amendment committed with S31. Both promotions were verified against one republished worktree authority. Wide run failures are the 12 S30-baseline failures only. DGT V4965-16 is cited in the binding comment, not `legal_refs:` the catalogue has no DGT consulta kind. Commit 898bc7f5d8.
 - `S07` Implemented by the IVA session on feature/iva-period as 950d71d157 (operator assignment), merged to feature/tui as 11597ef030; the source-disagreement type it reuses is b09654e5bb and 0f41170526. The row for the fixtures directory covers 173 regenerated desktop Modelo fixtures.
+- `S31` Docs refresh basis: operator ruling 2026-11-03, relayed by the orchestrator, to expose the three existing wizard election flags (--irpf-activity-income-imputation-criterion, --irpf-activity-income-imputation-year, --irpf-codigo-comercio-accounting) through the CLI option table, reusing their help keys with no new wizard logic. The criterion choice contract follows the table's import-pure convention: an empty static placeholder, validated by the flow against the profile schema's `enum_values` (a refused token reports choices `cobros_y_pagos,` devengo). The sequences state `directa_simplificada,` `cobros_y_pagos` for 2026 and no Codigo de Comercio accounting, because their rows are payment-dated without accrual documents (devengo leaves them `accrual_unknown)` and cash is admissible only with a declared regime (RIRPF art. 7.2). All five verify frames end COMPLETE with `granted_verificado_completo` true and no blocking finding, with casilla values and notices unchanged from the prior goldens. The CLI reference is a build output under ignored docs/cli and the operation contract manifest is unaffected. CLI suite failures: 3, all pre-existing with this change undone `(test_operation_invoice_catalogue` `settlement_amount` payload, two justificante cotejo persistence tests). lint-imports breaks only on the known undeclared `dev.desktop_*` fixture modules. Commits 70fa5bf1e9 and 77d5436a4c.
