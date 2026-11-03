@@ -153,6 +153,7 @@ _REGISTRY_DECLARED_OPS: tuple[str, ...] = (
     "count_distinct",
     "prior_pagos_fraccionados",
     "pagos_fraccionados_ingresados",
+    "prior_negative_results_undeducted",
 )
 
 

@@ -339,9 +339,13 @@ def test_every_relation_prefill_binding_has_a_typed_source_coordinate() -> None:
             provider = binding.provider
             source_modelo = getattr(provider, "source_modelo", None)
             source_casillas = getattr(provider, "declared_source_casilla_ids", ())
-            if not source_modelo or len(source_casillas) != 1:
+            aggregation = getattr(binding, "aggregation", None)
+            # Each quarter paid is casilla 18 plus the positive part of 19 (Modelo 131:
+            # 14 plus the positive part of 15), so that fold names two source casillas.
+            expected_sources = 2 if getattr(aggregation, "op", None) == "pagos_fraccionados_ingresados" else 1
+            if not source_modelo or len(source_casillas) != expected_sources:
                 offences.append(
-                    f"{revision_id}: relation-prefill binding {binding.id!r} has no singular typed source",
+                    f"{revision_id}: relation-prefill binding {binding.id!r} has no typed source coordinate",
                 )
     assert not offences, "relation-prefill bindings with incomplete source coordinates:\n  " + "\n  ".join(offences)
 
