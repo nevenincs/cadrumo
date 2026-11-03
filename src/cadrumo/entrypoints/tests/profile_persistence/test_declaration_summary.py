@@ -45,8 +45,6 @@ def persisted(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
             ports=work.ports,
             clock=SEEDED_AT,
             casilla_inputs={
-                "08": Decimal(0),
-                "10": Decimal(0),
                 "16": Decimal(0),
                 "18": Decimal(0),
             },

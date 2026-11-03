@@ -60,8 +60,6 @@ def two_persisted(tmp_path_factory: pytest.TempPathFactory) -> Iterator[SeededOp
                 ports=persisted.ports,
                 clock=SEEDED_AT,
                 casilla_inputs={
-                    "08": Decimal(0),
-                    "10": Decimal(0),
                     "16": Decimal(0),
                     "18": Decimal(0),
                 },
