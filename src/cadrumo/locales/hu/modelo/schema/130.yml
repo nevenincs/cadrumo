@@ -113,6 +113,13 @@ modelo:
               help: A Modelo 130 nyomtatvány végső fizetendő összege minden levonás
                 és korábbi önadózás után.
               label: Végső eredmény
+            rendimiento-neto-reducible-art-32-1:
+              help: A halmozott nettó jövedelem azon része, amely több mint két év
+                alatt keletkezett vagy kirívóan szabálytalan, és egyetlen időszakra
+                számolod el. Ne add meg, ha a tevékenységed rendszeresen ilyen jövedelmet
+                ér el. A 03. mező ennek 30%-os csökkentése után számolódik, évente
+                legfeljebb 300 000 euróig.
+              label: A 32.1. cikk szerinti csökkentésre jogosító nettó jövedelem
             saldo-negativo-fin-periodo:
               help: Az év ezen és korábbi bevallásainak negatív eredményei, amelyek
                 egy későbbi negyedévben a 15. mezőben még levonhatók.

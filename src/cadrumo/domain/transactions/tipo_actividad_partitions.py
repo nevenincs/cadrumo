@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from ...core.tipos_actividad import TipoActividad
 from ..calculations.registry.facts.resolution import (
     EntitySetFactQuery,
     MappingFactQuery,
@@ -20,6 +21,7 @@ from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError
 
 __all__ = [
+    "agrarian_instalment_activity_codes",
     "resolve_tipo_actividad_selector",
     "tipo_actividad_code_set",
 ]
@@ -106,4 +108,20 @@ def tipo_actividad_code_set(
             effective_date=effective_date,
             authority=authority,
         ),
+    )
+
+
+def agrarian_instalment_activity_codes(
+    *,
+    effective_date: date,
+    authority: GovernedFactSource,
+) -> frozenset[TipoActividad]:
+    """Return the activities whose instalment is a share of income under RIRPF art. 110.1.c."""
+    return frozenset(
+        TipoActividad(code)
+        for code in tipo_actividad_code_set(
+            "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
+            effective_date=effective_date,
+            authority=authority,
+        )
     )

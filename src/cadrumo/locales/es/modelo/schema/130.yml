@@ -113,6 +113,13 @@ modelo:
               help: Importe final a ingresar del modelo 130 después de todas las deducciones
                 y autoliquidaciones anteriores.
               label: Resultado final
+            rendimiento-neto-reducible-art-32-1:
+              help: Parte del rendimiento neto acumulado generada en más de dos años
+                o notoriamente irregular, imputada en un único periodo. No la indiques
+                si tu actividad obtiene este tipo de rendimientos de forma habitual.
+                La casilla 03 se calcula tras reducirla un 30 %, sobre un máximo de
+                300.000 euros al año.
+              label: Rendimiento neto con derecho a la reducción del art. 32.1
             saldo-negativo-fin-periodo:
               help: Resultados negativos de esta autoliquidación y de las anteriores
                 del ejercicio que quedan por deducir en la casilla 15 de un trimestre

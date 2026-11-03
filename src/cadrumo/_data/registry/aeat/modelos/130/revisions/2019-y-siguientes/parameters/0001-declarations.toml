@@ -46,3 +46,35 @@ valid_from = 2019-01-01
 
 # Casilla IDs in this modelo are the same as the printed form numbers.
 # form_number is not declared individually because id == form_number for all casillas.
+
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.art-32-1-reduction-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-32-2015"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["REDUCCIÓN POR IRREGULARIDAD", "30 POR 100"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "30"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.art-32-1-reduction-ceiling"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-32-2015"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["citada reducción no podrá superar el importe de 300.000 euros anuales"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "300000"
+date_axis = "filing_period"
+valid_from = 2019-01-01

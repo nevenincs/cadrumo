@@ -83,6 +83,7 @@ from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.tipo_actividad_partitions import agrarian_instalment_activity_codes
 from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
@@ -453,8 +454,12 @@ def aggregate_renta_gasto_ledger(
     issues: list[RentaGastoLedgerAggregationIssue] = []
     advisories: list[RentaExpenseAdvisory] = []
 
+    # Apartado I of the form takes no agrarian figure; apartado II is a share of income alone.
+    agrarian = agrarian_instalment_activity_codes(effective_date=period.end_date, authority=operation)
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if transaction.tipo_actividad in agrarian:
             continue
         outcome = _classify_gasto_transaction(
             transaction,

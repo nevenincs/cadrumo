@@ -76,7 +76,10 @@ from ...domain.renta.retenciones_routing_integrity import resolve_m130_retencion
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
+from ...domain.transactions.tipo_actividad_partitions import (
+    agrarian_instalment_activity_codes,
+    tipo_actividad_code_set,
+)
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
@@ -156,13 +159,25 @@ def _renta_income_target_casilla(context: CalculationSourceContext) -> CasillaId
         for binding in context.revision.bindings
         if isinstance(binding.provider, LedgerRentaIncomeProvider) and str(binding.provider.modelo) == context.modelo
     )
-    targets = {provider.target_casilla_id for provider in providers}
+    targets = {provider.target_casilla_id for provider in providers if not provider.agrarian_quarter}
     if len(targets) != 1:
         raise RegistryError(
             "selected revision must declare exactly one renta-income aggregation target",
             context={"modelo": context.modelo, "target_count": len(targets)},
         )
     return next(iter(targets))
+
+
+def _agrarian_quarter_target_casilla(context: CalculationSourceContext) -> CasillaId | None:
+    """Return the box a revision declares for its agrarian activities' quarter, when it splits them out."""
+    return next(
+        (
+            binding.provider.target_casilla_id
+            for binding in context.revision.bindings
+            if isinstance(binding.provider, LedgerRentaIncomeProvider) and binding.provider.agrarian_quarter
+        ),
+        None,
+    )
 
 
 def _irnr_handoff_bound_inputs(
@@ -308,6 +323,15 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         operation=operation,
                     )
                 else:
+                    agrarian_target = _agrarian_quarter_target_casilla(context)
+                    agrarian_codes = (
+                        frozenset()
+                        if agrarian_target is None
+                        else agrarian_instalment_activity_codes(
+                            effective_date=aggregation_period.end_date,
+                            authority=operation,
+                        )
+                    )
                     aggregation = aggregate_renta_income_ledger_from_repositories(
                         bucket_id=context.bucket_id,
                         period=aggregation_period,
@@ -317,7 +341,27 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
                         criteria=criteria,
+                        excluded_activity_codes=agrarian_codes,
                     )
+                    if agrarian_target is not None:
+                        agrarian = aggregate_renta_m131_agrario_income_ledger_from_repositories(
+                            bucket_id=context.bucket_id,
+                            period=aggregation_period,
+                            modelo=context.modelo,
+                            target_casilla_id=agrarian_target,
+                            agrarian_activity_codes=agrarian_codes,
+                            activity_category_matcher=activity_category_matcher,
+                            employment_category_matcher=employment_category_matcher,
+                            ports=self._ports,
+                            operation=operation,
+                            criteria=criteria,
+                        )
+                        aggregation = aggregation.model_copy(
+                            update={
+                                "observations": (*aggregation.observations, *agrarian.observations),
+                                "issues": (*aggregation.issues, *agrarian.issues),
+                            }
+                        )
                 disposal_excess = (
                     ()
                     if context.modelo == form_for_role("renta.annual")
