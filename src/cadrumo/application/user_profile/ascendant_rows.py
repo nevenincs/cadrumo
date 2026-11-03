@@ -22,17 +22,16 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
-from ...core.identity.documents import IdentityDocument, IdentityError, validate_identity
-from ...core.identity.tax_id import validate_spanish_tax_id
+from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .edit_baseline import require_profile_edit_baseline
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+from .household_person_tax_id import canonical_person_tax_id
 from .household_row_limit import declared_household_row_limit
 from .profile_record_repository import ProfileRecordRepository
 
@@ -93,15 +92,10 @@ def _refuse(message_key: str, **context: object) -> NoReturn:
 
 def _tax_id(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> str:
     """Admit a NIF or NIE whose checksum holds; an ascendant is a person, never an entity."""
-    tax_id_format = runtime_tax_id_format(authority=operation)
     try:
-        canonical = validate_spanish_tax_id(raw, tax_id_format)
-        kind = validate_identity(canonical, tax_id_format)
+        return canonical_person_tax_id(raw, operation=operation)
     except IdentityError:
         _refuse(_NIF_INVALID_KEY, row=position)
-    if kind is IdentityDocument.CIF:
-        _refuse(_NIF_INVALID_KEY, row=position)
-    return canonical
 
 
 def _date(raw: str, *, position: int, message_key: str) -> date:

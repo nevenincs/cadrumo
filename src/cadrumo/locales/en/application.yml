@@ -2938,6 +2938,19 @@ application:
         contains. A capsule keeps its identity when restored, so a backup can only
         be restored into a store that does not already hold it, or after the original
         profile is deleted.
+      descendant_birth_date_required: Descendant %{row} has no date of birth, and
+        every descendant needs one.
+      descendant_fact_unsupported: Descendant %{row} states a fact that the profile
+        does not keep for a descendant, or states it in a form the profile does not
+        store.
+      descendant_limit_unknown: The declaration design states no limit for descendants,
+        so the list cannot be checked or saved.
+      descendant_nif_invalid: The NIF or NIE of descendant %{row} is not valid; check
+        its letters and digits.
+      descendant_rows_over_limit: A declaration lists at most %{limit} descendants,
+        and %{count} were given.
+      descendant_value_invalid: Descendant %{row} states a value the declaration cannot
+        hold; check its dates, amounts and yes-or-no answers.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       passphrase_confirmation_mismatch: The new password and its confirmation do not

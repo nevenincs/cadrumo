@@ -60,6 +60,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
+from ..aggregation.renta_imputation import revision_reads_imputation_criterion
 from .calculation_note_gate import calculation_filed_before_grade_cap, calculation_screen_outdated
 from .calculation_notes import CALCULATION_NOTES, read_element_names
 from .caller_context import caller_context_of
@@ -319,6 +320,7 @@ def load_modelo_work_form(
                 registry_revision_id=review.registry_revision_id,
                 operation=operation,
             ),
+            "asks_imputation_election": revision_reads_imputation_criterion(snapshot.revision),
         }
     )
     state = review.lifecycle_state

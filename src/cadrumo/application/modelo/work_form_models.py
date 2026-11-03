@@ -989,6 +989,10 @@ class ModeloWorkForm(ModeloFormBase):
     #: for this declaration: the registry's projection declaration targets this modelo, period and
     #: revision. ``False`` says it cannot, never that an estimate would be empty.
     projectable: bool = False
+    #: Whether this revision's calculation reads the income imputation election (RIRPF art. 7): the
+    #: registry declares a binding whose resolver places activity income or expense by the taxpayer's
+    #: dated criterion. ``False`` says the declaration does not ask for it, never that none is stated.
+    asks_imputation_election: bool = False
     #: Set when the declaration is recorded as filed.
     filing: ModeloFormFiling | None = None
     #: The latest file exported for this declaration, or ``None`` when none was ever exported.

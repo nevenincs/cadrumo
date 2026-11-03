@@ -143,7 +143,8 @@ def _refuse_stale_and_malformed(
                 timeout=90,
             )
         assert invalid.value.operation_id
-        assert invalid.value.effect is not OperationEffect.UPDATED
+        assert invalid.value.effect is OperationEffect.NONE
+        assert invalid.value.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         assert profile_view_facts(client)[:2] == (revision, digest)
 
 

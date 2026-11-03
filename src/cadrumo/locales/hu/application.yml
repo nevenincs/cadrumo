@@ -3048,6 +3048,19 @@ application:
         lévő profilt. A kapszula visszaállításkor megtartja az azonosságát, ezért
         a biztonsági mentés csak olyan tárolóba állítható vissza, amely még nem tartalmazza,
         vagy az eredeti profil törlése után.
+      descendant_birth_date_required: A(z) %{row}. leszármazottnak nincs születési
+        dátuma, pedig minden leszármazotthoz kell egy.
+      descendant_fact_unsupported: A(z) %{row}. leszármazott olyan adatot ad meg,
+        amelyet a profil nem tárol leszármazottnál, vagy olyan alakban adja meg, amelyben
+        a profil nem tárolja.
+      descendant_limit_unknown: A bevallás kialakítása nem ad meg felső korlátot a
+        leszármazottakra, ezért a lista nem ellenőrizhető és nem menthető.
+      descendant_nif_invalid: A(z) %{row}. leszármazott NIF- vagy NIE-száma nem érvényes;
+        ellenőrizd a betűit és számjegyeit.
+      descendant_rows_over_limit: Egy bevallás legfeljebb %{limit} leszármazottat
+        tartalmaz, de %{count} lett megadva.
+      descendant_value_invalid: A(z) %{row}. leszármazott olyan értéket ad meg, amelyet
+        a bevallás nem fogad el; ellenőrizd a dátumait, összegeit és az igen-nem válaszait.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználói
         profil sémájának.
       passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik.

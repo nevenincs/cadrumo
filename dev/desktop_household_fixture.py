@@ -5,8 +5,9 @@ the desktop's edits use (``replace_profile_descendants`` and ``replace_profile_a
 then read as the ``family_rows`` page stream of ``user-profile.view`` in every language. The
 masked state reads the same function against a copy of the schema that declares the stored
 descendant object secret, because the shipped schema masks none of the household. The
-refusals are the registered error details an ascendants replacement settles with. No stored
-user profile is read; run after publishing a changed profile schema, wizard wording or design.
+refusals are the registered error details an ascendants or descendants replacement settles
+with. No stored user profile is read; run after publishing a changed profile schema, wizard
+wording or design.
 """
 
 from __future__ import annotations
@@ -219,37 +220,65 @@ def _items(operation: PinnedAuthorityOperation, language: str, *, secret: bool) 
     return [json.loads(item.model_dump_json()) for item in served]
 
 
-def _refusal(operation: PinnedAuthorityOperation, language: str, name: str) -> dict[str, object]:
-    """Settle one refused ascendants replacement as the registered executor does, and keep its recorded detail."""
-    from cadrumo.application.operations.error_detail import build_operation_error_detail
-    from cadrumo.application.user_profile.ascendant_rows import (
-        ProfileAscendantFact,
-        ProfileAscendantRow,
-        replace_profile_ascendants,
-    )
-    from cadrumo.core.config import override_settings
-    from cadrumo.core.errors.hierarchy import CadrumoError
+def _ascendant_sets() -> dict[str, tuple[ProfileAscendantRow, ...]]:
+    from cadrumo.application.user_profile.ascendant_rows import ProfileAscendantFact, ProfileAscendantRow
 
     def person(**leaves: str) -> ProfileAscendantRow:
         return ProfileAscendantRow(
             facts=tuple(ProfileAscendantFact(field_key=key, value=value) for key, value in leaves.items())
         )
 
-    sets = {
-        "over_limit": tuple(person(birth_date="1940-01-01") for _ in range(5)),
-        "second_nif_invalid": (person(birth_date="1940-01-01"), person(nif="12345678A", birth_date="1950-01-01")),
-        "first_birth_date_missing": (person(nif="12345678Z"),),
+    return {
+        "ascendants_over_limit": tuple(person(birth_date="1940-01-01") for _ in range(5)),
+        "ascendants_second_nif_invalid": (
+            person(birth_date="1940-01-01"),
+            person(nif="12345678A", birth_date="1950-01-01"),
+        ),
+        "ascendants_first_birth_date_missing": (person(nif="12345678Z"),),
+        "ascendants_fact_unsupported": (person(birth_date="1940-01-01", apellidos_nombre="Ana"),),
     }
+
+
+def _descendant_sets() -> dict[str, tuple[ProfileDescendantRow, ...]]:
+    from cadrumo.application.user_profile.descendant_rows import ProfileDescendantFact, ProfileDescendantRow
+
+    def person(**leaves: str) -> ProfileDescendantRow:
+        return ProfileDescendantRow(
+            facts=tuple(ProfileDescendantFact(field_key=key, value=value) for key, value in leaves.items())
+        )
+
+    return {
+        "descendants_over_limit": tuple(person(birth_date="2012-01-01") for _ in range(16)),
+        "descendants_second_value_invalid": (
+            person(birth_date="2012-01-01"),
+            person(birth_date="2015-04-03", convivencia="perhaps"),
+        ),
+        "descendants_first_birth_date_missing": (person(convivencia="true"),),
+        "descendants_fact_unsupported": (person(birth_date="2012-01-01", apellidos_nombre="Ana"),),
+    }
+
+
+def _refusal(operation: PinnedAuthorityOperation, language: str, name: str) -> dict[str, object]:
+    """Settle one refused replacement as the registered executor does, and keep its recorded detail."""
+    from cadrumo.application.operations.error_detail import build_operation_error_detail
+    from cadrumo.application.user_profile.ascendant_rows import replace_profile_ascendants
+    from cadrumo.application.user_profile.descendant_rows import replace_profile_descendants
+    from cadrumo.core.config import override_settings
+    from cadrumo.core.errors.hierarchy import CadrumoError
+
     current = _record(operation)
+    baseline = {
+        "profile_id": _BUCKET_ID,
+        "expected_revision": current.record_revision,
+        "expected_content_digest": current.content_digest,
+        "operation": operation,
+    }
     try:
         with override_settings(cadrumo_output_language=language):
-            replace_profile_ascendants(
-                profile_id=_BUCKET_ID,
-                ascendants=sets[name],
-                expected_revision=current.record_revision,
-                expected_content_digest=current.content_digest,
-                operation=operation,
-            )
+            if name.startswith("ascendants_"):
+                replace_profile_ascendants(ascendants=_ascendant_sets()[name], **baseline)
+            else:
+                replace_profile_descendants(descendants=_descendant_sets()[name], **baseline)
     except CadrumoError as error:
         with override_settings(cadrumo_output_language=language):
             detail = build_operation_error_detail(error)
@@ -286,7 +315,7 @@ def render_fixture(root: Path) -> str:
                 "items": items,
             }
         _write(operation, STATES["rows"])
-        for name in ("over_limit", "second_nif_invalid", "first_birth_date_missing"):
+        for name in (*_ascendant_sets(), *_descendant_sets()):
             refusals[name] = {language: _refusal(operation, language, name) for language in LANGUAGES}
     return (
         json.dumps({"profile_id": PROFILE_ID, "reads": reads, "refusals": refusals}, ensure_ascii=False, indent=2)

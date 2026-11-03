@@ -277,7 +277,11 @@ class ProfileDescendantsOperationExecutor:
         request: OperationRequest[ProfileDescendantsOperationRequest],
         context: OperationExecutorContext,
     ) -> str:
-        """Publish count, canonical rows and orphan clears through one guarded CAS."""
+        """Publish count, canonical rows and orphan clears through one guarded CAS.
+
+        A family the declaration does not hold is refused before anything is written,
+        so that refusal settles with no effect.
+        """
         payload = request.payload
         _require_active_profile_subject(request, payload.profile_id)
         await context.events.phase(PROFILE_DESCENDANTS_PHASES[0])
@@ -286,14 +290,18 @@ class ProfileDescendantsOperationExecutor:
         async def publish() -> str:
             async with _profile_mutation_section(context):
                 await context.events.effect(OperationEffect.UNKNOWN)
-                mutation = await asyncio.to_thread(
-                    replace_profile_descendants,
-                    profile_id=str(payload.profile_id),
-                    descendants=payload.descendants,
-                    expected_revision=payload.expected_revision,
-                    expected_content_digest=payload.expected_content_digest,
-                    operation=context.authority_operation,
-                )
+                try:
+                    mutation = await asyncio.to_thread(
+                        replace_profile_descendants,
+                        profile_id=str(payload.profile_id),
+                        descendants=payload.descendants,
+                        expected_revision=payload.expected_revision,
+                        expected_content_digest=payload.expected_content_digest,
+                        operation=context.authority_operation,
+                    )
+                except UserProfileValidationError:
+                    await context.events.effect(OperationEffect.NONE)
+                    raise
                 result_ref = await _result_reference(
                     ProfileDescendantsOperationResult(
                         profile_id=payload.profile_id,

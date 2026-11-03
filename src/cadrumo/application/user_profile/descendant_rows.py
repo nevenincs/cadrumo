@@ -1,18 +1,26 @@
 """Atomic replacement of a profile's declared descendant family.
 
+A replacement states the whole family: the rows, their count and the clearing of every
+row it no longer holds are one write against one exact custody revision. Every refusal
+names the row by its position and never echoes what was typed, so the sentence served
+for it discloses nothing the person did not already see.
+
 Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Final, NoReturn
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import ProfileAnswerTypeError, pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
+from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, validating_governed_facts
 from ...domain.contribuyente.descendant import DescendantInfo
 from ...domain.contribuyente.descendant_facts import descendant_facts_from_list, descendant_list_from_facts
@@ -20,7 +28,22 @@ from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .capsule_record import ProfileRecordConflictError
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+from .household_person_tax_id import canonical_person_tax_id
+from .household_row_limit import declared_household_row_limit
 from .profile_record_repository import ProfileRecordRepository
+
+DESCENDANT_OBJECT_PATH: Final = "renta_family.descendiente"
+DESCENDANT_COUNT_PATH: Final = "renta_family.descendientes_count"
+
+_BIRTH_DATE_LEAF: Final = "birth_date"
+_NIF_LEAF: Final = "nif"
+
+_ROWS_OVER_LIMIT_KEY: Final = "application.user_profile.errors.descendant_rows_over_limit"
+_LIMIT_UNKNOWN_KEY: Final = "application.user_profile.errors.descendant_limit_unknown"
+_BIRTH_DATE_REQUIRED_KEY: Final = "application.user_profile.errors.descendant_birth_date_required"
+_NIF_INVALID_KEY: Final = "application.user_profile.errors.descendant_nif_invalid"
+_VALUE_INVALID_KEY: Final = "application.user_profile.errors.descendant_value_invalid"
+_FACT_UNSUPPORTED_KEY: Final = "application.user_profile.errors.descendant_fact_unsupported"
 
 
 class ProfileDescendantFact(BaseModel):
@@ -64,32 +87,71 @@ def encode_descendant_rows(
     )
 
 
-def _supplied_descendant_facts(descendants: tuple[ProfileDescendantRow, ...]) -> dict[str, str]:
-    return {
-        f"renta_family.descendiente.{index}.{fact.field_key}": fact.value
-        for index, row in enumerate(descendants)
-        for fact in row.facts
-    }
+def _refuse(message_key: str, **context: object) -> NoReturn:
+    raise UserProfileValidationError(translated_message=message_key, context=context)
+
+
+def _validated_descendant_row(
+    row: ProfileDescendantRow, *, position: int, operation: PinnedAuthorityOperation
+) -> tuple[DescendantInfo, dict[str, str]]:
+    """Validate one row alone and return its record with its canonical leaves.
+
+    The record itself checks a NIF only for width, so the control letter is
+    enforced here through the identifier check ascendants use, and the stored NIF
+    is its canonical form. The domain decoder drops a leaf it does not know and a
+    row without a birth date, so each is checked against what the decoder kept:
+    nothing the person stated may disappear or change form on its way into the
+    profile.
+    """
+    supplied = {f"{DESCENDANT_OBJECT_PATH}.0.{fact.field_key}": fact.value for fact in row.facts}
+    if f"{DESCENDANT_OBJECT_PATH}.0.{_BIRTH_DATE_LEAF}" not in supplied:
+        _refuse(_BIRTH_DATE_REQUIRED_KEY, row=position)
+    nif_path = f"{DESCENDANT_OBJECT_PATH}.0.{_NIF_LEAF}"
+    if nif_path in supplied:
+        try:
+            supplied[nif_path] = canonical_person_tax_id(supplied[nif_path], operation=operation)
+        except IdentityError:
+            _refuse(_NIF_INVALID_KEY, row=position)
+    try:
+        decoded = descendant_list_from_facts(supplied, authority=operation)
+    except (ProfileAnswerTypeError, RegistryValidationError, ValueError):
+        _refuse(_VALUE_INVALID_KEY, row=position)
+    if len(decoded) != 1:
+        _refuse(_BIRTH_DATE_REQUIRED_KEY, row=position)
+    stored = dict(descendant_facts_from_list(decoded, authority=operation))
+    if any(stored.get(path) != value for path, value in supplied.items()):
+        _refuse(_FACT_UNSUPPORTED_KEY, row=position)
+    stored.pop(DESCENDANT_COUNT_PATH)
+    return decoded[0], stored
 
 
 def _validated_descendant_facts(
     descendants: tuple[ProfileDescendantRow, ...], operation: PinnedAuthorityOperation
 ) -> tuple[tuple[DescendantInfo, ...], dict[str, str]]:
-    supplied = _supplied_descendant_facts(descendants)
-    validated = descendant_list_from_facts(supplied, authority=operation)
-    pairs = dict(descendant_facts_from_list(validated, authority=operation))
-    # Unknown fields, omitted birth dates and noncanonical values must not
-    # disappear when the domain decoder constructs its supported record.
-    if len(validated) != len(descendants) or any(pairs.get(path) != value for path, value in supplied.items()):
-        raise UserProfileValidationError("descendant replacement contains unsupported or noncanonical facts")
-    return validated, pairs
+    """Return the family's records and its canonical ``path -> value`` facts, count included."""
+    limit = declared_household_row_limit(operation, object_path=DESCENDANT_OBJECT_PATH)
+    if limit is None:
+        _refuse(_LIMIT_UNKNOWN_KEY)
+    if len(descendants) > limit:
+        _refuse(_ROWS_OVER_LIMIT_KEY, limit=limit, count=len(descendants))
+    records: list[DescendantInfo] = []
+    pairs: dict[str, str] = {}
+    for index, row in enumerate(descendants):
+        record, stored = _validated_descendant_row(row, position=index + 1, operation=operation)
+        records.append(record)
+        prefix = f"{DESCENDANT_OBJECT_PATH}.0."
+        pairs.update(
+            {f"{DESCENDANT_OBJECT_PATH}.{index}.{path.removeprefix(prefix)}": value for path, value in stored.items()}
+        )
+    pairs[DESCENDANT_COUNT_PATH] = str(len(records))
+    return tuple(records), pairs
 
 
 def _replaced_descendant_facts(current: UserProfileRecord, pairs: dict[str, str]) -> tuple[UserProfileFact, ...]:
     stale_paths = {
         fact.path
         for fact in current.facts
-        if fact.path.startswith("renta_family.descendiente.") or fact.path == "renta_family.descendientes_count"
+        if fact.path.startswith(f"{DESCENDANT_OBJECT_PATH}.") or fact.path == DESCENDANT_COUNT_PATH
     }
     return (
         *(UserProfileFact(path=path, value=None) for path in sorted(stale_paths - pairs.keys())),
