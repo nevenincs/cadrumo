@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -37,10 +38,12 @@ import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import { Details, type OpenableSurface } from "../details/Details";
 import { TodoRail } from "../details/TodoRail";
 import { FilingView } from "../dialogs/FilingView";
-import type { OperationRun } from "../dialogs/operationRun";
+import { runOperation, type OperationRun } from "../dialogs/operationRun";
 import {
   createModeloWriteHolds,
   declarationWriteKey,
+  walletWriteKey,
+  type ModeloWriteHold,
   type ModeloWriteHolds,
 } from "../../../shell/modeloWriteHolds";
 import {
@@ -58,6 +61,7 @@ import type { CorrectionAnswer, CorrectionResult } from "./CorrectionDialog";
 import { creditFields } from "./creditBoxes";
 import { CreditsPanel } from "./CreditsPanel";
 import { useEstimate } from "./estimateRead";
+import { hasIvaWallet } from "./ivaWalletRead";
 import { HistoryView, type HistoryNotice } from "./HistoryView";
 import {
   ProfileCompanions,
@@ -290,7 +294,7 @@ function Ready({
     // No correction may bypass the declaration's shared write hold.
     if (held) return { kind: "unknown" };
     const mine = correctionGeneration.current;
-    const version = operation.holds.version(operation.target);
+    const version = operation.holds.admissionVersion(operation.target);
     if (!baseline || !correction)
       return { kind: "not_sent", code: "not_admitted" };
     let parsed;
@@ -325,7 +329,7 @@ function Ready({
     if (
       !alive.current ||
       mine !== correctionGeneration.current ||
-      operation.holds.version(operation.target) !== version
+      operation.holds.admissionVersion(operation.target) !== version
     )
       return { kind: "not_sent", code: "not_admitted" };
     const refused: Record<string, string> = {};
@@ -448,7 +452,9 @@ function Ready({
       writeHeld={held}
       prerequisiteHeld={prerequisiteHeld}
       notice={
-        operation.hold && operation.hold.phase !== "running" ? (
+        operation.hold &&
+        (operation.hold.phase !== "running" ||
+          operation.hold.key !== operation.target) ? (
           <>
             <div className="px-6 pt-3">
               <ScopedWriteHoldNotice />
@@ -535,8 +541,11 @@ function Ready({
             }
           />
         ),
+        creditsLabel: hasIvaWallet(envelope)
+          ? t("desktop.modelo.view.iva_wallet")
+          : undefined,
         credits:
-          creditFields(session.placed).length > 0 ? (
+          creditFields(session.placed).length > 0 || hasIvaWallet(envelope) ? (
             <CreditsPanel
               envelope={envelope}
               session={session}
@@ -759,6 +768,21 @@ export function WorkspaceScreen({
   const holds = suppliedHolds ?? localHolds;
   const target = declarationWriteKey(workUnitId);
   const [read, setRead] = useState<Read>({ phase: "reading" });
+  const owner = useMemo(() => {
+    if (read.phase !== "ready") return undefined;
+    const form = read.envelope.form.form;
+    return {
+      workUnitId,
+      label: [
+        form.modelo,
+        form.modelo_name ?? form.modelo_title,
+        form.period_words,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      filingYear: form.filing_year,
+    };
+  }, [read, workUnitId]);
   const latest = useRef(0);
   useLayoutEffect(
     () => () => {
@@ -786,6 +810,29 @@ export function WorkspaceScreen({
       return false;
     }
   }, [port, workUnitId, language, holds, target]);
+  const reloadHold = useCallback(
+    async (hold: ModeloWriteHold) => {
+      if (hold.phase !== "refresh") return false;
+      if (hold.key === target) return reread();
+      const heldOwner = hold.owner;
+      if (hold.key !== walletWriteKey || heldOwner?.workUnitId !== workUnitId)
+        return false;
+      const ticket = latest.current;
+      const balance = await runOperation(
+        port,
+        () =>
+          port.submit("modelo.iva-wallet.balance", {
+            as_of_year: heldOwner.filingYear,
+          }),
+        () => ticket === latest.current,
+      );
+      if (balance.kind !== "settled" || ticket !== latest.current) return false;
+      const fresh = await reread();
+      if (fresh) holds.readCompleted(hold);
+      return fresh;
+    },
+    [port, workUnitId, holds, target, reread],
+  );
   useEffect(() => {
     shown.current = false;
     setRead({ phase: "reading" });
@@ -836,6 +883,11 @@ export function WorkspaceScreen({
       port={port}
       onWritten={onWritten}
       reload={reread}
+      reloadHold={reloadHold}
+      owner={owner}
+      onOpenOwner={
+        onOpenWork ? (heldOwner) => onOpenWork(heldOwner.workUnitId) : undefined
+      }
     >
       {read.phase !== "ready" && <ScopedWriteHoldNotice />}
       {content}

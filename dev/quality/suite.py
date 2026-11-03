@@ -1,32 +1,35 @@
 #!/usr/bin/env python
 """Consolidated blocking code-quality dashboard for the build harness.
 
-Runs every fast static quality gate to completion (not fail-fast), then
+Runs its selected quality gates to completion (not fail-fast), then
 reports signal only:
 
 * On full success: silent, exit 0. Green gates are not reported.
 * On any failure: a compact dashboard naming each failing gate, replaying
   its actionable output, and listing the gates that passed by name only,
-  then exit 1.
+  then return the first failing gate's status.
 
-Each gate invokes its underlying tool directly (no ``just`` re-entry, no
-nested ``uv run``): this process is already started via ``uv run --no-sync
+Python gates invoke their underlying tools directly: this process is already started via ``uv run --no-sync
 python -m dev.quality.suite``, so the active venv's console scripts
 (``ruff`` and ``deptry``) resolve by bare name; the import-quality row calls
 the authoritative Python driver, which resolves Import Linter itself, and
 ``sys.executable`` names the venv interpreter for the Python-module gates.
-This script aggregates pass/fail and surfaces the failing detail.
+The optional native rows call their existing just recipes to preserve CMake's
+configured build ownership and platform selection. This script aggregates
+pass/fail and surfaces the failing detail.
 """
 
 from __future__ import annotations
 
+import argparse
 import subprocess
 import sys
 from dataclasses import dataclass
 from typing import Final
 
 from dev._paths import UTF_8
-from dev.exit_codes import TOOL_MISSING
+from dev.ci.lane_recipe_commands import resolve_just_executable
+from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
 from dev.first_party_source import DEPENDENCY_DECLARATION_ROOTS
 
 _UTF_8: Final[str] = UTF_8
@@ -133,6 +136,8 @@ def run_gate(name: str, command: tuple[str, ...]) -> GateResult:
         )
     except FileNotFoundError as error:
         return GateResult(name=name, returncode=TOOL_MISSING, output=f"cannot run {command[0]}: {error}")
+    except OSError as error:
+        return GateResult(name=name, returncode=TOOL_BROKEN, output=f"cannot run {command[0]}: {error}")
     return GateResult(
         name=name,
         returncode=result.returncode,
@@ -140,7 +145,17 @@ def run_gate(name: str, command: tuple[str, ...]) -> GateResult:
     )
 
 
-def main() -> int:
+def native_gate_results(configuration: str = "Debug") -> list[GateResult]:
+    """Run each platform-owned gate, including after another gate fails."""
+    names = ("check-frontend", "check-rust")
+    try:
+        executable = resolve_just_executable()
+    except RuntimeError as error:
+        return [GateResult(name, TOOL_MISSING, str(error)) for name in names]
+    return [run_gate(name, (executable, name, configuration)) for name in names]
+
+
+def main(*, native: bool = False, native_only: bool = False, configuration: str = "Debug") -> int:
     """Run every gate and emit the consolidated dashboard.
 
     Every gate runs even after one fails, because an aggregate is asked for a
@@ -150,14 +165,17 @@ def main() -> int:
     something (1) from a gate that could not run at all (127). See
     ``dev/EXIT-CODES.md``.
     """
-    results = [run_gate(name, command) for name, command in GATES]
+    results = [] if native_only else [run_gate(name, command) for name, command in GATES]
+    if native or native_only:
+        results.extend(native_gate_results(configuration))
     failed = [r for r in results if r.returncode != 0]
     passed = [r for r in results if r.returncode == 0]
 
     if not failed:
         return 0
 
-    _emit(f"check-code: {len(failed)} of {len(results)} gates failed\n")
+    name = "check-native-code" if native_only else "check-code" if native else "check-python"
+    _emit(f"{name}: {len(failed)} of {len(results)} gates failed\n")
     _emit_failed_gates(failed)
     if passed:
         _emit("passed: " + ", ".join(r.name for r in passed))
@@ -189,4 +207,10 @@ def _emit_failed_gates(failed: list[GateResult]) -> None:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    scope = parser.add_mutually_exclusive_group()
+    scope.add_argument("--all-languages", action="store_true", help="Include frontend and Rust gates.")
+    scope.add_argument("--native-only", action="store_true", help="Run only frontend and Rust gates.")
+    parser.add_argument("--configuration", choices=("Debug", "Release"), default="Debug")
+    options = parser.parse_args()
+    sys.exit(main(native=options.all_languages, native_only=options.native_only, configuration=options.configuration))

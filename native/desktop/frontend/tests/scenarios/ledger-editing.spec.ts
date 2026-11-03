@@ -390,14 +390,17 @@ test("the review flags an expense category on income, which no expense reads", a
 }) => {
   await openLedger(target);
   // A stored Business income, given a spending category in its cell.
+  await find(target, "TRANSFERENCIA TALLERES ONDARA");
   const income = rowOf(target, "TRANSFERENCIA TALLERES ONDARA");
+  await expect(income).toBeVisible();
   await chooseIn(
     target,
     cellOf(income, "category"),
     label("desktop.ledger.category.vehiculo_combustible"),
   );
   // The same category on an expense is no mismatch.
-  await find(target, "comision mantenimiento");
+  await find(target, "COMISION MANTENIMIENTO CUENTA");
+  await expect(rowOf(target, "COMISION MANTENIMIENTO CUENTA")).toBeVisible();
   await chooseIn(
     target,
     cellOf(rowOf(target, "COMISION MANTENIMIENTO CUENTA"), "category"),

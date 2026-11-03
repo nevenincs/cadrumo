@@ -121,6 +121,9 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "action_failed",
             "action_unknown",
             "unavailable",
+            "uncertain",
+            "reload",
+            "last_known",
         ),
         "desktop.aeat_sync.results.borrador.": (
             "captured",

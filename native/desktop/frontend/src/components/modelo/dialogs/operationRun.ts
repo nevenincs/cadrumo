@@ -8,6 +8,23 @@ import {
   type LedgerOutcome,
 } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
+import type { ModeloEditApplyBaselineV1 } from "../../../shell/modeloContract";
+
+/** Whether a check that found `stale` stale may renew it: only the latest
+ * check, on the baseline the review now holds; an overtaken check leaves the
+ * renewal to the check that overtook it. */
+export function mayRenew(check: {
+  ticket: number;
+  latest: number;
+  stale: ModeloEditApplyBaselineV1;
+  current: ModeloEditApplyBaselineV1 | null;
+}): boolean {
+  return (
+    check.ticket === check.latest &&
+    check.current !== null &&
+    check.stale.baseline_id === check.current.baseline_id
+  );
+}
 
 // One write, sent once and followed until it settles. A write that may have
 // reached the runtime and whose settlement was not seen is unknown: it may

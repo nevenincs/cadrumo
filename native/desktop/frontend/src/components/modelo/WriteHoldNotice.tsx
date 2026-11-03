@@ -15,6 +15,16 @@ export const useModeloWriteHold = (holds: ModeloWriteHolds, target: string) =>
     () => undefined,
   );
 
+export const useModeloBlockingWriteHold = (
+  holds: ModeloWriteHolds,
+  target: string,
+) =>
+  useSyncExternalStore(
+    holds.subscribe,
+    () => holds.blocking(target),
+    () => undefined,
+  );
+
 /** A read of the form/list is not evidence that an unknown operation ended. */
 export function WriteHoldNotice({
   holds,
@@ -23,13 +33,15 @@ export function WriteHoldNotice({
   onReload,
   refreshing = false,
   creation = false,
+  onCompleted,
 }: {
   holds: ModeloWriteHolds;
   target: string;
   port: ModeloPort;
-  onReload: () => void;
+  onReload?: () => void;
   refreshing?: boolean;
   creation?: boolean;
+  onCompleted?: () => void;
 }) {
   const t = useStrings();
   const hold = useModeloWriteHold(holds, target);
@@ -47,7 +59,7 @@ export function WriteHoldNotice({
     setChecking(target);
     try {
       const outcome = await port.observe(hold.operationId);
-      if (outcome.kind === "settled" || outcome.kind === "refused")
+      if (outcome.kind === "settled" || outcome.kind === "refused") {
         holds.needsRead(
           hold,
           false,
@@ -55,6 +67,8 @@ export function WriteHoldNotice({
             ? servedRefusalWords(outcome.detail)
             : null,
         );
+        onCompleted?.();
+      }
       // A running/review operation, or a failed observation, stays unknown.
     } catch {
       // No successful observation means no evidence to unlock this target.
@@ -84,33 +98,33 @@ export function WriteHoldNotice({
             )}
       </p>
       {hold.phase === "refresh" && hold.words && <p>{hold.words}</p>}
-      {hold.phase === "refresh" ? (
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={refreshing}
-          onClick={onReload}
-        >
-          {refreshing && <Spinner />}
-          {t(
-            creation
-              ? "workspace.modelo.write_hold.reload_list"
-              : "workspace.modelo.read_again",
+      {hold.phase === "refresh"
+        ? onReload && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={refreshing}
+              onClick={onReload}
+            >
+              {refreshing && <Spinner />}
+              {t(
+                creation
+                  ? "workspace.modelo.write_hold.reload_list"
+                  : "workspace.modelo.read_again",
+              )}
+            </Button>
+          )
+        : hold.operationId !== null && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={checking === target}
+              onClick={() => void check()}
+            >
+              {checking === target && <Spinner />}
+              {t("workspace.modelo.write_hold.check_status")}
+            </Button>
           )}
-        </Button>
-      ) : (
-        hold.operationId !== null && (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={checking === target}
-            onClick={() => void check()}
-          >
-            {checking === target && <Spinner />}
-            {t("workspace.modelo.write_hold.check_status")}
-          </Button>
-        )
-      )}
     </Alert>
   );
 }

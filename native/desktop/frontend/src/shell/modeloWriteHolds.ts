@@ -1,7 +1,16 @@
 /** Session-owned operation state. No request body, form value or financial
  * operand is retained here. The declarations memory owns this store and is
  * replaced with the signed-in reader. */
-export type ModeloWriteLease = { readonly key: string; readonly id: number };
+export type ModeloWriteOwner = {
+  readonly workUnitId: string;
+  readonly label: string;
+  readonly filingYear: number;
+};
+export type ModeloWriteLease = {
+  readonly key: string;
+  readonly id: number;
+  readonly owner?: ModeloWriteOwner;
+};
 export type ModeloWriteHold = ModeloWriteLease &
   (
     | { readonly phase: "running" }
@@ -27,20 +36,50 @@ export const creationWriteKey = (target: {
 export const declarationWriteKey = (workUnitId: string) =>
   JSON.stringify(["work", workUnitId]);
 export const isCreationWriteKey = (key: string) => key.startsWith('["create",');
+export const walletWriteKey = JSON.stringify(["wallet"]);
+const isDeclarationWriteKey = (key: string) => key.startsWith('["work",');
+export const modeloWriteConflicts = (target: string, held: string) =>
+  target === held ||
+  (target === walletWriteKey && isDeclarationWriteKey(held)) ||
+  (held === walletWriteKey && isDeclarationWriteKey(target));
 
 export function createModeloWriteHolds() {
   let sequence = 0;
+  let declarationVersion = 0;
   const holds = new Map<string, ModeloWriteHold>();
   const versions = new Map<string, number>();
   const listeners = new Set<() => void>();
-  const publish = () => listeners.forEach((listener) => listener());
+  let snapshot: readonly ModeloWriteHold[] = [];
+  const publish = () => {
+    snapshot = [...holds.values()];
+    listeners.forEach((listener) => listener());
+  };
   const owns = (lease: ModeloWriteLease) =>
     holds.get(lease.key)?.id === lease.id;
+  const blocking = (key: string) => {
+    const own = holds.get(key);
+    if (own) return own;
+    for (const hold of holds.values())
+      if (modeloWriteConflicts(key, hold.key)) return hold;
+    return undefined;
+  };
   return {
     get: (key: string) => holds.get(key),
+    /** Wallet writes affect the shared basis read by existing declarations. */
+    blocking,
     /** A completed write still invalidates reads started before admission. */
     version: (key: string) => versions.get(key) ?? 0,
-    snapshot: () => [...holds.values()],
+    /** Also retires a read when a conflicting write began and already ended. */
+    admissionVersion: (key: string) =>
+      Math.max(
+        versions.get(key) ?? 0,
+        isDeclarationWriteKey(key)
+          ? (versions.get(walletWriteKey) ?? 0)
+          : key === walletWriteKey
+            ? declarationVersion
+            : 0,
+      ),
+    snapshot: () => snapshot,
     subscribe: (listener: () => void) => {
       listeners.add(listener);
       return () => {
@@ -48,10 +87,11 @@ export function createModeloWriteHolds() {
       };
     },
     /** Admission is synchronous, before the first await or render. */
-    begin(key: string): ModeloWriteLease | null {
-      if (holds.has(key)) return null;
-      const lease = { key, id: ++sequence };
+    begin(key: string, owner?: ModeloWriteOwner): ModeloWriteLease | null {
+      if (blocking(key)) return null;
+      const lease = { key, id: ++sequence, ...(owner ? { owner } : {}) };
       versions.set(key, lease.id);
+      if (isDeclarationWriteKey(key)) declarationVersion = lease.id;
       holds.set(key, { ...lease, phase: "running" });
       publish();
       return lease;

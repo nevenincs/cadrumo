@@ -363,6 +363,47 @@ test("the shell's chords stay out of the canvas while it has focus, and run agai
   expect(await heard("a")).toBe(0);
 });
 
+test("refused browser input warns once and is never replayed", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  const box = await bounds(target);
+  await target.mouse.click(box.x + 60, box.y + box.height - 60);
+  const before = (await inputs(target)).length;
+  await target.evaluate(() => window.__scenarioSedeView!.refuseInputs(true));
+  await target.keyboard.insertText("private rejected text");
+  await target.mouse.click(box.x + 90, box.y + box.height - 60);
+  const warning = prompts(target)
+    .getByRole("alert")
+    .filter({ hasText: label("desktop.browser.input_not_sent") });
+  await expect(warning).toHaveCount(1);
+  await expect(warning).not.toContainText("private rejected text");
+  expect((await inputs(target)).length).toBe(before);
+  await target.evaluate(() => window.__scenarioSedeView!.refuseInputs(false));
+  await target.keyboard.insertText("new text");
+  await expect
+    .poll(async () =>
+      (await inputs(target))
+        .filter((input) => input.type === "text")
+        .map((input) => input.text),
+    )
+    .toEqual(["new text"]);
+  await expect(warning).toBeVisible();
+  await warning
+    .getByRole("button", {
+      name: label("desktop.browser.notice.dismiss"),
+      exact: true,
+    })
+    .click();
+  await expect(warning).toHaveCount(0);
+  expect(
+    (await inputs(target)).some(
+      (input) =>
+        input.type === "text" && input.text === "private rejected text",
+    ),
+  ).toBe(false);
+});
+
 test("the person's pointer, wheel and typing reach the page in its own pixels", async ({
   page: target,
 }) => {
@@ -801,6 +842,111 @@ test("page dialogs are answered by the person, each in its own words", async ({
       { kind: "dialog", id: 3, accepted: true, text: "Berta" },
       { kind: "dialog", id: 4, accepted: false, text: null },
     ]);
+});
+
+test("a refused dialog answer preserves the prompt and admits one manual retry", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  await target.evaluate(() => {
+    window.__scenarioSedeView!.failNextDialog();
+    window.__scenarioSedeView!.holdNextDialog();
+    window.__scenarioSedeView!.dialog("prompt", "Nombre?", "Ana");
+  });
+  const dialog = pageDialog(target);
+  const field = dialog.getByLabel(label("desktop.browser.dialog.prompt_label"));
+  const ok = dialog.getByRole("button", {
+    name: label("desktop.browser.dialog.ok"),
+    exact: true,
+  });
+  await field.fill("Berta");
+  await ok.click();
+  await expect(ok).toBeDisabled();
+  await target.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  await target.keyboard.press("Enter");
+  await expect(ok).toBeDisabled();
+  await expect(field).toHaveValue("Berta");
+  await target.evaluate(() => window.__scenarioSedeView!.releaseDialog());
+  await expect(dialog.getByRole("alert")).toHaveText(
+    label("desktop.browser.dialog.answer_failed"),
+  );
+  await expect(field).toHaveValue("Berta");
+  expect(await answers(target)).toEqual([]);
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("sedeViewDialog ")),
+  ).toHaveLength(1);
+  await ok.click();
+  await expect(dialog).toHaveCount(0);
+  expect(await answers(target)).toEqual([
+    { kind: "dialog", id: 1, accepted: true, text: "Berta" },
+  ]);
+});
+
+test("a refused viewport is retried and the newest pending size is sent serially", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  await idle(target);
+  const viewport = target.viewportSize()!;
+  const requests = () =>
+    target.evaluate(() => window.__scenarioSedeView!.resizeRequests());
+  const before = (await requests()).length;
+  await target.evaluate(() => window.__scenarioSedeView!.failResizes(1));
+  await target.setViewportSize({
+    width: viewport.width - 100,
+    height: viewport.height,
+  });
+  await expect.poll(async () => (await requests()).length).toBe(before + 2);
+  const retried = (await requests()).slice(before);
+  expect(retried[0]).toEqual(retried[1]);
+  await target.evaluate(() => window.__scenarioSedeView!.holdNextResize());
+  await target.setViewportSize({
+    width: viewport.width - 150,
+    height: viewport.height,
+  });
+  await expect.poll(async () => (await requests()).length).toBe(before + 3);
+  await target.setViewportSize({
+    width: viewport.width - 200,
+    height: viewport.height - 50,
+  });
+  await target.waitForTimeout(250);
+  expect((await requests()).length).toBe(before + 3);
+  await target.evaluate(() => window.__scenarioSedeView!.releaseResize());
+  await expect.poll(async () => (await requests()).length).toBe(before + 4);
+  const final = (await requests()).at(-1)!;
+  expect(final.cssWidth).toBeLessThan(retried[1]!.cssWidth);
+  await expect
+    .poll(() => target.evaluate(() => window.__scenarioSedeView!.size()))
+    .toEqual(final);
+});
+
+test("viewport recovery stops after three failures and accepts a new size", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  await idle(target);
+  const viewport = target.viewportSize()!;
+  const requests = () =>
+    target.evaluate(() => window.__scenarioSedeView!.resizeRequests());
+  const before = (await requests()).length;
+  await target.evaluate(() => window.__scenarioSedeView!.failResizes(10));
+  await target.setViewportSize({
+    width: viewport.width - 100,
+    height: viewport.height,
+  });
+  await expect.poll(async () => (await requests()).length).toBe(before + 3);
+  await target.waitForTimeout(1000);
+  expect((await requests()).length).toBe(before + 3);
+  await target.evaluate(() => window.__scenarioSedeView!.failResizes(0));
+  await target.setViewportSize({
+    width: viewport.width - 150,
+    height: viewport.height,
+  });
+  await expect.poll(async () => (await requests()).length).toBe(before + 4);
+  await expect
+    .poll(() => target.evaluate(() => window.__scenarioSedeView!.size()))
+    .toEqual((await requests()).at(-1));
 });
 
 test("dialogs queue oldest first, and closing one any other way declines it", async ({

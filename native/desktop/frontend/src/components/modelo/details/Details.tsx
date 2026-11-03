@@ -388,7 +388,15 @@ function CardParts({
   );
 }
 
-function CardState({ read, t }: { read: HelpCardRead; t: Translate }) {
+function CardState({
+  read,
+  t,
+  onRetry,
+}: {
+  read: HelpCardRead;
+  t: Translate;
+  onRetry(): void;
+}) {
   if (read.kind === "reading")
     return (
       <span className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -398,9 +406,12 @@ function CardState({ read, t }: { read: HelpCardRead; t: Translate }) {
     );
   if (read.kind === "failed")
     return (
-      <span className="flex items-center gap-2 text-sm text-muted-foreground">
+      <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         <Icon name="unknown" size="xs" />
         {t("workspace.modelo.details.card_unavailable")}
+        <Button size="xs" variant="outline" onClick={onRetry}>
+          {t("desktop.declarations.retry")}
+        </Button>
       </span>
     );
   return null;
@@ -438,13 +449,13 @@ export function Details({
   const field = session.selected;
   const casillaId =
     field?.address.kind === "casilla" ? field.address.casilla_id : null;
-  const read = useHelpCard(port, envelope, casillaId, language);
+  const { read, retry } = useHelpCard(port, envelope, casillaId, language);
   if (!field) return <Summary envelope={envelope} />;
   const key = editKey(field);
   const staged = session.staged.get(key);
   const restore = editsAdmitted(envelope) ? restoreIntent(field) : null;
   return (
-    <div className="flex flex-col gap-5 p-5">
+    <div data-modelo-details="" className="flex flex-col gap-5 p-5">
       <div className="flex flex-col items-start gap-2">
         <div className="flex w-full items-center">
           <BoxNumber box={field.box} />
@@ -478,7 +489,7 @@ export function Details({
           canOpenSurface={canOpenSurface}
         />
       ) : (
-        read && <CardState read={read} t={t} />
+        read && <CardState read={read} t={t} onRetry={retry} />
       )}
       <Part title={t("workspace.modelo.details.what_it_means")}>
         {field.help ? (

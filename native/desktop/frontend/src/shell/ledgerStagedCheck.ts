@@ -1,3 +1,4 @@
+import { ReadSessionScheduler } from "./readSessionScheduler";
 // The backend's answer for what is staged. Which write takes a cell, what a
 // row's staged state would refuse and what would give it a new id are the
 // writers' rules, so the page asks `ledger.staged.check` and holds no copy.
@@ -163,115 +164,27 @@ export const NOTHING_CHECKED: StagedCheck = {
   categories: new Map(),
 };
 
-export class StagedCheckSession {
-  private view = IDLE;
-  private readonly listeners = new Set<() => void>();
-  private wanted: { key: string; request: LedgerStagedCheckRequest } | null =
-    null;
-  private answer: StagedCheck | null = null;
-  private answeredKey: string | null = null;
-  private failedKey: string | null = null;
-  private sending = false;
-  private timer: ReturnType<typeof setTimeout> | null = null;
-  private running = true;
-
+export class StagedCheckSession extends ReadSessionScheduler<
+  LedgerStagedCheckRequest,
+  string,
+  LedgerStagedCheckResult,
+  StagedCheck,
+  CheckView
+> {
   constructor(
-    private readonly ask: (
-      request: LedgerStagedCheckRequest,
-    ) => Promise<CheckReply>,
-    private readonly pauseMs = PAUSE_MS,
-  ) {}
-
-  readonly subscribe = (listener: () => void) => {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  };
-  readonly snapshot = () => this.view;
-
-  want(request: LedgerStagedCheckRequest): void {
-    const key = JSON.stringify(request);
-    this.wanted = { key, request };
-    this.clearTimer();
-    if (NOTHING_ASKED(request)) {
-      this.answer = NOTHING_CHECKED;
-      this.answeredKey = key;
-      this.failedKey = null;
-      this.publish();
-      return;
-    }
-    this.publish();
-    if (key === this.answeredKey || key === this.failedKey) return;
-    this.timer = setTimeout(() => {
-      this.timer = null;
-      this.send();
-    }, this.pauseMs);
-  }
-
-  /** Asks again about a request whose read failed. */
-  retry(): void {
-    this.failedKey = null;
-    this.clearTimer();
-    this.publish();
-    this.send();
-  }
-
-  start(): void {
-    this.running = true;
-  }
-  stop(): void {
-    this.running = false;
-    this.clearTimer();
-  }
-
-  private clearTimer(): void {
-    if (this.timer !== null) clearTimeout(this.timer);
-    this.timer = null;
-  }
-
-  private send(): void {
-    const asked = this.wanted;
-    if (
-      !this.running ||
-      this.sending ||
-      !asked ||
-      asked.key === this.answeredKey ||
-      asked.key === this.failedKey
-    )
-      return;
-    this.sending = true;
-    void this.ask(asked.request)
-      .catch((): CheckReply => ({ kind: "failed" }))
-      .then((reply) => this.settle(asked.key, reply));
-  }
-
-  private settle(key: string, reply: CheckReply): void {
-    this.sending = false;
-    if (!this.running) return;
-    // Only the latest request's reply counts; the one that overtook it is
-    // asked about now unless still pausing.
-    if (key !== this.wanted?.key) {
-      if (this.timer === null) this.send();
-      return;
-    }
-    this.answer = reply.kind === "answer" ? indexCheck(reply.result) : null;
-    this.answeredKey = reply.kind === "answer" ? key : null;
-    this.failedKey = reply.kind === "answer" ? null : key;
-    this.publish();
-  }
-
-  private publish(): void {
-    const key = this.wanted?.key ?? null;
-    const answered = key !== null && key === this.answeredKey;
-    const failed = key !== null && key === this.failedKey;
-    this.view = {
-      shown: this.answer,
-      current: answered ? this.answer : null,
-      updating: key !== null && !answered && !failed,
-      failed,
-    };
-    this.listeners.forEach((listener) => listener());
+    ask: (request: LedgerStagedCheckRequest) => Promise<CheckReply>,
+    pauseMs = PAUSE_MS,
+  ) {
+    super({
+      ask,
+      keyOf: (request) => JSON.stringify(request),
+      answer: indexCheck,
+      present: (view) => view,
+      empty: (request) =>
+        NOTHING_ASKED(request) ? { answer: NOTHING_CHECKED } : null,
+      initial: IDLE,
+      pauseMs,
+    });
   }
 }
 

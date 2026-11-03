@@ -297,6 +297,7 @@ export function AgentColumn({
     conversationId: null as string | null,
     chosen: null as AgentSelection | null,
     sending: false,
+    interactionId: null as string | null,
     pending: null as PendingSend | null,
     sendFailure: null as string | null,
     // Why the history's last action was refused.
@@ -316,6 +317,7 @@ export function AgentColumn({
       conversationId: null,
       chosen: null,
       sending: false,
+      interactionId: null,
       pending: null,
       sendFailure: null,
       archiveFailure: null,
@@ -324,6 +326,29 @@ export function AgentColumn({
       revision: 0,
     });
   const { panel, archived, conversationId, revision } = view;
+  const promptOwner = useMemo(
+    () => ({ reader, conversationId, session }),
+    [reader, conversationId, session],
+  );
+  const currentPromptOwner = useRef(promptOwner);
+  currentPromptOwner.current = promptOwner;
+  const pendingPrompt = useRef<{
+    owner: typeof promptOwner;
+    id: string;
+  } | null>(null);
+  useEffect(
+    () => () => {
+      const retired = pendingPrompt.current;
+      if (retired?.owner !== promptOwner) return;
+      pendingPrompt.current = null;
+      setView((held) =>
+        held.interactionId === retired.id
+          ? { ...held, interactionId: null, sending: false }
+          : held,
+      );
+    },
+    [promptOwner],
+  );
   const currentSend = useRef<string | null>(null);
   currentSend.current = view.pending?.id ?? null;
   const change = (next: Partial<typeof view>) =>
@@ -694,21 +719,21 @@ export function AgentColumn({
       (error: unknown) => said(failureCode(error)),
     );
   };
-  const open = useCallback(
-    (id: string) =>
-      setView((held) => ({
-        ...held,
-        panel: "none",
-        conversationId: id,
-        pending: null,
-        sending: false,
-        // A conversation opened runs with its own choice, not the last one's.
-        chosen: held.conversationId === id ? held.chosen : null,
-        sendFailure: null,
-        archiveFailure: null,
-      })),
-    [],
-  );
+  const open = useCallback((id: string) => {
+    pendingPrompt.current = null;
+    setView((held) => ({
+      ...held,
+      panel: "none",
+      conversationId: id,
+      pending: null,
+      sending: false,
+      interactionId: null,
+      // A conversation opened runs with its own choice, not the last one's.
+      chosen: held.conversationId === id ? held.chosen : null,
+      sendFailure: null,
+      archiveFailure: null,
+    }));
+  }, []);
   // The conversation a first message starts keeps the choice it was sent
   // with.
   const started = useCallback(
@@ -958,6 +983,7 @@ export function AgentColumn({
     references: ComposerReferences,
   ) => {
     if (!session || catalog.kind !== "ready") return;
+    pendingPrompt.current = null;
     const runs = selectionRecord(catalog.value, chosen);
     if (!runs) {
       giveBack(text, "agent_selection_unavailable");
@@ -980,7 +1006,7 @@ export function AgentColumn({
         live.read.kind === "ready" ? live.read.value.map(replyIdOf) : [],
     };
     currentSend.current = submission.id;
-    change({ pending: submission });
+    change({ pending: submission, interactionId: null });
     const current = () =>
       currentReader.current === reader && currentSend.current === submission.id;
     let request: AgentSendRequest;
@@ -1017,35 +1043,69 @@ export function AgentColumn({
   // below answers them in the person's own words, and goes on with the
   // same reply.
   const questionnaire = live.questionnaires[0];
+  const resolvePrompt = async (
+    send: () => Promise<unknown>,
+    accepted: () => void,
+    returnedText?: string,
+  ) => {
+    if (!session || pendingPrompt.current?.owner === promptOwner) return;
+    const ticket = { owner: promptOwner, id: crypto.randomUUID() };
+    pendingPrompt.current = ticket;
+    const current = () =>
+      currentPromptOwner.current === ticket.owner &&
+      pendingPrompt.current === ticket;
+    change({ sending: true, sendFailure: null, interactionId: ticket.id });
+    let failed = false;
+    let failure: string | null = null;
+    try {
+      await send();
+      if (current()) accepted();
+    } catch (error) {
+      failed = true;
+      failure = failureCode(error);
+    } finally {
+      if (current())
+        setView((held) =>
+          held.interactionId === ticket.id
+            ? {
+                ...held,
+                interactionId: null,
+                sending: false,
+                sendFailure: failure,
+                ...(failed && returnedText !== undefined
+                  ? { draft: { key: held.draft.key + 1, text: returnedText } }
+                  : {}),
+              }
+            : held,
+        );
+      if (pendingPrompt.current === ticket) pendingPrompt.current = null;
+    }
+  };
   const answer = async (
     asked: AgentQuestionnaire,
     reply: AgentQuestionnaireAnswer,
   ) => {
     if (!session) return;
-    change({ sending: true, sendFailure: null });
-    try {
-      await session.answerQuestions(asked, reply);
-      // An answer in words continues the run in place: shown as sent, as a
-      // message is.
-      if (reply.kind === "message")
-        live.sent({ reply_id: asked.reply_id, text: reply.text, at: "end" });
-      live.resolved(asked.request_id);
-      change({ sending: false });
-    } catch (error) {
-      if (reply.kind === "message") giveBack(reply.text, failureCode(error));
-      else change({ sending: false, sendFailure: failureCode(error) });
-    }
+    await resolvePrompt(
+      () => session.answerQuestions(asked, reply),
+      () => {
+        // An answer in words continues the run in place: shown as sent, as a
+        // message is.
+        if (reply.kind === "message")
+          live.sent({ reply_id: asked.reply_id, text: reply.text, at: "end" });
+        live.resolved(asked.request_id);
+      },
+      reply.kind === "message" ? reply.text : undefined,
+    );
   };
   const decide = async (approval: AgentApproval, optionId: string) => {
     if (!session) return;
-    change({ sending: true, sendFailure: null });
-    try {
-      await session.decideApproval(approval, optionId);
-      live.resolved(approval.request_id);
-      change({ sending: false });
-    } catch (error) {
-      change({ sending: false, sendFailure: failureCode(error) });
-    }
+    await resolvePrompt(
+      () => session.decideApproval(approval, optionId),
+      () => {
+        live.resolved(approval.request_id);
+      },
+    );
   };
   const answering = session && ready && !view.sending;
   // The agent takes no message while a run needs repair or is being
@@ -1136,15 +1196,18 @@ export function AgentColumn({
         }
         onNewConversation={
           agent
-            ? () =>
+            ? () => {
+                pendingPrompt.current = null;
                 change({
                   panel: "none",
                   conversationId: null,
                   pending: null,
                   sending: false,
+                  interactionId: null,
                   chosen: null,
                   sendFailure: null,
-                })
+                });
+              }
             : undefined
         }
         onToggleHistory={agent ? () => toggle("history") : undefined}

@@ -34,6 +34,8 @@ export type DockDivider = {
   axis: "row" | "column";
   ratio: number;
   rect: DockRect;
+  minRatio: number;
+  maxRatio: number;
 };
 
 export function isDockPane(value: unknown): value is DockPane {
@@ -290,11 +292,42 @@ export function resizeDockSplit(
 export function dockGeometry(
   layout: DockLayout,
   visible: readonly DockPane[],
+  fit?: { width: number; minimumWidths: Partial<Record<DockPane, number>> },
 ): { groups: DockPlacement[]; dividers: DockDivider[] } {
   const groups: DockPlacement[] = [];
   const dividers: DockDivider[] = [];
   const has = (node: DockNode) =>
     dockPanes(node).some((pane) => visible.includes(pane));
+  const active = (node: DockGroup) =>
+    visible.includes(node.active)
+      ? node.active
+      : node.tabs.find((pane) => visible.includes(pane));
+  const widths = new Map<DockNode, number>();
+  const minimum = (node: DockNode): number => {
+    const cached = widths.get(node);
+    if (cached !== undefined) return cached;
+    let width: number;
+    if (node.kind === "tabs") {
+      const pane = active(node);
+      width = pane ? Math.max(0, fit?.minimumWidths[pane] ?? 0) : 0;
+    } else if (!has(node.first) || !has(node.second)) {
+      width = has(node.first)
+        ? minimum(node.first)
+        : has(node.second)
+          ? minimum(node.second)
+          : 0;
+    } else {
+      const a = minimum(node.first),
+        b = minimum(node.second);
+      // Side-by-side children also need room within the model's 10–90% limits.
+      width =
+        node.axis === "row"
+          ? Math.max(a + b, a / 0.9, b / 0.9)
+          : Math.max(a, b);
+    }
+    widths.set(node, width);
+    return width;
+  };
   const visit = (node: DockNode, rect: DockRect, path: string) => {
     if (node.kind === "tabs") {
       const tabs = node.tabs.filter((pane) => visible.includes(pane));
@@ -315,10 +348,25 @@ export function dockGeometry(
     if (!a && !b) return;
     if (!a || !b)
       return visit(a ? node.first : node.second, rect, path + (a ? "0" : "1"));
+    let minRatio = 0.1,
+      maxRatio = 0.9;
+    if (node.axis === "row" && fit && fit.width > 0) {
+      const available = rect.width * fit.width;
+      const low = Math.max(minRatio, minimum(node.first) / available);
+      const high = Math.min(maxRatio, 1 - minimum(node.second) / available);
+      // An infeasible split keeps its arrangement and local overflow behavior.
+      if (low <= high + 1e-12) {
+        minRatio = low;
+        maxRatio = Math.max(low, high);
+      }
+    }
+    const ratio = Math.max(minRatio, Math.min(maxRatio, node.ratio));
     dividers.push({
       path,
       axis: node.axis,
-      ratio: node.ratio,
+      ratio,
+      minRatio,
+      maxRatio,
       rect,
       panes: dockPanes(node).filter((pane) => visible.includes(pane)),
     });
@@ -327,18 +375,18 @@ export function dockGeometry(
       node.first,
       {
         ...rect,
-        width: row ? rect.width * node.ratio : rect.width,
-        height: row ? rect.height : rect.height * node.ratio,
+        width: row ? rect.width * ratio : rect.width,
+        height: row ? rect.height : rect.height * ratio,
       },
       path + "0",
     );
     visit(
       node.second,
       {
-        x: row ? rect.x + rect.width * node.ratio : rect.x,
-        y: row ? rect.y : rect.y + rect.height * node.ratio,
-        width: row ? rect.width * (1 - node.ratio) : rect.width,
-        height: row ? rect.height : rect.height * (1 - node.ratio),
+        x: row ? rect.x + rect.width * ratio : rect.x,
+        y: row ? rect.y : rect.y + rect.height * ratio,
+        width: row ? rect.width * (1 - ratio) : rect.width,
+        height: row ? rect.height : rect.height * (1 - ratio),
       },
       path + "1",
     );

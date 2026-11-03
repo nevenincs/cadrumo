@@ -868,6 +868,7 @@ desktop:
       check_again_for: 'Check again: {name}'
       done_all: Done
       done_problems: Done, with problems
+      last_known: Last known progress
       not_started: Not started
       outcome:
         brought: Done
@@ -882,6 +883,7 @@ desktop:
         refused: AEAT refused
         session_ended: Sign-in timed out
         unavailable: AEAT isn't available right now
+      reload: Reload progress
       resume: Sign in again
       running: Updating…
       stop: Stop
@@ -892,6 +894,8 @@ desktop:
       try_again: Try again
       try_again_for: 'Try again: {name}'
       unavailable: Couldn't load progress
+      uncertain: An update may still be running. Reload progress before starting another
+        update.
       waiting: Waiting
       warn_cancel: Cancel
       warn_confirm: Check anyway
@@ -1067,6 +1071,7 @@ desktop:
     close: Close the browser
     closing: Saving your session…
     dialog:
+      answer_failed: Cadrumo could not confirm your answer.
       cancel: Cancel
       leave: Leave
       leave_description: The page asks before you leave it. What you entered may not
@@ -1105,6 +1110,8 @@ desktop:
       unknown: Cadrumo couldn't tell how that ended.
     forward: Forward
     home: AEAT start page
+    input_not_sent: Some actions may not have reached the page. Check the page before
+      continuing.
     maximize: Maximize the browser
     notice:
       dismiss: Dismiss
@@ -4240,6 +4247,7 @@ desktop:
     filters: Log filters
     follow: Follow
     follow_hint: Keep the newest record in view
+    interrupted: Some log records from the interruption are unavailable.
     level_all: All levels
     level_critical: Critical only
     level_error: Errors only
@@ -4250,6 +4258,7 @@ desktop:
     minimum_level: Minimum level
     no_match: No records match these filters.
     origin: Origin
+    reconnect: Reconnect logs
     rejected: '{count} records omitted because their diagnostic format was invalid.'
     reveal: Reveal log location
     selected: '{count} entries selected'
@@ -4382,6 +4391,7 @@ desktop:
       compare: Compare
       credits: Withholdings
       form: Form
+      iva_wallet: IVA balance
     views:
       label: Declaration views
   navigation:
@@ -9712,6 +9722,10 @@ workspace:
       also_other_way: Also if you filed some other way.
       at_aeat: At the AEAT
       check_first: Check the declaration first.
+      compare_declaration: Choose declaration PDF…
+      compare_declaration_lead: Compare the PDF with this declaration. Nothing is
+        submitted to AEAT.
+      compare_declaration_title: Compare a declaration PDF
       completeness_unverified: Cadrumo could not check that every required box reached
         the file.
       copy:
@@ -9741,6 +9755,7 @@ workspace:
       filter:
         boe: AEAT filing file
         csv: CSV file
+        declaration: Declaration PDF
         pdf: PDF document
         receipt: AEAT receipt (PDF)
         xlsx: Excel workbook
@@ -9760,28 +9775,28 @@ workspace:
       reconciliation:
         category:
           casilla: Box
-          header_field: Header field
+          header_field: Declaration identity
           total: Total
         code: Code
         context: Context
-        details: Details
+        details: Returned details
         differences: Differences
-        differs: Some compared values differ from the document.
-        evidence_value: In the document
+        differs: Differences found in the imported document.
+        evidence_value: In imported document
         field:
-          ejercicio: Year
+          ejercicio: Tax year
           modelo: Modelo
           period: Period
-          tax_id: Tax ID
-          total_devolver: Amount to be refunded
-          total_ingresar: Amount to pay
-        kind: Kind
+          tax_id: Tax identifier
+          total_devolver: Refund amount
+          total_ingresar: Amount payable
+        kind: Difference code
         legal_refs: Legal references
-        matches: The compared values match the document.
+        matches: No differences found in the checks performed.
         not_present: Not present
-        notices: Notices
-        source_refs: Sources
-        work_value: In your declaration
+        notices: Comparison notices
+        source_refs: Source references
+        work_value: In Cadrumo
       record_as_filed: Record as filed…
       record_lead: Record here that you filed it, so your calendar and later declarations
         know. Then add the AEAT's receipt to confirm it.
@@ -9946,6 +9961,52 @@ workspace:
         record_value: A value every record in a table needs
         records: In your records
         unnumbered: 'Values without a box number: {count}'
+    iva_wallet:
+      action: Action
+      active_balance: Active balance
+      amount: Amount (EUR)
+      as_of_year: Reference year
+      evidence_locator: Evidence reference
+      expired_balance: Expired balance
+      expiry_not_reported: No expiry year reported
+      help:
+        correct: Choose the source period of an existing opening balance and explain
+          the correction.
+        override: Choose the period receiving the carry. Your amount, reason and evidence
+          reference are recorded as a taxpayer override; the reference is not verified.
+        seed: Choose the source period and the balance carried forward from it. This
+          records your declaration of the opening balance.
+      lead: Calculated from local records for the reference year. This is not a live
+        AEAT balance.
+      loading: Reading the IVA balance…
+      lot_count: Credit lots
+      manage: Manage balance…
+      mode:
+        correct: Correct opening balance
+        override: Record taxpayer override
+        seed: Record opening balance
+      next_expiry_year: Next expiry year
+      previous_amount: Previous amount
+      read_failed: The IVA balance could not be read. Reload it to try again.
+      reason: Reason
+      receipt:
+        authority:
+          taxpayer_override: Taxpayer-declared amount
+        divergence:
+          override: Explicit taxpayer override
+        not_reported: Not reported
+        provenance:
+          operator_correction: Opening balance corrected by an operator
+          operator_seed: Opening balance declared by an operator
+        reconciliation_outcome: Reconciliation outcome
+        register_status: Register status
+        selected_source: Selected source
+        source: Source
+      recorded: Recorded locally. This action does not recalculate the declaration.
+      reload: Reload balance
+      title: IVA compensation balance
+      total_balance: Total balance
+      unallocated_applied_amount: Applied amount not assigned to a lot
     key:
       back: Back
       calculate: Calculate

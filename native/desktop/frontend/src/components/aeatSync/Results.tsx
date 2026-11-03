@@ -85,10 +85,12 @@ export const Results = memo(function Results({
   language,
   onOpenAeat,
   onReviewCensus,
+  retryBlocked = false,
 }: {
   port: AeatSyncResultsPort;
   profile: string;
   language: string;
+  retryBlocked?: boolean;
   /** Opens the in-app AEAT browser at its start page. */
   onOpenAeat(): void;
   /** Goes to the profile's comparison of its details with AEAT's. */
@@ -113,7 +115,7 @@ export const Results = memo(function Results({
       part: number | null,
       acknowledgedUnknown: boolean,
     ) => {
-      if (retrying.current) return;
+      if (retryBlocked || retrying.current) return;
       const key = `${area}:${part ?? "all"}`;
       const hasUnknown = () =>
         [...uncertain.current].some((held) => held.startsWith(`${area}:`));
@@ -159,7 +161,7 @@ export const Results = memo(function Results({
         refresh();
       }
     },
-    [port, profile, refresh],
+    [port, profile, refresh, retryBlocked],
   );
 
   if (results.failed && !results.data)
@@ -264,7 +266,7 @@ export const Results = memo(function Results({
                     size="xs"
                     variant="outline"
                     pending={busy}
-                    disabled={trying !== null}
+                    disabled={retryBlocked || trying !== null}
                     aria-label={t("desktop.aeat_sync.results.retry_named", {
                       name,
                     })}
@@ -314,7 +316,7 @@ export const Results = memo(function Results({
                         </span>
                         {confirming === `${result.area}:${part.part}` ? (
                           <UnknownWarning
-                            busy={trying !== null}
+                            busy={retryBlocked || trying !== null}
                             onProceed={() =>
                               void retry(result.area, part.part, true)
                             }
@@ -325,7 +327,7 @@ export const Results = memo(function Results({
                             size="xs"
                             variant="outline"
                             pending={trying === `${result.area}:${part.part}`}
-                            disabled={trying !== null}
+                            disabled={retryBlocked || trying !== null}
                             aria-label={t(
                               "desktop.aeat_sync.results.retry_named",
                               {
@@ -348,7 +350,7 @@ export const Results = memo(function Results({
                 confirming === `${result.area}:all`) &&
                 (confirming === `${result.area}:all` ? (
                   <UnknownWarning
-                    busy={trying !== null}
+                    busy={retryBlocked || trying !== null}
                     onProceed={() => void retry(result.area, null, true)}
                     onCancel={() => setConfirming(null)}
                   />
@@ -358,7 +360,7 @@ export const Results = memo(function Results({
                       size="xs"
                       variant="outline"
                       pending={busy}
-                      disabled={trying !== null}
+                      disabled={retryBlocked || trying !== null}
                       onClick={() => setConfirming(`${result.area}:all`)}
                     >
                       {t("desktop.aeat_sync.results.retry")}

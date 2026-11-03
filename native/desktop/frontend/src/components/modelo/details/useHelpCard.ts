@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ledgerFailure, type LedgerFailureCode } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
@@ -23,7 +23,8 @@ export function useHelpCard(
   envelope: ModeloWorkbenchFormProjectionV1,
   casillaId: string | null,
   language: OutputLanguage,
-): HelpCardRead | null {
+) {
+  const [version, setVersion] = useState(0);
   const key =
     casillaId === null
       ? null
@@ -34,9 +35,12 @@ export function useHelpCard(
           language,
           casillaId,
         ].join("\u0000");
-  const [held, setHeld] = useState<{ key: string; read: HelpCardRead } | null>(
-    null,
-  );
+  const [held, setHeld] = useState<{
+    key: string;
+    port: ModeloPort;
+    version: number;
+    read: HelpCardRead;
+  } | null>(null);
   const workUnitId = envelope.work_unit_id;
   const registryRevisionId = envelope.registry_revision_id;
   const calculationRevisionId = envelope.calculation_revision_id;
@@ -57,7 +61,7 @@ export function useHelpCard(
       } catch (error) {
         read = { kind: "failed", code: ledgerFailure(error).code };
       }
-      if (active) setHeld({ key, read });
+      if (active) setHeld({ key, port, version, read });
     })();
     return () => {
       active = false;
@@ -70,7 +74,14 @@ export function useHelpCard(
     registryRevisionId,
     calculationRevisionId,
     language,
+    version,
   ]);
-  if (key === null) return null;
-  return held?.key === key ? held.read : { kind: "reading" };
+  const read: HelpCardRead | null =
+    key === null
+      ? null
+      : held?.key === key && held.port === port && held.version === version
+        ? held.read
+        : { kind: "reading" };
+  const retry = useCallback(() => setVersion((value) => value + 1), []);
+  return { read, retry };
 }

@@ -50,6 +50,94 @@ const calls = (target: Page, prefix: string) =>
     prefix,
   );
 
+test("progress observation can reconnect before another update is allowed", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=aeat-sync&latency=0&bar=off");
+  await expect
+    .poll(() => target.evaluate(() => Boolean(window.__scenarioAeatRun)))
+    .toBe(true);
+  await target.evaluate(() => window.__scenarioAeatRun!.failObservations(true));
+  const page = await reach(target);
+  const reload = button(page, "desktop.aeat_sync.progress.reload");
+  await expect(reload).toBeVisible();
+  await expect(update(page)).toBeDisabled();
+  await expectNoCalls(target, "aeatSync.start");
+  await target.evaluate(() =>
+    window.__scenarioAeatRun!.failObservations(false),
+  );
+  await reload.click();
+  await expect(update(page)).toBeEnabled();
+  await target.evaluate(() => window.__scenarioAeatRun!.publish("running"));
+  await expect(page.locator("[data-run=running]")).toBeVisible();
+  await expectNoCalls(target, "aeatSync.start");
+});
+
+test("an unread first progress snapshot retains recovery for an existing run", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=aeat-sync&latency=0&bar=off");
+  await expect
+    .poll(() => target.evaluate(() => Boolean(window.__scenarioAeatRun)))
+    .toBe(true);
+  await target.evaluate(() => {
+    window.__scenarioAeatRun!.publish("running");
+    window.__scenarioAeatRun!.failReads(true);
+  });
+  const page = await reach(target);
+  await expect(button(page, "desktop.aeat_sync.progress.reload")).toBeVisible();
+  await expect(update(page)).toBeDisabled();
+  await target.evaluate(() => window.__scenarioAeatRun!.failObservations(true));
+  await button(page, "desktop.aeat_sync.progress.reload").click();
+  await target.evaluate(() => {
+    window.__scenarioAeatRun!.failReads(false);
+    window.__scenarioAeatRun!.failObservations(false);
+  });
+  await button(page, "desktop.aeat_sync.progress.reload").click();
+  await expect(page.locator("[data-run=running]")).toBeVisible();
+  await target.evaluate(() => window.__scenarioAeatRun!.publish("stopped"));
+  await expect(page.locator("[data-run=stopped]")).toBeVisible();
+  await expectNoCalls(target, "aeatSync.start");
+});
+
+test("unread progress does not certify a cached completed run", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync");
+  await update(page).click();
+  await expect(done(page)).toBeVisible();
+  await target.evaluate(() => window.__scenarioAeatRun!.failReads(true));
+  await expect(button(page, "desktop.aeat_sync.progress.reload")).toBeVisible();
+  await expect(page.locator("[data-run=unknown]")).toContainText(
+    label("desktop.aeat_sync.progress.last_known"),
+  );
+  await expect(done(page)).toHaveCount(0);
+  await expect(results(page)).toBeVisible();
+  await expect(update(page)).toHaveCount(0);
+  const retries = results(page).getByRole("button", { name: /try again/i });
+  expect(await retries.count()).toBeGreaterThan(0);
+  for (const retry of await retries.all()) await expect(retry).toBeDisabled();
+  await target.evaluate(() => window.__scenarioAeatRun!.failReads(false));
+  await expect(done(page)).toBeVisible();
+  expect(await calls(target, "aeatSync.start")).toHaveLength(1);
+});
+
+test("an accepted update with unread progress keeps a recovery action", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-running");
+  await expect(update(page)).toBeEnabled();
+  await target.evaluate(() => window.__scenarioAeatRun!.failAfterStart());
+  await update(page).click();
+  await expect(button(page, "desktop.aeat_sync.progress.reload")).toBeVisible();
+  await expect(update(page)).toHaveCount(0);
+  await expect(done(page)).toHaveCount(0);
+  expect(await calls(target, "aeatSync.start")).toHaveLength(1);
+  await target.evaluate(() => window.__scenarioAeatRun!.failReads(false));
+  await expect(page.locator("[data-run=running]")).toBeVisible();
+  expect(await calls(target, "aeatSync.start")).toHaveLength(1);
+});
+
 // A host call follows the click that causes it by a few turns of the event
 // loop, so "never called" is held across a short window instead of read once.
 async function expectNoCalls(target: Page, prefix: string) {

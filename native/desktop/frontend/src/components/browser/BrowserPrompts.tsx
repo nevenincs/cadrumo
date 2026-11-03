@@ -85,6 +85,8 @@ function Waiting({
 export function BrowserPrompts({
   acquiring,
   problem,
+  inputFailed,
+  onDismissInputFailure,
   downloads,
   choosers,
   note,
@@ -95,6 +97,8 @@ export function BrowserPrompts({
 }: {
   acquiring: boolean;
   problem: SedeViewFailureCode | null;
+  inputFailed: boolean;
+  onDismissInputFailure: () => void;
   downloads: readonly DownloadOffer[];
   choosers: readonly ChooserOffer[];
   note: TransferNote | null;
@@ -126,6 +130,16 @@ export function BrowserPrompts({
           actions={dismiss(onDismissProblem)}
         >
           {failureText(t, problem)}
+        </Line>
+      )}
+      {inputFailed && (
+        <Line
+          tone="warning"
+          icon="alert"
+          role="alert"
+          actions={dismiss(onDismissInputFailure)}
+        >
+          {t("desktop.browser.input_not_sent")}
         </Line>
       )}
       {acquiring && <Line icon="key">{t("desktop.browser.acquiring")}</Line>}

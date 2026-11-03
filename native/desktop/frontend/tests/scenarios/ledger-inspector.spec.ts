@@ -58,7 +58,7 @@ const cellOf = (row: Locator, column: string) =>
   row.locator(`[data-column=${column}]`);
 
 async function choosePeriod(target: Page, year: number, code: string) {
-  await target.locator(".pane-docs .pane-head .ledger-period").click();
+  await target.locator('[data-dock-pane="docs"] .ledger-period').click();
   const periods = target.getByRole("dialog", {
     name: label("desktop.ledger.period.choose"),
   });
@@ -1040,9 +1040,14 @@ test("at 1280 with the agent open, the inspector narrows the agent so the grid k
   );
   // The agent laid out as wide as it goes, which leaves the page the least
   // any pane keeps.
-  const agent = target.locator("aside.agent-column");
-  await target.locator(".agent-separator").focus();
-  await target.keyboard.press("End");
+  const agent = target.locator('[data-dock-pane="agent"]');
+  const docs = target.locator('[data-dock-pane="docs"]');
+  const agentOnLeft =
+    (await agent.boundingBox())!.x < (await docs.boundingBox())!.x;
+  await target
+    .locator('[data-dock-divider][aria-orientation="vertical"]')
+    .focus();
+  await target.keyboard.press(agentOnLeft ? "End" : "Home");
   const agentBefore = (await agent.boundingBox())!.width;
   // As wide as it goes, it still leaves the grid its pinned groups and a
   // scrolling column whole, and the header its sections side by side.
@@ -1092,6 +1097,19 @@ test("at 1280 with the agent open, the inspector narrows the agent so the grid k
   const description = (await cellOf(row, "description").boundingBox())!;
   expect(Math.abs(description.x - pinnedAt)).toBeLessThan(1);
   expect(cell.x).toBeGreaterThanOrEqual(description.x + description.width - 1);
+  // An attempted move beyond the fitted limit leaves the saved preference alone.
+  const divider = target.locator(
+    '[data-dock-divider][aria-orientation="vertical"]',
+  );
+  await divider.focus();
+  await target.keyboard.press(agentOnLeft ? "End" : "Home");
+  const bounds = await divider.evaluate((element) => ({
+    min: Number(element.getAttribute("aria-valuemin")),
+    now: Number(element.getAttribute("aria-valuenow")),
+    max: Number(element.getAttribute("aria-valuemax")),
+  }));
+  expect(bounds.now).toBeGreaterThanOrEqual(bounds.min);
+  expect(bounds.now).toBeLessThanOrEqual(bounds.max);
   // Closed, the panel gives the agent back the width it was laid out at.
   await body(target).focus();
   await target.keyboard.press("Escape");
@@ -1099,6 +1117,37 @@ test("at 1280 with the agent open, the inspector narrows the agent so the grid k
   await expect
     .poll(async () => (await agent.boundingBox())!.width)
     .toBeCloseTo(agentBefore, 0);
+});
+
+test("a deliberate dock resize with the inspector open remains after it closes", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1440, height: 800 });
+  await openLedger(target);
+  const agent = target.locator('[data-dock-pane="agent"]');
+  const docs = target.locator('[data-dock-pane="docs"]');
+  const agentOnLeft =
+    (await agent.boundingBox())!.x < (await docs.boundingBox())!.x;
+  const divider = target.locator(
+    '[data-dock-divider][aria-orientation="vertical"]',
+  );
+  await divider.focus();
+  await target.keyboard.press(agentOnLeft ? "End" : "Home");
+  await inspect(target, "PAPELERIA TRAZO");
+  const before = (await agent.boundingBox())!.width;
+  await divider.focus();
+  await target.keyboard.press(agentOnLeft ? "ArrowLeft" : "ArrowRight");
+  await expect
+    .poll(async () => (await agent.boundingBox())!.width)
+    .toBeLessThan(before - 1);
+  const chosen = (await agent.boundingBox())!.width;
+  await body(target).focus();
+  await target.keyboard.press("Escape");
+  await expect(panel(target)).toHaveCount(0);
+  await expect
+    .poll(async () => (await agent.boundingBox())!.width)
+    .toBeCloseTo(chosen, 0);
+  await expectBandFits(target);
 });
 
 test("the inspector is resized by its separator within its limits", async ({
@@ -1201,17 +1250,17 @@ test("a readiness check that fails hides no drawn movement from the selection", 
   ).toBeEnabled();
 });
 
-test("in a narrow window the header keeps every section whole: the title and Add's word give way, and stay named", async ({
+test("in a narrow window sections stay whole, the dock tab names the page, and Add stays named", async ({
   page: target,
 }) => {
   await target.setViewportSize({ width: 760, height: 700 });
   await openLedger(target);
   await expectSectionsWhole(target);
-  const title = target.locator(".pane-head .pane-title").first();
-  await expect(title).toHaveText(/\S/);
-  expect(
-    await title.evaluate((head) => head.getBoundingClientRect().width),
-  ).toBeLessThanOrEqual(1);
+  const title = target.locator(
+    '[role="tab"][aria-controls="dock-content-docs"]',
+  );
+  await expect(title).toHaveAccessibleName(label("desktop.ledger.title"));
+  await expect(title).toBeVisible();
   const add = target.locator(".ledger-add");
   await expect(add).toHaveAccessibleName(/\S/);
   await add.hover();

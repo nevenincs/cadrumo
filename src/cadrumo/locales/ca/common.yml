@@ -897,6 +897,7 @@ desktop:
       check_again_for: 'Torna a comprovar: {name}'
       done_all: Fet
       done_problems: Fet, amb problemes
+      last_known: Últim progrés conegut
       not_started: Sense començar
       outcome:
         brought: Fet
@@ -911,6 +912,7 @@ desktop:
         refused: L'AEAT ho ha rebutjat
         session_ended: Accés caducat
         unavailable: L'AEAT no està disponible ara mateix
+      reload: Torna a carregar el progrés
       resume: Inicia la sessió de nou
       running: Actualitzant…
       stop: Atura
@@ -921,6 +923,8 @@ desktop:
       try_again: Torna-ho a provar
       try_again_for: 'Torna-ho a provar: {name}'
       unavailable: No s'ha pogut carregar el progrés
+      uncertain: Pot ser que una actualització continuï en curs. Torna a carregar
+        el progrés abans d'iniciar-ne una altra.
       waiting: En espera
       warn_cancel: Cancel·la
       warn_confirm: Comprova igualment
@@ -1104,6 +1108,7 @@ desktop:
     close: Tanca el navegador
     closing: Desant la teva sessió…
     dialog:
+      answer_failed: Cadrumo no ha pogut confirmar la teva resposta.
       cancel: Cancel·la
       leave: Surt
       leave_description: La pàgina pregunta abans que surtis. Pot ser que el que hagis
@@ -1143,6 +1148,8 @@ desktop:
       unknown: Cadrumo no ha pogut saber com ha acabat.
     forward: Endavant
     home: Pàgina d'inici de l'AEAT
+    input_not_sent: És possible que algunes accions no hagin arribat a la pàgina.
+      Comprova la pàgina abans de continuar.
     maximize: Maximitza el navegador
     notice:
       dismiss: Descarta
@@ -4308,6 +4315,7 @@ desktop:
     filters: Filtres de registres
     follow: Segueix
     follow_hint: Mantén visible el registre més recent
+    interrupted: Alguns registres de la interrupció no estan disponibles.
     level_all: Tots els nivells
     level_critical: Només crítics
     level_error: Només errors
@@ -4318,6 +4326,7 @@ desktop:
     minimum_level: Nivell mínim
     no_match: Cap registre no coincideix amb aquests filtres.
     origin: Origen
+    reconnect: Reconnecta els registres
     rejected: S'han omès {count} registres amb un format de diagnòstic no vàlid.
     reveal: Mostra la ubicació dels registres
     selected: '{count} entrades seleccionades'
@@ -4456,6 +4465,7 @@ desktop:
       compare: Compara
       credits: Retencions
       form: Formulari
+      iva_wallet: Saldo d'IVA
     views:
       label: Vistes de la declaració
   navigation:
@@ -9894,6 +9904,10 @@ workspace:
       also_other_way: També si l'has presentada d'una altra manera.
       at_aeat: A l'AEAT
       check_first: Comprova primer la declaració.
+      compare_declaration: Tria una declaració en PDF…
+      compare_declaration_lead: Compara el PDF amb aquesta declaració. No s'envia
+        res a l'AEAT.
+      compare_declaration_title: Compara una declaració en PDF
       completeness_unverified: Cadrumo no ha pogut comprovar que totes les caselles
         obligatòries siguin al fitxer.
       copy:
@@ -9924,6 +9938,7 @@ workspace:
       filter:
         boe: Fitxer de presentació AEAT
         csv: Fitxer CSV
+        declaration: Declaració en PDF
         pdf: Document PDF
         receipt: Justificant de l'AEAT (PDF)
         xlsx: Llibre d'Excel
@@ -9943,28 +9958,28 @@ workspace:
       reconciliation:
         category:
           casilla: Casella
-          header_field: Camp de capçalera
+          header_field: Identificació de la declaració
           total: Total
         code: Codi
         context: Context
-        details: Detalls
+        details: Detalls del resultat
         differences: Diferències
-        differs: Alguns valors comparats difereixen del document.
-        evidence_value: Al document
+        differs: S'han trobat diferències en el document importat.
+        evidence_value: Al document importat
         field:
           ejercicio: Exercici
           modelo: Model
           period: Període
-          tax_id: NIF
+          tax_id: Identificació fiscal
           total_devolver: Import a retornar
           total_ingresar: Import a ingressar
-        kind: Tipus
+        kind: Codi de diferència
         legal_refs: Referències legals
-        matches: Els valors comparats coincideixen amb el document.
+        matches: No s'han trobat diferències en les comprovacions realitzades.
         not_present: No consta
-        notices: Avisos
-        source_refs: Fonts
-        work_value: A la teva declaració
+        notices: Avisos de la comparació
+        source_refs: Referències d'origen
+        work_value: A Cadrumo
       record_as_filed: Registrar com a presentada…
       record_lead: Registra aquí que l'has presentada, perquè ho sàpiguen el teu calendari
         i les declaracions posteriors. Després afegeix el justificant de l'AEAT per
@@ -10135,6 +10150,54 @@ workspace:
         record_value: Una dada que necessita cada registre d'una taula
         records: Als teus registres
         unnumbered: 'Valors sense número de casella: {count}'
+    iva_wallet:
+      action: Acció
+      active_balance: Saldo vigent
+      amount: Import (EUR)
+      as_of_year: Any de referència
+      evidence_locator: Referència de l'evidència
+      expired_balance: Saldo caducat
+      expiry_not_reported: No s'indica cap any de caducitat
+      help:
+        correct: Tria el període d'origen d'un saldo inicial existent i explica la
+          correcció.
+        override: Tria el període que rep la compensació. L'import, el motiu i la
+          referència de l'evidència es registren com una declaració del contribuent;
+          la referència no es verifica.
+        seed: Tria el període d'origen i el saldo que s'arrossega des d'aquest període.
+          Es registra el saldo inicial que declares.
+      lead: Calculat amb els registres locals per a l'any de referència. No és un
+        saldo consultat en directe a l'AEAT.
+      loading: Llegint el saldo d'IVA…
+      lot_count: Lots de crèdit
+      manage: Gestiona el saldo…
+      mode:
+        correct: Corregeix el saldo inicial
+        override: Registra un import declarat pel contribuent
+        seed: Registra el saldo inicial
+      next_expiry_year: Pròxim any de caducitat
+      previous_amount: Import anterior
+      read_failed: No s'ha pogut llegir el saldo d'IVA. Torna'l a carregar per provar-ho
+        de nou.
+      reason: Motiu
+      receipt:
+        authority:
+          taxpayer_override: Import declarat pel contribuent
+        divergence:
+          override: Substitució expressa de l'import pel contribuent
+        not_reported: No informat
+        provenance:
+          operator_correction: Saldo inicial corregit per un operador
+          operator_seed: Saldo inicial declarat per un operador
+        reconciliation_outcome: Resultat de la conciliació
+        register_status: Estat del registre
+        selected_source: Origen seleccionat
+        source: Origen
+      recorded: Registrat localment. Aquesta acció no recalcula la declaració.
+      reload: Torna a carregar el saldo
+      title: Saldo d'IVA per compensar
+      total_balance: Saldo total
+      unallocated_applied_amount: Import aplicat sense assignar a un lot
     key:
       back: Tornar
       calculate: Calcula

@@ -129,6 +129,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
   // A paused update the person chose to leave for now.
   const [parked, setParked] = useState(false);
   const wanted = useRef<AeatSyncAreaId[]>([]);
+  const preparing = useRef(false);
   const { refresh } = status;
   const profile = status.data?.profile_id;
   const connected = prepare !== undefined && runPort !== undefined;
@@ -138,6 +139,9 @@ export const AeatSyncPage = memo(function AeatSyncPage({
     shown,
   );
   const snapshot = run.snapshot;
+  const refreshRun = run.refresh;
+  const runUncertain =
+    connected && profile !== undefined && (run.loading || run.error);
   const going =
     snapshot !== null &&
     (snapshot.state === "running" ||
@@ -160,10 +164,11 @@ export const AeatSyncPage = memo(function AeatSyncPage({
   );
   const start = useCallback(
     async (areas: AeatSyncAreaId[]) => {
-      if (profile === undefined) return;
+      if (profile === undefined || runUncertain || going) return;
       setFailure(null);
       if (connected) {
         wanted.current = areas;
+        preparing.current = true;
         setParked(false);
         setStage({ kind: "before" });
         return;
@@ -178,11 +183,18 @@ export const AeatSyncPage = memo(function AeatSyncPage({
         refresh();
       }
     },
-    [connected, profile, refresh, request],
+    [connected, profile, refresh, request, runUncertain, going],
   );
   // The checks passed and the person is signed in: the update is asked of
   // the host, and the page follows it.
   const checked = useCallback(async () => {
+    if (!preparing.current) return;
+    preparing.current = false;
+    if (runUncertain || going) {
+      setStage({ kind: "overview" });
+      refreshRun();
+      return;
+    }
     try {
       await request(wanted.current);
       setStage({ kind: "update" });
@@ -191,9 +203,13 @@ export const AeatSyncPage = memo(function AeatSyncPage({
       setStage({ kind: "overview" });
     } finally {
       refresh();
+      refreshRun();
     }
-  }, [request, refresh]);
-  const leave = useCallback(() => setStage({ kind: "overview" }), []);
+  }, [request, refresh, refreshRun, runUncertain, going]);
+  const leave = useCallback(() => {
+    preparing.current = false;
+    setStage({ kind: "overview" });
+  }, []);
   const park = useCallback(() => {
     setParked(true);
     setStage({ kind: "overview" });
@@ -213,7 +229,9 @@ export const AeatSyncPage = memo(function AeatSyncPage({
 
   const shell =
     "aeat-sync-page @container/aeat relative flex min-h-0 flex-1 flex-col overflow-y-auto outline-none";
-  const ended = snapshot?.state === "done" || snapshot?.state === "stopped";
+  const hasResults =
+    snapshot?.state === "done" || snapshot?.state === "stopped";
+  const ended = !runUncertain && hasResults;
   if (prepare && connected && stage.kind === "before")
     return (
       <section
@@ -233,7 +251,12 @@ export const AeatSyncPage = memo(function AeatSyncPage({
         </div>
       </section>
     );
-  if (prepare && connected && snapshot !== null && stage.kind === "update")
+  if (
+    prepare &&
+    connected &&
+    stage.kind === "update" &&
+    (runUncertain || snapshot !== null)
+  )
     return (
       <section
         ref={page}
@@ -252,8 +275,8 @@ export const AeatSyncPage = memo(function AeatSyncPage({
           {/* A finished update with every part in order is told by its
               results alone. */}
           {(!ended ||
-            snapshot.state === "stopped" ||
-            aeatSyncRunProblems(snapshot) > 0) && (
+            snapshot?.state === "stopped" ||
+            (snapshot !== null && aeatSyncRunProblems(snapshot) > 0)) && (
             <AeatSyncRunView
               run={run}
               paused={
@@ -268,9 +291,10 @@ export const AeatSyncPage = memo(function AeatSyncPage({
               }
             />
           )}
-          {ended && results && profile !== undefined && (
+          {hasResults && results && profile !== undefined && (
             <Results
               port={results}
+              retryBlocked={runUncertain || run.busy}
               profile={profile}
               language={language}
               onOpenAeat={onOpenAeat}
@@ -291,13 +315,16 @@ export const AeatSyncPage = memo(function AeatSyncPage({
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
         <div className="flex justify-end">
           <Button
-            disabled={starting || going || bringable.length === 0}
+            disabled={
+              starting || going || runUncertain || bringable.length === 0
+            }
             onClick={() => void start(bringable)}
           >
             {starting ? <Spinner /> : <Icon name="sync" size="sm" />}
             {t("desktop.aeat_sync.bring_all")}
           </Button>
         </div>
+        {runUncertain && <AeatSyncRunView run={run} />}
         {failure && (
           <Alert role="alert" tone="danger" icon={<Icon name="alert" />}>
             {t(
@@ -364,7 +391,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
                         aria-label={t("desktop.aeat_sync.update_area", {
                           area: name,
                         })}
-                        disabled={starting || going || !area}
+                        disabled={starting || going || runUncertain || !area}
                         onClick={() => void start([id])}
                       >
                         {t("desktop.aeat_sync.update")}

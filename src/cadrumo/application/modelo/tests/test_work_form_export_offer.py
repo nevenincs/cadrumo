@@ -10,6 +10,8 @@ by the real builder over the published registry; filing records are synthetic.
 
 from __future__ import annotations
 
+import json
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
@@ -45,6 +47,7 @@ from ....domain.transactions.own_accounts import (
     OwnAccountRole,
     OwnBankAccountDetails,
 )
+from ...operations.registry_schema_validation import strict_model_json_schema
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
 from ..settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_remainder_casilla_ids
@@ -77,7 +80,11 @@ from ..work_form_typing_effect import (
     form_typing_effects,
     typing_effect_words,
 )
-from ..workbench_projection import project_modelo_workbench_form, restore_modelo_workbench_form
+from ..workbench_projection import (
+    ModeloWorkbenchFormProjectionV1,
+    project_modelo_workbench_form,
+    restore_modelo_workbench_form,
+)
 from .work_form_fixture import built_form, form_snapshot, read_before_calculation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -602,9 +609,59 @@ def test_the_public_read_carries_the_offer_receipt_and_typing_words(operation: P
     projection = project_modelo_workbench_form(UUID("13000000-0000-4000-8000-000000000455"), form.work_unit_id, read)
     restored = restore_modelo_workbench_form(type(projection).model_validate_json(projection.model_dump_json()))
 
-    assert projection.export_offer == read.export_offer and projection.receipt == read.receipt
+    assert projection.export_offer is not None and read.export_offer is not None
+    assert projection.export_offer.model_dump(mode="json") == read.export_offer.model_dump(mode="json")
+    assert projection.receipt == read.receipt
     assert projection.typing_effects == read.typing_effects
     assert restored == read and restored.receipt_confirmed is False
+
+
+def test_instalment_figures_cross_the_public_boundary_as_exact_decimal_text(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = _calculated(
+        operation, "100", 2025, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
+    )
+    read = read_before_calculation(
+        form,
+        operation,
+        verified=False,
+        filed=False,
+        export_offer=form_export_offer(
+            "100", form_snapshot(operation, "100", 2025, "0A"), _EN, form=form, verified=False, filed=False
+        ),
+    )
+    read = replace(read, calculation_revision_id=form.calculation_revision_id)
+    projection = project_modelo_workbench_form(UUID("13000000-0000-4000-8000-000000000455"), form.work_unit_id, read)
+    assert projection.export_offer is not None
+    question = next(q for q in projection.export_offer.elections if q.election is ModeloFormElection.INSTALMENT)
+    assert tuple(figure.amount for figure in question.figures) == ("600.01", "400.00")
+    restored = restore_modelo_workbench_form(type(projection).model_validate_json(projection.model_dump_json()))
+    assert restored == read
+    assert restored.export_offer is not None
+    restored_question = next(q for q in restored.export_offer.elections if q.election is ModeloFormElection.INSTALMENT)
+    assert tuple(figure.amount for figure in restored_question.figures) == ("600.01", "400.00")
+    strict_model_json_schema(ModeloWorkbenchFormProjectionV1)
+    for invalid in ("NaN", "1e3", "-1", "1.001", 600.01):
+        payload = projection.model_dump(mode="json")
+        figures = next(q["figures"] for q in payload["export_offer"]["elections"] if q["election"] == "instalment")
+        figures[0]["amount"] = invalid
+        with pytest.raises(ValueError):
+            type(projection).model_validate_json(json.dumps(payload))
+
+    payload = projection.model_dump(mode="json")
+    figures = next(q["figures"] for q in payload["export_offer"]["elections"] if q["election"] == "instalment")
+    figures[0]["amount"] = "01.0"
+    accepted = type(projection).model_validate_json(json.dumps(payload))
+    assert accepted.export_offer is not None
+    accepted_question = next(q for q in accepted.export_offer.elections if q.election is ModeloFormElection.INSTALMENT)
+    assert accepted_question.figures[0].amount == "01.0"
+
+    payload = projection.model_dump(mode="json")
+    figures = next(q["figures"] for q in payload["export_offer"]["elections"] if q["election"] == "instalment")
+    figures[0]["advisory_words"] = None
+    with pytest.raises(ValueError):
+        type(projection).model_validate_json(json.dumps(payload))
 
 
 _HELD_210: dict[str, Decimal | str] = {"rendimientos_integros": Decimal("1200.00"), "tipo_renta": "01"}

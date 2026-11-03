@@ -99,6 +99,9 @@ export type ScenarioHostOptions = {
   latencyMs: number;
   /** Replace the fixture records with this many generated ones. */
   logRecords?: number;
+  /** Refuse initial attachments after a partial backlog has arrived. */
+  logAttachFailures?: number;
+  logReplayGap?: boolean;
   /** Keep the log growing: a batch of records every this many milliseconds
    * after the backlog, as a process writing its log sends them. */
   logFeedMs?: number;
@@ -308,6 +311,7 @@ export function scenarioHost(
   options: ScenarioHostOptions,
 ): Host {
   const say = (call: string) => options.onCall?.(call);
+  let logAttachFailures = options.logAttachFailures ?? 0;
   let presence = scenario.signIn.status.state;
   let runtimeAvailable = scenario.signIn.status.runtimeAvailable;
   // The session waits for a fresh proof until a sign-in or a sign-out ends it.
@@ -1007,6 +1011,15 @@ export function scenarioHost(
     subscribeLogs(listener) {
       say("subscribeLogs");
       if (scenario.logs === "pending") return never();
+      if (logAttachFailures > 0) {
+        logAttachFailures -= 1;
+        listener({
+          records: FIXTURE_RECORDS.slice(0, 1),
+          dropped: 0,
+          states: AVAILABLE,
+        });
+        return Promise.reject(failure("log_unavailable", "logging"));
+      }
       // The backlog arrives over two batches, the second reporting records
       // the ring had already dropped, as a large backlog does.
       const split = Math.ceil(FIXTURE_RECORDS.length / 2);
@@ -1039,6 +1052,10 @@ export function scenarioHost(
                 },
               ];
       let subscribed = true;
+      if (options.logReplayGap) {
+        for (const batch of batches)
+          batch.records = batch.records.filter((record) => record.seq >= 4);
+      }
       if (scenario.managerLog === "absent") {
         for (const batch of batches) {
           batch.states = { ...batch.states };

@@ -442,7 +442,7 @@ test("the documentation pane offers visible Back and Forward controls", async ({
     .getByRole("button", { name: label("desktop.rail.docs"), exact: true })
     .click();
   const frame = target.frameLocator(".docs-frame");
-  const head = target.locator(".pane-docs .pane-head");
+  const head = target.locator('[data-dock-header="docs"]');
   const back = head.getByRole("button", {
     name: label("desktop.action.docs_back"),
     exact: true,
@@ -520,13 +520,21 @@ test("a console fixture session takes input and restarts after exit", async ({
   await target.locator('[data-terminal="console"] .xterm-screen').click();
   await target.keyboard.type("exit");
   await target.keyboard.press("Enter");
-  await expect(
-    target.getByRole("tab", { name: label("desktop.rail.console") }),
-  ).toContainText(label("desktop.session.exited", { code: 0 }));
+  const consoleTab = target.getByRole("tab", {
+    name: label("desktop.rail.console"),
+    exact: true,
+  });
+  const exited = label("desktop.session.exited", { code: 0 });
+  await expect
+    .poll(async () => (await consoleTab.getAttribute("aria-description")) ?? "")
+    .toContain(exited);
   await target.keyboard.press("Enter");
-  await expect(
-    target.getByRole("tab", { name: label("desktop.rail.console") }),
-  ).not.toContainText(label("desktop.session.exited", { code: 0 }));
+  await expect
+    .poll(async () => (await consoleTab.getAttribute("aria-description")) ?? "")
+    .not.toContain(exited);
+  await target.keyboard.type("echo restarted");
+  await target.keyboard.press("Enter");
+  await expect(rows).toContainText("restarted");
 });
 
 test("the palette's first section is the documentation's while a query searches it", async ({

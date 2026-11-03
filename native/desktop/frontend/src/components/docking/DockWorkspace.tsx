@@ -1,4 +1,10 @@
-import { useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { cn } from "@/components/ui/cn";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -26,6 +32,7 @@ import {
   returnDockPane,
   swapDockPane,
   type DockLayout,
+  type DockDivider,
   type DockPane,
   type DockRect,
   type DockSide,
@@ -45,6 +52,7 @@ export type DockContent = {
   id: DockPane;
   title: string;
   content: ReactNode;
+  pageActions?: ReactNode;
   className?: string;
   status?: { phase: SessionPhase; note?: string };
 };
@@ -56,6 +64,7 @@ export function DockWorkspace({
   expanded,
   fullscreen,
   panes,
+  minimumWidths,
   onChange,
   onActivate,
   onFocusPane,
@@ -70,6 +79,8 @@ export function DockWorkspace({
   expanded: DockPane | null;
   fullscreen: boolean;
   panes: DockContent[];
+  /** Content widths in CSS pixels; fitting never rewrites the saved layout. */
+  minimumWidths?: Partial<Record<DockPane, number>>;
   onChange: (update: (layout: DockLayout) => DockLayout) => void;
   onActivate: (pane: DockPane) => void;
   onFocusPane: (pane: DockPane) => void;
@@ -81,13 +92,60 @@ export function DockWorkspace({
 }) {
   const t = useStrings();
   const surface = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState<{
+    width: number;
+    minimumWidths: Partial<Record<DockPane, number>>;
+  }>();
+  useLayoutEffect(() => {
+    const element = surface.current;
+    if (!element || !minimumWidths) {
+      setFit(undefined);
+      return;
+    }
+    const measure = () => {
+      const minimum: Partial<Record<DockPane, number>> = {};
+      for (const pane of element.querySelectorAll<HTMLElement>(
+        "[data-dock-pane]",
+      )) {
+        const id = pane.dataset.dockPane;
+        if (!isDockPane(id) || minimumWidths[id] === undefined) continue;
+        const style = getComputedStyle(pane);
+        minimum[id] =
+          minimumWidths[id]! +
+          parseFloat(style.borderLeftWidth) +
+          parseFloat(style.borderRightWidth) +
+          parseFloat(style.paddingLeft) +
+          parseFloat(style.paddingRight);
+      }
+      const width = element.clientWidth;
+      setFit((before) =>
+        before?.width === width &&
+        JSON.stringify(before.minimumWidths) === JSON.stringify(minimum)
+          ? before
+          : { width, minimumWidths: minimum },
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    measure();
+    return () => observer.disconnect();
+  }, [minimumWidths]);
   const [dragged, setDragged] = useState<DockPane | null>(null);
   const [externalDrag, setExternalDrag] = useState(false);
   const [drop, setDrop] = useState<{
     target: DockPane;
     side: DockSide | "tab";
   } | null>(null);
-  const { groups, dividers } = dockGeometry(layout, visible);
+  const { groups, dividers } = dockGeometry(layout, visible, fit);
+  const resize = (divider: DockDivider, requested: number) => {
+    const ratio = Math.max(
+      divider.minRatio,
+      Math.min(divider.maxRatio, requested),
+    );
+    // A gesture against an existing limit must not replace the saved preference.
+    if (Math.abs(ratio - divider.ratio) < 1e-9) return;
+    onChange((current) => resizeDockSplit(current, divider.path, ratio));
+  };
   const title = (pane: DockPane) =>
     panes.find((item) => item.id === pane)?.title ?? pane;
   const status = (pane: DockPane) =>
@@ -440,6 +498,11 @@ export function DockWorkspace({
                 ))}
               </TabsList>
             </Tabs>
+            {panes.find((pane) => pane.id === item.active)?.pageActions && (
+              <div className="flex shrink-0 items-center">
+                {panes.find((pane) => pane.id === item.active)?.pageActions}
+              </div>
+            )}
             {menus(item.active, item.floating)}
             <IconButton
               label={t(
@@ -579,6 +642,9 @@ export function DockWorkspace({
               orientation={row ? "vertical" : "horizontal"}
               aria-label={`${t("desktop.split.resize")}: ${divider.panes.map(title).join(" / ")}`}
               value={divider.ratio * 100}
+              aria-valuenow={divider.ratio * 100}
+              aria-valuemin={divider.minRatio * 100}
+              aria-valuemax={divider.maxRatio * 100}
               onDrag={({ x, y }) => {
                 const bounds = surface.current?.getBoundingClientRect();
                 if (!bounds) return;
@@ -587,26 +653,15 @@ export function DockWorkspace({
                     divider.rect.width
                   : ((y - bounds.top) / bounds.height - divider.rect.y) /
                     divider.rect.height;
-                onChange((current) =>
-                  resizeDockSplit(current, divider.path, ratio),
-                );
+                resize(divider, ratio);
               }}
               onStep={(direction) =>
-                onChange((current) =>
-                  resizeDockSplit(
-                    current,
-                    divider.path,
-                    divider.ratio + direction * 0.03,
-                  ),
-                )
+                resize(divider, divider.ratio + direction * 0.03)
               }
               onLimit={(limit) =>
-                onChange((current) =>
-                  resizeDockSplit(
-                    current,
-                    divider.path,
-                    limit === "min" ? 0.1 : 0.9,
-                  ),
+                resize(
+                  divider,
+                  limit === "min" ? divider.minRatio : divider.maxRatio,
                 )
               }
               onReset={() =>

@@ -6,12 +6,20 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import type { LedgerOutcome } from "../../shell/ledger";
 import type { ModeloPort } from "../../shell/modelo";
-import type { ModeloWriteHolds } from "../../shell/modeloWriteHolds";
-import { WriteHoldNotice, useModeloWriteHold } from "./WriteHoldNotice";
+import {
+  modeloWriteConflicts,
+  type ModeloWriteHold,
+  type ModeloWriteHolds,
+  type ModeloWriteOwner,
+} from "../../shell/modeloWriteHolds";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { WriteHoldNotice, useModeloBlockingWriteHold } from "./WriteHoldNotice";
 import { runOperation, type OperationRun } from "./dialogs/operationRun";
 
 type Scope = {
@@ -20,6 +28,9 @@ type Scope = {
   port: ModeloPort;
   onWritten?: () => void;
   reload: () => Promise<boolean>;
+  owner?: ModeloWriteOwner;
+  reloadHold?: (hold: ModeloWriteHold) => Promise<boolean>;
+  onOpenOwner?: (owner: ModeloWriteOwner) => void;
 };
 const Context = createContext<Scope | null>(null);
 
@@ -29,41 +40,104 @@ export function ModeloWriteScope({
   port,
   onWritten,
   reload,
+  owner,
+  reloadHold,
+  onOpenOwner,
   children,
 }: Scope & { children: ReactNode }) {
   const value = useMemo(
-    () => ({ holds, target, port, onWritten, reload }),
-    [holds, target, port, onWritten, reload],
+    () => ({
+      holds,
+      target,
+      port,
+      onWritten,
+      reload,
+      owner,
+      reloadHold,
+      onOpenOwner,
+    }),
+    [holds, target, port, onWritten, reload, owner, reloadHold, onOpenOwner],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
 /** Modal writers need the same notice inside their active focus layer. */
-export function ScopedWriteHoldNotice() {
+export function ScopedWriteHoldNotice({
+  exclude = [],
+}: { exclude?: readonly string[] } = {}) {
   const scope = useContext(Context);
+  return scope ? <ScopeNotices scope={scope} exclude={exclude} /> : null;
+}
+
+function ScopeNotices({
+  scope,
+  exclude,
+}: {
+  scope: Scope;
+  exclude: readonly string[];
+}) {
+  const snapshot = useSyncExternalStore(
+    scope.holds.subscribe,
+    scope.holds.snapshot,
+    scope.holds.snapshot,
+  );
   const pending = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
-  if (!scope) return null;
-  const reload = async () => {
+  const reload = async (hold: ModeloWriteHold) => {
     if (pending.current) return;
     pending.current = true;
     setRefreshing(true);
     try {
-      await scope.reload();
+      if (scope.reloadHold) await scope.reloadHold(hold);
+      else if (hold.key === scope.target) await scope.reload();
     } finally {
       pending.current = false;
       setRefreshing(false);
     }
   };
-  return (
-    <WriteHoldNotice
-      holds={scope.holds}
-      target={scope.target}
-      port={scope.port}
-      onReload={() => void reload()}
-      refreshing={refreshing}
-    />
-  );
+  return snapshot
+    .filter(
+      (hold) =>
+        !exclude.includes(hold.key) &&
+        modeloWriteConflicts(scope.target, hold.key),
+    )
+    .map((hold) => {
+      const owner = hold.owner;
+      if (hold.phase === "running" && (!owner || hold.key === scope.target))
+        return null;
+      const foreign =
+        hold.key !== scope.target &&
+        owner &&
+        scope.owner?.workUnitId !== owner.workUnitId;
+      return (
+        <div key={hold.key} aria-busy={hold.phase === "running"}>
+          {owner && hold.key !== scope.target && (
+            <div className="flex items-center gap-2 text-sm">
+              {foreign && scope.onOpenOwner ? (
+                <Button
+                  variant="link"
+                  className="h-auto p-0"
+                  onClick={() => scope.onOpenOwner?.(owner)}
+                >
+                  {owner.label}
+                </Button>
+              ) : (
+                <span>{owner.label}</span>
+              )}
+              {hold.phase === "running" && <Spinner />}
+            </div>
+          )}
+          <WriteHoldNotice
+            holds={scope.holds}
+            target={hold.key}
+            port={scope.port}
+            onReload={!foreign ? () => void reload(hold) : undefined}
+            refreshing={refreshing}
+            onCompleted={scope.onWritten}
+          />
+        </div>
+      );
+    });
 }
 
 export function useModeloWriteScope() {
@@ -76,8 +150,8 @@ export function useModeloWriteScope() {
  * including writers whose original dialog or view has since gone away. */
 export function useModeloOperation() {
   const scope = useModeloWriteScope();
-  const { holds, target, port, onWritten } = scope;
-  const hold = useModeloWriteHold(holds, target);
+  const { holds, target, port, onWritten, owner } = scope;
+  const hold = useModeloBlockingWriteHold(holds, target);
   const generation = useRef(0);
   useLayoutEffect(
     () => () => {
@@ -93,7 +167,7 @@ export function useModeloOperation() {
       if (!alive()) return null;
       const mine = generation.current;
       const current = () => alive() && mine === generation.current;
-      const lease = holds.begin(target);
+      const lease = holds.begin(target, owner);
       if (!lease) return null;
       onWritten?.();
       const outcome = await runOperation(port, send, current);
@@ -106,7 +180,7 @@ export function useModeloOperation() {
       onWritten?.();
       return current() ? outcome : null;
     },
-    [holds, target, port, onWritten],
+    [holds, target, port, onWritten, owner],
   );
   return { ...scope, hold, run };
 }

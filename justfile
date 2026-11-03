@@ -247,8 +247,7 @@ clean-apply *ARGS:
 [doc('Run Python, TypeScript/TSX, CSS and Rust code-quality checks.')]
 [group('check')]
 check-code:
-    @just check-python
-    @just check-native-code
+    @uv run --no-sync python -m dev.quality.suite --all-languages
 
 # The portable deterministic Python subject aggregate remains available alone.
 [doc('Run deterministic Python code-quality checks without a native build.')]
@@ -729,8 +728,7 @@ check-frontend CONFIGURATION="Debug": (_native-configure CONFIGURATION)
 [doc('Run the existing frontend and Rust quality gates; requires the configured native toolchain and advisory network access.')]
 [group('check')]
 check-native-code CONFIGURATION="Debug":
-    just check-frontend {{CONFIGURATION}}
-    just check-rust {{CONFIGURATION}}
+    @uv run --no-sync python -m dev.quality.suite --native-only --configuration {{CONFIGURATION}}
 
 # Drives only the package's own programs on a disposable root: profile, sign-in,
 # CLI and MCP reads, stdin-closed stop, and an unchanged installed default root.
@@ -1560,6 +1558,11 @@ report-code-health *ARGS:
 [group('report')]
 report-code-health-monthly:
     @uv run --no-sync python -m dev.audit.report --full
+
+[doc('Print the filesystem census of TS, TSX, CSS and Rust sources with their observed roles as JSON.')]
+[group('report')]
+report-native-inventory:
+    @uv run --no-sync python -m dev.audit.native_health
 
 # Read-only registry reports. These commands disclose their observational
 # posture; none publishes, repairs, or regenerates an artifact.

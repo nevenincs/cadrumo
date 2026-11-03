@@ -3,15 +3,24 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type {
   ModeloDeclarationsListProjectionV1,
+  ModeloReconciliationImportProjection,
+  PublicModeloFormContextFieldBlock,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
 } from "../../src/shell/modeloContract";
 import { ASSET_NOTES } from "../../src/dev/modeloAssetNotes";
 import { label } from "../support/strings";
+import { seedLayout } from "../support/layout";
 
 declare global {
   interface Window {
+    __modeloHelpGate?: { failed: boolean; reads: number };
     __modeloWorkRecovery?: { terminal: boolean; failReads: number };
+    __modeloCompared?: {
+      sourceKind: string;
+      calculation: string | null;
+      count: number;
+    };
     __modeloFileGate?: {
       release: () => void;
       tokens: string[];
@@ -56,6 +65,14 @@ function fields(page: unknown): PublicModeloFormField[] {
   };
   walk(page);
   return found;
+}
+
+function contextFacts(node: unknown): PublicModeloFormContextFieldBlock[] {
+  if (Array.isArray(node)) return node.flatMap(contextFacts);
+  if (!node || typeof node !== "object") return [];
+  if ("kind" in node && node.kind === "context_field")
+    return [node as PublicModeloFormContextFieldBlock];
+  return Object.values(node).flatMap(contextFacts);
 }
 
 async function openList(
@@ -353,6 +370,101 @@ test("a box shows the help the read serves for it, and its details in words only
   ).toEqual([]);
 });
 
+test("failed box help can be retried without leaving the selected box", async ({
+  page: target,
+}) => {
+  const helped = fields(form("130-1T").form.form.pages).find(
+    (field) => field.box && field.help && field.address.kind === "casilla",
+  )!;
+  await openDeclaration(target, "130");
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    const read = port.casillaHelp.bind(port);
+    window.__modeloHelpGate = { failed: true, reads: 0 };
+    port.casillaHelp = async (request) => {
+      const gate = window.__modeloHelpGate!;
+      gate.reads += 1;
+      if (gate.failed)
+        throw Object.assign(new Error("Help unavailable"), {
+          code: "unavailable",
+        });
+      return read(request);
+    };
+  });
+  await boxRow(target, helped.box!).click();
+  const details = target.locator("[data-modelo-details]:visible");
+  await expect(details).toContainText(
+    label("workspace.modelo.details.card_unavailable"),
+  );
+  const before = await target.evaluate(() => {
+    window.__modeloHelpGate!.failed = false;
+    return window.__modeloHelpGate!.reads;
+  });
+  await details
+    .getByRole("button", {
+      name: label("desktop.declarations.retry"),
+      exact: true,
+    })
+    .click();
+  await expect(details).not.toContainText(
+    label("workspace.modelo.details.card_unavailable"),
+  );
+  await expect(details).not.toContainText(
+    label("workspace.modelo.details.reading"),
+  );
+  await expect(details).toContainText(helped.label.text);
+  await expect(details).toContainText("Real Decreto 439/2007, art. 110");
+  expect(await target.evaluate(() => window.__modeloHelpGate!.reads)).toBe(
+    before + 1,
+  );
+  expect(await calls(target, "modelo submit")).toEqual([]);
+});
+
+test("one details panel survives responsive changes without rereading its help", async ({
+  page: target,
+}, info) => {
+  await seedLayout(target, {
+    layout: {
+      agentShown: false,
+      tuiShown: false,
+      docsShown: true,
+      page: "docs",
+    },
+  });
+  await target.setViewportSize({ width: 1600, height: 900 });
+  await openDeclaration(target, "130", { shape: "edit" });
+  await stage(target, "06", TYPED_06);
+  await boxRow(target, "01").click();
+  const details = target.locator("[data-modelo-details]");
+  await expect(details).toHaveCount(1);
+  await expect(details).toContainText("Real Decreto 439/2007, art. 110");
+  const reads = (await calls(target, "modelo casillaHelp")).length;
+  for (const width of [600, 1000, 1200, 1600]) {
+    await target.setViewportSize({ width, height: width === 600 ? 700 : 900 });
+    await expect(details).toHaveCount(1);
+    await expect(details).toBeVisible();
+    const panel = target.locator(
+      ".declarations-workspace [role=tabpanel][data-details]",
+    );
+    await expect(
+      panel.getByRole("button", {
+        name: label("workspace.modelo.next_button.apply"),
+        exact: true,
+      }),
+    ).toBeInViewport();
+    expect(
+      await panel.evaluate(
+        (element) => element.scrollWidth - element.clientWidth,
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect((await calls(target, "modelo casillaHelp")).length).toBe(reads);
+    if (width === 600 || width === 1600)
+      await target.screenshot({
+        path: info.outputPath(`details-${width}.png`),
+      });
+  }
+});
+
 test("a box whose kind of value cannot be typed says why on the form", async ({
   page: target,
 }) => {
@@ -490,19 +602,15 @@ test("a check line whose source is the suffered withholding opens that register 
   ).toBeVisible();
 });
 
-test("a file made before the declaration changed is out of date and is to be made again", async ({
+test("a file made before a conflicting edit stays out of date until its export hold is resolved", async ({
   page: target,
-}) => {
+}, info) => {
   const read = form("130-1T-stale");
   if (!read.header.file || read.header.file.current)
     throw new Error("the stale 130 has no out-of-date file");
   await openDeclaration(target, "130", { shape: "stale" });
   await expect(target.getByText(read.header.file.words)).toBeVisible();
-  await target
-    .getByRole("button", {
-      name: label("workspace.modelo.next_button.export_again"),
-    })
-    .click();
+  await tab(target, "workspace.modelo.filing.title").click();
   await expect(tab(target, "workspace.modelo.filing.title")).toHaveAttribute(
     "aria-selected",
     "true",
@@ -514,7 +622,110 @@ test("a file made before the declaration changed is out of date and is to be mad
     target.getByRole("button", {
       name: label("workspace.modelo.filing.export_again"),
     }),
-  ).toBeEnabled();
+  ).toBeDisabled();
+  expect(read.header.export_hold?.reason).toBe("blocks");
+  if (!read.header.export_hold)
+    throw new Error("the changed 130 has no export hold");
+  const words = read.header.export_hold.words;
+  await expect(target.getByText(words, { exact: true })).toHaveCount(1);
+  for (const key of [
+    "workspace.modelo.filing.export_again",
+    "workspace.modelo.filing.record_as_filed",
+    "workspace.modelo.filing.copy.package.action",
+  ]) {
+    const action = target.getByRole("button", {
+      name: label(key),
+      exact: true,
+    });
+    await expect(action).toBeDisabled();
+    await expect(action).toHaveAccessibleDescription(words);
+  }
+  await expect(
+    target.getByRole("region", {
+      name: label("workspace.modelo.filing.file_title"),
+      exact: true,
+    }),
+  ).toHaveAccessibleDescription(words);
+  await expect(
+    target.getByRole("region", {
+      name: label("workspace.modelo.filing.after_filed_title"),
+      exact: true,
+    }),
+  ).toHaveAccessibleDescription(words);
+  await expect(
+    target.getByRole("region", {
+      name: label("workspace.modelo.filing.compare_declaration_title"),
+      exact: true,
+    }),
+  ).not.toHaveAttribute("aria-describedby");
+  await target.screenshot({ path: info.outputPath("filing-shared-hold.png") });
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.open_check"),
+      exact: true,
+    })
+    .click();
+  await expect(tab(target, "workspace.modelo.step.review")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});
+
+test("a filing action keeps its distinct refusal beside the shared export hold", async ({
+  page: target,
+}) => {
+  const grid = await openList(target, { shape: "stale" });
+  const separate = "A separate filing requirement remains unresolved.";
+  await target.evaluate((words) => {
+    const port = window.__fixtureModelo!;
+    const original = port.form;
+    port.form = async (...args) => {
+      const read = await original(...args);
+      if (!read.export_offer)
+        throw new Error("The fixture has no export offer");
+      return {
+        ...read,
+        export_offer: {
+          ...read.export_offer,
+          artefacts: read.export_offer.artefacts.map((option) =>
+            option.artefact === "fichero_boe"
+              ? { ...option, availability: { ...option.availability, words } }
+              : option,
+          ),
+        },
+      };
+    };
+  }, separate);
+  const local = list().rows.find(
+    (row) => row.modelo === "130" && row.opens_local_work,
+  );
+  if (!local) throw new Error("The fixture has no local 130");
+  await target
+    .getByRole("searchbox", {
+      name: label("desktop.declarations.search.label"),
+      exact: true,
+    })
+    .fill("130");
+  await rowsOf(grid, "130")
+    .filter({ hasText: local.period_words ?? local.modelo_title })
+    .filter({ hasText: local.state_words })
+    .first()
+    .dblclick();
+  await tab(target, "workspace.modelo.filing.title").click();
+  const region = target.getByRole("region", {
+    name: label("workspace.modelo.filing.file_title"),
+    exact: true,
+  });
+  await expect(region.getByText(separate, { exact: true })).toBeVisible();
+  await expect(
+    region.getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  const hold = form("130-1T-stale").header.export_hold;
+  if (!hold) throw new Error("The fixture has no export hold");
+  await expect(target.getByText(hold.words, { exact: true })).toHaveCount(1);
 });
 
 test("a filing recorded without a verified receipt asks for it", async ({
@@ -664,6 +875,26 @@ for (const language of LANGUAGES) {
       const read = form(name, language);
       expect(read.form.form.language).toBe(language);
       await openDeclaration(target, modelo, { shape, language });
+      if (modelo === "347") {
+        const numbered = contextFacts(read.form.form.pages).filter(
+          (item) => item.box_number !== null,
+        );
+        expect(numbered.map((item) => item.box_number)).toEqual([
+          "01",
+          "02",
+          "03",
+          "04",
+        ]);
+        for (const item of numbered) {
+          const term = target
+            .locator("dt")
+            .filter({ hasText: item.label.text });
+          await expect(
+            term.getByText(item.box_number!, { exact: true }),
+          ).toBeVisible();
+          await expect(term).toContainText(item.label.text);
+        }
+      }
       if (read.header.deadline)
         await expect(
           target.getByText(read.header.deadline.text, { exact: true }),
@@ -1202,6 +1433,36 @@ test("an export whose settlement was not seen is unknown and holds", async ({
   await tab(target, "workspace.modelo.filing.title").click();
   await expect(exportAgain).toBeDisabled();
   expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
+  const listsBeforeCompletion = (await calls(target, "modelo declarations"))
+    .length;
+  await target.evaluate(() => {
+    window.__fixtureModelo!.observe = async (operation) => ({
+      kind: "refused",
+      operation_id: operation,
+      revision: 2,
+      reason: null,
+      detail: null,
+    });
+  });
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.write_hold.check_status"),
+    })
+    .click();
+  await target
+    .getByRole("button", { name: label("workspace.modelo.read_again") })
+    .click();
+  await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
+  await target
+    .locator(".declarations-workspace")
+    .getByRole("button", {
+      name: label("workspace.declarations.destination.overview"),
+      exact: true,
+    })
+    .click();
+  await expect
+    .poll(async () => (await calls(target, "modelo declarations")).length)
+    .toBeGreaterThan(listsBeforeCompletion);
 });
 
 for (const picker of ["saveFile", "pickFile"] as const) {
@@ -1370,30 +1631,245 @@ test("recording the filing keeps it local, and a verified receipt is another sta
   await expect(target.getByText(verified.words)).toHaveCount(0);
 });
 
-test("a receipt imported against the filing says whether it matches", async ({
+for (const language of LANGUAGES)
+  test(`receipt comparison exposes every returned difference and limitation in ${language}`, async ({
+    page: target,
+  }) => {
+    const imported =
+      envelope<ModeloReconciliationImportProjection>("reconcile-130");
+    await openDeclaration(target, "130", { shape: "filed", language });
+    await tab(target, "workspace.modelo.filing.title", language).click();
+    await target
+      .getByRole("button", {
+        name: label("workspace.modelo.filing.add_receipt_pdf", {}, language),
+      })
+      .click();
+    await expect(
+      target.getByText(
+        label(
+          imported.verdict === "matches"
+            ? "workspace.modelo.filing.reconciliation.matches"
+            : "workspace.modelo.filing.reconciliation.differs",
+          {},
+          language,
+        ),
+      ),
+    ).toBeVisible();
+    const report = target.locator(".modelo-reconciliation");
+    for (const diff of imported.diffs) {
+      await expect(
+        report.getByText(diff.work_unit_value, { exact: true }),
+      ).toBeVisible();
+      await expect(
+        report.getByText(diff.evidence_value, { exact: true }),
+      ).toBeVisible();
+    }
+    for (const advisory of imported.advisories) {
+      const item = report
+        .getByRole("listitem")
+        .filter({ hasText: advisory.message });
+      await expect(
+        item.getByText(advisory.message, { exact: true }),
+      ).toBeVisible();
+      await item.locator("summary").click();
+      await expect(
+        item.getByText(advisory.code, { exact: true }),
+      ).toBeVisible();
+      for (const [key, value] of advisory.context) {
+        await expect(item.locator("dt").filter({ hasText: key })).toBeVisible();
+        await expect(
+          item.locator("dd").filter({ hasText: value }),
+        ).toBeVisible();
+      }
+    }
+    await expect(
+      report.getByText(imported.narrative, { exact: true }),
+    ).toBeHidden();
+    await report.locator(":scope > details > summary").click();
+    await expect(
+      report.getByText(imported.narrative, { exact: true }),
+    ).toBeVisible();
+    await expect(report).not.toContainText(imported.source_path);
+    if (language === "en")
+      await report.screenshot({
+        path: test.info().outputPath("receipt-comparison.png"),
+      });
+    expect(await calls(target, "modelo pickFile evidence")).toHaveLength(1);
+  });
+
+test("declaration comparison is available before filing and keeps a served refusal visible", async ({
   page: target,
 }) => {
-  const imported = envelope<{ verdict: string; narrative: string }>(
-    "reconcile-130",
-  );
-  await filing(target, "filed");
-  await target
-    .getByRole("button", {
-      name: label("workspace.modelo.filing.add_receipt_pdf"),
-    })
-    .click();
+  await filing(target, "");
+  const words = "The test declaration cannot be compared with this PDF.";
+  await target.evaluate((words) => {
+    const port = window.__fixtureModelo!;
+    const submit = port.submit;
+    port.submit = async (...args) => {
+      if (args[0] !== "modelo.reconcile.import") return submit(...args);
+      const request = args[1] as {
+        source_kind: string;
+        calculation_revision_id: string | null;
+      };
+      window.__modeloCompared = {
+        sourceKind: request.source_kind,
+        calculation: request.calculation_revision_id,
+        count: (window.__modeloCompared?.count ?? 0) + 1,
+      };
+      return {
+        kind: "refused",
+        operation_id: "fixture-declaration-comparison",
+        revision: 1,
+        reason: null,
+        detail: {
+          detail_version: 1,
+          kind: "application",
+          error_code: null,
+          message_key: null,
+          context: [],
+          context_entries_omitted: 0,
+          precondition_verdict_json: null,
+          refusal_words: words,
+        },
+      };
+    };
+  }, words);
+  const compare = target.getByRole("button", {
+    name: label("workspace.modelo.filing.compare_declaration"),
+  });
+  await expect(compare).toBeEnabled();
   await expect(
-    target.getByText(
-      label(
-        imported.verdict === "matches"
-          ? "workspace.modelo.filing.receipt_matches"
-          : "workspace.modelo.filing.receipt_differs",
-      ),
-    ),
-  ).toBeVisible();
-  await expect(target.getByText(imported.narrative)).toBeVisible();
+    target.getByRole("button", {
+      name: label("workspace.modelo.filing.add_receipt_pdf"),
+    }),
+  ).toBeDisabled();
+  await compare.click();
+  await expect(target.getByText(words, { exact: true })).toBeVisible();
+  await expect(compare).toBeEnabled();
+  expect(await target.evaluate(() => window.__modeloCompared)).toMatchObject({
+    sourceKind: "declaration",
+    count: 1,
+  });
   expect(await calls(target, "modelo pickFile evidence")).toHaveLength(1);
 });
+
+test("declaration comparison stays available with a verified receipt and shares unknown-write protection", async ({
+  page: target,
+}) => {
+  await filing(target, "receipt");
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    const submit = port.submit;
+    port.submit = async (...args) => {
+      if (args[0] !== "modelo.reconcile.import") return submit(...args);
+      const request = args[1] as {
+        source_kind: string;
+        calculation_revision_id: string | null;
+      };
+      window.__modeloCompared = {
+        sourceKind: request.source_kind,
+        calculation: request.calculation_revision_id,
+        count: (window.__modeloCompared?.count ?? 0) + 1,
+      };
+      throw Object.assign(new Error("fixture unknown outcome"), {
+        code: "unknown",
+        operation_id: null,
+      });
+    };
+  });
+  const compare = target.getByRole("button", {
+    name: label("workspace.modelo.filing.compare_declaration"),
+  });
+  await expect(compare).toBeEnabled();
+  await expect(
+    target.getByRole("button", {
+      name: label("workspace.modelo.filing.add_receipt_pdf"),
+    }),
+  ).toBeDisabled();
+  await compare.click();
+  await expect(target.locator(".modelo-write-hold")).toContainText(
+    label("workspace.modelo.write_hold.unresolved"),
+  );
+  await expect(compare).toBeDisabled();
+  await tab(target, "desktop.modelo.view.form").click();
+  await tab(target, "workspace.modelo.filing.title").click();
+  await expect(compare).toBeDisabled();
+  expect(await target.evaluate(() => window.__modeloCompared)).toMatchObject({
+    sourceKind: "declaration",
+    count: 1,
+  });
+});
+
+for (const shape of ["limited-match", "missing-value"] as const) {
+  test(`reconciliation preserves ${shape} without inventing values or verification`, async ({
+    page: target,
+  }) => {
+    await filing(target, "filed");
+    const answer =
+      envelope<ModeloReconciliationImportProjection>("reconcile-130");
+    if (shape === "limited-match") {
+      answer.verdict = "matches";
+      answer.narrative = "Test comparison limited to identity.";
+      answer.diffs = [];
+      expect(answer.advisories.length).toBeGreaterThan(0);
+    } else {
+      answer.diffs = [
+        {
+          field_name: "01",
+          work_unit_value: "0.00",
+          evidence_value: "",
+          kind: "casilla_missing_in_filed",
+          diff_kind: "casilla",
+          legal_refs: ["test-legal-reference"],
+          source_refs: ["test-source-reference"],
+        },
+      ];
+    }
+    await target.evaluate((answer) => {
+      const port = window.__fixtureModelo!;
+      const submit = port.submit;
+      port.submit = async (...args) => {
+        const result = await submit(...args);
+        return args[0] === "modelo.reconcile.import" &&
+          result.kind === "settled"
+          ? ({ ...result, result: answer } as typeof result)
+          : result;
+      };
+    }, answer);
+    await target
+      .getByRole("button", {
+        name: label("workspace.modelo.filing.add_receipt_pdf"),
+      })
+      .click();
+    const report = target.locator(".modelo-reconciliation");
+    await expect(report.locator('[data-slot="alert"]')).toHaveAttribute(
+      "data-tone",
+      "warning",
+    );
+    if (shape === "limited-match") {
+      await expect(report).toContainText(
+        label("workspace.modelo.filing.reconciliation.matches"),
+      );
+      for (const advisory of answer.advisories)
+        await expect(report).toContainText(advisory.message);
+    } else {
+      await expect(report.getByText("0.00", { exact: true })).toBeVisible();
+      await expect(
+        report.getByText(
+          label("workspace.modelo.filing.reconciliation.not_present"),
+          { exact: true },
+        ),
+      ).toBeVisible();
+      await expect(
+        report.getByText("test-legal-reference", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        report.getByText("test-source-reference", { exact: true }),
+      ).toBeVisible();
+      await expect(report.getByRole("link")).toHaveCount(0);
+    }
+  });
+}
 
 /** Opens the correction of the receipt-confirmed 130 in `shape` and sends
  * one corrected figure, with the reason. */

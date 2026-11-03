@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#frontend-polish'
 date: '2026-11-02'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:88c5310c0e9672edb682d6bfbb088508d7578ea3610240feac541ec0138956d4'
+body_hash: 'sha256:b4c5ef7d21b7ee2554dc9aceaa197290717163d97bdfc1e2747d78a2fae39bb9'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -154,8 +154,171 @@ related:
 - `S19` `verify:` `Declarations and list lifecycle browser scenarios 16 plus final lifecycle rerun 5` -> `pass`
 - `S19` `verify:` `Modelo hold state race unit tests 4` -> `pass`
 - `S19` `verify:` `TypeScript targeted ESLint formatting and canonical four-language chrome` -> `pass`
+- `S20` `M` `native/desktop/frontend/src/components/modelo/WriteScope.tsx`
+- `S20` `M` `native/desktop/frontend/src/components/modelo/WriteHoldNotice.tsx`
+- `S20` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S20` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S20` `verify:` `Focused Modelo browser regressions 17 and final export lifecycle case` -> `pass`
+- `S20` `verify:` `Five hold-state unit tests and scoped static checks` -> `pass`
+- `S21` `A` `native/desktop/frontend/src/components/modelo/dialogs/ReconciliationResult.tsx`
+- `S21` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S21` `M` `dev/locales/desktop_workspace_keys.py`
+- `S21` `verify:` `Four-language reconciliation plus limited and missing-value scenarios six` -> `pass`
+- `S21` `verify:` `Canonical chrome and scoped static checks` -> `pass`
+- `S33` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S33` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S33` `M` `dev/locales/desktop_workspace_keys.py`
+- `S33` `verify:` `Declaration comparison refusal and unknown-settlement browser cases two` -> `pass`
+- `S33` `verify:` `TypeScript scoped lint formatting and canonical chrome` -> `pass`
+- `S23` `M` `native/desktop/frontend/src/shell/aeatSyncRun.ts`
+- `S23` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx`
+- `S23` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncProgress.tsx`
+- `S23` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S23` `M` `native/desktop/frontend/src/dev/aeatSyncRunFixture.ts`
+- `S23` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S23` `M` `dev/locales/desktop_chrome.py`
+- `S23` `M` `dev/locales/desktop_interface_keys.py`
+- `S23` `verify:` `All44 AEAT scenarios covered by full suite plus corrected cancellation and four recovery reruns` -> `pass`
+- `S23` `verify:` `TypeScript scoped ESLint formatting and canonical chrome` -> `pass`
+- `S24` `M` `native/desktop/frontend/src/components/browser/useSedeView.ts`
+- `S24` `M` `native/desktop/frontend/src/components/browser/PageDialog.tsx`
+- `S24` `M` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S24` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S24` `verify:` `Thirty Sede browser scenarios full run plus corrected refused-answer case` -> `pass`
+- `S24` `verify:` `TypeScript scoped lint formatting canonical chrome` -> `pass`
+- `S34` `M` `native/desktop/frontend/src/components/modelo/details/useHelpCard.ts`
+- `S34` `M` `native/desktop/frontend/src/components/modelo/details/Details.tsx`
+- `S34` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S34` `verify:` `Failed help read retries into served legal text without submitting an operation` -> `pass`
+- `S34` `verify:` `Scoped TypeScript ESLint formatting` -> `pass`
+- `S35` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S35` `M` `native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`
+- `S35` `verify:` `All35 agent-prompt scenarios including delayed acknowledgements rejection and newer pending decision` -> `pass`
+- `S35` `verify:` `TypeScript scoped ESLint and formatting` -> `pass`
+- `S36` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx`
+- `S36` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S36` `verify:` `responsive Details scenario 20261102T214014Z-58260` -> `pass`
+- `S36` `verify:` `scoped ESLint and TypeScript` -> `pass`
+- `S37` `M` `native/desktop/frontend/src/components/browser/useSedeView.ts`
+- `S37` `M` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S37` `M` `native/desktop/frontend/src/components/browser/BrowserPrompts.tsx`
+- `S37` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S37` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S37` `M` `dev/locales/desktop_interface_keys.py`
+- `S37` `M` `src/cadrumo/locales/en/common.yml`
+- `S37` `M` `src/cadrumo/locales/es/common.yml`
+- `S37` `M` `src/cadrumo/locales/ca/common.yml`
+- `S37` `M` `src/cadrumo/locales/hu/common.yml`
+- `S37` `verify:` `31 browser scenarios 20261102T221404Z-60704` -> `pass`
+- `S37` `verify:` `TypeScript scoped ESLint Prettier canonical chrome` -> `pass`
+- `S38` `M` `native/desktop/frontend/src/shell/useHostLogs.ts`
+- `S38` `M` `native/desktop/frontend/src/components/HostRecordList.tsx`
+- `S38` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S38` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S38` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S38` `M` `native/desktop/frontend/tests/scenarios/logs.spec.ts`
+- `S38` `verify:` `17 logs scenarios 20261102T221404Z-60704` -> `pass`
+- `S38` `verify:` `TypeScript scoped ESLint Prettier canonical chrome` -> `pass`
+- `S12` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S12` `verify:` `44 AEAT six calendar profile-view and31 browser scenarios` -> `pass`
+- `S32` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_work_form_export_offer.py`
+- `S32` `D` `src/cadrumo/application/modelo/tests/test_workbench_export_offer_projection.py`
+- `S32` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S32` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S32` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S32` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S32` `verify:` `canonical 218-envelope generation and post-simplification validation` -> `pass`
+- `S32` `verify:` `159 focused Python cases combined final evidence` -> `pass`
+- `S32` `verify:` `165 Modelo logs browser scenarios` -> `pass`
+- `S32` `verify:` `TypeScript and scoped Ruff ESLint Prettier` -> `pass`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/form/RecordsBlock.tsx`
+- `S31` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S31` `verify:` `canonical 218-envelope generation and validation` -> `pass`
+- `S31` `verify:` `117 Modelo scenarios including four-language context boxes` -> `pass`
+- `S40` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S40` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S40` `verify:` `15 filing receipt comparison browser scenarios` -> `pass`
+- `S40` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
+- `S40` `verify:` `Terra review and shared-hold visual inspection` -> `pass`
+- `S39` `M` `dev/locales/desktop_workspace_keys.py`
+- `S39` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S39` `M` `native/desktop/frontend/src/App.tsx`
+- `S39` `M` `native/desktop/frontend/src/components/modelo/`
+- `S39` `M` `native/desktop/frontend/src/shell/modeloWriteHolds.ts`
+- `S39` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S39` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S39` `M` `native/desktop/frontend/tests/live/modelo-write-holds.unit.ts`
+- `S39` `M` `native/desktop/frontend/tests/scenarios/modelo-wallet.spec.ts`
+- `S39` `M` `src/cadrumo/locales/en/common.yml`
+- `S39` `M` `src/cadrumo/locales/es/common.yml`
+- `S39` `M` `src/cadrumo/locales/ca/common.yml`
+- `S39` `M` `src/cadrumo/locales/hu/common.yml`
+- `S39` `verify:` `canonical245-envelope generation and validation` -> `pass`
+- `S39` `verify:` `final TypeScript scoped ESLint Prettier Ruff chrome` -> `pass`
+- `S39` `verify:` `nine shared hold unit cases` -> `pass`
+- `S39` `verify:` `14 focused browser cases 20261103T001331Z-28880` -> `pass`
+- `S39` `verify:` `24 declaration workspace profile cases 20261103T001600Z-29224` -> `pass`
+- `S39` `verify:` `Terra integrated review and visual inspection` -> `pass`
+- `S41` `M` `native/desktop/frontend/vite.config.ts`
+- `S41` `A` `native/desktop/frontend/dev/chrome-catalogue.ts`
+- `S41` `A` `native/desktop/frontend/tests/live/chrome-catalogue.unit.ts`
+- `S41` `verify:` `three catalogue unit cases` -> `pass`
+- `S41` `verify:` `TypeScript scoped ESLint Prettier product build` -> `pass`
+- `S41` `verify:` `four-language built-scenario regression` -> `pass`
+- `S41` `verify:` `same-cohort gzip payload reduction111834bytes` -> `pass`
+- `S41` `verify:` `Terra bounded encoding review` -> `pass`
+- `S42` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S42` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S42` `verify:` `three confirmation focus browser cases 20261103T003007Z-26936` -> `pass`
+- `S42` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
+- `S42` `verify:` `Terra bounded focus review` -> `pass`
+- `S43` `M` `native/desktop/frontend/src/shell/docking.ts`
+- `S43` `M` `native/desktop/frontend/src/components/docking/DockWorkspace.tsx`
+- `S43` `M` `native/desktop/frontend/src/App.tsx`
+- `S43` `M` `native/desktop/frontend/tests/live/docking.unit.ts`
+- `S43` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S43` `verify:` `docking model 10 cases` -> `pass`
+- `S43` `verify:` `TypeScript and scoped ESLint Prettier` -> `pass`
+- `S43` `verify:` `docking and inspector browser 41 cases` -> `pass`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S10` `verify:` `ledger model contract scheduler staged-check product cases` -> `pass`
+- `S10` `verify:` `four prior ledger regression repairs verified` -> `pass`
+- `S10` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/components/modelo/dialogs/operationRun.ts`
+- `S11` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S11` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S11` `verify:` `Modelo product model operation served-field date cases` -> `pass`
+- `S11` `verify:` `12 port cases and 3 stale-baseline browser cases` -> `pass`
+- `S11` `verify:` `TypeScript scoped ESLint Prettier and Terra review` -> `pass`
+- `S44` `M` `native/desktop/frontend/src/App.tsx`
+- `S44` `M` `native/desktop/frontend/src/components/docking/DockWorkspace.tsx`
+- `S44` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S44` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S44` `verify:` `Docs docking bridge terminal preferences 25 cases` -> `pass`
+- `S44` `verify:` `npm run check` -> `pass`
+- `S44` `verify:` `Sol brief and Terra bounded review` -> `pass`
+- `S13` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S13` `verify:` `agent conversation attachments history drops submission and contract cases` -> `pass`
+- `S13` `verify:` `prior skills prompts and owner lifecycle evidence retained` -> `pass`
+- `S14` `M` `native/desktop/frontend/tests/scenarios/view-preferences.spec.ts`
+- `S14` `verify:` `providers setup language preferences and provisioning cases` -> `pass`
+- `S14` `verify:` `11 preference regressions in final25 case batch` -> `pass`
+- `S14` `verify:` `npm run check` -> `pass`
+- `S15` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S15` `verify:` `Docs source-window bridge navigation and terminal restart cases` -> `pass`
+- `S15` `verify:` `terminal rendering theme palette and prior logs coverage` -> `pass`
+- `S15` `verify:` `S44 restored direct Docs controls` -> `pass`
+- `S45` `M` `native/desktop/frontend/scripts/benchmark.mjs`
+- `S45` `verify:` `complete measured workload and captured calendar timing` -> `pass`
+- `S45` `verify:` `benchmark --check JS and CSS asset budgets` -> `fail`
+- `S45` `verify:` `remaining25 timing memory retention budgets` -> `pass`
+- `S45` `verify:` `scoped ESLint Prettier and Terra review` -> `pass`
 
 ## Notes
 
 - `S01` Initial implementation was included by concurrent commit e6a39bc125; this checkpoint retains final generation and harness corrections. Full npm check formatting fails on four unrelated files recorded in audit.
 - `S02` Terra corrective review resolved interrupted hidden refresh; final callback guard precedes marking settled.
+- `S45` Asset budgets remain open in S16; observed-idle measurement retains missing RENTA acknowledgment. Budgets unchanged.

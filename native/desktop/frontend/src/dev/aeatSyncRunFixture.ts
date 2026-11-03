@@ -9,6 +9,17 @@ import type {
 import type { AeatSyncAreaId } from "../shell/aeatSync";
 import type { AeatSyncReason } from "../shell/aeatSyncResults";
 
+declare global {
+  interface Window {
+    __scenarioAeatRun?: {
+      failReads(fail: boolean): void;
+      failObservations(fail: boolean): void;
+      failAfterStart(): void;
+      publish(mode: AeatSyncRunMode): void;
+    };
+  }
+}
+
 /** What the scenario's update from AEAT is in the middle of. */
 export type AeatSyncRunMode =
   /** No update has started. */
@@ -174,6 +185,26 @@ export function aeatSyncRunFixture(
   let current = snapshot(mode);
   const listeners = new Set<() => void>();
   const push = () => listeners.forEach((listener) => listener());
+  let failReads = false;
+  let failObservations = false;
+  let failAfterStart = false;
+  if (typeof window !== "undefined")
+    window.__scenarioAeatRun = {
+      failReads(fail) {
+        failReads = fail;
+        push();
+      },
+      failObservations(fail) {
+        failObservations = fail;
+      },
+      failAfterStart() {
+        failAfterStart = true;
+      },
+      publish(mode) {
+        current = snapshot(mode);
+        push();
+      },
+    };
   const set = (patch: (s: AeatSyncRunSnapshot) => AeatSyncRunSnapshot) => {
     if (current) current = patch(current);
     push();
@@ -191,6 +222,7 @@ export function aeatSyncRunFixture(
     }));
   return {
     begin(outcome) {
+      if (failAfterStart) failReads = true;
       current = snapshot("running");
       push();
       if (outcome !== "running")
@@ -199,8 +231,14 @@ export function aeatSyncRunFixture(
           push();
         }, 700);
     },
-    progress: () => Promise.resolve(current && served(current)),
+    progress: () => {
+      return failReads
+        ? Promise.reject(new Error("Progress unavailable"))
+        : Promise.resolve(current && served(current));
+    },
     observe(changed) {
+      if (failObservations)
+        return Promise.reject(new Error("Observation unavailable"));
       listeners.add(changed);
       return Promise.resolve(() => listeners.delete(changed));
     },

@@ -19,6 +19,8 @@ const RETRY_MS = 750;
 const RETRY_LIMIT = 80;
 /** How long a panel size must hold before the page is told of it. */
 const RESIZE_SETTLE_MS = 120;
+const RESIZE_RETRY_MS = 350;
+const RESIZE_ATTEMPTS = 3;
 
 export type DrawnImage = Extract<SedeViewEvent, { kind: "image" }>;
 
@@ -55,7 +57,19 @@ export function useSedeView({
   const [state, dispatch] = useReducer(reduceBrowser, FIRST_STATE);
   const [attempt, setAttempt] = useState(0);
   const session = useRef<SedeViewSession | null>(null);
+  const [inputFailure, setInputFailure] = useState<SedeViewSession | null>(
+    null,
+  );
+  const answering = useRef<{ owner: SedeViewSession; id: number } | null>(null);
+  const [reply, setReply] = useState<{
+    owner: SedeViewSession;
+    id: number;
+    pending: boolean | null;
+    failed: boolean;
+    text?: string;
+  } | null>(null);
   const sent = useRef<SedeViewSize | null>(null);
+  const resize = useRef<(() => void) | null>(null);
   const latest = useRef({ size, draw, shown });
   latest.current = { size, draw, shown };
   const sized = size !== null;
@@ -79,8 +93,56 @@ export function useSedeView({
     if (!sized) return;
     let cancelled = false;
     let timer = 0;
+    let resizeTimer = 0;
+    let resizing = false;
+    let failures = 0;
+    let failedSize: SedeViewSize | null = null;
     let opened: SedeViewSession | null = null;
     owed.current = 0;
+
+    const scheduleResize = (delay = RESIZE_SETTLE_MS) => {
+      window.clearTimeout(resizeTimer);
+      if (!cancelled)
+        resizeTimer = window.setTimeout(() => void sendSize(), delay);
+    };
+    const sendSize = async () => {
+      const desired = latest.current.size;
+      if (
+        cancelled ||
+        !opened ||
+        resizing ||
+        !desired ||
+        sameSize(sent.current, desired)
+      )
+        return;
+      if (!sameSize(failedSize, desired)) failures = 0;
+      if (failures >= RESIZE_ATTEMPTS) return;
+      resizing = true;
+      try {
+        await opened.resize(desired);
+        if (cancelled) return;
+        sent.current = desired;
+        failures = 0;
+        failedSize = null;
+      } catch (error) {
+        if (cancelled) return;
+        failedSize = desired;
+        failures += 1;
+        if (failures === RESIZE_ATTEMPTS)
+          dispatch({ type: "problem", code: sedeViewFailure(error).code });
+      } finally {
+        resizing = false;
+        if (
+          !cancelled &&
+          !sameSize(sent.current, latest.current.size) &&
+          (failures < RESIZE_ATTEMPTS ||
+            !sameSize(failedSize, latest.current.size))
+        ) {
+          scheduleResize(failures ? RESIZE_RETRY_MS : RESIZE_SETTLE_MS);
+        }
+      }
+    };
+    resize.current = scheduleResize;
 
     const credit = () => {
       if (cancelled) return;
@@ -108,6 +170,7 @@ export function useSedeView({
           opened = view;
           session.current = view;
           sent.current = first;
+          scheduleResize();
           settle();
         },
         (error: unknown) => {
@@ -126,6 +189,8 @@ export function useSedeView({
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
+      window.clearTimeout(resizeTimer);
+      resize.current = null;
       session.current = null;
       sent.current = null;
       // Unmounting ends the view, which publishes the session.
@@ -134,15 +199,8 @@ export function useSedeView({
   }, [port, sized, attempt, settle]);
 
   useEffect(() => {
-    if (!size || state.phase !== "open" || sameSize(sent.current, size)) return;
-    const timer = window.setTimeout(() => {
-      const open = session.current;
-      if (!open) return;
-      sent.current = size;
-      void open.resize(size).catch(nothing);
-    }, RESIZE_SETTLE_MS);
-    return () => window.clearTimeout(timer);
-  }, [size, state.phase]);
+    resize.current?.();
+  }, [size]);
 
   // A call the host refuses is said once; it never rejects into the page.
   const refused = useCallback((work: Promise<unknown> | undefined) => {
@@ -153,8 +211,14 @@ export function useSedeView({
 
   return {
     state,
+    inputFailed: inputFailure !== null && inputFailure === session.current,
+    dismissInputFailure: useCallback(() => setInputFailure(null), []),
+    dialogReply: reply?.owner === session.current ? reply : null,
     input: useCallback((event: SedeViewInput) => {
-      void session.current?.input(event).catch(nothing);
+      const owner = session.current;
+      void owner?.input(event).catch(() => {
+        if (session.current === owner) setInputFailure(owner);
+      });
     }, []),
     navigate: useCallback(
       (verb: SedeViewVerb) => refused(session.current?.navigate(verb)),
@@ -166,11 +230,38 @@ export function useSedeView({
       [refused],
     ),
     answerDialog: useCallback(
-      (dialogId: number, accept: boolean, promptText?: string) => {
-        dispatch({ type: "dialog-answered", dialogId });
-        refused(session.current?.dialog(dialogId, accept, promptText));
+      async (dialogId: number, accept: boolean, promptText?: string) => {
+        const owner = session.current;
+        if (!owner || answering.current?.owner === owner) return;
+        const admission = { owner, id: dialogId };
+        answering.current = admission;
+        setReply({
+          owner,
+          id: dialogId,
+          pending: accept,
+          failed: false,
+          text: promptText,
+        });
+        try {
+          await owner.dialog(dialogId, accept, promptText);
+          if (session.current === owner) {
+            dispatch({ type: "dialog-answered", dialogId });
+            setReply(null);
+          }
+        } catch {
+          if (session.current === owner)
+            setReply({
+              owner,
+              id: dialogId,
+              pending: null,
+              failed: true,
+              text: promptText,
+            });
+        } finally {
+          if (answering.current === admission) answering.current = null;
+        }
       },
-      [refused],
+      [],
     ),
     /** Waits for the native save dialog. */
     answerDownload: useCallback(async (transferId: number, save: boolean) => {

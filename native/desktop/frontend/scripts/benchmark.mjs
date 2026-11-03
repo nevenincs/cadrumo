@@ -14,20 +14,14 @@
 // and catch a regression of kind, not of degree.
 import { chromium } from "@playwright/test";
 import { spawnSync } from "node:child_process";
-import {
-  createReadStream,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
-import { createServer } from "node:http";
-import { extname, join, normalize, resolve, sep } from "node:path";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { gzipSync } from "node:zlib";
+import { preview } from "vite";
 import { buildPath } from "../../scripts/build-paths.mjs";
+import { label } from "../tests/support/strings.ts";
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));
 const { values } = parseArgs({
@@ -69,36 +63,6 @@ function bundle(directory) {
   if (!sizes.js || !sizes.css)
     throw new Error(`No script or stylesheet was built into ${directory}.`);
   return sizes;
-}
-
-const TYPES = {
-  ".html": "text/html",
-  ".js": "text/javascript",
-  ".css": "text/css",
-  ".json": "application/json",
-  ".svg": "image/svg+xml",
-  ".woff2": "font/woff2",
-};
-
-function serve(directory) {
-  const server = createServer((request, response) => {
-    const path = normalize(
-      join(directory, new URL(request.url, "http://x").pathname),
-    );
-    if (!path.startsWith(directory + sep) || !existsSync(path)) {
-      response.writeHead(404).end();
-      return;
-    }
-    response.writeHead(200, {
-      "Content-Type": TYPES[extname(path)] ?? "application/octet-stream",
-    });
-    createReadStream(path).pipe(response);
-  });
-  return new Promise((ready) =>
-    server.listen(0, "127.0.0.1", () =>
-      ready({ server, origin: `http://127.0.0.1:${server.address().port}` }),
-    ),
-  );
 }
 
 const median = (list) => {
@@ -148,34 +112,105 @@ async function frames(page, action) {
 vite("build");
 vite("build", "--mode", "scenarios");
 const product = buildPath("desktop_frontend");
-const built = resolve(buildPath("desktop_testing"), "scenarios");
-const { server, origin } = await serve(built);
-const browser = await chromium.launch();
+let server;
+let browser;
 const report = {
   at: new Date().toISOString(),
+  setup: "Docs beside TUI, console panel open; isolated scenario context",
   bundle: { product: bundle(product) },
 };
+const stage = (name) => {
+  report.stage = name;
+  console.log(`Measuring ${name}`);
+};
+
+async function measuredShellContext() {
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+  });
+  context.on("page", (page) => {
+    page.on("pageerror", (error) =>
+      console.error(`Benchmark page error: ${error}`),
+    );
+    page.on("console", (message) => {
+      if (message.type() === "error")
+        console.error(`Benchmark console error: ${message.text()}`);
+    });
+  });
+  await context.addInitScript(() => {
+    if (window !== window.top) return;
+    if (!["http:", "https:"].includes(location.protocol)) return;
+    if (sessionStorage.getItem("benchmark-layout-seeded")) return;
+    localStorage.setItem(
+      "cadrumo-shell-layout",
+      JSON.stringify({
+        prefs: { order: "docs" },
+        layout: {
+          agentShown: false,
+          docsShown: true,
+          tuiShown: true,
+          page: "docs",
+          panelOpen: true,
+          tab: "console",
+        },
+      }),
+    );
+    sessionStorage.setItem("benchmark-layout-seeded", "1");
+  });
+  return context;
+}
+
+async function dockDivider(page) {
+  const separator = page.locator(
+    '[data-dock-divider][aria-orientation="vertical"]:visible',
+  );
+  await separator.first().waitFor();
+  if ((await separator.count()) !== 1)
+    throw new Error("Expected the single Docs/TUI divider.");
+  const handle = await separator.boundingBox();
+  if (!handle) throw new Error("The dock divider has no visible bounds.");
+  return {
+    separator,
+    x: handle.x + handle.width / 2,
+    y: handle.y + handle.height / 2,
+    horizontalMotion:
+      (await separator.getAttribute("aria-orientation")) === "vertical",
+  };
+}
 
 /** One frame in the page, so what was just done has been drawn. */
 const nextFrame = (page) =>
   page.evaluate(() => new Promise((done) => requestAnimationFrame(done)));
 
 try {
-  // Start-up: a fresh context each run, so nothing is cached.
+  // The scenario preview owns the documentation fixture and injects its port.
+  // A plain static server would measure a failed Docs pane instead.
+  server = await preview({
+    root: frontend,
+    configLoader: "runner",
+    mode: "scenarios",
+  });
+  const address = server.httpServer.address();
+  if (!address || typeof address === "string")
+    throw new Error("The benchmark preview has no TCP address.");
+  const origin = `http://127.0.0.1:${address.port}`;
+  browser = await chromium.launch();
+  stage("startup");
+  // Start-up of the explicitly opened shell surfaces, with a fresh context.
   const start = [];
   for (let run = 0; run < RUNS; run++) {
-    const context = await browser.newContext({
-      viewport: { width: 1440, height: 900 },
-    });
+    const context = await measuredShellContext();
     const page = await context.newPage();
     // The page notes for itself when its terminals have drawn, so the time
     // carries none of this script's own polling.
     await page.addInitScript(() => {
       const seen = new MutationObserver(() => {
-        if (!document.querySelector('[data-terminal="console"] .xterm-rows'))
+        if (!document.querySelector('[data-terminal="console"] .xterm-screen'))
           return;
         seen.disconnect();
-        window.__terminalsReady = performance.now();
+        requestAnimationFrame(() => {
+          window.__terminalsReady = performance.now();
+        });
       });
       seen.observe(document, { childList: true, subtree: true });
     });
@@ -204,20 +239,20 @@ try {
     terminalsReady: round(median(start.map((s) => s.terminalsReady))),
   };
 
-  const context = await browser.newContext({
-    viewport: { width: 1440, height: 900 },
-  });
+  const context = await measuredShellContext();
   const page = await context.newPage();
   const client = await context.newCDPSession(page);
   await client.send("Performance.enable");
 
-  // Idle shell: three terminals, the fixture log, nothing open.
+  // Idle shell with Docs, TUI and the console explicitly open.
   await page.goto(`${origin}/scenarios.html?scenario=signed-in&bar=off`);
-  await page.waitForSelector('[data-terminal="console"] .xterm-rows');
+  await page.waitForSelector('[data-terminal="console"] .xterm-screen');
+  await page.frameLocator(".docs-frame").locator("body").waitFor();
   await page.waitForTimeout(500);
   report.idle = await metrics(client);
 
   // The palette: from the chord to the dialog being on screen.
+  stage("palette");
   const palette = [];
   for (let run = 0; run < RUNS * 2; run++) {
     const opened = await page.evaluate(
@@ -253,6 +288,7 @@ try {
   // Overlays opened and closed many times: what is left behind after the
   // first rounds must not keep growing. Locators, not element handles, so
   // this script holds on to nothing in the page.
+  stage("overlay retention");
   const churn = async (count) => {
     for (let run = 0; run < count; run++) {
       await page.keyboard.press("Control+Shift+KeyK");
@@ -284,14 +320,18 @@ try {
 
   // A splitter drag across the main area, one pointer move to a frame, as a
   // hand moves it.
-  const separator = page.locator(".split-separator");
-  const handle = await separator.boundingBox();
+  stage("dock resizing");
+  const { separator, x, y, horizontalMotion } = await dockDivider(page);
   const before = await separator.getAttribute("aria-valuenow");
   const drag = await frames(page, async () => {
-    await page.mouse.move(handle.x, handle.y + 200);
+    await page.mouse.move(x, y);
     await page.mouse.down();
     for (let step = 0; step <= 60; step++) {
-      await page.mouse.move(handle.x - 300 + step * 10, handle.y + 200);
+      const offset = -300 + step * 10;
+      await page.mouse.move(
+        x + (horizontalMotion ? offset : 0),
+        y + (horizontalMotion ? 0 : offset),
+      );
       await nextFrame(page);
     }
     await page.mouse.up();
@@ -305,10 +345,11 @@ try {
   };
 
   // The log view under the largest log the host keeps.
+  stage("logs");
   await page.goto(
     `${origin}/scenarios.html?scenario=signed-in&bar=off&records=${RECORDS}`,
   );
-  await page.waitForSelector('[data-terminal="console"] .xterm-rows');
+  await page.waitForSelector('[data-terminal="console"] .xterm-screen');
   const shown = await page.evaluate(
     () =>
       new Promise((done) => {
@@ -321,7 +362,13 @@ try {
         wait();
       }),
   );
-  await page.selectOption(".logview select", "0");
+  await page
+    .getByRole("button", { name: label("desktop.logs.filters"), exact: true })
+    .click();
+  await page
+    .getByLabel(label("desktop.logs.minimum_level"), { exact: true })
+    .selectOption("0");
+  await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
   const drawn = await page.locator(".logview-list .record").count();
   // The filter is timed from the newest span, before any scrolling has
@@ -378,10 +425,8 @@ try {
   await page.goto(
     `${origin}/scenarios.html?scenario=signed-in&bar=off&records=${RECORDS}&feed=100`,
   );
-  // The log's tab is still the open one, so the console is not on screen.
-  await page.waitForSelector('[data-terminal="console"] .xterm-rows', {
-    state: "attached",
-  });
+  // The log is restored as the active tab. A fresh page has never activated
+  // its console, so no terminal renderer needs to exist for this measurement.
   await page.locator("#tab-logs").click();
   await page.locator(".logview-list .record").first().waitFor();
   const reading = await page.locator(".logview-list").boundingBox();
@@ -407,8 +452,23 @@ try {
   // leave behind when gone over many times, and what a drag of the split
   // costs while its months are laid out anew at every step.
   {
-    const context = await browser.newContext({
-      viewport: { width: 1440, height: 900 },
+    stage("calendar");
+    const context = await measuredShellContext();
+    // Observe the shortcut before the shell can synchronously draw its page.
+    await context.addInitScript(() => {
+      window.addEventListener(
+        "keydown",
+        (event) => {
+          if (
+            event.code === "KeyD" &&
+            event.ctrlKey &&
+            event.shiftKey &&
+            window.__calendarTiming
+          )
+            window.__calendarTiming.from = performance.now();
+        },
+        true,
+      );
     });
     const page = await context.newPage();
     const client = await context.newCDPSession(page);
@@ -416,32 +476,54 @@ try {
     await page.goto(
       `${origin}/scenarios.html?scenario=signed-in&bar=off&latency=0&calendar=busy`,
     );
-    await page.locator('[data-terminal="console"] .xterm-rows').waitFor();
+    await page.locator('[data-terminal="console"] .xterm-screen').waitFor();
     const months = page.locator(".calendar-months");
     const show = () => page.keyboard.press("Control+Shift+KeyD");
     const shown = [];
     for (let run = 0; run < RUNS; run++) {
+      // Closing the calendar can restore focus inside Docs. A key relayed
+      // from that iframe never reaches this window's timing listener.
+      await page.locator(".rail button").first().focus();
       // Timed in the page, from the key to the frame after the months are
       // in the document.
-      const drawn = page.evaluate(
-        () =>
-          new Promise((done) => {
-            let from = 0;
-            window.addEventListener(
-              "keydown",
-              () => (from = performance.now()),
-              { once: true, capture: true },
-            );
-            const seen = new MutationObserver(() => {
-              if (!document.querySelector(".calendar-month")) return;
-              seen.disconnect();
-              requestAnimationFrame(() => done(performance.now() - from));
-            });
-            seen.observe(document.body, { childList: true, subtree: true });
-          }),
-      );
-      await show();
-      shown.push(await drawn);
+      await page.evaluate(() => {
+        if (document.activeElement !== document.querySelector(".rail button"))
+          throw new Error(
+            "Calendar timing requires focus in the parent window",
+          );
+        if (document.querySelector(".calendar-months"))
+          throw new Error(
+            "Calendar timing requires the calendar to start closed",
+          );
+        const timing = (window.__calendarTiming = { from: null });
+        window.__calendarDraw = new Promise((done, reject) => {
+          const stop = () => {
+            delete window.__calendarTiming;
+            seen.disconnect();
+            clearTimeout(timeout);
+          };
+          const seen = new MutationObserver(() => {
+            if (!document.querySelector(".calendar-month")) return;
+            stop();
+            if (timing.from === null) {
+              reject(
+                new Error("Calendar appeared without the measured key event"),
+              );
+              return;
+            }
+            requestAnimationFrame(() => done(performance.now() - timing.from));
+          });
+          const timeout = setTimeout(() => {
+            stop();
+            reject(new Error("Calendar did not appear after the measured key"));
+          }, 10000);
+          seen.observe(document.body, { childList: true, subtree: true });
+        });
+      });
+      const drawn = page.evaluate(() => window.__calendarDraw);
+      const [elapsed] = await Promise.all([drawn, show()]);
+      shown.push(elapsed);
+      await page.evaluate(() => delete window.__calendarDraw);
       await show();
       await months.waitFor({ state: "detached" });
     }
@@ -470,18 +552,16 @@ try {
     await show();
     await months.waitFor();
     const held = await metrics(client);
-    const separator = page.locator(".split-separator").first();
-    const handle = await separator.boundingBox();
+    const { x, y, horizontalMotion } = await dockDivider(page);
+    if (!horizontalMotion)
+      throw new Error("The calendar measurement requires side-by-side panes.");
     const drag = await frames(page, async () => {
-      await page.mouse.move(handle.x, handle.y + 200);
+      await page.mouse.move(x, y);
       await page.mouse.down();
       // Out to where both faces fit and back: every step lays the months
       // out anew, and two of them change the face.
       for (let step = 0; step <= 60; step++) {
-        await page.mouse.move(
-          handle.x + (step <= 30 ? step : 60 - step) * 12,
-          handle.y + 200,
-        );
+        await page.mouse.move(x + (step <= 30 ? step : 60 - step) * 12, y);
         await nextFrame(page);
         // At its widest the page has both faces: a drag that never got
         // there measured nothing that was asked.
@@ -520,9 +600,8 @@ try {
   // opened again, turned into the form that creates a profile and back,
   // and another profile chosen. What it leaves behind must not keep growing.
   {
-    const context = await browser.newContext({
-      viewport: { width: 1440, height: 900 },
-    });
+    stage("sign-in retention");
+    const context = await measuredShellContext();
     const page = await context.newPage();
     const client = await context.newCDPSession(page);
     await client.send("Performance.enable");
@@ -567,6 +646,7 @@ try {
   // period takes to be read in pages and drawn, a scroll through it, every
   // shown movement selected, and a sort of the whole window.
   {
+    stage("ledger");
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
     });
@@ -702,9 +782,46 @@ try {
     };
     await context.close();
   }
+} catch (error) {
+  const pages = [];
+  for (const context of browser?.contexts() ?? []) {
+    for (const page of context.pages()) {
+      pages.push({
+        url: page.url(),
+        state: await page
+          .evaluate(() => ({
+            layout: localStorage.getItem("cadrumo-shell-layout"),
+            text: document.body.innerText.slice(0, 4000),
+            panes: Array.from(
+              document.querySelectorAll("[data-dock-pane]"),
+            ).map((pane) => pane.getAttribute("data-dock-pane")),
+            terminals: Array.from(
+              document.querySelectorAll("[data-terminal]"),
+            ).map((terminal) => ({
+              name: terminal.getAttribute("data-terminal"),
+              text: terminal.textContent,
+              rows: terminal.querySelectorAll(".xterm-rows").length,
+            })),
+          }))
+          .catch((captureError) => ({ captureError: String(captureError) })),
+      });
+    }
+  }
+  const out = resolve(buildPath("desktop_results"), "benchmark");
+  mkdirSync(out, { recursive: true });
+  const file = resolve(out, "benchmark-failure.json");
+  writeFileSync(
+    file,
+    `${JSON.stringify({ error: String(error), report, pages }, null, 2)}\n`,
+  );
+  console.error(`Benchmark failure state written to ${file}`);
+  throw error;
 } finally {
-  await browser.close();
-  server.close();
+  try {
+    await browser?.close();
+  } finally {
+    await server?.close();
+  }
 }
 
 // What each number may be at most. Sizes are of the product build; a frame

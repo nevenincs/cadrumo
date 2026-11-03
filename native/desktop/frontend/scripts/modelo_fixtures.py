@@ -44,6 +44,7 @@ from pydantic.json_schema import models_json_schema
 
 from cadrumo.application.modelo.amendment_context_operation import ModeloWorkAmendmentContextProjection
 from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.core.operations import OperationEffect
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
 FRONTEND = Path(__file__).resolve().parents[1]
@@ -1456,7 +1457,9 @@ def _borrador_comparison(work: Any, language: str) -> BaseModel:
     request = Borrador100CompareRequest(
         profile_id=UUID(work.work_unit.bucket_id), filing_year=RENTA_YEAR, output_language=OutputLanguage(language)
     )
-    return _operate(work, "live.borrador.100.compare", request, subject_ref=_profile_subject(work), no_effect=True)
+    return _operate(
+        work, "live.borrador.100.compare", request, subject_ref=_profile_subject(work), effect=OperationEffect.NONE
+    )
 
 
 def _write_borrador_comparison(directory: Path | None, work: Any, state: str) -> None:
@@ -1675,13 +1678,12 @@ def _registry() -> OperationRegistry:
     return build_production_operation_registry()
 
 
-def _published(definition_id: str, result: BaseModel, subject_ref: str, *, no_effect: bool = False) -> BaseModel:
-    """A settled result as the runtime publishes it: through its registered projector, where it has one.
-
-    A read that changed nothing settles with no effect, which its projector checks.
-    """
+def _published(
+    definition_id: str, result: BaseModel, subject_ref: str, *, effect: OperationEffect = OperationEffect.UPDATED
+) -> BaseModel:
+    """A settled result as the runtime publishes it: through its registered projector, where it has one."""
     from cadrumo.application.operations.models import OperationIdentity, OperationTerminalReceipt
-    from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+    from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.core.time.clock import now
 
     projector = _registry().lookup_public_registration(definition_id).result_projector
@@ -1691,7 +1693,7 @@ def _published(definition_id: str, result: BaseModel, subject_ref: str, *, no_ef
         identity=OperationIdentity(operation_id="e" * 64, definition_id=definition_id, subject_ref=subject_ref),
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE if no_effect else OperationEffect.UPDATED,
+        effect=effect,
         settled_at=now(),
         result_ref="f" * 64,
     )
@@ -1699,7 +1701,12 @@ def _published(definition_id: str, result: BaseModel, subject_ref: str, *, no_ef
 
 
 def _operate(
-    work: Any, definition_id: str, payload: BaseModel, *, subject_ref: str | None = None, no_effect: bool = False
+    work: Any,
+    definition_id: str,
+    payload: BaseModel,
+    *,
+    subject_ref: str | None = None,
+    effect: OperationEffect = OperationEffect.UPDATED,
 ) -> BaseModel:
     """Run one registered operation through its production executor, as the supervisor would; its public result."""
     subject = work.work_unit_id if subject_ref is None else subject_ref
@@ -1708,7 +1715,7 @@ def _operate(
         definition_id,
         _run_executor(work, definition_id, executor, payload, subject_ref=subject),
         subject,
-        no_effect=no_effect,
+        effect=effect,
     )
 
 
@@ -2376,6 +2383,81 @@ def write_refusals(directory: Path) -> None:
                 _write(directory, f"refusal-{name}-{language}.json", detail)
 
 
+def _write_iva_wallet(directory: Path) -> None:
+    """Real local balance operations in an isolated profile, without a sealed 303."""
+    from cadrumo.application.modelo.iva_wallet_balance_operation import (
+        MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
+        ModeloIvaWalletBalanceRequest,
+    )
+    from cadrumo.application.modelo.iva_wallet_correction_operation import (
+        MODELO_IVA_WALLET_CORRECTION_OPERATION_DEFINITION_ID,
+        ModeloIvaWalletCorrectionRequest,
+    )
+    from cadrumo.application.modelo.iva_wallet_override_operation import (
+        MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
+        ModeloIvaWalletOverrideRequest,
+    )
+    from cadrumo.application.modelo.iva_wallet_seed_operation import (
+        MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
+        ModeloIvaWalletSeedRequest,
+    )
+    from cadrumo.application.operations.public_period import PublicPeriod
+
+    with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp, _seeded(Path(tmp)) as work:
+        iva = _other_declaration(work, "303", "1T")
+        _write_list(directory, work, "declarations-wallet")
+        profile_id = UUID(work.work_unit.bucket_id)
+        source = PublicPeriod(filing_year=2024, code="4T")
+        subject = _profile_subject(work)
+
+        def balance(stage: str) -> None:
+            # Read the same declaration after each register write; never recalculate it.
+            _write_form(directory, iva, f"modelo-303-1T-wallet-{stage}")
+            _write(
+                directory,
+                f"iva-wallet-balance-{stage}.json",
+                _operate(
+                    work,
+                    MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
+                    ModeloIvaWalletBalanceRequest(profile_id=profile_id, as_of_year=2026),
+                    subject_ref=subject,
+                    effect=OperationEffect.NONE,
+                ),
+            )
+
+        balance("empty")
+        for name, definition, request in (
+            (
+                "seed",
+                MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
+                ModeloIvaWalletSeedRequest(profile_id=profile_id, period=source, amount="1200.50"),
+            ),
+            (
+                "correct",
+                MODELO_IVA_WALLET_CORRECTION_OPERATION_DEFINITION_ID,
+                ModeloIvaWalletCorrectionRequest(
+                    profile_id=profile_id,
+                    period=source,
+                    amount="900.25",
+                    reason="Correct the recorded opening balance.",
+                ),
+            ),
+            (
+                "override",
+                MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
+                ModeloIvaWalletOverrideRequest(
+                    profile_id=profile_id,
+                    period=PublicPeriod(filing_year=2026, code="1T"),
+                    amount="850.00",
+                    reason="Use the taxpayer's reviewed carry balance.",
+                    evidence_locator="fixture:reviewed-iva-balance-2026-1T",
+                ),
+            ),
+        ):
+            _write(directory, f"iva-wallet-{name}.json", _operate(work, definition, request, subject_ref=subject))
+            balance(name)
+
+
 def write_envelopes(directory: Path) -> None:
     """Read every envelope the scenario host answers through the application's read path."""
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
@@ -2384,6 +2466,7 @@ def write_envelopes(directory: Path) -> None:
 
     directory.mkdir(parents=True, exist_ok=True)
     write_refusals(directory)
+    _write_iva_wallet(directory)
     income = (_income_categories_fact(),)
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
@@ -2438,7 +2521,7 @@ def write_envelopes(directory: Path) -> None:
     ):
         renewing.recalculate()
         _write_renewal_flow(directory, renewing, started)
-    # Its own profile: the file for the AEAT is written, then the declaration changes and is checked again.
+    # Its own profile: the file is written, then a conflicting edit makes it stale and blocks verification.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _seeded(Path(tmp), facts=facts) as stale,
@@ -2582,10 +2665,14 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
     ]
 
 
-#: The write envelopes by file pattern, with the definition whose public result each one is.
+#: Operation envelopes by file pattern, with the definition whose public result each one is.
 _WRITE_ENVELOPES: tuple[tuple[str, str], ...] = (
     ("create-[0-9]*.json", "modelo.work.create"),
     ("calculate-[0-9]*.json", "modelo.work.calculate"),
+    ("iva-wallet-balance-*.json", "modelo.iva-wallet.balance"),
+    ("iva-wallet-seed.json", "modelo.iva-wallet.seed"),
+    ("iva-wallet-correct.json", "modelo.iva-wallet.correct"),
+    ("iva-wallet-override.json", "modelo.iva-wallet.override"),
     ("apply-[0-9]*.json", "modelo.edit.apply"),
     ("apply-prerequisite-*.json", "modelo.edit.apply_prerequisite"),
     ("export-*.json", "modelo.export"),

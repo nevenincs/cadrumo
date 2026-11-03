@@ -6,6 +6,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
 import { calm, Label } from "./FieldRow";
+import { BoxNumber } from "./BoxNumber";
 
 /** How many of a record's columns the table shows; the rest are counted. */
 const SHOWN_COLUMNS = 5;
@@ -103,8 +104,11 @@ export function ContextSummary({
         const text = item.value_text;
         return (
           <div key={item.id} className="contents">
-            <dt className="truncate text-muted-foreground">
-              {calm(item.label.text)}
+            <dt className="flex min-w-0 items-start gap-2 text-muted-foreground">
+              <BoxNumber box={item.box_number} size="sm" />
+              <span className="min-w-0 wrap-anywhere">
+                <Label text={item.label} />
+              </span>
             </dt>
             <dd className={text ? "text-foreground" : "text-faint"}>
               {text ?? t("workspace.modelo.value.not_known_yet")}

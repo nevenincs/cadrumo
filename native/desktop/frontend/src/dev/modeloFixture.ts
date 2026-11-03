@@ -120,6 +120,7 @@ import { hex64 } from "./fixtures/ledger";
  * application refused it. The first filer's is refused for want of the family
  * situation. */
 export const MODELO_SHAPES = [
+  "wallet",
   "fixture",
   "checked",
   "filed",
@@ -457,6 +458,7 @@ export function modeloFixture(options: Options): ModeloPort {
   // How far the first quarter's Modelo 130 has come for a filer whose
   // estimate is refused: not created, created, or calculated.
   let quarter: "none" | "drafted" | "calculated" = "none";
+  let walletStage: "empty" | "seed" | "correct" | "override" = "empty";
   // How many renewals were answered, granted or refused: after each the
   // window reads the declaration again.
   let renewals = 0;
@@ -513,11 +515,13 @@ export function modeloFixture(options: Options): ModeloPort {
     spoken = language;
     const name = await formName(workUnitId);
     const read =
-      name === LATER_STATES
-        ? laterState()
-        : name === RENTA
-          ? rentaForm(shape)
-          : name;
+      shape === "wallet" && name === "303-1T"
+        ? `303-1T-wallet-${walletStage}`
+        : name === LATER_STATES
+          ? laterState()
+          : name === RENTA
+            ? rentaForm(shape)
+            : name;
     const form =
       read &&
       (await envelope<ModeloWorkbenchFormProjectionV1>(
@@ -682,16 +686,18 @@ export function modeloFixture(options: Options): ModeloPort {
 
   const port: ModeloPort = {
     async declarations(language) {
-      window.__fixtureModelo = port;
+      if (typeof window !== "undefined") window.__fixtureModelo = port;
       say(`modelo declarations ${language}`);
       await answer();
       const list = await envelope<ModeloDeclarationsListProjectionV1>(
         `declarations${
-          shape === "incomplete"
-            ? "-incomplete"
-            : shape.startsWith("renta")
-              ? "-renta"
-              : ""
+          shape === "wallet"
+            ? "-wallet"
+            : shape === "incomplete"
+              ? "-incomplete"
+              : shape.startsWith("renta")
+                ? "-renta"
+                : ""
         }-${language}`,
       );
       if (!list) return reject("unavailable");
@@ -754,6 +760,47 @@ export function modeloFixture(options: Options): ModeloPort {
             return shape.startsWith("renta")
               ? written(`compare-${rentaForm(shape)}-${spoken}`)
               : unserved();
+          case "modelo.iva-wallet.balance":
+            return shape === "wallet" && request.as_of_year === 2026
+              ? written(`iva-wallet-balance-${walletStage}`)
+              : unserved();
+          case "modelo.iva-wallet.seed":
+          case "modelo.iva-wallet.correct":
+          case "modelo.iva-wallet.override": {
+            if (shape !== "wallet") return unserved();
+            const period = request.period as
+              { filing_year?: unknown; code?: unknown } | undefined;
+            const mode = definition.slice("modelo.iva-wallet.".length);
+            const matches =
+              mode === "seed"
+                ? walletStage === "empty" &&
+                  period?.filing_year === 2024 &&
+                  period.code === "4T" &&
+                  request.amount === "1200.50"
+                : mode === "correct"
+                  ? walletStage === "seed" &&
+                    period?.filing_year === 2024 &&
+                    period.code === "4T" &&
+                    request.amount === "900.25" &&
+                    request.reason === "Correct the recorded opening balance."
+                  : walletStage === "correct" &&
+                    period?.filing_year === 2026 &&
+                    period.code === "1T" &&
+                    request.amount === "850.00" &&
+                    request.reason ===
+                      "Use the taxpayer's reviewed carry balance." &&
+                    request.evidence_locator ===
+                      "fixture:reviewed-iva-balance-2026-1T";
+            if (!matches) return unserved();
+            const result = await written(`iva-wallet-${mode}`);
+            walletStage =
+              mode === "seed"
+                ? "seed"
+                : mode === "correct"
+                  ? "correct"
+                  : "override";
+            return result;
+          }
           case "modelo.project":
             return written(`project-${rentaForm(shape)}-${spoken}`);
           case "modelo.declarations.list":
@@ -803,7 +850,9 @@ export function modeloFixture(options: Options): ModeloPort {
           }
           case "modelo.reconcile.import":
             issued(request.source_path, true);
-            return shape === "filed" ? written("reconcile-130") : unserved();
+            return shape === "filed" && request.source_kind === "justificante"
+              ? written("reconcile-130")
+              : unserved();
           case "modelo.work.create": {
             // The first quarter, which a refused estimate asks to create.
             if (quarter !== "none" || !shape.startsWith("renta"))

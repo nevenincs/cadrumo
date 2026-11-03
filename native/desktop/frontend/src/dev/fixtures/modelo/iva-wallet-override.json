@@ -1,0 +1,1 @@
+{"result_version":1,"profile_id":"13000000-0000-4000-8000-000000000730","period":{"filing_year":2026,"code":"1T"},"taxpayer_nif":"12345678Z","amount":"850.00","reason":"Use the taxpayer's reviewed carry balance.","evidence_locator":"fixture:reviewed-iva-balance-2026-1T","selected_authority":"taxpayer_override","divergence":"override"}

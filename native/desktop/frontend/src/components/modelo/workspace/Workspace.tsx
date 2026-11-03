@@ -42,12 +42,12 @@ export type WorkspaceSlots = {
   filing: ReactNode;
   /** The Check, Sources and History views. */
   check: ReactNode;
-  /** The credits a register supplies and the estimate; the view is offered
-   * only where the form has credits to show. */
+  /** Credits, estimates, and the IVA wallet entry where the declaration uses it. */
   credits?: ReactNode;
   /** The comparisons the declaration asks for; the view is offered only
    * where it has one. */
   compare?: ReactNode;
+  creditsLabel?: string;
   sources: ReactNode;
   history: ReactNode;
   /** Dialogs drawn at the workspace's root. */
@@ -423,7 +423,10 @@ export function ModeloWorkspace({
             ),
           )}
           {slots.credits !== undefined &&
-            tab("credits", t("desktop.modelo.view.credits"))}
+            tab(
+              "credits",
+              slots.creditsLabel ?? t("desktop.modelo.view.credits"),
+            )}
           {slots.compare !== undefined &&
             tab("compare", t("desktop.modelo.view.compare"))}
           {tab("sources", t("workspace.modelo.key.sources"))}
@@ -444,21 +447,23 @@ export function ModeloWorkspace({
         <div
           id={panel}
           role="tabpanel"
-          className="relative grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] @4xl:grid-cols-[--spacing(60)_minmax(0,1fr)] @6xl:data-[details=true]:grid-cols-[--spacing(64)_minmax(0,1fr)_--spacing(88)]"
+          className="relative grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] @4xl:grid-cols-[--spacing(60)_minmax(0,1fr)] @6xl:grid-rows-[minmax(0,1fr)_auto] @6xl:data-[details=true]:grid-cols-[--spacing(64)_minmax(0,1fr)_--spacing(88)]"
           data-details={detailsOpen && slots.details !== undefined}
         >
-          <aside className="hidden min-h-0 flex-col border-r border-border bg-chrome @4xl:flex">
+          <aside className="hidden min-h-0 flex-col border-r border-border bg-chrome @4xl:flex @6xl:col-start-1 @6xl:row-span-2 @6xl:row-start-1">
             {slots.rail}
           </aside>
-          <div className="flex min-h-0 flex-col">
-            {slots.form}
+          <div className="flex min-h-0 min-w-0 flex-col @6xl:contents">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col @6xl:col-start-2 @6xl:row-start-1">
+              {slots.form}
+            </div>
             {detailsOpen && slots.details && (
-              <div className="h-2/5 flex-none overflow-y-auto border-t border-border bg-card @6xl:hidden">
+              <aside className="h-2/5 min-h-0 min-w-0 flex-none overflow-y-auto border-t border-border bg-card @6xl:col-start-3 @6xl:row-span-2 @6xl:row-start-1 @6xl:h-auto @6xl:border-t-0 @6xl:border-l">
                 {slots.details}
-              </div>
+              </aside>
             )}
             {stagedCount > 0 && (
-              <div className="flex items-center gap-3 border-t border-border bg-card px-6 py-3 shadow-raised">
+              <div className="flex shrink-0 items-center gap-3 border-t border-border bg-card px-6 py-3 shadow-raised @6xl:col-start-2 @6xl:row-start-2">
                 <Icon name="edit" size="sm" />
                 <span className="text-base font-medium">
                   {t("workspace.modelo.next.apply", { count: stagedCount })}
@@ -474,11 +479,6 @@ export function ModeloWorkspace({
               </div>
             )}
           </div>
-          {detailsOpen && slots.details && (
-            <aside className="hidden min-h-0 overflow-y-auto border-l border-border bg-card @6xl:block">
-              {slots.details}
-            </aside>
-          )}
         </div>
       ) : (
         <div

@@ -10,6 +10,7 @@ const open = (page: Page, logLevel: LogLevel = "INFO") =>
   );
 const rail = (page: Page, key: string) =>
   page.locator(".rail").getByRole("button", { name: label(key), exact: true });
+const profileHeader = (page: Page) => page.locator('[data-dock-header="docs"]');
 const saved = (page: Page) =>
   page.evaluate(
     () =>
@@ -23,14 +24,15 @@ test("fresh windows show one profile title and no workspace terminal", async ({
   await expect(page.locator(".user-profile-page")).toBeVisible();
   await expect(page.locator(".pane-tui")).toBeHidden();
   await expect(
-    page.getByRole("heading", {
+    profileHeader(page).getByRole("tab", {
       name: label("desktop.profile.title"),
       exact: true,
+      selected: true,
     }),
   ).toHaveCount(1);
   await expect(
-    page.getByRole("button", {
-      name: label("desktop.profile.maximize"),
+    profileHeader(page).getByRole("button", {
+      name: label("desktop.dock.expand"),
       exact: true,
     }),
   ).toHaveCount(1);
@@ -56,9 +58,9 @@ test("profile view choices and maximization survive reload without saving search
       .getByRole("menuitemradio", { name: label(key), exact: true })
       .click();
   await page.keyboard.press("Escape");
-  await page
+  await profileHeader(page)
     .getByRole("button", {
-      name: label("desktop.profile.maximize"),
+      name: label("desktop.dock.expand"),
       exact: true,
     })
     .click();

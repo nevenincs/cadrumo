@@ -1,5 +1,6 @@
 import {
   Fragment,
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -588,6 +589,11 @@ export function DraftReview({
   const countries = useFieldSuggestions("country");
   const currencies = useFieldSuggestions("currency");
   const root = useRef<HTMLDivElement>(null);
+  const confirmedLink = useCallback((button: HTMLButtonElement | null) => {
+    // A match may arrive after confirmation. Follow it only while the
+    // person remains at this result; a late read must not take focus back.
+    if (button && document.activeElement === root.current) button.focus();
+  }, []);
   // After a confirmation the next step is its link, when one is offered;
   // otherwise the confirmation itself, so the focus is never left behind
   // on the button that went away.
@@ -988,6 +994,7 @@ export function DraftReview({
                     size="xs"
                     variant="outline"
                     className="ledger-match-link"
+                    ref={confirmedLink}
                     onClick={() => {
                       onStage(
                         stageLink(

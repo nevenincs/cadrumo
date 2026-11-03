@@ -8,9 +8,12 @@ import {
   initialDockLayout,
   moveDockPane,
   readDockLayout,
+  resizeDockSplit,
   returnDockPane,
   swapDockPane,
   type DockLayout,
+  type DockNode,
+  type DockPane,
 } from "../../src/shell/docking.ts";
 
 const initial = () =>
@@ -94,4 +97,133 @@ test("invalid and self drops leave the layout unchanged", () => {
   const layout = floatDockPane(initial(), "docs");
   assert.equal(moveDockPane(layout, "tui", "docs", "tab"), layout);
   assert.equal(moveDockPane(layout, "tui", "tui", "left"), layout);
+});
+
+const tab = (pane: DockPane): DockNode => ({
+  kind: "tabs",
+  tabs: [pane],
+  active: pane,
+});
+const pair = (
+  first: DockNode,
+  second: DockNode,
+  axis: "row" | "column" = "row",
+  ratio = 0.7,
+): DockNode => ({ kind: "split", axis, ratio, first, second });
+const tree = (root: DockNode): DockLayout => ({
+  version: 1,
+  root,
+  floating: [],
+  closed: [],
+});
+const fit = { width: 1200, minimumWidths: { agent: 240, docs: 900 } };
+
+test("temporary width fitting restores the preference and respects later explicit resizing", () => {
+  const layout = tree(pair(tab("agent"), tab("docs")));
+  const before = structuredClone(layout);
+  assert.equal(
+    dockGeometry(layout, ["agent", "docs"], fit).dividers[0]?.ratio,
+    0.25,
+  );
+  assert.deepEqual(layout, before);
+  assert.equal(dockGeometry(layout, ["agent", "docs"]).dividers[0]?.ratio, 0.7);
+  const resized = resizeDockSplit(layout, "", 0.22);
+  assert.equal(
+    dockGeometry(resized, ["agent", "docs"], fit).dividers[0]?.ratio,
+    0.22,
+  );
+  assert.equal(
+    dockGeometry(resized, ["agent", "docs"]).dividers[0]?.ratio,
+    0.22,
+  );
+});
+
+test("fitting follows swapped and stacked groups", () => {
+  const swapped = dockGeometry(
+    tree(pair(tab("docs"), tab("agent"), "row", 0.3)),
+    ["agent", "docs"],
+    fit,
+  );
+  assert.equal(swapped.dividers[0]?.ratio, 0.75);
+  const stacked = dockGeometry(
+    tree(pair(tab("docs"), tab("agent"), "column")),
+    ["agent", "docs"],
+    fit,
+  );
+  assert.equal(stacked.dividers[0]?.ratio, 0.7);
+  assert.ok(stacked.groups.every((group) => group.rect.width === 1));
+});
+
+test("nested row minima reserve room through ancestors while column minima share width", () => {
+  const layout = tree(
+    pair(
+      tab("agent"),
+      pair(tab("docs"), pair(tab("tui"), tab("logs"), "column"), "row", 0.8),
+      "row",
+      0.5,
+    ),
+  );
+  const fitted = dockGeometry(layout, ["agent", "docs", "tui", "logs"], {
+    width: 1500,
+    minimumWidths: { agent: 240, docs: 700, tui: 250, logs: 300 },
+  });
+  for (const [pane, required] of [
+    ["agent", 240],
+    ["docs", 700],
+    ["tui", 250],
+    ["logs", 300],
+  ] as const) {
+    const group = fitted.groups.find((item) => item.group.active === pane)!;
+    assert.ok(group.rect.width * 1500 >= required - 1e-9, pane);
+  }
+  for (const divider of fitted.dividers) {
+    assert.ok(
+      divider.minRatio <= divider.ratio && divider.ratio <= divider.maxRatio,
+    );
+  }
+});
+
+test("inactive tabs, hidden branches and floating panes impose no width requirement", () => {
+  const layout = tree(
+    pair(tab("agent"), { kind: "tabs", tabs: ["docs", "tui"], active: "tui" }),
+  );
+  assert.equal(
+    dockGeometry(layout, ["agent", "docs", "tui"], fit).dividers[0]?.ratio,
+    0.7,
+  );
+  const active = activateDockPane(layout, "docs");
+  assert.equal(
+    dockGeometry(active, ["agent", "docs", "tui"], fit).dividers[0]?.ratio,
+    0.25,
+  );
+  assert.equal(
+    dockGeometry(active, ["agent", "tui"], fit).dividers[0]?.ratio,
+    0.7,
+  );
+  const floating = floatDockPane(active, "docs");
+  assert.equal(
+    dockGeometry(floating, ["agent", "docs", "tui"], fit).dividers[0]?.ratio,
+    0.7,
+  );
+  assert.deepEqual(
+    dockGeometry(floating, ["agent", "docs", "tui"], fit).groups.find(
+      (item) => item.group.active === "docs",
+    )?.rect,
+    undefined,
+  );
+});
+
+test("infeasible widths retain the arrangement and exact fits keep valid divider bounds", () => {
+  const layout = tree(pair(tab("agent"), tab("docs")));
+  const narrow = dockGeometry(layout, ["agent", "docs"], {
+    ...fit,
+    width: 800,
+  });
+  assert.equal(narrow.dividers[0]?.ratio, 0.7);
+  const exact = dockGeometry(layout, ["agent", "docs"], {
+    width: 1000,
+    minimumWidths: { agent: 323, docs: 677 },
+  }).dividers[0]!;
+  assert.ok(exact.minRatio <= exact.ratio && exact.ratio <= exact.maxRatio);
+  assert.ok(Math.abs(exact.ratio - 0.323) < 1e-9);
 });

@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -47,6 +48,10 @@ import type { FormSession } from "../form/session";
 import { CalculationNotes } from "../workspace/CalculationNotes";
 import { Settlement } from "../workspace/Settlement";
 import { useModeloOperation } from "../WriteScope";
+import {
+  ReconciliationResult,
+  type ReconciliationReport,
+} from "./ReconciliationResult";
 
 // Export and record: the official file written to a place the filer picks,
 // the filing recorded here, the AEAT's receipt added, and the other copies.
@@ -60,6 +65,7 @@ type Write =
   | "export"
   | "record"
   | "receipt"
+  | "declaration"
   | Exclude<ModeloExportArtefact, "fichero_boe">
   | "package";
 
@@ -77,7 +83,7 @@ type Notice =
   | { kind: "recorded" }
   /** It committed, and what it answered could not be read. */
   | { kind: "done" }
-  | { kind: "receipt"; matches: boolean; narrative: string }
+  | { kind: "comparison"; report: ReconciliationReport }
   /** `words` is why, as the backend served it; null when it served none. */
   | { kind: "refused"; write: Write; words: string | null }
   | { kind: "not_sent"; write: Write };
@@ -118,6 +124,7 @@ const COPY_ICON: Record<Write, IconName> = {
   export: "page",
   record: "tick",
   receipt: "paste",
+  declaration: "page",
   calculation_report_pdf: "page",
   calculation_report_csv: "sheet",
   calculation_review_xlsx: "sheet",
@@ -128,16 +135,19 @@ function Card({
   icon,
   title,
   lead,
+  describedBy,
   children,
 }: {
   icon: IconName;
   title: string;
   lead: string;
+  describedBy?: string;
   children: ReactNode;
 }) {
   return (
     <section
       aria-label={title}
+      aria-describedby={describedBy}
       className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
     >
       <div className="flex items-start gap-3">
@@ -288,9 +298,15 @@ export function FilingView({
     picking.current = true;
     setPickerOpen(true);
     const mine = generation.current;
+    const version = holds.admissionVersion(target);
     try {
       const picks = await pick();
-      if (!alive.current || mine !== generation.current || holds.get(target)) {
+      if (
+        !alive.current ||
+        mine !== generation.current ||
+        holds.blocking(target) ||
+        holds.admissionVersion(target) !== version
+      ) {
         void port.forgetFiles(picks.files.map((file) => file.token));
         return null;
       }
@@ -411,26 +427,38 @@ export function FilingView({
     );
   };
 
-  const addReceipt = async () => {
+  const importEvidence = async (sourceKind: "justificante" | "declaration") => {
     if (quiet) return;
-    const picked = await choose("receipt", () =>
-      port.pickFile("evidence", t("workspace.modelo.filing.filter.receipt")),
+    const write = sourceKind === "justificante" ? "receipt" : "declaration";
+    const picked = await choose(write, () =>
+      port.pickFile(
+        "evidence",
+        t(
+          sourceKind === "justificante"
+            ? "workspace.modelo.filing.filter.receipt"
+            : "workspace.modelo.filing.filter.declaration",
+        ),
+      ),
     );
     if (!picked) return;
     await run(
-      "receipt",
+      write,
       () =>
         port.submit("modelo.reconcile.import", {
           work_unit_id: envelope.work_unit_id,
           calculation_revision_id: calculation,
-          source_kind: "justificante",
+          source_kind: sourceKind,
           source_path: picked.token,
           actor: MODELO_ACTOR,
         }),
       (result: ModeloResult<"modelo.reconcile.import">) => ({
-        kind: "receipt",
-        matches: result.verdict === "matches",
-        narrative: result.narrative,
+        kind: "comparison",
+        report: {
+          verdict: result.verdict,
+          diffs: result.diffs,
+          advisories: result.advisories,
+          narrative: result.narrative,
+        },
       }),
       [picked.token],
     );
@@ -465,6 +493,23 @@ export function FilingView({
   const mayExport = filing?.availability.available === true;
   const recordAvailability = offer?.record ?? null;
   const mayRecord = recordAvailability?.available === true;
+  const holdId = useId();
+  const sharedWords = !recorded ? (hold?.words ?? null) : null;
+  const sharesHold = (
+    availability:
+      { available: boolean; words: string | null } | null | undefined,
+  ) =>
+    sharedWords !== null &&
+    availability?.available === false &&
+    availability.words === sharedWords;
+  const fileSharesHold = sharesHold(filing?.availability);
+  const recordSharesHold = sharesHold(recordAvailability);
+  const copyOptions = [
+    ...copies,
+    ...(offer
+      ? [{ artefact: "package" as const, ...offer.review_package }]
+      : []),
+  ];
   const notYet = t("workspace.modelo.filing.not_yet");
   const stages: Stage[] = [
     {
@@ -546,9 +591,26 @@ export function FilingView({
       )}
       <CalculationNotes notes={notes} />
 
+      {sharedWords !== null && (
+        <Alert tone="warning" icon={<Icon name="alert" />}>
+          <span className="flex flex-col items-start gap-1">
+            <span id={holdId}>{sharedWords}</span>
+            <Button
+              size="xs"
+              variant="link"
+              className="p-0"
+              onClick={onOpenCheck}
+            >
+              {t("workspace.modelo.filing.open_check")}
+            </Button>
+          </span>
+        </Alert>
+      )}
+
       <Card
         icon="page"
         title={t("workspace.modelo.filing.file_title")}
+        describedBy={fileSharesHold ? holdId : undefined}
         lead={t("workspace.modelo.filing.file_format", {
           modelo: form.modelo,
         })}
@@ -558,22 +620,7 @@ export function FilingView({
             {offer.file_format_words}
           </p>
         )}
-        {hold && !recorded && (
-          <Alert tone="warning" icon={<Icon name="alert" />}>
-            <span className="flex flex-col items-start gap-1">
-              <span>{hold.words}</span>
-              <Button
-                size="xs"
-                variant="link"
-                className="p-0"
-                onClick={onOpenCheck}
-              >
-                {t("workspace.modelo.filing.open_check")}
-              </Button>
-            </span>
-          </Alert>
-        )}
-        {fileStale && !recorded && (
+        {fileStale && !recorded && file.words !== sharedWords && (
           <Alert tone="warning" icon={<Icon name="alert" />}>
             {file.words}
           </Alert>
@@ -596,6 +643,7 @@ export function FilingView({
           ) : (
             <Button
               disabled={!mayExport || quiet}
+              aria-describedby={fileSharesHold ? holdId : undefined}
               variant={file?.current ? "secondary" : "primary"}
               onClick={() => {
                 void exportFile("export");
@@ -612,11 +660,14 @@ export function FilingView({
             </Button>
           )}
           {reveal("export")}
-          {!recorded && !hold && !mayExport && filing?.availability.words && (
-            <span className="text-sm text-muted-foreground">
-              {filing.availability.words}
-            </span>
-          )}
+          {!recorded &&
+            !fileSharesHold &&
+            !mayExport &&
+            filing?.availability.words && (
+              <span className="text-sm text-muted-foreground">
+                {filing.availability.words}
+              </span>
+            )}
           <Button
             variant="link"
             className="ml-auto"
@@ -628,9 +679,36 @@ export function FilingView({
         </div>
       </Card>
 
+      <section
+        aria-label={t("workspace.modelo.filing.compare_declaration_title")}
+        className="flex flex-col gap-2"
+      >
+        <h3 className="text-md font-medium">
+          {t("workspace.modelo.filing.compare_declaration_title")}
+        </h3>
+        <p className="text-base text-muted-foreground">
+          {t("workspace.modelo.filing.compare_declaration_lead")}
+        </p>
+        <div>
+          <Button
+            variant="outline"
+            disabled={quiet}
+            onClick={() => void importEvidence("declaration")}
+          >
+            {busy && notice.write === "declaration" ? (
+              <Spinner />
+            ) : (
+              <Icon name="page" size="xs" />
+            )}
+            {t("workspace.modelo.filing.compare_declaration")}
+          </Button>
+        </div>
+      </section>
+
       <Card
         icon="tick"
         title={t("workspace.modelo.filing.after_filed_title")}
+        describedBy={recordSharesHold ? holdId : undefined}
         lead={t("workspace.modelo.filing.record_lead")}
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -638,6 +716,7 @@ export function FilingView({
             <Button
               variant="secondary"
               disabled={!mayRecord || quiet}
+              aria-describedby={recordSharesHold ? holdId : undefined}
               onClick={() => setConfirming(true)}
             >
               {busy && notice.write === "record" && <Spinner />}
@@ -648,7 +727,7 @@ export function FilingView({
             variant="outline"
             disabled={!recorded || verifiedReceipt || quiet}
             onClick={() => {
-              void addReceipt();
+              void importEvidence("justificante");
             }}
           >
             {busy && notice.write === "receipt" ? (
@@ -658,39 +737,45 @@ export function FilingView({
             )}
             {t("workspace.modelo.filing.add_receipt_pdf")}
           </Button>
-          <span className="text-sm text-muted-foreground">
-            {!recorded
-              ? mayRecord
-                ? t("workspace.modelo.filing.also_other_way")
-                : (recordAvailability?.words ??
-                  t("workspace.modelo.filing.check_first"))
-              : (receipt?.words ??
-                t("workspace.modelo.filing.receipt_missing"))}
-          </span>
+          {!recordSharesHold && (
+            <span className="text-sm text-muted-foreground">
+              {!recorded
+                ? mayRecord
+                  ? t("workspace.modelo.filing.also_other_way")
+                  : (recordAvailability?.words ??
+                    t("workspace.modelo.filing.check_first"))
+                : (receipt?.words ??
+                  t("workspace.modelo.filing.receipt_missing"))}
+            </span>
+          )}
         </div>
       </Card>
 
       <section
         aria-label={t("workspace.modelo.filing.other_copies")}
+        aria-describedby={
+          copyOptions.some((option) => sharesHold(option.availability))
+            ? holdId
+            : undefined
+        }
         className="flex flex-col gap-2"
       >
         <h3 className="text-sm font-medium text-muted-foreground">
           {t("workspace.modelo.filing.other_copies")}
         </h3>
         <ul className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
-          {[
-            ...copies,
-            ...(offer
-              ? [{ artefact: "package" as const, ...offer.review_package }]
-              : []),
-          ].map((option) => {
+          {copyOptions.map((option) => {
             const { artefact: copy, words, availability } = option;
             // Each copy, the review package too, is offered as the read
             // model says.
             const ready = availability.available;
+            const shared = sharesHold(availability);
+            const titleId = `${holdId}-${copy}`;
             return (
               <li
                 key={copy}
+                aria-labelledby={titleId}
+                aria-describedby={shared ? holdId : undefined}
                 className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4"
               >
                 <div className="flex items-center gap-2">
@@ -698,12 +783,14 @@ export function FilingView({
                     name={COPY_ICON[copy]}
                     className="text-muted-foreground"
                   />
-                  <span className="text-base font-medium">{words}</span>
+                  <span id={titleId} className="text-base font-medium">
+                    {words}
+                  </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {t(`workspace.modelo.filing.copy.${copy}.detail`)}
                 </p>
-                {availability?.words && (
+                {availability?.words && !shared && (
                   <p className="text-xs text-faint">{availability.words}</p>
                 )}
                 <div className="mt-auto flex items-center gap-2 pt-1">
@@ -711,6 +798,7 @@ export function FilingView({
                     size="sm"
                     variant="outline"
                     disabled={!ready || quiet}
+                    aria-describedby={shared ? holdId : undefined}
                     onClick={() => {
                       void (copy === "package"
                         ? buildPackage()
@@ -795,22 +883,8 @@ function FilingNotice({
           {t("workspace.modelo.operation.done")}
         </Alert>
       );
-    case "receipt":
-      return (
-        <Alert
-          tone={notice.matches ? "success" : "warning"}
-          icon={<Icon name={notice.matches ? "check" : "alert"} />}
-        >
-          <span className="flex flex-col gap-1">
-            <span>
-              {notice.matches
-                ? t("workspace.modelo.filing.receipt_matches")
-                : t("workspace.modelo.filing.receipt_differs")}
-            </span>
-            <span className="text-muted-foreground">{notice.narrative}</span>
-          </span>
-        </Alert>
-      );
+    case "comparison":
+      return <ReconciliationResult report={notice.report} />;
     case "refused":
       return (
         <Alert tone="warning" icon={<Icon name="alert" />}>

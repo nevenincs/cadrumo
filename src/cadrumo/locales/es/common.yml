@@ -902,6 +902,7 @@ desktop:
       check_again_for: 'Comprobar de nuevo: {name}'
       done_all: Hecho
       done_problems: Hecho, con problemas
+      last_known: Último progreso conocido
       not_started: Sin empezar
       outcome:
         brought: Hecho
@@ -917,6 +918,7 @@ desktop:
         refused: La AEAT lo rechazó
         session_ended: Acceso caducado
         unavailable: La AEAT no está disponible ahora mismo
+      reload: Volver a cargar el progreso
       resume: Iniciar sesión de nuevo
       running: Actualizando…
       stop: Detener
@@ -927,6 +929,8 @@ desktop:
       try_again: Inténtalo de nuevo
       try_again_for: 'Inténtalo de nuevo: {name}'
       unavailable: No se pudo cargar el progreso
+      uncertain: Puede que una actualización siga en curso. Vuelve a cargar el progreso
+        antes de iniciar otra actualización.
       waiting: En espera
       warn_cancel: Cancelar
       warn_confirm: Comprobar igualmente
@@ -1110,6 +1114,7 @@ desktop:
     close: Cerrar el navegador
     closing: Guardando tu sesión…
     dialog:
+      answer_failed: Cadrumo no ha podido confirmar tu respuesta.
       cancel: Cancelar
       leave: Salir
       leave_description: La página pregunta antes de que salgas. Puede que no se guarde
@@ -1149,6 +1154,8 @@ desktop:
       unknown: Cadrumo no pudo saber cómo terminó.
     forward: Adelante
     home: Página de inicio de la AEAT
+    input_not_sent: Es posible que algunas acciones no hayan llegado a la página.
+      Comprueba la página antes de continuar.
     maximize: Maximizar el navegador
     notice:
       dismiss: Descartar
@@ -4309,6 +4316,7 @@ desktop:
     filters: Filtros de registros
     follow: Seguir
     follow_hint: Mantener visible el registro más reciente
+    interrupted: Algunos registros de la interrupción no están disponibles.
     level_all: Todos los niveles
     level_critical: Solo críticos
     level_error: Solo errores
@@ -4319,6 +4327,7 @@ desktop:
     minimum_level: Nivel mínimo
     no_match: Ningún registro coincide con estos filtros.
     origin: Origen
+    reconnect: Reconectar registros
     rejected: Se han omitido {count} registros con un formato de diagnóstico no válido.
     reveal: Mostrar la ubicación de los registros
     selected: '{count} entradas seleccionadas'
@@ -4457,6 +4466,7 @@ desktop:
       compare: Comparar
       credits: Retenciones
       form: Formulario
+      iva_wallet: Saldo de IVA
     views:
       label: Vistas de la declaración
   navigation:
@@ -9908,6 +9918,10 @@ workspace:
       also_other_way: También si la presentaste de otra forma.
       at_aeat: En la AEAT
       check_first: Comprueba primero la declaración.
+      compare_declaration: Elegir declaración en PDF…
+      compare_declaration_lead: Compara el PDF con esta declaración. No se envía nada
+        a la AEAT.
+      compare_declaration_title: Comparar una declaración en PDF
       completeness_unverified: Cadrumo no ha podido comprobar que todas las casillas
         obligatorias estén en el fichero.
       copy:
@@ -9938,6 +9952,7 @@ workspace:
       filter:
         boe: Fichero de presentación AEAT
         csv: Fichero CSV
+        declaration: Declaración en PDF
         pdf: Documento PDF
         receipt: Justificante de la AEAT (PDF)
         xlsx: Libro de Excel
@@ -9957,28 +9972,28 @@ workspace:
       reconciliation:
         category:
           casilla: Casilla
-          header_field: Campo de cabecera
+          header_field: Identificación de la declaración
           total: Total
         code: Código
         context: Contexto
-        details: Detalles
+        details: Detalles del resultado
         differences: Diferencias
-        differs: Algunos valores comparados difieren del documento.
-        evidence_value: En el documento
+        differs: Se han encontrado diferencias en el documento importado.
+        evidence_value: En el documento importado
         field:
           ejercicio: Ejercicio
           modelo: Modelo
           period: Periodo
-          tax_id: NIF
+          tax_id: Identificación fiscal
           total_devolver: Importe a devolver
           total_ingresar: Importe a ingresar
-        kind: Tipo
+        kind: Código de diferencia
         legal_refs: Referencias legales
-        matches: Los valores comparados coinciden con el documento.
+        matches: No se han encontrado diferencias en las comprobaciones realizadas.
         not_present: No consta
-        notices: Avisos
-        source_refs: Fuentes
-        work_value: En tu declaración
+        notices: Avisos de la comparación
+        source_refs: Referencias de origen
+        work_value: En Cadrumo
       record_as_filed: Registrar como presentada…
       record_lead: Registra aquí que la has presentado, para que lo sepan tu calendario
         y tus declaraciones posteriores. Después añade el justificante de la AEAT
@@ -10145,6 +10160,54 @@ workspace:
         record_value: Un dato que necesita cada registro de una tabla
         records: En tus registros
         unnumbered: 'Valores sin número de casilla: {count}'
+    iva_wallet:
+      action: Acción
+      active_balance: Saldo vigente
+      amount: Importe (EUR)
+      as_of_year: Año de referencia
+      evidence_locator: Referencia de la evidencia
+      expired_balance: Saldo caducado
+      expiry_not_reported: No se indica un año de caducidad
+      help:
+        correct: Elige el periodo de origen de un saldo inicial existente y explica
+          la corrección.
+        override: Elige el periodo que recibe la compensación. El importe, el motivo
+          y la referencia de la evidencia se registran como una declaración del contribuyente;
+          la referencia no se verifica.
+        seed: Elige el periodo de origen y el saldo que se arrastra desde él. Se registra
+          el saldo inicial que declaras.
+      lead: Calculado con los registros locales para el año de referencia. No es un
+        saldo consultado en directo a la AEAT.
+      loading: Leyendo el saldo de IVA…
+      lot_count: Lotes de crédito
+      manage: Gestionar saldo…
+      mode:
+        correct: Corregir saldo inicial
+        override: Registrar importe declarado por el contribuyente
+        seed: Registrar saldo inicial
+      next_expiry_year: Próximo año de caducidad
+      previous_amount: Importe anterior
+      read_failed: No se ha podido leer el saldo de IVA. Vuelve a cargarlo para intentarlo
+        de nuevo.
+      reason: Motivo
+      receipt:
+        authority:
+          taxpayer_override: Importe declarado por el contribuyente
+        divergence:
+          override: Sustitución expresa del importe por el contribuyente
+        not_reported: No informado
+        provenance:
+          operator_correction: Saldo inicial corregido por un operador
+          operator_seed: Saldo inicial declarado por un operador
+        reconciliation_outcome: Resultado de la conciliación
+        register_status: Estado del registro
+        selected_source: Origen seleccionado
+        source: Origen
+      recorded: Registrado localmente. Esta acción no recalcula la declaración.
+      reload: Volver a cargar el saldo
+      title: Saldo de IVA a compensar
+      total_balance: Saldo total
+      unallocated_applied_amount: Importe aplicado sin asignar a un lote
     key:
       back: Volver
       calculate: Calcular

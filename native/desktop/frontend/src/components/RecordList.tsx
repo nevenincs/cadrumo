@@ -13,6 +13,7 @@ import {
 } from "react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
@@ -143,6 +144,8 @@ export const RecordList = memo(function RecordList({
   onCopy,
   onExport,
   onReveal,
+  onRetry,
+  interrupted = false,
   shown,
 }: {
   /** null until the host's subscription answers. */
@@ -157,6 +160,8 @@ export const RecordList = memo(function RecordList({
   onCopy?: (text: string) => void;
   onExport?: (text: string) => void;
   onReveal?: () => void;
+  onRetry?: () => void;
+  interrupted?: boolean;
   shown: boolean;
 }) {
   const t = useStrings();
@@ -716,7 +721,28 @@ export const RecordList = memo(function RecordList({
           <AlertTitle className="font-normal">
             {t("desktop.host.unavailable")}
           </AlertTitle>
+          {onRetry && (
+            <Button size="xs" variant="outline" onClick={onRetry}>
+              {t("desktop.logs.reconnect")}
+            </Button>
+          )}
         </Alert>
+      )}
+      {interrupted && (
+        <Alert
+          className="mx-2.5 mt-2 w-auto"
+          tone="warning"
+          icon={<Icon name="alert" />}
+        >
+          <AlertTitle className="font-normal">
+            {t("desktop.logs.interrupted")}
+          </AlertTitle>
+        </Alert>
+      )}
+      {sourceStates === null && records !== null && (
+        <p role="status" className="mx-2.5 mt-2 text-sm text-muted-foreground">
+          {t("desktop.logs.loading")}
+        </p>
       )}
       {states.map(([source, state]) =>
         state.kind === "missing" ? (

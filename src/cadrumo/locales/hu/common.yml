@@ -874,6 +874,7 @@ desktop:
       check_again_for: 'Ellenőrzés újra: {name}'
       done_all: Kész
       done_problems: Kész, hibákkal
+      last_known: Utolsó ismert folyamatállapot
       not_started: Nem indult el
       outcome:
         brought: Kész
@@ -888,6 +889,7 @@ desktop:
         refused: Az AEAT elutasította
         session_ended: Lejárt a bejelentkezés
         unavailable: Az AEAT jelenleg nem érhető el
+      reload: Folyamatállapot újratöltése
       resume: Bejelentkezés újra
       running: Frissítés…
       stop: Leállítás
@@ -898,6 +900,8 @@ desktop:
       try_again: Próbáld újra
       try_again_for: 'Próbáld újra: {name}'
       unavailable: Nem sikerült betölteni az előrehaladást
+      uncertain: Lehet, hogy egy frissítés még folyamatban van. Új frissítés indítása
+        előtt töltsd újra a folyamat állapotát.
       waiting: Várakozik
       warn_cancel: Mégse
       warn_confirm: Ellenőrzés mégis
@@ -1079,6 +1083,7 @@ desktop:
     close: Böngésző bezárása
     closing: A munkameneted mentése…
     dialog:
+      answer_failed: A Cadrumo nem tudta megerősíteni a válaszodat.
       cancel: Mégse
       leave: Elhagyom
       leave_description: Az oldal rákérdez, mielőtt elhagynád. Lehet, hogy amit beírtál,
@@ -1117,6 +1122,8 @@ desktop:
       unknown: A Cadrumo nem tudta megállapítani, hogyan ért véget.
     forward: Előre
     home: Az AEAT kezdőoldala
+    input_not_sent: Előfordulhat, hogy néhány művelet nem jutott el az oldalhoz. Ellenőrizd
+      az oldalt, mielőtt folytatod.
     maximize: Böngésző teljes méretben
     notice:
       dismiss: Elvetés
@@ -4274,6 +4281,7 @@ desktop:
     filters: Naplószűrők
     follow: Követés
     follow_hint: A legújabb bejegyzés maradjon látható
+    interrupted: A megszakítás idejéből néhány naplóbejegyzés nem érhető el.
     level_all: Minden szint
     level_critical: Csak kritikus
     level_error: Csak hibák
@@ -4284,6 +4292,7 @@ desktop:
     minimum_level: Minimális szint
     no_match: Egy bejegyzés sem felel meg ezeknek a szűrőknek.
     origin: Forrás
+    reconnect: Naplók újracsatlakoztatása
     rejected: '{count} bejegyzés kimaradt érvénytelen diagnosztikai formátum miatt.'
     reveal: Napló helyének megnyitása
     selected: '{count} bejegyzés kijelölve'
@@ -4419,6 +4428,7 @@ desktop:
       compare: Összevetés
       credits: Levonások
       form: Nyomtatvány
+      iva_wallet: IVA-egyenleg
     views:
       label: Bevallásnézetek
   navigation:
@@ -9846,6 +9856,10 @@ workspace:
       also_other_way: Akkor is, ha más módon nyújtottad be.
       at_aeat: Az AEAT-nál
       check_first: Előbb ellenőrizd a bevallást.
+      compare_declaration: PDF-bevallás kiválasztása…
+      compare_declaration_lead: Hasonlítsd össze a PDF-et ezzel a bevallással. Semmit
+        nem küldünk be az AEAT-nak.
+      compare_declaration_title: PDF-bevallás összehasonlítása
       completeness_unverified: A Cadrumo nem tudta ellenőrizni, hogy minden kötelező
         rovat bekerült-e a fájlba.
       copy:
@@ -9876,6 +9890,7 @@ workspace:
       filter:
         boe: AEAT benyújtási fájl
         csv: CSV-fájl
+        declaration: PDF-bevallás
         pdf: PDF-dokumentum
         receipt: AEAT-igazolás (PDF)
         xlsx: Excel-munkafüzet
@@ -9895,28 +9910,28 @@ workspace:
       reconciliation:
         category:
           casilla: Mező
-          header_field: Fejlécmező
-          total: Összesen
+          header_field: A bevallás azonosító adatai
+          total: Végösszeg
         code: Kód
-        context: Környezet
-        details: Részletek
+        context: Kontextus
+        details: Az eredmény részletei
         differences: Eltérések
-        differs: Néhány összehasonlított érték eltér a dokumentumtól.
-        evidence_value: A dokumentumban
+        differs: Az importált dokumentumban eltérések találhatók.
+        evidence_value: Az importált dokumentumban
         field:
           ejercicio: Adóév
-          modelo: Modelo
+          modelo: Nyomtatvány
           period: Időszak
           tax_id: Adóazonosító
-          total_devolver: Visszatérítendő összeg
-          total_ingresar: Befizetendő összeg
-        kind: Típus
-        legal_refs: Jogi hivatkozások
-        matches: Az összehasonlított értékek egyeznek a dokumentummal.
+          total_devolver: Visszaigényelhető összeg
+          total_ingresar: Fizetendő összeg
+        kind: Eltéréskód
+        legal_refs: Jogszabályi hivatkozások
+        matches: Az elvégzett ellenőrzések nem találtak eltérést.
         not_present: Nincs megadva
-        notices: Figyelmeztetések
-        source_refs: Források
-        work_value: A te bevallásodban
+        notices: Az összehasonlítás megjegyzései
+        source_refs: Forráshivatkozások
+        work_value: A Cadrumóban
       record_as_filed: Rögzítés benyújtottként…
       record_lead: Rögzítsd itt, hogy benyújtottad, hogy a naptárad és a későbbi bevallásaid
         is tudjanak róla. Utána a megerősítéshez add hozzá az AEAT igazolását.
@@ -10085,6 +10100,54 @@ workspace:
         record_value: Olyan adat, amelyet a táblázat minden tételéhez meg kell adni
         records: A nyilvántartásaidban
         unnumbered: 'Rovatszám nélküli értékek: {count}'
+    iva_wallet:
+      action: Művelet
+      active_balance: Érvényes egyenleg
+      amount: Összeg (EUR)
+      as_of_year: Referenciaév
+      evidence_locator: Bizonyíték hivatkozása
+      expired_balance: Lejárt egyenleg
+      expiry_not_reported: Nincs megadva lejárati év
+      help:
+        correct: Válaszd ki egy meglévő nyitóegyenleg forrásidőszakát, és indokold
+          a javítást.
+        override: Válaszd ki a továbbvitt összeget fogadó időszakot. Az összeget,
+          az indoklást és a bizonyíték hivatkozását adózói felülbírálatként rögzítjük;
+          a hivatkozást nem ellenőrizzük.
+        seed: Válaszd ki a forrásidőszakot és az abból továbbvitt egyenleget. Az általad
+          megadott nyitóegyenleget rögzítjük.
+      lead: A referenciaévre vonatkozó, helyi adatokból számított egyenleg. Nem az
+        AEAT élő egyenlege.
+      loading: IVA-egyenleg betöltése…
+      lot_count: Jóváírási tételek
+      manage: Egyenleg kezelése…
+      mode:
+        correct: Nyitóegyenleg javítása
+        override: Adózói felülbírálat rögzítése
+        seed: Nyitóegyenleg rögzítése
+      next_expiry_year: A következő lejárat éve
+      previous_amount: Korábbi összeg
+      read_failed: Nem sikerült beolvasni az IVA-egyenleget. Az újrapróbálkozáshoz
+        töltsd be újra.
+      reason: Indoklás
+      receipt:
+        authority:
+          taxpayer_override: Adózó által megadott összeg
+        divergence:
+          override: Kifejezett adózói felülbírálat
+        not_reported: Nincs megadva
+        provenance:
+          operator_correction: Kezelő által javított nyitóegyenleg
+          operator_seed: Kezelő által megadott nyitóegyenleg
+        reconciliation_outcome: Egyeztetés eredménye
+        register_status: Nyilvántartási állapot
+        selected_source: Kiválasztott forrás
+        source: Forrás
+      recorded: Helyileg rögzítve. Ez a művelet nem számítja újra a bevallást.
+      reload: Egyenleg újratöltése
+      title: Továbbvihető IVA-egyenleg
+      total_balance: Teljes egyenleg
+      unallocated_applied_amount: Tételhez nem rendelt felhasznált összeg
     key:
       back: Vissza
       calculate: Számítás

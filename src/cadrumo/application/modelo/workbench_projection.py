@@ -57,7 +57,10 @@ from .work_form_declaration_facts import (
     ModeloFormFiling,
     ModeloFormResultDirection,
 )
-from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt
+from .work_form_export_offer import (
+    ModeloFormExportOffer,
+    ModeloFormReceipt,
+)
 from .work_form_findings import ModeloFormAttention
 from .work_form_header import ModeloFormHeader
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
@@ -471,7 +474,8 @@ _REVIEWED_EXCLUDED_FIELDS: frozenset[tuple[type[BaseModel], str]] = frozenset[tu
 
 
 def _require_reviewed_exclusions() -> None:
-    if excluded_canonical_fields(ModeloWorkFormLoadV1) != _REVIEWED_EXCLUDED_FIELDS:
+    excluded = excluded_canonical_fields(ModeloWorkFormLoadV1) | excluded_canonical_fields(ModeloFormExportOffer)
+    if excluded != _REVIEWED_EXCLUDED_FIELDS:
         raise ValueError("workbench form excluded-field inventory changed")
 
 

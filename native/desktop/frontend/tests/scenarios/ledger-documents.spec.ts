@@ -145,6 +145,53 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   await expect(focused).not.toContainText(DOMESTIKA);
 });
 
+declare global {
+  interface Window {
+    __documentMatchRelease?: () => void;
+    __documentMatchWaiting?: boolean;
+  }
+}
+
+for (const moved of [false, true]) {
+  test(`a delayed confirmed-document link ${moved ? "does not take focus back" : "takes focus from the waiting result"}`, async ({
+    page: target,
+  }) => {
+    await openDocuments(target);
+    await choose(target, DOMESTIKA);
+    await target.evaluate(() => {
+      const port = window.__fixtureLedger!;
+      const submit = port.submit;
+      const waiting = new Promise<void>((resolve) => {
+        window.__documentMatchRelease = resolve;
+      });
+      port.submit = async (...args) => {
+        const result = await submit(...args);
+        if (args[0] === "ledger.invoice.match") {
+          window.__documentMatchWaiting = true;
+          await waiting;
+        }
+        return result;
+      };
+    });
+    await kind(target, "received");
+    await draft(target).locator(".ledger-draft-country-read").click();
+    await draft(target).locator(".ledger-draft-confirm").click();
+    const done = section(target).locator(".ledger-draft-confirmed");
+    await expect
+      .poll(() => target.evaluate(() => !!window.__documentMatchWaiting))
+      .toBe(true);
+    await expect(done).toBeFocused();
+    const rail = target.locator("[data-rail=ledger]");
+    if (moved) await rail.focus();
+    await target.evaluate(() => {
+      window.__documentMatchRelease!();
+    });
+    const link = done.locator(".ledger-match-link");
+    await expect(link).toBeVisible();
+    await expect(moved ? rail : link).toBeFocused();
+  });
+}
+
 test("a withheld figure the document reads and the record lacks is said after confirming", async ({
   page: target,
 }) => {

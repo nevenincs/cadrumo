@@ -28,494 +28,90 @@
 //! A browser that is not usable ends `component_not_ready` with its setup action.
 //! The runtime's recorded refusal provides the same recovery if the browser
 //! becomes unavailable after the check. Other runtime refusals are logged.
+pub(crate) mod commands;
+mod lane;
+mod protocol;
+mod runtime;
+#[cfg(test)]
+mod tests;
 mod transfer;
 mod upstream;
 
-#[cfg(test)]
-mod tests;
+use self::lane::Lane;
 
-use super::{
-    blocking,
-    channel::RawFetch,
-    clipboard, external,
-    relay::{self, Failure, Relayed, Result, lock},
-    user_profile::ProfileHost,
+use self::protocol::{
+    ChooserAnswered, Condition, Dialog, DownloadAnswered, Message, Outcome, Reason, Sink, Size,
+    Transferred,
 };
-use crate::agent::person::HeldPerson;
-use cadrumo_application::{
-    diagnostics::{
-        Diagnostics,
-        service::{FeatureRefusal, RefusedFeature, ServiceFact},
-    },
-    provisioning::items::ItemId,
-    runtime_client::refusal::Refusal,
-    view_stream::{
-        chunks::AssembledImage,
-        documents::{
-            TRANSFER_CREDIT_MAX_CHUNKS, ViewClipboardAction, ViewClosedReason, ViewDialog,
-            ViewDialogKind, ViewDialogPrompt, ViewDownload, ViewDownloadOutcome, ViewFileChooser,
-            ViewInputEvent, ViewNavigateVerb, ViewNotice, ViewNoticeCode, ViewPageSecurity,
-            ViewPhase, ViewResize, ViewState, ViewTransferComplete,
-        },
-        lane::{UploadFile, UploadOutcome, ViewEnd, ViewEvent, ViewLane},
-        transfer::TransferChunk,
-    },
-};
-use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
-use std::{
-    collections::{BTreeMap, VecDeque},
-    sync::{
-        Arc, Condvar, Mutex, OnceLock,
-        atomic::{AtomicBool, AtomicU32, Ordering},
-        mpsc,
-    },
-    thread,
-    time::{Duration, Instant},
-};
-use tauri::{
-    AppHandle, Manager, State, Url, Webview,
-    ipc::{Channel, InvokeResponseBody},
-};
-use transfer::{Dialogs, Download, NativeDialogs, upload_file};
-use upstream::{Command, Upstream};
 
-const DEFINITION: &str = "live.sede.view";
-/// The schema a refused operation's recorded detail is read under.
-const ERROR_DETAIL_SCHEMA: &str = "operation.error_detail";
+use self::runtime::{Started, ViewRuntime};
+
+use self::transfer::{Dialogs, Download, upload_file};
+
+use self::upstream::{Command, Upstream};
+
+use super::clipboard;
+
+use super::external;
+
+use super::relay::{self, Failure, Result, lock};
+
+use cadrumo_application::diagnostics::Diagnostics;
+
+use cadrumo_application::diagnostics::service::{FeatureRefusal, RefusedFeature, ServiceFact};
+
+use cadrumo_application::provisioning::items::ItemId;
+
+use cadrumo_application::runtime_client::refusal::Refusal;
+
+use cadrumo_application::view_stream::chunks::AssembledImage;
+
+use cadrumo_application::view_stream::documents::{
+    TRANSFER_CREDIT_MAX_CHUNKS, ViewClipboardAction, ViewClosedReason, ViewDialog, ViewDownload,
+    ViewDownloadOutcome, ViewFileChooser, ViewInputEvent, ViewNavigateVerb, ViewNotice, ViewState,
+    ViewTransferComplete,
+};
+
+use cadrumo_application::view_stream::lane::{UploadOutcome, ViewEnd, ViewEvent};
+
+use cadrumo_application::view_stream::transfer::TransferChunk;
+
+use std::collections::{BTreeMap, VecDeque};
+
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+
+use std::sync::{Arc, Condvar, Mutex, OnceLock, mpsc};
+
+use std::thread;
+
+use std::time::{Duration, Instant};
+
+use tauri::ipc::InvokeResponseBody;
+
+use tauri::{AppHandle, Url};
+
 /// The runtime's refusal of a view whose browser is not open yet.
 const NOT_YET: &str = "operation_unavailable";
+
 /// How long the relay waits for an event before it looks at the session again.
 const TICK: Duration = Duration::from_millis(200);
+
 /// How long to wait before asking again for a view whose browser is not open.
 const ATTACH_RETRY: Duration = Duration::from_millis(250);
+
 /// Asks to attach this many times between looks at whether the operation still runs.
 const ATTACH_TRIES_PER_LOOK: u32 = 8;
-/// How long the runtime may take to answer one request to attach.
-const ATTACH_EXCHANGE: Duration = Duration::from_secs(5);
-/// How long a new view connection may take to open.
-const CONNECT: Duration = Duration::from_secs(5);
-/// How long between looks at a closing view's operation.
-const SETTLE_POLL: Duration = Duration::from_millis(500);
+
 /// The images a view may send before the window credits any.
 const START_CREDIT: u8 = 2;
+
 /// How many offers, dialogs and choosers wait for the person at once.
 const PENDING_LIMIT: usize = 16;
+
 const CLIPBOARD_REPLY: Duration = Duration::from_secs(5);
 
 fn failure(code: &'static str) -> Failure {
     Failure::new(code)
-}
-
-type Sent = std::result::Result<(), Refusal>;
-/// Where a view's messages go: the window's channel, or a test's list. It
-/// answers `false` once the window can no longer receive.
-type Sink = Arc<dyn Fn(InvokeResponseBody) -> bool + Send + Sync>;
-
-/// What the host needs of one view connection.
-trait Lane: Send + Sync {
-    fn recv(&self, timeout: Duration) -> Option<ViewEvent>;
-    fn credit(&self, images: u8) -> Sent;
-    fn input(&self, event: ViewInputEvent) -> Sent;
-    fn navigate(&self, verb: ViewNavigateVerb) -> Sent;
-    fn clipboard(&self, request_id: u32, action: ViewClipboardAction) -> Sent;
-    fn clipboard_commit(&self, request_id: u32, apply: bool) -> Sent;
-    fn resize(&self, css_width: u32, css_height: u32, scale: f64) -> Sent;
-    fn dialog(&self, dialog_id: u32, accept: bool, prompt_text: Option<String>) -> Sent;
-    fn accept_download(&self, transfer_id: u32, size: Option<u64>) -> Sent;
-    fn decline_download(&self, transfer_id: u32, outcome: ViewDownloadOutcome) -> Sent;
-    fn download_credit(&self, transfer_id: u32, chunks: u8) -> Sent;
-    fn cancel_download(&self, transfer_id: u32) -> Sent;
-    fn cancel_file_chooser(&self, chooser_id: u32) -> Sent;
-    fn supply_files(&self, chooser_id: u32, files: Vec<UploadFile>) -> Sent;
-    /// The person closed the page or the window: the view publishes and settles.
-    fn end_view(&self);
-    /// The session was lost: the connection drops with nothing to publish.
-    fn close(&self);
-}
-
-impl Lane for ViewLane {
-    fn recv(&self, timeout: Duration) -> Option<ViewEvent> {
-        ViewLane::recv(self, timeout)
-    }
-    fn credit(&self, images: u8) -> Sent {
-        ViewLane::credit(self, images)
-    }
-    fn input(&self, event: ViewInputEvent) -> Sent {
-        ViewLane::input(self, event)
-    }
-    fn navigate(&self, verb: ViewNavigateVerb) -> Sent {
-        ViewLane::navigate(self, verb)
-    }
-    fn clipboard(&self, request_id: u32, action: ViewClipboardAction) -> Sent {
-        ViewLane::clipboard(self, request_id, action)
-    }
-    fn clipboard_commit(&self, request_id: u32, apply: bool) -> Sent {
-        ViewLane::clipboard_commit(self, request_id, apply)
-    }
-    fn resize(&self, css_width: u32, css_height: u32, scale: f64) -> Sent {
-        ViewLane::resize(self, css_width, css_height, scale)
-    }
-    fn dialog(&self, dialog_id: u32, accept: bool, prompt_text: Option<String>) -> Sent {
-        ViewLane::dialog(self, dialog_id, accept, prompt_text)
-    }
-    fn accept_download(&self, transfer_id: u32, size: Option<u64>) -> Sent {
-        ViewLane::accept_download(self, transfer_id, size)
-    }
-    fn decline_download(&self, transfer_id: u32, outcome: ViewDownloadOutcome) -> Sent {
-        ViewLane::decline_download(self, transfer_id, outcome)
-    }
-    fn download_credit(&self, transfer_id: u32, chunks: u8) -> Sent {
-        ViewLane::download_credit(self, transfer_id, chunks)
-    }
-    fn cancel_download(&self, transfer_id: u32) -> Sent {
-        ViewLane::cancel_download(self, transfer_id)
-    }
-    fn cancel_file_chooser(&self, chooser_id: u32) -> Sent {
-        ViewLane::cancel_file_chooser(self, chooser_id)
-    }
-    fn supply_files(&self, chooser_id: u32, files: Vec<UploadFile>) -> Sent {
-        ViewLane::supply_files(self, chooser_id, files)
-    }
-    fn end_view(&self) {
-        ViewLane::end_view(self);
-    }
-    fn close(&self) {
-        ViewLane::close(self);
-    }
-}
-
-/// How a settled view ended, as its operation's terminal receipt says.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-enum Condition {
-    Succeeded,
-    Refused,
-    Failed,
-    Cancelled,
-    TimedOut,
-    Interrupted,
-}
-
-/// Why browsing stopped, as the view's result names it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-enum Finish {
-    Closed,
-    PageLost,
-    StreamEnded,
-    Stopped,
-    ProtocolViolation,
-}
-
-/// What the close-time publication of the session did.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-enum Publication {
-    #[serde(rename = "published")]
-    Published,
-    #[serde(rename = "unchanged")]
-    Unchanged,
-    #[serde(rename = "kept-newer")]
-    KeptNewer,
-    #[serde(rename = "verification-failed")]
-    VerificationFailed,
-    /// AEAT showed the session signed in as another taxpayer.
-    #[serde(rename = "identity-mismatch")]
-    IdentityMismatch,
-    #[serde(rename = "unknown")]
-    Unknown,
-}
-
-/// The view's result: how it ended and what it did with the session. The
-/// operation's journal holds no more than this.
-#[derive(Deserialize)]
-struct Report {
-    end: Finish,
-    publication: Option<Publication>,
-}
-
-/// What a settled view reported.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-struct Outcome {
-    condition: Condition,
-    end: Option<Finish>,
-    publication: Option<Publication>,
-}
-
-/// What the host needs of the runtime for one submitted view.
-trait ViewRuntime: Send + Sync {
-    /// A connection bound to the running view, or why none is yet.
-    fn attach(&self, operation: &str) -> std::result::Result<Arc<dyn Lane>, Refusal>;
-    /// Whether the operation still runs; `None` when that cannot be told.
-    fn running(&self, operation: &str) -> Option<bool>;
-    /// Asks the runtime to cancel the operation, which ends the view without
-    /// publishing. Best effort: a lost session cancels it on its own.
-    fn cancel(&self, operation: &str);
-    /// Follows the operation to its terminal receipt and says what it reported;
-    /// `None` when that could not be observed in time.
-    fn settled(&self, operation: &str) -> Option<Outcome>;
-    /// Whether the session that submitted the view is still held.
-    fn held(&self) -> bool;
-    /// The component a refused operation's recorded verdict says must be set
-    /// up first; `None` when it names none or its detail cannot be read.
-    fn needs(&self, operation: &str) -> Option<ItemId>;
-}
-
-/// The setup item a stopped operation's recorded refusal stands for.
-fn needed_component(document: &Value) -> Option<ItemId> {
-    if document["result_schema"]["schema_id"] != ERROR_DETAIL_SCHEMA {
-        return None;
-    }
-    super::setup::wire::refused_item(&document["projection"])
-}
-
-/// The runtime as the window's own person session reaches it.
-struct PersonRuntime {
-    person: HeldPerson,
-    sign_in: Arc<super::sign_in::SignIn>,
-    subject: String,
-}
-
-impl PersonRuntime {
-    fn relayed<'a>(&'a self, operation: &str) -> Relayed<'a> {
-        Relayed {
-            person: &self.person,
-            operation: operation.to_owned(),
-            definition: DEFINITION,
-            subject: self.subject.clone(),
-        }
-    }
-}
-
-impl ViewRuntime for PersonRuntime {
-    fn attach(&self, operation: &str) -> std::result::Result<Arc<dyn Lane>, Refusal> {
-        let grant = lock(&self.person).view_attach(operation, Instant::now() + ATTACH_EXCHANGE)?;
-        let (endpoint, cohort) = self.sign_in.runtime_target()?;
-        let lane = ViewLane::open(&endpoint, &cohort, grant, Instant::now() + CONNECT)?;
-        Ok(Arc::new(lane))
-    }
-
-    fn running(&self, operation: &str) -> Option<bool> {
-        match tauri::async_runtime::block_on(relay::observe(&self.relayed(operation))) {
-            Ok(projection) => Some(projection["lifecycle"] != "terminal"),
-            // The runtime no longer knows the operation, so nothing of it runs.
-            Err(gone) if gone.code == "not_admitted" => Some(false),
-            Err(_) => None,
-        }
-    }
-
-    fn cancel(&self, operation: &str) {
-        let relayed = self.relayed(operation);
-        tauri::async_runtime::block_on(async {
-            let Ok(projection) = relay::observe(&relayed).await else {
-                return;
-            };
-            if projection["lifecycle"] == "terminal" {
-                return;
-            }
-            let _ = relay::call(
-                &self.person,
-                json!({"action":"operation_cancel", "operation_id":operation,
-                    "expected_revision":projection["revision"]}),
-            )
-            .await;
-        });
-    }
-
-    fn settled(&self, operation: &str) -> Option<Outcome> {
-        let relayed = self.relayed(operation);
-        let deadline = Instant::now() + relay::SETTLE_LIMIT;
-        loop {
-            let projection = tauri::async_runtime::block_on(relay::observe(&relayed)).ok()?;
-            if projection["lifecycle"] == "terminal" {
-                let condition: Condition =
-                    serde_json::from_value(projection["terminal_condition"].clone()).ok()?;
-                if condition != Condition::Succeeded {
-                    return Some(Outcome {
-                        condition,
-                        end: None,
-                        publication: None,
-                    });
-                }
-                let document = tauri::async_runtime::block_on(relay::result(&relayed)).ok()?;
-                let report: Report = serde_json::from_value(document["projection"].clone()).ok()?;
-                return Some(Outcome {
-                    condition,
-                    end: Some(report.end),
-                    publication: report.publication,
-                });
-            }
-            if Instant::now() >= deadline {
-                return None;
-            }
-            thread::sleep(SETTLE_POLL);
-        }
-    }
-
-    fn needs(&self, operation: &str) -> Option<ItemId> {
-        let document =
-            tauri::async_runtime::block_on(relay::result(&self.relayed(operation))).ok()?;
-        needed_component(&document)
-    }
-
-    fn held(&self) -> bool {
-        match self.person.try_lock() {
-            Ok(mut person) => person.is_open(),
-            Err(std::sync::TryLockError::Poisoned(poisoned)) => poisoned.into_inner().is_open(),
-            // An exchange is in flight, so the session is in use.
-            Err(std::sync::TryLockError::WouldBlock) => true,
-        }
-    }
-}
-
-/// A view the host submitted: its operation and the runtime that runs it.
-struct Started {
-    operation: String,
-    runtime: Arc<dyn ViewRuntime>,
-}
-
-/// Why a view ended, as the window is told.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
-enum Reason {
-    /// The person closed the page or the window.
-    Closed,
-    /// The person's session was lost, locked or signed out.
-    SessionLost,
-    Cancelled,
-    OperationEnded,
-    Replaced,
-    ProtocolViolation,
-    RuntimeStopping,
-    Failed,
-    /// The runtime could not be reached, or ended the stream without saying why.
-    Unavailable,
-    /// The runtime refused the view; `code` says why.
-    Refused,
-    /// A component the view needs is not set up; `recovery_action_id` names
-    /// its setup.
-    ComponentNotReady,
-}
-
-impl From<ViewClosedReason> for Reason {
-    fn from(reason: ViewClosedReason) -> Self {
-        match reason {
-            ViewClosedReason::Cancelled => Self::Cancelled,
-            ViewClosedReason::IdleExpired
-            | ViewClosedReason::LifetimeExpired
-            | ViewClosedReason::OperationEnded => Self::OperationEnded,
-            ViewClosedReason::SessionRetired => Self::SessionLost,
-            ViewClosedReason::Replaced => Self::Replaced,
-            ViewClosedReason::ProtocolViolation => Self::ProtocolViolation,
-            ViewClosedReason::RuntimeStopping => Self::RuntimeStopping,
-            ViewClosedReason::Failed => Self::Failed,
-        }
-    }
-}
-
-/// How a transfer ended.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
-enum Transferred {
-    Done,
-    Cancelled,
-    Failed,
-}
-
-#[derive(Serialize)]
-struct Dialog {
-    dialog_id: u32,
-    dialog_kind: ViewDialogKind,
-    message: String,
-    default_prompt: Option<String>,
-}
-
-impl From<ViewDialogPrompt> for Dialog {
-    fn from(prompt: ViewDialogPrompt) -> Self {
-        Self {
-            dialog_id: prompt.dialog_id,
-            dialog_kind: prompt.dialog_kind,
-            message: prompt.message,
-            default_prompt: prompt.default_prompt,
-        }
-    }
-}
-
-/// What the window receives on its channel. Every message names its `view`,
-/// so a late message of an earlier view is told apart.
-#[derive(Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-enum Message {
-    /// The view connection is bound and two images are credited.
-    Opened { view: u32 },
-    /// Announces the next raw message, which holds this image's JPEG bytes.
-    Image {
-        view: u32,
-        sequence: u32,
-        byte_length: u32,
-        pixel_width: u32,
-        pixel_height: u32,
-        css_width: u32,
-        css_height: u32,
-        scale: f64,
-    },
-    /// The page the person is on. A page that is not `secure` has no origin
-    /// or path, and `external` says whether the host holds an address it
-    /// would open.
-    #[serde(rename = "state")]
-    Page {
-        view: u32,
-        security: ViewPageSecurity,
-        origin: Option<String>,
-        path: Option<String>,
-        title: String,
-        can_go_back: bool,
-        can_go_forward: bool,
-        loading: bool,
-        phase: ViewPhase,
-        external: bool,
-    },
-    /// A notice; `dialog_opened` carries the dialog the person answers.
-    Notice {
-        view: u32,
-        code: ViewNoticeCode,
-        dialog: Option<Dialog>,
-    },
-    /// A download is offered; answer it with the download answer command.
-    Download {
-        view: u32,
-        transfer_id: u32,
-        filename: String,
-        size: Option<u64>,
-        mime: Option<String>,
-    },
-    DownloadEnded {
-        view: u32,
-        transfer_id: u32,
-        outcome: Transferred,
-    },
-    /// The page asks for files; answer it with the file chooser answer command.
-    FileChooser {
-        view: u32,
-        chooser_id: u32,
-        accept: Vec<String>,
-        multiple: bool,
-    },
-    UploadEnded {
-        view: u32,
-        chooser_id: u32,
-        outcome: Transferred,
-    },
-    /// The person closed the view and its session is being published.
-    Closing { view: u32 },
-    /// The last message of a view.
-    Ended {
-        view: u32,
-        reason: Reason,
-        code: Option<String>,
-        outcome: Option<Outcome>,
-        recovery_action_id: Option<&'static str>,
-    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1292,23 +888,6 @@ impl View {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct Opened {
-    view: u32,
-}
-
-#[derive(Debug, Serialize)]
-pub struct DownloadAnswered {
-    /// Whether the download began: the person chose where to save it.
-    saving: bool,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ChooserAnswered {
-    /// How many files went to the page.
-    supplied: u32,
-}
-
 /// Opens an address in the person's own browser. The system's handler, or a
 /// test's list.
 trait Opener: Send + Sync {
@@ -1321,63 +900,6 @@ impl Opener for System {
     fn open(&self, url: &Url) -> Result<()> {
         external::open(url).map_err(|_| failure("unavailable"))
     }
-}
-
-/// The panel size a view starts at.
-#[derive(Debug)]
-struct Size {
-    css_width: u32,
-    css_height: u32,
-    scale: f64,
-}
-
-impl Size {
-    fn admit(css_width: u32, css_height: u32, scale: f64) -> Result<Self> {
-        ViewResize {
-            css_width,
-            css_height,
-            scale,
-        }
-        .validate()
-        .map_err(|_| failure("invalid"))?;
-        Ok(Self {
-            css_width,
-            css_height,
-            scale,
-        })
-    }
-}
-
-/// The view's registered request: the profile and the panel's starting size.
-/// The start page is the backend's own; the window never names one.
-fn request(profile_id: &str, size: &Size) -> Value {
-    json!({"profile_id":profile_id, "css_width":size.css_width,
-        "css_height":size.css_height, "scale":size.scale})
-}
-
-/// Submits the Sede view for the window's signed-in profile.
-async fn start(profile: &ProfileHost, size: &Size) -> Result<Started> {
-    let _serial = profile.serial().await;
-    let person = profile.person(None).await?;
-    let profile_id = relay::profile_of(&person).await?;
-    let subject = relay::subject(&profile_id);
-    // A lost answer may still have started a view, so the submission counts as a mutation.
-    let operation = relay::submit(
-        &person,
-        DEFINITION,
-        &subject,
-        request(&profile_id, size),
-        true,
-    )
-    .await?;
-    Ok(Started {
-        operation,
-        runtime: Arc::new(PersonRuntime {
-            person,
-            sign_in: profile.sign_in().clone(),
-            subject,
-        }),
-    })
 }
 
 /// The window's one view, and the commands that drive it.
@@ -1759,186 +1281,4 @@ impl SedeViewHost {
         let url = external::admit(&text).map_err(|_| failure("invalid"))?;
         self.opener.open(&url)
     }
-}
-
-/// A view's messages on the window's channel. The images reach the page as
-/// binary, which the page takes by name. It ends when the channel refuses a
-/// message or the shell reports that one could not be delivered to the page.
-fn channel_sink<R: tauri::Runtime>(
-    webview: Webview<R>,
-    messages: Channel<InvokeResponseBody>,
-) -> Sink {
-    let fetch = RawFetch::new(webview, messages.id());
-    Arc::new(move |body| messages.send(body).is_ok() && !fetch.failed())
-}
-
-/// Opens the Sede view for the signed-in profile at the panel's size and
-/// relays it on `messages` until it ends. The answer comes before the browser
-/// is open; `opened` follows on the channel.
-///
-/// Refuses `conflict` while the previous view has not ended, which includes the
-/// time it takes to publish its session.
-#[tauri::command]
-async fn sede_view_open<R: tauri::Runtime>(
-    host: State<'_, Arc<SedeViewHost>>,
-    profile: State<'_, Arc<ProfileHost>>,
-    webview: Webview<R>,
-    css_width: u32,
-    css_height: u32,
-    scale: f64,
-    messages: Channel<InvokeResponseBody>,
-) -> Result<Opened> {
-    let size = Size::admit(css_width, css_height, scale)?;
-    host.admit_open()?;
-    let setup = webview
-        .try_state::<Arc<super::setup::SetupHost>>()
-        .ok_or_else(|| failure("unavailable"))?
-        .inner()
-        .clone();
-    match setup.check_browser().await {
-        Some(true) => {}
-        Some(false) => {
-            let view = host.component_not_ready(channel_sink(webview, messages))?;
-            return Ok(Opened { view });
-        }
-        None => return Err(failure("unavailable")),
-    }
-    let started = start(&profile, &size)
-        .await
-        .inspect_err(|failure| host.submission_refused(failure))?;
-    let sink = channel_sink(webview, messages);
-    let owner = host.inner().clone();
-    let view = blocking(move || Ok(owner.open_with(started, sink))).await??;
-    Ok(Opened { view })
-}
-
-/// The person closed the page: the view publishes its session and settles.
-/// `closing` and then `ended` follow on the channel.
-#[tauri::command]
-async fn sede_view_close(host: State<'_, Arc<SedeViewHost>>, view: u32) -> Result<()> {
-    let owner = host.inner().clone();
-    blocking(move || Ok(owner.close_view(view))).await?
-}
-
-/// Forwards one input event: a pointer, wheel, key or text event of the person.
-#[tauri::command]
-fn sede_view_input(
-    host: State<'_, Arc<SedeViewHost>>,
-    view: u32,
-    event: ViewInputEvent,
-) -> Result<()> {
-    host.input(view, event)
-}
-
-/// Back, forward, reload or home. The window never names an address.
-#[tauri::command]
-fn sede_view_navigate(
-    host: State<'_, Arc<SedeViewHost>>,
-    view: u32,
-    verb: ViewNavigateVerb,
-) -> Result<()> {
-    host.navigate(view, verb)
-}
-
-/// The person explicitly copied or cut the focused page selection. Text stays
-/// between the worker and the native clipboard, never in the webview channel.
-#[tauri::command]
-async fn sede_view_clipboard<R: tauri::Runtime>(
-    host: State<'_, Arc<SedeViewHost>>,
-    app: AppHandle<R>,
-    view: u32,
-    action: ViewClipboardAction,
-) -> Result<()> {
-    let owner = host.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || owner.clipboard(view, action, &app))
-        .await
-        .map_err(|_| failure("unavailable"))?
-}
-
-#[tauri::command]
-fn sede_view_resize(
-    host: State<'_, Arc<SedeViewHost>>,
-    view: u32,
-    css_width: u32,
-    css_height: u32,
-    scale: f64,
-) -> Result<()> {
-    host.resize(view, css_width, css_height, scale)
-}
-
-/// Grants the page one more image. Call it once for each `image` message
-/// received, drawn or not: the host grants the first two itself.
-#[tauri::command]
-fn sede_view_credit(host: State<'_, Arc<SedeViewHost>>, view: u32) -> Result<()> {
-    host.credit(view)
-}
-
-/// The person's answer to a page dialog the view announced under `dialog_id`.
-#[tauri::command]
-fn sede_view_dialog(
-    host: State<'_, Arc<SedeViewHost>>,
-    view: u32,
-    dialog_id: u32,
-    accept: bool,
-    prompt_text: Option<String>,
-) -> Result<()> {
-    host.dialog(view, dialog_id, accept, prompt_text)
-}
-
-/// The person's answer to a download the view offered under `transfer_id`.
-/// With `save`, the native save dialog asks where; a dialog closed unchosen
-/// declines the download. The answer waits for the dialog. `download_ended`
-/// follows on the channel when the bytes are written.
-#[tauri::command]
-async fn sede_view_download_answer<R: tauri::Runtime>(
-    host: State<'_, Arc<SedeViewHost>>,
-    window: tauri::WebviewWindow<R>,
-    view: u32,
-    transfer_id: u32,
-    save: bool,
-) -> Result<DownloadAnswered> {
-    let owner = host.inner().clone();
-    blocking(move || Ok(owner.download_answer(view, transfer_id, save, &NativeDialogs(window))))
-        .await?
-}
-
-/// The person's answer to a file chooser the page opened under `chooser_id`.
-/// With `choose`, the native open dialog asks which files; a dialog closed
-/// unchosen cancels the chooser. The answer waits for the dialog.
-/// `upload_ended` follows on the channel for each file.
-#[tauri::command]
-async fn sede_view_file_chooser_answer<R: tauri::Runtime>(
-    host: State<'_, Arc<SedeViewHost>>,
-    window: tauri::WebviewWindow<R>,
-    view: u32,
-    chooser_id: u32,
-    choose: bool,
-) -> Result<ChooserAnswered> {
-    let owner = host.inner().clone();
-    blocking(move || Ok(owner.chooser_answer(view, chooser_id, choose, &NativeDialogs(window))))
-        .await?
-}
-
-/// Opens the page the person is on in the system browser. The window sends
-/// no address.
-#[tauri::command]
-async fn sede_view_open_external(host: State<'_, Arc<SedeViewHost>>, view: u32) -> Result<()> {
-    let owner = host.inner().clone();
-    blocking(move || Ok(owner.open_external(view))).await?
-}
-
-pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
-    crate::app::commands![
-        sede_view_open,
-        sede_view_close,
-        sede_view_input,
-        sede_view_navigate,
-        sede_view_clipboard,
-        sede_view_resize,
-        sede_view_credit,
-        sede_view_dialog,
-        sede_view_download_answer,
-        sede_view_file_chooser_answer,
-        sede_view_open_external
-    ]
 }

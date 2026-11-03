@@ -17,6 +17,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { editKey, editSubmission, type FormSession } from "../form/session";
 import { useModeloOperation } from "../WriteScope";
+import { mayRenew } from "./operationRun";
 
 // The review's run: the staged edits are checked by a preflight on the
 // admitted baseline, applied once, and followed until the apply settles. A
@@ -146,22 +147,6 @@ async function renewal(
     : { kind: "check_failed", code: "unavailable" };
 }
 
-/** Whether a check that found `stale` stale may renew it: only the latest
- * check, on the baseline the review now holds; an overtaken check leaves the
- * renewal to the check that overtook it. */
-export function mayRenew(check: {
-  ticket: number;
-  latest: number;
-  stale: ModeloEditApplyBaselineV1;
-  current: ModeloEditApplyBaselineV1 | null;
-}): boolean {
-  return (
-    check.ticket === check.latest &&
-    check.current !== null &&
-    check.stale.baseline_id === check.current.baseline_id
-  );
-}
-
 export function useEditReview({
   open,
   envelope,
@@ -213,7 +198,7 @@ export function useEditReview({
       ? renewed
       : admitted;
   const check = useCallback(async () => {
-    if (!alive.current || holds.get(target)) return;
+    if (!alive.current || holds.blocking(target)) return;
     if (!baseline) {
       setPhase({ kind: "check_failed", code: "not_admitted" });
       return;
@@ -221,7 +206,7 @@ export function useEditReview({
     setPhase({ kind: "checking" });
     // Only the latest check speaks: a renewal starts another.
     const ticket = ++checks.current;
-    const version = holds.version(target);
+    const version = holds.admissionVersion(target);
     const answer = await preflight(
       port,
       session,
@@ -231,8 +216,8 @@ export function useEditReview({
       (stale) => {
         if (
           !alive.current ||
-          holds.get(target) ||
-          holds.version(target) !== version
+          holds.blocking(target) ||
+          holds.admissionVersion(target) !== version
         )
           return Promise.resolve(null);
         const held = renewing.current;
@@ -250,8 +235,8 @@ export function useEditReview({
         const isCurrent = () =>
           alive.current &&
           ticket === checks.current &&
-          !holds.get(target) &&
-          holds.version(target) === version;
+          !holds.blocking(target) &&
+          holds.admissionVersion(target) === version;
         const running = renewal(
           port,
           stale,
@@ -271,8 +256,8 @@ export function useEditReview({
     if (
       !alive.current ||
       ticket !== checks.current ||
-      holds.get(target) ||
-      holds.version(target) !== version
+      holds.blocking(target) ||
+      holds.admissionVersion(target) !== version
     )
       return;
     // A check that evaluated the edits ends the moving: a later stale
@@ -328,7 +313,9 @@ export function useEditReview({
     if (
       sameInputs &&
       before.blocked &&
-      (phase.kind === "not_applied" || phase.kind === "applied")
+      (phase.kind === "applying" ||
+        phase.kind === "not_applied" ||
+        phase.kind === "applied")
     )
       return;
     void latest.current();
@@ -385,7 +372,7 @@ export function useEditReview({
   }, [standing, onPrerequisiteHeld]);
 
   const apply = useCallback(async () => {
-    if (!baseline || holds.get(target) || phase.kind !== "checked") return;
+    if (!baseline || holds.blocking(target) || phase.kind !== "checked") return;
     ++checks.current;
     setPhase({ kind: "applying" });
     const run = await runWrite(
