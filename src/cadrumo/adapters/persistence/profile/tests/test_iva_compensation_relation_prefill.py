@@ -495,8 +495,14 @@ _negativa = ResultDisposition.NEGATIVA
             (
                 (_negativa, _quarter("0.00", aplicada="200.00", posterior="800.00", disponible="800.00")),
                 (_negativa, _quarter("0.00", aplicada="600.00", posterior="200.00", disponible="200.00")),
-                (_compensa, _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="200.00", disponible="700.00")),
-                (_compensa, _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="700.00", disponible="900.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="200.00", disponible="700.00"),
+                ),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="700.00", disponible="900.00"),
+                ),
             ),
             "800.00",
             "200.00",
@@ -506,9 +512,15 @@ _negativa = ResultDisposition.NEGATIVA
         pytest.param(
             (
                 (_ingreso, _quarter("100.00", aplicada="0.00", posterior="0.00", disponible="0.00")),
-                (_compensa, _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="0.00", disponible="200.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="0.00", disponible="200.00"),
+                ),
                 (_negativa, _quarter("0.00", aplicada="0.00", posterior="200.00", disponible="200.00")),
-                (_compensa, _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="200.00", disponible="700.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="200.00", disponible="700.00"),
+                ),
             ),
             "0.00",
             "500.00",
@@ -518,9 +530,15 @@ _negativa = ResultDisposition.NEGATIVA
         pytest.param(
             (
                 (_negativa, _quarter("0.00", aplicada="100.00", posterior="100.00", disponible="100.00")),
-                (_compensa, _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="100.00", disponible="300.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="100.00", disponible="300.00"),
+                ),
                 (_ingreso, _quarter("100.00", aplicada="300.00", posterior="0.00", disponible="0.00")),
-                (_compensa, _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="0.00", disponible="500.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="0.00", disponible="500.00"),
+                ),
             ),
             "200.00",
             "500.00",
@@ -530,9 +548,15 @@ _negativa = ResultDisposition.NEGATIVA
         pytest.param(
             (
                 (_negativa, _quarter("0.00", aplicada="100.00", posterior="100.00", disponible="100.00")),
-                (_compensa, _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="100.00", disponible="300.00")),
+                (
+                    _compensa,
+                    _quarter("-200.00", generada="200.00", aplicada="0.00", posterior="100.00", disponible="300.00"),
+                ),
                 (_negativa, _quarter("0.00", aplicada="0.00", posterior="300.00", disponible="300.00")),
-                (_compensa, _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="300.00", disponible="800.00")),
+                (
+                    _compensa,
+                    _quarter("-500.00", generada="500.00", aplicada="0.00", posterior="300.00", disponible="800.00"),
+                ),
             ),
             "100.00",
             "500.00",

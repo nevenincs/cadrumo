@@ -26,6 +26,7 @@ from cadrumo.application.invoices.source_resolver_ports import (
     M349FiledDeclaration,
 )
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.invoices.enums import invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice
@@ -473,19 +474,10 @@ class _CalculationRepository:
     def __init__(self, catalogue: CalculationRevisionCatalogue | Exception) -> None:
         self._catalogue = catalogue
 
-    def load(self, *, operation: object = None) -> CalculationRevisionCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         if isinstance(self._catalogue, Exception):
             raise self._catalogue
         return self._catalogue
-
-
-def _sealing_fields(state: CalculationRevisionState, at: datetime) -> dict[str, object]:
-    if state is CalculationRevisionState.BORRADOR:
-        return {}
-    filed = {"verified_at": at, "verified_by": "operator", "filed_at": at, "filed_by": "operator"}
-    if state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
-        return {**filed, "superseded_at": at}
-    return filed
 
 
 def _filed_revision(
@@ -496,6 +488,9 @@ def _filed_revision(
     updated_at: datetime = datetime(2026, 4, 20, tzinfo=UTC),
 ) -> CalculationRevision:
     rows = (_filed_operator(importe=importe),)
+    sealed = state is not CalculationRevisionState.BORRADOR
+    sealed_at = updated_at if sealed else None
+    sealed_by = "operator" if sealed else None
     work_unit = hashlib.sha256(f"{modelo}-1T-{importe}-{state.value}".encode()).hexdigest()
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
@@ -517,7 +512,11 @@ def _filed_revision(
         updated_at=updated_at,
         filing_instance_evidence=None,
         source_provenance=(),
-        **_sealing_fields(state, updated_at),
+        verified_at=sealed_at,
+        verified_by=sealed_by,
+        filed_at=sealed_at,
+        filed_by=sealed_by,
+        superseded_at=updated_at if state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO else None,
     )
 
 
@@ -540,7 +539,7 @@ def test_m349_filed_declarations_are_the_current_filed_revision_of_each_period()
     declarations = reader.load()
 
     assert [item.period for item in declarations] == [Period.from_year_and_code(2026, "1T")]
-    assert [row.importe for row in declarations[0].rows] == [Decimal("10000.00")]
+    assert declarations[0].rows == (_filed_operator(importe="10000.00"),)
 
 
 def test_m349_filed_declaration_read_failure_is_a_persistence_failure() -> None:

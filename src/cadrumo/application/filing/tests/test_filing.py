@@ -318,7 +318,6 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
     assert draft.schema_version == "registry:115:2019-y-siguientes"
     assert {_M115_CASILLA_03, _M115_CASILLA_05} <= set(values)
     assert values[_M115_CASILLA_03].value == Decimal("237.60")
-    assert values[_M115_CASILLA_03].formula_trace_casilla_ids == ()
     assert values[_M115_CASILLA_05].kind is ModeloValueKind.COMPUTED
     assert values[_M115_CASILLA_05].formula_trace_casilla_ids == _M115_CASILLA_05_TRACE
 

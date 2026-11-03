@@ -239,7 +239,6 @@ def _compute_year_115_totals(
     totals: dict[CasillaId, Decimal] = {
         _M115_PERCEPTORES_CASILLA: Decimal("0"),
         _M115_BASE_CASILLA: Decimal("0"),
-        _M115_RETENCIONES_CASILLA: Decimal("0.01"),
         _M115_RETENCIONES_CASILLA: Decimal("0"),
     }
     for period, inputs in quarters.items():

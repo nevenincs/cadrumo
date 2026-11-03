@@ -6,7 +6,7 @@ Core types:
 
 from __future__ import annotations
 
-from typing import override
+from typing import Protocol, override
 
 from ....application.invoices.source_resolver_ports import (
     InvoiceSourceCatalogueReader,
@@ -19,8 +19,11 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.form_codes import form_for_role
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
-from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+)
 from ....domain.modelos.row_models import Modelo349OperadorRow, Modelo349RectificacionRow
 from ..storage.errors import STORAGE_DEGRADATION_ERRORS
 from .invoices import InvoiceCatalogueRepository
@@ -42,6 +45,10 @@ class InvoiceCatalogueSourceResolverAdapter(InvoiceSourceCatalogueReader):
             raise InvoiceSourcePersistenceError("invoice_catalogue_load") from exc
 
 
+class _CalculationCatalogueLoader(Protocol):
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue: ...
+
+
 class M349FiledDeclarationAdapter(M349FiledDeclarationReader):
     """Read what each period's current filed Modelo 349 revision declared.
 
@@ -52,7 +59,7 @@ class M349FiledDeclarationAdapter(M349FiledDeclarationReader):
     def __init__(
         self,
         *,
-        repository: CalculationRevisionCatalogueRepositoryProtocol,
+        repository: _CalculationCatalogueLoader,
         operation: PinnedAuthorityOperation | None,
     ) -> None:
         """Bind the calculation repository and the operation's pinned authority."""
