@@ -17,7 +17,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:e52233636b3cbf1145d7cc0fa138aeba4b324508848b8170ac1a813924b07ff1'
+body_hash: 'sha256:68993405a34005b17712f008972b1094de4b4137ad409b097f1887875e2612db'
 ---
 
 # `desktop-renta` plan
@@ -86,7 +86,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S47` - [Opus medium] ground box 0506 in LIRPF art. 84.2.3 and the AEAT design, applying the remainder of the joint reduction to the savings base, so the joint calculation and comparison do not over-tax savings income; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
 - [ ] `P01.S48` - [Sonnet high] resolve the low plan-close findings: required authored_year, settlement-unsupported words naming a waived refund in all four locales; `src/cadrumo/application/modelo/profile_derived_facts.py`.
 - [ ] `P01.S49` - [Sonnet high] mirror the merged backend on the desktop: regenerate the modelo and ledger contracts for the disagreement operations and the form note finding id, and give the withholding certificate record a certificate file picker with served words for the custody refusals; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
-- [ ] `P01.S50` - [Sonnet high] let a projected Modelo 100 year resolve the Anexo D inventory applicability through the registry selection instead of an exact year match, and serve state-projection readiness at the grade the year reaches; `src/cadrumo/application/aggregation/inventory.py`.
+- [x] `P01.S50` - [Sonnet high] let a projected Modelo 100 year resolve the Anexo D inventory applicability through the registry selection instead of an exact year match, and serve state-projection readiness at the grade the year reaches; `src/cadrumo/application/aggregation/inventory.py`.
 - [ ] `P01.S51` - [Opus medium] design and [Sonnet high] build the Modelo workspace door for a blocking credit or tier disagreement: list the served disagreements, accept one with a reason and revoke an acceptance at its expected revision, all in served words with stories and a scenario; `native/desktop/frontend/src/components/modelo/workspace`.
 
 ### Phase `P02` - contracts and fixtures

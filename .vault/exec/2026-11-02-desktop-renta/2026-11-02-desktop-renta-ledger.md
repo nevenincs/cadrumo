@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b3b1a750279beafe317452fb8027dc5cbe7f27e49df0c02b64fdfe7634c6d230'
+body_hash: 'sha256:eba054934533220ebe633ed94f1e2c509b211cebd2c29068cf047e2a83d13ffc'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -760,6 +760,27 @@ related:
 - `S44` `verify:` `dev.locales audit` -> `pass`
 - `S44` `verify:` `pytest wide suites` -> `fail`
 - `S44` `by:` `vaultspec-standard-executor`
+- `S50` `M` `src/cadrumo/application/_state_projection_readiness.py`
+- `S50` `M` `src/cadrumo/application/aggregation/inventory.py`
+- `S50` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
+- `S50` `M` `src/cadrumo/application/state_projection.py`
+- `S50` `M` `src/cadrumo/application/tests/test_state_projection.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/inventory_anexo_d_applicability.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py`
+- `S50` `M` `src/cadrumo/domain/contribuyente/inventory/valuation.py`
+- `S50` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_state_projection.py`
+- `S50` `M` `src/cadrumo/locales/en/application.yml`
+- `S50` `M` `src/cadrumo/locales/es/application.yml`
+- `S50` `M` `src/cadrumo/locales/ca/application.yml`
+- `S50` `M` `src/cadrumo/locales/hu/application.yml`
+- `S50` `A` `src/cadrumo/domain/calculations/registry/tests/test_inventory_anexo_d_applicability.py`
+- `S50` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_projected_year_inventory_live.py`
+- `S50` `verify:` `ruff` -> `pass`
+- `S50` `verify:` `ty` -> `pass`
+- `S50` `verify:` `lint-imports` -> `pass`
+- `S50` `verify:` `pytest inventory, modelo, state projection suites` -> `pass`
+- `S50` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S50` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -816,3 +837,4 @@ related:
 - `S20` Commits 058065391e, 991f48bdea, cae85744d0, e499839a18, e9a18f1117, 148173569a, b7da0dbe77, 99d8a52aa8, 17bcee39e3, 5fd7982366. Every failure the plan's commits caused is fixed. Remaining reds belong to other lanes: desktop chrome 17 keys (frontend 6fa9d30093, 975330ea1f, bb0476fd0c); check-types 3 diagnostics outside our files; 130/131 relation-prefill drift (10dcf5c8fc); 0171 (0f570046bf); Modelo 130/131 split regressions (ca59ec5ecb, fb844a52db, 24e2cef114); identity inventory keys of other lanes; 2 Playwright modelo-workspace scenarios. 46 raw-key scenarios were stale build chrome-strings, cleared by regeneration.
 - `S47` Commit 781c65f4aa. 0506 = max(0, min(0460, 0461 - max(0, 0435))) from LIRPF art. 84.2.3 and the AEAT dictionary JREDU21, authored once at 2022. 2026 cases passed after S44 8a53bf9e6f. 2020/2021 below the floor left alone; box 0507 pension remainder is the same kind of gap, out of scope.
 - `S44` Commit 8a53bf9e6f (readers, verification findings, work form, workspace and 8 locale catalogues also in it). A projected year reads at calculation grade through `reading_snapshot;` verify refuses with `registry_filing_year_projected,` export with `errors.snapshot.filing_year_projected.` Wide-suite failures attributed to other lanes (M130, 131, layout). Open: inventory-anexo-d-applicability is authored for 2025 only, blocking box 0177 for any projected year; state-projection readiness still requests filing grade.
+- `S50` Commit 4902820ea6. Anexo D applies from its first authored filing year on `(inventory_anexo_d_applies),` so a projected year resolves 0177/0181/0182. Readiness reads at the reachable grade and refuses in served words. Open: the typed modelo.readiness.summary still carries only the cause token to the window.
