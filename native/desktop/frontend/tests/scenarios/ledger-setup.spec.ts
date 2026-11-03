@@ -25,6 +25,24 @@ declare global {
 // readiness reason that opens the movements it names, and a reset whose
 // dry run the sealed declarations block.
 
+/** The sentences the backend serves for the certificate custody and file
+ * refusals, in each language, as the generated fixture holds them. */
+const CERTIFICATE_WORDS = JSON.parse(
+  readFileSync(
+    new URL(
+      "../../src/dev/fixtures/ledgerWithholdingWords.json",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+) as Record<
+  | "certificate_not_in_custody"
+  | "certificate_file_unreadable"
+  | "certificate_fingerprint_mismatch",
+  Record<string, { refusal_words: string }>
+>;
+const WITHHOLDING_LANGUAGES = ["en", "es", "ca", "hu"] as const;
+
 const engine = readFileSync(
   fileURLToPath(
     new URL("../../node_modules/axe-core/axe.min.js", import.meta.url),
@@ -97,10 +115,13 @@ test("a capital good names its purchase from the year typed", async ({
 async function openSetup(
   target: Page,
   section: "rules" | "registers" | "health",
+  language = "en",
 ) {
   await head(target).locator(".ledger-setup").click();
   await target
-    .getByRole("menuitem", { name: label(`desktop.ledger.section.${section}`) })
+    .getByRole("menuitem", {
+      name: label(`desktop.ledger.section.${section}`, {}, language),
+    })
     .click();
   await expect(target.locator(`.ledger-setup-${section}`)).toBeVisible();
   // The menu has closed and given the page back.
@@ -118,8 +139,10 @@ async function openAssets(target: Page, stock = false, language = "en") {
   if (stock) await area(target, "desktop.ledger.assets.area.stock");
 }
 
-async function area(target: Page, key: string) {
-  await target.getByRole("tab", { name: label(key), exact: true }).click();
+async function area(target: Page, key: string, language = "en") {
+  await target
+    .getByRole("tab", { name: label(key, {}, language), exact: true })
+    .click();
 }
 
 test("counterparty replies and drafts belong to the exact lookup identity", async ({
@@ -1368,10 +1391,10 @@ for (const scheme of ["light", "dark"] as const)
   });
 
 /** Opens Setup › Registers › Withholding. */
-async function openWithholding(target: Page, shape?: string) {
-  await openLedger(target, undefined, "en", shape);
-  await openSetup(target, "registers");
-  await area(target, "desktop.ledger.registers.area.withholding");
+async function openWithholding(target: Page, shape?: string, language = "en") {
+  await openLedger(target, undefined, language, shape);
+  await openSetup(target, "registers", language);
+  await area(target, "desktop.ledger.registers.area.withholding", language);
   await expect(
     target.locator(".ledger-withholding-class").first(),
   ).toBeVisible();
@@ -1491,7 +1514,7 @@ test("a certificate is recorded, and the payer's tax ID is nowhere in the window
   expect(held).toEqual({ page: false, fields: false, storage: false });
 });
 
-test("a refused certificate shows the backend's words, or the pane's own when it served none, and keeps the form", async ({
+test("a refusal the backend served no words for is said in the pane's own, and keeps the form", async ({
   page: target,
 }) => {
   await openWithholding(target);
@@ -1515,15 +1538,15 @@ test("a refused certificate shows the backend's words, or the pane's own when it
   );
   const submit = button(form, "desktop.ledger.withholding.action.record");
   await submit.click();
-  // The served words, as served.
   await expect(target.locator(".setup-call-line")).toContainText(
-    "The payment on account passed on to you cannot be more than the payment on account.",
+    label(
+      "desktop.ledger.withholding.refusal.repercutido_exceeds_ingreso_a_cuenta",
+    ),
   );
   await expect(form).toBeVisible();
   await expect(
     field(form, "desktop.ledger.withholding.payer_tax_id"),
   ).toHaveValue(PAYER_TAX_ID);
-  // A refusal with no words served is said in the pane's own.
   await field(
     form,
     "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
@@ -1542,29 +1565,41 @@ test("a refused certificate shows the backend's words, or the pane's own when it
 
 /** Starts a certificate record the way a payer's certificate is: a class, a
  * payer, the payer-certificate source. The figures stay at zero. */
-async function startCertificate(target: Page) {
-  await button(target, "desktop.ledger.withholding.action.record").click();
+async function startCertificate(target: Page, language = "en") {
+  const word = (key: string) => label(key, {}, language);
+  await target
+    .getByRole("button", {
+      name: word("desktop.ledger.withholding.action.record"),
+      exact: true,
+    })
+    .click();
   const form = withholdingForm(target);
-  await field(form, "desktop.ledger.withholding.income_class").selectOption(
+  const labelled = (key: string) => form.getByLabel(word(key), { exact: true });
+  await labelled("desktop.ledger.withholding.income_class").selectOption(
     "capital_mobiliario",
   );
-  await field(form, "desktop.ledger.withholding.payer_tax_id").fill(
-    PAYER_TAX_ID,
-  );
-  await field(form, "desktop.ledger.withholding.payer_legal_name").fill(
+  await labelled("desktop.ledger.withholding.payer_tax_id").fill(PAYER_TAX_ID);
+  await labelled("desktop.ledger.withholding.payer_legal_name").fill(
     "Banco de Ejemplo SA",
   );
-  await field(form, "desktop.ledger.withholding.origin_label").selectOption(
+  await labelled("desktop.ledger.withholding.origin_label").selectOption(
     "payer_certificate",
   );
   return form;
 }
 
+/** The form's own record button, in the window's language. */
+const recordButton = (form: Locator, language = "en") =>
+  form.getByRole("button", {
+    name: label("desktop.ledger.withholding.action.record", {}, language),
+    exact: true,
+  });
+
 /** Chooses the certificate file in the made-up computer's dialog. */
-async function chooseCertificateFile(form: Locator) {
+async function chooseCertificateFile(form: Locator, language = "en") {
   await form
     .getByRole("button", {
-      name: `${label("desktop.ledger.withholding.file")}: ${label("desktop.ledger.withholding.file_choose")}`,
+      name: `${label("desktop.ledger.withholding.file", {}, language)}: ${label("desktop.ledger.withholding.file_choose", {}, language)}`,
       exact: true,
     })
     .click();
@@ -1595,59 +1630,72 @@ test("a certificate file is picked, kept by the backend and recorded under the f
   expect(held).toBe(false);
 });
 
-test("a certificate file that cannot be read is refused without the token, and the form keeps the file", async ({
-  page: target,
-}) => {
-  await openWithholding(target);
-  const form = await startCertificate(target);
-  await chooseCertificateFile(form);
-  await target.evaluate(() =>
-    window.__scenarioWithholding!.nextRecords(["unreadable"]),
-  );
-  await button(form, "desktop.ledger.withholding.action.record").click();
-  const line = target.locator(".setup-call-line");
-  // The backend serves no words for this refusal, so the pane says so in its
-  // generic notice and never prints the reason's token.
-  await expect(line).toContainText(label("desktop.ledger.form.refused"));
-  await expect(line).not.toContainText("certificate_file_unreadable");
-  await expect(form).toBeVisible();
-  await expect(form.locator(".ledger-withholding-file-name")).toBeVisible();
-  // Sent again, the same file is recorded.
-  await button(form, "desktop.ledger.withholding.action.record").click();
-  await expect(form).toBeHidden();
-  await expect(
-    target.locator(".ledger-withholding-table tr", {
-      hasText: "Banco de Ejemplo SA",
-    }),
-  ).toBeVisible();
-});
+for (const language of WITHHOLDING_LANGUAGES) {
+  test(`a certificate file that cannot be read is refused in the words the backend served in ${language}, and the form keeps the file`, async ({
+    page: target,
+  }) => {
+    await openWithholding(target, undefined, language);
+    const form = await startCertificate(target, language);
+    await chooseCertificateFile(form, language);
+    await target.evaluate(() =>
+      window.__scenarioWithholding!.nextRecords(["unreadable"]),
+    );
+    await recordButton(form, language).click();
+    const line = target.locator(".setup-call-line");
+    // The sentence as served: neither the reason's token nor a notice of the
+    // window's own stands in for it.
+    await expect(line).toHaveText(
+      CERTIFICATE_WORDS.certificate_file_unreadable[language]!.refusal_words,
+    );
+    await expect(line).not.toContainText("certificate_file_unreadable");
+    await expect(form).toBeVisible();
+    await expect(form.locator(".ledger-withholding-file-name")).toBeVisible();
+    // Sent again, the same file is recorded.
+    await recordButton(form, language).click();
+    await expect(form).toBeHidden();
+    await expect(
+      target.locator(".ledger-withholding-table tr", {
+        hasText: "Banco de Ejemplo SA",
+      }),
+    ).toBeVisible();
+  });
 
-test("a stored document that is not the chosen file, or that custody does not hold, is refused in the generic notice", async ({
-  page: target,
-}) => {
-  await openWithholding(target, "documents");
-  const form = await startCertificate(target);
-  const stored = field(form, "desktop.ledger.withholding.document");
-  await expect.poll(() => stored.locator("option").count()).toBeGreaterThan(1);
-  await stored.selectOption({ index: 1 });
-  const record = button(form, "desktop.ledger.withholding.action.record");
-  const line = target.locator(".setup-call-line");
-  // The register's custody holds no such document.
-  await record.click();
-  await expect(line).toContainText(label("desktop.ledger.form.refused"));
-  await expect(line).not.toContainText("certificate_not_in_custody");
-  // A file chosen beside it must be that document.
-  await chooseCertificateFile(form);
-  await record.click();
-  await expect(line).toContainText(label("desktop.ledger.form.refused"));
-  await expect(line).not.toContainText("certificate_fingerprint_mismatch");
-  await expect(form).toBeVisible();
-  await expect(
-    target.locator(".ledger-withholding-table tr", {
-      hasText: "Banco de Ejemplo SA",
-    }),
-  ).toHaveCount(0);
-});
+  test(`a stored document that is not the chosen file, or that custody does not hold, is refused in the words the backend served in ${language}`, async ({
+    page: target,
+  }) => {
+    await openWithholding(target, "documents", language);
+    const form = await startCertificate(target, language);
+    const stored = form.getByLabel(
+      label("desktop.ledger.withholding.document", {}, language),
+      { exact: true },
+    );
+    await expect
+      .poll(() => stored.locator("option").count())
+      .toBeGreaterThan(1);
+    await stored.selectOption({ index: 1 });
+    const line = target.locator(".setup-call-line");
+    // The register's custody holds no such document.
+    await recordButton(form, language).click();
+    await expect(line).toHaveText(
+      CERTIFICATE_WORDS.certificate_not_in_custody[language]!.refusal_words,
+    );
+    await expect(line).not.toContainText("certificate_not_in_custody");
+    // A file chosen beside it must be that document.
+    await chooseCertificateFile(form, language);
+    await recordButton(form, language).click();
+    await expect(line).toHaveText(
+      CERTIFICATE_WORDS.certificate_fingerprint_mismatch[language]!
+        .refusal_words,
+    );
+    await expect(line).not.toContainText("certificate_fingerprint_mismatch");
+    await expect(form).toBeVisible();
+    await expect(
+      target.locator(".ledger-withholding-table tr", {
+        hasText: "Banco de Ejemplo SA",
+      }),
+    ).toHaveCount(0);
+  });
+}
 
 test("a refusal that kept the file is shown as partial, apart from a write whose outcome is unknown", async ({
   page: target,

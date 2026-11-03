@@ -53,6 +53,7 @@ export const STORY_PERIOD: LedgerPeriod = { year: 2026, code: "4T" };
 export function useLedgerPort(
   shape: LedgerShape = "fixture",
   signedIn = true,
+  language = "en",
 ): LedgerPort {
   const port = useRef<LedgerPort | null>(null);
   port.current ??= ledgerFixture({
@@ -60,6 +61,7 @@ export function useLedgerPort(
     wait: async () => undefined,
     signedIn: () => signedIn,
     shape,
+    language,
   });
   return port.current;
 }

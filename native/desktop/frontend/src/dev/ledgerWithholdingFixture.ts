@@ -5,6 +5,7 @@
 // never holds the payer's tax identifier, which is dropped once it has named
 // the payer's reference. Everything it answers is synthetic.
 
+import served from "./fixtures/ledgerWithholdingWords.json";
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,
@@ -28,6 +29,8 @@ type Tools = {
   keptInPart: (reason: string, detail: JsonObject) => never;
   /** The file a token the window was given stands for. */
   fileOf: (token: JsonValue | undefined) => { name: string };
+  /** The language the backend words a refusal in. */
+  language: string;
 };
 
 /** What the made-up register cannot cause itself, which a scenario asks the
@@ -53,11 +56,13 @@ const AMOUNTS = [
   "ingreso_a_cuenta_repercutido",
 ] as const;
 const DECIMAL = /^(0|[1-9]\d*)(\.\d+)?$/;
-/** Words the backend serves with a refusal, which the window shows as served. */
-const SERVED_WORDS: Record<string, string> = {
-  repercutido_exceeds_ingreso_a_cuenta:
-    "The payment on account passed on to you cannot be more than the payment on account.",
-};
+/** The sentences the backend serves with the certificate custody and file
+ * refusals, in each language, read from its own wording; it serves none for
+ * the other reasons. */
+const SERVED_WORDS: Record<
+  string,
+  Record<string, { refusal_words: string; refusal_words_language: string }>
+> = served;
 /** The class the scenario serves a label for; the others are served bare. */
 const LABELLED = {
   [WITHHOLDING_INCOME_CLASSES[0]]: "Employment income",
@@ -86,8 +91,17 @@ type Attestation = {
 
 /** The withholding operations over a small synthetic register. */
 export function withholdingOperations(tools: Tools) {
-  const { profileId, today, now, hex64, invalid, stop, keptInPart, fileOf } =
-    tools;
+  const {
+    profileId,
+    today,
+    now,
+    hex64,
+    invalid,
+    stop,
+    keptInPart,
+    fileOf,
+    language,
+  } = tools;
   const faults: CertificateFault[] = [];
   window.__scenarioWithholding = {
     nextRecords: (next) => faults.push(...next),
@@ -226,8 +240,14 @@ export function withholdingOperations(tools: Tools) {
       ejercicio,
       row: null,
       count: null,
-      refusal: { code, reason, ejercicio },
-      ...(SERVED_WORDS[reason] ? { refusal_words: SERVED_WORDS[reason] } : {}),
+      refusal: {
+        code,
+        reason,
+        ejercicio,
+        ...(SERVED_WORDS[reason]
+          ? (SERVED_WORDS[reason][language] ?? SERVED_WORDS[reason].en)
+          : {}),
+      },
     });
   const keptInPartRefusal = (
     code: string,

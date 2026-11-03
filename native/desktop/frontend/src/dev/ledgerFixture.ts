@@ -197,6 +197,8 @@ type Options = {
   wait: () => Promise<void>;
   signedIn: () => boolean;
   shape: LedgerShape;
+  /** The language the backend words a refusal in; English when not given. */
+  language?: string;
 };
 
 const PURPOSE_KINDS: Record<FilePurpose, readonly string[]> = {
@@ -1951,6 +1953,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     events,
     hex64,
     fileOf: (token) => fileOf(token, "documents"),
+    language: options.language ?? "en",
   });
   const movementWork = movementActionOperations(ledger, {
     profileId: LEDGER_FIXTURE_PROFILE_ID,

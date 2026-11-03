@@ -388,16 +388,16 @@ export function WithholdingPane({
     reload();
   };
 
-  /** A refusal said in the words the backend served for it, else in this
-   * pane's own words for a reason it has some for. A reason it has none for
-   * (the custody refusals, which the backend serves no words for) gets the
-   * generic notice, never the token. */
+  /** A refusal said in the words the backend served for it, with the
+   * refusal's own or the detail's; else in this pane's own words for a reason
+   * it has some for. A reason it has none for (and the backend served no
+   * words for) gets the generic notice, never the token. */
   const ownWords = tokensOf("desktop.ledger.withholding.refusal.");
   const refusalIn = (detail: unknown): string | null => {
-    const served = servedRefusalWords(detail);
-    if (served) return served;
     const found = (detail as Partial<WithholdingMutationResult> | null)
       ?.refusal;
+    const served = servedRefusalWords(found) ?? servedRefusalWords(detail);
+    if (served) return served;
     return found && ownWords.includes(found.reason)
       ? t(`desktop.ledger.withholding.refusal.${found.reason}`)
       : null;

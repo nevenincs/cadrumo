@@ -86,6 +86,8 @@ type Tools = {
   hex64: (text: string) => string;
   /** The file a token the window was given stands for. */
   fileOf: (token: JsonValue | undefined) => { name: string };
+  /** The language the backend words a refusal in. */
+  language: string;
 };
 
 type Handler = (request: JsonObject) => JsonObject;
@@ -2286,6 +2288,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       throw new SetupKeptInPart(reason, detail);
     },
     fileOf: tools.fileOf,
+    language: tools.language,
   });
   const reads: Partial<Record<LedgerDefinitionId, Handler>> = {
     "ledger.rule.list": (request) => {

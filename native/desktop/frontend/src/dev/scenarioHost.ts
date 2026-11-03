@@ -559,6 +559,7 @@ export function scenarioHost(
     wait: () => wait(options.latencyMs),
     signedIn,
     shape: options.ledger ?? scenario.ledger ?? "fixture",
+    language: options.language,
   });
   const modelo = modeloFixture({
     say,

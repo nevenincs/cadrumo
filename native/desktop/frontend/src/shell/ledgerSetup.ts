@@ -509,6 +509,10 @@ export type WithholdingMutationResult = {
       | "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT";
     reason: WithholdingRefusalReason;
     ejercicio: number;
+    /** The finished sentence the backend serves, in its own language, for
+     * the certificate custody and file refusals; absent for the others. */
+    refusal_words?: string | null;
+    refusal_words_language?: string | null;
   } | null;
 };
 /** Records a payer's certificate. `payer_tax_id` is private input: it goes

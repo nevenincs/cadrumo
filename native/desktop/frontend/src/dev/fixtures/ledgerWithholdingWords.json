@@ -1,0 +1,56 @@
+{
+  "certificate_not_in_custody": {
+    "en": {
+      "refusal_words": "No stored certificate has that SHA-256, or the stored file no longer matches it. Record the certificate with --certificate-file.",
+      "refusal_words_language": "en"
+    },
+    "es": {
+      "refusal_words": "Ningún certificado guardado tiene ese SHA-256, o el archivo guardado ya no coincide con él. Registra el certificado con --certificate-file.",
+      "refusal_words_language": "es"
+    },
+    "ca": {
+      "refusal_words": "Cap certificat desat té aquest SHA-256, o el fitxer desat ja no hi coincideix. Registra el certificat amb --certificate-file.",
+      "refusal_words_language": "ca"
+    },
+    "hu": {
+      "refusal_words": "Egyetlen eltárolt igazolásnak sincs ilyen SHA-256 ujjlenyomata, vagy az eltárolt fájl már nem egyezik vele. Rögzítsd az igazolást a --certificate-file kapcsolóval.",
+      "refusal_words_language": "hu"
+    }
+  },
+  "certificate_file_unreadable": {
+    "en": {
+      "refusal_words": "The certificate file could not be read: check the path, that the file is not empty, and that it is a PDF, an image or an XML document.",
+      "refusal_words_language": "en"
+    },
+    "es": {
+      "refusal_words": "No se pudo leer el archivo del certificado: revisa la ruta, que el archivo no esté vacío y que sea un PDF, una imagen o un documento XML.",
+      "refusal_words_language": "es"
+    },
+    "ca": {
+      "refusal_words": "No s'ha pogut llegir el fitxer del certificat: revisa la ruta, que el fitxer no estigui buit i que sigui un PDF, una imatge o un document XML.",
+      "refusal_words_language": "ca"
+    },
+    "hu": {
+      "refusal_words": "Az igazolás fájlja nem olvasható: ellenőrizd az útvonalat, hogy a fájl nem üres, és hogy PDF, kép vagy XML dokumentum.",
+      "refusal_words_language": "hu"
+    }
+  },
+  "certificate_fingerprint_mismatch": {
+    "en": {
+      "refusal_words": "The SHA-256 you gave is not the SHA-256 of the certificate file, so nothing was stored. Check that you named the right file.",
+      "refusal_words_language": "en"
+    },
+    "es": {
+      "refusal_words": "El SHA-256 que indicaste no es el del archivo del certificado, así que no se guardó nada. Comprueba que has indicado el archivo correcto.",
+      "refusal_words_language": "es"
+    },
+    "ca": {
+      "refusal_words": "El SHA-256 que has indicat no és el del fitxer del certificat, així que no s'ha desat res. Comprova que has indicat el fitxer correcte.",
+      "refusal_words_language": "ca"
+    },
+    "hu": {
+      "refusal_words": "A megadott SHA-256 nem az igazolás fájljáé, ezért semmi sem lett mentve. Ellenőrizd, hogy a megfelelő fájlt adtad meg.",
+      "refusal_words_language": "hu"
+    }
+  }
+}

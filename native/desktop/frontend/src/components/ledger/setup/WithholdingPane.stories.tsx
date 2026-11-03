@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import served from "@/dev/fixtures/ledgerWithholdingWords.json";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import {
   STORY_PERIOD,
@@ -15,15 +16,16 @@ import { WithholdingPane } from "./WithholdingPane";
 // The withholding register of Setup › Registers over the scenario's ledger:
 // the payers' certificates by income class, a year with none, the statements
 // that a class had no withholding with the withdrawn ones kept as history, a
-// refusal said in the words the backend served for it, and a certificate file
-// picked and kept, with the refusals the backend serves no words for and the
-// one that kept the file. The scenario's payer and tax ID are made up.
+// refusal said in the pane's own words, and a certificate file picked and
+// kept, with the three custody and file refusals said in the words the
+// backend served for them and the one that kept the file. The scenario's
+// payer and tax ID are made up.
 
 type Args = { locale: string; shape?: LedgerShape };
 
 /** The page's own reads, held as the page holds them, for the register. */
 function Register({ locale, shape }: Args) {
-  const port = useLedgerPort(shape);
+  const port = useLedgerPort(shape, true, locale);
   const read = useLedgerRead(port, STORY_PERIOD);
   const { stage, onStage } = useStoryStage();
   const pause = usePagePause({
@@ -172,9 +174,10 @@ export const AttestationsListed: Story = {
   },
 };
 
-/** A certificate the register refused, said in the words it served. */
-export const RefusedWithServedWords: Story = {
-  name: "Refusal in the backend's words",
+/** A certificate the register refused with no words served, said in the
+ * pane's own. */
+export const RefusedInPaneWords: Story = {
+  name: "Refusal in the pane's own words",
   play: async ({ canvasElement }) => {
     await openForm(canvasElement, "record");
     const form = canvasElement.querySelector<HTMLElement>(
@@ -202,6 +205,13 @@ export const RefusedWithServedWords: Story = {
       inside.getByRole("button", {
         name: word("desktop.ledger.withholding.action.record"),
       }),
+    );
+    await waitFor(() =>
+      within(canvasElement).getByText(
+        word(
+          "desktop.ledger.withholding.refusal.repercutido_exceeds_ingreso_a_cuenta",
+        ),
+      ),
     );
   },
 };
@@ -271,8 +281,8 @@ export const CertificateFileRecorded: Story = {
   },
 };
 
-/** A file that could not be read: the backend serves no words for it, so the
- * pane's generic notice stands and the file stays chosen. */
+/** A file that could not be read: the pane shows the sentence the backend
+ * served and the file stays chosen. */
 export const CertificateFileUnreadable: Story = {
   name: "Certificate file unreadable",
   play: async ({ canvasElement }) => {
@@ -281,12 +291,14 @@ export const CertificateFileUnreadable: Story = {
     await chooseFile(inside);
     await sendCertificate(inside);
     await waitFor(() =>
-      within(canvasElement).getByText(word("desktop.ledger.form.refused")),
+      within(canvasElement).getByText(
+        served.certificate_file_unreadable.en.refusal_words,
+      ),
     );
   },
 };
 
-/** A stored document custody does not hold: the same generic notice. */
+/** A stored document custody does not hold, said in the served words. */
 export const CertificateNotInCustody: Story = {
   name: "Certificate not in custody",
   args: { shape: "documents" },
@@ -305,12 +317,15 @@ export const CertificateNotInCustody: Story = {
     );
     await sendCertificate(inside);
     await waitFor(() =>
-      within(canvasElement).getByText(word("desktop.ledger.form.refused")),
+      within(canvasElement).getByText(
+        served.certificate_not_in_custody.en.refusal_words,
+      ),
     );
   },
 };
 
-/** A stored document beside a file that is not that document. */
+/** A stored document beside a file that is not that document, said in the
+ * served words. */
 export const CertificateFingerprintMismatch: Story = {
   name: "Certificate does not match its fingerprint",
   args: { shape: "documents" },
@@ -330,7 +345,9 @@ export const CertificateFingerprintMismatch: Story = {
     await chooseFile(inside);
     await sendCertificate(inside);
     await waitFor(() =>
-      within(canvasElement).getByText(word("desktop.ledger.form.refused")),
+      within(canvasElement).getByText(
+        served.certificate_fingerprint_mismatch.en.refusal_words,
+      ),
     );
   },
 };
