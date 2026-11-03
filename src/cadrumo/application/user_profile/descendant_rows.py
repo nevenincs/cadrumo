@@ -38,12 +38,12 @@ DESCENDANT_COUNT_PATH: Final = "renta_family.descendientes_count"
 _BIRTH_DATE_LEAF: Final = "birth_date"
 _NIF_LEAF: Final = "nif"
 
-_ROWS_OVER_LIMIT_KEY: Final = "application.user_profile.errors.descendant_rows_over_limit"
-_LIMIT_UNKNOWN_KEY: Final = "application.user_profile.errors.descendant_limit_unknown"
-_BIRTH_DATE_REQUIRED_KEY: Final = "application.user_profile.errors.descendant_birth_date_required"
-_NIF_INVALID_KEY: Final = "application.user_profile.errors.descendant_nif_invalid"
-_VALUE_INVALID_KEY: Final = "application.user_profile.errors.descendant_value_invalid"
-_FACT_UNSUPPORTED_KEY: Final = "application.user_profile.errors.descendant_fact_unsupported"
+_ROWS_OVER_LIMIT_LOCALE_KEY: Final = "application.user_profile.errors.descendant_rows_over_limit"
+_LIMIT_UNKNOWN_LOCALE_KEY: Final = "application.user_profile.errors.descendant_limit_unknown"
+_BIRTH_DATE_REQUIRED_LOCALE_KEY: Final = "application.user_profile.errors.descendant_birth_date_required"
+_NIF_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.descendant_nif_invalid"
+_VALUE_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.descendant_value_invalid"
+_FACT_UNSUPPORTED_LOCALE_KEY: Final = "application.user_profile.errors.descendant_fact_unsupported"
 
 
 class ProfileDescendantFact(BaseModel):
@@ -123,21 +123,21 @@ def _validated_descendant_row(
     """
     supplied = {f"{DESCENDANT_OBJECT_PATH}.0.{fact.field_key}": fact.value for fact in row.facts}
     if f"{DESCENDANT_OBJECT_PATH}.0.{_BIRTH_DATE_LEAF}" not in supplied:
-        _refuse(_BIRTH_DATE_REQUIRED_KEY, row=position)
+        _refuse(_BIRTH_DATE_REQUIRED_LOCALE_KEY, row=position)
     nif_path = f"{DESCENDANT_OBJECT_PATH}.0.{_NIF_LEAF}"
     if nif_path in supplied:
         canonical_nif = _canonical_nif(supplied[nif_path], operation=operation)
         if canonical_nif is None:
-            _refuse(_NIF_INVALID_KEY, row=position)
+            _refuse(_NIF_INVALID_LOCALE_KEY, row=position)
         supplied[nif_path] = canonical_nif
     decoded = _decoded_descendants(supplied, operation=operation)
     if decoded is None:
-        _refuse(_VALUE_INVALID_KEY, row=position)
+        _refuse(_VALUE_INVALID_LOCALE_KEY, row=position)
     if len(decoded) != 1:
-        _refuse(_BIRTH_DATE_REQUIRED_KEY, row=position)
+        _refuse(_BIRTH_DATE_REQUIRED_LOCALE_KEY, row=position)
     stored = dict(descendant_facts_from_list(decoded, authority=operation))
     if any(stored.get(path) != value for path, value in supplied.items()):
-        _refuse(_FACT_UNSUPPORTED_KEY, row=position)
+        _refuse(_FACT_UNSUPPORTED_LOCALE_KEY, row=position)
     stored.pop(DESCENDANT_COUNT_PATH)
     return decoded[0], stored
 
@@ -148,9 +148,9 @@ def _validated_descendant_facts(
     """Return the family's records and its canonical ``path -> value`` facts, count included."""
     limit = declared_household_row_limit(operation, object_path=DESCENDANT_OBJECT_PATH)
     if limit is None:
-        _refuse(_LIMIT_UNKNOWN_KEY)
+        _refuse(_LIMIT_UNKNOWN_LOCALE_KEY)
     if len(descendants) > limit:
-        _refuse(_ROWS_OVER_LIMIT_KEY, limit=limit, count=len(descendants))
+        _refuse(_ROWS_OVER_LIMIT_LOCALE_KEY, limit=limit, count=len(descendants))
     records: list[DescendantInfo] = []
     pairs: dict[str, str] = {}
     for index, row in enumerate(descendants):

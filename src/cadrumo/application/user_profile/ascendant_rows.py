@@ -48,15 +48,15 @@ _COHABITING_LEAF: Final = "convivientes"
 _COHABITING_BOUND_KEY: Final = "m100.ascendant_cohabiting_descendants_max"
 _FORM_ROW_CODES_FACT: Final = "form-row-codes"
 
-_ROWS_OVER_LIMIT_KEY: Final = "application.user_profile.errors.ascendant_rows_over_limit"
-_LIMIT_UNKNOWN_KEY: Final = "application.user_profile.errors.ascendant_limit_unknown"
-_FACT_UNSUPPORTED_KEY: Final = "application.user_profile.errors.ascendant_fact_unsupported"
-_BIRTH_DATE_REQUIRED_KEY: Final = "application.user_profile.errors.ascendant_birth_date_required"
-_BIRTH_DATE_INVALID_KEY: Final = "application.user_profile.errors.ascendant_birth_date_invalid"
-_DEATH_DATE_INVALID_KEY: Final = "application.user_profile.errors.ascendant_death_date_invalid"
-_DEATH_BEFORE_BIRTH_KEY: Final = "application.user_profile.errors.ascendant_death_before_birth"
-_NIF_INVALID_KEY: Final = "application.user_profile.errors.ascendant_nif_invalid"
-_COHABITING_INVALID_KEY: Final = "application.user_profile.errors.ascendant_convivientes_invalid"
+_ROWS_OVER_LIMIT_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_rows_over_limit"
+_LIMIT_UNKNOWN_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_limit_unknown"
+_FACT_UNSUPPORTED_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_fact_unsupported"
+_BIRTH_DATE_REQUIRED_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_birth_date_required"
+_BIRTH_DATE_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_birth_date_invalid"
+_DEATH_DATE_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_death_date_invalid"
+_DEATH_BEFORE_BIRTH_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_death_before_birth"
+_NIF_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_nif_invalid"
+_COHABITING_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_convivientes_invalid"
 
 _LEAF_ORDER: Final = (_NIF_LEAF, _BIRTH_DATE_LEAF, _DEATH_DATE_LEAF, _COHABITING_LEAF)
 
@@ -110,7 +110,7 @@ def _tax_id(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> 
     """Admit a NIF or NIE whose checksum holds; an ascendant is a person, never an entity."""
     canonical = _canonical_nif(raw, operation=operation)
     if canonical is None:
-        _refuse(_NIF_INVALID_KEY, row=position)
+        _refuse(_NIF_INVALID_LOCALE_KEY, row=position)
     return canonical
 
 
@@ -125,7 +125,7 @@ def _cohabiting(raw: str, *, position: int, operation: PinnedAuthorityOperation)
     limit = resolve_form_codes(_FORM_ROW_CODES_FACT, authority=operation).integer(_COHABITING_BOUND_KEY)
     text = raw.strip()
     if not (text.isascii() and text.isdigit()) or int(text) > limit:
-        _refuse(_COHABITING_INVALID_KEY, row=position, limit=limit)
+        _refuse(_COHABITING_INVALID_LOCALE_KEY, row=position, limit=limit)
     return str(int(text))
 
 
@@ -133,18 +133,18 @@ def _row_facts(row: ProfileAscendantRow, *, position: int, operation: PinnedAuth
     """Validate one row's leaves and return them in their canonical stored form."""
     supplied = {fact.field_key: fact.value for fact in row.facts}
     if not supplied.keys() <= set(_LEAF_ORDER):
-        _refuse(_FACT_UNSUPPORTED_KEY, row=position)
+        _refuse(_FACT_UNSUPPORTED_LOCALE_KEY, row=position)
     if _BIRTH_DATE_LEAF not in supplied:
-        _refuse(_BIRTH_DATE_REQUIRED_KEY, row=position)
+        _refuse(_BIRTH_DATE_REQUIRED_LOCALE_KEY, row=position)
     stored: dict[str, str] = {}
-    birth = _date(supplied[_BIRTH_DATE_LEAF], position=position, message_key=_BIRTH_DATE_INVALID_KEY)
+    birth = _date(supplied[_BIRTH_DATE_LEAF], position=position, message_key=_BIRTH_DATE_INVALID_LOCALE_KEY)
     if _NIF_LEAF in supplied:
         stored[_NIF_LEAF] = _tax_id(supplied[_NIF_LEAF], position=position, operation=operation)
     stored[_BIRTH_DATE_LEAF] = birth.isoformat()
     if _DEATH_DATE_LEAF in supplied:
-        death = _date(supplied[_DEATH_DATE_LEAF], position=position, message_key=_DEATH_DATE_INVALID_KEY)
+        death = _date(supplied[_DEATH_DATE_LEAF], position=position, message_key=_DEATH_DATE_INVALID_LOCALE_KEY)
         if death < birth:
-            _refuse(_DEATH_BEFORE_BIRTH_KEY, row=position)
+            _refuse(_DEATH_BEFORE_BIRTH_LOCALE_KEY, row=position)
         stored[_DEATH_DATE_LEAF] = death.isoformat()
     if _COHABITING_LEAF in supplied:
         stored[_COHABITING_LEAF] = _cohabiting(supplied[_COHABITING_LEAF], position=position, operation=operation)
@@ -157,9 +157,9 @@ def _validated_ascendant_facts(
     """Return the canonical ``path -> value`` facts of the whole set, count included."""
     limit = declared_household_row_limit(operation, object_path=ASCENDANT_OBJECT_PATH)
     if limit is None:
-        _refuse(_LIMIT_UNKNOWN_KEY)
+        _refuse(_LIMIT_UNKNOWN_LOCALE_KEY)
     if len(ascendants) > limit:
-        _refuse(_ROWS_OVER_LIMIT_KEY, limit=limit, count=len(ascendants))
+        _refuse(_ROWS_OVER_LIMIT_LOCALE_KEY, limit=limit, count=len(ascendants))
     pairs: dict[str, str] = {}
     for index, row in enumerate(ascendants):
         stored = _row_facts(row, position=index + 1, operation=operation)

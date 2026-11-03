@@ -46,6 +46,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
@@ -76,7 +77,6 @@ _CUOTA_RESULTANTE_ROLE: Final = "irpf_cuota_resultante_autoliquidacion"
 _RESULTADO_ROLE: Final = "irpf_cuota_diferencial"
 _SITUACION_FAMILIAR_PATH: Final = "renta_family.situacion_familiar"
 _MINOR_CHILDREN_IN_UNIT_PATH: Final = "renta_family.minor_children_in_unit"
-_REFUSAL_KEY_PREFIX: Final = "application.modelo.taxation_comparison_words.refusal."
 _SPOUSE_TAX_ID_PATH: Final = "renta_spouse.tax_id"
 """The profile rule that refuses a joint return whose spouse the profile does not identify."""
 
@@ -127,6 +127,31 @@ class TaxationComparisonRefusal(StrEnum):
     """A box the compared results read has no value in one of the runs."""
 
 
+_REFUSAL_LOCALE_KEYS: Final[Mapping[TaxationComparisonRefusal, str]] = MappingProxyType(
+    {
+        TaxationComparisonRefusal.NOT_DECLARED: "application.modelo.taxation_comparison_words.refusal.not_declared",
+        TaxationComparisonRefusal.REVISION_OUTDATED: (
+            "application.modelo.taxation_comparison_words.refusal.revision_outdated"
+        ),
+        TaxationComparisonRefusal.NOT_CALCULATED: "application.modelo.taxation_comparison_words.refusal.not_calculated",
+        TaxationComparisonRefusal.ENTRIES_UNKNOWN: (
+            "application.modelo.taxation_comparison_words.refusal.entries_unknown"
+        ),
+        TaxationComparisonRefusal.SPOUSE_UNSTATED: (
+            "application.modelo.taxation_comparison_words.refusal.spouse_unstated"
+        ),
+        TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED: (
+            "application.modelo.taxation_comparison_words.refusal.family_situation_unstated"
+        ),
+        TaxationComparisonRefusal.NO_FAMILY_UNIT: "application.modelo.taxation_comparison_words.refusal.no_family_unit",
+        TaxationComparisonRefusal.UNRESOLVED_BOXES: (
+            "application.modelo.taxation_comparison_words.refusal.unresolved_boxes"
+        ),
+    }
+)
+"""The catalogue sentence of each refusal; every refusal has one."""
+
+
 class TaxationComparisonError(CoreError):
     """Raised when a conjunta-vs-individual comparison cannot be performed.
 
@@ -144,7 +169,7 @@ class TaxationComparisonError(CoreError):
             context["casilla_ids"] = ", ".join(casilla_ids)
         super().__init__(
             f"taxation comparison refused: {refusal.value}",
-            translated_message=f"{_REFUSAL_KEY_PREFIX}{refusal.value}",
+            translated_message=_REFUSAL_LOCALE_KEYS[refusal],
             context=context,
         )
 

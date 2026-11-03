@@ -68,7 +68,6 @@ from .borrador_100_import import borrador_pdf_extraction_profile
 from .borrador_100_keys import borrador_admitted_bindings, printed_box_casilla
 
 _ANNUAL: Final = "0A"
-_WORDS: Final = "application.live.borrador.comparison"
 
 type _Value = Decimal | str
 
@@ -139,6 +138,73 @@ _CLASSIFICATION_OF: Final[Mapping[Borrador100ComparisonReason, Borrador100Compar
     Borrador100ComparisonReason.BORRADOR_VALUE_AMBIGUOUS: Borrador100ComparisonClassification.NOT_COMPARABLE,
     Borrador100ComparisonReason.CALCULATION_BLOCKED: Borrador100ComparisonClassification.NOT_COMPARABLE,
     Borrador100ComparisonReason.VALUE_KINDS_DIFFER: Borrador100ComparisonClassification.NOT_COMPARABLE,
+}
+
+
+_STATUS_LOCALE_KEYS: Final[Mapping[Borrador100ComparisonStatus, str]] = {
+    Borrador100ComparisonStatus.COMPARED: "application.live.borrador.comparison.status.compared",
+    Borrador100ComparisonStatus.STALE: "application.live.borrador.comparison.status.stale",
+    Borrador100ComparisonStatus.NO_CAPTURE: "application.live.borrador.comparison.status.no_capture",
+    Borrador100ComparisonStatus.CAPTURE_REFUSED: "application.live.borrador.comparison.status.capture_refused",
+    Borrador100ComparisonStatus.NO_CALCULATION: "application.live.borrador.comparison.status.no_calculation",
+}
+
+_STALE_LOCALE_KEYS: Final[Mapping[Borrador100ComparisonStaleReason, str]] = {
+    Borrador100ComparisonStaleReason.CALCULATION_USED_OTHER_CAPTURE: (
+        "application.live.borrador.comparison.stale.calculation_used_other_capture"
+    ),
+    Borrador100ComparisonStaleReason.NEWER_CAPTURE_REFUSED: (
+        "application.live.borrador.comparison.stale.newer_capture_refused"
+    ),
+    Borrador100ComparisonStaleReason.CALCULATION_OUTDATED: (
+        "application.live.borrador.comparison.stale.calculation_outdated"
+    ),
+}
+
+_CLASSIFICATION_LOCALE_KEYS: Final[Mapping[Borrador100ComparisonClassification, str]] = {
+    Borrador100ComparisonClassification.AGREE: "application.live.borrador.comparison.classification.agree",
+    Borrador100ComparisonClassification.DIFFER: "application.live.borrador.comparison.classification.differ",
+    Borrador100ComparisonClassification.ONLY_IN_BORRADOR: (
+        "application.live.borrador.comparison.classification.only_in_borrador"
+    ),
+    Borrador100ComparisonClassification.ONLY_IN_CALCULATION: (
+        "application.live.borrador.comparison.classification.only_in_calculation"
+    ),
+    Borrador100ComparisonClassification.NOT_COMPARABLE: (
+        "application.live.borrador.comparison.classification.not_comparable"
+    ),
+}
+
+_REASON_LOCALE_KEYS: Final[Mapping[Borrador100ComparisonReason, str]] = {
+    Borrador100ComparisonReason.SAME_VALUE: "application.live.borrador.comparison.reason.same_value",
+    Borrador100ComparisonReason.TAKEN_FROM_BORRADOR: "application.live.borrador.comparison.reason.taken_from_borrador",
+    Borrador100ComparisonReason.NOT_APPLICABLE_ZERO: "application.live.borrador.comparison.reason.not_applicable_zero",
+    Borrador100ComparisonReason.VALUES_DIFFER: "application.live.borrador.comparison.reason.values_differ",
+    Borrador100ComparisonReason.CALCULATION_NOT_APPLICABLE: (
+        "application.live.borrador.comparison.reason.calculation_not_applicable"
+    ),
+    Borrador100ComparisonReason.CALCULATION_HAS_NO_VALUE: (
+        "application.live.borrador.comparison.reason.calculation_has_no_value"
+    ),
+    Borrador100ComparisonReason.BORRADOR_PRINTED_NO_VALUE: (
+        "application.live.borrador.comparison.reason.borrador_printed_no_value"
+    ),
+    Borrador100ComparisonReason.BORRADOR_VALUE_NOT_KEPT: (
+        "application.live.borrador.comparison.reason.borrador_value_not_kept"
+    ),
+    Borrador100ComparisonReason.BORRADOR_DOES_NOT_READ_BOX: (
+        "application.live.borrador.comparison.reason.borrador_does_not_read_box"
+    ),
+    Borrador100ComparisonReason.BORRADOR_VALUE_AMBIGUOUS: (
+        "application.live.borrador.comparison.reason.borrador_value_ambiguous"
+    ),
+    Borrador100ComparisonReason.CALCULATION_BLOCKED: "application.live.borrador.comparison.reason.calculation_blocked",
+    Borrador100ComparisonReason.VALUE_KINDS_DIFFER: "application.live.borrador.comparison.reason.value_kinds_differ",
+}
+
+_EVIDENCE_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "calculation": "application.live.borrador.comparison.evidence.calculation",
+    "borrador": "application.live.borrador.comparison.evidence.borrador",
 }
 
 
@@ -248,14 +314,14 @@ def _annual_modelo(operation: PinnedAuthorityOperation) -> ModeloCode:
     return ModeloCode(form_for_role("renta.annual", authority=operation))
 
 
-def _words(group: str, token: StrEnum, language: OutputLanguage) -> Borrador100ComparisonWords:
-    return Borrador100ComparisonWords(
-        token=token.value, words=tr(f"{_WORDS}.{group}.{token.value}", locale=language.value)
-    )
+def _words[Token: StrEnum](
+    token: Token, locale_keys: Mapping[Token, str], language: OutputLanguage
+) -> Borrador100ComparisonWords:
+    return Borrador100ComparisonWords(token=token.value, words=tr(locale_keys[token], locale=language.value))
 
 
 def _evidence(token: str, language: OutputLanguage) -> Borrador100ComparisonWords:
-    return Borrador100ComparisonWords(token=token, words=tr(f"{_WORDS}.evidence.{token}", locale=language.value))
+    return Borrador100ComparisonWords(token=token, words=tr(_EVIDENCE_LOCALE_KEYS[token], locale=language.value))
 
 
 def _saved_calculation(
@@ -517,8 +583,8 @@ def _comparison_row(
         calculation_value=_public(sides.calculation),
         calculation_absent_by_design=sides.row is not None and sides.row.absent_by_design,
         difference=_difference(sides.borrador, sides.calculation),
-        classification=_words("classification", _CLASSIFICATION_OF[reason], language),
-        reason=_words("reason", reason, language),
+        classification=_words(_CLASSIFICATION_OF[reason], _CLASSIFICATION_LOCALE_KEYS, language),
+        reason=_words(reason, _REASON_LOCALE_KEYS, language),
     )
 
 
@@ -600,8 +666,8 @@ def compare_borrador_100_with_calculation(
         profile_id=profile_id,
         filing_year=filing_year,
         language=language,
-        status=_words("status", status, language),
-        stale_reasons=tuple(_words("stale", reason, language) for reason in stale),
+        status=_words(status, _STATUS_LOCALE_KEYS, language),
+        stale_reasons=tuple(_words(reason, _STALE_LOCALE_KEYS, language) for reason in stale),
         capture=None if snapshot is None else _capture_summary(snapshot, language),
         refused_captures=len(reading.refused),
         outdated_stored_captures=reading.outdated_stored_snapshots,

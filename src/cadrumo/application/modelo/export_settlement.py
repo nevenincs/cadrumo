@@ -256,7 +256,7 @@ def _refund_values(amount: Decimal, refund_account: RefundAccount | None) -> dic
     return values
 
 
-_REFUSAL_MESSAGES: Final = {
+_REFUSAL_LOCALE_KEYS: Final = {
     SettlementRefusal.RESULT_UNKNOWN: "application.modelo.errors.export_settlement_unknown",
     SettlementRefusal.SETTLEMENT_UNSUPPORTED: "application.modelo.errors.export_settlement_unsupported",
 }
@@ -265,7 +265,7 @@ _REFUSAL_MESSAGES: Final = {
 def _settlement_refused(disposition: ResultDisposition, refusal: SettlementRefusal) -> ModeloExportError:
     """Refuse with the settlement's own message: the generic write failure would read as a disk problem."""
     return ModeloExportError(
-        translated_message=_REFUSAL_MESSAGES[refusal],
+        translated_message=_REFUSAL_LOCALE_KEYS[refusal],
         context={"cause": refusal.value, "result_disposition": disposition.value},
     )
 

@@ -32,9 +32,9 @@ from .work_form_models import (
 )
 
 #: The headings of the lists kept apart from the pages, which the form's window also names its pages by.
-_UNPLACED_HEADING_KEY: Final[str] = "workspace.modelo.page.unplaced"
-_WORKING_FIGURES_HEADING_KEY: Final[str] = "workspace.modelo.page.calculation_details"
-_ANSWERS_HEADING_KEY: Final[str] = "workspace.modelo.page.answers"
+_UNPLACED_HEADING_LOCALE_KEY: Final[str] = "workspace.modelo.page.unplaced"
+_WORKING_FIGURES_HEADING_LOCALE_KEY: Final[str] = "workspace.modelo.page.calculation_details"
+_ANSWERS_HEADING_LOCALE_KEY: Final[str] = "workspace.modelo.page.answers"
 
 
 def form_outline(
@@ -84,9 +84,9 @@ def _kept_apart_groups(
     filed: bool,
 ) -> tuple[ModeloFormOutlineGroup, ...]:
     kept_apart = (
-        (ModeloFormOutlineKind.UNPLACED, _UNPLACED_HEADING_KEY, tuple(item.field for item in unplaced)),
-        (ModeloFormOutlineKind.WORKING_FIGURES, _WORKING_FIGURES_HEADING_KEY, working_figures),
-        (ModeloFormOutlineKind.ANSWERS, _ANSWERS_HEADING_KEY, answers),
+        (ModeloFormOutlineKind.UNPLACED, _UNPLACED_HEADING_LOCALE_KEY, tuple(item.field for item in unplaced)),
+        (ModeloFormOutlineKind.WORKING_FIGURES, _WORKING_FIGURES_HEADING_LOCALE_KEY, working_figures),
+        (ModeloFormOutlineKind.ANSWERS, _ANSWERS_HEADING_LOCALE_KEY, answers),
     )
     return tuple(
         ModeloFormOutlineGroup(
