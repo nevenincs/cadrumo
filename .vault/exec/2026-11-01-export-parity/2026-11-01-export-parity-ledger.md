@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8c846896903630b2021d4e3986b82792af4e0e9c90658e8dbfe001784091692'
+body_hash: 'sha256:eaf933ecf1bac6a48b3b3811612f5b120ef0778c81875eb4487d28b6ea4ed8ee'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -890,6 +890,31 @@ related:
 - `S19` `verify:` `ruff` -> `pass`
 - `S19` `verify:` `test_modelo_100_retencion_soportada_credits_live` -> `pass`
 - `S19` `by:` `implementation-engineer-high`
+- `S22` `M` `src/cadrumo/core/aggregation.py`
+- `S22` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S22` `M` `src/cadrumo/application/aggregation/renta_income_diagnostics.py`
+- `S22` `M` `src/cadrumo/application/aggregation/renta_income_ledger.py`
+- `S22` `M` `src/cadrumo/application/aggregation/renta_income_models.py`
+- `S22` `M` `src/cadrumo/application/aggregation/retencion_soportada_source.py`
+- `S22` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S22` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S22` `M` `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`
+- `S22` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S22` `M` `src/cadrumo/application/modelo/calculation_bucket_actions.py`
+- `S22` `M` `src/cadrumo/application/modelo/credit_reconciliation.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_retencion_soportada_credits_live.py`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/facts/0082-m036-activity-selector-catalogue.toml`
+- `S22` `A` `src/cadrumo/_data/registry/aeat/facts/0178-modelo-100-selector-m036-arrendadores-inmuebles.toml`
+- `S22` `verify:` `pytest test_renta_imputation_criterion.py test_modelo_100_retencion_soportada_credits_live.py` -> `pass`
+- `S22` `verify:` `pytest aggregation modelo profile_persistence registry renta-credit subset` -> `fail`
+- `S22` `verify:` `ruff ty touched files` -> `pass`
+- `S22` `verify:` `registry_status --check` -> `pass`
+- `S22` `verify:` `grade_earned under_supported=0` -> `pass`
+- `S22` `by:` `implementation-engineer-high`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_suffered_withholding_credits.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_payer_side_returns_leave_credits_unchanged_live.py`
+- `S19` `verify:` `pytest test_projection_suffered_withholding_credits.py test_modelo_100_payer_side_returns_leave_credits_unchanged_live.py` -> `pass`
 
 ## Notes
 
@@ -927,3 +952,5 @@ related:
 - `S06` Broad run: 3560 passed, 16 failed, all in `test_calculation_note_wording.py` on `retencion_soportada_evidence_required` and `retencion_soportada_absence_contradicted,` which leave `{income_class}` unfilled; those come from withholding-note wording outside this Step.
 - `S19` content first landed in external snapshots 55af68e5bf and 70192a59e1; completed with 0f41170526, merges d127bf7e00 and ad39fcf220, sweep f54ea2a700, and follow-ups ac48cf2241 56f3dc3a81 3742b00591 c723b9215c 96ccc4eec1 7a31179a16 b2e0e07ff8
 - `S19` ty and lint-imports fail only in tui-owned files from 3be7987f95, c9d6d73b82 and b1cafbb63d; M100 2024 export refusals come from the settlement suspension rule of 3be7987f95
+- `S22` Casilla 06 cut-off: a declared retencion whose receipt is dated after the M130 window stays out of that window's 06 and is reported. Primary text: RIRPF art. 110.3.a deducts 'las retenciones practicadas ... correspondientes al periodo ... hasta el ultimo dia del trimestre' `(src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-110.html.extracted.md,` apartado 3.a); art. 78.1 makes withholding arise when the income is paid; TEAC 00/03187/2011 allows no deduction before payment; DGT V3298-15 places it in the window of its income's imputation. Research 2026-11-01-export-parity-withholding-legal-readings-research finds a payment after quarter end but before filing not excluded by any text, and limiting inclusion to payments by the window end lawful; the next quarter's cumulative 06 and annual 0599 pick it up. The V4965-16 payer-year comparison covers the `retencion_soportada` certificate cross-check; `datos_fiscales` does not exist yet and the borrador is not payer-year compared, as the ADR names certificate and `datos_fiscales` only. Wide-run failures present at 553bba5402 and untouched by S22: `test_projection` and payer-side credit tests (S19 regressions, fixed in b7450a5dd6), `test_local_cross_period_carry` (6, tier-divergence screen), 7 dev/registry date-window tests; tui settlement failures (3) unchanged.
+- `S19` Post-close fix b7450a5dd6: the S19 rental-activity credit asks for payer evidence when no IAE epigraph is declared; these scenarios now declare a non-rental epigraph 844.

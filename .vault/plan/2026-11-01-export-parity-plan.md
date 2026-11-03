@@ -11,9 +11,9 @@ related:
   - '[[2026-06-10-modelo-130-100-continuity-adr]]'
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:7a934f86dfa6bf49cb986d97ef0513a7059ce3a1f031f54344db837ab50d940d'
+body_hash: 'sha256:77cac22f7e16086c85fc4fb9d5aeca361eea87bfd8af057cc851f4ea537e9ef8'
 ---
 
 # `export-parity` plan
@@ -76,7 +76,7 @@ Compare every credit casilla against its declared cross-check sources at cent pr
 Key activity income and withholding by accrual or receipt date per the elected criterion, so 0599 and Modelo 130 casilla 06 credit the right year.
 
 - [ ] `P05.S21` - Add the imputation-criterion profile fact and its wizard question; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/wizard/ and the Modelo 100 registry at the 2022 baseline`.
-- [ ] `P05.S22` - Key ledger activity income, expenses and withholding by the criterion and surface accrued-but-unpaid withholding as a rectification finding; `src/cadrumo/application/aggregation/renta_income_ledger.py and _renta_income_evidence.py`.
+- [x] `P05.S22` - Key ledger activity income, expenses and withholding by the criterion and surface accrued-but-unpaid withholding as a rectification finding; `src/cadrumo/application/aggregation/renta_income_ledger.py and _renta_income_evidence.py`.
 - [ ] `P05.S30` - Add the 0599 against fourth-quarter Modelo 130 casilla 06 cross-check under the imputation criterion; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
 - [ ] `P05.S31` - Present the Modelo 130 casilla 06 filing-grade promotion for operator ruling; `.vault/adr/`.
 - [ ] `P05.S08` - Present the 0599 filing-grade promotion for operator ruling; `.vault/adr/`.
