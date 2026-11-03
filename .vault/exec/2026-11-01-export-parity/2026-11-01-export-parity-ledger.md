@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:95276e488e11104ffc0b0374da87f7fa090e2ee6fc0f88fc6bd8a712aff89a67'
+body_hash: 'sha256:6b21444a494561570f814fffd012bb1e6f9a5db312f1bb090b7500a630efc185'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -1018,6 +1018,13 @@ related:
 - `S25` `M` `src/cadrumo/entrypoints/tests/test_m193_settled_row_file_verify_gate.py`
 - `S25` `verify:` `pytest test_m193_settled_row_file_verify_gate.py test_m193_settled_row_export_gate.py -m integration (14)` -> `pass`
 - `S25` `verify:` `pytest test_m193_disclosure_phase_calculation.py (8)` -> `pass`
+- `S17` `M` `src/cadrumo/application/retencion_soportada_certificado/executor.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/conformance_retencion_soportada_support.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S17` `M` `.vault/audit/2026-09-26-export-parity-audit.md`
+- `S17` `verify:` `pytest -m integration test_retencion_soportada_certificado_mesh.py, test_retencion_soportada_cli.py, conformance -k retencion_soportada` -> `pass`
+- `S29` `verify:` `pytest -m integration test_retencion_soportada_absence_cli.py` -> `pass`
 
 ## Notes
 
@@ -1064,3 +1071,5 @@ related:
 - `S31` Docs refresh basis: operator ruling 2026-11-03, relayed by the orchestrator, to expose the three existing wizard election flags (--irpf-activity-income-imputation-criterion, --irpf-activity-income-imputation-year, --irpf-codigo-comercio-accounting) through the CLI option table, reusing their help keys with no new wizard logic. The criterion choice contract follows the table's import-pure convention: an empty static placeholder, validated by the flow against the profile schema's `enum_values` (a refused token reports choices `cobros_y_pagos,` devengo). The sequences state `directa_simplificada,` `cobros_y_pagos` for 2026 and no Codigo de Comercio accounting, because their rows are payment-dated without accrual documents (devengo leaves them `accrual_unknown)` and cash is admissible only with a declared regime (RIRPF art. 7.2). All five verify frames end COMPLETE with `granted_verificado_completo` true and no blocking finding, with casilla values and notices unchanged from the prior goldens. The CLI reference is a build output under ignored docs/cli and the operation contract manifest is unaffected. CLI suite failures: 3, all pre-existing with this change undone `(test_operation_invoice_catalogue` `settlement_amount` payload, two justificante cotejo persistence tests). lint-imports breaks only on the known undeclared `dev.desktop_*` fixture modules. Commits 70fa5bf1e9 and 77d5436a4c.
 - `S21` Delivered mostly by other lanes: 0f570046bf, 33b3364ed4 (facts, RIRPF art. 7.2 eligibility, 0169 at the 2022 baseline), e9b64e8fb5, d5ca77a721 (wizard), 843833d8da (operations), 54bb1caaee (TUI/desktop), 632b246526, 70fa5bf1e9 (CLI flags). e6bfa3c6ff closes the gap: the blocking refusal now names the provision. Casillas 1443 and 1487 stay manual, since no producer enumerates those blocks per the ADR.
 - `S25` 0d22d4b7c3: hand-declared rows with EJERCICIO DEVENGO before the filing year (Orden EHA/3377/2011 positions 118-121) now count as settled prior-accrual rows in the one gate. Follow-up: the gate opens its own bundled authority instead of the caller's pin.
+- `S17` P03 phase review 2026-11-03 follow-up bc9c230741: the payer NIF is checksum-validated and keyed canonically. Audit fdb20cd89f.
+- `S29` P03 review follow-up 8e15a7a749: `list_absences` class labels render in the --language locale.
