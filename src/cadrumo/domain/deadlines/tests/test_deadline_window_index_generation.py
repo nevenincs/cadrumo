@@ -188,7 +188,9 @@ def test_each_window_carries_the_filing_schedules_of_its_hydrated_owner(operatio
     """
     compared = 0
     for year in range(2024, 2028):
-        projected = indexed_deadline_window_year(operation, year).dated
+        index = indexed_deadline_window_year(operation, year)
+        # A window derived from a filing-window clause has no authored owner row to compare.
+        projected = tuple(item for item in index.dated if item[2].id not in index.projected)
         assert {(modelo, str(metadata.id), window) for modelo, metadata, window in projected} == (
             _hydrating_projection(operation, year)
         )

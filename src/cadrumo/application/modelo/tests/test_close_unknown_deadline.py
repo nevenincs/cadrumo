@@ -1,7 +1,7 @@
 """A projected window whose close is unknown bounds the deadline below and judges no lateness.
 
-Modelo 303 for 2027 has no authored window and the 2027 holiday calendar is not
-published. The nominal close of the first quarter, 20 April 2027 (RD 1624/1992
+Modelo 303 for 2028 has no authored window and the 2028 holiday calendar is not
+published. The nominal close of the first quarter, 20 April 2028 (RD 1624/1992
 art. 71.4), is a lower bound: before it the filer has at least the days to it;
 after it neither a remaining nor an overdue count can be stated.
 """
@@ -24,7 +24,7 @@ from ..work_plazo import modelo_work_deadline_posture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2027
+_YEAR = 2028
 _PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _NOMINAL_CLOSE = date(_YEAR, 4, 20)
 _BEFORE = date(_YEAR, 4, 10)

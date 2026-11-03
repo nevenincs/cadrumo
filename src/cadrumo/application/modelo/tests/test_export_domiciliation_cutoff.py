@@ -19,6 +19,8 @@ from ....core.time.clock import MADRID_TZ
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.deadlines.domiciliation_cutoff import UnavailablePaymentCutoff, resolve_payment_cutoff
+from ....domain.deadlines.errors import DeadlineValidationError
+from ....domain.deadlines.festivos import holiday_calendar_from_authority
 from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -36,9 +38,10 @@ _BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"
 # quarterly 3T window authors none, and the rule derives Thursday 15 October 2026:
 # the Anexo II day of Orden EHA/1658/2009 for the third quarter, a business day in
 # Madrid that leaves Friday 16, Monday 19 and Tuesday 20 before the close. The 4T
-# window closes in February 2027, whose días inhábiles are unpublished, so its
-# cutoff is unknown. Clocks are UTC; the gate compares the Europe/Madrid civil
-# date (UTC+1 in February, UTC+2 in October, UTC+1 in January).
+# window closes Monday 1 February 2027 after Saturday 30 January, so the Anexo II
+# day 25 January runs two days to Wednesday 27 January 2027. Clocks are UTC; the
+# gate compares the Europe/Madrid civil date (UTC+1 in February, UTC+2 in
+# October, UTC+1 in January).
 @pytest.mark.parametrize(
     ("period_code", "exported_at", "expected"),
     (
@@ -46,14 +49,16 @@ _BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"
         ("01", datetime(2026, 2, 25, 23, 0, tzinfo=UTC), "refused"),
         ("3T", datetime(2026, 10, 15, 21, 59, tzinfo=UTC), "admitted"),
         ("3T", datetime(2026, 10, 15, 22, 0, tzinfo=UTC), "refused"),
-        ("4T", datetime(2027, 1, 10, 12, 0, tzinfo=UTC), "advisory"),
+        ("4T", datetime(2027, 1, 27, 22, 59, tzinfo=UTC), "admitted"),
+        ("4T", datetime(2027, 1, 27, 23, 0, tzinfo=UTC), "refused"),
     ),
     ids=(
         "on-the-authored-madrid-cutoff-day",
         "after-the-authored-madrid-cutoff-day",
         "on-the-derived-madrid-cutoff-day",
         "after-the-derived-madrid-cutoff-day",
-        "unavailable-cutoff",
+        "on-the-derived-year-end-madrid-cutoff-day",
+        "after-the-derived-year-end-madrid-cutoff-day",
     ),
 )
 def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
@@ -62,7 +67,7 @@ def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
     expected: str,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """U closes on the authored or derived cutoff alike; an unavailable cutoff advises instead of refusing."""
+    """The gate closes on the authored or derived cutoff alike."""
     period = Period.from_year_and_code(2026, period_code)
     snapshot = operation.snapshot("303", filing_year=period.filing_year, period=period.registry_token)
     work_unit = WorkUnit(
@@ -117,12 +122,17 @@ def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
                 "export_on": "2026-02-26",
             }
         else:
+            clause, cutoff_on, export_on = (
+                ("quarterly:4t", "2027-01-27", "2027-01-28")
+                if period_code == "4T"
+                else ("quarterly:1t-3t", "2026-10-15", "2026-10-16")
+            )
             expected_context |= {
-                "payment_cutoff_on": "2026-10-15",
+                "payment_cutoff_on": cutoff_on,
                 "payment_cutoff_source": "derived",
-                "export_on": "2026-10-16",
+                "export_on": export_on,
                 "payment_cutoff_rule": (
-                    "domiciliation-cutoff-clause:303:quarterly:1t-3t, domiciliation-procedure:aeat-practice-2026"
+                    f"domiciliation-cutoff-clause:303:{clause}, domiciliation-procedure:aeat-practice-2026"
                 ),
                 "payment_cutoff_legal_refs": (
                     "orden-eha-1658-2009:anexo-ii, rd-1624-1992:art-71, "
@@ -231,3 +241,47 @@ def test_domiciliation_closes_at_the_resolved_cutoff_of_every_supported_quarter(
     assert context["payment_cutoff_source"] == cutoff.source.value
     assert context["period"] == period.registry_token
     assert context["filing_year"] == str(period.filing_year)
+
+
+def test_a_year_end_quarter_closing_in_an_unpublished_calendar_year_advises_instead_of_refusing(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The 4T window after the last published holiday calendar has no cutoff yet, so the gate advises.
+
+    The fourth quarter of a year closes in January of the next year; when that
+    year's días inhábiles are not published the cutoff cannot be resolved, and
+    domiciliación is admitted with an advisory rather than refused on a guess.
+    """
+    last_published = _last_published_holiday_calendar_year(operation)
+    period = Period.from_year_and_code(last_published, "4T")
+    command = ModeloExportCommand(
+        calculation_revision_id="a" * 64,
+        output_path=Path("unused.txt"),
+        actor="operator",
+        payment_election=PaymentElection.DOMICILIACION,
+    )
+    exported_at = datetime(last_published + 1, 1, 10, 12, 0, tzinfo=MADRID_TZ)
+    assert (
+        require_domiciliation_before_cutoff(
+            command,
+            work_unit=_work_unit_for(period, operation),
+            resolved_result_disposition=ResultDisposition.DOMICILIACION,
+            exported_at=exported_at,
+            operation=operation,
+        )
+        is True
+    )
+
+
+def _last_published_holiday_calendar_year(operation: PinnedAuthorityOperation) -> int:
+    """The latest year whose días inhábiles calendar the authority publishes."""
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no support envelope"
+    year = support.years[-1]
+    holiday_calendar_from_authority(year, operation=operation)
+    while True:
+        try:
+            holiday_calendar_from_authority(year + 1, operation=operation)
+        except DeadlineValidationError:
+            return year
+        year += 1

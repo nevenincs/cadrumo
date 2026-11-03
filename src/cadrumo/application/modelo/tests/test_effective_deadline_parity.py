@@ -16,8 +16,10 @@ count from all three:
 * Modelo 136 1T 2025 closes nominally on Sunday 20 April 2025.
 * Modelo 185 period 09 of 2026 closes nominally on Saturday 10 October 2026;
   Monday the 12th is the Fiesta Nacional, so the filer has until Tuesday.
-* Modelo 303 4T 2026 closes on 1 February 2027, a year whose holiday calendar
-  is not published: the nominal date stands and is reported as unverified.
+* Modelo 303 4T 2026 closes on Monday 1 February 2027 and 2027 is a published
+  calendar year, so the date stands and is reported as nationally verified.
+* A Modelo 303 window of 2028, whose holiday calendar is not published, keeps
+  its nominal date and is reported as unverified.
 
 An electronic filing counts days on the State's calendar of días inhábiles
 (Ley 39/2015 art. 31.3), so a regional inhábil never moves a close. The
@@ -67,10 +69,9 @@ _WEEKEND = _Case("136", 2025, "1T", date(2025, 4, 20), date(2025, 4, 21), Deadli
 _NATIONAL_HOLIDAY = _Case(
     "185", 2026, "09", date(2026, 10, 10), date(2026, 10, 13), DeadlineHolidayCoverage.NATIONAL_ONLY
 )
-_UNCOVERED_YEAR = _Case(
-    "303", 2026, "4T", date(2027, 2, 1), date(2027, 2, 1), DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-)
-_CASES = (_WEEKEND, _NATIONAL_HOLIDAY, _UNCOVERED_YEAR)
+_PUBLISHED_2027 = _Case("303", 2026, "4T", date(2027, 2, 1), date(2027, 2, 1), DeadlineHolidayCoverage.NATIONAL_ONLY)
+_CASES = (_WEEKEND, _NATIONAL_HOLIDAY, _PUBLISHED_2027)
+_UNCOVERED_YEAR = 2028
 
 
 class _Posture(NamedTuple):
@@ -153,7 +154,7 @@ def _calendar_posture(case: _Case, reference_on: date, operation: PinnedAuthorit
     return _Posture(row.closes_on, row.adjusted_closes_on, row.holiday_coverage, remaining, row.days_overdue)
 
 
-@pytest.mark.parametrize("case", _CASES, ids=["weekend", "national-holiday", "uncovered-year"])
+@pytest.mark.parametrize("case", _CASES, ids=["weekend", "national-holiday", "published-2027"])
 def test_every_surface_reads_the_same_nominal_and_effective_deadline(
     case: _Case, operation: PinnedAuthorityOperation
 ) -> None:
@@ -202,14 +203,11 @@ def test_an_uncovered_year_is_reported_as_unverified_not_silently_nominal(
     operation: PinnedAuthorityOperation,
 ) -> None:
     deadline = resolve_effective_filing_deadline(
-        _UNCOVERED_YEAR.modelo,
-        _UNCOVERED_YEAR.filing_year,
-        Period.from_year_and_code(_UNCOVERED_YEAR.filing_year, _UNCOVERED_YEAR.period_code),
-        operation=operation,
+        "303", _UNCOVERED_YEAR, Period.from_year_and_code(_UNCOVERED_YEAR, "1T"), operation=operation
     )
 
     assert deadline is not None
-    assert deadline.closes_on == deadline.nominal_closes_on
+    assert deadline.closes_on == deadline.nominal_closes_on == date(_UNCOVERED_YEAR, 4, 20)
     assert deadline.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     assert deadline.shift_reason == "calendar_unavailable"
 

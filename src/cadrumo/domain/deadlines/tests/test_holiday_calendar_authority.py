@@ -12,6 +12,19 @@ BOE-A-2025-23702 (2026). The fixed dates used here:
 * 2025-11-10: not listed for Madrid; it is a municipal holiday of the city.
 * 2025-12-26, San Esteban: listed for Cataluña, but replaced by 17 June in Arán,
   so it is not a day off throughout the territory.
+
+2027 comes from the Dirección General de Trabajo relación de fiestas laborales
+(BOE-A-2026-21254), whose anexo marks each date by territory. The dates used:
+
+* 2027-01-01 (Friday), 2027-03-26 (Viernes Santo, Friday), 2027-05-01 and
+  2027-12-25 (Saturdays): festive in all nineteen territories, so inhábil nationally.
+* 2027-03-25, Jueves Santo: festive in seventeen territories, not in Cataluña or the
+  Comunitat Valenciana.
+* 2027-03-29, Lunes de Pascua: festive in Illes Balears, Cataluña, Navarra, País
+  Vasco, La Rioja and the Comunitat Valenciana; note 2 replaces it in Arán, so it is
+  not a day off throughout Cataluña.
+* 2027-08-16: Lunes siguiente a la Asunción in Andalucía, Aragón, Asturias,
+  Canarias, Castilla y León and Madrid.
 """
 
 from __future__ import annotations
@@ -81,7 +94,7 @@ def test_a_calendar_resolves_from_its_own_publication() -> None:
     assert date(_BOE_A_2025_23702_EXERCISE, 4, 3) in {holiday.holiday_date for holiday in calendar.national}
 
 
-@pytest.mark.parametrize("year", [2024, 2025, 2026])
+@pytest.mark.parametrize("year", [2024, 2025, 2026, 2027])
 def test_every_calendar_territory_is_verified(year: int) -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = load_holiday_calendar(year, operation=operation)
@@ -146,3 +159,67 @@ def test_the_calendar_publication_cites_the_dias_inhabiles_resolution() -> None:
         calendar = load_holiday_calendar(_BOE_A_2024_26935_EXERCISE, operation=operation)
 
     assert calendar.boe_url == "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+
+
+def _national_dates(calendar: HolidayCalendar) -> set[date]:
+    return {holiday.holiday_date for holiday in calendar.national}
+
+
+def test_the_2027_national_days_are_those_festive_in_every_territory() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        calendar = load_holiday_calendar(2027, operation=operation)
+
+    assert calendar.boe_url == "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254"
+    assert _national_dates(calendar) == {
+        date(2027, 1, 1),
+        date(2027, 1, 6),
+        date(2027, 3, 26),
+        date(2027, 5, 1),
+        date(2027, 10, 12),
+        date(2027, 11, 1),
+        date(2027, 12, 6),
+        date(2027, 12, 8),
+        date(2027, 12, 25),
+    }
+
+
+@pytest.mark.parametrize(
+    ("close", "expected"),
+    [
+        # Friday 1 January: Saturday 2 and Sunday 3 are weekend, Monday 4 is ordinary.
+        (date(2027, 1, 1), date(2027, 1, 4)),
+        # Wednesday 6 January, Epifanía, moves to Thursday.
+        (date(2027, 1, 6), date(2027, 1, 7)),
+        # Saturday 30 January moves to Monday 1 February.
+        (date(2027, 1, 30), date(2027, 2, 1)),
+        # Viernes Santo moves to Monday 29 March, a regional-only day that never moves a close.
+        (date(2027, 3, 26), date(2027, 3, 29)),
+        # Jueves Santo is regional, so the close stays.
+        (date(2027, 3, 25), date(2027, 3, 25)),
+        # Monday 1 November moves to Tuesday 2 November.
+        (date(2027, 11, 1), date(2027, 11, 2)),
+        # Saturday 25 December moves to Monday 27 December.
+        (date(2027, 12, 25), date(2027, 12, 27)),
+    ],
+)
+def test_a_2027_filing_close_moves_only_for_weekends_and_national_days(close: date, expected: date) -> None:
+    with bundled_indexed_authority().operation() as operation:
+        shift = shift_deadline(close, modelo="303", operation=operation)
+
+    assert shift.adjusted_close_date == expected
+    assert shift.coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
+
+
+def test_2027_regional_days_follow_the_annex_columns() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        calendar = load_holiday_calendar(2027, operation=operation)
+        madrid = _regional_dates(calendar, _territory(operation, "ES-MD", 2027))
+        catalonia = _regional_dates(calendar, _territory(operation, "ES-CT", 2027))
+        valencia = _regional_dates(calendar, _territory(operation, "ES-VC", 2027))
+        basque = _regional_dates(calendar, _territory(operation, "ES-PV", 2027))
+
+    assert madrid == {date(2027, 3, 19), date(2027, 3, 25), date(2027, 8, 16)}
+    # Arán replaces Easter Monday, and the Catalan Saturday 11 September is a weekend day.
+    assert catalonia == {date(2027, 6, 24)}
+    assert valencia == {date(2027, 3, 19), date(2027, 3, 29)}
+    assert basque == {date(2027, 3, 25), date(2027, 3, 29), date(2027, 10, 7)}

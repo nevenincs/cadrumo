@@ -3,6 +3,13 @@
 # Dates come from the ANEXO of each year's Secretaría de Estado de Función Pública
 # resolution (BOE-A-2023-23637 for 2024, BOE-A-2024-26935 for 2025,
 # BOE-A-2025-23702 for 2026); each variant quotes the anexo line for its date.
+# 2027 is sourced from the Dirección General de Trabajo relación de fiestas
+# laborales (BOE-A-2026-21254) until the 2027 días inhábiles resolution is
+# published: a day festive in all nineteen territories is inhábil nationally
+# (Ley 39/2015 art. 30.2), including those that fall on a Saturday, and each
+# territory takes the other days its column marks. A Sunday-only national fiesta
+# has no row. Regional days that fall on a weekend are not authored. In 2027 the
+# Arán swap of Easter Monday (29 March, note 2) leaves it out of ES-CT.
 # Names come from the Dirección General de Trabajo relación de fiestas laborales
 # for the same year (BOE-A-2023-22014, BOE-A-2024-21316, BOE-A-2025-21667),
 # because the días inhábiles anexo lists dates only.
@@ -4753,4 +4760,1430 @@ outputs = [
   { name = "name", value = "Lunes siguiente al Día de la Constitución Española" },
   { name = "boe_ref", value = "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo" },
   { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702" },
+]
+
+[[fact.variants]]
+variant_id = "2027-01-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-01-01
+valid_to = 2027-01-01
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["1 Año Nuevo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-01-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Año Nuevo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-01-06:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-01-06
+valid_to = 2027-01-06
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["6 Epifanía del Señor."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-01-06
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Epifanía del Señor" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-26:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-03-26
+valid_to = 2027-03-26
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["26 Viernes Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-26
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Viernes Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-05-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-05-01
+valid_to = 2027-05-01
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["1 Fiesta del Trabajo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-05-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta del Trabajo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-10-12:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-10-12
+valid_to = 2027-10-12
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["12 Fiesta Nacional de España."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-10-12
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta Nacional de España" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-11-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-11-01
+valid_to = 2027-11-01
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["1 Todos los Santos."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-11-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Todos los Santos" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-12-06:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-12-06
+valid_to = 2027-12-06
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["6 Día de la Constitución Española."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-12-06
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de la Constitución Española" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-12-08:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-12-08
+valid_to = 2027-12-08
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["8 Inmaculada Concepción."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-12-08
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Inmaculada Concepción" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-12-25:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2027-12-25
+valid_to = 2027-12-25
+legal_refs = ["ley-39-2015:art-30.2", "ley-39-2015:art-31.3", "ley-39-2015:art-30.5", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Natividad del Señor."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-12-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Natividad del Señor" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-01:ccaa:es-an"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AN" }]
+date_axis = "submission_date"
+valid_from = 2027-03-01
+valid_to = 2027-03-01
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["1 Día de Andalucía."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de Andalucía" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-an"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AN" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-08-16:ccaa:es-an"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AN" }]
+date_axis = "submission_date"
+valid_from = 2027-08-16
+valid_to = 2027-08-16
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["16 Lunes siguiente a asunción de la Virgen."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-08-16
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes siguiente a la Asunción de la Virgen" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-ar"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AR" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-04-23:ccaa:es-ar"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AR" }]
+date_axis = "submission_date"
+valid_from = 2027-04-23
+valid_to = 2027-04-23
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["23 San Jorge/Día de Aragón."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-04-23
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San Jorge/Día de Aragón" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-08-16:ccaa:es-ar"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AR" }]
+date_axis = "submission_date"
+valid_from = 2027-08-16
+valid_to = 2027-08-16
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["16 Lunes siguiente a asunción de la Virgen."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-08-16
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes siguiente a la Asunción de la Virgen" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-as"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AS" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-08-16:ccaa:es-as"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AS" }]
+date_axis = "submission_date"
+valid_from = 2027-08-16
+valid_to = 2027-08-16
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["16 Lunes siguiente a asunción de la Virgen."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-08-16
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes siguiente a la Asunción de la Virgen" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-09-08:ccaa:es-as"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AS" }]
+date_axis = "submission_date"
+valid_from = 2027-09-08
+valid_to = 2027-09-08
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["8 Día de Asturias."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-09-08
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de Asturias" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-01:ccaa:es-ib"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-IB" }]
+date_axis = "submission_date"
+valid_from = 2027-03-01
+valid_to = 2027-03-01
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["1 Día de les Illes Balears."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de les Illes Balears" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-ib"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-IB" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-29:ccaa:es-ib"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-IB" }]
+date_axis = "submission_date"
+valid_from = 2027-03-29
+valid_to = 2027-03-29
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["29 Lunes de Pascua."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-29
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes de Pascua" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-cn"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CN" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-08-16:ccaa:es-cn"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CN" }]
+date_axis = "submission_date"
+valid_from = 2027-08-16
+valid_to = 2027-08-16
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["16 Lunes siguiente a asunción de la Virgen."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-08-16
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes siguiente a la Asunción de la Virgen" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-cb"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CB" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-07-28:ccaa:es-cb"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CB" }]
+date_axis = "submission_date"
+valid_from = 2027-07-28
+valid_to = 2027-07-28
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["28 Día de las Instituciones de Cantabria."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-07-28
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de las Instituciones de Cantabria" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-09-15:ccaa:es-cb"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CB" }]
+date_axis = "submission_date"
+valid_from = 2027-09-15
+valid_to = 2027-09-15
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["15 La Bien Aparecida."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-09-15
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "La Bien Aparecida" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-cm"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CM" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-05-27:ccaa:es-cm"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CM" }]
+date_axis = "submission_date"
+valid_from = 2027-05-27
+valid_to = 2027-05-27
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["27 Corpus Christi."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-05-27
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Corpus Christi" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-05-31:ccaa:es-cm"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CM" }]
+date_axis = "submission_date"
+valid_from = 2027-05-31
+valid_to = 2027-05-31
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["31 Día de Castilla-La Mancha."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-05-31
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de Castilla-La Mancha" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-cl"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CL" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-04-23:ccaa:es-cl"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CL" }]
+date_axis = "submission_date"
+valid_from = 2027-04-23
+valid_to = 2027-04-23
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["23 Fiesta de Castilla y León."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-04-23
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta de Castilla y León" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-08-16:ccaa:es-cl"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CL" }]
+date_axis = "submission_date"
+valid_from = 2027-08-16
+valid_to = 2027-08-16
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["16 Lunes siguiente a asunción de la Virgen."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-08-16
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes siguiente a la Asunción de la Virgen" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-06-24:ccaa:es-ct"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CT" }]
+date_axis = "submission_date"
+valid_from = 2027-06-24
+valid_to = 2027-06-24
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["24 Día de San Juan."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-06-24
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San Juan" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-ex"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-EX" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-09-08:ccaa:es-ex"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-EX" }]
+date_axis = "submission_date"
+valid_from = 2027-09-08
+valid_to = 2027-09-08
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["8 Día de Extremadura."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-09-08
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de Extremadura" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-10-11:ccaa:es-ex"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-EX" }]
+date_axis = "submission_date"
+valid_from = 2027-10-11
+valid_to = 2027-10-11
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["11 Sustitución 15 de agosto."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-10-11
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Sustitución del 15 de agosto" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-19:ccaa:es-ga"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-GA" }]
+date_axis = "submission_date"
+valid_from = 2027-03-19
+valid_to = 2027-03-19
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["19 San José."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-19
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San José" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-ga"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-GA" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-05-17:ccaa:es-ga"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-GA" }]
+date_axis = "submission_date"
+valid_from = 2027-05-17
+valid_to = 2027-05-17
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["17 Día de las Letras Gallegas."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-05-17
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de las Letras Gallegas" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-ri"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-RI" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-29:ccaa:es-ri"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-RI" }]
+date_axis = "submission_date"
+valid_from = 2027-03-29
+valid_to = 2027-03-29
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["29 Lunes de Pascua."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-29
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes de Pascua" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-06-09:ccaa:es-ri"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-RI" }]
+date_axis = "submission_date"
+valid_from = 2027-06-09
+valid_to = 2027-06-09
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["9 Día de La Rioja."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-06-09
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de La Rioja" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-19:ccaa:es-md"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MD" }]
+date_axis = "submission_date"
+valid_from = 2027-03-19
+valid_to = 2027-03-19
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["19 San José."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-19
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San José" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-md"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MD" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-08-16:ccaa:es-md"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MD" }]
+date_axis = "submission_date"
+valid_from = 2027-08-16
+valid_to = 2027-08-16
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["16 Lunes siguiente a asunción de la Virgen."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-08-16
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes siguiente a la Asunción de la Virgen" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-19:ccaa:es-mc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MC" }]
+date_axis = "submission_date"
+valid_from = 2027-03-19
+valid_to = 2027-03-19
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["19 San José."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-19
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San José" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-mc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MC" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-06-09:ccaa:es-mc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MC" }]
+date_axis = "submission_date"
+valid_from = 2027-06-09
+valid_to = 2027-06-09
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["9 Día de la Región de Murcia."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-06-09
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Día de la Región de Murcia" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-19:ccaa:es-nc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-NC" }]
+date_axis = "submission_date"
+valid_from = 2027-03-19
+valid_to = 2027-03-19
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["19 San José."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-19
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San José" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-nc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-NC" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-29:ccaa:es-nc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-NC" }]
+date_axis = "submission_date"
+valid_from = 2027-03-29
+valid_to = 2027-03-29
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["29 Lunes de Pascua."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-29
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes de Pascua" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-pv"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-PV" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-29:ccaa:es-pv"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-PV" }]
+date_axis = "submission_date"
+valid_from = 2027-03-29
+valid_to = 2027-03-29
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["29 Lunes de Pascua."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-29
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes de Pascua" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-10-07:ccaa:es-pv"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-PV" }]
+date_axis = "submission_date"
+valid_from = 2027-10-07
+valid_to = 2027-10-07
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["7 Aniversario 1er Gobierno Euskadi."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-10-07
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Aniversario 1er Gobierno Euskadi" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-19:ccaa:es-vc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-VC" }]
+date_axis = "submission_date"
+valid_from = 2027-03-19
+valid_to = 2027-03-19
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["19 San José."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-19
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San José" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-29:ccaa:es-vc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-VC" }]
+date_axis = "submission_date"
+valid_from = 2027-03-29
+valid_to = 2027-03-29
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["29 Lunes de Pascua."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-29
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes de Pascua" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-ce"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CE" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-05-17:ccaa:es-ce"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CE" }]
+date_axis = "submission_date"
+valid_from = 2027-05-17
+valid_to = 2027-05-17
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["17 Eidul Adha-Fiesta Sacrificio."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-05-17
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Eidul Adha-Fiesta Sacrificio" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-08-05:ccaa:es-ce"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CE" }]
+date_axis = "submission_date"
+valid_from = 2027-08-05
+valid_to = 2027-08-05
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["5 Nuestra Señora de África."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-08-05
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Nuestra Señora de África" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-10:ccaa:es-ml"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-ML" }]
+date_axis = "submission_date"
+valid_from = 2027-03-10
+valid_to = 2027-03-10
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["10 Fiesta del Eid Fitr."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-10
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta del Eid Fitr" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-03-25:ccaa:es-ml"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-ML" }]
+date_axis = "submission_date"
+valid_from = 2027-03-25
+valid_to = 2027-03-25
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["25 Jueves Santo."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-03-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
+]
+
+[[fact.variants]]
+variant_id = "2027-05-17:ccaa:es-ml"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-ML" }]
+date_axis = "submission_date"
+valid_from = 2027-05-17
+valid_to = 2027-05-17
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo"]
+source_refs = ["boe-fiestas-laborales-2027"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-fiestas-laborales-2027"
+required_text = ["17 Fiesta Sacrificio-Aid Al Adha."]
+[fact.variants.payload]
+kind = "event"
+event_date = 2027-05-17
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta Sacrificio-Aid Al Adha" },
+  { name = "boe_ref", value = "resolucion-dgt-2026-10-08-fiestas-laborales-2027:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-21254" },
 ]

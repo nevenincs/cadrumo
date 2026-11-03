@@ -817,10 +817,10 @@ def test_modelo_369_entry_is_not_shifted_on_a_weekend(
 def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """No holiday publication exists for 2027 yet, so a Saturday close cannot be adjusted or certified."""
-    entry = _entry_for(_obligation("303", date(2027, 10, 16)), authority_operation)
+    """No holiday publication exists for 2028 yet, so a Saturday close cannot be adjusted or certified."""
+    entry = _entry_for(_obligation("303", date(2028, 10, 14)), authority_operation)
 
-    assert entry.adjusted_closes_on == entry.closes_on == date(2027, 10, 16)
+    assert entry.adjusted_closes_on == entry.closes_on == date(2028, 10, 14)
     assert entry.shift_reason == "calendar_unavailable"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
 

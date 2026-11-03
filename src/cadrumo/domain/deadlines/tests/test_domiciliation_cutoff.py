@@ -357,34 +357,26 @@ def test_the_floor_period_derives_from_the_floor_reaching_variants_without_a_cal
     assert derived.margin_cap_on is None
 
 
-def test_a_window_past_the_published_holiday_calendars_is_unavailable(operation: PinnedAuthorityOperation) -> None:
-    # 4T 2026 closes 1 February 2027; no 2027 días inhábiles are published, so
-    # the margin cannot be counted.
-    window = _window("303", 2026, "4T", operation)
-
-    resolved = resolve_payment_cutoff("303", window, operation=operation)
-
-    assert isinstance(resolved, UnavailablePaymentCutoff)
-    assert resolved.reason is PaymentCutoffUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE
-    assert resolved.cutoff_on is None
-    assert resolved.procedure is not None
-    assert resolved.procedure.projection_direction is TemporalProjectionDirection.FORWARD
-
-
-def test_the_december_2026_cutoff_is_not_authored_and_waits_on_the_2027_calendar(
+@pytest.mark.parametrize("code", ("4T", "12"))
+def test_the_2026_year_end_cutoffs_derive_from_the_published_2027_calendar(
+    code: str,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    # The 2026 domiciliación calendar prints no row for 12M 2026, so no date is
-    # authored for it. Its window closes in 2027, whose días inhábiles are not
-    # published, so the margin cannot be counted.
-    window = _window("303", 2026, "12", operation)
+    # The Anexo II day is 25 January. The filing period ends Saturday 30 January 2027,
+    # so it runs to Monday 1 February (two days) and art. 3.2.b extends the Anexo II
+    # day by the same two days to Wednesday 27 January. That day leaves five natural
+    # days and three business days (28, 29 January and 1 February) before the close.
+    # The 2026 domiciliación calendar prints no row for 12M 2026, so none is authored.
+    window = _window("303", 2026, code, operation)
+    assert window.closes_on == date(2027, 2, 1)
     assert window.payment_cutoff_on is None
 
     resolved = resolve_payment_cutoff("303", window, operation=operation)
 
-    assert isinstance(resolved, UnavailablePaymentCutoff)
-    assert resolved.reason is PaymentCutoffUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE
-    assert resolved.cutoff_on is None
+    assert isinstance(resolved, DerivedPaymentCutoff)
+    assert resolved.extension_days == 2
+    assert resolved.cutoff_on == date(2027, 1, 27)
+    assert resolved.base_on == date(2027, 1, 27)
 
 
 # A filing year well beyond the support horizon, chosen so that 15 July is a

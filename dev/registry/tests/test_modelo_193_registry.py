@@ -195,9 +195,9 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
             shift = shift_deadline(window.closes_on, modelo="193", operation=operation)
             assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (date(2026, 2, 2), True, "sabado")
             with pytest.raises(
-                DeadlineValidationError, match="holiday calendar publication for 2027 could not be resolved"
+                DeadlineValidationError, match="holiday calendar publication for 2028 could not be resolved"
             ):
-                shift_deadline(date(2027, 1, 29), modelo="193", operation=operation)
+                shift_deadline(date(2028, 1, 28), modelo="193", operation=operation)
 
 
 @pytest.mark.parametrize(
