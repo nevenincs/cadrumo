@@ -2649,6 +2649,9 @@ application:
       region_unstated: El teu perfil no indica la comunitat autònoma on tributes,
         de manera que no es pot fer l'estimació. Afegeix la teva comunitat de residència
         fiscal al perfil i torna a demanar l'estimació.
+      revision_not_mapped: 'No es pot estimar la declaració anual de l''exercici %{year}:
+        la manera de traslladar les declaracions trimestrals a la declaració anual
+        no està preparada per al model d''aquell any.'
     quickfile:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha

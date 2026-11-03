@@ -225,6 +225,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.project.region.stated",
         "modelo.project.region.unstated",
     ),
+    # No action: which revision the registry's declaration names is the registry's,
+    # and the filer cannot change it.
+    _profile(
+        "modelo.project",
+        "modelo.project.projection_mapping.names_revision",
+        "modelo.project.projection_mapping.revision_unnamed",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.caller_overrides.binding_declared",

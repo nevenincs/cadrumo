@@ -216,11 +216,14 @@ def run_projection(
     ccaa: str | None = "madrid",
     states_region: bool = True,
     quarter: QuarterSeeding = QuarterSeeding.CALCULATED,
+    year: int = PROJECTION_YEAR,
 ) -> ModeloProjectServiceResult:
     """Seed one isolated profile and return the real projection service's result for it.
 
     ``ccaa`` is the region the request names, or ``None`` to leave it to the
     profile; ``states_region`` is whether the profile's tax residence names one.
+    ``year`` is the filing year the request asks for; the stored quarter is always
+    the ``PROJECTION_YEAR`` one.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_profile(
@@ -233,7 +236,7 @@ def run_projection(
         _seed_payer_records(profile, payer_records, operation)
         with bundled_indexed_authority().operation() as projection_operation:
             return project_modelo_100_from_m130(
-                year=PROJECTION_YEAR,
+                year=year,
                 ccaa=ccaa,
                 bucket_id=profile.bucket_id,
                 ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=projection_operation),

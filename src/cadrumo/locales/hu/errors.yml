@@ -959,6 +959,8 @@ errors:
       decimális összeg.
     modelo_project_region_unstated: Az előrejelzéshez szükség van arra a régióra,
       ahol az adózó adózik, a profil pedig egyet sem ad meg.
+    modelo_project_revision_not_mapped: Nem készül előrejelzés olyan évre, amelynek
+      éves bevallását a nyilvántartás vetítési megadása nem nevezi meg.
     modelo_revision_pick: A nyomtatványváltozat kiválasztása érvénytelen.
     modelo_work_capture_not_current: A munkakiválasztás mar nem aktuális. Olvasd be
       újra a munkacélt, és próbáld meg ismét.

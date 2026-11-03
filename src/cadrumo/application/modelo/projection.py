@@ -157,6 +157,16 @@ class ModeloProjectRegionUnstatedError(TerminalPreconditionErrorMixin[Preconditi
     """
 
 
+class ModeloProjectRevisionNotMappedError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError):
+    """Raised when the registry's projection declaration does not name the annual return's revision.
+
+    The declaration was authored against one revision of the annual return. A
+    year whose return is another revision is not projected on that mapping, and
+    nothing the filer does changes what the registry names, so the verdict
+    carries no action.
+    """
+
+
 class ModeloProjectInvalidDecimalOverrideError(ModeloProjectionError):
     """Raised when a projection override cannot be parsed as a decimal."""
 
@@ -406,6 +416,40 @@ def modelo_projection_available(
         declaration.target_modelo == modelo
         and declaration.target_period == period.registry_token
         and declaration.target_revision == registry_revision_id
+    )
+
+
+def _require_declared_target(
+    declaration: _ProjectionDeclaration,
+    *,
+    year: int,
+    target_revision_id: str,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a target the registry's projection declaration does not name.
+
+    The answer is :func:`modelo_projection_available`, the one check the work
+    form serves ``projectable`` from, so the operation and the capability can
+    never disagree about a year.
+    """
+    if modelo_projection_available(
+        modelo=declaration.target_modelo,
+        period=Period.from_year_and_code(year, declaration.target_period),
+        filing_year=year,
+        registry_revision_id=target_revision_id,
+        operation=operation,
+    ):
+        return
+    raise ModeloProjectRevisionNotMappedError(
+        translated_message="application.modelo.projection_words.revision_not_mapped",
+        context={"year": year},
+        precondition_verdict=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.project",
+            scenario_id="modelo.project.projection_mapping.revision_unnamed",
+            evidence_id="modelo.project.projection_mapping",
+            evidence_values={"year": year, "revision_named": False},
+            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+        ).verdict,
     )
 
 
@@ -1110,13 +1154,19 @@ def project_modelo_100_from_m130(
     ``ccaa`` is the region the projection is made for. A caller that omits it
     gets the region the exact profile's tax residence states, and a profile
     that states none is refused with :class:`ModeloProjectRegionUnstatedError`.
+    A year whose annual return is a revision the registry's projection
+    declaration does not name is refused with
+    :class:`ModeloProjectRevisionNotMappedError`.
     """
     declaration = _registry_projection_declaration(year, operation=operation)
+    m100_snapshot = operation.snapshot(declaration.target_modelo, filing_year=year, period=declaration.target_period)
+    _require_declared_target(
+        declaration, year=year, target_revision_id=str(m100_snapshot.revision.id), operation=operation
+    )
     profile = load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=operation.profile_decode_context())
     region = _projection_region(ccaa, profile=profile)
     annual = _m130_annual_projection(year, declaration=declaration, ports=ports, operation=operation)
 
-    m100_snapshot = operation.snapshot(declaration.target_modelo, filing_year=year, period=declaration.target_period)
     extra_inputs = validate_casilla_input_ids(
         m100_snapshot.revision,
         _decimal_overrides(
@@ -1237,6 +1287,7 @@ __all__ = [
     "ModeloProjectNoM130RevisionsError",
     "ModeloProjectNoM130UnitsError",
     "ModeloProjectRegionUnstatedError",
+    "ModeloProjectRevisionNotMappedError",
     "ModeloProjectServiceResult",
     "ModeloProjectionCasillaObservation",
     "ModeloProjectionError",

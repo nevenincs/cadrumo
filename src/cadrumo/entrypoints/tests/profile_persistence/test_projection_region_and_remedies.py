@@ -17,6 +17,8 @@ from cadrumo.application.modelo.projection import (
     ModeloProjectNoM130RevisionsError,
     ModeloProjectNoM130UnitsError,
     ModeloProjectRegionUnstatedError,
+    ModeloProjectRevisionNotMappedError,
+    modelo_projection_available,
 )
 from cadrumo.application.modelo.projection_operation import ModeloProjectOperationProjection
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
@@ -24,6 +26,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import UserProfileFact
 
@@ -179,3 +182,50 @@ def test_each_figure_of_the_projection_is_named_in_every_language(
     english = {*served["en"].m130_accumulated.words.model_dump().values()}
     assert not english & {*served["hu"].m130_accumulated.words.model_dump().values()}
     assert not english & {*served["es"].m130_accumulated.words.model_dump().values()}
+
+
+@pytest.mark.parametrize(("year", "named"), [(2022, False), (2023, False), (2024, False), (PROJECTION_YEAR, True)])
+def test_the_projection_runs_only_for_a_year_the_registry_mapping_names(
+    year: int, named: bool, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The mapping names the 2025 annual return; the operation follows the capability the form serves.
+
+    The expected answer is read from the mapping's own revision, not from the
+    check: the 2022 to 2024 returns are other revisions than the one named.
+    """
+    revision = operation.revision_for_context("100", filing_year=year, period="0A")
+    assert (str(revision.id) == "2025") is named
+    served = modelo_projection_available(
+        modelo="100",
+        period=Period.from_year_and_code(year, "0A"),
+        filing_year=year,
+        registry_revision_id=str(revision.id),
+        operation=operation,
+    )
+    assert served is named
+
+    if named:
+        assert run_projection(tmp_path, operation, ccaa=None, year=year).year == year
+        return
+    with pytest.raises(ModeloProjectRevisionNotMappedError) as refused:
+        run_projection(tmp_path, operation, ccaa=None, year=year)
+
+    words = _words_by_language(refused.value)
+    assert len(set(words.values())) == len(SUPPORTED_OUTPUT_LANGUAGES)
+    for sentence in words.values():
+        assert str(year) in sentence
+        assert _names_no_command(sentence)
+    detail = _served(refused.value, "hu")
+    assert detail.error_code == "REFUSED_MODELO_PROJECT_REVISION_NOT_MAPPED"
+    verdict = detail.precondition_verdict()
+    assert verdict is not None
+    # The registry decides what it names, so no catalogue action can put this right.
+    assert verdict.action is None and verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
+
+
+def test_a_target_the_mapping_does_not_name_is_refused_before_any_quarter_is_read(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A 2025 quarter is stored and none exists for 2024, yet the refusal is the mapping's, not a missing quarter."""
+    with pytest.raises(ModeloProjectRevisionNotMappedError):
+        run_projection(tmp_path, operation, ccaa=None, year=PROJECTION_YEAR - 1, quarter=QuarterSeeding.NONE)

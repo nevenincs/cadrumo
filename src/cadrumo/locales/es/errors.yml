@@ -1019,6 +1019,8 @@ errors:
       un importe decimal válido.
     modelo_project_region_unstated: La proyección necesita la comunidad autónoma en
       la que tributa el contribuyente y el perfil no indica ninguna.
+    modelo_project_revision_not_mapped: No se hace una proyección para un año cuya
+      declaración anual no nombra la declaración de proyección del registro.
     modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
     modelo_work_capture_not_current: La selección de trabajo ya no es actual. Vuelve
       a leer el objetivo de trabajo e inténtalo de nuevo.

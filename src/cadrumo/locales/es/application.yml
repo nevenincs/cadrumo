@@ -2647,6 +2647,9 @@ application:
       region_unstated: Tu perfil no indica la comunidad autónoma en la que tributas,
         así que no se puede hacer la estimación. Añade tu comunidad de residencia
         fiscal al perfil y vuelve a pedir la estimación.
+      revision_not_mapped: 'No se puede estimar la declaración anual del ejercicio
+        %{year}: la forma de trasladar las declaraciones trimestrales a la declaración
+        anual no está preparada para el modelo de ese año.'
     quickfile:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó

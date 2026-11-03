@@ -2603,6 +2603,9 @@ application:
       region_unstated: A profilodban nincs megadva, melyik régióban adózol, így a
         becslés nem készíthető el. Add meg az adóügyi lakóhelyed régióját a profilodban,
         majd kérd újra a becslést.
+      revision_not_mapped: 'A(z) %{year}. évi éves bevallás becslése nem készíthető
+        el: a negyedéves bevallások éves bevallásra vetítése még nincs beállítva az
+        adott évi nyomtatványhoz.'
     quickfile:
       stage_incomplete: A `quickfile` %{stage} szakasza %{status} állapottal fejeződött
         be.

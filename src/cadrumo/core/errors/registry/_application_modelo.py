@@ -98,6 +98,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.projection.ModeloProjectRevisionNotMappedError",
+        ErrorCode(
+            code="REFUSED_MODELO_PROJECT_REVISION_NOT_MAPPED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_project_revision_not_mapped",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.projection.ModeloProjectInvalidDecimalOverrideError",
         ErrorCode(
             code="REFUSED_MODELO_PROJECT_INVALID_DECIMAL_OVERRIDE",

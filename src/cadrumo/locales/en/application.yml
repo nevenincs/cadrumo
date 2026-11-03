@@ -2503,6 +2503,9 @@ application:
       region_unstated: Your profile does not state the region you pay tax in, so the
         estimate cannot be made. Add your region of tax residence to your profile,
         then ask for the estimate again.
+      revision_not_mapped: 'The annual return cannot be estimated for filing year
+        %{year}: the way the quarterly declarations are carried onto the annual return
+        has not been set up for that year''s form.'
     quickfile:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused

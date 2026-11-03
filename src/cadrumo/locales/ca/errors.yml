@@ -1027,6 +1027,8 @@ errors:
       un import decimal vàlid.
     modelo_project_region_unstated: La projecció necessita la comunitat autònoma on
       tributa el contribuent i el perfil no n'indica cap.
+    modelo_project_revision_not_mapped: No es fa una projecció per a un any la declaració
+      anual del qual no nomena la declaració de projecció del registre.
     modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.
     modelo_work_capture_not_current: La selecció de treball ja no es actual. Torna
       a llegir l'objectiu de treball i prova-ho de nou.
