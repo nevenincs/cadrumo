@@ -2,9 +2,11 @@
 
 Each refusal is exercised on one isolated defect: a copy of the compiled
 Modelo 130 revision, or of another compiled revision, with exactly one
-declaration changed in memory. The live corpus is the passing control, so a
-rule that refused everything, or nothing, fails here. Nothing in the bundled
-registry tree is read for writing.
+declaration changed in memory. The live corpus caps no binding since the
+withholding credits were promoted, so the Modelo 130 copy re-declares the cap
+on casilla 06's binding, where it was first declared. The live corpus and that
+copy are the passing controls, so a rule that refused everything, or nothing,
+fails here. Nothing in the bundled registry tree is read for writing.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from cadrumo.core.authority_grade import BindingGradeCapReason, RegistryAuthorit
 from cadrumo.domain.calculations.registry.binding_grade_cap import BindingGradeCap
 from cadrumo.domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.grade_cap_support import recapped_revision
 
 from ..validate_binding_grade_caps import validate_binding_grade_cap_section
 
@@ -32,9 +35,14 @@ _INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _CAP_LEGAL_REF = "rd-439-2007:art-79"
 
 
-def _m130(authority: ValidatedRegistryAuthority) -> ModeloRevision:
+def _published_m130(authority: ValidatedRegistryAuthority) -> ModeloRevision:
     (modelo,) = [modelo for modelo in authority.modelos if modelo.id == "130"]
     return modelo.revisions[_M130_REVISION]
+
+
+def _m130(authority: ValidatedRegistryAuthority) -> ModeloRevision:
+    """The compiled Modelo 130 revision with casilla 06's binding capped in memory."""
+    return recapped_revision(_published_m130(authority), _CAPPED_BINDING, _cap())
 
 
 def _failures(
@@ -56,14 +64,13 @@ def _cap() -> BindingGradeCap:
     )
 
 
-def test_every_compiled_revision_passes_and_modelo_130_carries_its_cap(
+def test_every_compiled_revision_passes_and_a_declared_modelo_130_cap_is_admitted(
     _worker_compiled_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """The passing control: the live corpus declares a cap and every declared cap is admitted."""
-    revision = _m130(_worker_compiled_authority)
-    capped = [binding.id for binding in revision.bindings if binding.grade_cap is not None]
-
-    assert capped == [_CAPPED_BINDING]
+    """The passing controls: the live corpus caps nothing, and a well-formed cap on casilla 06 is admitted."""
+    published = _published_m130(_worker_compiled_authority)
+    assert not [binding.id for binding in published.bindings if binding.grade_cap is not None]
+    assert _failures(_worker_compiled_authority, _m130(_worker_compiled_authority)) == []
     for modelo in _worker_compiled_authority.modelos:
         for revision_id, candidate in modelo.revisions.items():
             assert (

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9ca4ce37055c388d2d588be93dbe80d5e34adace687cb61c548f2919666a452'
+body_hash: 'sha256:3e7de7f23d8af7c08e6d7f65ee5686004f4d4dbe0ab8ae0083ae35e3a6444edb'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-research]]"
@@ -17,7 +17,6 @@ related:
   - "[[2026-09-09-registry-edition-authoring-adr]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
 ---
-
 # `export-parity` adr: `declared per-binding grade cap that blocks verify, export and local filing` | (**status:** `accepted`)
 
 Accepted 2026-11-01 on the operator's rulings recorded below.
@@ -156,3 +155,25 @@ Authorized by the operator on 2026-11-02 ("follow your recommends; proven-zero c
 - The proven-zero outcome is persisted on the revision's source issues as a typed value outcome, so a reloaded form and the declarations list show that a capped value was proven zero. It stays non-blocking. Stored revisions written before this change are not rewritten and keep their identity.
 - A filed (PRESENTADO) revision written before the screen stamp existed, whose pinned revision has a capped binding and whose stored value for that binding's casilla is nonzero or unresolved, is refused at export of the local file until the period is recalculated. Filed revisions with a stamp, and filed revisions with no capped value, keep their existing behaviour. Local filing state, AEAT status and receipts are unaffected.
 - The signed calculation report stays limited to sealed revisions and applies the same screen check as export to non-filed sealed revisions, so a revision sealed before the cap is not signed without its note.
+
+## Amendment 2026-11-02: promotion of Modelo 130 casilla 06 and Modelo 100 casilla 0599
+
+Basis: operator ruling 2026-11-02, relayed by the orchestrator as binding for plan Steps P05.S31 and P05.S08. The ruling removes both caps once the resolver and the credit reconciliation hold the properties of `2026-11-01-export-parity-income-imputation-criterion-adr` Implementation item 9. Each promotion is a registry delta at the baseline edition, because the grounding applies to every ejercicio the baseline covers. The provisions did not change across those ejercicios, and no successor edition restates either binding.
+
+- P05.S31, Modelo 130 casilla 06. The cap is removed from `modelo-130-actividad-economica-retenciones-cumulative` at the `2019-y-siguientes` baseline (`src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0001-declarations.toml`).
+  - The binding now cites LIRPF art. 14 and RIRPF arts. 7, 79 and 110.
+  - Its Modelo 130 instructions citation adds the casilla 06 window text: "correspondientes al período comprendido entre el primer día del año y el último día del trimestre a que se refiere el pago fraccionado".
+  - The conditions that held at promotion:
+    - each row's retención follows its income into the window the declared criterion imputes it to;
+    - an unknown criterion or accrual date leaves the value unresolved;
+    - withholding paid after the window's end is reported and left for the quarter it is paid in (RIRPF art. 110.3.a, "practicadas"; TEAC 00/03187/2011);
+    - a rental activity's withholding is kept (RIRPF art. 110.3.a.2.º).
+- P05.S08, Modelo 100 casilla 0599. The cap is removed from `renta-ledger-actividad-retenciones-0599` at the `2022` baseline (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`), and the binding now cites LIRPF art. 14 and RIRPF arts. 7 and 79. The conditions that held at promotion:
+  - each row's retención follows its income into the ejercicio the criterion imputes it to, whenever it was paid (RIRPF art. 79);
+  - only withholding on a linked, wholly paid invoice is credited;
+  - accrued-but-unpaid withholding is reported, with a rectification finding when the payment follows a filed return;
+  - a rental activity's withholding goes to 0598;
+  - the credit reconciliation compares 0599 with the payer records by the payer's payment year (DGT V4965-16), with the borrador, and with casilla 06 of the filed fourth-quarter Modelo 130 on that return's basis. Only a residual difference the itemised timing cannot explain blocks.
+- DGT V4965-16 is cited in the 0599 binding comment and here, not as a `legal_refs` entry. The legal catalogue has no entry kind for a DGT consulta and no bundled copy of one.
+- The mechanism stays, and no binding in the published registry carries a cap after these promotions. The tests of the reach, the emitted note, the screen digest, the filed-before-cap check and the build refusals declare the cap in memory on a copy of the Modelo 130 revision. Revisions calculated before the promotions refuse with `calculation_screen_outdated` until they are recalculated, as Promotion as a registry delta states. Publication and runtime adoption of the shared authority stay with the shared publication session. These Steps republished only the worktree-local authority.
+- Evidence: `2026-11-01-export-parity-withholding-legal-readings-research` (Q1 and Q3), `2026-11-01-export-parity-income-imputation-criterion-research`, `2026-11-01-export-parity-income-imputation-criterion-adr` items 6 to 9, and `2026-11-01-export-parity-suffered-withholding-schemas-adr`. The resolver properties are proven by tests in `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`, `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_retencion_soportada_credits_live.py`, `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_retenciones.py` and `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_carry_forward_continuity.py`. The last holds the production route: a Modelo 130 with 1.000,00 of activity income and 162,00 withheld verifies complete and exports.
