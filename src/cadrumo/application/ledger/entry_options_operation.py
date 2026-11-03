@@ -39,6 +39,12 @@ from ...domain.categories.spending_category_catalogue import resolve_spending_ca
 from ...domain.invoices.business_premises import SituacionInmueble
 from ...domain.invoices.enums import default_invoice_class, invoice_class_rectificativa, invoice_class_simplificada
 from ...domain.iva.establishment import catalogued_country_codes
+from ...domain.transactions.enums import (
+    BusinessClassification,
+    rule_names_category,
+    split_part_requires_category,
+    takes_business_share,
+)
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.m210_income_classification import m210_payer_modes
 from ...domain.usage_ratios.model import eligible_usage_ratio_categories
@@ -110,13 +116,25 @@ class LedgerEntryOptionFamilyProjection(BaseModel):
     options: tuple[LedgerEntryOptionProjection, ...]
 
 
+class LedgerEntryClassificationProjection(BaseModel):
+    """What one classification takes, each answer from the predicate the writers enforce it with."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    classification: BusinessClassification
+    takes_business_share: bool
+    rule_requires_category: bool
+    split_part_requires_category: bool
+
+
 class LedgerEntryOptionsProjection(BaseModel):
-    """Every vocabulary a ledger entry form offers, and the limits it holds typed text to."""
+    """The vocabularies a ledger entry form offers, what each classification takes, and its text limits."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     families: tuple[LedgerEntryOptionFamilyProjection, ...]
+    classifications: tuple[LedgerEntryClassificationProjection, ...]
     limits: LedgerEntryLimitsProjection
 
 
@@ -136,6 +154,25 @@ def _worded(word_family: str, tokens: tuple[str, ...]) -> tuple[LedgerEntryOptio
     return tuple(
         LedgerEntryOptionProjection(value=token, label_key=f"{ENTRY_OPTION_LABEL_PREFIX}{word_family}.{token}")
         for token in tokens
+    )
+
+
+def _classification_rules() -> tuple[LedgerEntryClassificationProjection, ...]:
+    """Answer, for each classification in the enum's order, what the writers ask of it.
+
+    A rule deciding a classification names a category only where
+    ``rule_names_category`` allows it, and a share belongs only where
+    ``takes_business_share`` says so; each flag is that predicate's verdict, so
+    what is served and what is enforced cannot differ.
+    """
+    return tuple(
+        LedgerEntryClassificationProjection(
+            classification=classification,
+            takes_business_share=takes_business_share(classification),
+            rule_requires_category=rule_names_category(classification),
+            split_part_requires_category=split_part_requires_category(classification),
+        )
+        for classification in BusinessClassification
     )
 
 
@@ -246,6 +283,7 @@ def ledger_entry_options(
         families=tuple(
             LedgerEntryOptionFamilyProjection(family=family, options=options) for family, options in families
         ),
+        classifications=_classification_rules(),
         limits=ledger_entry_limits(),
     )
 
@@ -331,6 +369,7 @@ __all__ = [
     "ENTRY_OPTION_LABEL_PREFIX",
     "LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID",
     "EntryOptionFamily",
+    "LedgerEntryClassificationProjection",
     "LedgerEntryOptionFamilyProjection",
     "LedgerEntryOptionProjection",
     "LedgerEntryOptionsExecutionResult",

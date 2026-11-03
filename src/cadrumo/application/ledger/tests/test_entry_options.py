@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import date
 from decimal import Decimal
 from importlib.resources import files
@@ -32,8 +32,16 @@ from ....domain.categories.spending_category import SpendingCategory, SpendingCa
 from ....domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
 from ....domain.invoices.business_premises import SituacionInmueble
 from ....domain.iva.establishment import StatedCountryCodeStatus, stated_country_code_status
+from ....domain.transactions.classification_rule import require_new_rule_decision
+from ....domain.transactions.enums import (
+    BUSINESS_BEARING_STATES,
+    RULE_DECIDED_STATES,
+    BusinessClassification,
+)
+from ....domain.transactions.errors import ClassificationRuleError, TransactionValidationError
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue, require_ledger_irpf_category
 from ....domain.transactions.m210_income_classification import M210IncomeClassification
+from ....domain.transactions.model_validation import validate_business_pct_coupling
 from ....domain.usage_ratios.errors import UsageRatioValidationError
 from ....domain.usage_ratios.model import UsageRatioProfile, eligible_usage_ratio_categories
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -485,3 +493,66 @@ def test_each_invoice_class_is_filed_under_what_it_means_to_a_form(
         "SIMPLIFICADA": "simplified",
         "RECTIFICATIVA": "corrective",
     }
+
+
+def _accepts(check: Callable[[], None]) -> bool:
+    """Whether the writer's own check lets the case through."""
+    try:
+        check()
+    except (ClassificationRuleError, TransactionValidationError):
+        return False
+    return True
+
+
+def test_every_classification_is_served_once_in_the_enums_order(operation: PinnedAuthorityOperation) -> None:
+    served = ledger_entry_options(_PROFILE, operation=operation).classifications
+
+    assert [item.classification for item in served] == list(BusinessClassification)
+
+
+@pytest.mark.parametrize("classification", list(BusinessClassification))
+def test_the_business_share_flag_is_what_the_coupling_check_enforces(
+    classification: BusinessClassification, operation: PinnedAuthorityOperation
+) -> None:
+    served = next(
+        item
+        for item in ledger_entry_options(_PROFILE, operation=operation).classifications
+        if item.classification is classification
+    )
+
+    takes_a_share = _accepts(lambda: validate_business_pct_coupling(classification, Decimal("0.5")))
+    takes_none = _accepts(lambda: validate_business_pct_coupling(classification, None))
+
+    assert served.takes_business_share is takes_a_share
+    assert served.takes_business_share is not takes_none
+
+
+@pytest.mark.parametrize("classification", list(BusinessClassification))
+def test_the_rule_category_flag_is_what_a_new_rule_is_held_to(
+    classification: BusinessClassification, operation: PinnedAuthorityOperation
+) -> None:
+    served = next(
+        item
+        for item in ledger_entry_options(_PROFILE, operation=operation).classifications
+        if item.classification is classification
+    )
+
+    with_category = _accepts(lambda: require_new_rule_decision(classification, "office_supplies"))
+
+    assert served.rule_requires_category is with_category
+    if classification in RULE_DECIDED_STATES:
+        assert _accepts(lambda: require_new_rule_decision(classification, None))
+    else:
+        assert served.rule_requires_category is False
+
+
+def test_a_split_part_is_told_to_name_a_category_only_where_it_carries_business_figures(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    served = ledger_entry_options(_PROFILE, operation=operation).classifications
+
+    asked = {item.classification for item in served if item.split_part_requires_category}
+
+    assert asked
+    assert asked <= BUSINESS_BEARING_STATES
+    assert asked == {BusinessClassification.BUSINESS}

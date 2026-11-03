@@ -23,7 +23,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.pattern_search_worker import PATTERN_COMPILE_FAILURES, PATTERN_FLAGS
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
-from .enums import RULE_CATEGORY_STATES, RULE_DECIDED_STATES, BusinessClassification
+from .enums import RULE_DECIDED_STATES, BusinessClassification, rule_names_category
 from .errors import ClassificationRuleError
 
 RuleDescriptionPattern = Annotated[str, StringConstraints(min_length=1)]
@@ -124,7 +124,7 @@ def require_new_rule_decision(classification: BusinessClassification, category_i
     """
     if classification not in RULE_DECIDED_STATES:
         raise ClassificationRuleError(f"a rule cannot decide {classification.value}")
-    if category_id is not None and classification not in RULE_CATEGORY_STATES:
+    if category_id is not None and not rule_names_category(classification):
         raise ClassificationRuleError(f"a rule deciding {classification.value} cannot name a category")
 
 

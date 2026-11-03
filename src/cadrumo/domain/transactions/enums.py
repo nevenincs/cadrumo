@@ -226,6 +226,32 @@ def takes_business_share(state: BusinessClassification) -> bool:
     return state in SHARE_BEARING_STATES
 
 
+def rule_names_category(state: BusinessClassification) -> bool:
+    """Return whether a new rule deciding this classification may name a spending category.
+
+    Args:
+        state: A :class:`BusinessClassification` value.
+
+    Returns:
+        ``True`` iff a category belongs on a rule that decides ``state``; a rule
+        deciding any other classification is refused one.
+    """
+    return state in RULE_CATEGORY_STATES
+
+
+def split_part_requires_category(state: BusinessClassification) -> bool:
+    """Return whether a split part classified as this is told to name a spending category.
+
+    Args:
+        state: A :class:`BusinessClassification` value.
+
+    Returns:
+        ``True`` iff a person staging a part as ``state`` is asked for a
+        category. This is advice to the person, not a writer refusal.
+    """
+    return state in SPLIT_PART_CATEGORY_REQUIRED_STATES
+
+
 def is_classified(state: BusinessClassification) -> bool:
     """Return ``True`` when the pipeline has produced a classified outcome.
 
