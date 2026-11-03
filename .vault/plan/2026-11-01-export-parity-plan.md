@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:52836b9600ded45599b9ffabb521fe15e9fd939f4bea9713da547277f907f366'
+body_hash: 'sha256:a7b0b055ee44605b58718854beedf4be971b50ce67e54e46a3374c196aa68f9c'
 ---
 
 # `export-parity` plan
@@ -78,8 +78,8 @@ Key activity income and withholding by accrual or receipt date per the elected c
 - [ ] `P05.S21` - Add the imputation-criterion profile fact and its wizard question; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/wizard/ and the Modelo 100 registry at the 2022 baseline`.
 - [x] `P05.S22` - Key ledger activity income, expenses and withholding by the criterion and surface accrued-but-unpaid withholding as a rectification finding; `src/cadrumo/application/aggregation/renta_income_ledger.py and _renta_income_evidence.py`.
 - [x] `P05.S30` - Add the 0599 against fourth-quarter Modelo 130 casilla 06 cross-check under the imputation criterion; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
-- [ ] `P05.S31` - Present the Modelo 130 casilla 06 filing-grade promotion for operator ruling; `.vault/adr/`.
-- [ ] `P05.S08` - Present the 0599 filing-grade promotion for operator ruling; `.vault/adr/`.
+- [x] `P05.S31` - Present the Modelo 130 casilla 06 filing-grade promotion for operator ruling; `.vault/adr/`.
+- [x] `P05.S08` - Present the 0599 filing-grade promotion for operator ruling; `.vault/adr/`.
 
 ### Phase `P06` - Ingest AEAT datos fiscales as a cross-check source
 

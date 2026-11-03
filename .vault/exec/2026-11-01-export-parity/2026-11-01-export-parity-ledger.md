@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:665913100052f31a04bd21f709f0bf2e9fdf7810903e8a8639f5a1d3bada8e0b'
+body_hash: 'sha256:de0a879ba74f183ab338b85ecde9724714ff267e6abb78b5ca70389f2f358bb2'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -940,6 +940,38 @@ related:
 - `S30` `verify:` `grade_earned under_supported=0` -> `pass`
 - `S30` `verify:` `lint-imports` -> `fail`
 - `S30` `by:` `implementation-engineer-high`
+- `S31` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0001-declarations.toml`
+- `S31` `A` `src/cadrumo/domain/calculations/registry/tests/grade_cap_support.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_advisory_binding_value_gate.py`
+- `S31` `M` `dev/registry/compiler/tests/test_binding_grade_cap_validation.py`
+- `S31` `M` `src/cadrumo/domain/renta/tests/test_retenciones_routing_integrity.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_art109_activity_income_period_evidence.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_carry_forward_continuity.py`
+- `S31` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_retenciones.py`
+- `S31` `D` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_capped_retenciones.py`
+- `S31` `M` `.vault/adr/2026-11-01-export-parity-binding-capability-grade-adr.md`
+- `S31` `verify:` `pytest focused S31 tests` -> `pass`
+- `S31` `verify:` `pytest wide renta/130/100/note-gate suites` -> `fail`
+- `S31` `verify:` `registry_status --check --json` -> `pass`
+- `S31` `verify:` `grade_earned under_supported 0` -> `pass`
+- `S31` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S31` `verify:` `lint-imports --config .importlinter --no-cache` -> `fail`
+- `S31` `verify:` `python -m dev.docs.sequences refresh quickstart-modelo-130` -> `fail`
+- `S31` `by:` `implementation-engineer-high`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S08` `M` `src/cadrumo/application/aggregation/tests/test_modelo_100_actividad_retencion_credit.py`
+- `S08` `M` `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`
+- `S08` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger_imputation_period.py`
+- `S08` `D` `src/cadrumo/entrypoints/tests/profile_persistence/proven_zero_withholding_support.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/profile_persistence/unchecked_credit_note_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_pagos_fold_in_live.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_pagos_fraccionados_fold_in_live.py`
+- `S08` `verify:` `pytest focused S08 tests` -> `pass`
+- `S08` `verify:` `pytest wide renta/130/100/note-gate suites` -> `fail`
+- `S08` `verify:` `registry_status --check --json` -> `pass`
+- `S08` `verify:` `grade_earned under_supported 0` -> `pass`
+- `S08` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -980,3 +1012,5 @@ related:
 - `S22` Casilla 06 cut-off: a declared retencion whose receipt is dated after the M130 window stays out of that window's 06 and is reported. Primary text: RIRPF art. 110.3.a deducts 'las retenciones practicadas ... correspondientes al periodo ... hasta el ultimo dia del trimestre' `(src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-110.html.extracted.md,` apartado 3.a); art. 78.1 makes withholding arise when the income is paid; TEAC 00/03187/2011 allows no deduction before payment; DGT V3298-15 places it in the window of its income's imputation. Research 2026-11-01-export-parity-withholding-legal-readings-research finds a payment after quarter end but before filing not excluded by any text, and limiting inclusion to payments by the window end lawful; the next quarter's cumulative 06 and annual 0599 pick it up. The V4965-16 payer-year comparison covers the `retencion_soportada` certificate cross-check; `datos_fiscales` does not exist yet and the borrador is not payer-year compared, as the ADR names certificate and `datos_fiscales` only. Wide-run failures present at 553bba5402 and untouched by S22: `test_projection` and payer-side credit tests (S19 regressions, fixed in b7450a5dd6), `test_local_cross_period_carry` (6, tier-divergence screen), 7 dev/registry date-window tests; tui settlement failures (3) unchanged.
 - `S19` Post-close fix b7450a5dd6: the S19 rental-activity credit asks for payer evidence when no IAE epigraph is declared; these scenarios now declare a non-rental epigraph 844.
 - `S30` lint-imports fails only on the tui tooling lane `(dev.desktop_household_fixture,` `dev.desktop_imputation_election_fixture).` The wide run over application/aggregation, application/modelo, domain/calculations/registry, `entrypoints/tests/profile_persistence` and dev/registry/tests shows no credit or filed-observation failure; its failures are pre-existing or another lane's: M100 export settlement refusal (tui 3be7987f95, failing before S30), `precedence_tier_divergence` on M130 06, OSS year window, desktop frontend deps, registry date windows. The filed-observation comparison restates rows on the fourth-quarter basis (RIRPF art. 110.3.a), keeping A01 withholding and dropping withholding paid after 31 December; this itemised-basis tolerance follows the ADR principle but is not spelled out in its wording.
+- `S31` Operator ruling 2026-11-02 recorded as an ADR amendment. Wide run: 2857 passed, 12 failed, all 12 in the S30 baseline (cross-period carry precedence, OSS year 2012, M100 export settlement refusal, Sonnet-owned imputation e2e). lint-imports breaks only on the pre-existing undeclared `dev.desktop_*` fixture modules. Docs sequence refresh stays open: verify exits 2 with `unresolved_binding` because the seeds declare no imputation criterion and no operator CLI flag sets `irpf.activity_income_imputation_criterion;` no golden was changed. Commit 76a3922534.
+- `S08` Operator ruling 2026-11-02, recorded in the binding-capability-grade ADR amendment committed with S31. Both promotions were verified against one republished worktree authority. Wide run failures are the 12 S30-baseline failures only. DGT V4965-16 is cited in the binding comment, not `legal_refs:` the catalogue has no DGT consulta kind. Commit 898bc7f5d8.
