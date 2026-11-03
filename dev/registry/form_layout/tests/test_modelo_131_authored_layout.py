@@ -48,9 +48,10 @@ def _assert_131_context_fields_resolve_to_producers_and_draft(
     revision, sections: dict[str, FormSectionDefinition]
 ) -> None:
     context = [b for s in sections.values() for b in s.blocks if isinstance(b, FormContextFieldBlock)]
-    assert len(context) == 5
+    assert len(context) == 6
     fields = [resolve_form_context_field(revision, b) for b in context]
     assert {str(f.producer_key) for f in fields if (f.producer_key is not None and f.producer_key)} == {
+        "amendment_evidence.is_complementaria",
         "taxpayer.tax_id",
         "taxpayer.surnames",
         "taxpayer.given_name",

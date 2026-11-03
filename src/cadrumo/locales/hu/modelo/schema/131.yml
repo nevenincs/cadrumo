@@ -200,7 +200,7 @@ modelo:
           irpf-pf-modulos-volumen-sin-datos-base:
             label: Forgalom vagy bevétel alapadatok nélkül
           irpf-pf-saldo-negativo-fin-periodo:
-            label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
+            label: Későbbi időszakokra átvihető negatív egyenleg
           minoracion-rendimientos-actividades-economicas:
             label: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
               után

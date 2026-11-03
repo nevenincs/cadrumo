@@ -65,6 +65,7 @@ from ..calculations.cross_period_models import (
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ._invoice_drift_gate import invoice_drift_findings
 from ._ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
+from .imputation_filings import imputation_filings_from_repositories
 from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
@@ -410,6 +411,8 @@ def _ledger_snapshot_findings(
     target: CalculationRevision,
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile,
     ledger_membership_ports: LedgerMembershipPorts,
@@ -494,6 +497,30 @@ def _ledger_snapshot_findings(
             ports=ledger_membership_ports.invoice_catalogue_read_ports,
             profile=work_profile,
             source_refs=optional_observation_refs(target.observations, "source_refs"),
+            filings=imputation_filings_from_repositories(
+                bucket_id=work_unit.bucket_id,
+                year=work_unit.filing_year,
+                observation_repository=observation_repository,
+                filing_repository=filing_repository,
+                authority=operation,
+            ),
+            narrower_scope_observer=lambda finding: failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.invoice_fingerprint.current",
+                    scenario_id="modelo.work.verify.invoice_fingerprint.scope_narrower",
+                    evidence_id="modelo.work.verify.invoice_fingerprint",
+                    evidence_values={
+                        "catalogue_available": True,
+                        "changed_invoice_ids": "",
+                        "removed_invoice_ids": "",
+                        "added_invoice_ids": "",
+                    },
+                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                ),
+            ),
             blocking_finding_observer=lambda finding, verdict: failures_by_finding_id.__setitem__(
                 id(finding),
                 build_verification_precondition_failure(
@@ -623,6 +650,8 @@ def collect_verification_gate_findings(
             target=target,
             work_unit=work_unit,
             transaction_repository=transaction_repository,
+            observation_repository=observation_repository,
+            filing_repository=filing_repository,
             operation=operation,
             work_profile=work_profile,
             ledger_membership_ports=ledger_membership_ports,

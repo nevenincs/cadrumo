@@ -235,6 +235,7 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
             # facts; neutral zero when the chain under test is unrelated.
             "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),

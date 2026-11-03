@@ -57,6 +57,10 @@ class BindingAggregationOp(StrEnum):
             selected observations (e.g. Modelo 349 operator counts).
         PRIOR_PAGOS_FRACCIONADOS: Modelo 130 cumulative pago-fraccionado carry
             that nets the prior positive declaration against the running total.
+        PRIOR_NEGATIVE_RESULTS_UNDEDUCTED: The negative results of earlier
+            pago-fraccionado quarters that no quarter has deducted yet: per quarter,
+            the unsigned negative part of the first source casilla (its result),
+            less the second source casilla (what it deducted).
         PAGOS_FRACCIONADOS_INGRESADOS: The amount pago-fraccionado
             autoliquidaciones actually paid, folded across their source periods.
             Each period's effective filing contributes the result already paid
@@ -70,6 +74,7 @@ class BindingAggregationOp(StrEnum):
     COPY = "copy"
     COUNT_DISTINCT = "count_distinct"
     PRIOR_PAGOS_FRACCIONADOS = "prior_pagos_fraccionados"
+    PRIOR_NEGATIVE_RESULTS_UNDEDUCTED = "prior_negative_results_undeducted"
     PAGOS_FRACCIONADOS_INGRESADOS = "pagos_fraccionados_ingresados"
 
 
@@ -121,7 +126,7 @@ class RelationAggregationOp(StrEnum):
     period's own result. This is a deliberately separate axis from
     :class:`BindingAggregationOp` (which governs ``BindingDefinition`` folds and
     carries the binding-only ``rows`` / ``count_distinct`` /
-    ``prior_pagos_fraccionados`` members); the two are not interchanged. The
+    ``prior_pagos_fraccionados`` / ``prior_negative_results_undeducted`` members); the two are not interchanged. The
     complete set declared across the registry relation tree is ``copy``, ``sum``
     and ``pagos_fraccionados_ingresados``.
     """
@@ -698,6 +703,25 @@ class LedgerWithholdingDerivation(StrEnum):
     Each payment is its own withholding event (RIRPF arts. 78.1 and 95.1), but
     no source read fixes how a part payment splits between IVA and base, so the
     pro rata share stays out of the credit and is reported until the payer states it.
+    """
+
+    PAID_AFTER_CUT_OFF = "paid_after_cut_off"
+    """The linked invoice's declared retención, imputed to a pago fraccionado's window but paid after it.
+
+    RIRPF art. 110.3.a counts the withholding that corresponds to the window's
+    income (DGT V3298-15), and it is practised only when the income is paid
+    (TEAC 00/03187/2011). The window's end is the cut-off that is always safe, so
+    a receipt dated after it keeps its figure for reporting and stays out of the
+    pago fraccionado; the annual return still credits it, whatever its payment date.
+    """
+
+    RENTAL_ACTIVITY_COMPONENT = "rental_activity_component"
+    """The linked invoice's declared retención on a row of an arrendador de inmuebles activity.
+
+    The annual return puts urban-rental withholding in its own credit whether or
+    not the rental is an activity, and leaves it out of the activity credit
+    (Manual práctico de Renta, retenciones e ingresos a cuenta). The row's figure is
+    kept for reporting and points to that rental credit's activity component.
     """
 
     INFERRED_FROM_DECLARED_CUOTA = "inferred_from_declared_cuota"

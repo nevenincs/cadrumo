@@ -4,9 +4,8 @@ The advisory is built by the verification finding collector from the quarter's
 persisted ledger rows. The rows are bank movements linking no invoice, which only
 the cobros y pagos criterion places in a quarter (RIRPF art. 7.2), so the profile
 declares that election for 2026 under its directa normal regime. That grounds
-boxes 01 and 02, but every verified quarter holds a withheld receipt, and box 06
-(activity withholding) stays calculation grade, so verify refuses on box 06 while
-the advisories are still collected for the calculation.
+boxes 01, 02 and the activity withholding of box 06, so verify passes the
+calculation-note gate on every quarter, each holding a withheld receipt, and builds its advisories.
 """
 
 from __future__ import annotations
@@ -30,7 +29,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_revision_findings import collect_revision_verification_findings
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -39,7 +37,11 @@ from cadrumo.core.period import Period
 from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
+from cadrumo.domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -53,8 +55,6 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.entrypoints.tests.profile_persistence.verification_substance_support import (
     _CASILLA_05,
     _CASILLA_06,
-    _CASILLA_08,
-    _CASILLA_10,
     _CASILLA_16,
     _CASILLA_18,
     _T0,
@@ -275,8 +275,6 @@ def _calculate_m130_draft(
             casilla_inputs={
                 _CASILLA_05: Decimal("0.00"),
                 _CASILLA_06: Decimal("0.00"),
-                _CASILLA_08: Decimal("0.00"),
-                _CASILLA_10: Decimal("0.00"),
                 _CASILLA_16: Decimal("0.00"),
                 _CASILLA_18: Decimal("0.00"),
             },
@@ -340,22 +338,18 @@ def _collect_art109_findings(
     ]
 
 
-def _verify_refuses_capped_box_06(
+def _verify_art109_findings(
     objects: SecureObjectRepository,
     *,
     transactions: tuple[Transaction, ...],
     profile_flag: bool,
     operation: PinnedAuthorityOperation,
 ) -> list[ModeloVerificationFinding]:
-    """Assert verify refuses on capped box 06, and return the advisories still built for the calculation."""
+    """Verify the quarter past the calculation-note gate, and return the Art. 109 advisories it built."""
     _, revision = _calculate_over_quarter_ledger(objects, transactions=transactions, operation=operation)
-    capped = {issue.casilla_id for issue in revision.source_issues if issue.reason == _ADVISORY_BINDING_VALUE}
-    assert capped == {_CASILLA_06}, revision.source_issues
-    with (
-        pytest.raises(ModeloCalculationBlockedError) as refused,
-        bundled_indexed_authority().operation() as verify_operation,
-    ):
-        verify_modelo_revision_with_preconditions(
+    assert not [issue for issue in revision.source_issues if issue.reason == _ADVISORY_BINDING_VALUE]
+    with bundled_indexed_authority().operation() as verify_operation:
+        result = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -367,16 +361,19 @@ def _verify_refuses_capped_box_06(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=verify_operation,
         )
-    context = refused.value.context or {}
-    assert context["reason"] == _ADVISORY_BINDING_VALUE
-    assert context["box"] == "06"
+    # The quarter has no prior-year return on record, so the report holds cross-period blockers; box 06 holds none.
+    assert not [
+        finding
+        for finding in result.report.findings
+        if finding.casilla_id == _CASILLA_06 and finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    ], result.report.findings
     return _collect_art109_findings(objects, revision=revision, profile_flag=profile_flag)
 
 
 def test_verify_art109_advisory_uses_proven_period_evidence_when_profile_flag_is_false(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    findings = _verify_refuses_capped_box_06(
+    findings = _verify_art109_findings(
         objects,
         transactions=_positive_threshold_transactions(),
         profile_flag=False,
@@ -389,7 +386,7 @@ def test_verify_art109_advisory_uses_proven_period_evidence_when_profile_flag_is
 def test_verify_art109_advisory_proven_below_threshold_overrides_declared_profile_flag(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    findings = _verify_refuses_capped_box_06(
+    findings = _verify_art109_findings(
         objects,
         transactions=_below_threshold_transactions(),
         profile_flag=True,
@@ -402,7 +399,7 @@ def test_verify_art109_advisory_proven_below_threshold_overrides_declared_profil
 def test_verify_art109_advisory_keeps_declared_profile_fact_when_period_evidence_is_insufficient(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    findings = _verify_refuses_capped_box_06(
+    findings = _verify_art109_findings(
         objects,
         transactions=_insufficient_transactions(),
         profile_flag=True,

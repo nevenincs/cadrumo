@@ -6,10 +6,9 @@ issued invoice states the retención the client practised, so the ledger is the
 value source. A figure reconstructed from invoice gross minus cash received is
 not a recorded fact: it is reported with its count and amount and never added.
 A row whose retención the substrate cannot determine is reported as unknown,
-never as zero. Until the year that credits an invoice whose payment and accrual
-fall in different ejercicios is grounded, the binding is capped at calculation
-grade: the calculation and preview show the credit, and checking, export and
-local filing refuse it unless it is a proven zero.
+never as zero. Each row's retención follows its income into the ejercicio the
+declared criterion imputes it to (LIRPF art. 14.1.b; RIRPF art. 79), so the
+credit is filing grade: checking, export and local filing admit it.
 
 Every case runs through the production resolver against the Modelo 100 and
 Modelo 130 revisions of the published authority, so the bindings under test are
@@ -52,7 +51,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_sources import CalculationNoteSentence, CalculationSourceIssue
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -361,29 +360,22 @@ def _refused_reasons(
     return refusals[0]
 
 
-def test_the_cap_sits_on_the_activity_credit_and_not_on_the_income_box(operation: PinnedAuthorityOperation) -> None:
-    """The 0599 binding is capped; the 0171 income binding sharing its provider kind keeps its grade."""
+def test_the_activity_credit_is_filing_grade_and_cites_its_imputation(operation: PinnedAuthorityOperation) -> None:
+    """The 0599 binding carries no cap, and cites the provisions that place its year."""
     snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
     bindings = revision_bindings_by_id(snapshot.revision)
     credit = bindings[_casilla_0599_binding(snapshot.revision)]
-    assert credit.grade_cap is not None
-    assert credit.grade_cap.reason == "imputation_period_ungrounded"
-    assert set(credit.grade_cap.legal_refs) == {"rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"}
-    reached = {
-        str(casilla_id)
-        for entry in capped_binding_reach(
-            snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
-        ).values()
-        for casilla_id in entry.casilla_ids
-    }
-    assert "0599" in reached
-    assert "0171" not in reached
+    assert credit.grade_cap is None
+    assert {"rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"} <= set(credit.legal_refs)
+    assert not capped_binding_reach(
+        snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+    )
 
 
-def test_a_declared_credit_is_calculated_shown_and_refused_at_check_export_and_recording(
+def test_a_declared_credit_is_calculated_and_admitted_at_check_export_and_recording(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """185,00 resolves, carries the advisory note, and withholds check, export and recording."""
+    """185,00 resolves with no advisory note, and check, export and recording admit it."""
     transactions, invoices = _declared_ledger()
     revision = _m100_revision()
 
@@ -391,16 +383,12 @@ def test_a_declared_credit_is_calculated_shown_and_refused_at_check_export_and_r
 
     assert _credit_0599(resolution, revision) == _DECLARED_CREDIT
     emitted, persisted = _calculated(operation, resolution)
-    (note,) = [item for item in emitted.diagnostics if item.reason == _ADVISORY_REASON]
-    assert note.casilla_id == "0599"
-    assert note.fact is not None
-    assert note.fact.sentence is CalculationNoteSentence.ADVISORY_IMPUTATION_PERIOD_UNGROUNDED
-    reasons = _refused_reasons(operation, persisted)
-    assert reasons is not None and _ADVISORY_REASON in reasons
+    assert not [item for item in emitted.diagnostics if item.reason == _ADVISORY_REASON]
+    assert _refused_reasons(operation, persisted) is None
 
 
 def test_a_proven_zero_over_rows_without_withholding_passes(operation: PinnedAuthorityOperation) -> None:
-    """An activity receipt that carries no retención is a proven zero: shown, and nothing is refused."""
+    """An activity receipt that carries no retención is a proven zero, and nothing is refused."""
     paid_in_full = _transaction(
         provider_id="cobro-integro",
         cash=_INFERRED_BASE + _INFERRED_IVA,
@@ -416,12 +404,7 @@ def test_a_proven_zero_over_rows_without_withholding_passes(operation: PinnedAut
     assert _credit_0599(resolution, revision) == Decimal("0")
     assert resolution.value_outcomes[_casilla_0599_binding(revision)] is BindingValueOutcome.PROVEN_ZERO
     emitted, persisted = _calculated(operation, resolution)
-    (note,) = [item for item in emitted.diagnostics if item.reason == _ADVISORY_REASON]
-    assert note.value_outcome is BindingValueOutcome.PROVEN_ZERO
-    # The proven zero persists, so a reopened declaration still says it stands, and it withholds nothing.
-    (proven,) = [issue for issue in persisted if issue.casilla_id == "0599"]
-    assert proven.value_outcome is BindingValueOutcome.PROVEN_ZERO
-    assert _refused_reasons(operation, (proven,)) is None
+    assert not [item for item in emitted.diagnostics if item.reason == _ADVISORY_REASON]
     assert _refused_reasons(operation, persisted) is None
 
 

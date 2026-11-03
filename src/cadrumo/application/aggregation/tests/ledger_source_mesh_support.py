@@ -228,9 +228,9 @@ class _InMemoryInvoiceCatalogueRepository:
 class _InMemoryProrrataRegisterRepository:
     """Inward fake for the bucket-scoped prorrata read capability."""
 
-    def __init__(self, *, bucket_id: str) -> None:
+    def __init__(self, *, bucket_id: str, register: ProrrataRegister | None = None) -> None:
         self._bucket_id = bucket_id
-        self._register = ProrrataRegister()
+        self._register = register or ProrrataRegister()
 
     @property
     def bucket_id(self) -> str:
@@ -272,6 +272,10 @@ def empty_invoice_repository() -> _InMemoryInvoiceCatalogueRepository:
 
 def empty_prorrata_repository() -> _InMemoryProrrataRegisterRepository:
     return _InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID)
+
+
+def prorrata_repository_holding(register: ProrrataRegister) -> _InMemoryProrrataRegisterRepository:
+    return _InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID, register=register)
 
 
 def _ledger_iva_resolver(
@@ -628,6 +632,7 @@ def resolve_m100(
     profile: ModeloWorkProfile | None = None,
     year: int = 2025,
     invoices: InvoiceCatalogueReader | None = None,
+    prorrata_register: ProrrataRegister | None = None,
 ) -> CalculationSourceResolution:
     profile = profile or cash_criterion_profile(year)
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
@@ -637,7 +642,7 @@ def resolve_m100(
             invoice_reader=invoices or _InMemoryInvoiceCatalogueRepository(),
             transaction_reader=tx_repo,
         ),
-        prorrata_register_repository=empty_prorrata_repository(),
+        prorrata_register_repository=prorrata_repository_holding(prorrata_register or ProrrataRegister()),
         usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
         activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
     ).resolve(

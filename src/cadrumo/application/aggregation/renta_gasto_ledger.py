@@ -20,9 +20,9 @@ Only ACTIVE, EUR-denominated, OUTGOING transactions whose explicit
 ``business_classification`` is BUSINESS or MIXED are eligible. The deductible
 amount is the IVA-exclusive base imponible (``taxable_base``), plus the
 non-recoverable share of ``iva_amount`` when the activity's IVA-deduction ratio
-(:func:`~.renta_ledger.resolve_iva_deduction_ratio` -- the SAME resolver the
-annual counterpart uses, for the SAME ejercicio, so the two filings cannot
-diverge) is less than full: IVA soportado a taxpayer cannot recover through
+(:func:`~.renta_ledger.resolve_iva_deduction_ratio`, the provisional percentage
+a quarter runs on; the annual return closes on the definitive one) is less than
+full: IVA soportado a taxpayer cannot recover through
 The indirect-tax input is PGC NRV 12.ª acquisition cost, same as the annual side (LIRPF arts.
 28-30 base-imponible deductibility governs the pago fraccionado's gasto
 determination identically to the annual declaration). A declarable expense
@@ -43,7 +43,7 @@ pipeline refuses it: the payment is computed on the same rendimiento neto
 This module does NOT reuse the annual pipeline's invoice-evidence
 reconciliation or its annual window, which are constraint-shape-divergent from
 the quarterly cumulative gasto sum. It shares that module's category-rule
-construction, its single IVA-deduction-ratio resolver
+construction, its provisional IVA-deduction-ratio resolver
 (:func:`~.renta_ledger.resolve_iva_deduction_ratio`) and its residence lookup.
 """
 
@@ -53,7 +53,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import BaseModel, Field
 
@@ -84,6 +84,7 @@ from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.tipo_actividad_partitions import agrarian_instalment_activity_codes
 from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
@@ -91,6 +92,7 @@ from ._models import CasillaAggregation, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
     RentaExpenseAdvisory,
     exclusive_business_use,
+    is_supplier_refund,
     renta_expense_business_proportion,
     row_scaling_proportion,
 )
@@ -108,6 +110,7 @@ from .errors import AggregationValidationError
 from .renta_imputation import (
     ImputationCriteria,
     ImputationUnresolved,
+    expense_incurred_date,
     impute_ledger_row,
     rows_left_out_summary,
     rows_touching_window,
@@ -123,6 +126,8 @@ from .renta_ledger import (
     resolve_iva_deduction_ratio,
     resolve_residence_ccaa,
 )
+from .renta_ledger_evidence import purchase_invoice_evidence_payload, refund_left_to_correction_netting
+from .renta_ledger_models import RentaLedgerAggregationIssue
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -136,7 +141,7 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
 
     Only reasons that represent a *dropped declarable gasto* — a BUSINESS / MIXED
     expense excluded by a downstream gate — are modelled, so every emitted issue
-    is a genuine no-silent-under-declaration signal. INCOMING and PERSONAL /
+    is a genuine no-silent-under-declaration signal. Receipts and PERSONAL /
     unclassified OUTGOING rows are skipped silently (they are not deductible
     gastos) and never produce an issue.
     """
@@ -164,6 +169,8 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
     INELIGIBLE_DEDUCTIBILITY = _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
     EXCLUSIVE_USE_REQUIRED = _shared_issue_reasons.EXCLUSIVE_USE_REQUIRED
     MISSING_OWNERSHIP_SHARE = _shared_issue_reasons.MISSING_OWNERSHIP_SHARE
+    # A supplier's refund whose invoice cannot state what it takes back.
+    REFUND_EVIDENCE_REFUSED = "refund_evidence_refused"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -197,14 +204,15 @@ class RentaGastoObservation(BaseModel):
     ``deductible_amount`` is the IVA-exclusive base imponible
     (``transaction.taxable_base``), plus any non-recoverable input IVA, after the
     row's category rule: a usage-ratio category applies the operator's ratio, any
-    other category the MIXED business fraction.
+    other category the MIXED business fraction. A supplier's refund states it below
+    zero, so the fold takes it off the expense.
     """
 
     model_config = _STRICT_FROZEN
 
     transaction_id: TransactionId
     target_casilla_id: CasillaId
-    deductible_amount: Decimal = Field(ge=Decimal("0"))
+    deductible_amount: Decimal
     filing_date: date
     category_id: str | None = Field(default=None, min_length=1, max_length=128)
     """The row's ledger spending category, or ``None`` when it declares none.
@@ -253,9 +261,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
     """Load the transaction catalogue and aggregate a cumulative expense window.
 
     Derives the activity's IVA-deduction ratio through
-    :func:`~.renta_ledger.resolve_iva_deduction_ratio` -- the SAME resolver the
-    The annual counterpart uses, for the SAME ejercicio (``period.filing_year``),
-    so the two filings cannot diverge on it. ``profile_record`` (a
+    :func:`~.renta_ledger.resolve_iva_deduction_ratio`, for the ejercicio
+    (``period.filing_year``). ``profile_record`` (a
     :class:`UserProfileRecord`) and ``prorrata_register_repository`` supply the
     profile and canonical register directly. ``usage_ratios`` carries the
     effective per-category ratios (the same mapping the annual pipeline is
@@ -454,11 +461,16 @@ def aggregate_renta_gasto_ledger(
     issues: list[RentaGastoLedgerAggregationIssue] = []
     advisories: list[RentaExpenseAdvisory] = []
 
+    # Apartado I of the form takes no agrarian figure; apartado II is a share of income alone.
+    agrarian = agrarian_instalment_activity_codes(effective_date=period.end_date, authority=operation)
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
+        if transaction.tipo_actividad in agrarian:
+            continue
         outcome = _classify_gasto_transaction(
             transaction,
+            bucket_id=bucket_id,
             cumulative_start=window.start,
             cumulative_end=window.end,
             target_casilla_id=target_casilla_id,
@@ -490,7 +502,7 @@ def aggregate_renta_gasto_ledger(
                 criteria=criteria,
             ).fractions,
         )
-    observations = _apply_statutory_cap_trims(observations, rules=rules)
+    observations = _apply_statutory_cap_trims(observations, rules=rules, transactions=transactions, invoices=invoices)
     casilla_aggregation = _gasto_casilla_aggregation(
         window.period,
         observations,
@@ -509,6 +521,7 @@ def aggregate_renta_gasto_ledger(
 def _classify_gasto_transaction(
     transaction: Transaction,
     *,
+    bucket_id: str,
     cumulative_start: date,
     cumulative_end: date,
     target_casilla_id: CasillaId,
@@ -522,16 +535,18 @@ def _classify_gasto_transaction(
     Returns a :class:`RentaGastoObservation` for an eligible deductible expense,
     a :class:`RentaGastoLedgerAggregationIssue` for an OUTGOING row that fails a
     gate or that its category rule refuses (so the operator sees the dropped
-    expense rather than a silent zero), or ``None`` for an INCOMING row that
-    this expense pipeline simply does not own (it is the income pipeline's
-    concern, never a gasto issue).
+    expense rather than a silent zero), or ``None`` for a receipt that this
+    expense pipeline simply does not own (it is the income pipeline's concern,
+    never a gasto issue). A supplier's refund is an expense row with its sign
+    reversed, read as the annual pipeline reads it.
     """
     transaction_id = transaction.transaction_id
 
-    # INCOMING rows belong to the income pipeline; this expense pass skips them
-    # without recording an issue so the operator is not shown a spurious gasto
+    # Other INCOMING rows belong to the income pipeline; this expense pass skips
+    # them without recording an issue so the operator is not shown a spurious gasto
     # advisory for every receipt.
-    if transaction.direction is not TransactionDirection.OUTGOING:
+    refunded = is_supplier_refund(transaction)
+    if transaction.direction is not TransactionDirection.OUTGOING and not refunded:
         return None
 
     if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
@@ -563,25 +578,29 @@ def _classify_gasto_transaction(
         )
     if criteria is not None and not cumulative_start <= filing_date <= cumulative_end:
         return None
+    refund = None
+    if refunded:
+        refund = _refund_figures(transaction, invoices=invoices, bucket_id=bucket_id, netting=criteria is not None)
+        if refund is None or isinstance(refund, RentaGastoLedgerAggregationIssue):
+            return refund
     gate_issue = _gasto_gate_issue(
         transaction,
         transaction_id=transaction_id,
         cumulative_start=cumulative_start,
         cumulative_end=cumulative_end,
         filing_date=filing_date,
+        base_known=refund is not None,
     )
     if gate_issue is not None:
         return gate_issue
 
-    eur_base = _eur_taxable_base_after_gate(transaction)
-    eur_iva_amount = effective_eur_iva_amount(transaction)
-
     evaluated = _category_rule_deductible_amount(
         transaction,
-        eur_base=eur_base,
-        eur_iva_amount=eur_iva_amount,
+        eur_base=_eur_taxable_base_after_gate(transaction) if refund is None else refund.taxable_base,
+        eur_iva_amount=effective_eur_iva_amount(transaction) if refund is None else refund.iva_amount,
         proportion=proportion,
         rules=rules,
+        refund=refund,
     )
     if isinstance(evaluated, RentaGastoLedgerAggregationIssue):
         return evaluated
@@ -592,6 +611,45 @@ def _classify_gasto_transaction(
         filing_date=filing_date,
         category_id=transaction.category_id,
     )
+
+
+class _RefundFigures(NamedTuple):
+    """What the received invoice a supplier's refund is linked to says it takes back, in EUR."""
+
+    invoice_id: str
+    invoice_issue_date: date
+    taxable_base: Decimal
+    iva_amount: Decimal
+
+
+def _refund_figures(
+    transaction: Transaction,
+    *,
+    invoices: InvoiceCatalogue | None,
+    bucket_id: str,
+    netting: bool,
+) -> _RefundFigures | RentaGastoLedgerAggregationIssue | None:
+    """Read a supplier's refund through the evidence check the annual pipeline applies.
+
+    ``None`` leaves the row to what already owns it: a refund on a correction belongs to the
+    correction netting, and with no catalogue there is no invoice to read it against.
+    """
+    invoice_id = transaction.purchase_invoice_evidence_id
+    if invoices is None or invoice_id is None:
+        return None
+    if netting and refund_left_to_correction_netting(transaction, invoices):
+        return None
+    payload = purchase_invoice_evidence_payload(invoices=invoices, bucket_id=bucket_id, transaction=transaction)
+    if isinstance(payload, RentaLedgerAggregationIssue):
+        return RentaGastoLedgerAggregationIssue(
+            transaction_id=transaction.transaction_id,
+            reason=RentaGastoLedgerAggregationIssueReason.REFUND_EVIDENCE_REFUSED,
+            detail=payload.detail,
+        )
+    if payload.invoice_issue_date is None or payload.taxable_base is None or payload.iva_amount is None:
+        msg = f"transaction {transaction.transaction_id} cleared the refund evidence check without invoice figures"
+        raise ValueError(msg)
+    return _RefundFigures(invoice_id, payload.invoice_issue_date, payload.taxable_base, payload.iva_amount)
 
 
 def _unplaced_gasto_issue(
@@ -672,6 +730,7 @@ def _category_rule_deductible_amount(
     eur_iva_amount: Decimal | None,
     proportion: Decimal,
     rules: RentaCategoryDeductionRules,
+    refund: _RefundFigures | None = None,
 ) -> Decimal | RentaGastoLedgerAggregationIssue:
     """Run one categorised row through its category rule and return the deductible amount.
 
@@ -700,13 +759,15 @@ def _category_rule_deductible_amount(
     try:
         fact = RentaDeductibleExpenseFact(
             transaction_id=transaction_id,
+            invoice_id=None if refund is None else refund.invoice_id,
             catalogue_id="ledger",
             operation_date=transaction.raw.value_date or transaction.raw.booked_date,
+            invoice_issue_date=None if refund is None else refund.invoice_issue_date,
             posting_date=transaction.raw.booked_date,
             gross_amount=effective_eur_amount(transaction) * scaling,
             taxable_base=eur_base * scaling,
             iva_amount=eur_iva_amount * scaling if eur_iva_amount is not None else None,
-            direction=RentaExpenseDirection.OUTGOING_EXPENSE,
+            direction=RentaExpenseDirection.OUTGOING_EXPENSE if refund is None else RentaExpenseDirection.REFUND,
             category=category,
             exclusive_business_use=exclusive_business_use(transaction),
         )
@@ -730,6 +791,8 @@ def _apply_statutory_cap_trims(
     observations: list[RentaGastoObservation],
     *,
     rules: RentaCategoryDeductionRules,
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue | None,
 ) -> list[RentaGastoObservation]:
     """Hold the cumulative-window observations that share one statutory cap to that cap together."""
     trims = statutory_cap_trims(
@@ -738,7 +801,8 @@ def _apply_statutory_cap_trims(
                 claim_id=observation.transaction_id,
                 transaction_id=observation.transaction_id,
                 category=normalize_spending_category(observation.category_id),
-                claim_date=observation.filing_date,
+                imputed_on=observation.filing_date,
+                incurred_on=expense_incurred_date(transactions.transactions[observation.transaction_id], invoices),
                 deductible_amount=observation.deductible_amount,
             )
             for observation in observations
@@ -796,6 +860,7 @@ def _gasto_gate_issue(
     cumulative_start: date,
     cumulative_end: date,
     filing_date: date,
+    base_known: bool = False,
 ) -> RentaGastoLedgerAggregationIssue | None:
     """Return the first downstream issue for an eligible gasto transaction."""
     if not (cumulative_start <= filing_date <= cumulative_end):
@@ -817,7 +882,7 @@ def _gasto_gate_issue(
     # so surface it (the operator tags it via classify) rather than gross-folding
     # and silently OVER-declaring gastos (which would under-state the pago
     # fraccionado). Preflight already requires taxable_base, so this is a backstop.
-    if transaction.taxable_base is None:
+    if transaction.taxable_base is None and not base_known:
         return RentaGastoLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,

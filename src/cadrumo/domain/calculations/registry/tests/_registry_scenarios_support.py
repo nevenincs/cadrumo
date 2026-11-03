@@ -205,6 +205,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "renta-retencion-soportada-trabajo": Decimal("4.00"),
             "renta-retencion-soportada-capital-mobiliario": Decimal("5.00"),
             "renta-retencion-soportada-ganancia-patrimonial": Decimal("11.00"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero.
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
@@ -340,6 +341,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
@@ -401,6 +403,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
@@ -485,6 +488,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
@@ -583,6 +587,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                 value=Decimal("800.00"),
                 operand_refs=_operand_refs(
                     "0153",
+                    "renta-retencion-soportada-arrendamiento-actividad",
                 ),
                 operand_casilla_refs=_operand_casilla_refs("0153"),
                 legal_refs=(
@@ -672,6 +677,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-retencion-soportada-trabajo": Decimal("40.00"),
             "renta-retencion-soportada-capital-mobiliario": Decimal("50.00"),
             "renta-retencion-soportada-ganancia-patrimonial": Decimal("110.00"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             **dict.fromkeys(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, Decimal("100.00")),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},

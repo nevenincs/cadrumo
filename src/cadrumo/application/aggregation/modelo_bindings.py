@@ -60,6 +60,7 @@ from ...domain.calculations.registry.ledger_renta_income_bindings import (
     RentaIncomeObservationProtocol,
     UngroundedRentaIncome,
     WithholdingDerivationPartition,
+    declared_withholding_binding_ids,
     ledger_renta_withholding_derivation_partition,
     ledger_renta_withholding_value_outcomes,
     resolve_ledger_renta_income_aggregation_binding_values,
@@ -72,11 +73,18 @@ from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.iva.schema import InvoiceKind
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
+from ...domain.renta.retencion_soportada_applicability import (
+    RetencionSoportadaApplicability,
+    arrendamiento_actividad_applicability,
+)
 from ...domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
+from ...domain.transactions.tipo_actividad_partitions import (
+    agrarian_instalment_activity_codes,
+    tipo_actividad_code_set,
+)
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
@@ -103,6 +111,7 @@ from .modelo_bindings_actividad_assets import (
     activity_asset_disposal_excess_m131_findings,
 )
 from .renta_imputation import (
+    ActivityImputationCriterion,
     ImputationCriteria,
     ImputationFilingHistory,
     ImputationUnresolved,
@@ -113,9 +122,11 @@ from .renta_imputation import (
 )
 from .renta_income_diagnostics import (
     accrued_withholding_unpaid_diagnostics,
+    paid_after_cut_off_diagnostics,
     part_payment_diagnostics,
     rectification_diagnostics,
     rectificativa_netting_diagnostics,
+    rental_activity_component_diagnostics,
 )
 from .renta_income_diagnostics import (
     fitted_diagnostic_id_list as _fitted_id_list,
@@ -125,11 +136,15 @@ from .renta_income_diagnostics import (
 )
 from .renta_income_ledger import (
     RentaIncomeLedgerAggregation,
+    RentalActivityScreen,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
     aggregate_renta_m131_agrario_income_ledger_from_repositories,
+    instalment_basis_observations,
+    payment_dated_renta_m100_income_observations,
 )
 from .renta_income_models import RentaIncomeLedgerAggregationIssue, RentaIncomeLedgerAggregationIssueReason
+from .retencion_soportada_source import declared_activity_epigraphs
 from .source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
     CalculationSourceContext,
@@ -142,12 +157,14 @@ from .source_resolution_operations import (
     source_context_operation,
     source_issue_diagnostics,
     storage_degradation_resolution,
+    unresolved_binding_diagnostics,
 )
 from .source_resolution_operations import (
     source_provenance_for as _provenance_for,
 )
 
 _M131_AGRARIAN_ACTIVITY_SELECTOR = "modelo-131:selector-m036-volumen-ingresos-agrario"
+_M100_RENTAL_ACTIVITY_SELECTOR = "modelo-100:selector-m036-arrendadores-inmuebles"
 
 
 def _renta_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
@@ -156,13 +173,25 @@ def _renta_income_target_casilla(context: CalculationSourceContext) -> CasillaId
         for binding in context.revision.bindings
         if isinstance(binding.provider, LedgerRentaIncomeProvider) and str(binding.provider.modelo) == context.modelo
     )
-    targets = {provider.target_casilla_id for provider in providers}
+    targets = {provider.target_casilla_id for provider in providers if not provider.agrarian_quarter}
     if len(targets) != 1:
         raise RegistryError(
             "selected revision must declare exactly one renta-income aggregation target",
             context={"modelo": context.modelo, "target_count": len(targets)},
         )
     return next(iter(targets))
+
+
+def _agrarian_quarter_target_casilla(context: CalculationSourceContext) -> CasillaId | None:
+    """Return the box a revision declares for its agrarian activities' quarter, when it splits them out."""
+    return next(
+        (
+            binding.provider.target_casilla_id
+            for binding in context.revision.bindings
+            if isinstance(binding.provider, LedgerRentaIncomeProvider) and binding.provider.agrarian_quarter
+        ),
+        None,
+    )
 
 
 def _irnr_handoff_bound_inputs(
@@ -226,6 +255,40 @@ def _employment_category_matcher(operation: PinnedAuthorityOperation) -> Callabl
     return matcher
 
 
+def _rental_activity_screen(
+    context: CalculationSourceContext, period: Period, operation: PinnedAuthorityOperation
+) -> RentalActivityScreen:
+    """Read which tipos de actividad are rentals, and whether the profile declares one for the ejercicio."""
+    return RentalActivityScreen(
+        codes=tipo_actividad_code_set(
+            _M100_RENTAL_ACTIVITY_SELECTOR, effective_date=period.end_date, authority=operation
+        ),
+        declared=arrendamiento_actividad_applicability(declared_activity_epigraphs(context))
+        is RetencionSoportadaApplicability.DECLARED,
+    )
+
+
+def _rental_tag_missing_diagnostics(
+    context: CalculationSourceContext, aggregation: RentaIncomeLedgerAggregation, *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Withhold the activity credit while a rental year holds withholding-bearing rows with no tipo de actividad."""
+    untagged = aggregation.rental_tag_missing
+    if not untagged:
+        return ()
+    return unresolved_binding_diagnostics(
+        revision=context.revision,
+        source_kind="ledger_renta_income_aggregation",
+        binding_ids=tuple(sorted(declared_withholding_binding_ids(context.revision))),
+        resolver_id=resolver_id,
+        message=(
+            f"ejercicio {context.filing_year} includes a rental activity, and {len(untagged)} receipt(s) bearing "
+            "a retencion record no tipo de actividad, so whether their withholding is the activity's or the "
+            "rental's is unknown; set tipo_actividad on each (A01 for the rental): "
+            + _fitted_id_list(sorted(untagged), budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH // 2)
+        )[:DIAGNOSTIC_MESSAGE_MAX_LENGTH],
+    )
+
+
 class LedgerRentaIncomeAggregationSourceResolver:
     """Resolve ``ledger_renta_income_aggregation`` actividad-income bindings.
 
@@ -271,12 +334,15 @@ class LedgerRentaIncomeAggregationSourceResolver:
             context.profile.record if context.profile is not None else None,
             self._imputation_filings(context) if self._imputation_filings is not None else None,
         )
+        payment_year_values: dict[BindingId, Decimal] = {}
+        instalment_basis_values: dict[BindingId, Decimal] = {}
         with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = _activity_category_matcher(operation)
             employment_category_matcher = _employment_category_matcher(operation)
             try:
                 if context.modelo == form_for_role("renta.annual"):
+                    rental = _rental_activity_screen(context, aggregation_period, operation)
                     aggregation = aggregate_renta_m100_income_ledger_from_repositories(
                         bucket_id=context.bucket_id,
                         period=aggregation_period,
@@ -286,7 +352,18 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
                         criteria=criteria,
+                        rental=rental,
                     )
+                    payment_year_values = self._payment_year_withholding(
+                        context,
+                        aggregation_period,
+                        criteria,
+                        rental=rental,
+                        target_casilla_id=target_casilla_id,
+                        activity_category_matcher=activity_category_matcher,
+                        employment_category_matcher=employment_category_matcher,
+                    )
+                    instalment_basis_values = self._instalment_basis_withholding(context, aggregation)
                 elif context.modelo == form_for_role("renta.objective_instalment"):
                     agrarian_activity_codes = frozenset(
                         TipoActividad(code)
@@ -308,6 +385,13 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         operation=operation,
                     )
                 else:
+                    agrarian_target = _agrarian_quarter_target_casilla(context)
+                    agrarian_codes = frozenset[TipoActividad]()
+                    if agrarian_target is not None:
+                        agrarian_codes = agrarian_instalment_activity_codes(
+                            effective_date=aggregation_period.end_date,
+                            authority=operation,
+                        )
                     aggregation = aggregate_renta_income_ledger_from_repositories(
                         bucket_id=context.bucket_id,
                         period=aggregation_period,
@@ -317,7 +401,27 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
                         criteria=criteria,
+                        excluded_activity_codes=agrarian_codes,
                     )
+                    if agrarian_target is not None:
+                        agrarian = aggregate_renta_m131_agrario_income_ledger_from_repositories(
+                            bucket_id=context.bucket_id,
+                            period=aggregation_period,
+                            modelo=context.modelo,
+                            target_casilla_id=agrarian_target,
+                            agrarian_activity_codes=agrarian_codes,
+                            activity_category_matcher=activity_category_matcher,
+                            employment_category_matcher=employment_category_matcher,
+                            ports=self._ports,
+                            operation=operation,
+                            criteria=criteria,
+                        )
+                        aggregation = aggregation.model_copy(
+                            update={
+                                "observations": (*aggregation.observations, *agrarian.observations),
+                                "issues": (*aggregation.issues, *agrarian.issues),
+                            }
+                        )
                 disposal_excess = (
                     ()
                     if context.modelo == form_for_role("renta.annual")
@@ -336,7 +440,56 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
-        return self._assemble_resolution(context, aggregation, profile_decode_context, disposal_excess, criteria)
+        return self._assemble_resolution(
+            context, aggregation, profile_decode_context, disposal_excess, criteria
+        ).model_copy(
+            update={
+                "payment_year_binding_values": payment_year_values,
+                "instalment_basis_binding_values": instalment_basis_values,
+            }
+        )
+
+    def _instalment_basis_withholding(
+        self, context: CalculationSourceContext, aggregation: RentaIncomeLedgerAggregation
+    ) -> dict[BindingId, Decimal]:
+        """State each declared retención binding as the year's last pago fraccionado would credit it."""
+        withholding_ids = declared_withholding_binding_ids(context.revision)
+        if not withholding_ids:
+            return {}
+        restated = instalment_basis_observations(
+            aggregation.observations,
+            self._ports.transaction_reader.load(),
+            cut_off=context.period.end_date,
+        )
+        values = resolve_ledger_renta_income_aggregation_binding_values(context.revision, restated)
+        return {binding_id: value for binding_id, value in values.items() if binding_id in withholding_ids}
+
+    def _payment_year_withholding(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        criteria: ImputationCriteria,
+        *,
+        rental: RentalActivityScreen,
+        target_casilla_id: CasillaId,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> dict[BindingId, Decimal]:
+        """State each declared retención binding's figure by payment year, when accrual can move a receipt."""
+        withholding_ids = declared_withholding_binding_ids(context.revision)
+        if not withholding_ids or criteria.usable(context.filing_year) is not ActivityImputationCriterion.DEVENGO:
+            return {}
+        paid = payment_dated_renta_m100_income_observations(
+            bucket_id=context.bucket_id,
+            period=period,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+            rental=rental,
+        )
+        values = resolve_ledger_renta_income_aggregation_binding_values(context.revision, paid)
+        return {binding_id: value for binding_id, value in values.items() if binding_id in withholding_ids}
 
     def _assemble_resolution(
         self,
@@ -449,6 +602,9 @@ class LedgerRentaIncomeAggregationSourceResolver:
             )
             + accrued_withholding_unpaid_diagnostics(aggregation.accrued_unpaid, resolver_id=self.resolver_id)
             + part_payment_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + paid_after_cut_off_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + rental_activity_component_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + _rental_tag_missing_diagnostics(context, aggregation, resolver_id=self.resolver_id)
             + rectificativa_netting_diagnostics(aggregation.rectificativa_corrections, resolver_id=self.resolver_id)
             + rectification_diagnostics(
                 self._ports.transaction_reader.load(),

@@ -209,6 +209,7 @@ _BASE_BINDINGS: dict[str, Decimal] = {
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
     "renta-profile-declaration-type": Decimal("1"),
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),

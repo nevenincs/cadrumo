@@ -162,6 +162,16 @@ aggregation:
       consignment_exceeds_ceiling: 'Egy küldemény meghaladja e rendszer korlátját:
         belső értéke nem lépheti túl a törvényi felső határt. Ellenőrizd a számlát,
         vagy vallsd be az importrendszeren kívül.'
+      correction_beyond_limit: 'Egy OSS/IOSS-helyesbítés túllépte a hároméves határidőt,
+        amely {limit} napon lejárt. Már nem a 369-es modellbe tartozik: nyújtsd be
+        közvetlenül a fogyasztás szerinti tagállamnál.'
+      correction_currency_unsourced: Egy idegen pénznemű OSS/IOSS helyesbítő számla
+        korábbi időszakot helyesbít, és a hivatalos források nem mondják meg, melyik
+        nap árfolyamán kell átváltani. Add meg a helyesbítést euróban a helyesbítések
+        szakasz soraként.
+      correction_row_invalid: Az OSS/IOSS-helyesbítések szakaszának egyik sora érvénytelen.
+        Meg kell adni a fogyasztás szerinti tagállamot, az évet, a bevallás időszaktípusát,
+        a bevallásnál korábbi időszakot és a helyesbített adót.
       detail_consumption_state_excluded: Az uniós séma szolgáltatásai nem vallhatók
         be az azonosítás szerinti tagállamra, mert a séma csak olyan tagállamban nyújtott
         szolgáltatásokra vonatkozik, ahol nem vagy letelepedve.
@@ -187,19 +197,23 @@ aggregation:
         és a fogyasztás szerinti tagállam adómértéke ebben az időszakban megváltozott,
         ezért a kiállítás dátumából nem állapítható meg, melyik adómérték alkalmazandó.
         Rögzítsd a teljesítési dátumot a számlán.
+      rate_tier_absent: A rendeltetési tagállamnak egyik időpontban sincs kulcsa ebben
+        a sávban, ezért a sor nem írható meg. Ellenőrizd a számla tételének sávját.
       rate_tier_ambiguous: A rendeltetési tagállam ugyanazon sávjának két kulcsa is
         ezt az adót adja, így nem tudható, melyik kulcs kerüljön a sorba. Ellenőrizd
         a számla tételét.
       rectificativa_above_row: 'Az OSS/IOSS helyesbítő számlák többet vonnak le, mint
         amennyit a helyesbített sor tartalmaz. Ellenőrizd az összegeket: lehet, hogy
         a helyesbítés utáni eredményt adják meg, nem a csökkentést.'
-      rectificativa_outside_period: Egy OSS/IOSS helyesbítő számla egy másik időszak
-        számláját helyesbíti. Ez a 369-es modell korábbi időszakokra vonatkozó helyesbítései
-        közé tartozik, és a terv e mezője itt nem fogad negatív összeget. Nem történt
-        export; vallsd be közvetlenül a Sede felületén.
+      rectificativa_target_ambiguous: Egy OSS/IOSS helyesbítő számla olyan számot
+        nevez meg, amely több rögzített számlán szerepel, így nem tudható, melyik
+        sort helyesbíti. Tedd egyedivé a számlaszámokat, vagy javítsd a hivatkozást.
       rectificativa_target_differs: Egy OSS/IOSS helyesbítő számla rendszere, ügylettípusa
         vagy tagállama eltér a helyesbített számláétól, így nem vonható le annak sorából.
         Ellenőrizd mindkét számlát.
+      rectificativa_target_later: Egy OSS/IOSS helyesbítő számla a saját kiállítási
+        dátumánál későbbi időszak számlájára hivatkozik. Ellenőrizd mindkét számla
+        dátumát.
       rectificativa_target_unknown: Egy OSS/IOSS helyesbítő számla olyan számlát nevez
         meg, amely nincs rögzítve, így nem tudható, melyik sort helyesbíti. Rögzítsd
         azt a számlát, vagy javítsd a hivatkozást.

@@ -36,6 +36,8 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_absence_attestation
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -46,14 +48,17 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.payment_instalment_election import PaymentInstalmentElection
 from cadrumo.core.period import Period
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
+from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .imputation_export_support import (
     CASH,
     DEVENGO,
@@ -124,9 +129,6 @@ def bucket_id() -> str:
 
 
 def _seed_profile(criterion: str) -> None:
-    from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-
-    from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 
     dated = tuple(
         UserProfileFact.model_validate(
@@ -337,6 +339,13 @@ def test_m100_places_stated_rows_by_the_criterion_through_export(
     seed_prior_year_m100(secure_objects)
     for period, result in OFFICIAL_M130_C19.items():
         import_official_m130_result_observation(secure_objects, period=period, c19_value=result)
+    # The profile declares activity income without an IAE epigraph, so whether the activity includes an urban
+    # rental, whose withholding credits casilla 0598, is not proven: the operator attests that no payer withheld.
+    seed_absence_attestation(
+        operation=published_authority_operation(),
+        ejercicio=YEAR,
+        income_class=RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD,
+    )
 
     annual = _annual(secure_objects)
 

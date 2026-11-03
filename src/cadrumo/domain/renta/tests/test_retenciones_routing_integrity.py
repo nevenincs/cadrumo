@@ -18,6 +18,7 @@ from ...calculations.registry.binding_grade_cap_reach import capped_binding_reac
 from ...calculations.registry.facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.schema_references import TemporalSupportEnvelope
+from ...calculations.registry.tests.grade_cap_support import recapped_revision
 from ...calculations.registry.tests.registry_tree import full_published_modelo
 from ..retenciones_routing_integrity import (
     M130_RETENCIONES_ROUTING_FACT_ID,
@@ -174,13 +175,17 @@ class _RecordingFacts:
     ("year", "period", "closes"), [(2025, "1T", date(2025, 3, 31)), (2026, "3T", date(2026, 9, 30))]
 )
 def test_the_capped_reach_reads_the_route_at_the_period_it_screens(year: int, period: str, closes: date) -> None:
-    """The redirect behind casilla 06's cap is the route in force for the quarter, never the route of today."""
+    """The redirect a cap on casilla 06's binding reads is the route in force for the quarter, never today's.
+
+    The published binding is uncapped since its promotion, so the cap is declared in memory on a copy.
+    """
     with bundled_indexed_authority().operation() as operation:
         snapshot = operation.snapshot(Modelo("130"), filing_year=year, period=period)
+        route = resolve_m130_retenciones_route(effective_date=closes, authority=operation)
+        capped = recapped_revision(snapshot.revision, str(route.binding_id))
         facts = _RecordingFacts(operation)
-        reach = capped_binding_reach(snapshot.revision, authority=facts, effective_date=snapshot_reach_date(snapshot))
+        reach = capped_binding_reach(capped, authority=facts, effective_date=snapshot_reach_date(snapshot))
 
     assert snapshot_reach_date(snapshot) == closes
     assert facts.dates == [closes]
-    route = resolve_m130_retenciones_route(effective_date=closes, authority=operation)
     assert reach[route.binding_id].casilla_ids == (route.output_casilla,)

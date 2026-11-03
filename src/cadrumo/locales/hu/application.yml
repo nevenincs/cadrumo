@@ -1272,6 +1272,16 @@ application:
         what: Ez a számítás a Cadrumo jelenlegi ellenőrzései előtt készült, ezért
           ebben a formában nem ellenőrizhető, nem exportálható és nem rögzíthető.
         what_to_do: Számold újra a bevallást, majd ellenőrizd.
+      credit_cross_check_absent:
+        what: Egy forrásadó-jóváírás összevetésére szolgáló forrás nem tartalmaz semmit,
+          ezért az összeg megmarad, de nincs összevetve.
+        what_to_do: Ha ennek a forrásnak tartalmaznia kellene ezt a forrásadót, add
+          hozzá, és számold újra; különben nincs teendőd.
+      credit_source_disagreement:
+        what: Két forrás eltérő összeget ad ugyanarra a forrásadó-jóváírásra, ezért
+          a Cadrumo ezzel nem tudja ellenőrizni, exportálni vagy rögzíteni a bevallást.
+        what_to_do: Vesd össze az összeget az egyes kifizetők igazolásával, javítsd
+          a hibás forrást, és számold újra.
       deferred_binding_source:
         what: A Cadrumo a nyilatkozat egy értékét még nem tölti ki automatikusan.
         what_to_do: Nincs teendőd, hacsak az az érték nem vonatkozik rád. Ha igen,
@@ -1593,6 +1603,10 @@ application:
       claim_gap_free_method: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért nem számítható ki, a(z) {box}
         mező pedig csak a rögzítettet tartalmazza.'
+      credit_cross_check_absent: '{box}. mező: {cross_check} alapján nincs mit összevetni,
+        ezért ez az összeg nincs összevetve.'
+      credit_source_disagreement: '{box}. mező: a megadott forrás szerint {amount},
+        {cross_check} szerint viszont {compared_amount}.'
       disposal_claim_gap: '{element}: a kivezetése {date} napon történik, és {year}
         egy részére nincs rögzített értékcsökkenési leírás. A minimuma ettől még csökkenti
         a költséget.'
@@ -1764,6 +1778,11 @@ application:
       verification_complete: Teljes
       verification_incomplete: Hiányos
       verification_none: Nincs rögzített ellenőrzés
+    credit_cross_check_source:
+      borrador: az AEAT-tervezet
+      filed_observation: a benyújtott bevallásod
+      ledger: a nyilvántartásod
+      retencion_soportada: a kifizetői igazolások
     edit:
       parse:
         above_maximum: 'A legnagyobb megengedett érték: {bound}.'
@@ -2314,9 +2333,8 @@ application:
         %{period} kiszámítása után (%{changed_count} módosult, %{removed_count} törölve,
         %{added_count} új). Számítsd ki újra az ellenőrzés előtt.
       invoice_fingerprint_narrower_scope: Ez a(z) %{modelo} %{filing_year}, %{period}
-        számítás a banki mozgás nélkül teljesült számlák követése előtt készült, ezért
-        a Cadrumo nem tudja megmondani, változtak-e azóta ezek a számlák. Számítsd
-        ki újra a követés elindításához.
+        számítás kevesebb számlaadatot követ, mint amennyire most szüksége van, ezért
+        nem igazolható, hogy naprakész. Számítsd újra, mielőtt ellenőrzöd.
       invoice_fingerprint_unavailable: A Cadrumo nem tudta beolvasni a számláidat,
         hogy összevesse őket a(z) %{modelo} %{filing_year}, %{period} modellel, ezért
         nem igazolható, hogy a számítás naprakész. Próbáld újra, ha már olvashatók.

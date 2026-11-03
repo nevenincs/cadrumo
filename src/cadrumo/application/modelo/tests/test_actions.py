@@ -1051,6 +1051,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-deduccion-maternidad": Decimal("0"),
     }
     relation_values = {

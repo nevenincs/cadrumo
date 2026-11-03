@@ -40,6 +40,12 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-review-pending-operator"
 reviewed_at = 2026-10-08
 
+[revisions."2024-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo is a withholding agent's return: its withholding boxes state what the declarant practised on others and paid in, never a credit of the declarant's own, so there is no credit casilla for an entry to name. The perceptor credits that withholding on the perceptor's own return."""
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout", "aeat-dr-216-2024", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]
+
 [revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-216-2024-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through \

@@ -17,6 +17,7 @@ from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.identity.continuidad import ContinuidadId
 from ._schema_export_exemption import ExportExemptionReasonValue
 from .casilla_lineage import CasillaLineageOriginField
+from .credit_reconciliation import WithholdingSideField
 from .errors import RegistryValidationError
 from .ids import (
     BindingId,
@@ -442,6 +443,15 @@ class CasillaDefinition(RegistryModel):
     semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
     semantic_role_cardinality: SemanticRoleCardinalityField = SemanticRoleCardinality.SHARED
     semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
+    withholding_side: WithholdingSideField | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Whose withholding the casilla records: suffered by the declarant, or practised on others. "
+            "A role shared by payer-side returns and the perceptor's own returns cannot tell the two apart; "
+            "undeclared is never read as suffered."
+        ),
+    )
     aliases: tuple[CasillaAlias, ...] = ()
     internal_only: bool = Field(
         default=False,

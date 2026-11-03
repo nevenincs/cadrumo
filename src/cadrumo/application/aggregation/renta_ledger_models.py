@@ -36,6 +36,8 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     UNSUPPORTED_PERIOD = "unsupported_period"
     # RIRPF art. 7 cannot place the row in an ejercicio; it enters no box.
     IMPUTATION_UNRESOLVED = "imputation_unresolved"
+    # LIVA art. 105.Cuatro fixes the year's non-deductible IVA at the definitive prorrata.
+    DEFINITIVE_PRORRATA_PENDING = "definitive_prorrata_pending"
     UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
     UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
     UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE

@@ -42,7 +42,7 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import IssueDetail
 from ...domain.categories.proportionality import ProportionalityRule
-from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
 from .business_proportion import business_proportion
@@ -51,6 +51,7 @@ __all__ = [
     "RentaExpenseAdvisory",
     "RentaExpenseAdvisoryReason",
     "exclusive_business_use",
+    "is_supplier_refund",
     "relies_on_activity_marker",
     "renta_expense_advisory",
     "renta_expense_business_proportion",
@@ -74,6 +75,17 @@ class RentaExpenseAdvisory(BaseModel):
     transaction_id: TransactionId
     reason: RentaExpenseAdvisoryReason
     detail: IssueDetail
+
+
+def is_supplier_refund(transaction: Transaction) -> bool:
+    """Return whether the row is money a supplier returned on a received invoice.
+
+    It undoes an acquisition, so the expense pipelines own it and it is never income
+    (LIRPF art. 28.1; Manual Renta, ch. 7, "Partidas negativas", lists only sales-side reductions).
+    """
+    return (
+        transaction.direction is TransactionDirection.INCOMING and transaction.purchase_invoice_evidence_id is not None
+    )
 
 
 def relies_on_activity_marker(transaction: Transaction) -> bool:

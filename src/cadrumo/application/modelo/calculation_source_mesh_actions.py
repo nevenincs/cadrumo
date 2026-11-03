@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.period import Period, StandardPeriodCode
+from ...core.period import Period
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -52,6 +52,7 @@ from .calculation_action_ports import (
 )
 from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
+from .imputation_filings import imputation_filings_from_repositories
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
@@ -59,7 +60,6 @@ from .m303_regimen_simplificado_scope import (
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.bindings import RegistryModeloObservation
     from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -127,6 +127,8 @@ def resolve_bucket_source_mesh(
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         revision=snapshot.revision,
+        caller_binding_values=dict(binding_values or {}),
+        caller_enum_binding_values=dict(enum_binding_values or {}),
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         profile=profile,
@@ -527,22 +529,15 @@ def _resolve_ledger_income_families(
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     )
-    from ..aggregation.renta_imputation import imputation_filing_history
     from ..aggregation.source_resolution_operations import source_context_operation
 
     def imputation_filings(context: CalculationSourceContext) -> ImputationFilingHistory:
-        def load_filed(modelo: str, period: Period) -> RegistryModeloObservation | None:
-            envelope = ports.observation_repository.load_observation(modelo, period)
-            return None if envelope is None else envelope.observation
-
         with source_context_operation(context) as authority:
-            return imputation_filing_history(
+            return imputation_filings_from_repositories(
                 bucket_id=context.bucket_id,
                 year=context.filing_year,
-                annual_form=form_for_role("renta.annual"),
-                annual_period_code=StandardPeriodCode.ANNUAL.value,
-                load_observation=load_filed,
-                filing_records=ports.filing_repository.load(),
+                observation_repository=ports.observation_repository,
+                filing_repository=ports.filing_repository,
                 authority=authority,
             )
 

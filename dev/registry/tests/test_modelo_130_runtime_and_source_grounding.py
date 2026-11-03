@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -42,7 +42,6 @@ _M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15")
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
 _M130_DIFERENCIA_CASILLA: CasillaId = validated_casilla_id("17")
 _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
 _M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479")
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
@@ -76,6 +75,7 @@ _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
         "rd-439-2007:art-95",
     }
 )
+_M130_STATUTORY_CLOSE = {1: (4, 20), 2: (7, 20), 3: (10, 20), 4: (1, 30)}
 _M130_SUPPORTED_DEADLINES = {
     2022: (
         ("2022-04-20", "2022-04-15"),
@@ -105,7 +105,7 @@ _M130_SUPPORTED_DEADLINES = {
         ("2026-04-20", "2026-04-15"),
         ("2026-07-20", "2026-07-15"),
         ("2026-10-20", "2026-10-15"),
-        ("2027-01-30", None),
+        ("2027-02-01", None),
     ),
 }
 
@@ -159,7 +159,17 @@ def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
             assert select_revision(modelo, filing_year=filing_year, period=period) is revision
             assert window.id == f"modelo-130-{filing_year}-{period.lower()}"
             assert window.filing_year == window.period.filing_year == filing_year
-            assert window.opens_on == date(window.closes_on.year, window.closes_on.month, 1)
+            # RIRPF art. 110: 1-20 April, July and October; 1-30 January of the next year.
+            # A statutory last day on a weekend moves to the next working day (Ley 39/2015
+            # art. 30.5); the opening day stays on the first of the statutory month.
+            statutory_month, statutory_day = _M130_STATUTORY_CLOSE[quarter]
+            statutory_year = filing_year + 1 if quarter == 4 else filing_year
+            statutory_close = date(statutory_year, statutory_month, statutory_day)
+            expected_close = statutory_close
+            while expected_close.weekday() >= 5:
+                expected_close += timedelta(days=1)
+            assert window.opens_on == date(statutory_year, statutory_month, 1)
+            assert window.closes_on == expected_close
             assert window.closes_on == date.fromisoformat(close_text)
             assert window.payment_cutoff_on == (None if cutoff_text is None else date.fromisoformat(cutoff_text))
             expected_sources = {"aeat-modelo-130-instructions"}
@@ -212,12 +222,9 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     assert carry_binding.source == "previous_filing"
     assert selector_as_dict(carry_binding) == {
         "source_modelo": "130",
-        "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
-        "temporal": {
-            "kind": BindingTemporalKind.TARGET_PERIOD_OFFSET,
-            "periods": -1,
-            "within_filing_year": True,
-        },
+        "source_casilla_ids": ("19", "15"),
+        "required_source_casilla_ids": ("19",),
+        "temporal": {"kind": BindingTemporalKind.PRIOR_QUARTER_EXPANDING_SPAN},
     }
     assert carry_binding.source_refs == ("aeat-modelo-130-instructions",)
     assert carry_binding.source_citations
@@ -386,9 +393,8 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
         casilla_values = {
             _M130_PAGO_FRACCIONADO_CASILLA: _prior_07[period],
             _M130_HOME_DEDUCTION_CASILLA: _prior_16[period],
+            validated_casilla_id("19"): -saldo_seed if period == prior_period else Decimal("0"),
         }
-        if period == prior_period:
-            casilla_values[_M130_SALDO_NEGATIVO_CASILLA] = saldo_seed
         return registry_grounded_modelo_observation(
             modelo="130",
             filing_year=filing_year,
@@ -489,7 +495,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
         casilla_values={
             _M130_PAGO_FRACCIONADO_CASILLA: Decimal("38.00"),
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _M130_SALDO_NEGATIVO_CASILLA: Decimal("62.00"),
+            validated_casilla_id("19"): Decimal("-62.00"),
         },
     )
     prior_year_income_observation = registry_grounded_modelo_observation(
@@ -567,7 +573,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
         casilla_values={
             _M130_PAGO_FRACCIONADO_CASILLA: prior_07,
             _M130_HOME_DEDUCTION_CASILLA: prior_16,
-            _M130_SALDO_NEGATIVO_CASILLA: saldo_seed,
+            validated_casilla_id("19"): -saldo_seed,
         },
     )
     # The M100 income-reduction binding also resolves through the

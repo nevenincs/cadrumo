@@ -583,6 +583,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.invoice_fingerprint.current",
+        "modelo.work.verify.invoice_fingerprint.scope_narrower",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.shared_casilla_cells.adjudicated",
         "modelo.work.verify.shared_casilla_cells.unadjudicated",
     ),

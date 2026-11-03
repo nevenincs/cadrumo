@@ -602,6 +602,13 @@ export function DraftReview({
     const at = root.current;
     (at?.querySelector<HTMLElement>(".ledger-match-link") ?? at)?.focus();
   }, [confirmed]);
+  // The ledger answers which movement settles the invoice after the
+  // confirmation shows, so its link can arrive once focus has already
+  // settled on the confirmation: it takes the focus there, and never from
+  // a control the person has since moved to.
+  const takeFocusOffered = useCallback((link: HTMLElement | null) => {
+    if (link && document.activeElement === root.current) link.focus();
+  }, []);
 
   // Keyed by the document, so another document's page is never kept. It
   // stays beside the confirmation, read only, to check what was confirmed.
@@ -993,6 +1000,7 @@ export function DraftReview({
                   <Button
                     size="xs"
                     variant="outline"
+                    ref={takeFocusOffered}
                     className="ledger-match-link"
                     ref={confirmedLink}
                     onClick={() => {

@@ -214,6 +214,10 @@ class CalculationSourceContext(BaseModel):
     filing_year: FilingYear
     period: Period
     revision: ModeloRevision
+    # What the operator entered directly, for a resolver whose table the operator
+    # may share. Transient: a resolver reads it, nothing persists it from here.
+    caller_binding_values: dict[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
+    caller_enum_binding_values: dict[BindingId, str] = Field(default_factory=dict, exclude=True, repr=False)
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None
@@ -633,6 +637,21 @@ class CalculationSourceResolution(BaseModel):
     which applies here and no consumer infers it from the amount. A binding with
     no entry has no stated outcome, which a capped value reads as withholding.
     A proven zero is refused for a binding whose value is not zero.
+    """
+    payment_year_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
+    """Each declared-only retención binding's figure with its rows placed on the payer's payment date.
+
+    Stated only for an accrual ejercicio, where a receipt can be imputed to one
+    year and paid in another. A payer certifies the retención in the year it
+    pays, so a payer-side cross-check compares with this figure, not with the
+    value. It is never a binding value and never reaches a casilla.
+    """
+    instalment_basis_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
+    """Each declared-only retención binding's figure as the year's last pago fraccionado would credit it.
+
+    The year's rows are restated by their payment dates and tipo de actividad,
+    so a cross-check against that filed pago fraccionado compares like with
+    like. It is never a binding value and never reaches a casilla.
     """
 
     @field_validator("owned_sources", mode="before")

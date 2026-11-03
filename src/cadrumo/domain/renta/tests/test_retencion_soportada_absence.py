@@ -131,10 +131,12 @@ def test_every_category_the_table_names_is_declared_by_the_bundled_vocabulary(
             frozenset({"capital_inmobiliario"}),
             RetencionSoportadaApplicability.DECLARED_ABSENT,
         ),
+        # Activity income alone does not say whether one activity is a rental: without the
+        # activities' IAE groups the class is unknown, never declared absent.
         (
             RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD,
             frozenset({"actividad_economica"}),
-            RetencionSoportadaApplicability.DECLARED,
+            RetencionSoportadaApplicability.UNKNOWN,
         ),
         (
             RetencionSoportadaClase.GANANCIA_PATRIMONIAL,

@@ -26,7 +26,7 @@ Core types:
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from typing import ClassVar, Final, override
 
 from ....application.aggregation.retencion_soportada_absence_repository import (
@@ -51,12 +51,10 @@ from ....domain.renta.retencion_soportada_absence import (
     RetencionSoportadaAbsenceIdentity,
 )
 from ..storage.crypto.encrypted_columns import secure_object_key_digest
-from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.errors import STORED_RECORD_FAILURES, SecureObjectRevisionConflictError, SecureObjectRowIdentityError
 from ..storage.master_key.active_session import get_active_hmac_subkey
 from ..storage.secure_object_namespaces import RETENCION_SOPORTADA_RECORDS_NAMESPACE
-from ..storage.sql.secure_object_records import SecureObjectRecord
 from ..storage.sql.secure_objects import SecureObjectRepository
 
 __all__ = [
@@ -142,16 +140,9 @@ class RetencionSoportadaRecordRepositoryAdapter(
         return retencion_soportada_record_key(payload.identity)
 
     @override
-    def _iter_validated_rows(self) -> Iterator[tuple[SecureObjectRecord, Envelope[RetencionSoportadaRecord]]]:
-        """Yield the payer-record rows only; the namespace's attestation rows belong to their own adapter."""
-        for stored in self.secure_object_repository.list_records(
-            self.namespace,
-            expected_class=self.sensitivity,
-            max_supported_version=self.schema_version,
-        ):
-            if is_retencion_soportada_absence_row(stored.payload):
-                continue
-            yield stored, self._validate_envelope(stored.payload, subject=f"{self.namespace} iterator row")
+    def _holds_row(self, stored_payload: bytes) -> bool:
+        """Hold the payer-record rows only; the namespace's attestation rows belong to their own adapter."""
+        return not is_retencion_soportada_absence_row(stored_payload)
 
     @override
     def payer_reference(self, payer_tax_id: str) -> str:
@@ -225,16 +216,9 @@ class RetencionSoportadaAbsenceRepositoryAdapter(
         return retencion_soportada_absence_key(payload.identity)
 
     @override
-    def _iter_validated_rows(self) -> Iterator[tuple[SecureObjectRecord, Envelope[RetencionSoportadaAbsence]]]:
-        """Yield the attestation rows only; the namespace's payer records belong to their own adapter."""
-        for stored in self.secure_object_repository.list_records(
-            self.namespace,
-            expected_class=self.sensitivity,
-            max_supported_version=self.schema_version,
-        ):
-            if not is_retencion_soportada_absence_row(stored.payload):
-                continue
-            yield stored, self._validate_envelope(stored.payload, subject=f"{self.namespace} iterator row")
+    def _holds_row(self, stored_payload: bytes) -> bool:
+        """Hold the attestation rows only; the namespace's payer records belong to their own adapter."""
+        return is_retencion_soportada_absence_row(stored_payload)
 
     @override
     def load_attestations(self, ejercicio: int) -> tuple[RetencionSoportadaAbsence, ...]:

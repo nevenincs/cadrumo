@@ -40,6 +40,12 @@ source_refs = [
 family_storage_baseline = "2015-2022"
 scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
+[revisions."2025-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This return of the special regime for workers posted to Spain (LIRPF art. 93) credits withholding under the non-resident income tax rules, and none of its casillas is a Modelo 100 credit casilla, so there is no casilla for an entry to name."""
+legal_refs = ["ley-35-2006:art-93", "ley-35-2006:art-93-ahorro", "ley-35-2006:art-93-ahorro-2023", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout", "aeat-dr-151-2023"]
+
 [revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-151-2025-y-siguientes-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection': the design repeats its income blocks by printing each occurrence as its own positions within a fixed-width record, not by repeating a record, so there is no repeated endpoint for the family to admit and nothing an entry here could name. Authoring a \

@@ -168,6 +168,9 @@ def _split_numeric_wire(field: ExportField, raw: str) -> tuple[bool, str]:
         # An all-zero slot is the design's empty case; the canonical re-render
         # in the caller refuses an 'N' in front of a zero magnitude.
         negative, digits = False, raw[1:] if raw[:1] == "N" else raw
+    elif field.sign_position is ExportSignPosition.MINUS_DISPLACES_DIGIT:
+        negative = raw[:1] == "-"
+        digits = raw[1:] if negative else raw
     elif field.signed:
         # The mirror of the render rule above: a negative slot is 'N' followed by
         # its digits, and a non-negative slot is digits all the way. Refusing a

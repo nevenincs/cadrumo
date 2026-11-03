@@ -50,6 +50,7 @@ from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.retencion_soportada_bindings import retencion_soportada_bindings
+from ....domain.calculations.registry.runtime_graph import expression_binding_refs
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
@@ -66,6 +67,8 @@ _YEAR = 2025
 _PERIOD = "0A"
 _CATEGORIES = "taxpayer_type.irpf_income_categories"
 _CREDIT_CASILLAS = ("0596", "0597", "0603")
+# Computed credit casillas whose formula reads a family binding as one operand.
+_COMPUTED_CREDIT_CASILLAS = ("0598",)
 _ABSENT_CLASSES = (RetencionSoportadaClase.CAPITAL_MOBILIARIO, RetencionSoportadaClase.GANANCIA_PATRIMONIAL)
 # Sources the bucket calculation resolves itself or refuses from a caller; the locked half is
 # derived from the caller-override ladder, so the suffered-withholding family is among them.
@@ -84,10 +87,17 @@ def _family_binding_ids() -> frozenset[BindingId]:
 
 def _credit_targets() -> frozenset[BindingId]:
     """Every binding or relation that reaches a credit casilla, so no caller filler can stand in for the mesh."""
-    targets = casillas_by_binding(_revision_definition())
+    revision = _revision_definition()
+    targets = casillas_by_binding(revision)
+    operands = {
+        binding_id
+        for formula in revision.formulas
+        if str(formula.target_casilla_id) in _COMPUTED_CREDIT_CASILLAS
+        for binding_id in expression_binding_refs(formula.expression)
+    }
     return frozenset(
         binding_id for binding_id, casillas in targets.items() if set(casillas).intersection(_CREDIT_CASILLAS)
-    )
+    ) | frozenset(operands)
 
 
 def _zero_binding_values() -> dict[BindingId, Decimal]:
@@ -128,6 +138,8 @@ def _seed_profile(categories: str) -> None:
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="economic activity"),
+                # A consulting activity, so no urban rental is carried on as an activity.
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
                 *general,
                 UserProfileFact(path=_CATEGORIES, value=categories),
                 UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),

@@ -93,3 +93,7 @@ number = "19"
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "saldo-negativo-fin-periodo"
 number = "saldo-negativo-fin-periodo"
+
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "rendimiento-neto-reducible-art-32-1"
+number = "rendimiento-neto-reducible-art-32-1"

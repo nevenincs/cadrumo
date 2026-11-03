@@ -165,20 +165,30 @@ required_text = ["estimación directa", "rendimiento neto"]
 # Modelo 100 renta-income observation is built against the income casilla 0171,
 # and casilla 0599 names this binding directly.
 #
-# The value is ADVISORY, not filing grade. The resolver now dates each row by the
-# declared RIRPF art. 7 criterion and credits only withholding on a linked, wholly
-# paid invoice, but the credit reconciliation and the fourth-quarter Modelo 130
-# casilla 06 cross-check do not yet run over it, and rental activity rows are not
-# yet excluded. The grade cap keeps calculation and preview showing the figure, and
-# refuses checking, export and local filing unless it is a proven zero.
+# Filing grade. Each row's retencion follows the income it was practised on into
+# the ejercicio the declared RIRPF art. 7 criterion imputes that income to,
+# whenever it was paid (LIRPF art. 14.1.b; RIRPF art. 79), and an unknown
+# criterion or accrual date leaves the value unresolved. Only withholding on a
+# linked, wholly paid invoice is credited, and a rental activity's withholding is
+# left to the rental credit 0598. The credit reconciliation compares the value
+# with the payer records by the payer's payment year (DGT V4965-16), with the
+# borrador, and with casilla 06 of the filed fourth-quarter Modelo 130 on that
+# return's own basis; only a difference the itemised timing cannot explain blocks.
+#
+# The operator ruled this promotion on 2026-11-02, once the resolver and the
+# reconciliation held those properties.
+#
+# The borrador may hold this casilla, but only as a cross-check: the credit is the
+# withholding the taxpayer's own invoices declare, never the informative prefill.
 [[revisions."2022".bindings]]
 id = "renta-ledger-actividad-retenciones-0599"
 provider = { kind = "ledger_renta_income_aggregation", modelo = "100", target_casilla_id = "0171", fact = "declared_withheld_amount_sum" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-95"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-14", "rd-439-2007:art-7", "rd-439-2007:art-79"]
 source_refs = ["lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
+aeat_prefilled = true
+borrador_participation = "cross_check_only"
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
@@ -220,6 +230,25 @@ provider = { kind = "retencion_soportada", income_class = "ganancia_patrimonial"
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-79", "ley-35-2006:art-99", "rd-439-2007:art-75", "rd-439-2007:art-96", "rd-439-2007:art-99", "rd-439-2007:art-105", "rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-3-certificado-retenciones"]
+aeat_prefilled = true
+borrador_participation = "cross_check_only"
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "boe-rirpf-art-108-3-certificado-retenciones"
+required_text = ["deberá expedir en favor del contribuyente certificación acreditativa de las retenciones practicadas o de los ingresos a cuenta efectuados"]
+# Withholding on urban rental carried on as an economic activity (RIRPF art. 100:
+# the lessor declares the rental under sección primera epigraph 861 of the IAE
+# tariffs, RDLeg 1175/1990) is credited in the one urban-rental field beside the
+# capital-inmobiliario withholding, so casilla 0598 adds this binding to 0153.
+# Each payer's certificate is the evidence (RIRPF art. 108.3), and the borrador
+# only cross-checks it.
+[[revisions."2022".bindings]]
+id = "renta-retencion-soportada-arrendamiento-actividad"
+provider = { kind = "retencion_soportada", income_class = "arrendamiento_inmueble_urbano_actividad", quantity = "pago_a_cuenta" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-75", "rd-439-2007:art-100", "rd-439-2007:art-108"]
 source_refs = ["boe-rirpf-art-108-3-certificado-retenciones"]
 aeat_prefilled = true
 borrador_participation = "cross_check_only"

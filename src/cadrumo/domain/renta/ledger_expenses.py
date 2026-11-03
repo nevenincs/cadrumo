@@ -149,14 +149,13 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     especial) makes ``1 - iva_deduction_ratio`` of ``iva_amount`` join the
     deductible base. See :func:`evaluate_renta_deductibility`.
 
-    Populated by :func:`~application.aggregation.renta_ledger.resolve_category_deduction_rules`
-    for the M100 annual first slice and the M130 quarterly pagos fraccionados
-    gasto path alike, from
-    ``application.aggregation.renta_ledger.resolve_iva_deduction_ratio``: a
-    wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
+    Populated by :func:`~application.aggregation.renta_ledger.resolve_category_deduction_rules`:
+    a wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
     otherwise the bucket's ``domain.prorrata_register.ProrrataRegister``
-    whole-entity entry for the ejercicio contributes its in-force provisional
-    percentage under ``GENERAL`` or ``ESPECIAL``.
+    whole-entity entry for the ejercicio contributes, under ``GENERAL`` or
+    ``ESPECIAL``, its definitive percentage for the M100 annual return
+    (``resolve_annual_iva_deduction``) and its in-force provisional percentage for
+    the M130 quarterly path (``resolve_iva_deduction_ratio``).
     """
     residence_ccaa: CCAA | None = None
     """Optional residence axis consumed by the governed territorial policy."""
@@ -908,14 +907,18 @@ class StatutoryCapClaim:
             :func:`statutory_cap_trims`.
         transaction_id: The ledger transaction the row comes from.
         category: The row's spending category.
-        claim_date: The date the expense was incurred on.
+        imputed_on: The date the taxpayer's imputation criterion places the row on,
+            which decides the ejercicio an annual cap counts it in.
+        incurred_on: The day the expense happened, which decides the day a daily
+            cap counts it on whenever it was paid or imputed.
         deductible_amount: The signed amount the row's own rule deducted.
     """
 
     claim_id: str
     transaction_id: str
     category: SpendingCategory
-    claim_date: date
+    imputed_on: date
+    incurred_on: date
     deductible_amount: Decimal
 
 
@@ -957,7 +960,7 @@ def statutory_cap_trims(
         limits[key] = limit
     trims: dict[str, Decimal] = {}
     for key, members in groups.items():
-        ordered = sorted(members, key=lambda member: (member.claim_date, member.claim_id))
+        ordered = sorted(members, key=lambda member: (member.imputed_on, member.claim_id))
         excess = sum((member.deductible_amount for member in ordered), Decimal("0")) - limits[key]
         for member in reversed(ordered):
             if excess <= Decimal("0"):
@@ -982,9 +985,9 @@ def _statutory_cap_group(
     one_day = context.model_copy(update={"statutory_cap_days": None})
     if rule.statutory_cap_eur_per_day is not None or any(variant.is_per_day for variant in rule.statutory_cap_variants):
         daily = _resolve_statutory_cap(rule=rule, context=one_day)
-        return None if daily is None else ((claim.category.value, claim.claim_date), daily)
+        return None if daily is None else ((claim.category.value, claim.incurred_on), daily)
     annual = _resolve_statutory_cap(rule=rule, context=context)
-    return None if annual is None else ((claim.category.value, claim.claim_date.year), annual)
+    return None if annual is None else ((claim.category.value, claim.imputed_on.year), annual)
 
 
 def _observation_id(fact: RentaDeductibleExpenseFact) -> str:

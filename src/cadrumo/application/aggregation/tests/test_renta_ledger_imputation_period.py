@@ -1,4 +1,4 @@
-"""Activity income and expense boxes wait on the dated imputation criterion; the credit boxes stay capped.
+"""Activity income, expense and withholding credit boxes follow the dated imputation criterion.
 
 LIRPF art. 14.1.b imputes activity income on accrual and RIRPF art. 7.2 opens a
 cash election. An invoice accrued on 20 December and collected on 10 January
@@ -176,33 +176,13 @@ def test_a_year_with_no_row_and_no_accruing_invoice_proves_its_zeros() -> None:
     assert resolution.value_outcomes[_CREDIT_0599] is BindingValueOutcome.PROVEN_ZERO
 
 
-_UNCAPPED_100 = {"0171", "0183", "0186", "0191", "0192", "0193", "0194", "0195", "0199", "0200", "0202", "0203"} | {
-    "0206",
-    "0217",
-}
-
-
-@pytest.mark.parametrize(
-    ("modelo", "period", "capped", "uncapped"),
-    [
-        ("100", "0A", {"0599"}, _UNCAPPED_100),
-        ("130", "1T", {"06"}, {"01", "02"}),
-    ],
-)
-def test_only_the_withholding_credit_boxes_stay_capped(
-    operation: PinnedAuthorityOperation, modelo: str, period: str, capped: set[str], uncapped: set[str]
-) -> None:
-    """Income and expense boxes read the dated criterion; the credit boxes still wait on their own grounding."""
+@pytest.mark.parametrize(("modelo", "period"), [("100", "0A"), ("130", "1T")])
+def test_no_ledger_box_stays_capped(operation: PinnedAuthorityOperation, modelo: str, period: str) -> None:
+    """Income, expense and withholding credit boxes all read the dated criterion, so none is capped."""
     snapshot = operation.snapshot(modelo, filing_year=_LATER, period=period)
-    reached = {
-        str(casilla_id)
-        for entry in capped_binding_reach(
-            snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
-        ).values()
-        for casilla_id in entry.casilla_ids
-    }
-    assert reached == capped
-    assert reached.isdisjoint(uncapped)
+    assert not capped_binding_reach(
+        snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+    )
 
 
 def test_the_register_owned_amortization_boxes_stay_uncapped(operation: PinnedAuthorityOperation) -> None:

@@ -315,6 +315,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     {
                         RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
                         RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
+                        RentaLedgerAggregationIssueReason.DEFINITIVE_PRORRATA_PENDING,
                     }
                 ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",

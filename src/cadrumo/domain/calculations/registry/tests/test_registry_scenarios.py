@@ -168,6 +168,7 @@ def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
         },
         relation_values={

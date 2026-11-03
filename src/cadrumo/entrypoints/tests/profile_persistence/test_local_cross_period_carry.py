@@ -91,8 +91,6 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import (
     _DEFAULT_130_BINDING_VALUES,
-    _M130_AGRARIAN_VOLUME_CASILLA,
-    _M130_AGRARIAN_WITHHELD_CASILLA,
     _M130_CARRY_FORWARD_CASILLA,
     _M130_HOME_DEDUCTION_CASILLA,
     _M130_INCOME_CASILLA,
@@ -146,8 +144,6 @@ _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 # manufacture a negative Casilla05. The carry seed is read from the actually
 # saved/filed revision, rather than derived here from the formulas.
 _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }

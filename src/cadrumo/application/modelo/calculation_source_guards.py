@@ -173,6 +173,7 @@ def reject_caller_overrides_of_source_bindings(
     caller_casilla_inputs: Mapping[CasillaId, Decimal],
     caller_enum_binding_values: Mapping[BindingId, str] | None = None,
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
+    source_supplied_binding_ids: frozenset[BindingId] = frozenset(),
     subject_leaf_key: SourceInputGuardLeaf,
 ) -> None:
     """Refuse caller-supplied bindings or casilla inputs that collide with values bucket source resolvers own.
@@ -192,9 +193,14 @@ def reject_caller_overrides_of_source_bindings(
     # A closed table can populate positional manual-input bindings. Its actual
     # ownership therefore cannot be inferred from the binding's provider kind.
     # Keep all rows (including occupied ones) coupled to their source evidence
-    # before the caller's enum channel is overlaid during preparation.
+    # before the caller's enum channel is overlaid during preparation. The one row
+    # a source leaves to the caller is one it declares occupied and fills nothing of.
     protected_binding_ids = _source_owned_binding_ids(revision, owned_sources) | frozenset(
-        binding_id for row_set in closed_record_row_sets for binding_id in row_set.binding_ids
+        binding_id
+        for row_set in closed_record_row_sets
+        for row in row_set.rows
+        if not row.occupied or source_supplied_binding_ids.intersection(row.binding_ids)
+        for binding_id in row.binding_ids
     )
     rejected_bindings = sorted(
         (set(caller_binding_values) | set(caller_enum_binding_values or {})).intersection(protected_binding_ids),

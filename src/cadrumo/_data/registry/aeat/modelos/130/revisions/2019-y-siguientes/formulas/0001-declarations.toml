@@ -1,16 +1,24 @@
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-saldo-negativo-fin-periodo"
 target_casilla_id = "saldo-negativo-fin-periodo"
-expression = { op = "max", args = [
-    { literal = "0" },
-    { op = "negate", args = [{ casilla_id = "17" }] },
+# What later quarters can still deduct: the carry received, less what this quarter's
+# casilla 15 used, plus this quarter's own negative result.
+expression = { op = "add", args = [
+    { op = "subtract", args = [
+        { binding = "modelo-130-resultados-negativos-anteriores" },
+        { casilla_id = "15" },
+    ] },
+    { op = "max", args = [
+        { literal = "0" },
+        { op = "negate", args = [{ casilla_id = "19" }] },
+    ] },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
-required_text = ["Resultados negativos"]
+required_text = ["Resultados negativos", "no hubieran sido deducidos anteriormente"]
 
 
 
@@ -18,15 +26,24 @@ required_text = ["Resultados negativos"]
 id = "modelo-130-rendimiento-neto"
 target_casilla_id = "03"
 expression = { op = "subtract", args = [
-    { casilla_id = "01" },
-    { casilla_id = "02" },
+    { op = "subtract", args = [
+        { casilla_id = "01" },
+        { casilla_id = "02" },
+    ] },
+    { op = "percent", args = [
+        { op = "min", args = [
+            { casilla_id = "rendimiento-neto-reducible-art-32-1" },
+            { parameter = "irpf.art-32-1-reduction-ceiling" },
+        ] },
+        { parameter = "irpf.art-32-1-reduction-rate" },
+    ] },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-32-2015"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
-required_text = ["Rendimiento neto", "Casilla 03"]
+required_text = ["Rendimiento neto", "Casilla 03", "previa aplicación de la reducción"]
 
 
 [[revisions."2019-y-siguientes".formulas]]

@@ -53,6 +53,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -65,7 +66,9 @@ from ....application.calculations.binding_prefill import resolve_bindings_from_l
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+from ....application.modelo.calculation_note_gate import blocking_calculation_issues
+from ....application.modelo.export import export_modelo_revision
+from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -86,6 +89,7 @@ from ....domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.transactions.enums import (
     BusinessClassification,
     TransactionDirection,
@@ -94,6 +98,7 @@ from ....domain.transactions.enums import (
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import link_invoice
+from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import build_calculation_action_ports
@@ -191,8 +196,6 @@ _Q1_INCOME = Decimal("3000")
 _Q1_EXPENSE = Decimal("3000")
 _Q1_INPUTS: dict[CasillaId, Decimal] = {
     _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
@@ -210,6 +213,8 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     *GENERAL_REGIME_NATURAL_PERSON_FACTS,
     UserProfileFact(path="iva.oss_enrolled", value=False),
     UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+    # The operator declares the cobros y pagos criterion for the quarters this module calculates.
+    *cash_criterion_facts(2026),
 )
 
 
@@ -475,8 +480,6 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos, *, operatio
         repos,
         period="2T",
         casilla_inputs={
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
@@ -584,8 +587,8 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
 ) -> None:
     """Q1's carried saldo is capped at Q2's positive casilla 14, leaving casilla 17 at zero.
 
-    The declared cobros y pagos criterion grounds boxes 01 and 02, but box 06 carries Q1's
-    162,00 activity withholding, which stays calculation grade, so verify refuses on box 06.
+    The declared cobros y pagos criterion grounds boxes 01, 02 and the 162,00 activity
+    withholding Q1 carries in box 06, so Q2 verifies complete.
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     _seed_sofia_q1_invoiced_receipt()
@@ -648,8 +651,6 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
         repos,
         period="2T",
         casilla_inputs={
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
@@ -664,20 +665,81 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
     assert Decimal(q2.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == Decimal("37.40")
     assert Decimal(q2.casilla_values[_M130_DIFERENCIA_CASILLA]) == Decimal("0.00")
 
-    with pytest.raises(ModeloCalculationBlockedError) as refused:
-        _verify_modelo_revision(
-            q2.calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="operator-test",
-            workflow_profile=general_iva_workflow_profile(),
-            settings=ready_clave_settings("X1234567L"),
-            clock=_CLOCK,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
-    context = refused.value.context or {}
-    assert context["reason"] == "advisory_binding_value"
-    assert context["box"] == "06"
+    report = _verify_modelo_revision(
+        q2.calculation_revision_id,
+        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+        verification_repositories=build_test_verification_repository_bundle(),
+        actor="operator-test",
+        workflow_profile=general_iva_workflow_profile(),
+        settings=ready_clave_settings("X1234567L"),
+        clock=_CLOCK,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE, report
+
+
+def _seed_sofia_prior_year(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    """Record the 2025 Renta from its official evidence, with the prior-year activity net income Q1 reads."""
+    obs_repo = repos[3]
+    m100_values = {
+        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+    }
+    stamp, metadata = _import_official_filing_evidence(
+        repos, modelo="100", filing_year=2025, period="0A", casilla_values=m100_values, operation=operation
+    )
+    _seed_prior_year_m100(
+        obs_repo,
+        net_income=_PRIOR_YEAR_NET_INCOME,
+        source_kind="aeat_sede_justificante",
+        stamped_revision_id=stamp,
+        source_metadata=metadata,
+    )
+
+
+def test_sofia_q1_with_activity_withholding_verifies_complete_and_exports(
+    repos: _Repos, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """1.000,00 of activity income with 162,00 withheld: box 06 credits it, and the quarter verifies and exports.
+
+    The 62,00 saldo is the Q1 figure the Q2 continuity case above already states.
+    """
+    _seed_sofia_q1_invoiced_receipt()
+    _seed_sofia_prior_year(repos, operation=operation)
+    q1 = _calculate_quarter(
+        repos,
+        period="1T",
+        casilla_inputs=_Q1_INPUTS,
+        binding_values={_CARRY_FORWARD_BINDING: Decimal("0")},
+        operation=operation,
+    )
+    assert Decimal(q1.casilla_values[_M130_RETENCIONES_CASILLA]) == _SOFIA_Q1_RETENCION
+    assert Decimal(q1.casilla_values[_M130_SALDO_NEGATIVO_CASILLA]) == Decimal("62.00")
+    assert not blocking_calculation_issues(q1), q1.source_issues
+
+    report = _verify_modelo_revision(
+        q1.calculation_revision_id,
+        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+        verification_repositories=build_test_verification_repository_bundle(),
+        actor="operator-test",
+        workflow_profile=general_iva_workflow_profile(),
+        settings=ready_clave_settings("X1234567L"),
+        clock=_CLOCK,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE, report
+
+    output = tmp_path / "modelo-130-1T.txt"
+    export_modelo_revision(
+        ModeloExportCommand(calculation_revision_id=q1.calculation_revision_id, output_path=output, actor="operator"),
+        workflow_profile=general_iva_workflow_profile(),
+        export_ports=modelo_export_ports_for_test(bucket_id=_BUCKET_ID),
+        clock=_CLOCK,
+        operation=operation,
+    )
+    assert output.read_bytes()
 
 
 # Shared parity-fixture inputs (named so the expected casilla-05 identity is
@@ -700,11 +762,11 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     (the modelo-130-relation-regression guarantee).
 
     Shared fixture (prior 1T/2T observations, engine-independent for this wiring gate):
-      1T: casilla 07 = +500 (a real pago fraccionado), casilla 16 = 60, saldo = 0
-      2T: casilla 07 = +300, casilla 16 = 40, saldo = 150 (a loss carried to 3T)
+      1T: casilla 07 = +500 (a real pago fraccionado), casilla 16 = 60, casilla 19 = 0
+      2T: casilla 07 = +300, casilla 16 = 40, casilla 19 = -150 (a loss carried to 3T)
 
     At 3T:
-      casilla-15 (op=copy, offset -1) = 2T saldo (the single immediately-prior quarter)
+      casilla-15 = the earlier negative casilla 19 none of them has deducted = 150
       casilla-05 (op=sum, expanding span {1T, 2T}) = Σ max(0, 07) − Σ 16,
                 computed in-test from the seeded fixture inputs (not a hand-summed literal).
     """
@@ -723,7 +785,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
             casilla_values={
                 _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_1T,
                 _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_1T,
-                _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+                validated_casilla_id("19"): Decimal("0"),
             },
         ),
         source_kind="app_filing",
@@ -738,7 +800,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
             casilla_values={
                 _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_2T,
                 _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_2T,
-                _M130_SALDO_NEGATIVO_CASILLA: _PRIOR_2T_SALDO,
+                validated_casilla_id("19"): -_PRIOR_2T_SALDO,
             },
         ),
         source_kind="app_filing",
@@ -757,5 +819,5 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         _PRIOR_16_1T + _PRIOR_16_2T
     )
     assert resolved.get("modelo-130-pagos-fraccionados-anteriores") == expected_casilla_05
-    # The single-offset op=copy carry still reads exactly the immediately-prior quarter's saldo.
+    # The carry folds both quarters' casilla 19 and 15.
     assert resolved.get(_CARRY_FORWARD_BINDING) == _PRIOR_2T_SALDO

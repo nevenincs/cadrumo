@@ -38,6 +38,7 @@ def _family_binding_ids(operation: PinnedAuthorityOperation) -> tuple[str, ...]:
 def test_the_family_binding_ids_are_the_revisions_own_declarations(*, operation: PinnedAuthorityOperation) -> None:
     """Anchor the ids so a renamed binding fails here instead of passing vacuously below."""
     assert _family_binding_ids(operation) == (
+        "renta-retencion-soportada-arrendamiento-actividad",
         "renta-retencion-soportada-capital-mobiliario",
         "renta-retencion-soportada-ganancia-patrimonial",
         "renta-retencion-soportada-trabajo",

@@ -112,6 +112,8 @@ class LedgerRentaIncomeProvider(BaseModel):
     modelo: Modelo = Modelo("130")
     target_casilla_id: CasillaId
     fact: LedgerIncomeFactValue
+    agrarian_quarter: bool = False
+    """The binding reads the art. 110.1.c activities' own quarter, which then leave the other bindings' rows."""
 
     @model_validator(mode="before")
     @classmethod
@@ -663,9 +665,21 @@ def _carries_withholding(observation: RentaIncomeObservationProtocol) -> bool:
     derivation = observation.withheld_derivation
     if derivation in _INFERRED_WITHHOLDING_DERIVATIONS or derivation in _UNRESOLVED_WITHHOLDING_DERIVATIONS:
         return True
+    if derivation is LedgerWithholdingDerivation.PAID_AFTER_CUT_OFF:
+        return True
     if derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE:
         return observation.withheld_amount != 0
     return False
+
+
+def declared_withholding_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
+    """Return the ``ledger_renta_income_aggregation`` bindings on ``revision`` that sum declared retención."""
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+        and provider_member(binding, LedgerRentaIncomeProvider).fact == LedgerIncomeFact.DECLARED_WITHHELD_AMOUNT_SUM
+    )
 
 
 def ledger_renta_withholding_value_outcomes(

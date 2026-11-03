@@ -30,7 +30,7 @@ from datetime import date
 from decimal import Decimal
 from typing import NamedTuple
 
-from ...core.aggregation import LedgerIncomeGrounding
+from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.period import Period, PeriodKind
@@ -47,6 +47,7 @@ from ..invoices.source_observations import is_rectificativa
 from . import _shared_issue_reasons, renta_income_evidence
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
+from ._renta_business_eligibility import is_supplier_refund
 from .business_proportion import business_proportion
 from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .concepto_ingreso_admission import row_counts_toward_volumen_de_ingresos
@@ -109,6 +110,8 @@ class RentaIncomeLedgerAggregation(
     """The numbers of the issued invoices that accrue unsettled with no EUR value to count."""
     rectificativa_corrections: tuple[RectificativaCorrection, ...] = ()
     rectificativa_refused: tuple[str, ...] = ()
+    rental_tag_missing: tuple[str, ...] = ()
+    """Withholding-bearing activity rows with no tipo de actividad, in a year with a rental activity."""
     """Why each correction accruing in the window could not be placed."""
 
 
@@ -136,6 +139,7 @@ def aggregate_renta_income_ledger_from_repositories(
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
     criteria: ImputationCriteria | None = None,
+    excluded_activity_codes: frozenset[TipoActividad] = frozenset(),
 ) -> RentaIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate a cumulative income window.
 
@@ -168,6 +172,7 @@ def aggregate_renta_income_ledger_from_repositories(
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
             criteria=criteria,
+            excluded_activity_codes=excluded_activity_codes,
         ).model_copy(update={"out_of_window_summary": rows_left_out_summary(whole_catalogue, touching)})
     # Only the cumulative in-window subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
@@ -183,6 +188,7 @@ def aggregate_renta_income_ledger_from_repositories(
         target_casilla_id=target_casilla_id,
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
+        excluded_activity_codes=excluded_activity_codes,
     )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
@@ -203,6 +209,7 @@ def aggregate_renta_income_ledger(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     criteria: ImputationCriteria | None = None,
+    excluded_activity_codes: frozenset[TipoActividad] = frozenset(),
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate incoming professional-income transactions into a selected target.
 
@@ -222,6 +229,7 @@ def aggregate_renta_income_ledger(
         target_casilla_id: Registry-selected output casilla for professional income.
         activity_category_matcher: Predicate for activity-category transactions.
         employment_category_matcher: Predicate for employment-category transactions.
+        excluded_activity_codes: Declared activities whose rows belong to another box.
         criteria: The dated imputation election that places each row; ``None``
             keeps the bank date, for a caller that does not consult the profile.
 
@@ -242,6 +250,8 @@ def aggregate_renta_income_ledger(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
+        if transaction.tipo_actividad in excluded_activity_codes:
+            continue
         outcome = _classify_income_transaction(
             transaction,
             invoices=resolved_invoices,
@@ -259,7 +269,7 @@ def aggregate_renta_income_ledger(
         if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
             issues.append(outcome)
         else:
-            observations.append(outcome)
+            observations.append(_held_past_cut_off(outcome, transaction, cut_off=window.end))
 
     casilla_aggregation = _income_casilla_aggregation(
         window.period,
@@ -318,6 +328,25 @@ def aggregate_renta_income_ledger(
     )
 
 
+def _held_past_cut_off(
+    observation: RentaIncomeObservation, transaction: Transaction, *, cut_off: date
+) -> RentaIncomeObservation:
+    """Keep a pago fraccionado from crediting a declared retención its receipt paid after the window.
+
+    Only accrual places a receipt dated after the window inside it, so under cash
+    basis no row reaches this. The income still counts in the window it accrues in;
+    the retención is held with its figure and reported (RIRPF art. 110.3.a; TEAC
+    00/03187/2011).
+    """
+    paid_on = transaction.raw.value_date or transaction.raw.booked_date
+    if (
+        paid_on <= cut_off
+        or observation.withheld_derivation is not LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+    ):
+        return observation
+    return observation.model_copy(update={"withheld_derivation": LedgerWithholdingDerivation.PAID_AFTER_CUT_OFF})
+
+
 def aggregate_renta_m100_income_ledger_from_repositories(
     *,
     bucket_id: str,
@@ -328,6 +357,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
     criteria: ImputationCriteria | None = None,
+    rental: RentalActivityScreen | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the catalogue and aggregate an annual activity-income window.
 
@@ -362,6 +392,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
             criteria=criteria,
+            rental=rental,
         ).model_copy(update={"out_of_window_summary": rows_left_out_summary(whole_catalogue, touching)})
     if period.kind is not PeriodKind.ANNUAL:
         return aggregate_renta_m100_income_ledger(
@@ -374,6 +405,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
             criteria=criteria,
+            rental=rental,
         )
     partition = ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date)
     result = aggregate_renta_m100_income_ledger(
@@ -385,6 +417,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
         target_casilla_id=target_casilla_id,
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
+        rental=rental,
     )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
@@ -405,6 +438,7 @@ def aggregate_renta_m100_income_ledger(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     criteria: ImputationCriteria | None = None,
+    rental: RentalActivityScreen | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate annual activity-income from a :class:`TransactionCatalogue` into a selected target.
 
@@ -440,7 +474,8 @@ def aggregate_renta_m100_income_ledger(
         employment_category_matcher=employment_category_matcher,
         criteria=criteria,
     )
-    observations = list(projected.observations)
+    screened = _screen_rental_activity(projected.observations, transactions, rental)
+    observations = list(screened.observations)
     issues = list(projected.issues)
 
     casilla_aggregation = _m100_income_casilla_aggregation(
@@ -462,6 +497,7 @@ def aggregate_renta_m100_income_ledger(
         )
     )
     return RentaIncomeLedgerAggregation(
+        rental_tag_missing=screened.untagged,
         rectificativa_corrections=corrected.corrections,
         rectificativa_refused=corrected.refused,
         modelo=modelo,
@@ -514,6 +550,130 @@ def _m100_income_casilla_aggregation(
     )
 
 
+def payment_dated_renta_m100_income_observations(
+    *,
+    bucket_id: str,
+    period: Period,
+    target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
+    ports: InvoiceCatalogueReadPorts,
+    rental: RentalActivityScreen | None = None,
+) -> tuple[RentaIncomeObservation, ...]:
+    """Return the ejercicio's activity receipts placed on the date the payer paid them.
+
+    A payer certifies the retención in the year it pays (DGT V4965-16), so this
+    is the ledger figure a certificate is compared with when accrual places some
+    receipts in another year. Each receipt keeps its share of a part-paid invoice,
+    as it does under an imputation criterion.
+    """
+    if period.kind is not PeriodKind.ANNUAL:
+        raise AggregationPeriodError(
+            tr("aggregation.renta_ledger.errors.unsupported_period"),
+            context={"period": str(period)},
+        )
+    require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
+    paid = ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date).in_window
+    projected = _project_income_onto_casilla(
+        paid,
+        invoices=_load_income_invoices(ports=ports),
+        bucket_id=bucket_id,
+        window_start=date(period.filing_year, 1, 1),
+        window_end=date(period.filing_year, 12, 31),
+        target_casilla_id=target_casilla_id,
+        activity_category_matcher=activity_category_matcher,
+        employment_category_matcher=employment_category_matcher,
+        allocate_part_payments=True,
+    )
+    return _screen_rental_activity(projected.observations, paid, rental).observations
+
+
+def instalment_basis_observations(
+    observations: Sequence[RentaIncomeObservation],
+    transactions: TransactionCatalogue,
+    *,
+    cut_off: date,
+) -> tuple[RentaIncomeObservation, ...]:
+    """Restate the ejercicio's activity rows as the year's last pago fraccionado credits their retención.
+
+    That pago fraccionado deducts only the retención practised by the window's
+    end, and keeps a rental activity's (RIRPF art. 110.3.a), while the annual
+    activity credit counts any payment date and leaves the rental's to the
+    rental credit. Each row is restated by its own payment date and tipo de
+    actividad, so a difference the two credits owe to that itemisation is visible.
+    """
+    restated: list[RentaIncomeObservation] = []
+    for observation in observations:
+        transaction = transactions.get(observation.transaction_id)
+        if transaction is None:
+            restated.append(observation)
+            continue
+        if observation.withheld_derivation is LedgerWithholdingDerivation.RENTAL_ACTIVITY_COMPONENT:
+            observation = observation.model_copy(
+                update={"withheld_derivation": LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE}
+            )
+        restated.append(_held_past_cut_off(observation, transaction, cut_off=cut_off))
+    return tuple(restated)
+
+
+class RentalActivityScreen(NamedTuple):
+    """Which activity rows the annual activity credit hands to the rental credit.
+
+    ``codes`` are the tipos de actividad whose withholding belongs to the
+    rental credit; ``declared`` says the profile declares a rental activity
+    for the ejercicio, which a ledger row carrying one of ``codes`` also shows.
+    """
+
+    codes: frozenset[str]
+    declared: bool
+
+
+class _ScreenedRentalActivity(NamedTuple):
+    observations: tuple[RentaIncomeObservation, ...]
+    untagged: tuple[str, ...]
+
+
+def _bears_withholding(observation: RentaIncomeObservation) -> bool:
+    derivation = observation.withheld_derivation
+    if derivation in (LedgerWithholdingDerivation.NOT_APPLICABLE, LedgerWithholdingDerivation.NONE_WITHHELD):
+        return False
+    return derivation is not LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE or observation.withheld_amount != 0
+
+
+def _screen_rental_activity(
+    observations: Sequence[RentaIncomeObservation],
+    transactions: TransactionCatalogue,
+    rental: RentalActivityScreen | None,
+) -> _ScreenedRentalActivity:
+    """Hand a rental activity row's declared retención to the rental credit, and name the untagged rows.
+
+    ``tipo_actividad`` is optional on a row, so an untagged row cannot be told
+    apart from a rental one. Where the ejercicio shows a rental activity, each
+    untagged row bearing a retención is named, and the activity credit is not
+    stated until it is tagged; where none is shown, untagged rows are activity rows.
+    """
+    if rental is None or not rental.codes:
+        return _ScreenedRentalActivity(tuple(observations), ())
+    screened: list[RentaIncomeObservation] = []
+    untagged: list[str] = []
+    rental_shown = rental.declared
+    for observation in observations:
+        transaction = transactions.get(observation.transaction_id)
+        tipo = None if transaction is None or transaction.tipo_actividad is None else transaction.tipo_actividad.value
+        if tipo in rental.codes:
+            rental_shown = True
+            if observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE and (
+                observation.withheld_amount > 0
+            ):
+                observation = observation.model_copy(
+                    update={"withheld_derivation": LedgerWithholdingDerivation.RENTAL_ACTIVITY_COMPONENT}
+                )
+        elif tipo is None and _bears_withholding(observation):
+            untagged.append(observation.transaction_id)
+        screened.append(observation)
+    return _ScreenedRentalActivity(tuple(screened), tuple(untagged) if rental_shown else ())
+
+
 def aggregate_renta_m131_agrario_income_ledger_from_repositories(
     *,
     bucket_id: str,
@@ -525,6 +685,7 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
     operation: PinnedAuthorityOperation,
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the catalogue and aggregate a selected activity-narrowed quarter.
 
@@ -544,6 +705,7 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
         operation=operation,
+        criteria=criteria,
     )
 
 
@@ -559,6 +721,7 @@ def aggregate_renta_m131_agrario_income_ledger(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     operation: PinnedAuthorityOperation,
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate an activity-narrowed quarterly income volume into a target.
 
@@ -592,6 +755,7 @@ def aggregate_renta_m131_agrario_income_ledger(
         agrarian_activity_codes: Selected activity-code set supplied by the registry.
         activity_category_matcher: Predicate for activity-category transactions.
         employment_category_matcher: Predicate for employment-category transactions.
+        criteria: The dated imputation election that places each row, when one is declared.
         operation: The operation's generation-pinned authority; the concept
             vocabulary and exclusion set are read from it.
 
@@ -618,6 +782,7 @@ def aggregate_renta_m131_agrario_income_ledger(
         target_casilla_id=target_casilla_id,
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
+        criteria=criteria,
         admits=lambda transaction: (
             transaction.tipo_actividad in agrarian_activity_codes
             and row_counts_toward_volumen_de_ingresos(
@@ -715,6 +880,7 @@ def _project_income_onto_casilla(
     employment_category_matcher: Callable[[Transaction], bool],
     admits: Callable[[Transaction], bool] | None = None,
     criteria: ImputationCriteria | None = None,
+    allocate_part_payments: bool | None = None,
 ) -> _ProjectedIncome:
     """Classify a catalogue once and re-target every eligible observation.
 
@@ -741,6 +907,8 @@ def _project_income_onto_casilla(
             ``observations``.
         criteria: The dated imputation election that places each row, or
             ``None`` to keep the bank date.
+        allocate_part_payments: Whether a part payment carries its share of
+            the invoice; ``None`` allocates exactly when ``criteria`` is given.
 
     Returns:
         The projected observations, the issues raised along the way, and the
@@ -749,7 +917,8 @@ def _project_income_onto_casilla(
     observations: list[RentaIncomeObservation] = []
     issues: list[RentaIncomeLedgerAggregationIssue] = []
     unadmitted: list[RentaIncomeObservation] = []
-    receipts_by_invoice = None if criteria is None else _active_receipts_by_invoice(transactions, invoices)
+    allocates = criteria is not None if allocate_part_payments is None else allocate_part_payments
+    receipts_by_invoice = _active_receipts_by_invoice(transactions, invoices) if allocates else None
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
@@ -879,10 +1048,12 @@ def _income_transaction_is_out_of_scope(transaction: Transaction) -> bool:
     # Operator reviewed and deliberately excluded this row from filing (a final
     # disposition): omit it before the actividad-económica category override can
     # re-admit it. OUTGOING rows belong to the gasto pipeline and are skipped
-    # rather than reported as income exclusions.
+    # rather than reported as income exclusions. So do a supplier's refunds, which
+    # take the expense back there rather than coming in as income here.
     return (
         transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
         or transaction.direction is not TransactionDirection.INCOMING
+        or is_supplier_refund(transaction)
     )
 
 
@@ -1143,9 +1314,12 @@ __all__ = [
     "RentaIncomeLedgerAggregationIssue",
     "RentaIncomeLedgerAggregationIssueReason",
     "RentaIncomeObservation",
+    "RentalActivityScreen",
     "UnadmittedActivityIncome",
     "aggregate_renta_income_ledger",
     "aggregate_renta_income_ledger_from_repositories",
     "aggregate_renta_m100_income_ledger",
     "aggregate_renta_m100_income_ledger_from_repositories",
+    "instalment_basis_observations",
+    "payment_dated_renta_m100_income_observations",
 ]

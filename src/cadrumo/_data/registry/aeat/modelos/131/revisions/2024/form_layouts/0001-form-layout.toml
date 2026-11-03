@@ -7,7 +7,7 @@ revision_id = "2024"
 seed_source = "authored"
 review = { state = "generated", notes = "Printed sections follow BOE-A-2015-1656 Annex II page 8. Additional revision-specific fields and DPA/DID records are retained from the enrolled record design. Negative/deferred-payment marks, signature and full printed-form fidelity remain unreviewed." }
 generator_version = 1
-source_state_digest = "21fc7fad3aee22000d25153ad77bf0745f65537b3feb08d5653d3ebe082b7cff"
+source_state_digest = "dced6fbc252aa3dfd4c715865ea92061acee40c7c3d25fc01af41027858d0e92"
 design_sources = [
     { source_ref = "aeat-dr-131-2024", sha256 = "e15e565cce21b428b1c03b9426833f6e61637957a27de094c8f3bb8a91301256" },
     { source_ref = "boe-2015-1656-modelos-130-131-form", sha256 = "f62a61854eac561e96f689ebf11b8b2c75d418a6146a7f972e6e6a404a8063a0" },

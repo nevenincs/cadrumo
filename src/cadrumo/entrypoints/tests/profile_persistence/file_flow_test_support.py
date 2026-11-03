@@ -498,8 +498,6 @@ _M180_PERCEPTOR_BASE_CASILLA: CasillaId = validated_casilla_id("perc.base")
 _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
     _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
     _M130_WITHHELD_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }

@@ -1225,6 +1225,16 @@ application:
         what: This calculation was made before Cadrumo's current checks on its figures,
           so it cannot be checked, exported or recorded as it stands.
         what_to_do: Calculate the declaration again, then check it.
+      credit_cross_check_absent:
+        what: A withholding credit has a source to compare it with that holds nothing,
+          so the figure stands but is not cross-checked.
+        what_to_do: If that source should hold this withholding, add it and recalculate;
+          otherwise there is nothing to do.
+      credit_source_disagreement:
+        what: Two sources state different amounts for the same withholding credit,
+          so Cadrumo cannot check, export or record the declaration with it.
+        what_to_do: Compare the amount with each payer's certificate, correct the
+          source that is wrong, and recalculate.
       deferred_binding_source:
         what: Cadrumo does not fill in one figure of this declaration automatically
           yet.
@@ -1544,6 +1554,10 @@ application:
       claim_gap_free_method: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so none can be worked out,
         and box {box} declares only what is recorded.'
+      credit_cross_check_absent: 'Box {box}: there is nothing in {cross_check} to
+        compare, so this figure is not cross-checked.'
+      credit_source_disagreement: 'Box {box}: the declared source gives {amount};
+        according to {cross_check}, it is {compared_amount}.'
       disposal_claim_gap: '{element}: its disposal is on {date} and part of {year}
         has no recorded depreciation charge. Its minimum still reduces the cost.'
       disposal_exemption_not_computed: '{element}: any exemption or deferral on its
@@ -1709,6 +1723,11 @@ application:
       verification_complete: Complete
       verification_incomplete: Incomplete
       verification_none: No check recorded
+    credit_cross_check_source:
+      borrador: the AEAT borrador
+      filed_observation: the return you filed
+      ledger: your ledger
+      retencion_soportada: the payer certificates
     edit:
       parse:
         above_maximum: The largest value allowed is {bound}.
@@ -2226,9 +2245,8 @@ application:
         %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
         %{added_count} added). Calculate it again before verifying.
       invoice_fingerprint_narrower_scope: This modelo %{modelo} %{filing_year}, %{period}
-        calculation predates the tracking of invoices accrued with no bank movement,
-        so Cadrumo cannot say whether those have changed since. Calculate it again
-        to start tracking them.
+        calculation tracks fewer invoice facts than it now rests on, so it cannot
+        prove it is current. Calculate it again before you verify it.
       invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
         them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
         cannot be shown to be current. Try again once they can be read.

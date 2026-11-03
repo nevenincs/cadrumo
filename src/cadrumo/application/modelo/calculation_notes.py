@@ -77,6 +77,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unhandled_binding_source",
         "source_domain_not_ready",
         "advisory_binding_value",
+        "credit_source_disagreement",
         "precedence_tier_divergence",
     }
 )
@@ -122,6 +123,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         **dict.fromkeys(BLOCKING_REASONS, _B),
         # Persisted and shown, not refused: the route it reports may lack a terminal origin by design.
         "terminal_origin_mismatch": _C,
+        # A credit no second source could confirm: worth checking, never agreement.
+        "credit_cross_check_absent": _C,
         "unresolved_derived_binding": _C,
         # Something only the filer can supply.
         "source_issue": _M,
@@ -277,12 +280,34 @@ _INCOME_CLASS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 """The words of each suffered-withholding income class a note names, by the token the calculation stores."""
 _OTHER_INCOME_CLASS_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.income_class.other"
 _ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
-_INCOME_CLASS_VALUE: Final[str] = "income_class"
 _PROFILE_GROUP_VALUE: Final[str] = "group"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
-    {"amount", "cost", "paid", "price", "base", "remainder", "effect", "transmission_value", "net_value", "row_amount"}
+    {
+        "amount",
+        "cost",
+        "paid",
+        "price",
+        "base",
+        "remainder",
+        "effect",
+        "transmission_value",
+        "net_value",
+        "row_amount",
+        "compared_amount",
+    }
 )
+_INCOME_CLASS_VALUE: Final[str] = "income_class"
+_CROSS_CHECK_VALUE: Final[str] = "cross_check"
+_CROSS_CHECK_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "retencion_soportada": "application.modelo.credit_cross_check_source.retencion_soportada",
+        "borrador": "application.modelo.credit_cross_check_source.borrador",
+        "ledger": "application.modelo.credit_cross_check_source.ledger",
+        "filed_observation": "application.modelo.credit_cross_check_source.filed_observation",
+    }
+)
+"""How a note names the source a credit was compared with, by its cross-check kind."""
 _logger = get_logger(__name__)
 STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
@@ -337,7 +362,8 @@ def note_fact_text(
 ) -> str:
     """State a note's facts in words, in ``locale`` or the active language.
 
-    Dates and amounts read as a box writes them. An element goes by the name it
+    Dates and amounts read as a box writes them, and an income class by its Renta
+    label in the language read in, never its stored token. An element goes by the name it
     has now, or by a plain phrase when it has none or has left the register.
     """
     language = OutputLanguage(locale or output_language())
@@ -372,6 +398,8 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
     if name == _PROFILE_GROUP_VALUE:
         section, _, field = value.partition(".")
         return tr(profile_field_label_key(section, field), locale=language.value)
+    if name == _CROSS_CHECK_VALUE:
+        return tr(_CROSS_CHECK_LABEL_LOCALE_KEYS[value], locale=language.value)
     return value
 
 

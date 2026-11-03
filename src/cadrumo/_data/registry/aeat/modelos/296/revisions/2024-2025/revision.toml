@@ -28,6 +28,13 @@ scoped_families = ["workbook_parity_refs", "verification_expectations", "complet
 
 family_disposition_removals = ["bindings", "dependency_classifications"]
 
+[revisions."2024-2025".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo is a withholding agent's return: its withholding boxes state what the declarant practised on others and paid in, never a credit of the declarant's own, so there is no credit casilla for an entry to name. The perceptor credits that withholding on the perceptor's own return."""
+legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-dr-296-2024"]
+
+
 [revisions."2024-2025".family_dispositions.extraction_profiles]
 reason = """
 An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 296's corpus carries its diseno de registro (aeat-dr-296-2024), which is a wire-record description printing no form labels, and no label-printing specimen. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on \
