@@ -100,12 +100,24 @@ def _repositories(
         def load(self) -> ModeloRecordCatalogue:
             return ModeloRecordCatalogue()
 
+    class CreditResolutions:
+        bucket_id = str(_PROFILE)
+
+        def load_for_work(self, *, modelo: str, filing_year: int, period: str) -> tuple[()]:
+            assert (modelo, filing_year, period) == (str(unit.modelo), unit.filing_year, unit.period.registry_token)
+            return ()
+
     pinned = operation
 
     def factory(profile: str, *, operation: PinnedAuthorityOperation) -> SimpleNamespace:
         assert profile == str(_PROFILE)
         assert operation is pinned
-        return SimpleNamespace(calculation=Calculations(), work_unit=WorkUnits(), filing=Filings())
+        return SimpleNamespace(
+            calculation=Calculations(),
+            work_unit=WorkUnits(),
+            filing=Filings(),
+            credit_resolution=CreditResolutions(),
+        )
 
     monkeypatch.setattr(snapshot_composition, "build_verification_repository_bundle", factory)
     return revision, unit
