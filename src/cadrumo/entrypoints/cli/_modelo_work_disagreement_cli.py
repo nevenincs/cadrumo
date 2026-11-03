@@ -22,6 +22,7 @@ from ...application.modelo.credit_resolution_contracts import (
 )
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ._modelo_work_disagreement_payloads import (
     DisagreementResolutionPayload,
@@ -106,6 +107,7 @@ def work_accept_disagreement(
         request = CreditResolutionAcceptRequest(
             profile_id=client.profile_id,
             calculation_revision_id=selected.calculation_revision_id,
+            output_language=OutputLanguage(active_output_language()),
             finding_id=finding_id.strip().lower(),
             reason=stated,
         )
@@ -156,6 +158,7 @@ def work_revoke_disagreement(
         request = CreditResolutionRevokeRequest(
             profile_id=client.profile_id,
             calculation_revision_id=selected.calculation_revision_id,
+            output_language=OutputLanguage(active_output_language()),
             finding_id=finding_id.strip().lower(),
             expected_revision_id=expected_revision.strip(),
         )
@@ -202,7 +205,9 @@ def work_disagreements(
         client,
         work_unit_id=selected.unit.work_unit_id,
         request=CreditResolutionListRequest(
-            profile_id=client.profile_id, calculation_revision_id=selected.calculation_revision_id
+            profile_id=client.profile_id,
+            calculation_revision_id=selected.calculation_revision_id,
+            output_language=OutputLanguage(active_output_language()),
         ),
     )
     result = WorkDisagreementsResult(

@@ -1762,6 +1762,30 @@ application:
         unknown_finding: The current calculation of this declaration has no source
           disagreement with that finding id. Calculate again and copy the id from
           the check.
+      served:
+        already_resolved: This disagreement is already accepted.
+        calculation_not_current: This is not the declaration's current calculation,
+          so its disagreements can no longer be accepted. Use the current calculation.
+        not_resolved: This disagreement has no active acceptance to take back.
+        stale_revision: This acceptance changed since you read it. Read it again and
+          retry.
+        unknown_finding: 'The declaration''s current calculation has no source disagreement
+          like this one. It may have changed: calculate again and look at the check.'
+      served_answer:
+        many_boxes: 'This answers boxes {box}: the amount in use is {accepted}, while
+          the sources state {sources}.'
+        no_box: 'This answers a figure that no box of the form shows: the amount in
+          use is {accepted}, while the sources state {sources}.'
+        one_box: 'This answers box {box}: the amount in use is {accepted}, while the
+          sources state {sources}.'
+        source_amount: '{source} ({amount})'
+      served_source:
+        backend: Cadrumo's own calculation
+        borrador: the AEAT borrador
+        caller: the value supplied to the calculation
+        cross_check: another source
+        profile: your profile
+        value_source: the source the declaration reads
     edit:
       parse:
         above_maximum: The largest value allowed is {bound}.

@@ -28,6 +28,15 @@ class ModeloFormBase(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
+class ModeloFormResolutionAnswer(StrEnum):
+    """Which answer a source disagreement's line offers the operator, decided from the resolutions held."""
+
+    ACCEPT = "accept"
+    """No active acceptance covers the disagreement, so the line offers to accept the amount in use."""
+    REVOKE = "revoke"
+    """An active acceptance covers the disagreement, so the line offers to take that acceptance back."""
+
+
 class ModeloFormCalculationNote(ModeloFormBase):
     """One thing the latest calculation noticed, on the filer's scale, with the box it names.
 
@@ -39,7 +48,9 @@ class ModeloFormCalculationNote(ModeloFormBase):
     editor withholds them too (:attr:`ModeloWorkForm.blocking_calculation_notes`),
     as it does for a note at the blocking level. ``finding_id`` names the source
     disagreement the note states, the id an operator answers with a resolution;
-    it is ``None`` for every other note. ``fact`` is what this note says
+    it is ``None`` for every other note. ``resolution_answer`` is the answer the
+    note offers for that disagreement, accepting it or taking an acceptance back;
+    it is ``None`` exactly when ``finding_id`` is. ``fact`` is what this note says
     about its own subject, when its reason alone does not. ``message`` is the
     calculation's own account of this note, as its resolver worded it for the
     filer and the calculate result carries it, in the form's language; ``None``
@@ -53,6 +64,7 @@ class ModeloFormCalculationNote(ModeloFormBase):
     box: str | None = None
     withholds_filing: bool = False
     finding_id: str | None = Field(default=None, min_length=16, max_length=16)
+    resolution_answer: ModeloFormResolutionAnswer | None = None
     fact: CalculationNoteFact | None = None
     element_names: tuple[tuple[str, str], ...] = ()
     message: str | None = Field(default=None, min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)
@@ -181,6 +193,7 @@ __all__ = [
     "ModeloFormEditClosure",
     "ModeloFormExport",
     "ModeloFormFiling",
+    "ModeloFormResolutionAnswer",
     "ModeloFormResult",
     "ModeloFormResultDirection",
 ]

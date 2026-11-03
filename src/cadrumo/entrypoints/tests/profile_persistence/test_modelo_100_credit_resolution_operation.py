@@ -38,6 +38,9 @@ from ....application.modelo.credit_resolution_contracts import (
     CreditResolutionRevokeRequest,
 )
 from ....application.modelo.credit_resolution_operation import CreditResolutionExecutor
+from ....application.modelo.tests.work_form_fixture import built_form
+from ....application.modelo.work_form_declaration_facts import ModeloFormResolutionAnswer
+from ....application.modelo.work_form_issue_lines import form_issue_lines
 from ....application.operations.execution_actor import (
     OperationExecutionCaller,
     OperationExecutionCallerReader,
@@ -50,6 +53,9 @@ from ....application.operations.registry import OperationFrontendProjection
 from ....application.tests.operation_host_fakes import RecordingEvents
 from ....application.user_profile.access_contracts import SessionKind
 from ....core.casilla_id import CasillaId
+from ....core.config import override_settings
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision import CalculationRevision
@@ -160,6 +166,7 @@ def _accept(
     reason: str = _REASON,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
     kind: SessionKind = SessionKind.HUMAN,
+    language: OutputLanguage = OutputLanguage.EN,
 ):
     return _run(
         harness,
@@ -167,6 +174,7 @@ def _accept(
         CreditResolutionAcceptRequest(
             profile_id=UUID(BUCKET_ID),
             calculation_revision_id=revision.calculation_revision_id,
+            output_language=language,
             finding_id=finding_id,
             reason=reason,
         ),
@@ -175,25 +183,34 @@ def _accept(
     )
 
 
-def _revoke(harness: CreditLiveHarness, revision: CalculationRevision, finding_id: str, expected_revision_id: str):
+def _revoke(
+    harness: CreditLiveHarness,
+    revision: CalculationRevision,
+    finding_id: str,
+    expected_revision_id: str,
+    language: OutputLanguage = OutputLanguage.EN,
+):
     return _run(
         harness,
         MODELO_CREDIT_RESOLUTION_REVOKE_OPERATION_DEFINITION_ID,
         CreditResolutionRevokeRequest(
             profile_id=UUID(BUCKET_ID),
             calculation_revision_id=revision.calculation_revision_id,
+            output_language=language,
             finding_id=finding_id,
             expected_revision_id=expected_revision_id,
         ),
     )
 
 
-def _list(harness: CreditLiveHarness, revision: CalculationRevision):
+def _list(harness: CreditLiveHarness, revision: CalculationRevision, language: OutputLanguage = OutputLanguage.EN):
     return _run(
         harness,
         MODELO_CREDIT_RESOLUTION_LIST_OPERATION_DEFINITION_ID,
         CreditResolutionListRequest(
-            profile_id=UUID(BUCKET_ID), calculation_revision_id=revision.calculation_revision_id
+            profile_id=UUID(BUCKET_ID),
+            calculation_revision_id=revision.calculation_revision_id,
+            output_language=language,
         ),
     )
 
@@ -369,3 +386,139 @@ def test_an_acceptance_is_recorded_under_the_admitting_sessions_label_and_an_aut
     assert not actor_label_is_automation(person.resolution.resolved_by_session)
     assert automation.resolution.resolved_by_session == _AUTOMATION_LABEL
     assert actor_label_is_automation(automation.resolution.resolved_by_session)
+
+
+_SERVED = "application.modelo.credit_resolution.served."
+_AMOUNTS = {
+    OutputLanguage.EN: ("1,950.00", "1,800.00"),
+    OutputLanguage.ES: ("1.950,00", "1.800,00"),
+    OutputLanguage.CA: ("1.950,00", "1.800,00"),
+    OutputLanguage.HU: ("1\u00a0950,00", "1\u00a0800,00"),
+}
+"""The two amounts of the trabajo disagreement, written the way each language writes a figure."""
+
+
+def _refusals(harness: CreditLiveHarness, language: OutputLanguage) -> dict[str, CreditResolutionExecutionResult]:
+    """Every refusal reason, reached through the real operations in ``language``."""
+    refused: dict[str, CreditResolutionExecutionResult] = {}
+    first = harness.calculate(_BORRADOR).revision
+    finding_id = _finding_id(first, TRABAJO_CASILLA)
+    refused["unknown_finding"] = _accept(harness, first, "0" * 16, language=language)[1]
+    _, accepted, _ = _accept(harness, first, finding_id, language=language)
+    assert accepted.resolution is not None
+    refused["already_resolved"] = _accept(harness, first, finding_id, language=language)[1]
+    refused["stale_revision"] = _revoke(harness, first, finding_id, "e" * 64, language)[1]
+    _, revoked, _ = _revoke(harness, first, finding_id, accepted.resolution.revision_id, language)
+    assert revoked.resolution is not None
+    refused["not_resolved"] = _revoke(harness, first, finding_id, revoked.resolution.revision_id, language)[1]
+    harness.calculate({**_BORRADOR, CAPITAL_BINDING: Decimal("500.50")})
+    refused["calculation_not_current"] = _accept(harness, first, finding_id, language=language)[1]
+    return refused
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_every_refusal_reason_serves_its_own_sentence_in_the_workers_language(
+    harness: CreditLiveHarness, language: OutputLanguage
+) -> None:
+    with override_settings(cadrumo_output_language=language.value):
+        refused = _refusals(harness, language)
+
+    assert set(refused) == {
+        "unknown_finding",
+        "already_resolved",
+        "stale_revision",
+        "not_resolved",
+        "calculation_not_current",
+    }
+    for reason, result in refused.items():
+        assert result.refusal is not None
+        assert result.refusal.reason == reason
+        words = result.refusal.refusal_words
+        assert words == tr(_SERVED + reason, locale=language.value)
+        assert result.refusal.refusal_words_language is language
+        assert words is not None
+        assert "--" not in words and "{" not in words and "aggregation." not in words
+        assert result.refusal.finding_id not in words
+
+
+def test_the_served_refusal_sentences_differ_between_languages(harness: CreditLiveHarness) -> None:
+    sentences: dict[OutputLanguage, str | None] = {}
+    revision = harness.calculate(_BORRADOR).revision
+    for language in OutputLanguage:
+        with override_settings(cadrumo_output_language=language.value):
+            _, result, _ = _accept(harness, revision, "0" * 16, language=language)
+        assert result.refusal is not None
+        sentences[language] = result.refusal.refusal_words
+
+    assert all(sentences.values())
+    assert len(set(sentences.values())) == len(OutputLanguage)
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_an_acceptance_says_which_box_it_answers_and_the_amounts_in_the_readers_language(
+    harness: CreditLiveHarness, language: OutputLanguage
+) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    finding_id = _finding_id(revision, TRABAJO_CASILLA)
+    in_use, compared = _AMOUNTS[language]
+
+    _, accepted, _ = _accept(harness, revision, finding_id, language=language)
+    assert accepted.resolution is not None
+    _, revoked, _ = _revoke(harness, revision, finding_id, accepted.resolution.revision_id, language)
+    assert revoked.resolution is not None
+    _, listed, _ = _list(harness, revision, language)
+    assert listed.resolutions is not None
+
+    sentences = [accepted.resolution, revoked.resolution, *listed.resolutions]
+    for row in sentences:
+        assert row.answer_words_language is language
+        assert str(TRABAJO_CASILLA) in row.answer_words
+        assert in_use in row.answer_words and compared in row.answer_words
+        assert "1950.00" not in row.answer_words and "value_source" not in row.answer_words
+        assert row.answer_words.count(in_use) == 2
+        assert "{" not in row.answer_words and "application." not in row.answer_words
+    # The sentence is the same whether the row was just accepted, taken back or listed.
+    assert len({row.answer_words for row in sentences}) == 1
+
+
+def test_an_acceptance_sentence_names_the_kind_of_source_each_amount_came_from(harness: CreditLiveHarness) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    _, accepted, _ = _accept(harness, revision, _finding_id(revision, TRABAJO_CASILLA))
+
+    assert accepted.resolution is not None
+    words = accepted.resolution.answer_words
+    assert tr("application.modelo.credit_resolution.served_source.value_source", locale="en") in words
+    assert tr("application.modelo.credit_cross_check_source.borrador", locale="en") in words
+
+
+def test_the_check_lines_carry_the_finding_id_and_the_answer_the_resolutions_held_decide(
+    harness: CreditLiveHarness, operation: PinnedAuthorityOperation
+) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    trabajo_id = _finding_id(revision, TRABAJO_CASILLA)
+    capital_id = _finding_id(revision, CAPITAL_CASILLA)
+
+    def lines():
+        unit = harness.current_work_unit()
+        form = built_form(
+            operation,
+            "100",
+            unit.filing_year,
+            "0A",
+            revision=revision,
+            resolutions=credit_resolutions_for_work(harness.resolutions, unit),
+        )
+        return {
+            line.finding_id: line.resolution_answer
+            for line in form_issue_lines(form, OutputLanguage.EN)
+            if line.finding_id is not None
+        }, [line for line in form_issue_lines(form, OutputLanguage.EN) if line.finding_id is None]
+
+    answered, others = lines()
+    assert answered == {trabajo_id: ModeloFormResolutionAnswer.ACCEPT, capital_id: ModeloFormResolutionAnswer.ACCEPT}
+    assert all(line.resolution_answer is None for line in others)
+
+    _accept(harness, revision, trabajo_id)
+    answered, others = lines()
+    assert answered == {trabajo_id: ModeloFormResolutionAnswer.REVOKE, capital_id: ModeloFormResolutionAnswer.ACCEPT}
+    assert all(line.resolution_answer is None for line in others)

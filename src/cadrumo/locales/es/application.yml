@@ -1853,6 +1853,31 @@ application:
         unknown_finding: El cálculo actual de esta declaración no tiene ninguna discrepancia
           entre fuentes con ese identificador. Vuelve a calcular y copia el identificador
           de la comprobación.
+      served:
+        already_resolved: Esta discrepancia ya está aceptada.
+        calculation_not_current: Este no es el cálculo actual de la declaración, así
+          que sus discrepancias ya no se pueden aceptar. Usa el cálculo actual.
+        not_resolved: Esta discrepancia no tiene ninguna aceptación activa que retirar.
+        stale_revision: Esta aceptación cambió desde que la leíste. Vuelve a leerla
+          y reinténtalo.
+        unknown_finding: 'El cálculo actual de la declaración no tiene ninguna discrepancia
+          entre fuentes como esta. Puede que haya cambiado: vuelve a calcular y mira
+          la comprobación.'
+      served_answer:
+        many_boxes: 'Esto responde a las casillas {box}: el importe en uso es {accepted},
+          mientras que las fuentes indican {sources}.'
+        no_box: 'Esto responde a una cifra que ninguna casilla del formulario muestra:
+          el importe en uso es {accepted}, mientras que las fuentes indican {sources}.'
+        one_box: 'Esto responde a la casilla {box}: el importe en uso es {accepted},
+          mientras que las fuentes indican {sources}.'
+        source_amount: '{source} ({amount})'
+      served_source:
+        backend: el propio cálculo de Cadrumo
+        borrador: el borrador de la AEAT
+        caller: el valor aportado al cálculo
+        cross_check: otra fuente
+        profile: tu perfil
+        value_source: la fuente que lee la declaración
     edit:
       parse:
         above_maximum: El valor máximo es {bound}.

@@ -1817,6 +1817,30 @@ application:
           mentés előtt.
         unknown_finding: A bevallás jelenlegi számításában nincs ilyen azonosítójú
           forrás-eltérés. Számolj újra, és másold ki az azonosítót az ellenőrzésből.
+      served:
+        already_resolved: Ezt az eltérést már elfogadtad.
+        calculation_not_current: Ez nem a bevallás jelenlegi számítása, ezért az eltéréseit
+          már nem lehet elfogadni. Használd a jelenlegi számítást.
+        not_resolved: Ennek az eltérésnek nincs visszavonható, érvényes elfogadása.
+        stale_revision: Ez az elfogadás megváltozott, amióta elolvastad. Olvasd be
+          újra, és próbáld meg ismét.
+        unknown_finding: 'A bevallás jelenlegi számításában nincs ilyen forrás-eltérés.
+          Lehet, hogy megváltozott: számolj újra, és nézd meg az ellenőrzést.'
+      served_answer:
+        many_boxes: 'Ez a(z) {box} rovatokra válaszol: a használt összeg {accepted},
+          míg a források ezt adják: {sources}.'
+        no_box: 'Ez egy olyan számra válaszol, amelyet az űrlap egyik rovata sem mutat:
+          a használt összeg {accepted}, míg a források ezt adják: {sources}.'
+        one_box: 'Ez a(z) {box} rovatra válaszol: a használt összeg {accepted}, míg
+          a források ezt adják: {sources}.'
+        source_amount: '{source} ({amount})'
+      served_source:
+        backend: a Cadrumo saját számítása
+        borrador: az AEAT-tervezet
+        caller: a számításnak átadott érték
+        cross_check: egy másik forrás
+        profile: a profilod
+        value_source: a forrás, amelyet a bevallás olvas
     edit:
       parse:
         above_maximum: 'A legnagyobb megengedett érték: {bound}.'

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex16Str
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -27,8 +28,10 @@ from ...domain.modelos.credit_resolution import (
     CreditResolutionState,
 )
 from ...domain.modelos.source_disagreement import SourceDisagreementRole
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH
 from .credit_resolution import disagreement_value_text
+from .credit_resolution_words import credit_resolution_answer_words
 
 __all__ = [
     "MODELO_CREDIT_RESOLUTION_ACCEPT_OPERATION_DEFINITION_ID",
@@ -82,6 +85,8 @@ class CreditResolutionRequest(BaseModel):
 
     profile_id: UUID
     calculation_revision_id: CalculationRevisionId
+    #: The language the resolution's sentence is said in.
+    output_language: OutputLanguage
 
 
 class CreditResolutionListRequest(CreditResolutionRequest):
@@ -136,6 +141,9 @@ class CreditResolutionRowProjection(BaseModel):
     revision_id: str
     applies: bool
     """Whether the addressed calculation revision persisted this very disagreement."""
+    answer_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    """The sentence saying which figure the resolution answers, the amount accepted and what each source stated."""
+    answer_words_language: OutputLanguage
 
     @field_validator("resolved_at", "revoked_at")
     @classmethod
@@ -144,7 +152,7 @@ class CreditResolutionRowProjection(BaseModel):
         return None if value is None else validate_utc_aware(value)
 
     @classmethod
-    def of(cls, record: CreditResolutionRecord, *, revision_id: str, applies: bool) -> Self:
+    def of(cls, record: CreditResolutionRecord, *, revision_id: str, applies: bool, language: OutputLanguage) -> Self:
         """Project every operator-visible field of ``record``."""
         fact = record.disagreement
         return cls(
@@ -166,6 +174,8 @@ class CreditResolutionRowProjection(BaseModel):
             revoked_by_session=record.revoked_by_session,
             revision_id=revision_id,
             applies=applies,
+            answer_words=credit_resolution_answer_words(record, language),
+            answer_words_language=language,
         )
 
 
@@ -177,6 +187,16 @@ class CreditResolutionRefusalProjection(BaseModel):
     code: Literal["REFUSED_CREDIT_RESOLUTION", "REFUSED_CREDIT_RESOLUTION_REVISION_CONFLICT"]
     reason: CreditResolutionOperationRefusalReason
     finding_id: Hex16Str
+    #: The finished sentence a frontend shows for the refusal and the language it is in, worded by the
+    #: operation error detail's rules from a key written for frontends.
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> CreditResolutionRefusalProjection:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
 
 class CreditResolutionListProjection(BaseModel):

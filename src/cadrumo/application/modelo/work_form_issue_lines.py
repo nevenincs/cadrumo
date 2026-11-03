@@ -56,7 +56,7 @@ from .calculation_notes import (
 )
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
-from .work_form_declaration_facts import ModeloFormCalculationNote
+from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import (
     ModeloFormAddressV1,
@@ -185,6 +185,11 @@ class ModeloFormIssueLine(BaseModel):
     from_calculation: bool = False
     #: Calculating again is what puts this right.
     recalculates: bool = False
+    #: The source disagreement this line states, the id an operator answers with; ``None`` for every other line.
+    finding_id: str | None = Field(default=None, min_length=16, max_length=16)
+    #: The answer this line offers for that disagreement: accept the amount in use, or take the acceptance
+    #: back. ``None`` exactly when ``finding_id`` is.
+    resolution_answer: ModeloFormResolutionAnswer | None = None
 
 
 class ModeloFormVerdict(BaseModel):
@@ -461,6 +466,8 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         address=None if field is None else field.address,
         surface=_note_surface(note, field),
         from_calculation=True,
+        finding_id=note.finding_id,
+        resolution_answer=note.resolution_answer,
         # A revision the gate refuses before reading its notes is put right by calculating again.
         recalculates=note.reason in DERIVED_GATE_REASONS,
     )

@@ -1857,6 +1857,32 @@ application:
         unknown_finding: El càlcul actual d'aquesta declaració no té cap discrepància
           entre fonts amb aquest identificador. Torna a calcular i copia l'identificador
           de la comprovació.
+      served:
+        already_resolved: Aquesta discrepància ja està acceptada.
+        calculation_not_current: Aquest no és el càlcul actual de la declaració, així
+          que les seves discrepàncies ja no es poden acceptar. Fes servir el càlcul
+          actual.
+        not_resolved: Aquesta discrepància no té cap acceptació activa per retirar.
+        stale_revision: Aquesta acceptació ha canviat des que la vas llegir. Torna
+          a llegir-la i reintenta-ho.
+        unknown_finding: 'El càlcul actual de la declaració no té cap discrepància
+          entre fonts com aquesta. Pot ser que hagi canviat: torna a calcular i mira
+          la comprovació.'
+      served_answer:
+        many_boxes: 'Això respon a les caselles {box}: l''import en ús és {accepted},
+          mentre que les fonts indiquen {sources}.'
+        no_box: 'Això respon a una xifra que cap casella del formulari mostra: l''import
+          en ús és {accepted}, mentre que les fonts indiquen {sources}.'
+        one_box: 'Això respon a la casella {box}: l''import en ús és {accepted}, mentre
+          que les fonts indiquen {sources}.'
+        source_amount: '{source} ({amount})'
+      served_source:
+        backend: el càlcul propi de Cadrumo
+        borrador: l'esborrany de l'AEAT
+        caller: el valor aportat al càlcul
+        cross_check: una altra font
+        profile: el teu perfil
+        value_source: la font que llegeix la declaració
     edit:
       parse:
         above_maximum: El valor màxim és {bound}.

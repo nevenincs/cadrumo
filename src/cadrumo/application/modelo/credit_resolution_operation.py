@@ -76,6 +76,7 @@ from .credit_resolution_repository import (
     revoke_credit_resolution,
     store_credit_resolution,
 )
+from .credit_resolution_words import served_credit_resolution_refusal_words
 from .verification_repository_ports import VerificationRepositoryBundleFactory
 
 __all__ = [
@@ -254,7 +255,9 @@ class CreditResolutionExecutor:
             revision_id = store_credit_resolution(
                 record, repository=repository, expected_revision_id=expected_revision_id
             )
-            return CreditResolutionRowProjection.of(record, revision_id=revision_id, applies=True)
+            return CreditResolutionRowProjection.of(
+                record, revision_id=revision_id, applies=True, language=payload.output_language
+            )
 
         return write
 
@@ -279,7 +282,10 @@ class CreditResolutionExecutor:
                 expected_revision_id=payload.expected_revision_id,
             )
             return CreditResolutionRowProjection.of(
-                revoked, revision_id=revision_id, applies=revoked.finding_key in current
+                revoked,
+                revision_id=revision_id,
+                applies=revoked.finding_key in current,
+                language=payload.output_language,
             )
 
         return write
@@ -296,7 +302,10 @@ class CreditResolutionExecutor:
                 }
                 rows = tuple(
                     CreditResolutionRowProjection.of(
-                        record, revision_id=revision_id, applies=record.finding_key in persisted
+                        record,
+                        revision_id=revision_id,
+                        applies=record.finding_key in persisted,
+                        language=payload.output_language,
                     )
                     for record, revision_id in declaration.resolutions.list_revisioned(
                         modelo=modelo, filing_year=filing_year, period=period
@@ -334,8 +343,15 @@ class CreditResolutionExecutor:
         finding_id = getattr(payload, "finding_id", None)
         if not isinstance(finding_id, str) or len(finding_id) != SOURCE_DISAGREEMENT_FINDING_ID_LENGTH:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        words, words_language = served_credit_resolution_refusal_words(reason, error_code=code)
         refusal = CreditResolutionRefusalProjection.model_validate(
-            {"code": code, "reason": reason, "finding_id": finding_id}
+            {
+                "code": code,
+                "reason": reason,
+                "finding_id": finding_id,
+                "refusal_words": words,
+                "refusal_words_language": words_language,
+            }
         )
         result = CreditResolutionExecutionResult(
             operation_id=operation_id,

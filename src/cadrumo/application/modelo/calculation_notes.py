@@ -304,7 +304,7 @@ _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
 )
 _INCOME_CLASS_VALUE: Final[str] = "income_class"
 _CROSS_CHECK_VALUE: Final[str] = "cross_check"
-_CROSS_CHECK_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+CROSS_CHECK_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "retencion_soportada": "application.modelo.credit_cross_check_source.retencion_soportada",
         "borrador": "application.modelo.credit_cross_check_source.borrador",
@@ -410,7 +410,7 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         section, _, field = value.partition(".")
         return tr(profile_field_label_key(section, field), locale=language.value)
     if name == _CROSS_CHECK_VALUE:
-        return tr(_CROSS_CHECK_LABEL_LOCALE_KEYS[value], locale=language.value)
+        return tr(CROSS_CHECK_LABEL_LOCALE_KEYS[value], locale=language.value)
     return value
 
 
@@ -537,6 +537,7 @@ __all__ = [
     "CALCULATION_NOTE_ATTENTION",
     "CALCULATION_SCREEN_OUTDATED_REASON",
     "CHECK_REFUSED_REASONS",
+    "CROSS_CHECK_LABEL_LOCALE_KEYS",
     "DERIVED_GATE_REASONS",
     "EXPORT_REFUSED_REASONS",
     "FILED_BEFORE_GRADE_CAP_REASON",

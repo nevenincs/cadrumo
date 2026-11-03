@@ -25,7 +25,7 @@ from .calculation_notes import (
     durable_binding_source,
     note_attention,
 )
-from .work_form_declaration_facts import ModeloFormCalculationNote
+from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormField
 from .work_review import ModeloWorkReview
@@ -177,6 +177,17 @@ def _message_in_language(worded: tuple[str, OutputLanguage] | None, language: Ou
     return worded[0] if worded is not None and worded[1] is language else None
 
 
+def _resolution_answer(finding_key: str | None, context: WorkFormContext) -> ModeloFormResolutionAnswer | None:
+    """The answer a disagreement note offers: take back the acceptance covering it, else accept the amount in use."""
+    if finding_key is None:
+        return None
+    return (
+        ModeloFormResolutionAnswer.REVOKE
+        if context.resolutions.covers(finding_key)
+        else ModeloFormResolutionAnswer.ACCEPT
+    )
+
+
 def project_calculation_notes(
     context: WorkFormContext, sources: tuple[NoteSource, ...], fields: Iterable[ModeloFormField]
 ) -> tuple[ModeloFormCalculationNote, ...]:
@@ -218,6 +229,7 @@ def project_calculation_notes(
                 reason, binding_source, outcome, finding_key=finding_key, resolutions=context.resolutions
             ),
             finding_id=None if finding_key is None else finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH],
+            resolution_answer=_resolution_answer(finding_key, context),
             fact=fact,
             element_names=element_names_of(fact, context.element_names),
             message=message,
