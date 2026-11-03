@@ -1839,6 +1839,7 @@
         "cadrumo.application.user_profile.google_configuration_result_projection",
         "cadrumo.application.user_profile.history_contracts",
         "cadrumo.application.user_profile.history_operation",
+        "cadrumo.application.user_profile.household_person_tax_id",
         "cadrumo.application.user_profile.household_row_limit",
         "cadrumo.application.user_profile.imputation_election_contracts",
         "cadrumo.application.user_profile.imputation_election_operation",
