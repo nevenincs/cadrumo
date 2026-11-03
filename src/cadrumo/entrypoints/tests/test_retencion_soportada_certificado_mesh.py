@@ -507,3 +507,56 @@ def test_a_refusal_after_the_bytes_were_kept_reports_the_partial_effect(
     assert [(record.retencion, record.evidence_fingerprint) for record, _revision in stored] == [
         (Decimal("999.00"), _sha256(rival))
     ]
+
+
+def test_correcting_the_figures_against_the_same_certificate_file_overwrites_the_row_and_keeps_the_lineage(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    data = _certificate_file(files, "payer-a.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        first = _run(operation, _request(_PAYER_A, retencion="1200.00", directory=files, file="payer-a.pdf"))
+        ((_, revision),) = _repository().list_revisioned(_EJERCICIO)
+        # Without the stored revision the same file is a stale write, not a second row.
+        unguarded, context = _run_in(
+            operation, _request(_PAYER_A, retencion="1250.00", directory=files, file="payer-a.pdf")
+        )
+        corrected = _run(
+            operation,
+            _request(_PAYER_A, retencion="1250.00", directory=files, file="payer-a.pdf", expected_revision=revision),
+        )
+        ((record, new_revision),) = _repository().list_revisioned(_EJERCICIO)
+
+    assert not isinstance(first, OperationRefusalEvidence)
+    assert isinstance(unguarded, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "stale_revision"
+    assert not isinstance(corrected, OperationRefusalEvidence)
+    assert new_revision != revision
+    assert record.retencion == Decimal("1250.00")
+    assert record.evidence_fingerprint == record.replaces_evidence_fingerprint == _sha256(data)
+
+
+def test_a_different_certificate_file_still_replaces_the_one_it_corrects(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    old = _certificate_file(files, "old.pdf")
+    new = _certificate_file(files, "new.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        _run(operation, _request(_PAYER_A, retencion="1200.00", directory=files, file="old.pdf"))
+        ((_, revision),) = _repository().list_revisioned(_EJERCICIO)
+        replaced = _run(
+            operation,
+            _request(_PAYER_A, retencion="1300.00", directory=files, file="new.pdf", expected_revision=revision),
+        )
+        ((record, _revision),) = _repository().list_revisioned(_EJERCICIO)
+        old_kept = _custody().holds(_sha256(old))
+
+    assert not isinstance(replaced, OperationRefusalEvidence)
+    assert record.retencion == Decimal("1300.00")
+    assert record.evidence_fingerprint == _sha256(new)
+    assert record.replaces_evidence_fingerprint == _sha256(old)
+    # The replaced certificate's bytes stay in custody: they are still the evidence of the earlier reading.
+    assert old_kept

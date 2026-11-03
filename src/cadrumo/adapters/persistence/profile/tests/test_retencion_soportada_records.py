@@ -310,6 +310,37 @@ def test_an_overwrite_needs_the_stored_revision_and_the_replaced_certificate(
             _write(repository, correction, operation, expected_revision_id=stored_revision)
 
 
+def test_a_correction_against_the_same_certificate_overwrites_the_row_and_keeps_the_lineage(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = _repository()
+        certificate = _certificate("one")
+        original = _record(repository, retencion="1200.00", fingerprint=certificate)
+        _write(repository, original, operation)
+        _, stored_revision = repository.load_revisioned(original.identity)
+        # The same certificate was misread: only the figures change, and the evidence stays the one file.
+        correction = _record(repository, retencion="1250.00", fingerprint=certificate, replaces=certificate)
+
+        with pytest.raises(RetencionSoportadaRevisionConflictError):
+            _write(repository, correction, operation)
+        with pytest.raises(RetencionSoportadaWriteRefusedError) as refused:
+            _write(
+                repository,
+                _record(repository, retencion="1250.00", fingerprint=certificate, replaces=_certificate("two")),
+                operation,
+                expected_revision_id=stored_revision,
+            )
+        assert refused.value.reason == "identity_mismatch"
+        assert repository.load_records(_EJERCICIO) == (original,)
+
+        _write(repository, correction, operation, expected_revision_id=stored_revision)
+        (stored,) = repository.load_records(_EJERCICIO)
+        assert stored == correction
+        assert stored.retencion == Decimal("1250.00")
+        assert stored.evidence_fingerprint == stored.replaces_evidence_fingerprint == certificate
+
+
 def test_a_first_record_cannot_claim_to_replace_a_certificate(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
