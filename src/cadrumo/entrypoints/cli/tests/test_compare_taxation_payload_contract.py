@@ -92,6 +92,7 @@ def test_canonical_result_also_refuses_non_finite_amounts() -> None:
     with pytest.raises(ValidationError):
         TaxationComparisonResult(
             filing_year=2025,
+            modelo=Modelo("100"),
             revision="2025-y-siguientes",
             conjunta_cuota_resultante=Decimal("NaN"),
             individual_cuota_resultante=Decimal("1500.00"),
