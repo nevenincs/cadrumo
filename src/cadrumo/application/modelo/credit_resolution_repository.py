@@ -39,8 +39,10 @@ __all__ = [
     "CreditResolutionRefusedError",
     "CreditResolutionRepository",
     "CreditResolutionRevisionConflictError",
+    "CreditResolutionRevokeRefusalReason",
     "credit_resolution_key",
     "revoke_credit_resolution",
+    "revoke_refusal_reason",
     "store_credit_resolution",
 ]
 
@@ -81,6 +83,9 @@ type CreditResolutionRefusalReason = Literal[
     "already_resolved", "not_resolved", "unknown_finding", "calculation_not_current"
 ]
 """Why a resolution or its revocation was refused before it reached storage."""
+
+type CreditResolutionRevokeRefusalReason = Literal["not_resolved", "unknown_finding"]
+"""Why taking an acceptance back is refused for the acceptance itself, whatever revision the request names."""
 
 CREDIT_RESOLUTION_MESSAGE_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
@@ -168,6 +173,15 @@ def store_credit_resolution(
     return repository.save_revisioned(record, expected_revision_id=expected_revision_id)
 
 
+def revoke_refusal_reason(record: CreditResolutionRecord | None) -> CreditResolutionRevokeRefusalReason | None:
+    """Why ``record`` cannot be taken back, or ``None`` when it is an active acceptance.
+
+    The revocation enforces this verdict and the listing serves it, so what a row says it
+    can do is what the revocation does.
+    """
+    return None if record is not None and record.active else "not_resolved"
+
+
 def revoke_credit_resolution(
     identity: CreditResolutionIdentity,
     *,
@@ -186,7 +200,8 @@ def revoke_credit_resolution(
     stored, current_revision_id = repository.load_revisioned(identity)
     if current_revision_id != expected_revision_id:
         raise CreditResolutionRevisionConflictError
-    if stored is None or not stored.active:
-        raise CreditResolutionRefusedError("not_resolved")
+    reason = revoke_refusal_reason(stored)
+    if reason is not None or stored is None:
+        raise CreditResolutionRefusedError(reason or "not_resolved")
     revoked = stored.revoked(at, by_session=by_session)
     return revoked, repository.save_revisioned(revoked, expected_revision_id=expected_revision_id)

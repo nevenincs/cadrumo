@@ -49,7 +49,12 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH
-from .credit_resolution import credit_resolution_for_finding, find_finding
+from .credit_resolution import (
+    credit_resolution_for_finding,
+    find_finding,
+    revoke_refusal_for,
+    stored_resolution_for,
+)
 from .credit_resolution_contracts import (
     MODELO_CREDIT_RESOLUTION_ACCEPT_OPERATION_DEFINITION_ID,
     MODELO_CREDIT_RESOLUTION_LIST_OPERATION_DEFINITION_ID,
@@ -74,6 +79,7 @@ from .credit_resolution_repository import (
     CreditResolutionRepository,
     CreditResolutionRevisionConflictError,
     revoke_credit_resolution,
+    revoke_refusal_reason,
     store_credit_resolution,
 )
 from .credit_resolution_words import served_credit_resolution_refusal_words
@@ -114,11 +120,17 @@ class _Declaration:
     """The persisted calculation revision a request addresses, with its work unit and the profile's stores."""
 
     def __init__(
-        self, revision: CalculationRevision, work_unit: WorkUnit, resolutions: CreditResolutionRepository
+        self,
+        revision: CalculationRevision,
+        work_unit: WorkUnit,
+        resolutions: CreditResolutionRepository,
+        current_finding_keys: frozenset[str],
     ) -> None:
         self.revision = revision
         self.work_unit = work_unit
         self.resolutions = resolutions
+        self.current_finding_keys = current_finding_keys
+        """The finding keys of the disagreements the work unit's current calculation holds."""
 
     @property
     def coordinates(self) -> tuple[str, int, str]:
@@ -216,13 +228,25 @@ class CreditResolutionExecutor:
         bundle = self._bundle_factory(profile_id, operation=operation)
         if bundle.calculation.bucket_id != profile_id or bundle.work_unit.bucket_id != profile_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        revision = bundle.calculation.load(operation=operation).get(payload.calculation_revision_id)
+        revisions = bundle.calculation.load(operation=operation)
+        revision = revisions.get(payload.calculation_revision_id)
         if revision is None or revision.work_unit_id != context.identity.subject_ref:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         unit = bundle.work_unit.load().get(revision.work_unit_id)
         if unit is None or unit.bucket_id != profile_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        return _Declaration(revision, unit, bundle.credit_resolution)
+        current_id = unit.current_calculation_revision_id
+        current = None if current_id is None else revisions.get(current_id)
+        return _Declaration(
+            revision,
+            unit,
+            bundle.credit_resolution,
+            frozenset(
+                issue.disagreement.finding_key
+                for issue in (() if current is None else current.source_issues)
+                if issue.disagreement is not None
+            ),
+        )
 
     def _prepare(
         self, declaration: _Declaration, payload: CreditResolutionRequest
@@ -256,7 +280,12 @@ class CreditResolutionExecutor:
                 record, repository=repository, expected_revision_id=expected_revision_id
             )
             return CreditResolutionRowProjection.of(
-                record, revision_id=revision_id, applies=True, language=payload.output_language
+                record,
+                revision_id=revision_id,
+                applies=True,
+                current=record.finding_key in declaration.current_finding_keys,
+                revoke_refusal=revoke_refusal_reason(record),
+                language=payload.output_language,
             )
 
         return write
@@ -266,10 +295,7 @@ class CreditResolutionExecutor:
     ) -> Callable[[str], CreditResolutionRowProjection]:
         modelo, filing_year, period = declaration.coordinates
         stored = declaration.resolutions.list_revisioned(modelo=modelo, filing_year=filing_year, period=period)
-        matches = [record for record, _revision_id in stored if record.finding_key.startswith(payload.finding_id)]
-        if len(matches) != 1:
-            raise CreditResolutionRefusedError("unknown_finding")
-        identity = matches[0].identity
+        identity = stored_resolution_for((record for record, _revision_id in stored), payload.finding_id).identity
         repository = declaration.resolutions
         current = {issue.disagreement.finding_key for issue in declaration.revision.source_issues if issue.disagreement}
 
@@ -285,6 +311,8 @@ class CreditResolutionExecutor:
                 revoked,
                 revision_id=revision_id,
                 applies=revoked.finding_key in current,
+                current=revoked.finding_key in declaration.current_finding_keys,
+                revoke_refusal=revoke_refusal_reason(revoked),
                 language=payload.output_language,
             )
 
@@ -300,16 +328,20 @@ class CreditResolutionExecutor:
                     for issue in declaration.revision.source_issues
                     if issue.disagreement is not None
                 }
+                stored = declaration.resolutions.list_revisioned(modelo=modelo, filing_year=filing_year, period=period)
+                records = tuple(record for record, _revision_id in stored)
                 rows = tuple(
                     CreditResolutionRowProjection.of(
                         record,
                         revision_id=revision_id,
                         applies=record.finding_key in persisted,
+                        current=record.finding_key in declaration.current_finding_keys,
+                        revoke_refusal=revoke_refusal_for(
+                            records, record.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+                        ),
                         language=payload.output_language,
                     )
-                    for record, revision_id in declaration.resolutions.list_revisioned(
-                        modelo=modelo, filing_year=filing_year, period=period
-                    )
+                    for record, revision_id in stored
                 )
                 return CreditResolutionExecutionResult(
                     operation_id="list",

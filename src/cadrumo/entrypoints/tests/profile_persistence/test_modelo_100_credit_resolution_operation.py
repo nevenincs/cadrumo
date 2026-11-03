@@ -522,3 +522,116 @@ def test_the_check_lines_carry_the_finding_id_and_the_answer_the_resolutions_hel
     answered, others = lines()
     assert answered == {trabajo_id: ModeloFormResolutionAnswer.REVOKE, capital_id: ModeloFormResolutionAnswer.ACCEPT}
     assert all(line.resolution_answer is None for line in others)
+
+
+_ROW = "application.modelo.credit_resolution.served_row."
+_LEAD = "application.modelo.credit_resolution.served_lead."
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_every_row_says_its_state_whether_the_calculation_still_has_it_and_whether_it_can_be_taken_back(
+    harness: CreditLiveHarness, language: OutputLanguage
+) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    trabajo_id = _finding_id(revision, TRABAJO_CASILLA)
+
+    _, accepted, _ = _accept(harness, revision, trabajo_id, language=language)
+    assert accepted.resolution is not None
+    _, revoked, _ = _revoke(harness, revision, trabajo_id, accepted.resolution.revision_id, language)
+    assert revoked.resolution is not None
+    _, listed, _ = _list(harness, revision, language)
+    assert listed.resolutions is not None
+
+    standing = accepted.resolution
+    assert standing.state_words == tr(_ROW + "state.active", locale=language.value)
+    assert standing.current and standing.current_words == tr(_ROW + "current.yes", locale=language.value)
+    assert standing.revocable and standing.revoke_refusal_words is None
+    assert standing.revoke_refusal_words_language is None
+    for row in (revoked.resolution, *listed.resolutions):
+        assert row.state_words == tr(_ROW + "state.revoked", locale=language.value)
+        assert not row.revocable
+        assert row.revoke_refusal_words == tr(_ROW + "revoke_refusal.not_resolved", locale=language.value)
+        assert row.revoke_refusal_words_language is language
+    for row in (standing, revoked.resolution, *listed.resolutions):
+        assert row.state_words_language is row.current_words_language is language
+        assert row.current and "{" not in row.current_words and "--" not in row.current_words
+
+
+def test_a_row_can_be_taken_back_exactly_when_the_revocation_takes_it_back(harness: CreditLiveHarness) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    trabajo_id = _finding_id(revision, TRABAJO_CASILLA)
+    capital_id = _finding_id(revision, CAPITAL_CASILLA)
+    _, first, _ = _accept(harness, revision, trabajo_id)
+    assert first.resolution is not None
+    _revoke(harness, revision, trabajo_id, first.resolution.revision_id)
+    _accept(harness, revision, capital_id)
+
+    _, listed, _ = _list(harness, revision)
+
+    assert listed.resolutions is not None
+    verdicts = {row.finding_id: row.revocable for row in listed.resolutions}
+    assert verdicts == {trabajo_id: False, capital_id: True}
+    for row in listed.resolutions:
+        outcome, result, _effects = _revoke(harness, revision, row.finding_id, row.revision_id)
+        taken_back = not isinstance(outcome, OperationRefusalEvidence)
+        assert taken_back == row.revocable
+        if not taken_back:
+            assert result.refusal is not None and result.refusal.reason == "not_resolved"
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_a_row_stops_being_current_when_the_declaration_changes_but_the_old_calculation_still_holds_it(
+    harness: CreditLiveHarness, language: OutputLanguage
+) -> None:
+    first = harness.calculate(_BORRADOR).revision
+    _accept(harness, first, _finding_id(first, TRABAJO_CASILLA))
+    _accept(harness, first, _finding_id(first, CAPITAL_CASILLA))
+    corrected = harness.calculate({**_BORRADOR, TRABAJO_BINDING: Decimal("1801.00")}).revision
+
+    _, from_old, _ = _list(harness, first, language)
+    _, from_current, _ = _list(harness, corrected, language)
+
+    assert from_old.resolutions is not None and from_current.resolutions is not None
+    for listed in (from_old, from_current):
+        current = {row.key: row.current for row in listed.resolutions or ()}
+        # The capital figure kept its amounts; the trabajo one is another finding in the current calculation.
+        assert current == {str(TRABAJO_CASILLA): False, str(CAPITAL_CASILLA): True}
+        for row in listed.resolutions or ():
+            assert row.current_words == tr(
+                _ROW + ("current.yes" if row.current else "current.no"), locale=language.value
+            )
+            assert row.current_words_language is language
+    # The first calculation still persisted both disagreements: that is `applies`, which is not `current`.
+    assert {row.key: row.applies for row in from_old.resolutions} == {
+        str(TRABAJO_CASILLA): True,
+        str(CAPITAL_CASILLA): True,
+    }
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_the_check_line_leads_with_what_the_answer_it_offers_records(
+    harness: CreditLiveHarness, operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    revision = harness.calculate(_BORRADOR).revision
+    trabajo_id = _finding_id(revision, TRABAJO_CASILLA)
+    capital_id = _finding_id(revision, CAPITAL_CASILLA)
+    _accept(harness, revision, trabajo_id)
+    unit = harness.current_work_unit()
+    form = built_form(
+        operation,
+        "100",
+        unit.filing_year,
+        "0A",
+        revision=revision,
+        resolutions=credit_resolutions_for_work(harness.resolutions, unit),
+    )
+
+    lines = {line.finding_id: line for line in form_issue_lines(form, language) if line.finding_id is not None}
+
+    assert lines[trabajo_id].answer_lead_words == tr(_LEAD + "revoke", locale=language.value)
+    assert lines[capital_id].answer_lead_words == tr(_LEAD + "accept", locale=language.value)
+    assert {line.answer_lead_words_language for line in lines.values()} == {language}
+    assert all(
+        (line.answer_lead_words is None) == (line.resolution_answer is None)
+        for line in form_issue_lines(form, language)
+    )

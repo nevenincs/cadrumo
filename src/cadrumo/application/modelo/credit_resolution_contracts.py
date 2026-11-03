@@ -30,7 +30,13 @@ from ...domain.modelos.credit_resolution import (
 from ...domain.modelos.source_disagreement import SourceDisagreementRole
 from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH
-from .credit_resolution_words import credit_resolution_answer_words
+from .credit_resolution_repository import CreditResolutionRevokeRefusalReason
+from .credit_resolution_words import (
+    credit_resolution_answer_words,
+    credit_resolution_current_words,
+    credit_resolution_revoke_refusal_words,
+    credit_resolution_state_words,
+)
 from .disagreement_words import disagreement_value_text
 
 __all__ = [
@@ -144,6 +150,26 @@ class CreditResolutionRowProjection(BaseModel):
     answer_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
     """The sentence saying which figure the resolution answers, the amount accepted and what each source stated."""
     answer_words_language: OutputLanguage
+    state_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    """Whether the resolution stands or has been taken back, in words."""
+    state_words_language: OutputLanguage
+    current: bool
+    """Whether the declaration's current calculation still has the disagreement this resolution answers."""
+    current_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    current_words_language: OutputLanguage
+    revocable: bool
+    """Whether taking this resolution back would be accepted: the verdict the revocation itself reaches."""
+    revoke_refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    """Why it would be refused; present exactly when ``revocable`` is false."""
+    revoke_refusal_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _revocation_verdict_is_said(self) -> Self:
+        if self.revocable != (self.revoke_refusal_words is None) or (self.revoke_refusal_words is None) != (
+            self.revoke_refusal_words_language is None
+        ):
+            raise ValueError("a resolution that cannot be taken back says why, and one that can says nothing")
+        return self
 
     @field_validator("resolved_at", "revoked_at")
     @classmethod
@@ -152,7 +178,16 @@ class CreditResolutionRowProjection(BaseModel):
         return None if value is None else validate_utc_aware(value)
 
     @classmethod
-    def of(cls, record: CreditResolutionRecord, *, revision_id: str, applies: bool, language: OutputLanguage) -> Self:
+    def of(
+        cls,
+        record: CreditResolutionRecord,
+        *,
+        revision_id: str,
+        applies: bool,
+        current: bool,
+        revoke_refusal: CreditResolutionRevokeRefusalReason | None,
+        language: OutputLanguage,
+    ) -> Self:
         """Project every operator-visible field of ``record``."""
         fact = record.disagreement
         return cls(
@@ -176,6 +211,16 @@ class CreditResolutionRowProjection(BaseModel):
             applies=applies,
             answer_words=credit_resolution_answer_words(record, language),
             answer_words_language=language,
+            state_words=credit_resolution_state_words(record.state, language),
+            state_words_language=language,
+            current=current,
+            current_words=credit_resolution_current_words(current, language),
+            current_words_language=language,
+            revocable=revoke_refusal is None,
+            revoke_refusal_words=(
+                None if revoke_refusal is None else credit_resolution_revoke_refusal_words(revoke_refusal, language)
+            ),
+            revoke_refusal_words_language=None if revoke_refusal is None else language,
         )
 
 

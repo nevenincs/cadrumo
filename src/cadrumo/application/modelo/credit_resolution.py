@@ -44,6 +44,8 @@ from .credit_resolution_repository import (
     CreditResolutionPersistenceError,
     CreditResolutionReader,
     CreditResolutionRefusedError,
+    CreditResolutionRevokeRefusalReason,
+    revoke_refusal_reason,
 )
 from .disagreement_words import sources_facts, value_facts
 
@@ -62,7 +64,9 @@ __all__ = [
     "credit_resolutions_for_work",
     "find_finding",
     "load_credit_resolutions",
+    "revoke_refusal_for",
     "stale_resolution_issues",
+    "stored_resolution_for",
 ]
 
 CREDIT_RESOLUTION_STALE_REASON: Final = "credit_resolution_stale"
@@ -154,6 +158,33 @@ def find_finding(revision: CalculationRevision, finding_id: str) -> CalculationS
     if len(matches) != 1:
         raise CreditResolutionRefusedError("unknown_finding")
     return next(iter(matches.values()))
+
+
+def stored_resolution_for(records: Iterable[CreditResolutionRecord], finding_id: str) -> CreditResolutionRecord:
+    """Return the one stored resolution whose finding key begins with ``finding_id``.
+
+    Raises:
+        CreditResolutionRefusedError: The id names no stored resolution, or more than one.
+    """
+    matches = [record for record in records if record.finding_key.startswith(finding_id)]
+    if len(matches) != 1:
+        raise CreditResolutionRefusedError("unknown_finding")
+    return matches[0]
+
+
+def revoke_refusal_for(
+    records: Iterable[CreditResolutionRecord], finding_id: str
+) -> CreditResolutionRevokeRefusalReason | None:
+    """Why the revocation would refuse the acceptance ``finding_id`` names, or ``None`` when it would take it back.
+
+    It runs the checks the revocation runs, in its order: the id must name exactly one stored
+    resolution, and that resolution must be active.
+    """
+    try:
+        record = stored_resolution_for(records, finding_id)
+    except CreditResolutionRefusedError as refused:
+        return "unknown_finding" if refused.reason == "unknown_finding" else "not_resolved"
+    return revoke_refusal_reason(record)
 
 
 def credit_resolution_for_finding(

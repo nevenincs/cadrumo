@@ -54,6 +54,7 @@ from .calculation_notes import (
     what_locale_key,
     what_to_do_locale_key,
 )
+from .disagreement_words import credit_resolution_lead_words
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
 from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
@@ -202,6 +203,9 @@ class ModeloFormIssueLine(BaseModel):
     #: The answer this line offers for that disagreement: accept the amount in use, or take the acceptance
     #: back. ``None`` exactly when ``finding_id`` is.
     resolution_answer: ModeloFormResolutionAnswer | None = None
+    #: What answering this way records, in the form's language; ``None`` exactly when ``resolution_answer`` is.
+    answer_lead_words: str | None = Field(default=None, min_length=1)
+    answer_lead_words_language: OutputLanguage | None = None
 
 
 class ModeloFormVerdict(BaseModel):
@@ -485,8 +489,16 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         from_calculation=True,
         finding_id=note.finding_id,
         resolution_answer=note.resolution_answer,
+        answer_lead_words=None if note.resolution_answer is None else _answer_lead(note.resolution_answer, context),
+        answer_lead_words_language=None if note.resolution_answer is None else context.language,
         # A revision the gate refuses before reading its notes is put right by calculating again.
         recalculates=note.reason in DERIVED_GATE_REASONS,
+    )
+
+
+def _answer_lead(answer: ModeloFormResolutionAnswer, context: _Context) -> str:
+    return credit_resolution_lead_words(
+        "revoke" if answer is ModeloFormResolutionAnswer.REVOKE else "accept", context.language
     )
 
 

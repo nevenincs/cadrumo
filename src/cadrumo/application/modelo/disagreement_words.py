@@ -15,7 +15,7 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Final
+from typing import Final, Literal
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
@@ -36,6 +36,7 @@ from .value_presentation import format_casilla_value
 
 __all__ = [
     "CROSS_CHECK_LABEL_LOCALE_KEYS",
+    "credit_resolution_lead_words",
     "disagreement_value_text",
     "sources_facts",
     "sources_facts_words",
@@ -66,6 +67,14 @@ _ROLE_LOCALE_KEYS: Final[Mapping[SourceDisagreementRole, str]] = MappingProxyTyp
     }
 )
 """How each part a source plays in a disagreement is named."""
+
+_LEAD_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "accept": "application.modelo.credit_resolution.served_lead.accept",
+        "revoke": "application.modelo.credit_resolution.served_lead.revoke",
+    }
+)
+"""What answering a disagreement records, by the answer."""
 
 _SOURCE_AMOUNT_LOCALE_KEY: Final = "application.modelo.credit_resolution.served_answer.source_amount"
 _ROWS_KIND: Final = "rows"
@@ -114,6 +123,11 @@ def sources_facts(sources: Iterable[SourceDisagreementEntry]) -> str:
         separators=(",", ":"),
         ensure_ascii=False,
     )
+
+
+def credit_resolution_lead_words(answer: Literal["accept", "revoke"], language: OutputLanguage) -> str:
+    """Say what answering a disagreement with ``answer`` records."""
+    return tr(_LEAD_LOCALE_KEYS[answer], locale=language.value)
 
 
 def _data_words(data: _ValueData, language: OutputLanguage) -> str:
