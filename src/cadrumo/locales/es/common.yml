@@ -3275,7 +3275,9 @@ desktop:
       split:
         add_part: Añadir una parte
         amount: La parte {part} necesita un importe mayor que cero.
-        category_needed: Elige una categoría para la parte {part}.
+        category_advised: La parte {part} aún no tiene categoría. Puedes añadir la
+          división igualmente, pero un gasto profesional sin categoría no está listo
+          para calcular.
         check_failed: El libro no ha respondido sobre estas partes, así que aún no
           puedes añadir la división.
         check_retry: Volver a preguntar

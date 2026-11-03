@@ -13,10 +13,13 @@ import {
 import { FieldError } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
-import type {
-  ClassifyKind,
-  RatioCoverage,
+import {
+  classifyAsksCategory,
+  classifyAsksShare,
+  type ClassifyKind,
+  type RatioCoverage,
 } from "../../../shell/ledgerCommands";
+import { useLedgerClassifications } from "../../../shell/ledgerClassifications";
 import { shareCategoryFamilies } from "../../../shell/ledgerServedVocabulary";
 import { useStrings } from "../../../shell/strings";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
@@ -89,20 +92,22 @@ export function ClassifyDialog({
   const [category, setCategory] = useState<string | null>(null);
   const [share, setShare] = useState(typedPoints(initialShare));
   const mixed = kind === "mixed";
+  // Drawn again once the backend has served what each classification takes.
+  useLedgerClassifications();
+  const asksShare = kind !== "category" && classifyAsksShare(kind);
   const vocabulary = useVocabulary();
   const options = useMemo<ComboboxOption[]>(
     () =>
-      (mixed
+      (asksShare
         ? shareCategoryFamilies(vocabulary)
         : vocabulary.categoryFamilies
       ).flatMap(([family, members]) =>
         members.map((member) => categoryOption(t, family, member)),
       ),
-    [t, mixed, vocabulary],
+    [t, asksShare, vocabulary],
   );
   const asksCategory =
-    kind === "category" || (kind !== "personal" && split.expenses > 0);
-  const asksShare = mixed;
+    kind === "category" || (classifyAsksCategory(kind) && split.expenses > 0);
   const ready =
     (!asksCategory || category !== null) && (!asksShare || share.trim() !== "");
   const notes = [
@@ -215,7 +220,7 @@ export function ClassifyDialog({
                 )}
                 placeholder={t("desktop.ledger.classify.search_category")}
                 hint={
-                  mixed
+                  asksShare
                     ? t("desktop.ledger.classify.share_categories")
                     : undefined
                 }

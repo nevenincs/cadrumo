@@ -3247,7 +3247,9 @@ desktop:
       split:
         add_part: Rész hozzáadása
         amount: A(z) {part}. résznek nullánál nagyobb összeg kell.
-        category_needed: Válassz kategóriát a(z) {part}. részhez.
+        category_advised: A(z) {part}. résznek még nincs kategóriája. A felosztást
+          ettől még hozzáadhatod, de a kategória nélküli üzleti kiadás nem kész a
+          számításra.
         check_failed: A főkönyv nem válaszolt ezekről a részekről, ezért a felosztást
           még nem adhatod hozzá.
         check_retry: Kérdezd újra

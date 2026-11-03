@@ -55,10 +55,7 @@ from cadrumo.domain.transactions.classification_effects import (
 from cadrumo.domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
     CLASSIFIED_STATES,
-    RULE_CATEGORY_STATES,
     RULE_DECIDED_STATES,
-    SHARE_BEARING_STATES,
-    SPLIT_PART_CATEGORY_REQUIRED_STATES,
     UNDECIDED_STATES,
     BusinessClassification,
     TransactionDirection,
@@ -145,24 +142,6 @@ _CLASSIFICATION_SETS: tuple[tuple[str, str, str, frozenset[BusinessClassificatio
         "isRuleClassification",
         "The classifications a person may have a rule decide.",
         RULE_DECIDED_STATES,
-    ),
-    (
-        "SHARE_BEARING_CLASSIFICATIONS",
-        "takesBusinessShare",
-        "The classifications that carry a business share.",
-        SHARE_BEARING_STATES,
-    ),
-    (
-        "RULE_CATEGORY_CLASSIFICATIONS",
-        "ruleNamesCategory",
-        "The classifications a person's new rule names a spending category with.",
-        RULE_CATEGORY_STATES,
-    ),
-    (
-        "SPLIT_PART_CATEGORY_REQUIRED_CLASSIFICATIONS",
-        "splitPartNeedsCategory",
-        "The classifications a split part cannot be staged as without a spending category.",
-        SPLIT_PART_CATEGORY_REQUIRED_STATES,
     ),
     (
         "UNDECIDED_CLASSIFICATIONS",

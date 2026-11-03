@@ -3217,7 +3217,8 @@ desktop:
       split:
         add_part: Add a part
         amount: Part {part} needs an amount above zero.
-        category_needed: Choose a category for part {part}.
+        category_advised: Part {part} has no category yet. The split can still be
+          added, but a business expense without one is not ready for calculation.
         check_failed: The ledger did not answer about these parts, so the split can't
           be added yet.
         check_retry: Ask again

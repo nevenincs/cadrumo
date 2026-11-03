@@ -2434,6 +2434,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         families: Object.entries(ENTRY_OPTION_FAMILIES).map(
           ([family, options]) => ({ family, options }),
         ),
+        classifications: servedEntryOptions.classifications,
         limits: servedEntryOptions.limits,
       };
     },

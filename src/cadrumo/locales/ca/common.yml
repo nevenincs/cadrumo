@@ -3273,7 +3273,9 @@ desktop:
       split:
         add_part: Afegeix una part
         amount: La part {part} necessita un import més gran que zero.
-        category_needed: Tria una categoria per a la part {part}.
+        category_advised: La part {part} encara no té categoria. Pots afegir la divisió
+          igualment, però una despesa professional sense categoria no està llesta
+          per calcular.
         check_failed: El llibre no ha respost sobre aquestes parts, així que encara
           no pots afegir la divisió.
         check_retry: Torna a preguntar

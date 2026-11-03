@@ -1,8 +1,11 @@
 import {
   isRuleClassification,
   RULE_CLASSIFICATIONS,
-  ruleNamesCategory,
 } from "../../../shell/ledgerContract";
+import {
+  ruleMayNameCategory,
+  useLedgerClassifications,
+} from "../../../shell/ledgerClassifications";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
@@ -204,7 +207,9 @@ export function RuleDialog({
     (pattern !== target.rule.description_pattern ||
       classification !== target.rule.classification ||
       (category || null) !== target.rule.category_id);
-  const takesCategory = ruleNamesCategory(classification);
+  // Drawn again once the backend has served what each classification takes.
+  useLedgerClassifications();
+  const takesCategory = ruleMayNameCategory(classification) === true;
   const { hold, held } = useWritePause();
   // A save the page settles after this dialog closed says nothing here.
   const mounted = useRef(true);

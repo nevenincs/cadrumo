@@ -874,6 +874,48 @@ test("a split's last part takes the remainder, and its parts may be classified",
   expect(await trayCount(target)).toBe(1);
 });
 
+test("a split part classified as Business without a category is advised of it, and the split is still staged", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await inspect(target, "SOFTNUBE IRELAND SUSCRIPCION");
+  await panel(target)
+    .getByRole("button", { name: label("desktop.ledger.inspector.actions") })
+    .click();
+  await target
+    .getByRole("menuitem", {
+      name: `${label("desktop.ledger.inspector.action.split")}…`,
+    })
+    .click();
+  const dialog = target.locator(".ledger-split");
+  await expect(dialog).toBeVisible();
+  await dialog.locator(".ledger-split-amount").first().fill("20");
+  const descriptions = dialog.locator(".ledger-split-description");
+  await descriptions.nth(0).fill("Licencia");
+  await descriptions.nth(1).fill("Soporte");
+  const first = dialog.locator(".ledger-split-part").first();
+  const advice = first.locator(".ledger-split-category-advice");
+  // Only the classification the ledger serves the advice for asks for it, and
+  // only until the part names a category.
+  await expect(advice).toHaveCount(0);
+  await first.locator("select").selectOption("PERSONAL");
+  await expect(advice).toHaveCount(0);
+  await first.locator("select").selectOption("MIXED");
+  await expect(advice).toHaveCount(0);
+  await first.locator("select").selectOption("BUSINESS");
+  await expect(advice).toHaveText(
+    label("desktop.ledger.inspector.split.category_advised", { part: 1 }),
+  );
+  // It is advice: the split is staged without a category and nothing is refused.
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.split.stage"),
+    })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  expect(await trayCount(target)).toBe(1);
+});
+
 test("removing is previewed by the ledger, and a movement a finalized declaration cites cannot be", async ({
   page: target,
 }) => {

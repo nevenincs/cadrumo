@@ -3,12 +3,19 @@ import { useEffect } from "react";
 import { Frame, type Surface } from "../src/dev/catalogue/Frame";
 import servedEntryOptions from "../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
 import "../src/dev/index.css";
+import { holdLedgerClassifications } from "../src/shell/ledgerClassifications";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
-import type { LedgerEntryLimits } from "../src/shell/ledgerSetup";
+import type {
+  LedgerEntryClassification,
+  LedgerEntryLimits,
+} from "../src/shell/ledgerSetup";
 
 import "virtual:desktop-palette.css";
 
 holdLedgerLimits(servedEntryOptions.limits as LedgerEntryLimits);
+holdLedgerClassifications(
+  servedEntryOptions.classifications as LedgerEntryClassification[],
+);
 
 // Every story is drawn on a real shell surface, in the scheme and language
 // chosen in the toolbar, with the application's own providers around it.

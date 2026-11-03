@@ -945,7 +945,25 @@ export type LedgerEntryOptionsResult = {
       group?: string | null;
     }[];
   }[];
+  /** What each classification takes, one row per classification in the
+   * backend's order. */
+  classifications: LedgerEntryClassification[];
   limits: LedgerEntryLimits;
+};
+/** What one classification takes, each flag the verdict of the predicate the
+ * backend's writers enforce it with, except the advisory one. */
+export type LedgerEntryClassification = {
+  classification: string;
+  /** A movement so classified carries a business share, and the ledger
+   * refuses one that does not. */
+  takes_business_share: boolean;
+  /** A rule deciding it may name a spending category, and the ledger
+   * refuses a category on any other rule. */
+  rule_may_name_category: boolean;
+  /** Advice, not a refusal: a split part so classified is asked for a
+   * spending category, and no write refuses it without one, though
+   * readiness holds an expense row that has none. */
+  split_part_requires_category: boolean;
 };
 /** The limits an entry form holds typed text to; `shell/ledgerLimits` holds
  * them for the page. Figures are decimal text, unread here. */

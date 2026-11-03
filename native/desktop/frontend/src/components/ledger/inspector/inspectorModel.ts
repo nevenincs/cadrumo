@@ -13,9 +13,9 @@ import type {
 } from "../../../shell/ledger";
 import {
   FIELDS_DROPPED_BY_PERSONAL,
-  takesBusinessShare,
   takesChanges,
 } from "../../../shell/ledgerContract";
+import { takesBusinessShare } from "../../../shell/ledgerClassifications";
 import type { StagedCheck } from "../../../shell/ledgerStagedCheck";
 import {
   periodOf,
@@ -309,7 +309,7 @@ export function suggestionWrites(
     });
   if (
     suggestion.classification &&
-    takesBusinessShare(suggestion.classification)
+    takesBusinessShare(suggestion.classification) === true
   )
     writes.push({ field: "business_pct", value: suggestion.business_pct });
   if (suggestion.category)
@@ -328,7 +328,7 @@ export function suggestionWrites(
 export const needsShare = (suggestion: LedgerLlmSuggestion["suggestion"]) =>
   suggestion.kind !== "split" &&
   !!suggestion.classification &&
-  takesBusinessShare(suggestion.classification) &&
+  takesBusinessShare(suggestion.classification) === true &&
   suggestion.business_pct === null;
 
 // ---- Dates ---------------------------------------------------------------------

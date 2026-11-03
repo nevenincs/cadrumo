@@ -16,11 +16,8 @@ import {
   type LedgerUpdateRequest,
   type OutputLanguage,
 } from "./ledger";
-import {
-  LEDGER_UPDATE_FIELDS,
-  takesBusinessShare,
-  type LedgerUpdateField,
-} from "./ledgerContract";
+import { LEDGER_UPDATE_FIELDS, type LedgerUpdateField } from "./ledgerContract";
+import { takesBusinessShare } from "./ledgerClassifications";
 import { RELAY_PAYLOAD_LIMIT } from "./relayBounds";
 import {
   canonicalDecimal,
@@ -560,7 +557,7 @@ function checkRow(
       (write) =>
         write.field === "business_classification" &&
         write.value !== null &&
-        takesBusinessShare(write.value),
+        takesBusinessShare(write.value) === true,
     );
     const share = writes.some(
       (write) => write.field === "business_pct" && write.value !== null,

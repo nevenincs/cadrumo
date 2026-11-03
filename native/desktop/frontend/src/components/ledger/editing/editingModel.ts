@@ -51,9 +51,9 @@ import {
   REQUIRED_FIELDS,
   UNCLEARABLE_FIELDS,
   lockedByDirection,
-  takesBusinessShare,
   takesChanges,
 } from "../../../shell/ledgerContract";
+import { takesBusinessShare } from "../../../shell/ledgerClassifications";
 import type { ColumnId } from "../movements/movementsModel";
 
 // ---- Columns and fields --------------------------------------------------------
@@ -316,7 +316,10 @@ export function parseCell(
           DECIDED_CLASSIFICATIONS,
           labels.classification,
         );
-        if (head.kind !== "value" || !takesBusinessShare(head.value.value))
+        if (
+          head.kind !== "value" ||
+          takesBusinessShare(head.value.value) !== true
+        )
           return head.kind === "refused"
             ? head
             : { kind: "refused", refusal: { key: "unknown_choice", raw } };
@@ -349,8 +352,9 @@ export function clearRefusal(
 }
 
 /** The staged cells that set `value` on `row`'s `field`: a classification
- * names its share when it is Mixed and clears a stored one when it stops
- * being so. */
+ * names its share where the ledger says it takes one and clears a stored one
+ * where the ledger says it takes none; where that is not served, a stored
+ * share is left as it is. */
 export function rowCells(
   id: string,
   row: LedgerRow,
@@ -372,7 +376,7 @@ export function rowCells(
       value: { kind: "set", value: input.share },
       stored: storedShare,
     });
-  else if (!takesBusinessShare(input.value) && storedShare != null)
+  else if (takesBusinessShare(input.value) === false && storedShare != null)
     cells.push({
       id,
       field: "business_pct",
@@ -398,7 +402,7 @@ export function draftEdits(
   if (field === "business_classification" && input) {
     if (input.share !== undefined)
       edits.push({ key, field: "business_pct", value: input.share });
-    else if (!takesBusinessShare(input.value))
+    else if (takesBusinessShare(input.value) === false)
       edits.push({ key, field: "business_pct", value: null });
   }
   return edits;
@@ -449,7 +453,7 @@ export function copyCell(
     case "direction":
       return labels.direction(value);
     case "classification":
-      return takesBusinessShare(value) && share !== null
+      return takesBusinessShare(value) === true && share !== null
         ? labels.mixedShare(copyPercent(share))
         : labels.classification(value);
     case "category":
@@ -747,7 +751,7 @@ export function planFill(
       }
       const input: CellValue =
         column === "classification" &&
-        takesBusinessShare(source.value) &&
+        takesBusinessShare(source.value) === true &&
         source.share !== null
           ? { value: source.value, share: source.share }
           : { value: source.value };

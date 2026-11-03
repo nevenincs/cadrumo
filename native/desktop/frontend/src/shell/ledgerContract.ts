@@ -151,25 +151,6 @@ export const RULE_CLASSIFICATIONS = [
 export const isRuleClassification = (id: string): boolean =>
   (RULE_CLASSIFICATIONS as readonly string[]).includes(id);
 
-/** The classifications that carry a business share. */
-export const SHARE_BEARING_CLASSIFICATIONS = ["MIXED"] as const;
-export const takesBusinessShare = (id: string): boolean =>
-  (SHARE_BEARING_CLASSIFICATIONS as readonly string[]).includes(id);
-
-/** The classifications a person's new rule names a spending category with. */
-export const RULE_CATEGORY_CLASSIFICATIONS = ["BUSINESS"] as const;
-export const ruleNamesCategory = (id: string): boolean =>
-  (RULE_CATEGORY_CLASSIFICATIONS as readonly string[]).includes(id);
-
-/** The classifications a split part cannot be staged as without a spending category. */
-export const SPLIT_PART_CATEGORY_REQUIRED_CLASSIFICATIONS = [
-  "BUSINESS",
-] as const;
-export const splitPartNeedsCategory = (id: string): boolean =>
-  (SPLIT_PART_CATEGORY_REQUIRED_CLASSIFICATIONS as readonly string[]).includes(
-    id,
-  );
-
 /** The classifications no person or rule decided, so classifying over one overwrites nothing. */
 export const UNDECIDED_CLASSIFICATIONS = [
   "NOT_YET_PROCESSED",

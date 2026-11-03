@@ -5,7 +5,12 @@
 // stages the cells it returns and says what it staged. Nothing here writes.
 
 import type { LedgerRow } from "./ledger";
-import { takesChanges, takesClassification } from "./ledgerContract";
+import { takesBusinessShare } from "./ledgerClassifications";
+import {
+  isBusinessBearing,
+  takesChanges,
+  takesClassification,
+} from "./ledgerContract";
 import { parsePercent, type GrammarRefusal } from "./ledgerGrammar";
 import type { StagedCheck } from "./ledgerStagedCheck";
 import {
@@ -23,6 +28,17 @@ export const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   personal: "PERSONAL",
   mixed: "MIXED",
 };
+
+/** Whether classifying as `kind` names a business share, as the backend
+ * serves it for the classification the command sets; false where that is not
+ * served, and the ledger refuses what it needs and lacks at the check. */
+export const classifyAsksShare = (kind: ClassifyKind): boolean =>
+  takesBusinessShare(CLASSIFICATION_OF[kind]) === true;
+
+/** Whether classifying as `kind` names a spending category where a movement
+ * takes one: the classifications that carry business figures do. */
+export const classifyAsksCategory = (kind: ClassifyKind): boolean =>
+  isBusinessBearing(CLASSIFICATION_OF[kind]);
 
 /** The classify command that sets a stored classification; Personal for any
  * other, which no control offers. */
@@ -204,14 +220,14 @@ export function classifyCells(
 ): ClassifyOutcome {
   let category: string | null = null;
   let share: string | null = null;
-  if (request.kind === "mixed") {
+  if (classifyAsksShare(request.kind)) {
     const parsed = parsePercent(request.share ?? "");
     if (parsed.kind === "empty") return { kind: "needs", field: "share" };
     if (parsed.kind === "refused")
       return { kind: "refused", field: "share", refusal: parsed.refusal };
     share = parsed.value;
   }
-  if (request.kind !== "personal") {
+  if (classifyAsksCategory(request.kind)) {
     if (!request.check) return { kind: "needs", field: "category" };
     const expenses = categorySplit(request.ids, rows, request.check).expenses;
     const given = request.category ?? null;

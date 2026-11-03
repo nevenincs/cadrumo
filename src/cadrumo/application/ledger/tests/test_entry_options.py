@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Callable, Iterator
 from datetime import date
 from decimal import Decimal
 from importlib.resources import files
+from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -64,6 +66,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("31313131-3131-4131-8131-313131313131")
 _OTHER_PROFILE = UUID("32323232-3232-4232-8232-323232323232")
+_RECORDING = Path(__file__).resolve().parents[5] / "native/desktop/frontend/src/dev/fixtures/ledgerEntryOptions.json"
 
 
 @pytest.fixture(scope="module")
@@ -556,3 +559,10 @@ def test_a_split_part_is_told_to_name_a_category_only_where_it_carries_business_
     assert asked
     assert asked <= BUSINESS_BEARING_STATES
     assert asked == {BusinessClassification.BUSINESS}
+
+
+def test_the_recorded_classification_rules_are_what_the_backend_answers(operation: PinnedAuthorityOperation) -> None:
+    recorded = json.loads(_RECORDING.read_text(encoding="utf-8"))
+    served = ledger_entry_options(_PROFILE, operation=operation).classifications
+
+    assert recorded["classifications"] == [item.model_dump(mode="json") for item in served]

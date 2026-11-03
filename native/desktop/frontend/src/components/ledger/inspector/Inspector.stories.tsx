@@ -416,6 +416,18 @@ export const SplitMovement: StoryObj<SplitArgs> = {
   ),
 };
 
+export const SplitBusinessPartAdvised: StoryObj<SplitArgs> = {
+  name: "Split a movement: a Business part is advised to name a category",
+  render: (args, { globals }) => (
+    <Split {...args} locale={String(globals.locale ?? "en")} />
+  ),
+  play: async () => {
+    const part = await drawn<HTMLElement>(document.body, ".ledger-split-part");
+    await userEvent.selectOptions(part.querySelector("select")!, "BUSINESS");
+    await drawn<HTMLElement>(part, ".ledger-split-category-advice");
+  },
+};
+
 type ActionArgs = {
   request: (ids: string[]) => ActionRequest;
   ids: string[];

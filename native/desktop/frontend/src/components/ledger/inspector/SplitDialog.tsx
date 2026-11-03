@@ -25,9 +25,12 @@ import type {
 import {
   DECIDED_CLASSIFICATIONS,
   isBusinessBearing,
-  splitPartNeedsCategory,
-  takesBusinessShare,
 } from "../../../shell/ledgerContract";
+import {
+  splitPartAdvisedCategory,
+  takesBusinessShare,
+  useLedgerClassifications,
+} from "../../../shell/ledgerClassifications";
 import {
   AMOUNT_RULE,
   parseDecimal,
@@ -90,6 +93,8 @@ export function SplitDialog({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  // Drawn again once the backend has served what each classification takes.
+  useLedgerClassifications();
   const mostParts = useTextLimit("split_parts");
   const longestDescription = useTextLimit("split_part_description");
   const reasonLimit = useTextLimit("event_payload_value");
@@ -185,7 +190,7 @@ export function SplitDialog({
         continue;
       }
       let share: string | null = null;
-      if (takesBusinessShare(part.classification)) {
+      if (takesBusinessShare(part.classification) === true) {
         const parsed = parseFractionPercent(part.share);
         if (parsed.kind !== "value") {
           setProblem(
@@ -198,12 +203,6 @@ export function SplitDialog({
           return;
         }
         share = parsed.value;
-      }
-      if (splitPartNeedsCategory(part.classification) && !part.category) {
-        setProblem(
-          t("desktop.ledger.inspector.split.category_needed", { part: at + 1 }),
-        );
-        return;
       }
       classes.push({
         classification: part.classification,
@@ -377,7 +376,7 @@ export function SplitDialog({
                       </Button>
                     </Combobox>
                   )}
-                  {takesBusinessShare(part.classification) && (
+                  {takesBusinessShare(part.classification) === true && (
                     <div className="grid w-fit gap-0.5 text-sm">
                       <Label
                         htmlFor={`${partId}-${at}-share`}
@@ -397,6 +396,14 @@ export function SplitDialog({
                     </div>
                   )}
                 </div>
+                {splitPartAdvisedCategory(part.classification) === true &&
+                  !part.category && (
+                    <p className="ledger-split-category-advice text-sm text-muted-foreground">
+                      {t("desktop.ledger.inspector.split.category_advised", {
+                        part: at + 1,
+                      })}
+                    </p>
+                  )}
               </li>
             ))}
           </ol>

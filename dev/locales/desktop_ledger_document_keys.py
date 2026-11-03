@@ -251,7 +251,7 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.inspector.source_jurisdiction",
         "desktop.ledger.inspector.split.add_part",
         "desktop.ledger.inspector.split.amount",
-        "desktop.ledger.inspector.split.category_needed",
+        "desktop.ledger.inspector.split.category_advised",
         "desktop.ledger.inspector.split.check_failed",
         "desktop.ledger.inspector.split.check_retry",
         "desktop.ledger.inspector.split.choose_category",

@@ -11,8 +11,8 @@ import {
   isClassification,
   isDirection,
   isLifecycleState,
-  takesBusinessShare,
 } from "../../../shell/ledgerContract";
+import { takesBusinessShare } from "../../../shell/ledgerClassifications";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type { Translate } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
@@ -80,7 +80,7 @@ export function classificationText(
 ): string {
   const fraction = transaction.business_pct;
   if (
-    takesBusinessShare(transaction.business_classification) &&
+    takesBusinessShare(transaction.business_classification) === true &&
     fraction !== null
   )
     return t("desktop.ledger.classification.mixed_share", {

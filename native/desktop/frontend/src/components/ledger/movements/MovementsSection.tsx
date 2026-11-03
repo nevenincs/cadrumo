@@ -40,6 +40,7 @@ import {
   CLASSIFY_KINDS,
   categoryCells,
   categorySplit,
+  classifyAsksCategory,
   classifyAvailability,
   classifyCells,
   ratioCoverage,
@@ -48,6 +49,7 @@ import {
   type ClassifyScope,
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
+import { useLedgerClassifications } from "../../../shell/ledgerClassifications";
 import {
   isUndecided,
   takesChanges,
@@ -579,6 +581,9 @@ export function MovementsSection({
   );
   const { ratios } = useConfiguredRatios(port, reader, years);
   const vocabulary = useVocabulary();
+  // The words for a classification with its share depend on what the backend
+  // serves for it, so the section is drawn again once that arrives.
+  useLedgerClassifications();
 
   // ---- What is shown ---------------------------------------------------------
   const labels = useMemo<SortLabels>(
@@ -1022,11 +1027,11 @@ export function MovementsSection({
     answer: { category?: string; share?: string },
   ): Promise<string | null> {
     const overwritten = overwrittenBy(kind, ids);
-    // Personal names no category, so it has nothing to ask.
-    const check =
-      kind === "personal" ? null : await askCheck(ids, answer.category);
-    if (kind !== "personal" && !check)
-      return t("desktop.ledger.apply.read_failed");
+    // A classification that carries no business figures names no category,
+    // so it has nothing to ask.
+    const asks = classifyAsksCategory(kind);
+    const check = asks ? await askCheck(ids, answer.category) : null;
+    if (asks && !check) return t("desktop.ledger.apply.read_failed");
     const outcome = classifyCells(
       { kind, ids, ...answer, ratios, check },
       byId,
@@ -1076,9 +1081,9 @@ export function MovementsSection({
       setToast(blockText(t, availability.block));
       return;
     }
-    if (kind === "personal") {
-      // Personal asks nothing, so over many movements classified otherwise
-      // it asks once before it changes them.
+    if (!classifyAsksCategory(kind)) {
+      // It asks nothing, so over many movements classified otherwise it asks
+      // once before it changes them.
       const overwritten = overwrittenBy(kind, availability.ids);
       if (overwritten > OVERWRITE_ASK && !scope?.answer)
         setAsking({

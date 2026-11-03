@@ -21,10 +21,13 @@ import {
   isIvaDerivableReason,
   READINESS_REASON_FIELD,
   lockedByDirection,
-  takesBusinessShare,
   takesClassification,
   takesM210Income,
 } from "../../../shell/ledgerContract";
+import {
+  takesBusinessShare,
+  useLedgerClassifications,
+} from "../../../shell/ledgerClassifications";
 import {
   CLASSIFICATION_OF,
   CLASSIFY_KINDS,
@@ -105,6 +108,8 @@ export function ClassifySection({
 }) {
   const t = useStrings();
   const vocabulary = useVocabulary();
+  // Drawn again once the backend has served what each classification takes.
+  useLedgerClassifications();
   const { row, changes, locale, onStage } = scope;
   const id = row.transaction.transaction_id;
   const effective = effectiveFacts(row, changes);
@@ -281,7 +286,8 @@ export function ClassifySection({
             })}
           </p>
         )}
-        {takesBusinessShare(effective.business_classification ?? "") && (
+        {takesBusinessShare(effective.business_classification ?? "") ===
+          true && (
           <div className="grid gap-1">
             <label htmlFor={shareId} className="text-sm">
               {t("desktop.ledger.inspector.share")}
@@ -338,7 +344,8 @@ export function ClassifySection({
         </dt>
         <dd className="px-1.5 py-1 text-sm">
           {row.transaction.usage_ratio_id ??
-            (takesBusinessShare(effective.business_classification ?? "")
+            (takesBusinessShare(effective.business_classification ?? "") ===
+            true
               ? t("desktop.ledger.inspector.ratio_missing")
               : t("desktop.ledger.inspector.ratio_not_needed"))}
         </dd>
