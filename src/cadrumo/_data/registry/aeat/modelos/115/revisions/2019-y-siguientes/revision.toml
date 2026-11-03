@@ -54,4 +54,8 @@ source_refs = [
     "aeat-modelo-115-obligaciones-retenedor",
     "aeat-modelo-115-guia-censal",
 ]
-
+[revisions."2019-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 115 applies none. Casilla 03 reports the retenciones practised, bound from the ledger as the amount the retenedor withheld on each payment under RD 439/2007 art. 100, so the rate is spent before this modelo sees the figure; the one formula left subtracts casilla 04 from casilla 03. Empty by the shape of this modelo's calculation rather than by omission."""
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-180-folleto-actividades"]

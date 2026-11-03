@@ -7,7 +7,7 @@ revision_id = "2019-y-siguientes"
 seed_source = "authored"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "03fd00f7477efd9305575073f030320d5ad83607b572b36be0e144faa47c61db"
+source_state_digest = "8acc55dfa30ca16e04f6e702c8de1093600c33c613a56ed7ce9a311440406e52"
 design_sources = [
     { source_ref = "aeat-dr-115-2019-v13", sha256 = "4f7192e04c98ba31a053f2619416b77098ef1ed43665ce144774ec527dcffea7" },
     { source_ref = "boe-2000-21430-modelo-115-form", sha256 = "b0bcdb4481216c47bd7db91b648b2efdd30b13e245e552c72f0c3742ad543358" },

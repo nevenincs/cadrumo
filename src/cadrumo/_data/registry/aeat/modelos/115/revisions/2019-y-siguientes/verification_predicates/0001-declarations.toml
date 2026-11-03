@@ -6,13 +6,8 @@
 # the shape this family exists to surface -- rent was paid to somebody, and the
 # amount withheld on it went unreported.
 #
-# The antecedent is 01 and NOT 02, and the consequent is 02 and NOT 03, because
-# the 02 -> 03 pairing would be TAUTOLOGICAL: casilla 03 is computed by this
-# revision's own formula as percent(02, irpf.urban_rental_withholding_rate), so a
-# positive 02 mechanically produces a positive 03 for any non-zero rate and the
-# predicate could never fire on an engine-computed draft. It would assert that
-# the engine's own arithmetic worked. 01 and 02 are independently bound from the
-# ledger, so their disagreement is a real observation about the filing.
+# 01 and 02 are independently bound from the ledger, so their disagreement is a
+# real observation about the filing.
 #
 # ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
 # at or below zero, so a retenedor with no perceptores in the period never fires
