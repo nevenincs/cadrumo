@@ -479,6 +479,15 @@ class _CalculationRepository:
         return self._catalogue
 
 
+def _sealing_fields(state: CalculationRevisionState, at: datetime) -> dict[str, object]:
+    if state is CalculationRevisionState.BORRADOR:
+        return {}
+    filed = {"verified_at": at, "verified_by": "operator", "filed_at": at, "filed_by": "operator"}
+    if state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
+        return {**filed, "superseded_at": at}
+    return filed
+
+
 def _filed_revision(
     *,
     modelo: str = "349",
@@ -508,6 +517,7 @@ def _filed_revision(
         updated_at=updated_at,
         filing_instance_evidence=None,
         source_provenance=(),
+        **_sealing_fields(state, updated_at),
     )
 
 
