@@ -116,3 +116,43 @@ The 2020 to 2024 designs do carry the remainder (TCPP112 [0695], PAGONOFRACC). C
 ### m200-art-26-1-ceiling | medium | Modelo 200 compensation maximum stays positive when the base is not positive
 
 Observed during S33, outside the desktop-renta scope: `bin-aplicada-maxima` = min(stock, max(1M, 70% of the base)) remains positive when the taxable base is zero or negative. LIS art. 26.1 limits compensation to the positive base before compensation. Needs checking and an owner in the corporate-tax registry work.
+
+## Plan-close review (2026-11-03)
+
+Scope: S07, S14 to S17, S19, S20, S22, S25 to S43, diff `a66305e9c0..a23abe80bb`. Verdict PENDING: no critical or high finding; the five re-review findings (`settlement-waived-refund-pre-2025`, `art-50-3-gate-fails-open`, `instalment-zero-refusal-words`, `typed-0700-pre-2025`, `plan-step-text-contradicts-decision`) are resolved in code. Registry delta keying holds, window purity holds apart from the finding below, and the tax rules match their cited provisions (LIRPF arts. 50.1, 50.3, 84.2.3, 84.2.4, 97.6).
+
+### registry-temporal-coverage-unlinked | medium | A projected Modelo 100 year calculates without the plan linking the decision that bounds its grade
+
+S43 (`2441755ff6`) makes a year above the newest authored Modelo 100 edition calculate through the projected edition. `2026-08-14-registry-temporal-coverage-adr`, clarification of 2026-10-30, keeps that projection from widening a filing-grade Modelo 100 snapshot. No test establishes what verification and export do with a projected year, and no Modelo 100 gate visibly reads the projection direction. Failure scenario: a 2026 return verifies and exports as filing grade from the 2025 edition.
+
+### hardcoded-years-in-tests | medium | Tests in scope still list supported years as literals
+
+`test_modelo_100_art_50_3_compensation_verification.py:85,544`, `dev/acceptance/income_tax/tests/test_modelo_100_edition_schema.py:186` and `test_projection_region_and_remedies.py:247,257` name years instead of deriving them from the support declaration and the authored editions. When the horizon advances, the floor and the projected year go untested.
+
+### window-derives-formula-closure | medium | The credits panel computes which totals depend on a credit
+
+`native/desktop/frontend/src/components/modelo/workspace/creditBoxes.ts:27-49` walks `formula_operands` transitively in the window. Failure scenario: a total that reads a credit through a working figure without a printed box is listed wrongly, and the backend cannot correct it.
+
+### s20-attribution-incomplete | low | The S20 ledger note omits three commits behind the unused chrome keys
+
+`af80a603c4`, `f734e601ba` and `6720e519fc` also own keys `test_desktop_chrome` reports unused. The attribution to other lanes holds.
+
+### s35-step-text | low | S35's Step text names 2020 to 2024; the gates cover the supported span
+
+`.vault/plan/2026-11-02-desktop-renta-plan.md:74`.
+
+### projection-default-test-only | low | `authored_year=None` is reached only by tests
+
+`src/cadrumo/application/modelo/profile_derived_facts.py:910,995`.
+
+### fixture-and-story-years | low | The fixture generator pins the Renta year and a story helper infers projection from the revision id
+
+`native/desktop/frontend/scripts/modelo_fixtures.py:148`, `native/desktop/frontend/src/dev/servedRentaYears.ts:73`.
+
+### settlement-unsupported-waiver-words | low | The settlement-unsupported sentence names only the suspended part
+
+`src/cadrumo/locales/en/application.yml:1942` and its three siblings; a waived refund now refuses with the same words.
+
+Recommendations:
+- Outside scope, needs checking and an owner: box 0506 (the remainder of the joint reduction applied to the savings base) has no formula; a joint filer whose general base is below the reduction and who has savings income may be over-taxed.
+- Remaining red gates belong to other lanes: `test_desktop_chrome` (frontend), `just check-types` (3 diagnostics outside this plan's files), two `modelo-workspace` Playwright scenarios. Plan close needs their owners' fixes or a recorded acceptance.
