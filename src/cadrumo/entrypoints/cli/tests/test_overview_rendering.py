@@ -27,6 +27,7 @@ from ....application.overview.calendar import build_overview_calendar
 from ....application.overview.calendar_models import OverviewCalendarRange, OverviewStatusReport
 from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ....application.overview.next_actions import OverviewStatusNextStepId
+from ....core.i18n.render import lookup_translation
 from ....core.json_contract import Notice, ResolvedNoticeAction
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.deadlines.models import TaxpayerProfile
@@ -360,7 +361,10 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap()
 
     warning_line = next(line for line in lines if line.startswith("warning\tiva.regime.m303_simplificado"))
     assert "cli.overview.warning" not in warning_line
-    assert "forfait calculation engine is not yet available" in warning_line
+    # The line carries the catalogue's own sentence for this warning, in the language the run reads in.
+    expected_sentence = lookup_translation("cli.overview.warning.m303_simplificado_forfait_unavailable", locale="en")
+    assert expected_sentence is not None
+    assert expected_sentence in warning_line
 
     # The same warning reaches the envelope carrying the remedy as an action,
     # and its text line states the explanation only - one projection, two views.
