@@ -9,23 +9,34 @@ Modelo 347: RD 1065/2007 arts. 33.1, 34.2, 34.4 and 35.2, and LIVA art. 78.Tres.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Sequence
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.invoice_source_resolver import M349FiledDeclarationAdapter
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from cadrumo.application.invoices.source_resolver_ports import (
+    InvoiceSourcePersistenceError,
     InvoiceSourceResolverPorts,
     M349FiledDeclaration,
 )
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.invoices.enums import invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
+from cadrumo.domain.modelos.calculation_repository import CalculationRevisionPersistenceError
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow, Modelo349RectificacionRow
 
 from .source_resolver_test_support import (
@@ -456,3 +467,78 @@ def test_m347_earlier_year_correction_below_the_floor_is_disclosed(secure_profil
 
     assert resolution.binding_values[_M347_COUNT] == Decimal("0")
     assert _unsettled_reading_refs(resolution) == ["m347-threshold-bucket:earlier-year-modification-left-out"]
+
+
+class _CalculationRepository:
+    def __init__(self, catalogue: CalculationRevisionCatalogue | Exception) -> None:
+        self._catalogue = catalogue
+
+    def load(self, *, operation: object = None) -> CalculationRevisionCatalogue:
+        if isinstance(self._catalogue, Exception):
+            raise self._catalogue
+        return self._catalogue
+
+
+def _filed_revision(
+    *,
+    modelo: str = "349",
+    state: CalculationRevisionState = CalculationRevisionState.PRESENTADO,
+    importe: str = "10000.00",
+    updated_at: datetime = datetime(2026, 4, 20, tzinfo=UTC),
+) -> CalculationRevision:
+    rows = (_filed_operator(importe=importe),)
+    work_unit = hashlib.sha256(f"{modelo}-1T-{importe}-{state.value}".encode()).hexdigest()
+    return CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=work_unit,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values={},
+            detail_rows=rows,
+            filing_instance_evidence=None,
+            source_provenance=(),
+        ),
+        work_unit_id=work_unit,
+        registry_snapshot_ref=RegistrySnapshotRef(modelo=modelo, revision_id="2026", modelo_year=2026, period="1T"),
+        state=state,
+        casilla_values={},
+        observations=(),
+        detail_rows=rows,
+        created_at=updated_at,
+        updated_at=updated_at,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+
+
+def test_m349_filed_declarations_are_the_current_filed_revision_of_each_period() -> None:
+    """Drafts, superseded revisions and other modelos state nothing declared; the latest filing of a period does."""
+    revisions = (
+        _filed_revision(state=CalculationRevisionState.PRESENTADO_SUPERSEDIDO, importe="1.00"),
+        _filed_revision(state=CalculationRevisionState.BORRADOR, importe="2.00"),
+        _filed_revision(modelo="303", importe="3.00"),
+        _filed_revision(importe="9000.00", updated_at=datetime(2026, 4, 20, tzinfo=UTC)),
+        _filed_revision(importe="10000.00", updated_at=datetime(2026, 5, 20, tzinfo=UTC)),
+    )
+    reader = M349FiledDeclarationAdapter(
+        repository=_CalculationRepository(
+            CalculationRevisionCatalogue(revisions={item.calculation_revision_id: item for item in revisions}),
+        ),
+        operation=None,
+    )
+
+    declarations = reader.load()
+
+    assert [item.period for item in declarations] == [Period.from_year_and_code(2026, "1T")]
+    assert [row.importe for row in declarations[0].rows] == [Decimal("10000.00")]
+
+
+def test_m349_filed_declaration_read_failure_is_a_persistence_failure() -> None:
+    """Unreadable storage must not read as nothing filed."""
+    reader = M349FiledDeclarationAdapter(
+        repository=_CalculationRepository(CalculationRevisionPersistenceError("unreadable")),
+        operation=None,
+    )
+
+    with pytest.raises(InvoiceSourcePersistenceError):
+        reader.load()
