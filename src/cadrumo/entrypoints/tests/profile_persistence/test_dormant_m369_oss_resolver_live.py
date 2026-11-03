@@ -325,7 +325,11 @@ def _assert_exterior_revision(
     exterior_cuota = validated_casilla_id("iva.exterior.de.services-cuota")
     assert result.revision.input_values_by_casilla_id[period_casilla] == period_token
     assert Decimal(result.revision.casilla_values[exterior_cuota]) == Decimal("19.00")
-    (membership,) = result.revision.closed_record_row_sets
+    (membership,) = (
+        row_set
+        for row_set in result.revision.closed_record_row_sets
+        if row_set.record_id != "modelo-369-exterior-t36902"
+    )
     assert membership.work_unit_id == work_unit.work_unit_id
     assert membership.registry_snapshot_ref.period == period_token
     assert membership.authority_generation == operation.pin().logical_generation
@@ -333,7 +337,7 @@ def _assert_exterior_revision(
     assert sum(row.occupied for row in membership.rows) == 1
     reloaded = cr_repo.load(operation=operation).get(result.revision.calculation_revision_id)
     assert reloaded is not None
-    assert reloaded.closed_record_row_sets == (membership,)
+    assert reloaded.closed_record_row_sets == result.revision.closed_record_row_sets
     assert all(
         result.revision.binding_overrides[binding] == value for binding, value in _EXTERIOR_DECLARANT_BINDINGS.items()
     )

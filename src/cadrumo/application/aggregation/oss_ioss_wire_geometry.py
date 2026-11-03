@@ -35,14 +35,22 @@ ROW_SHAPES: tuple[tuple[CasillaDataType, ...], ...] = (
         CasillaDataType.MONEY,
         CasillaDataType.MONEY,
     ),
+    (
+        CasillaDataType.TEXT,
+        CasillaDataType.INTEGER,
+        CasillaDataType.TEXT,
+        CasillaDataType.TEXT,
+        CasillaDataType.MONEY,
+    ),
 )
-"""The two line layouts of DR369's lists: destination first, or establishment first.
+"""The three line layouts of DR369's lists: destination first, establishment first, or a correction.
 
 Columns are told apart by data type and contiguity alone; each column's width is
 whatever the revision's own wire geometry declares.
 
-Only the first can be projected; the second names a permanent establishment or a
-dispatch state the invoice does not record, and is enumerated solely to close it.
+The second names a permanent establishment or a dispatch state the invoice does not
+record, and is enumerated solely to close it. The third is destination, exercise, period
+type, period and cuota, and is what the corrections of earlier periods take.
 """
 
 

@@ -516,6 +516,8 @@ def _resolve_bucket_aggregation_source_resolution(
         caller_casilla_inputs=preparation.casilla_inputs,
         caller_enum_binding_values=enum_binding_values,
         closed_record_row_sets=source_resolution.closed_record_row_sets,
+        source_supplied_binding_ids=frozenset(source_resolution.binding_values)
+        | frozenset(source_resolution.enum_binding_values),
         subject_leaf_key="modelo.work.calculate",
     )
     return source_resolution

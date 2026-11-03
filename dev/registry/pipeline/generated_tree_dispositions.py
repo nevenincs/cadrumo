@@ -246,7 +246,9 @@ def disposition_ledger_from_path(path: Path) -> tuple[_GeneratedTreeDisposition,
     ledger = _GeneratedTreeDispositionLedger.model_validate_json(
         json.dumps(rtoml.load(path)),
     )
-    subjects = tuple(item.subject for item in ledger.dispositions)
+    # One tree can owe a republish and already need the ruling its new records
+    # will stand on, so identity is per class of explanation.
+    subjects = tuple((item.kind, item.subject) for item in ledger.dispositions)
     if len(subjects) != len(set(subjects)):
         raise ValueError("generated tree disposition ledger contains duplicate subjects")
     return ledger.dispositions
