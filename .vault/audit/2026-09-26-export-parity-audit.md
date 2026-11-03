@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fa80eb41d37b6d189ef7fbd8edcab7f51cfccf5b5ad7b6bae6e1e1562a69de6'
+body_hash: 'sha256:cd71dcf477a820bc566870bd21dcf36a91c995bc3124cf8de1c2b0ba5ccb0291'
 related:
   - "[[2026-09-23-tuimodelo-export-paths-reference]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
@@ -127,3 +127,31 @@ The advice implies re-import clears it; the count covers the whole store and com
 Orchestrator decision under the 2026-11-02 ruling: the report and the review workbook apply the `filed_before_grade_cap` predicate as export does.
 
 Out of scope, queued: Modelo 131 2024-onward complementaria export refuses the boolean `declaracion-complementaria` value at position 692 (`text value must be text or absent`).
+
+## Phase review 2026-11-03: `2026-11-01-export-parity-plan` P03 (S17, S18, S29, S06)
+
+Reviewed against `2026-11-01-export-parity-suffered-withholding-schemas-adr` (ADR D): the namespace and key grammar, the record and its write port, the certificate and absence operations, the `retencion_soportada` source kind and resolver, and the 0596, 0597 and 0603 bindings with the borrador cross-check marker. Sound: the keyed `payer_ref`, the exact-profile worker composition, the self-NIF, unsupported-year and undeclared-family refusals, the revision-guarded overwrite and removal, the absence/record contradiction handling, the fail-closed applicability, and the 2022 baseline bindings with `cross_check_only`. Findings below; the first three are fixed, the rest need an operator decision.
+
+### payer tax ID without a checksum | medium | the import only trimmed and upper-cased the payer ID
+`src/cadrumo/application/retencion_soportada_certificado/executor.py` keyed the row by `tax_id_identity_token`, so a mistyped payer ID stored a certificate under a payer that does not exist. Fixed in `bc9c230741`: the import validates through the registry tax-ID validator and refuses a failing ID with the existing `validation` reason, which already names the payer ID. No contract change.
+
+### printed and bare payer ID forms | medium | `B-0000001-8` and `B00000018` keyed two rows
+The same change keys the row by the validator's canonical form, so one payer is one row and the own-NIF check also sees the separated form. Teeth: the printed form meets the stored row as a stale revision instead of opening a second row.
+
+### listed absence label in the worker language | low | `--language` did not reach `income_class_label`
+The worker worded the label in the profile language and the CLI printed it. Fixed in `8e15a7a749`: the CLI words it from the class token in the invocation language. The projection field stays, because the desktop reads it in the person's language.
+
+### certificate fingerprint not checked against custody | medium | a payer-certificate record rests on an unverified digest
+ADR D section 3 defines `evidence_fingerprint` as the sha256 of the certificate bytes held in attachment custody, but its list of write-port refusals has no custody check, and P03 gives the operator no route that puts certificate bytes into attachment custody. The CLI takes a bare `--evidence-sha256`, and the resolver passes it on as provenance `fingerprint`. Not fixed: a custody check needs a custody-ingest route and a new refusal reason, which is a public-contract change (`RetencionSoportadaCertificadoRefusalReason`, locale keys, operation manifest). Operator decision: add the check and its route, or amend ADR D to call the fingerprint operator-asserted.
+
+### same-fingerprint amendment | low | re-entering figures from the same certificate is refused as `validation`
+`RetencionSoportadaRecord` refuses `replaces_evidence_fingerprint == evidence_fingerprint`, and the executor fills the replaced fingerprint from the stored row, so correcting a typo against the same certificate file fails with the generic reason. ADR D section 4 says only that "a corrected or replacement certificate overwrites that row"; it does not settle the same-file case. Not changed. The workaround is remove then record, which drops the lineage. Operator decision: allow it (with no `replaces` value) or keep the refusal and give it its own reason.
+
+### proven zero from the profile carries `PROFILE_FIELD` | medium | ADR D section 1 lists two terminal origins
+The provider registration admits `PAYER_CERTIFICATE`, `OPERATOR_INPUT` and `PROFILE_FIELD`, and the resolver stamps `PROFILE_FIELD` on a class the profile positively declares absent (the same reading the activity-rental applicability uses). ADR D section 1 says "Terminal origins are `PAYER_CERTIFICATE` and `OPERATOR_INPUT`"; section 5 grants the proven zero without an attestation but names the origin only for the attestation. Not changed. Operator decision: amend ADR D to admit `PROFILE_FIELD`, or stamp `OPERATOR_INPUT`.
+
+### attestation against a ledger income row | low | the section 5 hypothesis is not implemented
+ADR D section 5 hypothesises reporting an attestation contradicted by a ledger income row of the same class. Only the record-versus-attestation contradiction exists. It was marked a hypothesis, so this is a gap to schedule, not a defect.
+
+### verification pending | note | live Modelo 100 credit tests cannot run on the shared tree
+`test_modelo_100_retencion_soportada_credits_live.py` and `test_retencion_soportada_absence_m100.py` fail at construction with `CalculationActionPorts.__init__() missing ... 'credit_resolution_reader'`. The uncommitted P04 edits in `src/cadrumo/application/modelo/calculation_action_ports.py` add that argument before its callers are updated. Not caused by P03 or by the fixes above. Re-run both files when the P04 writer commits.
