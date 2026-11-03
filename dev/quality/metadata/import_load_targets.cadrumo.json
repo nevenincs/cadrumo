@@ -2501,6 +2501,7 @@
         "cadrumo.domain.calculations.registry.snapshot_globals",
         "cadrumo.domain.calculations.registry.snapshot_proof",
         "cadrumo.domain.calculations.registry.snapshot_references",
+        "cadrumo.domain.calculations.registry.snapshot_source_windows",
         "cadrumo.domain.calculations.registry.source_byte_availability",
         "cadrumo.domain.calculations.registry.static_inspection",
         "cadrumo.domain.calculations.registry.support_matrix",

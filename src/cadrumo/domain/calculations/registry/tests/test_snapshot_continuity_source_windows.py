@@ -30,9 +30,9 @@ from ..errors import RegistryValidationError
 from ..governed_fact_scope import validating_governed_facts
 from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
-from ..snapshot import _revision_scoped_source_window_failures
 from ..snapshot_globals import SnapshotGlobalCatalogues
 from ..snapshot_references import collect_snapshot_ref_ids
+from ..snapshot_source_windows import _revision_scoped_source_window_failures
 from ..temporal import ModeloRevisionDirectory
 from .authority_fakes import FakeAuthorityComponentReader
 from .registry_tree import bundled_registry_tree

@@ -29,13 +29,11 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 # The canonical definitions of both window rules. They are private to the
-# snapshot module because runtime reaches them only through snapshot build; this
+# snapshot modules because runtime reaches them only through snapshot build; this
 # gate needs the same rule applied to revisions no snapshot coordinate reaches,
 # and reading it a second time here is what would let the two disagree.
-from cadrumo.domain.calculations.registry.snapshot import (
-    check_revision_scoped_legal_windows,
-    check_revision_scoped_source_windows,
-)
+from cadrumo.domain.calculations.registry.snapshot import check_revision_scoped_legal_windows
+from cadrumo.domain.calculations.registry.snapshot_source_windows import check_revision_scoped_source_windows
 
 from ..compiler.authority import compiled_bundled_authority
 
