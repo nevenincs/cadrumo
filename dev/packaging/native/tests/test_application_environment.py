@@ -26,6 +26,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
 
 
+def _declared_kdf_child_module() -> str:
+    """Return the module the declaration's POSIX child invocations launch with ``-m``."""
+    modules = {
+        invocation["arguments"][position + 1]["literal"]
+        for invocation in tomllib.loads(_SOURCE)["invocations"]
+        if invocation["profile"] == "kdf-child" and invocation["platform"] == "posix"
+        for position, argument in enumerate(invocation["arguments"])
+        if argument == {"literal": "-m"}
+    }
+    assert len(modules) == 1
+    return modules.pop()
+
+
 def test_hosted_posix_kdf_command_selects_only_the_exact_child_profile(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "_xoptions", {ROLE_IMAGE_OPTION: "/package/cadrumo"}, raising=False)
     command = isolated_interpreter_command()
@@ -33,7 +46,7 @@ def test_hosted_posix_kdf_command_selects_only_the_exact_child_profile(monkeypat
     arguments = (
         *command[3:],
         "-m",
-        "cadrumo.adapters.persistence.storage.custody._kdf_worker",
+        _declared_kdf_child_module(),
         "--request-fd",
         "3",
         "--result-fd",

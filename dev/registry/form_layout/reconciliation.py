@@ -258,7 +258,7 @@ def _reconcile_producer_field(
     layout: FormLayoutDefinition,
     referenced: set[tuple[str, str, str]],
 ) -> int:
-    changed = _admit_note_signed_amount(old_field, new_field)
+    changed = admit_note_signed_amount(old_field, new_field)
     if old_field["kind"] == "computed" and new_field["kind"] == "casilla":
         _validate_marker_owner(old_field, new_field, address, before, layout, referenced)
         old_field.update(kind="casilla", casilla_id=new_field["casilla_id"], computed_key=None)
@@ -275,7 +275,7 @@ def _reconcile_producer_field(
     return changed + 1
 
 
-def _admit_note_signed_amount(old_field: dict[str, object], new_field: dict[str, object]) -> int:
+def admit_note_signed_amount(old_field: dict[str, object], new_field: dict[str, object]) -> int:
     """Admit an unsigned 2-decimal amount gaining the signed shape its design's notes state.
 
     The bytes of every non-negative value stay the same and the form still reads

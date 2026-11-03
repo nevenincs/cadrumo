@@ -12,7 +12,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportSignPosition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-from ...form_layout.reconciliation import _admit_note_signed_amount
+from ...form_layout.reconciliation import admit_note_signed_amount
 from ..note_negative_amount import _NOTE_NEGATIVE_AMOUNTS, note_negative_amount_for
 from ..record_design_intermediate import RecordDesignIntermediateSource
 
@@ -78,7 +78,7 @@ _SIGNED: dict[str, object] = {
 
 def test_form_reconciliation_admits_an_amount_gaining_the_noted_sign() -> None:
     old = dict(_UNSIGNED)
-    assert _admit_note_signed_amount(old, _SIGNED) == 1
+    assert admit_note_signed_amount(old, _SIGNED) == 1
     assert old == _SIGNED
 
 
@@ -93,5 +93,5 @@ def test_form_reconciliation_admits_an_amount_gaining_the_noted_sign() -> None:
 )
 def test_form_reconciliation_admits_no_other_shape_change(old: dict[str, object], new: dict[str, object]) -> None:
     held = dict(old)
-    assert _admit_note_signed_amount(held, new) == 0
+    assert admit_note_signed_amount(held, new) == 0
     assert held == old

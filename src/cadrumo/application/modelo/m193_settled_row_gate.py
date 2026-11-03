@@ -35,10 +35,10 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingAggregationOp, BindingSourceKind, CalculationSourceLineageRole
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.binding_aggregation import BindingAggregationOp, binding_aggregation_op
+from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId

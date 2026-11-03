@@ -6,6 +6,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.record_row_membership import ClosedRecordRowSet
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -21,7 +22,7 @@ from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .. import oss_ioss
 from ..errors import AggregationValidationError
-from ..source_mesh import CalculationSourceContext, CalculationSourceResolution, ClosedRecordRowSet
+from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
