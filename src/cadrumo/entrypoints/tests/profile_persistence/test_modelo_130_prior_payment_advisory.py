@@ -133,8 +133,6 @@ _PRIOR_1T_CASILLA_07 = Decimal("200")
 # casilla 01 folds from seeded income transactions.
 _MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     _M130_RETENCIONES_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }

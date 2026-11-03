@@ -141,8 +141,6 @@ _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 # actually saved/filed revision, rather than derived here from the formulas.
 _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
     _M130_WITHHELD_CASILLA: Decimal("5000"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
@@ -152,8 +150,6 @@ _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
 # still come only from previous_filing, never from manual inputs.
 _2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = {
     _M130_WITHHELD_CASILLA: Decimal("5000"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }

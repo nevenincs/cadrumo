@@ -310,8 +310,6 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
                 casilla_inputs={
                     _GUARD_WITHHELD_CASILLA: Decimal("0"),
                     _GUARD_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
-                    _GUARD_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-                    _GUARD_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
                     _GUARD_HOME_DEDUCTION_CASILLA: Decimal("0"),
                     _GUARD_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
                 },

@@ -419,8 +419,6 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
             casilla_inputs={
                 _AMEND_WITHHELD_CASILLA: Decimal("0"),
                 _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
-                _AMEND_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-                _AMEND_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
                 _AMEND_HOME_DEDUCTION_CASILLA: Decimal("0"),
                 _AMEND_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
             },

@@ -191,8 +191,6 @@ _Q1_INCOME = Decimal("3000")
 _Q1_EXPENSE = Decimal("3000")
 _Q1_INPUTS: dict[CasillaId, Decimal] = {
     _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
@@ -475,8 +473,6 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos, *, operatio
         repos,
         period="2T",
         casilla_inputs={
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
@@ -648,8 +644,6 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
         repos,
         period="2T",
         casilla_inputs={
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
