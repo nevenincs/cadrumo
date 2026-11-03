@@ -3,47 +3,50 @@
 Companion to ``test_modelo_390_303_fold_in_live.py``. That module proves the
 ordinary M390<-M303 relations and the annual compensation partition source run on
 the live calculate path, but its fixture seeds independent per-period
-``iva.compensacion-generada-periodo`` with NO carried pending chain (each
-period's disponible equals its own generated credit). In
-that degenerate case the FIFO partition and the naive per-period split COINCIDE
+``iva.compensacion-generada-periodo`` with NO carried pending chain and no
+consumption (each period's disponible equals its own generated credit). In that
+degenerate case the FIFO partition and the naive per-period split COINCIDE
 (box 97 = copy(4T generated), box 662 = sum(1T-3T generated)), so the existing
 test cannot tell whether the box-97/662 values came from the declared FIFO
-annual-partition source (#7/#12, IVA-1/IVA-2) or from the un-fixed naive relation sums.
+annual-partition source or from the un-fixed naive relation sums.
 
-This module closes that coverage hole with a REAL carried-pending chain driven
-through the full operator calculate action
+This module closes that coverage hole with a REAL carried-pending chain in which
+part of the carried credit is consumed, driven through the full operator
+calculate action
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`),
 choosing inputs where the FIFO partition DIVERGES from the naive split, so the
 test FAILS if the annual-partition source is ever removed and the naive relation
 sums leak through.
 
-Scenario (the AEAT "always-carry" case - every period's credit carries forward
-into the last period's autoliquidacion, nothing consumed):
+Scenario (credit carries forward, and 2T consumes part of 1T's credit):
 
     period  generada  aplicada  disponible(available_end)
     1T      100.00    0.00      100.00
-    2T       20.00    0.00      120.00   (100 carried + 20 new)
-    3T       30.00    0.00      150.00   (120 carried + 30 new)
-    4T       50.00    0.00      200.00   (150 carried + 50 new)
+    2T        0.00   60.00       40.00   (100 carried, 60 applied against a payable quota)
+    3T       30.00    0.00       70.00   (40 carried + 30 new)
+    4T       50.00    0.00      120.00   (70 carried + 50 new)
 
-The year generated 100+20+30+50 = 200.00 of compensacion credit and consumed
-none, so the whole 200.00 is pending and ALL of it is carried into the 4T
-autoliquidacion (4T disponible = 200.00).
+The year generated 100+30+50 = 180.00 of compensacion credit and consumed 60.00,
+so 120.00 is pending at year end. Compensation is consumed oldest credit first,
+so the 60.00 comes out of 1T's lot and 40.00 of it remains.
 
 Oracle (grounded in the carried-pending inputs + the AEAT identity
 ``[86] = [95] - [97] - [98] - [662]`` -> ``[97] + [662] = year pending``, NOT in
-the registry formula under test):
-  - AEAT box 97 ``iva.anual.compensacion-ultimo-periodo-97`` = credit carried
-    INTO the last period = the whole year pending = 200.00 (because every
-    quarter's credit carried forward into 4T).
-  - AEAT box 662 ``iva.anual.compensacion-generada-ejercicio-no-97`` = year
-    credit NOT carried into the last period = 0.00.
+the registry formula under test; the IVA manual's worked example puts in box 97
+what the last period itself generated and the rest of the pending credit of the
+year in box 662):
+  - AEAT box 97 ``iva.anual.compensacion-ultimo-periodo-97`` = credit generated
+    by the last period = 50.00 (none of it was consumed).
+  - AEAT box 662 ``iva.anual.compensacion-generada-ejercicio-no-97`` = the rest
+    of the year's pending credit = 120.00 - 50.00 = 70.00 (40.00 of 1T's lot and
+    30.00 of 3T's).
 
 Divergence proof (what the un-fixed naive per-period relation split would give):
-  - naive box 97 = copy(4T generada) = 50.00  != FIFO 200.00
-  - naive box 662 = sum(1T-3T generada) = 100+20+30 = 150.00  != FIFO 0.00
-Both partitions satisfy the identity (200 = 50+150 = 200+0), so a test that only
-checked the sum would not discriminate; this test asserts the PARTITION.
+  - naive box 97 = copy(4T generada) = 50.00 (the same)
+  - naive box 662 = sum(1T-3T generada) = 100+0+30 = 130.00  != FIFO 70.00
+The naive split ignores the 60.00 consumed, so it breaks the identity
+(50 + 130 = 180 != 120 pending), and a test that only checked box 97 would not
+discriminate; this test asserts the PARTITION.
 
 Real-behaviour, real-adapter (real encrypted-SQLite observation store via
 :class:`SecureObjectRepository` + :class:`EphemeralBucketSession`, real
@@ -82,6 +85,7 @@ from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
@@ -119,9 +123,9 @@ _PRORRATA_REGULARIZACION: CasillaId = validated_casilla_id("44")
 _M390_BOX_97: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
 _M390_BOX_662: CasillaId = validated_casilla_id("iva.anual.compensacion-generada-ejercicio-no-97")
 
-# Carried-pending chain: every quarter generates credit, none is consumed, and
-# each quarter's disponible accumulates the prior quarters' unconsumed saldo, so
-# the whole year's credit carries into the 4T autoliquidacion.
+# Carried-pending chain: 1T generates credit, 2T consumes part of it against a
+# payable quota, and 3T and 4T generate more; each quarter's disponible is the
+# prior quarter's disponible plus what it generates less what it applies.
 _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
         _DEVENGADA: Decimal("0.00"),
@@ -134,14 +138,14 @@ _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _DISPONIBLE: Decimal("100.00"),
     },
     "2T": {
-        _DEVENGADA: Decimal("0.00"),
-        _DEDUCIBLE: Decimal("20.00"),
-        _RESULTADO_GENERAL: Decimal("-20.00"),
-        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-20.00"),
-        _GENERADA: Decimal("20.00"),
-        _APLICADA: Decimal("0.00"),
-        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("100.00"),
-        _DISPONIBLE: Decimal("120.00"),
+        _DEVENGADA: Decimal("60.00"),
+        _DEDUCIBLE: Decimal("0.00"),
+        _RESULTADO_GENERAL: Decimal("60.00"),
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("60.00"),
+        _GENERADA: Decimal("0.00"),
+        _APLICADA: Decimal("60.00"),
+        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("40.00"),
+        _DISPONIBLE: Decimal("40.00"),
     },
     "3T": {
         _DEVENGADA: Decimal("0.00"),
@@ -150,8 +154,8 @@ _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-30.00"),
         _GENERADA: Decimal("30.00"),
         _APLICADA: Decimal("0.00"),
-        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("120.00"),
-        _DISPONIBLE: Decimal("150.00"),
+        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("40.00"),
+        _DISPONIBLE: Decimal("70.00"),
     },
     "4T": {
         _DEVENGADA: Decimal("0.00"),
@@ -161,20 +165,22 @@ _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-50.00"),
         _GENERADA: Decimal("50.00"),
         _APLICADA: Decimal("0.00"),
-        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("150.00"),
-        _DISPONIBLE: Decimal("200.00"),
+        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("70.00"),
+        _DISPONIBLE: Decimal("120.00"),
     },
 }
 
 # Oracle from the carried-pending inputs + AEAT identity (NOT the registry formula).
-_YEAR_PENDING = sum(v[_GENERADA] for v in _M303_COMPENSACION_BY_PERIOD.values())  # 200.00
-_EXPECTED_BOX_97 = Decimal("200.00")  # whole year pending carried into 4T
-_EXPECTED_BOX_662 = Decimal("0.00")  # nothing left the chain
+_YEAR_PENDING = sum(  # 100 + 30 + 50 generated, less the 60 applied = 120.00
+    (v[_GENERADA] - v[_APLICADA] for v in _M303_COMPENSACION_BY_PERIOD.values()), Decimal(0)
+)
+_EXPECTED_BOX_97 = Decimal("50.00")  # what the last period itself generated, none consumed
+_EXPECTED_BOX_662 = Decimal("70.00")  # 40.00 of 1T's lot after the 60.00 applied, plus 30.00 of 3T's
 
 # The un-fixed naive per-period relation split (what this test must NOT see).
 _NAIVE_BOX_97 = _M303_COMPENSACION_BY_PERIOD["4T"][_GENERADA]  # copy(4T) = 50.00
-_NAIVE_BOX_662 = sum(  # sum(1T-3T) = 150.00
-    _M303_COMPENSACION_BY_PERIOD[p][_GENERADA] for p in ("1T", "2T", "3T")
+_NAIVE_BOX_662 = sum(  # sum(1T-3T) = 130.00, blind to the 60.00 consumed
+    (_M303_COMPENSACION_BY_PERIOD[p][_GENERADA] for p in ("1T", "2T", "3T")), Decimal(0)
 )
 
 
@@ -201,7 +207,12 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     """Persist one M303/2025 filing observation per quarter carrying the FIFO compensacion casillas."""
     save_local_m303_compensacion_filings(
-        obs_repo, filing_year=_YEAR, casillas_by_period=_M303_COMPENSACION_BY_PERIOD, captured_at=_T0
+        obs_repo,
+        filing_year=_YEAR,
+        casillas_by_period=_M303_COMPENSACION_BY_PERIOD,
+        captured_at=_T0,
+        # 2T has a positive result, which it pays after applying carried credit.
+        dispositions_by_period={"2T": ResultDisposition.INGRESO},
     )
 
 
@@ -244,19 +255,18 @@ def test_m390_carry_boxes_are_the_fifo_partition_not_the_naive_split(
 ) -> None:
     """A carried-pending chain drives box 97/662 to the FIFO partition, diverging from the naive split.
 
-    With four M303/2025 quarters whose credit carries forward unconsumed into 4T,
-    the live M390 calculate must produce the FIFO partition (box 97 = 200.00 whole
-    year pending, box 662 = 0.00), NOT the naive per-period relation split
-    (box 97 = copy(4T) = 50.00, box 662 = sum(1T-3T) = 150.00). The expected
-    values are derived from the carried-pending inputs and the AEAT identity, not
-    the registry formula.
+    With four M303/2025 quarters whose credit carries forward and is partly
+    consumed in 2T, the live M390 calculate must produce the FIFO partition
+    (box 97 = 50.00 generated by 4T, box 662 = 70.00 rest of the year pending),
+    NOT the naive per-period relation split (box 97 = copy(4T) = 50.00,
+    box 662 = sum(1T-3T) = 130.00). The expected values are derived from the
+    carried-pending inputs and the AEAT identity, not the registry formula.
     """
     # Guard the fixture's own divergence premise: FIFO oracle must differ from naive.
-    assert _EXPECTED_BOX_97 != _NAIVE_BOX_97, "fixture must make box 97 diverge from the naive copy(4T)"
     assert _EXPECTED_BOX_662 != _NAIVE_BOX_662, "fixture must make box 662 diverge from the naive sum(1T-3T)"
-    # AEAT identity holds for both partitions (so only the partition discriminates).
+    # Only the FIFO partition satisfies the AEAT identity; the naive split ignores the consumption.
     assert _EXPECTED_BOX_97 + _EXPECTED_BOX_662 == _YEAR_PENDING
-    assert _NAIVE_BOX_97 + _NAIVE_BOX_662 == _YEAR_PENDING
+    assert _NAIVE_BOX_97 + _NAIVE_BOX_662 != _YEAR_PENDING
 
     obs_repo = CalculationObservationRepository()
     _seed_m303_compensacion_quarters(obs_repo=obs_repo)
@@ -267,15 +277,15 @@ def test_m390_carry_boxes_are_the_fifo_partition_not_the_naive_split(
     box_97 = Decimal(casilla_values[_M390_BOX_97])
     box_662 = Decimal(casilla_values[_M390_BOX_662])
 
-    # The carried-pending credit all flows into the last period: box 97 carries
-    # the whole year pending, box 662 is zero (the FIFO partition).
+    # Box 97 carries what the last period itself generated; box 662 the rest of
+    # the year's pending credit, after the 2T consumption (the FIFO partition).
     assert box_97 == _EXPECTED_BOX_97, (
-        f"M390 box 97 (compensacion-ultimo-periodo) must be the FIFO whole-year-pending {_EXPECTED_BOX_97!r} "
-        f"for an all-carry chain, NOT the naive copy(4T)={_NAIVE_BOX_97!r}; got {box_97!r}"
+        f"M390 box 97 (compensacion-ultimo-periodo) must be the credit the last period generated "
+        f"{_EXPECTED_BOX_97!r}; got {box_97!r}"
     )
     assert box_662 == _EXPECTED_BOX_662, (
         f"M390 box 662 (compensacion-generada-ejercicio-no-97) must be the FIFO remainder {_EXPECTED_BOX_662!r} "
-        f"(no credit left the chain), NOT the naive sum(1T-3T)={_NAIVE_BOX_662!r}; got {box_662!r}"
+        f"(40.00 of 1T's lot and 30.00 of 3T's), NOT the naive sum(1T-3T)={_NAIVE_BOX_662!r}; got {box_662!r}"
     )
 
     # Belt-and-braces: the result must NOT be the naive split (the un-fixed behaviour).

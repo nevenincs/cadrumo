@@ -46,8 +46,13 @@ def save_local_m303_compensacion_filings(
     filing_year: int,
     casillas_by_period: Mapping[str, Mapping[CasillaId, Decimal]],
     captured_at: datetime,
+    dispositions_by_period: Mapping[str, ResultDisposition] | None = None,
 ) -> None:
-    """Persist one local ``app_filing`` M303 compensacion observation per period."""
+    """Persist one local ``app_filing`` M303 compensacion observation per period.
+
+    A period is filed as a compensación unless ``dispositions_by_period`` names another
+    disposition for it, such as the ingreso of a period that applies carried credit.
+    """
     for period, casillas in casillas_by_period.items():
         save_stamped_observation(
             repository,
@@ -65,7 +70,7 @@ def save_local_m303_compensacion_filings(
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=captured_at,
             result_disposition=ResultDispositionProjection(
-                disposition=ResultDisposition.COMPENSACION,
+                disposition=(dispositions_by_period or {}).get(period, ResultDisposition.COMPENSACION),
                 provenance_kind="app_filing",
                 provenance_locator=f"test-local-filing:{filing_year}:{period}",
             ),
