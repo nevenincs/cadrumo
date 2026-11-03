@@ -203,6 +203,9 @@ aggregation:
         el tipus de l'Estat membre de consum va canviar durant aquest període, de
         manera que la data d'emissió no permet saber quin tipus s'aplica. Registra
         la data d'operació a la factura.
+      rate_tier_absent: L'Estat membre de destinació no té cap tipus en aquest tram
+        en cap data, així que no es pot escriure la fila. Revisa el tram de la línia
+        de la factura.
       rate_tier_ambiguous: Dos tipus del mateix tram de l'Estat membre de destinació
         donen aquesta mateixa quota, així que no se sap quin tipus escriure a la fila.
         Revisa la línia de la factura.

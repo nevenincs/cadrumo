@@ -197,6 +197,8 @@ aggregation:
         és a fogyasztás szerinti tagállam adómértéke ebben az időszakban megváltozott,
         ezért a kiállítás dátumából nem állapítható meg, melyik adómérték alkalmazandó.
         Rögzítsd a teljesítési dátumot a számlán.
+      rate_tier_absent: A rendeltetési tagállamnak egyik időpontban sincs kulcsa ebben
+        a sávban, ezért a sor nem írható meg. Ellenőrizd a számla tételének sávját.
       rate_tier_ambiguous: A rendeltetési tagállam ugyanazon sávjának két kulcsa is
         ezt az adót adja, így nem tudható, melyik kulcs kerüljön a sorba. Ellenőrizd
         a számla tételét.

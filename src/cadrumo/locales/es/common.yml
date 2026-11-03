@@ -207,6 +207,9 @@ aggregation:
         y el tipo del Estado miembro de consumo cambió durante este período, por lo
         que su fecha de emisión no permite saber qué tipo se aplica. Registra la fecha
         de operación en la factura.
+      rate_tier_absent: El Estado miembro de destino no tiene ningún tipo en este
+        tramo en ninguna fecha, así que no se puede escribir la fila. Revisa el tramo
+        de la línea de la factura.
       rate_tier_ambiguous: Dos tipos del mismo tramo del Estado miembro de destino
         dan esta misma cuota, así que no se sabe qué tipo escribir en la fila. Revisa
         la línea de la factura.
