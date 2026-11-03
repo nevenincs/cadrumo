@@ -26,7 +26,6 @@ from ..credit_reconciliation_checks import (
     credit_reconciliation_digest,
     credit_reconciliation_revision_failures,
     filed_observation_source_failures,
-    revision_declares_credit_reconciliation,
 )
 from ..errors import RegistryValidationError
 from ..schema import ModeloRevision
@@ -64,7 +63,6 @@ def _trabajo_entry(*cross_checks: object, value_binding: str = _TRABAJO_BINDING)
 
 
 def test_the_published_revision_declares_a_clean_credit_reconciliation(revision: ModeloRevision) -> None:
-    assert revision_declares_credit_reconciliation(revision)
     assert {str(entry.casilla_id) for entry in revision.credit_reconciliation} == {
         "0596",
         "0597",

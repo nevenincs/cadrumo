@@ -52,18 +52,12 @@ __all__ = [
     "credit_reconciliation_digest",
     "credit_reconciliation_revision_failures",
     "filed_observation_source_failures",
-    "revision_declares_credit_reconciliation",
 ]
 
 _LEDGER_CROSS_CHECK_REFUSED_ORIGINS: frozenset[TerminalOriginClass] = frozenset(
     {TerminalOriginClass.PERCEPTOR_OBSERVATION}
 )
 """Terminal origins of the payer-side stores, whose figures are withholding practised on others."""
-
-
-def revision_declares_credit_reconciliation(revision: ModeloRevision) -> bool:
-    """Return whether ``revision`` declares any credit reconciliation entry."""
-    return bool(revision.credit_reconciliation)
 
 
 def credit_reconciliation_digest(revision: ModeloRevision) -> str:
