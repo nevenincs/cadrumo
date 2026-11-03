@@ -391,6 +391,13 @@ def test_a_split_of_an_amount_whose_second_instalment_is_nothing_is_refused_with
     seed_prior_year_m100(secure_objects)
     for period, payment in _PAYMENTS_LEAVING_ONE_CENT.items():
         import_official_m130_result_observation(secure_objects, period=period, c19_value=payment)
+    # Activity income without an IAE epigraph does not prove whether an urban rental, whose withholding credits
+    # casilla 0598, is part of it: the operator attests that no payer withheld.
+    seed_absence_attestation(
+        operation=published_authority_operation(),
+        ejercicio=YEAR,
+        income_class=RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD,
+    )
 
     annual = _annual(secure_objects)
 
