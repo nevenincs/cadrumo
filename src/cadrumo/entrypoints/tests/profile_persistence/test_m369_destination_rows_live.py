@@ -742,6 +742,7 @@ def test_a_direct_ioss_filer_without_intermediary_number_still_refuses_at_export
     result, _ = _calculate(
         objects, scenario, (_invoice(scenario, "IOSS-D", "FR", "general", "100.00", "20.00"),), operation
     )
+    assert _verify(result).granted_verificado_completo is True
     with pytest.raises(ModeloExportError) as refused:
         _export(objects, tmp_path, scenario, result)
     assert refused.value.translated_message == "application.modelo.errors.export_draft_write_failed"

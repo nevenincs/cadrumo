@@ -38,6 +38,7 @@ from cadrumo.application.aggregation.renta_ledger_models import (
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
 )
+from cadrumo.application.aggregation.tests.ledger_source_mesh_support import cash_criterion_profile
 from cadrumo.application.aggregation.tests.renta_ledger_support import (
     ledger_expense_transaction,
     m100_2025_renta_expense_revision,
@@ -168,6 +169,7 @@ def _resolve_2025_renta_expenses(secure_objects: SecureObjectRepository):
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
             revision=m100_2025_renta_expense_revision(),
+            profile=cash_criterion_profile(2025),
         ),
     )
 
