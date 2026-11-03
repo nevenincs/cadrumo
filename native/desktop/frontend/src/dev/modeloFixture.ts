@@ -642,7 +642,7 @@ export function modeloFixture(options: Options): ModeloPort {
 
   const port: ModeloPort = {
     async declarations(language) {
-      window.__fixtureModelo = port;
+      if (typeof window !== "undefined") window.__fixtureModelo = port;
       say(`modelo declarations ${language}`);
       await answer();
       const list = await envelope<ModeloDeclarationsListProjectionV1>(

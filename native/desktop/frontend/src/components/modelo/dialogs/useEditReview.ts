@@ -17,6 +17,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { editKey, editSubmission, type FormSession } from "../form/session";
 import { useModeloOperation } from "../WriteScope";
+import { mayRenew } from "./operationRun";
 
 // The review's run: the staged edits are checked by a preflight on the
 // admitted baseline, applied once, and followed until the apply settles. A
@@ -144,22 +145,6 @@ async function renewal(
   return (await onReread())
     ? null
     : { kind: "check_failed", code: "unavailable" };
-}
-
-/** Whether a check that found `stale` stale may renew it: only the latest
- * check, on the baseline the review now holds; an overtaken check leaves the
- * renewal to the check that overtook it. */
-export function mayRenew(check: {
-  ticket: number;
-  latest: number;
-  stale: ModeloEditApplyBaselineV1;
-  current: ModeloEditApplyBaselineV1 | null;
-}): boolean {
-  return (
-    check.ticket === check.latest &&
-    check.current !== null &&
-    check.stale.baseline_id === check.current.baseline_id
-  );
 }
 
 export function useEditReview({

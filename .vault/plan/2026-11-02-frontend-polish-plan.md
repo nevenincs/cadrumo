@@ -21,7 +21,7 @@ related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:24bce60690eda894e3a8538c9bdeb437a637b9b2f11de86151ad9c2c096553c0'
+body_hash: 'sha256:5669baa974172d522d3284917354e6c4a9860a8001f840b74c79cfd1fed8580e'
 ---
 
 # `frontend-polish` plan
@@ -60,7 +60,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S19` - Keep declaration creation outcome holds across selection and navigation, and require authoritative completion plus a successful list refresh; `native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/src/components/modelo/WriteHoldNotice.tsx, native/desktop/frontend/src/components/modelo/declarations/, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts, native/desktop/frontend/tests/live/modelo-write-holds.unit.ts, dev/locales/desktop_workspace_keys.py, src/cadrumo/locales/`.
 - [x] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/tests/scenarios/modelo*.spec.ts, native/desktop/frontend/tests/live/modelo-write-holds.unit.ts`.
 - [x] `S21` - Expose returned reconciliation differences and advisory limitations using the Sol design brief and localized labels; `native/desktop/frontend/src/components/modelo/dialogs/, native/desktop/frontend/src/dev/, dev/locales/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
-- [ ] `S11` - Complete modelo workflow review from declaration selection through editing, review, calculation, export and reconciliation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modelo.ts`.
+- [x] `S11` - Complete modelo workflow review from declaration selection through editing, review, calculation, export and reconciliation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modelo.ts`.
 - [x] `S23` - Keep AEAT progress uncertainty visible before the first snapshot and after a failed observation of completed work; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/shell/aeatSyncRun.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
 - [x] `S24` - Recover refused Sede dialog answers and viewport updates without replaying uncertain person input; `native/desktop/frontend/src/components/browser/useSedeView.ts, native/desktop/frontend/tests/scenarios/sede-browser.spec.ts, native/desktop/frontend/src/dev/`.
 - [x] `S12` - Complete AEAT and browser workflow review including preparation, progress, outcomes, notifications and calendar interactions; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/components/calendar/`.

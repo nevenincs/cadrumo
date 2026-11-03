@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f41c30b449cfd2ccda3738bab48399ce8b4e1d2934efd1b449974f047e607b25'
+body_hash: 'sha256:ee09e95add1bae016dbe431061fc7d0fe8efcdc226300eeb9a11970f8375f8bc'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -286,6 +286,13 @@ related:
 - `S10` `verify:` `ledger model contract scheduler staged-check product cases` -> `pass`
 - `S10` `verify:` `four prior ledger regression repairs verified` -> `pass`
 - `S10` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/components/modelo/dialogs/operationRun.ts`
+- `S11` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S11` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S11` `verify:` `Modelo product model operation served-field date cases` -> `pass`
+- `S11` `verify:` `12 port cases and 3 stale-baseline browser cases` -> `pass`
+- `S11` `verify:` `TypeScript scoped ESLint Prettier and Terra review` -> `pass`
 
 ## Notes
 

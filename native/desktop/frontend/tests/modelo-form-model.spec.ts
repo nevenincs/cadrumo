@@ -21,7 +21,7 @@ import {
   WORKING_FIGURES_PAGE,
   type StagedEdit,
 } from "../src/components/modelo/form/session";
-import { mayRenew } from "../src/components/modelo/dialogs/useEditReview";
+import { mayRenew } from "../src/components/modelo/dialogs/operationRun";
 import { stagedText } from "../src/components/modelo/form/stagedWords";
 import type { Translate } from "../src/shell/strings";
 import type {
