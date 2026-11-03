@@ -336,8 +336,6 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
                 casilla_inputs={
                     _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
                     _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-                    _M130_RETENCIONES_CASILLA: Decimal("0"),
-                    _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
                     _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
                     _M130_RESULTADO_CASILLA: Decimal("0"),
                 },
@@ -393,8 +391,6 @@ def test_verify_grants_when_required_casillas_supplied_m130(
         casilla_inputs: dict[CasillaId, Decimal] = {
             _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
             _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-            _M130_RETENCIONES_CASILLA: Decimal("0"),
-            _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
             _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
             _M130_RESULTADO_CASILLA: Decimal("0"),
         }
@@ -495,8 +491,6 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
                 casilla_inputs={
                     _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
                     _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-                    _M130_RETENCIONES_CASILLA: Decimal("0"),
-                    _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
                     _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
                     _M130_RESULTADO_CASILLA: Decimal("0"),
                 },

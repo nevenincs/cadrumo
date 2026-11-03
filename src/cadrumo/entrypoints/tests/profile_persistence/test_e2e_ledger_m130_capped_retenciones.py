@@ -156,7 +156,7 @@ _UNWITHHELD_BASE: Final = Decimal("2000.00")
 _UNWITHHELD_IVA: Final = Decimal("420.00")
 
 _ZERO_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
-    validated_casilla_id(casilla): Decimal("0") for casilla in ("08", "10", "16", "18")
+    validated_casilla_id(casilla): Decimal("0") for casilla in ("16", "18")
 }
 _PRIOR_BINDINGS: dict[BindingId, Decimal] = {
     "irpf.previous_year_economic_activity_net_income": Decimal("50000"),

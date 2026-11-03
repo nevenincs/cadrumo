@@ -411,24 +411,24 @@ def test_report_rows_follow_the_registry_order_of_the_pinned_snapshot(repos: Rep
     assert report.header.row_count == len(report.rows)
 
 
-_AGRARIAN_VOLUME_CASILLA = validated_casilla_id("08")
-# Hand-derived, RIRPF art. 110.1.b: the agrarian payment is 2 % of the quarter's 2.000,00 volume,
-# and apartado II subtracts the casilla 10 retenciones, which the baseline holds at zero.
-_AGRARIAN_MEASURED = {
-    _AGRARIAN_VOLUME_CASILLA: Decimal("2000.00"),
-    validated_casilla_id("09"): Decimal("40.00"),
-    validated_casilla_id("11"): Decimal("40.00"),
+_HOME_DEDUCTION_CASILLA = validated_casilla_id("16")
+# Hand-derived: with nothing else in the quarter, a typed box 16 of 40,00 leaves
+# box 17 = 0 - 0 - 40,00 and box 19 = box 17 - 0.
+_TYPED_MEASURED = {
+    _HOME_DEDUCTION_CASILLA: Decimal("40.00"),
+    validated_casilla_id("17"): Decimal("-40.00"),
+    validated_casilla_id("19"): Decimal("-40.00"),
 }
 
 
 def test_measured_zero_absent_and_not_applicable_stay_three_states(repos: Repos) -> None:
     """A proven zero, an unrealised casilla and a non-applicable one never merge."""
-    work_unit, revision = _verified_130(repos, inputs={_AGRARIAN_VOLUME_CASILLA: Decimal("2000.00")})
+    work_unit, revision = _verified_130(repos, inputs={_HOME_DEDUCTION_CASILLA: Decimal("40.00")})
     report = _report(repos, work_unit, revision)
 
-    measured = {row.casilla_id: row for row in report.rows if row.casilla_id in _AGRARIAN_MEASURED}
+    measured = {row.casilla_id: row for row in report.rows if row.casilla_id in _TYPED_MEASURED}
     assert {row.value_state for row in measured.values()} == {CalculationReportValueState.VALUE}
-    assert {casilla_id: Decimal(str(row.value)) for casilla_id, row in measured.items()} == _AGRARIAN_MEASURED
+    assert {casilla_id: Decimal(str(row.value)) for casilla_id, row in measured.items()} == _TYPED_MEASURED
 
     income = next(row for row in report.rows if row.casilla_id == M130_INCOME_CASILLA)
     assert income.value_state is CalculationReportValueState.VALUE

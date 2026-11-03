@@ -198,8 +198,6 @@ _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacio
 # prior-year M130 result to net.
 _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     validated_casilla_id("06", surface="test casilla id"): Decimal("0"),
-    validated_casilla_id("08", surface="test casilla id"): Decimal("0"),
-    validated_casilla_id("10", surface="test casilla id"): Decimal("0"),
     validated_casilla_id("16", surface="test casilla id"): Decimal("0"),
     validated_casilla_id("18", surface="test casilla id"): Decimal("0"),
 }
