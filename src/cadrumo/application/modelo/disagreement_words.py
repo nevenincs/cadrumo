@@ -19,6 +19,7 @@ from typing import Final, Literal
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
+from ...core.type_guards import is_object_list
 from ...domain.modelos.source_disagreement import (
     DisagreementBooleanValue,
     DisagreementDateValue,
@@ -130,10 +131,12 @@ def credit_resolution_lead_words(answer: Literal["accept", "revoke"], language: 
     return tr(_LEAD_LOCALE_KEYS[answer], locale=language.value)
 
 
-def _data_words(data: _ValueData, language: OutputLanguage) -> str:
+def _data_words(data: object, language: OutputLanguage) -> str:
+    if not is_object_list(data):
+        raise ValueError("a kept value is a list of its kind and payload")
     kind, payload = data
     if kind == _ROWS_KIND:
-        if not isinstance(payload, list):
+        if not is_object_list(payload):
             raise ValueError("a row set keeps its rows as a list")
         return ", ".join(_data_words(row, language) for row in payload)
     if not isinstance(kind, str) or not isinstance(payload, str):

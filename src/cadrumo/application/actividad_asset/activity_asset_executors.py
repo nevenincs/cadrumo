@@ -279,7 +279,8 @@ def _refusal(error: Exception, language: OutputLanguage | None = None) -> Activi
     sentence = refusal_words(
         error, key=reason_key, facts=project_reason_facts(stated, reason_fact_kinds), language=language
     )
-    served = {} if sentence is None else {"refusal_words": sentence[0], "refusal_words_language": sentence[1]}
+    words = None if sentence is None else sentence[0]
+    words_language = None if sentence is None else sentence[1]
     if isinstance(error, ActividadAssetIncompleteError):
         verdict = error.terminal_precondition_verdict
         return ActivityAssetRefusalResult(
@@ -288,7 +289,8 @@ def _refusal(error: Exception, language: OutputLanguage | None = None) -> Activi
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
-            **served,
+            refusal_words=words,
+            refusal_words_language=words_language,
         )
     if isinstance(error, ActividadAssetAcceleratedDa18DepreciationError):
         return ActivityAssetRefusalResult(
@@ -297,7 +299,8 @@ def _refusal(error: Exception, language: OutputLanguage | None = None) -> Activi
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
-            **served,
+            refusal_words=words,
+            refusal_words_language=words_language,
         )
     if isinstance(error, ActividadAssetUnsupportedError):
         return ActivityAssetRefusalResult(
@@ -305,7 +308,8 @@ def _refusal(error: Exception, language: OutputLanguage | None = None) -> Activi
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
-            **served,
+            refusal_words=words,
+            refusal_words_language=words_language,
         )
     if isinstance(error, ActividadAssetClaimConflictError):
         return ActivityAssetRefusalResult(
@@ -313,7 +317,8 @@ def _refusal(error: Exception, language: OutputLanguage | None = None) -> Activi
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
-            **served,
+            refusal_words=words,
+            refusal_words_language=words_language,
         )
     if isinstance(error, ActividadAssetValidationError):
         return ActivityAssetRefusalResult(
@@ -321,7 +326,8 @@ def _refusal(error: Exception, language: OutputLanguage | None = None) -> Activi
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
-            **served,
+            refusal_words=words,
+            refusal_words_language=words_language,
         )
     return None
 
