@@ -1,11 +1,14 @@
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
-import { servedRefusalWords } from "../../shell/ledger";
+import { ledgerFailure, servedRefusalWords } from "../../shell/ledger";
 import type { ModeloPort } from "../../shell/modelo";
-import type { ModeloWriteHolds } from "../../shell/modeloWriteHolds";
+import {
+  reviewableFailedCalculation,
+  type ModeloWriteHolds,
+} from "../../shell/modeloWriteHolds";
 import { useStrings } from "../../shell/strings";
 
 export const useModeloWriteHold = (holds: ModeloWriteHolds, target: string) =>
@@ -25,12 +28,24 @@ export const useModeloBlockingWriteHold = (
     () => undefined,
   );
 
-/** A read of the form/list is not evidence that an unknown operation ended. */
+export const useModeloReviewedFailure = (
+  holds: ModeloWriteHolds,
+  target: string,
+) =>
+  useSyncExternalStore(
+    holds.subscribe,
+    () => holds.reviewedFailure(target),
+    () => undefined,
+  );
+
+/** An arbitrary read cannot release an unknown operation. A person may explicitly
+ * review a proven terminal calculation failure. */
 export function WriteHoldNotice({
   holds,
   target,
   port,
   onReload,
+  onReviewCurrent,
   refreshing = false,
   creation = false,
   onCompleted,
@@ -39,15 +54,58 @@ export function WriteHoldNotice({
   target: string;
   port: ModeloPort;
   onReload?: () => void;
+  onReviewCurrent?: () => Promise<boolean>;
   refreshing?: boolean;
   creation?: boolean;
   onCompleted?: () => void;
 }) {
   const t = useStrings();
   const hold = useModeloWriteHold(holds, target);
+  const reviewed = useModeloReviewedFailure(holds, target);
+  const generation = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      ++generation.current;
+    },
+    [holds, target, port, onReviewCurrent],
+  );
   const pending = useRef(new Set<string>());
   const [checking, setChecking] = useState<string | null>(null);
-  if (!hold || hold.phase === "running") return null;
+  if (!hold)
+    return reviewed ? (
+      <Alert
+        tone="warning"
+        role="alert"
+        icon={<Icon name="alert" />}
+        className="modelo-write-hold"
+      >
+        {reviewed.refusal_words && <p>{reviewed.refusal_words}</p>}
+        <p>{t("workspace.modelo.write_hold.reviewed_calculation")}</p>
+      </Alert>
+    ) : null;
+  if (hold.phase === "running") return null;
+  const canReview =
+    !creation &&
+    onReviewCurrent !== undefined &&
+    reviewableFailedCalculation(hold);
+  const terminalFailure =
+    hold.phase === "unknown" ? hold.terminalFailure : undefined;
+  const review = async () => {
+    if (!canReview || !onReviewCurrent || pending.current.has(target)) return;
+    pending.current.add(target);
+    setChecking(target);
+    const mine = generation.current;
+    try {
+      await holds.reviewCalculation(
+        hold,
+        onReviewCurrent,
+        () => mine === generation.current,
+      );
+    } finally {
+      pending.current.delete(target);
+      if (mine === generation.current) setChecking(null);
+    }
+  };
   const check = async () => {
     if (
       hold.phase !== "unknown" ||
@@ -59,7 +117,10 @@ export function WriteHoldNotice({
     setChecking(target);
     try {
       const outcome = await port.observe(hold.operationId);
-      if (outcome.kind === "settled" || outcome.kind === "refused") {
+      if (
+        outcome.operation_id === hold.operationId &&
+        (outcome.kind === "settled" || outcome.kind === "refused")
+      ) {
         holds.needsRead(
           hold,
           false,
@@ -70,8 +131,14 @@ export function WriteHoldNotice({
         onCompleted?.();
       }
       // A running/review operation, or a failed observation, stays unknown.
-    } catch {
-      // No successful observation means no evidence to unlock this target.
+    } catch (error) {
+      const failure = ledgerFailure(error);
+      if (
+        holds.get(target) === hold &&
+        failure.terminal_failure?.operation_id === hold.operationId
+      )
+        holds.unknown(hold, hold.operationId, failure.terminal_failure);
+      // Terminal failure words explain the stop; unresolved effects stay held.
     } finally {
       pending.current.delete(target);
       setChecking((current) => (current === target ? null : current));
@@ -91,13 +158,30 @@ export function WriteHoldNotice({
                 ? "workspace.modelo.write_hold.saved_unread"
                 : "workspace.modelo.write_hold.reload_needed",
             )
-          : t(
-              hold.operationId === null
-                ? "workspace.modelo.write_hold.unresolved"
-                : "workspace.modelo.write_hold.unknown",
-            )}
+          : terminalFailure
+            ? t("workspace.modelo.write_hold.terminal_failed")
+            : t(
+                hold.operationId === null
+                  ? "workspace.modelo.write_hold.unresolved"
+                  : "workspace.modelo.write_hold.unknown",
+              )}
       </p>
       {hold.phase === "refresh" && hold.words && <p>{hold.words}</p>}
+      {terminalFailure?.refusal_words && <p>{terminalFailure.refusal_words}</p>}
+      {canReview && (
+        <p>{t("workspace.modelo.write_hold.review_calculation_hint")}</p>
+      )}
+      {canReview && (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={checking === target}
+          onClick={() => void review()}
+        >
+          {checking === target && <Spinner />}
+          {t("workspace.modelo.write_hold.review_calculation")}
+        </Button>
+      )}
       {hold.phase === "refresh"
         ? onReload && (
             <Button

@@ -2,6 +2,7 @@
 // No tax flow is encoded here. The caller chooses each action after inspecting UI.
 import { spawn, spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
+import { randomBytes } from "node:crypto";
 import { createServer } from "node:net";
 import {
   mkdirSync,
@@ -11,8 +12,19 @@ import {
   readFileSync,
   writeFileSync,
   realpathSync,
+  lstatSync,
+  statSync,
+  linkSync,
+  unlinkSync,
 } from "node:fs";
-import { resolve, relative, isAbsolute, dirname, sep } from "node:path";
+import {
+  resolve,
+  relative,
+  isAbsolute,
+  dirname,
+  basename,
+  sep,
+} from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPath } from "../../scripts/build-paths.mjs";
 
@@ -22,6 +34,73 @@ const require = createRequire(
 const { remote, attach } = require("webdriverio");
 const repository = fileURLToPath(new URL("../../../../", import.meta.url));
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
+
+// Subscribe before the first asynchronous operation, and also inspect the
+// ChildProcess properties in case the exit event has already been delivered.
+export async function waitForWebDriver(child, port, run, options = {}) {
+  let termination;
+  let resolveTermination;
+  const ended = new Promise((resolve) => {
+    resolveTermination = resolve;
+  });
+  const onExit = (code, signal) => {
+    termination = { code, signal };
+    resolveTermination(termination);
+  };
+  const onError = () => {
+    termination = { failed: true };
+    resolveTermination(termination);
+  };
+  child.once("exit", onExit);
+  child.once("error", onError);
+  const currentTermination = () =>
+    termination ??
+    (child.exitCode !== null || child.signalCode !== null
+      ? { code: child.exitCode, signal: child.signalCode }
+      : null);
+  const throwIfEnded = () => {
+    const result = currentTermination();
+    if (!result) return;
+    const detail = result.failed
+      ? "launch_failed"
+      : result.signal
+        ? `exit_signal=${result.signal}`
+        : `exit_code=${result.code}`;
+    throw new Error(`Native app ${detail}; inspect ${run}.`);
+  };
+  const check =
+    options.fetchStatus ??
+    ((url) =>
+      fetch(url, {
+        signal: AbortSignal.timeout(1000),
+      }));
+  let lastStatus = "not_checked";
+  try {
+    for (let attempt = 0; attempt < (options.attempts ?? 120); attempt++) {
+      throwIfEnded();
+      const response = await Promise.race([
+        check(`http://127.0.0.1:${port}/status`).then(
+          (status) => ({ status }),
+          () => ({ connectionFailed: true }),
+        ),
+        ended.then(() => ({ ended: true })),
+      ]);
+      throwIfEnded();
+      if (response.status?.ok) return;
+      lastStatus = response.connectionFailed
+        ? "connection_failed"
+        : "http_non_ok";
+      await Promise.race([sleep(options.interval ?? 500), ended]);
+    }
+    throwIfEnded();
+    throw new Error(
+      `Native WebDriver did not become ready; child=running readiness=${lastStatus}; inspect ${run}.`,
+    );
+  } finally {
+    child.removeListener("exit", onExit);
+    child.removeListener("error", onError);
+  }
+}
 
 export function within(root, path) {
   const member = relative(realpathSync(root), realpathSync(path));
@@ -35,6 +114,75 @@ export function within(root, path) {
       "Automation files must remain inside this build's run directory.",
     );
   return realpathSync(path);
+}
+
+/** Publish one chooser answer without replacing any unconsumed answer. */
+export function queuePickerSelection(run, kind, path) {
+  if (
+    !["open", "save"].includes(kind) ||
+    (path !== null && typeof path !== "string")
+  )
+    throw new Error("Choose open or save and an absolute path, or cancel.");
+  let chosen = null;
+  let temporary;
+  try {
+    const realRun = realpathSync(run);
+    const directDirectory = (name) => {
+      const directory = resolve(realRun, name);
+      if (
+        lstatSync(directory).isSymbolicLink() ||
+        !statSync(directory).isDirectory()
+      )
+        throw new Error("invalid directory");
+      const canonical = realpathSync(directory);
+      if (dirname(canonical) !== realRun) throw new Error("invalid directory");
+      return canonical;
+    };
+    temporary = directDirectory("temporary");
+    if (path !== null) {
+      if (!isAbsolute(path) || path.split(/[\\/]/).includes(".."))
+        throw new Error("invalid path");
+      const root = directDirectory(kind === "open" ? "fixtures" : "exports");
+      if (kind === "open") {
+        chosen = within(root, path);
+        if (!statSync(chosen).isFile()) throw new Error("not a file");
+      } else {
+        try {
+          lstatSync(path);
+          throw new Error("destination exists");
+        } catch (error) {
+          if (error.code !== "ENOENT") throw error;
+        }
+        const parent = realpathSync(dirname(path));
+        if (parent !== root) within(root, parent);
+        const name = basename(path);
+        if (!name || name === "." || name === "..")
+          throw new Error("invalid name");
+        chosen = resolve(parent, name);
+      }
+    }
+    const body = JSON.stringify({ kind, path: chosen });
+    if (Buffer.byteLength(body) > 8192) throw new Error("answer too large");
+    const pending = resolve(temporary, "native-picker-selection.json");
+    const scratch = resolve(
+      temporary,
+      `.native-picker-${randomBytes(16).toString("hex")}`,
+    );
+    let created = false;
+    try {
+      writeFileSync(scratch, body, { mode: 0o600, flag: "wx" });
+      created = true;
+      linkSync(scratch, pending);
+    } finally {
+      if (created) unlinkSync(scratch);
+    }
+  } catch {
+    // Do not leak paths, including a fixture name or a destination, on failure.
+    throw new Error(
+      "Cannot queue picker answer: invalid path or pending answer.",
+    );
+  }
+  return { kind, selected: chosen === null ? null : basename(chosen) };
 }
 
 export function hostEnvironment(source, run, packageRoot, port) {
@@ -128,22 +276,51 @@ export async function connect(path) {
   return { state, browser };
 }
 
+/** Resume only after the former host is gone, discarding its queued answer. */
+export function prepareResume(
+  previous,
+  inspect = (pid) =>
+    spawnSync("ps", ["-p", String(pid), "-o", "command="], {
+      encoding: "utf8",
+    }),
+) {
+  const running = inspect(previous.pid);
+  if (
+    running.status === 0 &&
+    running.stdout.trim() === `${previous.executable} --gui`
+  )
+    throw new Error(
+      "Stop this session before resuming it with a rebuilt package.",
+    );
+  if (
+    running.status !== 0 &&
+    !(running.status === 1 && !running.stdout.trim() && !running.stderr.trim())
+  )
+    throw new Error("Cannot confirm the previous native host has exited.");
+  const run = realpathSync(previous.run);
+  const temporary = resolve(run, "temporary");
+  if (
+    lstatSync(temporary).isSymbolicLink() ||
+    realpathSync(temporary) !== temporary ||
+    !statSync(temporary).isDirectory()
+  )
+    throw new Error("Invalid native automation temporary directory.");
+  const queue = resolve(temporary, "native-picker-selection.json");
+  let metadata;
+  try {
+    metadata = lstatSync(queue);
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw error;
+  }
+  if (!metadata.isFile() || metadata.isSymbolicLink())
+    throw new Error("Invalid pending picker answer.");
+  unlinkSync(queue);
+}
+
 export async function start(previousSession) {
   const previous = previousSession ? readSession(previousSession) : null;
-  if (previous) {
-    const running = spawnSync(
-      "ps",
-      ["-p", String(previous.pid), "-o", "command="],
-      { encoding: "utf8" },
-    );
-    if (
-      running.status === 0 &&
-      running.stdout.trim() === `${previous.executable} --gui`
-    )
-      throw new Error(
-        "Stop this session before resuming it with a rebuilt package.",
-      );
-  }
+  if (previous) prepareResume(previous);
   const staged = spawnSync(
     resolve(repository, ".venv/bin/python"),
     [
@@ -164,7 +341,7 @@ export async function start(previousSession) {
   const runs = resolve(buildPath("desktop_testing"), "automation", "runs");
   mkdirSync(runs, { recursive: true });
   const run = previous?.run ?? mkdtempSync(resolve(runs, "run-"));
-  for (const member of ["storage", "temporary", "exports"])
+  for (const member of ["storage", "temporary", "fixtures", "exports"])
     mkdirSync(resolve(run, member), { mode: 0o700, recursive: true });
   const port = await freePort();
   const stdout = openSync(
@@ -185,35 +362,10 @@ export async function start(previousSession) {
   });
   closeSync(stdout);
   closeSync(stderr);
-  let launchError;
-  child.once("error", (error) => {
-    launchError = error;
-  });
   child.unref();
   const sessionFile = resolve(run, "session.json");
   try {
-    let ready = false;
-    for (let attempt = 0; attempt < 120; attempt++) {
-      if (launchError) throw launchError;
-      if (child.exitCode !== null)
-        throw new Error(
-          `Native app exited with ${child.exitCode}; inspect ${run}.`,
-        );
-      try {
-        const status = await fetch(`http://127.0.0.1:${port}/status`, {
-          signal: AbortSignal.timeout(1000),
-        });
-        if (status.ok) {
-          ready = true;
-          break;
-        }
-      } catch {
-        /* The listener starts with the native app. */
-      }
-      await sleep(500);
-    }
-    if (!ready)
-      throw new Error(`Native WebDriver did not become ready; inspect ${run}.`);
+    await waitForWebDriver(child, port, run);
     verifyListener({ pid: child.pid, executable: host.executable, port });
     const browser = await remote({
       hostname: "127.0.0.1",
@@ -243,7 +395,14 @@ export async function start(previousSession) {
       windows: await browser.getWindowHandles(),
     };
   } catch (error) {
-    if (child.pid) child.kill("SIGTERM");
+    if (child.pid && child.exitCode === null && child.signalCode === null) {
+      try {
+        if (!child.kill("SIGTERM"))
+          error.message += " Native process cleanup could not be requested.";
+      } catch {
+        error.message += " Native process cleanup could not be requested.";
+      }
+    }
     throw error;
   }
 }

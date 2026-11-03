@@ -259,11 +259,21 @@ export const LEDGER_FAILURE_CODES = [
   "file_unavailable",
 ] as const;
 export type LedgerFailureCode = (typeof LEDGER_FAILURE_CODES)[number];
+/** Native-observed terminal failure; execution stopped, effects unresolved.
+ * These words alone come from the definition's admitted error projection. */
+export type TerminalOperationFailure = {
+  operation_id: string;
+  definition_id: string;
+  effect: "unknown" | "partial" | "updated";
+  refusal_words: string | null;
+};
+
 export type LedgerFailure = {
   code: LedgerFailureCode;
   operation_id: string | null;
   /** The runtime's closed refusal code, where it gave one. */
   reason?: string;
+  terminal_failure?: TerminalOperationFailure;
 };
 /** The typed failure of a rejected ledger call. A rejection that is not the
  * host's own answer never reached it, so nothing was sent. */
@@ -272,17 +282,44 @@ export function ledgerFailure(error: unknown): LedgerFailure {
     code?: unknown;
     operation_id?: unknown;
     reason?: unknown;
+    terminal_failure?: unknown;
   } | null;
   const code = (LEDGER_FAILURE_CODES as readonly unknown[]).includes(
     found?.code,
   )
     ? (found?.code as LedgerFailureCode)
     : "unavailable";
+  const operationId =
+    typeof found?.operation_id === "string" ? found.operation_id : null;
+  const terminal =
+    found?.terminal_failure as Partial<TerminalOperationFailure> | null;
+  const terminalFailure =
+    code === "unknown" &&
+    terminal &&
+    terminal.operation_id === operationId &&
+    typeof operationId === "string" &&
+    /^[a-f0-9]{64}$/.test(operationId) &&
+    typeof terminal.definition_id === "string" &&
+    /^[a-z][a-z0-9_.-]{0,159}$/.test(terminal.definition_id) &&
+    (terminal.effect === "unknown" ||
+      terminal.effect === "partial" ||
+      terminal.effect === "updated") &&
+    (terminal.refusal_words === null ||
+      (typeof terminal.refusal_words === "string" &&
+        terminal.refusal_words.trim() !== "" &&
+        [...terminal.refusal_words].length <= 2048))
+      ? ({
+          operation_id: operationId,
+          definition_id: terminal.definition_id,
+          effect: terminal.effect,
+          refusal_words: terminal.refusal_words,
+        } satisfies TerminalOperationFailure)
+      : undefined;
   return {
     code,
-    operation_id:
-      typeof found?.operation_id === "string" ? found.operation_id : null,
+    operation_id: operationId,
     ...(typeof found?.reason === "string" ? { reason: found.reason } : {}),
+    ...(terminalFailure ? { terminal_failure: terminalFailure } : {}),
   };
 }
 
@@ -475,6 +512,8 @@ export type LedgerTransaction = {
   iva_rate: string | null;
   iva_amount: string | null;
   iva_category: string | null;
+  deduction_fact_kind: string | null;
+  investment_asset_id: string | null;
   counterparty_country: string | null;
   counterparty_identification_state: string | null;
   irpf_category: string | null;
@@ -1071,7 +1110,11 @@ export type LedgerStagedCheckResult = {
   profile_id: string;
   input_digest: string;
   rows: LedgerStagedRowAnswer[];
-  drafts: { key: string; blockers: LedgerStagedBlocker[] }[];
+  drafts: {
+    key: string;
+    takes_expense_category: boolean;
+    blockers: LedgerStagedBlocker[];
+  }[];
   categories: { category: string; business: boolean; mixed: boolean }[];
 };
 

@@ -2937,8 +2937,8 @@ desktop:
         add_file: Add from this computer
         add_staged: '{file} · attachment not saved yet'
         adding: Add {file} · not saved
-        advisory: 'No purchase invoice yet. Advice only: it never blocks saving or
-          calculation.'
+        advisory: No purchase invoice document is attached. You can save the movement;
+          calculating a deduction may require its tax details and supporting evidence.
         attach_existing: Attach a document
         attach_staged: Attachment not saved yet
         attaching: Attach {file} · not saved
@@ -2951,7 +2951,9 @@ desktop:
         no_free: No other document in the ledger
         none: No documents
         pick_failed: The file dialog did not open.
+        purchase_details_unavailable: The linked purchase evidence details are unavailable.
         purchase_invoice: Purchase invoice · added {date}
+        purchase_linked: Purchase invoice evidence linked
         search: Search documents
       drop: Drop it
       earlier: Earlier decisions
@@ -4891,6 +4893,10 @@ desktop:
   signin:
     checking: Checking your sign-in…
     choose_profile: Choose a profile
+    clear_saved: Clear saved sign-in
+    clear_saved_lead: Enter your password again to clear saved sign-in for this profile
+      on this device. Your profile and tax records are kept.
+    clearing_saved: Clearing saved sign-in…
     dismiss: Not now
     hide_code: Hide code
     hide_password: Hide password
@@ -4932,6 +4938,7 @@ desktop:
       receipt_expired: Your sign-in expired. Sign in again.
       runtime_unavailable: Cadrumo's background services aren't running.
       throttled: Too many attempts. You can try again in {seconds} s.
+    saved_cleared: Saved sign-in cleared. Enter your password to sign in again.
     services_recovered: Background services are ready. Checking sign-in…
     show_code: Show code
     show_password: Show password
@@ -9551,6 +9558,23 @@ workspace:
       at_risk_cancel: Keep the current values
       at_risk_proceed: Recalculate
       at_risk_title: Recalculate from your sources?
+      evidence:
+        calculate: Calculate
+        cancel: Cancel
+        description: Answer these questions before calculating this declaration.
+        joint_return: Joint self-assessment (autoliquidación conjunta)?
+        modelo_390_confirm: I confirm that the Modelo 390 exemption section does not
+          apply to this declaration.
+        modelo_390_hint: This last period needs your confirmation about the Modelo
+          390 exemption. If you cannot confirm the statement, cancel and review your
+          tax situation.
+        'no': 'No'
+        stale: The declaration changed while these questions were open. Choose Calculate
+          again.
+        title: Calculation evidence
+        unavailable: The saved confirmation could not be recovered for this declaration.
+          Review its operation before continuing; no new confirmation has been created.
+        'yes': 'Yes'
       kept: Nothing was recalculated. Enter the values you want to keep, then recalculate.
       operator_entries_at_risk: 'Some boxes hold values that were not entered on this
         screen ({count}): {boxes}. This declaration was last calculated outside this
@@ -10444,8 +10468,14 @@ workspace:
       check_status: Check status
       reload_list: Reload declaration list
       reload_needed: The request has finished. Reload before making further changes.
+      review_calculation: Review current declaration
+      review_calculation_hint: Load the current declaration to decide what to do next.
+        This does not undo earlier changes or start another calculation.
+      reviewed_calculation: The current declaration is loaded. Earlier changes were
+        not undone. Review it before choosing a new calculation.
       saved_unread: The change was saved, but its result could not be loaded. Reload
         before making further changes.
+      terminal_failed: The operation failed and has stopped. It may have changed records.
       unknown: The outcome is not confirmed. The request may already have taken effect.
         Further changes here are paused.
       unresolved: Cadrumo cannot confirm this request's outcome in this session. Further

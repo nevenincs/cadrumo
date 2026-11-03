@@ -33,7 +33,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from ....domain.modelos.source_disagreement import SourceDisagreementRole
+from ....domain.modelos.source_disagreement import DisagreementBooleanValue, SourceDisagreementRole
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ...aggregation.source_resolution_operations import (
@@ -168,6 +168,10 @@ def test_precedence_merge_lets_a_later_tier_overlay_a_truth_value() -> None:
         SourceDisagreementRole.PROFILE,
         SourceDisagreementRole.CALLER,
     ]
+    assert tuple(source.value for source in divergence.sources) == (
+        DisagreementBooleanValue(value=True),
+        DisagreementBooleanValue(value=False),
+    )
 
 
 # ---------------------------------------------------------------------------

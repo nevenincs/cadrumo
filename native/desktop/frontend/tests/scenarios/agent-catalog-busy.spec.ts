@@ -15,6 +15,30 @@ test.beforeEach(() => {
   scenarioOnly("The scenario host decides when the service is busy.");
 });
 
+test("an unsupported platform reports its capability without catalog or model reads", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&catalog=unsupported",
+  );
+  await expect(column(page).getByRole("status")).toContainText(
+    label("desktop.agent.platform_unsupported"),
+  );
+  await expect(
+    column(page).getByRole("button", {
+      name: label("desktop.agent.retry"),
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page.waitForTimeout(1200);
+  const calls = await page.evaluate(() => window.__scenarioHostCalls ?? []);
+  expect(
+    calls.filter(
+      (call) => call === "agentProviderCatalog" || call === "agentLocalModels",
+    ),
+  ).toEqual([]);
+});
+
 test("history waits for the agent and refreshes after service recovery", async ({
   page,
 }) => {

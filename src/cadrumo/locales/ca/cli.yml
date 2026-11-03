@@ -2470,6 +2470,8 @@ cli:
     logout:
       help: Tanca la sessió d’aquest perfil a totes les sessions d’usuari d’aquest
         dispositiu. Les sessions de l’AEAT continuen actives.
+      name_help: UUID o nom exacte del perfil del qual vols tancar la sessió; omet-lo
+        per fer servir el perfil seleccionat.
       notices:
         already_logged_out: No hi ha cap perfil seleccionat; no hi ha cap sessió per
           tancar.

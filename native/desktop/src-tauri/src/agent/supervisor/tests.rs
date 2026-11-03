@@ -13,6 +13,39 @@ use tokio::sync::Notify;
 use zeroize::Zeroizing;
 
 #[test]
+fn unavailable_supervisor_does_not_observe_or_retry() {
+    let calls = Arc::new(AtomicU64::new(0));
+    let observed_calls = calls.clone();
+    let observe: Observe = Arc::new(move || {
+        observed_calls.fetch_add(1, Ordering::Relaxed);
+        Box::pin(async { observed(true, true, Some("profile")) })
+    });
+    let changed_calls = calls.clone();
+    let changed: Changed = Arc::new(move || {
+        changed_calls.fetch_add(1, Ordering::Relaxed);
+        Box::pin(async {})
+    });
+    for reason in [Refusal::ServiceAbsent, Refusal::UnsupportedPlatform] {
+        let supervisor = Supervisor::unavailable(
+            observe.clone(),
+            changed.clone(),
+            reason,
+            Arc::new(Diagnostics::default()),
+        );
+        assert_eq!(supervisor.status().state, State::Refused { code: reason });
+        supervisor.retry();
+        assert_eq!(supervisor.status().state, State::Refused { code: reason });
+        assert!(!supervisor.shared.started.load(Ordering::Acquire));
+        assert!(!supervisor.shared.retry_requested.load(Ordering::Acquire));
+    }
+    assert_eq!(calls.load(Ordering::Relaxed), 0);
+    assert_eq!(
+        serde_json::to_string(&Refusal::UnsupportedPlatform).unwrap(),
+        "\"agent_platform_unsupported\""
+    );
+}
+
+#[test]
 fn bound_administration_rejects_replacement_before_and_during_an_exchange() {
     use std::io::{Read, Write};
     use std::net::TcpListener;

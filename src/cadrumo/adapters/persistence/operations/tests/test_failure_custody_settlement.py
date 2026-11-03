@@ -352,4 +352,11 @@ def test_executor_failure_log_record_carries_the_raising_frame(
     # only where it was raised: this module's executor.
     assert records[0].exc_info is None
     message = records[0].getMessage()
-    assert f"raising_frame={__file__}:" in message and message.endswith(":execute")
+    raising = message.partition("raising_frame=")[2].partition(" application_frame=")[0]
+    path, line, function = raising.rsplit(":", 2)
+    assert path == __file__.replace(str(Path.home()), "~")
+    assert line.isdecimal() and int(line) > 0
+    assert function == "execute"
+    if not registered_refusal:
+        assert message.partition(" application_frame=")[2] == raising
+    assert "synthetic executor failure" not in message

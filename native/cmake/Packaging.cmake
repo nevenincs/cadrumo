@@ -17,6 +17,9 @@ file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input
 cadrumo_build_step(step_comment python_product GROUP dependencies
   SUMMARY "build and install the product wheels from this checkout" OUTPUTS "${CADRUMO_PATH_PRODUCT}")
 add_custom_target(python_product
+  # Native packages must reject stale public operation contracts before either
+  # building wheels or reusing cached ones, just like build-distributions.
+  COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.operation_contract_manifest.generate --check
   # Always run the Python admission check: it loads env/.env or inherited CI
   # credentials and binds cache reuse to their digest without CMake variables.
   COMMAND ${CADRUMO_HELPER} product --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-product.txt"

@@ -24,7 +24,9 @@ import { useLedgerReadiness } from "../../shell/ledgerReadiness";
 import {
   EMPTY_STAGE,
   reduceStage,
-  stagedMovements,
+  movementsToTrack,
+  reconcileMovementSelection,
+  rekeyMovementSelection,
 } from "../../shell/ledgerStage";
 import {
   readinessSnapshot,
@@ -131,6 +133,13 @@ export function useLedgerPage({
   // What is staged lives here, with the page, so it stays while a section
   // is put away and goes with the profile.
   const [stage, dispatchStage] = useReducer(reduceStage, EMPTY_STAGE);
+  useEffect(() => {
+    const next = reconcileMovementSelection(
+      movements.selection,
+      stage.content.drafts,
+    );
+    if (next.size !== movements.selection.size) movements.setSelection(next);
+  }, [movements, stage.content.drafts]);
   // What the movements section offers the palette.
   const movementActions = useRef<(() => Action[]) | null>(null);
   const registerMovements = useCallback((actions: (() => Action[]) | null) => {
@@ -208,9 +217,7 @@ export function useLedgerPage({
   // The movements the page acts on, whose participation it reads to know
   // which a finalized declaration seals.
   const sealedWanted = useMemo(
-    () => [
-      ...new Set([...movements.selection, ...stagedMovements(stage.content)]),
-    ],
+    () => movementsToTrack(stage.content, movements.selection),
     [movements.selection, stage.content],
   );
   const { sealed, unread, sealedOf } = useSealedMovements(
@@ -230,11 +237,9 @@ export function useLedgerPage({
     dispatch: dispatchStage,
     reread,
     onRekey: (from, to) => {
-      if (!movements.selection.has(from)) return;
-      const next = new Set(movements.selection);
-      next.delete(from);
-      next.add(to);
-      movements.setSelection(next);
+      movements.setSelection((current) =>
+        rekeyMovementSelection(current, from, to),
+      );
     },
     onShowRows: (ids) => {
       setSection("movements");

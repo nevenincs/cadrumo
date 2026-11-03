@@ -33,7 +33,11 @@ import {
   type StageKeep,
   type StagedContent,
 } from "./ledgerStage";
-import { canonicalDecimal, type LedgerPeriod } from "./ledgerGrammar";
+import {
+  canonicalDecimal,
+  isTransactionPrefix,
+  type LedgerPeriod,
+} from "./ledgerGrammar";
 import { readWindow, rowsById, type LedgerReadFailure } from "./ledgerWindow";
 
 /** Why a step was not sent. */
@@ -377,7 +381,17 @@ export function followUps(step: PlanStep, result: JsonObject): PlanStep[] {
   if (action.kind === "attach_file") {
     const record = object(result.record);
     const evidence = record?.evidence_id;
-    if (typeof evidence !== "string") return [];
+    const attachment = record?.attachment_id;
+    if (
+      typeof evidence !== "string" ||
+      (action.supplementary && typeof attachment !== "string")
+    )
+      return [];
+    const evidenceId = action.supplementary ? null : evidence;
+    const attachmentIds =
+      action.supplementary && typeof attachment === "string"
+        ? [attachment]
+        : [];
     return [
       {
         kind: "action",
@@ -385,14 +399,14 @@ export function followUps(step: PlanStep, result: JsonObject): PlanStep[] {
           id: `${action.id}:attach`,
           kind: "attach",
           transactionId: action.transactionId,
-          evidenceId: evidence,
-          attachmentIds: [],
+          evidenceId,
+          attachmentIds,
         },
         definition: "ledger.attach",
         request: {
           transaction_id: action.transactionId,
-          purchase_invoice_evidence_id: evidence,
-          attachment_ids: [],
+          purchase_invoice_evidence_id: evidenceId,
+          attachment_ids: attachmentIds,
         },
       },
     ];
@@ -453,11 +467,34 @@ export async function runPlan(
         const answered = await send(port, step, current);
         settled = outcomeOf(step, answered);
         if (answered.kind === "settled" && DONE.has(settled.outcome.kind)) {
+          if (step.kind === "add") {
+            const created = (answered.result as unknown as LedgerAddResult)
+              .transaction?.transaction_id;
+            if (created && isTransactionPrefix(created))
+              ids.set(step.draftKey, created);
+          }
           const follows = step.kind === "action" ? step.action.id : undefined;
           const next: (typeof queue)[number][] = followUps(
             step,
             answered.result,
           ).map((found) => ({ index, step: found, follows }));
+          if (
+            step.kind === "action" &&
+            step.action.kind === "attach_file" &&
+            next.length === 0
+          ) {
+            // The evidence add committed, but its receipt did not supply the
+            // identity needed to attach it. Pause rather than claim the
+            // movement received it or repeat the already-saved evidence add.
+            const outcome: StepOutcome = {
+              kind: "saved_unread",
+              operationId: answered.operation_id,
+            };
+            settled = {
+              outcome,
+              rows: rows.map((transactionId) => ({ transactionId, outcome })),
+            };
+          }
           if (partsUnnamed(step, answered.result))
             next.push({ index, step, follows, unsent: "parts_unnamed" });
           queue.splice(at + 1, 0, ...next);
@@ -505,7 +542,11 @@ export async function runPlan(
         saved += 1;
     }
   for (const report of steps)
-    if (report.step.kind === "add" && DONE.has(report.outcome.kind)) saved += 1;
+    if (report.step.kind === "add" && DONE.has(report.outcome.kind)) {
+      saved += 1;
+      const created = ids.get(report.step.draftKey);
+      if (created) reread.add(created);
+    }
   return {
     steps,
     paused,

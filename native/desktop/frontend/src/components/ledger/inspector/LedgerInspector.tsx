@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode, type Ref } from "react";
 import { EmptyState } from "@/components/ui/empty";
 import { Toast } from "@/components/ui/toast";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import { isTransactionPrefix } from "../../../shell/ledgerGrammar";
 import type { OpenRuleFromSelection } from "../../../shell/ledgerCommands";
 import { useOwnAccounts } from "../../../shell/ledgerMovementReads";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
@@ -88,7 +89,8 @@ export function LedgerInspector({
     [context, accounts],
   );
   const ids = useMemo(
-    () => [...selection].filter((id) => byId.has(id)),
+    () =>
+      [...selection].filter((id) => isTransactionPrefix(id) && byId.has(id)),
     [selection, byId],
   );
   const [action, setAction] = useState<ActionRequest | null>(null);

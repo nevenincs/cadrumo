@@ -622,6 +622,50 @@ async function fillDraft(target: Page, description: string) {
   return draft;
 }
 
+for (const [direction, takesCategory] of [
+  ["incoming", false],
+  ["outgoing", true],
+] as const)
+  test(`a new ${direction} business movement asks only for the category it takes`, async ({
+    page: target,
+  }) => {
+    await openLedger(target);
+    await target.locator(".ledger-add").click();
+    const draft = dataRows(target).first();
+    await expect(draft.locator(".ledger-draft-status")).toBeVisible();
+    await chooseIn(
+      target,
+      cellOf(draft, "direction"),
+      label(`desktop.ledger.direction.${direction}`),
+    );
+    await chooseIn(
+      target,
+      cellOf(draft, "classification"),
+      label("desktop.ledger.classification.business"),
+    );
+    const dialog = target.locator(".ledger-classify");
+    await expect(dialog).toBeVisible();
+    const category = dialog.locator(".ledger-classify-category");
+    const stage = dialog.locator(".ledger-classify-stage");
+    if (takesCategory) {
+      await expect(category).toBeVisible();
+      await expect(stage).toHaveAttribute("aria-disabled", "true");
+      await category.click();
+      await target
+        .getByRole("option", {
+          name: label("desktop.ledger.category.material_oficina"),
+        })
+        .click();
+    } else {
+      await expect(category).toHaveCount(0);
+    }
+    await stage.click();
+    await expect(dialog).toHaveCount(0);
+    await expect(cellOf(draft, "classification")).toContainText(
+      label("desktop.ledger.classification.business"),
+    );
+  });
+
 test("a new movement starts empty, is staged like an edit, and its add is the same add after an unknown outcome", async ({
   page: target,
 }) => {

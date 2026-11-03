@@ -5,7 +5,9 @@
 //! follow. Shared by the host families; no family's meaning lives here: a
 //! caller names the definition, says whether it may write, which result
 //! fields name a file, and which folders its payload put files from.
-use super::relay::{self, Failure, Relayed, Result, lock, protocol};
+use super::relay::{
+    self, Failure, Relayed, Result, TerminalFailure, TerminalFailureEffect, lock, protocol,
+};
 use super::user_profile::ProfileHost;
 use crate::agent::person::{HeldPerson, PersonEvent};
 use serde::{Deserialize, Serialize};
@@ -384,6 +386,37 @@ pub(super) fn reduced(document: &Value, keys: &[&str], folders: &[String]) -> Va
     document
 }
 
+/// Only native-observed terminal failure carries this evidence. Missing,
+/// malformed or other terminal conditions cannot enable calculation review.
+fn terminal_failure(p: &Value, tracked: &Tracked) -> Option<TerminalFailure> {
+    if p["lifecycle"] != "terminal"
+        || p["terminal_condition"] != "failed"
+        || p["operation_id"] != tracked.operation
+        || p["definition_id"] != tracked.definition.id
+    {
+        return None;
+    }
+    let effect = match p["effect"].as_str()? {
+        "unknown" => TerminalFailureEffect::Unknown,
+        "partial" => TerminalFailureEffect::Partial,
+        "updated" => TerminalFailureEffect::Updated,
+        _ => return None,
+    };
+    Some(TerminalFailure {
+        operation_id: tracked.operation.clone(),
+        definition_id: tracked.definition.id.to_owned(),
+        effect,
+        refusal_words: None,
+    })
+}
+
+fn served_failure_words(document: &Value) -> Option<String> {
+    document["projection"]["refusal_words"]
+        .as_str()
+        .filter(|words| !words.trim().is_empty() && words.chars().count() <= 2048)
+        .map(str::to_owned)
+}
+
 /// The outcome a projection settles to, reading the result where there is one.
 async fn outcome(relayed: &Relayed<'_>, p: &Value, tracked: &Tracked) -> Result<Outcome> {
     let mutation = tracked.definition.mutation;
@@ -410,7 +443,18 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, tracked: &Tracked) -> Result<
                 result,
             }
         }
-        Phase::Unknown => return Err(failure("unknown")),
+        Phase::Unknown => {
+            let mut unresolved = failure("unknown");
+            if let Some(mut stopped) = terminal_failure(p, tracked) {
+                // RESULT authority and the declared error schema own this
+                // sentence. No exception/context is copied into the failure.
+                if let Ok(document) = relay::result(relayed).await {
+                    stopped.refusal_words = served_failure_words(&document);
+                }
+                unresolved.terminal_failure = Some(stopped);
+            }
+            return Err(unresolved);
+        }
         Phase::Stopped(reason) => {
             // A refused or failed stop carries the detail its definition
             // declares, or the registered error detail with the sentence the
@@ -763,6 +807,57 @@ mod tests {
         json!({"lifecycle":lifecycle, "terminal_condition":null, "effect":"none",
             "refusal_ref":null, "failure_error_code":null, "revision":3, "cancellable_now":false,
             "pending_interaction":{"disposition":"none"}})
+    }
+
+    #[test]
+    fn terminal_failure_metadata_requires_exact_native_observed_identity_and_unresolved_effect() {
+        let tracked = Tracked::new(
+            "a".repeat(64),
+            REVIEWED,
+            "profile:test".into(),
+            Value::Null,
+            Vec::new(),
+        );
+        let failed = json!({"operation_id":tracked.operation,"definition_id":REVIEWED.id,
+            "lifecycle":"terminal","terminal_condition":"failed","effect":"unknown"});
+        let terminal = terminal_failure(&failed, &tracked).unwrap();
+        assert_eq!(terminal.operation_id, tracked.operation);
+        assert_eq!(terminal.effect, TerminalFailureEffect::Unknown);
+        assert!(terminal.refusal_words.is_none());
+        for (key, value) in [
+            ("lifecycle", json!("running")),
+            ("terminal_condition", json!("refused")),
+            ("terminal_condition", json!("succeeded")),
+            ("operation_id", json!("b".repeat(64))),
+            ("definition_id", json!("other.definition")),
+            ("effect", json!("none")),
+            ("effect", Value::Null),
+        ] {
+            let mut changed = failed.clone();
+            changed[key] = value;
+            assert!(terminal_failure(&changed, &tracked).is_none(), "{key}");
+        }
+        for effect in ["partial", "updated"] {
+            let mut changed = failed.clone();
+            changed["effect"] = json!(effect);
+            assert!(terminal_failure(&changed, &tracked).is_some());
+        }
+    }
+
+    #[test]
+    fn terminal_failure_words_are_only_the_bounded_served_sentence() {
+        let words = "  Review the invoice evidence.  ";
+        let document = json!({"projection":{"refusal_words":words,"context":[{"value":"private_canary"}],"message":"not the served sentence"}});
+        assert_eq!(served_failure_words(&document).as_deref(), Some(words));
+        for value in [
+            Value::Null,
+            json!(""),
+            json!("  "),
+            json!("x".repeat(2049)),
+            json!({"message":"private_canary"}),
+        ] {
+            assert!(served_failure_words(&json!({"projection":{"refusal_words":value}})).is_none());
+        }
     }
 
     #[test]
@@ -1154,17 +1249,25 @@ mod tests {
         #[tokio::test]
         async fn a_settled_effect_the_projection_does_not_name_is_unknown() {
             let held = holder(|_| {
-                vec![step(
-                    "operation_observe",
-                    json!([["operation_id", OPERATION]]),
-                    observed(
-                        REVIEWED.id,
-                        &subject(),
-                        "terminal",
-                        json!({"terminal_condition":"failed","effect":"partial"}),
+                vec![
+                    step(
+                        "operation_observe",
+                        json!([["operation_id", OPERATION]]),
+                        observed(
+                            REVIEWED.id,
+                            &subject(),
+                            "terminal",
+                            json!({"terminal_condition":"failed","effect":"partial"}),
+                        ),
+                        false,
                     ),
-                    false,
-                )]
+                    step(
+                        "operation_result",
+                        json!([]),
+                        json!({"kind":"operation_refused","code":"no_result"}),
+                        false,
+                    ),
+                ]
             });
             let mut events = held.events.subscribe();
             let lost = settle(
@@ -1176,6 +1279,60 @@ mod tests {
             .unwrap_err();
             assert_eq!(lost.code, "unknown");
             assert_eq!(lost.operation_id.as_deref(), Some(OPERATION));
+            assert_eq!(
+                lost.terminal_failure.as_ref().unwrap().effect,
+                TerminalFailureEffect::Partial
+            );
+            assert!(lost.terminal_failure.unwrap().refusal_words.is_none());
+        }
+
+        #[tokio::test]
+        async fn failed_unknown_effect_keeps_only_the_served_sentence_in_terminal_metadata() {
+            let words = "Review the invoice evidence before calculating again.";
+            let held = holder(|_| {
+                vec![
+                    step(
+                        "operation_observe",
+                        json!([]),
+                        observed(
+                            REVIEWED.id,
+                            &subject(),
+                            "terminal",
+                            json!({"terminal_condition":"failed","effect":"unknown"}),
+                        ),
+                        false,
+                    ),
+                    step(
+                        "operation_result",
+                        json!([]),
+                        resulted(
+                            REVIEWED.id,
+                            json!({"refusal_words":words,"context":[{"value":"private_canary"}],"message":"not the served sentence"}),
+                        ),
+                        false,
+                    ),
+                ]
+            });
+            let mut events = held.events.subscribe();
+            let failure = settle(
+                &mut events,
+                &tracked(REVIEWED, &held.identity),
+                &held.person,
+            )
+            .await
+            .unwrap_err();
+            assert_eq!(failure.code, "unknown");
+            let terminal = failure.terminal_failure.as_ref().unwrap();
+            assert_eq!(terminal.operation_id, OPERATION);
+            assert_eq!(terminal.definition_id, REVIEWED.id);
+            assert_eq!(terminal.effect, TerminalFailureEffect::Unknown);
+            assert_eq!(terminal.refusal_words.as_deref(), Some(words));
+            assert!(
+                !serde_json::to_value(failure)
+                    .unwrap()
+                    .to_string()
+                    .contains("private_canary")
+            );
         }
 
         #[tokio::test]

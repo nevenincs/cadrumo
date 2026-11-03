@@ -5,7 +5,7 @@ import {
   passwordProblem,
   targetOf,
 } from "../src/shell/profiles";
-import { canSignIn, phaseOf } from "../src/shell/signIn";
+import { canSignIn, phaseOf, GATED } from "../src/shell/signIn";
 import type { ProfileList, SignInStatus } from "../src/ipc/contract";
 
 // The rules of choosing and creating a profile, checked at their
@@ -142,4 +142,36 @@ test("with no profile selected, the profiles that exist are still there to sign 
   expect(
     phaseOf(true, status({ runtimeAvailable: false }), list(["Ana"])),
   ).toBe("services-down");
+});
+
+// Persisted runtime presence alone is not this desktop's person authority.
+for (const code of [
+  "RECEIPT_EXPIRED",
+  "RECEIPT_ABSENT",
+  "tampered",
+  "runtime_timeout",
+  "runtime_unavailable",
+])
+  test(`stored presence with ${code} offers password recovery and gates profile work`, () => {
+    const held = status({
+      state: "present",
+      active_profile: "Ana",
+      refusal: { code, retryAfterSeconds: null },
+    });
+    const phase = phaseOf(true, held, list(["Ana", "Berta"], 0));
+    expect(phase).toBe("unknown");
+    expect(GATED.has(phase)).toBe(true);
+    expect(canSignIn(phase)).toBe(true);
+    expect(held.active_profile).toBe("Ana");
+    expect(held.state).toBe("present");
+  });
+
+test("a successful password acknowledgement restores usable signed-in state", () => {
+  const restored = status({
+    state: "present",
+    active_profile: "Ana",
+    refusal: null,
+  });
+  expect(phaseOf(true, restored)).toBe("signed-in");
+  expect(GATED.has(phaseOf(true, restored))).toBe(false);
 });

@@ -16,6 +16,7 @@ import {
   EMPTY_CONTENT,
   EMPTY_STAGE,
   newDraft,
+  movementsToTrack,
   reduceStage,
   type Draft,
   type StageField,
@@ -58,6 +59,29 @@ const stepKinds = (plan: LedgerPlan) =>
   plan.steps.map((step) =>
     step.kind === "action" ? `action:${step.action.kind}` : step.kind,
   );
+
+test("a selected new draft is never read as a stored movement's filing participation", () => {
+  const draft = newDraft();
+  const saved = hexId("a");
+  const changed = hexId("b");
+  const content = staged(
+    { [changed]: { description: set("changed") } },
+    [],
+    [draft],
+  );
+  expect(movementsToTrack(content, new Set([draft.key, saved]))).toEqual([
+    saved,
+    changed,
+  ]);
+  expect(content.drafts).toEqual([draft]);
+  // Once an apply removes the draft, its old selection is still not a stored handle.
+  expect(
+    movementsToTrack(
+      { ...content, drafts: [] },
+      new Set([draft.key, saved, "af", "", "ABC", "f".repeat(65)]),
+    ),
+  ).toEqual([saved, "af", changed]);
+});
 
 test("every field routes by the operation that accepts it, and by set or clear", () => {
   type Case = [StageField, "set" | "clear", boolean, string];

@@ -19,7 +19,11 @@ import {
 } from "../../shell/modeloWriteHolds";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { WriteHoldNotice, useModeloBlockingWriteHold } from "./WriteHoldNotice";
+import {
+  WriteHoldNotice,
+  useModeloBlockingWriteHold,
+  useModeloReviewedFailure,
+} from "./WriteHoldNotice";
 import { runOperation, type OperationRun } from "./dialogs/operationRun";
 
 type Scope = {
@@ -95,49 +99,64 @@ function ScopeNotices({
       setRefreshing(false);
     }
   };
-  return snapshot
-    .filter(
-      (hold) =>
-        !exclude.includes(hold.key) &&
-        modeloWriteConflicts(scope.target, hold.key),
-    )
-    .map((hold) => {
-      const owner = hold.owner;
-      if (hold.phase === "running" && (!owner || hold.key === scope.target))
-        return null;
-      const foreign =
-        hold.key !== scope.target &&
-        owner &&
-        scope.owner?.workUnitId !== owner.workUnitId;
-      return (
-        <div key={hold.key} aria-busy={hold.phase === "running"}>
-          {owner && hold.key !== scope.target && (
-            <div className="flex items-center gap-2 text-sm">
-              {foreign && scope.onOpenOwner ? (
-                <Button
-                  variant="link"
-                  className="h-auto p-0"
-                  onClick={() => scope.onOpenOwner?.(owner)}
-                >
-                  {owner.label}
-                </Button>
-              ) : (
-                <span>{owner.label}</span>
+  const reviewed = useModeloReviewedFailure(scope.holds, scope.target);
+  return (
+    <>
+      {reviewed && !exclude.includes(scope.target) && (
+        <WriteHoldNotice
+          holds={scope.holds}
+          target={scope.target}
+          port={scope.port}
+        />
+      )}
+      {snapshot
+        .filter(
+          (hold) =>
+            !exclude.includes(hold.key) &&
+            modeloWriteConflicts(scope.target, hold.key),
+        )
+        .map((hold) => {
+          const owner = hold.owner;
+          if (hold.phase === "running" && (!owner || hold.key === scope.target))
+            return null;
+          const foreign =
+            hold.key !== scope.target &&
+            owner &&
+            scope.owner?.workUnitId !== owner.workUnitId;
+          return (
+            <div key={hold.key} aria-busy={hold.phase === "running"}>
+              {owner && hold.key !== scope.target && (
+                <div className="flex items-center gap-2 text-sm">
+                  {foreign && scope.onOpenOwner ? (
+                    <Button
+                      variant="link"
+                      className="h-auto p-0"
+                      onClick={() => scope.onOpenOwner?.(owner)}
+                    >
+                      {owner.label}
+                    </Button>
+                  ) : (
+                    <span>{owner.label}</span>
+                  )}
+                  {hold.phase === "running" && <Spinner />}
+                </div>
               )}
-              {hold.phase === "running" && <Spinner />}
+              <WriteHoldNotice
+                holds={scope.holds}
+                target={hold.key}
+                port={scope.port}
+                onReload={!foreign ? () => void reload(hold) : undefined}
+                onReviewCurrent={
+                  hold.key === scope.target ? scope.reload : undefined
+                }
+                refreshing={refreshing}
+                onCompleted={scope.onWritten}
+              />
             </div>
-          )}
-          <WriteHoldNotice
-            holds={scope.holds}
-            target={hold.key}
-            port={scope.port}
-            onReload={!foreign ? () => void reload(hold) : undefined}
-            refreshing={refreshing}
-            onCompleted={scope.onWritten}
-          />
-        </div>
-      );
-    });
+          );
+        })}
+    </>
+  );
 }
 
 export function useModeloWriteScope() {
@@ -152,6 +171,7 @@ export function useModeloOperation() {
   const scope = useModeloWriteScope();
   const { holds, target, port, onWritten, owner } = scope;
   const hold = useModeloBlockingWriteHold(holds, target);
+  const reviewedFailure = useModeloReviewedFailure(holds, target);
   const generation = useRef(0);
   useLayoutEffect(
     () => () => {
@@ -171,7 +191,8 @@ export function useModeloOperation() {
       if (!lease) return null;
       onWritten?.();
       const outcome = await runOperation(port, send, current);
-      if (outcome.kind === "unknown") holds.unknown(lease, outcome.operationId);
+      if (outcome.kind === "unknown")
+        holds.unknown(lease, outcome.operationId, outcome.terminalFailure);
       else if (outcome.kind === "settled" || outcome.kind === "saved_unread")
         holds.needsRead(lease, outcome.kind === "saved_unread");
       else holds.notWritten(lease);
@@ -182,5 +203,5 @@ export function useModeloOperation() {
     },
     [holds, target, port, onWritten, owner],
   );
-  return { ...scope, hold, run };
+  return { ...scope, hold, reviewedFailure, run };
 }

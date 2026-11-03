@@ -1134,42 +1134,64 @@ test("a committed save stays busy through readback and coalesced observations", 
   await expect(input).toBeEnabled();
 });
 
-test("a committed save with failed readback unlocks and refreshes without replay", async ({
-  page,
-}) => {
-  const profile = await open(page);
-  await editButton(profile, "Given name").click();
-  const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
-  await dialog.getByLabel("Given name", { exact: true }).fill("Already saved");
-  const before = await page.evaluate(() => window.__scenarioProfile!.reads());
-  await page.evaluate(() => window.__scenarioProfile!.deferRead());
-  await save(dialog).click();
-  await expect
-    .poll(() => page.evaluate(() => window.__scenarioProfile!.reads()))
-    .toBe(before + 1);
-  await expect(
-    dialog.getByRole("button", {
-      name: label("desktop.profile.saving"),
+for (const code of [
+  "unavailable",
+  "refused",
+  "not_signed_in",
+  "unknown",
+  "conflict",
+] as const)
+  test(`a committed save with ${code} readback unlocks and refreshes without replay`, async ({
+    page,
+  }) => {
+    const profile = await open(page);
+    await editButton(profile, "Given name").click();
+    const dialog = page.getByRole("dialog", {
+      name: "Given name",
       exact: true,
-    }),
-  ).toBeDisabled();
-  await page.evaluate(() => window.__scenarioProfile!.rejectRead());
-  await expect(dialog).toHaveCount(0);
-  await expect(profile.getByRole("alert")).toContainText(
-    label("desktop.profile.saved_unread"),
-  );
-  await expect(profile).not.toContainText(label("desktop.profile.loading"));
-  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
-  const refresh = profile.getByRole("button", {
-    name: label("desktop.profile.refresh"),
-    exact: true,
+    });
+    await dialog
+      .getByLabel("Given name", { exact: true })
+      .fill("Already saved");
+    const before = await page.evaluate(() => window.__scenarioProfile!.reads());
+    await page.evaluate(() => window.__scenarioProfile!.deferRead());
+    await save(dialog).click();
+    await expect
+      .poll(() => page.evaluate(() => window.__scenarioProfile!.reads()))
+      .toBe(before + 1);
+    await expect(
+      dialog.getByRole("button", {
+        name: label("desktop.profile.saving"),
+        exact: true,
+      }),
+    ).toBeDisabled();
+    await page.evaluate(
+      (failure) => window.__scenarioProfile!.rejectRead(failure),
+      code,
+    );
+    await expect(dialog).toHaveCount(0);
+    await expect(profile.getByRole("alert")).toContainText(
+      label("desktop.profile.saved_unread"),
+    );
+    await expect(profile).not.toContainText(label("desktop.profile.loading"));
+    expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(
+      1,
+    );
+    const refresh = profile.getByRole("button", {
+      name: label("desktop.profile.refresh"),
+      exact: true,
+    });
+    await expect(refresh).toBeEnabled();
+    await refresh.click();
+    await expect
+      .poll(() => page.evaluate(() => window.__scenarioProfile!.reads()))
+      .toBe(before + 2);
+    await expect(profile.locator("header")).toContainText("Already saved");
+    await expect(profile.getByRole("alert")).toHaveCount(0);
+    expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(
+      1,
+    );
   });
-  await expect(refresh).toBeEnabled();
-  await refresh.click();
-  await expect(profile.locator("header")).toContainText("Already saved");
-  await expect(profile.getByRole("alert")).toHaveCount(0);
-  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
-});
 
 test("a failed pending profile read leaves loading and allows a retry", async ({
   page,

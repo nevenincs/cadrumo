@@ -66,5 +66,5 @@ export function useLedgerRead<D extends LedgerDefinitionId>(
       active = false;
     };
   }, [port, definition, key, on, answered]);
-  return wanted ? (held ?? { kind: "reading" }) : null;
+  return on ? (held ?? { kind: "reading" }) : null;
 }

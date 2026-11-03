@@ -5,9 +5,19 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
+from cadrumo.core.package_interpreter import INTERPRETER_ROLE
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 _INSTALLED_WORKER_ARGUMENTS = ("-I", "-B", "-m", "cadrumo_runtime.host.worker")
+
+
+def worker_interpreter_arguments(arguments: Sequence[str]) -> tuple[str, ...]:
+    """Select only the canonical hosted-interpreter role from a worker command.
+
+    This role selects Python in the packaged executable before Python parses its
+    own arguments. It grants no choice of Python flags or worker entrypoint.
+    """
+    return INTERPRETER_ROLE if tuple(arguments[: len(INTERPRETER_ROLE)]) == INTERPRETER_ROLE else ()
 
 
 def validated_worker_arguments(
@@ -36,6 +46,7 @@ def validated_worker_arguments(
     if arguments is None:
         return prefix
     command = tuple(arguments)
+    prefix = (*worker_interpreter_arguments(command), *prefix)
     if command[: len(prefix)] != prefix or any("\0" in argument for argument in command):
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     return command

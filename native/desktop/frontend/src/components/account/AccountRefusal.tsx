@@ -76,6 +76,11 @@ const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
     tone: "warning",
     icon: "lock",
   },
+  SESSION_NOT_PERSISTED: {
+    key: "desktop.signin.refused.keyring_unavailable",
+    tone: "warning",
+    icon: "lock",
+  },
   RUNTIME_UNAVAILABLE: {
     key: "desktop.signin.refused.runtime_unavailable",
     tone: "warning",

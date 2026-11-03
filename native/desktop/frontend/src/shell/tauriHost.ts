@@ -77,6 +77,7 @@ export function tauriHost(): Host {
   const submit = <Result>(
     command:
       | "sign_in_submit"
+      | "sign_out_with_password"
       | "profile_create"
       | "profile_password_change"
       | "profile_aeat_credential_save",
@@ -382,6 +383,8 @@ export function tauriHost(): Host {
     startManager: () => call("manager_start", {}),
     installManager: (scope) => call("manager_install", { scope }),
     signOut: () => call("sign_out", {}),
+    signOutWithPassword: (password, profile) =>
+      submit("sign_out_with_password", password, profile),
     signIn: (password, profile) => submit("sign_in_submit", password, profile),
     profiles: {
       list: () => call("profile_list", {}),

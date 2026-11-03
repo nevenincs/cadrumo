@@ -294,7 +294,8 @@ test("the effective row is the stored row plus its changes; identity fields are 
   // The list read names the own account; what it does not carry is
   // unknown, not empty.
   expect(facts.own_account_id).toBeNull();
-  expect(facts.deduction_fact_kind).toBeUndefined();
+  expect(facts.deduction_fact_kind).toBeNull();
+  expect(facts.investment_asset_id).toBeNull();
   // The stored row is untouched.
   expect(rowA.transaction.taxable_base).toBe("30.00");
 

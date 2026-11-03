@@ -244,7 +244,7 @@ class ProfileWorkerOperationRequest(BaseModel):
     """Internal lifecycle access to a previously session-bound invocation."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    action: Literal["operation_start"] = "operation_start"
+    action: Literal["operation_start", "operation_abandon"] = "operation_start"
     request_id: UUID
     session_id: UUID
     frontend: OperationFrontendProjection
@@ -475,6 +475,18 @@ class ProfileWorkerSubmission(BaseModel):
     request_id: UUID
     receipt: OperationSubmissionReceiptV1
     release: WorkerAuthorityRequest
+    newly_admitted: bool
+
+
+class ProfileWorkerAdmissionAbandoned(BaseModel):
+    """Parent-only cleanup acknowledgement, with no result or disclosure authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["operation_admission_abandoned"] = "operation_admission_abandoned"
+    identity: _ProfileWorkerIdentity
+    request_id: UUID
+    operation_id: OperationId
+    settled: bool
 
 
 class ProfileWorkerUploadAccepted(BaseModel):
@@ -554,6 +566,7 @@ class ProfileWorkerReply(
             | ProfileWorkerRefusal
             | ProfileWorkerOperationContract
             | ProfileWorkerSubmission
+            | ProfileWorkerAdmissionAbandoned
             | ProfileWorkerUploadAccepted
             | ProfileWorkerOperationReceipt
             | ProfileWorkerObservation

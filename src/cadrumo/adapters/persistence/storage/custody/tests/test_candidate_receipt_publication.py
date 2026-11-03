@@ -26,6 +26,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -45,13 +46,18 @@ class _Keyring:
         self.entries: dict[tuple[str, str], str] = {}
         self.writes = 0
         self.unavailable = False
+        self.needs_user = False
 
     def get_password(self, service_name: str, username: str) -> str | None:
+        if self.needs_user:
+            raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
         if self.unavailable:
             raise _KeyringError("unavailable")
         return self.entries.get((service_name, username))
 
     def set_password(self, service_name: str, username: str, password: str) -> None:
+        if self.needs_user:
+            raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
         if self.unavailable:
             raise _KeyringError("unavailable")
         self.writes += 1
@@ -142,13 +148,15 @@ def test_password_candidate_publishes_once_without_promoting_custody(
     )
 
 
+@pytest.mark.parametrize("needs_user", [False, True])
 def test_unavailable_keyring_does_not_invalidate_password_candidate(
-    registered: tuple[Path, UUID], keyring: _Keyring
+    registered: tuple[Path, UUID], keyring: _Keyring, needs_user: bool
 ) -> None:
     root, profile_id = registered
     binding = committed_sign_in(root, profile_id).binding
     captured = committed_sign_in(root, profile_id).establish().current
-    keyring.unavailable = True
+    keyring.unavailable = not needs_user
+    keyring.needs_user = needs_user
     with (
         bundled_indexed_authority().operation() as authority,
         bind_profile_custody_port(build_profile_custody_port()),

@@ -47,6 +47,7 @@ from ....domain.transactions.own_accounts import (
     OwnAccountRole,
     OwnBankAccountDetails,
 )
+from ...operations.public_mirror import project_public_mirror, restore_public_mirror
 from ...operations.registry_schema_validation import strict_model_json_schema
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
@@ -59,6 +60,7 @@ from ..work_form_export_offer import (
     ModeloFormElectionQuestion,
     ModeloFormElectionReason,
     ModeloFormElectionState,
+    ModeloFormExportOffer,
     ModeloFormInstalment,
     ModeloFormUnavailable,
     asks_export_elections,
@@ -82,6 +84,7 @@ from ..work_form_typing_effect import (
 )
 from ..workbench_projection import (
     ModeloWorkbenchFormProjectionV1,
+    PublicModeloFormExportOffer,
     project_modelo_workbench_form,
     restore_modelo_workbench_form,
 )
@@ -309,6 +312,30 @@ def test_a_figure_amount_is_the_decimal_text_of_cents(amount: str) -> None:
         ModeloFormElectionFigure(
             instalment=ModeloFormInstalment.FIRST, amount=amount, words="x", advisory=True, advisory_words="y"
         )
+
+
+def test_public_workbench_schema_and_instalment_amounts_survive_strict_transport(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    strict_model_json_schema(ModeloWorkbenchFormProjectionV1)
+    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.01"), deadline=_deadline(30))
+    offer = form_export_offer(
+        "100", form_snapshot(operation, "100", 2025, "0A"), _EN, form=form, verified=False, filed=False
+    )
+    public = project_public_mirror(offer, ModeloFormExportOffer, PublicModeloFormExportOffer)
+    assert isinstance(public, PublicModeloFormExportOffer)
+    figures = next(
+        question.figures for question in public.elections if question.election is ModeloFormElection.INSTALMENT
+    )
+    assert tuple(figure.amount for figure in figures) == ("600.01", "400.00")
+    transported = PublicModeloFormExportOffer.model_validate_json(public.model_dump_json())
+    restored = restore_public_mirror(transported, ModeloFormExportOffer, PublicModeloFormExportOffer)
+    assert restored == offer
+    assert isinstance(restored, ModeloFormExportOffer)
+    amounts = next(
+        question.figures for question in restored.elections if question.election is ModeloFormElection.INSTALMENT
+    )
+    assert tuple(figure.amount for figure in amounts) == ("600.01", "400.00")
 
 
 def test_a_settled_box_without_a_value_withholds_the_settlement_as_unknown(

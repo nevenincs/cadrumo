@@ -10,14 +10,28 @@ An absent per-session lock key is never itself evidence of unlock.
 from __future__ import annotations
 
 import ctypes
+import logging
 import plistlib
 import sys
 from collections.abc import Callable
 from typing import Any
 
 from cadrumo.application.user_profile.access_contracts import OsLockState
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 
 _MAX_PROPERTY_BYTES = 1024 * 1024
+_log = get_logger(__name__)
+
+
+def _unavailable(reason: str) -> OsLockState:
+    diagnostic_event(
+        _log,
+        "macos_console_observation_unavailable",
+        fields={"reason_code": reason},
+        level=logging.DEBUG,
+    )
+    return OsLockState.UNKNOWN
 
 
 def _well_formed_query(value: object, owner: str, session_id: int) -> dict[Any, Any] | None:
@@ -157,14 +171,17 @@ def observe_console_lock(owner: str, session_id: int) -> OsLockState:
         first = _registry_snapshot()
         second = _registry_snapshot()
         if not isinstance(first, dict) or not isinstance(second, dict):
-            return OsLockState.UNKNOWN
+            return _unavailable("console_snapshot_unavailable")
         keys = ("IOConsoleLocked", "IOConsoleUsers")
         # Property-list encoding preserves Boolean/integer distinctions that
         # Python's ordinary dictionary equality erases (False == 0).
         before = plistlib.dumps({key: first.get(key) for key in keys}, fmt=plistlib.FMT_BINARY)
         after = plistlib.dumps({key: second.get(key) for key in keys}, fmt=plistlib.FMT_BINARY)
         if before != after:
-            return OsLockState.UNKNOWN
-        return console_lock_state(second, owner, session_id)
+            return _unavailable("console_snapshot_changed")
+        state = console_lock_state(second, owner, session_id)
+        if state is OsLockState.UNKNOWN:
+            return _unavailable("console_identity_or_lock_unknown")
+        return state
     except (AttributeError, OSError, ValueError, TypeError, plistlib.InvalidFileException):
-        return OsLockState.UNKNOWN
+        return _unavailable("console_snapshot_error")

@@ -24,6 +24,7 @@ import { chordAria, chordText } from "@/shared/chords";
 import { INSPECTOR_CHORD } from "../ledgerChords";
 import { facts, listed, noted } from "../../../shell/compose";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import { isTransactionPrefix } from "../../../shell/ledgerGrammar";
 import type { ClassifySelection } from "../../../shell/ledgerCommands";
 import { takesChanges } from "../../../shell/ledgerContract";
 import {
@@ -180,13 +181,13 @@ export function MovementInspector({
   const [documentsRef, documentsSeen] = useSeen(scroll, key);
   const [invoiceRef, invoiceSeen] = useSeen(scroll, key);
   const [historyRef, historySeen] = useSeen(scroll, key);
-  const prefix = { transaction_prefix: id };
+  const prefix = isTransactionPrefix(id) ? { transaction_prefix: id } : null;
   const track = useLedgerRead(port, "ledger.track", prefix, key, true);
   const view = useLedgerRead(port, "ledger.view", prefix, key, true);
   const history = useLedgerRead(
     port,
     "ledger.history.typed",
-    { transaction_prefix: id, include_split_siblings: true },
+    prefix ? { ...prefix, include_split_siblings: true } : null,
     key,
     historySeen,
   );

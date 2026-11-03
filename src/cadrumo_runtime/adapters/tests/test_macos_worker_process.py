@@ -519,17 +519,23 @@ def test_admitted_guardian_runs_in_a_fresh_launchd_coalition(
     assert host.store == {} and not host.jobs
 
 
+@pytest.mark.parametrize("hosted", [False, True])
+@pytest.mark.parametrize("script_mode", [False, True])
 def test_selected_script_scope_keeps_guardian_isolation_and_retires_its_owned_coalition(
-    host: _Host, tmp_path: Path
+    host: _Host, tmp_path: Path, hosted: bool, script_mode: bool
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
     selected = script.resolve(strict=True)
-    scope = MacosProcessScope(worker_id=uuid4(), storage_root=tmp_path, worker_script=script, host=host)
+    scope = MacosProcessScope(
+        worker_id=uuid4(), storage_root=tmp_path, worker_script=script if script_mode else None, host=host
+    )
+    role = ("--role", "python") if hosted else ()
+    command = (*role, *(("-I", "-B", str(selected)) if script_mode else _DEFAULT))
     try:
         guardian = scope.launch(
             executable=Path(sys.executable),
-            arguments=("-I", "-B", str(selected)),
+            arguments=command,
             directory=tmp_path,
             environment=_ENVIRONMENT,
         )
@@ -537,9 +543,12 @@ def test_selected_script_scope_keeps_guardian_isolation_and_retires_its_owned_co
         arguments = host.definition["ProgramArguments"]
         assert isinstance(arguments, list)
         guardian_index = arguments.index("cadrumo_runtime.host.macos_worker_guardian")
-        assert arguments[guardian_index - 2 : guardian_index] == ["-I", "-m"]
-        assert arguments[arguments.index("--worker-script") + 1] == str(selected)
-        assert arguments[arguments.index("--") + 1 :] == ["-I", "-B", str(selected)]
+        assert arguments[arguments.index(sys.executable) : guardian_index] == [sys.executable, *role, "-I", "-m"]
+        if script_mode:
+            assert arguments[arguments.index("--worker-script") + 1] == str(selected)
+        else:
+            assert "--worker-script" not in arguments
+        assert arguments[arguments.index("--") + 1 :] == list(command)
         marker = decode_macos_worker_marker(host.store[scope._label + ".json"], name=scope._label + ".json")
         assert marker.coalition == _JOB_COALITION
     finally:

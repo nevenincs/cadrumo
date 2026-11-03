@@ -122,6 +122,23 @@ def _raising_frame(error: BaseException) -> str:
     return "-" if origin is None else str(origin)
 
 
+def _application_frame(error: BaseException) -> str:
+    """Retain the last application call site when a dependency raises.
+
+    Only code coordinates are recorded: no exception message, arguments,
+    source text or local values enter diagnostics.
+    """
+    origin = "-"
+    trace = error.__traceback__
+    while trace is not None:
+        module = trace.tb_frame.f_globals.get("__name__", "")
+        if isinstance(module, str) and module.startswith("cadrumo."):
+            code = trace.tb_frame.f_code
+            origin = f"{code.co_filename}:{trace.tb_lineno}:{code.co_name}"
+        trace = trace.tb_next
+    return origin
+
+
 class SupervisorExecutionMixin(SupervisorHost):
     """Own request binding, executor execution, and durable interaction stages."""
 
@@ -427,12 +444,14 @@ class SupervisorExecutionMixin(SupervisorHost):
             diagnostic_ref = self._executor_failure_diagnostic_reference(snapshot, error)
             # The opaque reference correlates with the encrypted error detail.
             _log.error(
-                "operation failed definition=%s operation=%s diagnostic_ref=%s exception_type=%s raising_frame=%s",
+                "operation failed definition=%s operation=%s diagnostic_ref=%s exception_type=%s "
+                "raising_frame=%s application_frame=%s",
                 snapshot.identity.definition_id,
                 snapshot.identity.operation_id,
                 diagnostic_ref,
                 type(error).__name__,
                 _raising_frame(error),
+                _application_frame(error),
             )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,

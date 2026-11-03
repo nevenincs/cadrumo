@@ -291,7 +291,9 @@ export function useUserProfile(
               // Keep the save reserved, including its UI, until readback and
               // coalesced observations settle. Only this read may bypass it.
               await refresh(true);
-              if (committed && (!state.data || state.error === "unavailable"))
+              // A failed readback cannot turn a confirmed write into a failed
+              // save, even when access was refused or the session expired.
+              if (committed && (!state.data || state.error !== null))
                 update({ error: "saved_unread" });
               else if (writeError && writeError !== "saved_unread")
                 update({ error: writeError });

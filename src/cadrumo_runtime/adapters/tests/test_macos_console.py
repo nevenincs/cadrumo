@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import logging
 from copy import deepcopy
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
@@ -176,6 +177,50 @@ def test_native_snapshot_errors_are_unknown(error: type[Exception], monkeypatch:
     monkeypatch.setattr(macos_console.sys, "platform", "darwin")
     monkeypatch.setattr(macos_console, "_registry_snapshot", fail)
     assert macos_console.observe_console_lock("501", 100022) is OsLockState.UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "failure,reason",
+    [
+        ("missing", "console_snapshot_unavailable"),
+        ("changed", "console_snapshot_changed"),
+        ("unknown", "console_identity_or_lock_unknown"),
+        ("error", "console_snapshot_error"),
+    ],
+)
+def test_unknown_observation_logs_only_a_reason_code(
+    failure: str, reason: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first, second = _snapshot(), _snapshot()
+    first["IOConsoleUsers"][0]["private-name"] = "private-snapshot-value"
+    second["IOConsoleUsers"][0]["private-name"] = "private-snapshot-value"
+    if failure == "missing":
+        snapshots = iter([None, second])
+    elif failure == "changed":
+        first["IOConsoleLocked"] = True
+        snapshots = iter([first, second])
+    elif failure == "unknown":
+        first["IOConsoleUsers"][0]["kCGSSessionUserIDKey"] = 502
+        second["IOConsoleUsers"][0]["kCGSSessionUserIDKey"] = 502
+        snapshots = iter([first, second])
+    else:
+        snapshots = iter([])
+
+    def read_snapshot() -> object:
+        if failure == "error":
+            raise OSError("private-error-message")
+        return next(snapshots)
+
+    events: list[tuple[str, dict[str, Any], int]] = []
+
+    def record(_logger: object, event: str, *, fields: dict[str, Any], level: int) -> None:
+        events.append((event, fields, level))
+
+    monkeypatch.setattr(macos_console.sys, "platform", "darwin")
+    monkeypatch.setattr(macos_console, "_registry_snapshot", read_snapshot)
+    monkeypatch.setattr(macos_console, "diagnostic_event", record)
+    assert macos_console.observe_console_lock("501", 100022) is OsLockState.UNKNOWN
+    assert events == [("macos_console_observation_unavailable", {"reason_code": reason}, logging.DEBUG)]
 
 
 def test_registry_snapshot_releases_error_document_and_root_on_encode_failure(monkeypatch: pytest.MonkeyPatch) -> None:

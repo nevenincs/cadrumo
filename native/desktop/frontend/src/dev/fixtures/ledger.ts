@@ -540,6 +540,8 @@ export function fixtureLedger(): FixtureLedger {
               : kind.iva === "exempt"
                 ? "domestic_exempt"
                 : "domestic_not_subject",
+      deduction_fact_kind: null,
+      investment_asset_id: null,
       counterparty_country: kind.country ?? (kind.counterparty ? "ES" : null),
       counterparty_identification_state: kind.country ?? null,
       irpf_category: null,

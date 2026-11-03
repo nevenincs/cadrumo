@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.core import package_interpreter
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ...adapters.macos_process import MacosProcessIncarnation, MacosProcessObservation
@@ -176,20 +177,24 @@ def test_parent_pid_reused_before_the_watch_registered_refuses(monkeypatch: pyte
     assert kernel.launched == [] and kernel.closed == 1
 
 
+@pytest.mark.parametrize("hosted", [False, True])
 @pytest.mark.parametrize("script_mode", [False, True])
 def test_worker_exit_retires_the_rest_of_the_coalition_and_returns_its_code(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script_mode: bool
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, script_mode: bool, hosted: bool
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
     command = ("-I", "-B", str(script)) if script_mode else _DEFAULT
+    command = (*(("--role", "python") if hosted else ()), *command)
+    image = "/packaged/Cadrumo" if hosted else sys.executable
+    monkeypatch.setattr(package_interpreter.sys, "_xoptions", {"cadrumo_role_image": image} if hosted else {})
     kernel = _kernel()
     kernel.worker_codes = [None, None, 7]
     _install(monkeypatch, kernel)
     selection = ("--worker-script", str(script)) if script_mode else ()
     assert _run(selection=selection, command=command) == 7
     ((arguments, options),) = kernel.launched
-    assert arguments == (sys.executable, *command)
+    assert arguments == (image, *command)
     # Same session and process group: no new session is requested.
     assert options == {"stdin": -3, "stdout": -3, "stderr": -3, "env": _ENVIRONMENT, "close_fds": True}
     assert kernel.terminations == [(_OWN_COALITION, _OWN)]

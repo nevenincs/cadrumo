@@ -204,6 +204,7 @@ class LedgerStagedDraftAnswer(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     key: str
+    takes_expense_category: bool = False
     blockers: tuple[LedgerStagedBlocker, ...] = ()
 
 

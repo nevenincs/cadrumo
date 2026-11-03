@@ -239,7 +239,7 @@ def wallet_decision(
     )
 
 
-def store_profile(secure_objects: SecureObjectRepository) -> None:
+def store_profile(secure_objects: SecureObjectRepository, *, activity_start_date: date = date(2020, 1, 1)) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
     seed_test_profile_record(
         _create_profile_record_for_test(
@@ -265,7 +265,7 @@ def store_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
             ),
             created_at=_T0,
             updated_at=_T0,

@@ -24,6 +24,7 @@ from cadrumo_client.contracts.submission_payload import (
     SubmissionPayloadDescriptor,
 )
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerAdmissionAbandoned,
     ProfileWorkerContractRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObservation,
@@ -210,6 +211,27 @@ class ProfileWorkerOperationClient(ProfileWorkerTransport):
             upload_id,
             deadline=deadline,
         )
+
+    def abandon_submission(
+        self, session_id: UUID, operation_id: OperationId, *, frontend: OperationFrontendProjection
+    ) -> bool:
+        """Retire only an original unstarted admission whose receipt the parent withheld."""
+        result = self._exchange(
+            ProfileWorkerRequest(
+                ProfileWorkerOperationRequest(
+                    action="operation_abandon",
+                    request_id=uuid4(),
+                    session_id=session_id,
+                    frontend=frontend,
+                    operation_id=operation_id,
+                )
+            ),
+            ProfileWorkerAdmissionAbandoned,
+            operation=True,
+        )
+        if result.operation_id != operation_id:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return result.settled
 
     def start(
         self,

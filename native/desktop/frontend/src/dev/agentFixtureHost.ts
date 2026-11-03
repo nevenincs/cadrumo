@@ -82,7 +82,7 @@ export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
 /** How the service answers the catalog: served, busy starting the agent
  * until the scenario publishes the agent's status, or starting with only the
  * agent's declared catalog until the scenario publishes it ready. */
-export type FixtureCatalog = "served" | "busy" | "declared";
+export type FixtureCatalog = "served" | "busy" | "declared" | "unsupported";
 
 /** The lane whose model list the made-up service keeps: its one keyless
  * lane, and the most models the lists hold. */
@@ -510,9 +510,12 @@ export function fixtureAgent({
 } {
   let catalogBusy = catalog === "busy";
   let catalogDeclared = catalog === "declared";
-  let publishedStatus: AgentServiceStatus | null = catalogDeclared
-    ? { state: "starting", lane: "development" }
-    : null;
+  let publishedStatus: AgentServiceStatus | null =
+    catalog === "unsupported"
+      ? { state: "refused", code: "agent_platform_unsupported" }
+      : catalogDeclared
+        ? { state: "starting", lane: "development" }
+        : null;
   // The models the person added to the local lane's list, as the made-up
   // service stores them, and how many changes it has committed, which its
   // revision names.

@@ -75,6 +75,7 @@ impl AgentHost {
                 })
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
+        #[cfg(windows)]
         let launch: supervisor::protocol::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
             let person = sign_in.person(&profile_id)?;
@@ -85,8 +86,17 @@ impl AgentHost {
                 person: Some(person),
             })
         });
+        #[cfg(windows)]
+        let supervisor = Supervisor::new(observe, changed, Some(launch), diagnostics.clone());
+        #[cfg(not(windows))]
+        let supervisor = Supervisor::unavailable(
+            observe,
+            changed,
+            cadrumo_application::diagnostics::service::AgentRefusal::UnsupportedPlatform,
+            diagnostics.clone(),
+        );
         Self {
-            supervisor: Supervisor::new(observe, changed, Some(launch), diagnostics.clone()),
+            supervisor,
             session: Session::default(),
             diagnostics,
             sign_in: held,
@@ -286,6 +296,10 @@ pub fn commands<R: Runtime>() -> Commands<R> {
 #[tauri::command]
 async fn runtime_attendance_inventory(host: State<'_, Arc<AgentHost>>) -> Result<Value> {
     let host = host.inner().clone();
+    // A successful password response can precede the watch's post-mutation
+    // observation. Wait for that observation before the fresh-only identity
+    // and held-session checks in person_request; never use stale presence.
+    host.sign_in.read_status().await?;
     tauri::async_runtime::spawn_blocking(move || {
         host.person_request(serde_json::json!({"action":"attendance_inventory"}))
     })

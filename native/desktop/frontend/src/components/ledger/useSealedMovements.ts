@@ -18,6 +18,7 @@ import {
   useState,
 } from "react";
 import type { LedgerPort } from "../../shell/ledger";
+import { isTransactionPrefix } from "../../shell/ledgerGrammar";
 import { readAnswer } from "../../shell/ledgerWindow";
 import { seals } from "./inspector/inspectorWords";
 
@@ -47,10 +48,11 @@ function yieldPageRead(): Promise<void> {
 }
 
 /** Whether one movement is sealed; null where it could not be read. */
-async function readSealed(
+export async function readSealed(
   port: LedgerPort,
   id: string,
 ): Promise<boolean | null> {
+  if (!isTransactionPrefix(id)) return null;
   try {
     const answer = readAnswer(
       await port.submit("ledger.track", { transaction_prefix: id }),

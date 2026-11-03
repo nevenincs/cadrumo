@@ -2961,8 +2961,8 @@ desktop:
         add_file: Hozzáadás erről a gépről
         add_staged: '{file} · a csatolás még nincs mentve'
         adding: '{file} hozzáadása · nincs mentve'
-        advisory: 'Még nincs beszerzési számla. Csak tanács: a mentést és a számítást
-          nem akadályozza.'
+        advisory: Nincs csatolva beszerzési számla. A pénzmozgást elmentheted; a levonás
+          kiszámításához szükség lehet a számla adózási adataira és az igazoló dokumentumokra.
         attach_existing: Dokumentum csatolása
         attach_staged: A csatolás még nincs mentve
         attaching: '{file} csatolása · nincs mentve'
@@ -2975,7 +2975,10 @@ desktop:
         no_free: Nincs más dokumentum a főkönyvben
         none: Nincs dokumentum
         pick_failed: A fájlválasztó nem nyílt meg.
+        purchase_details_unavailable: A kapcsolt beszerzési bizonylat részletei nem
+          érhetők el.
         purchase_invoice: 'Beszerzési számla · hozzáadva: {date}'
+        purchase_linked: Kapcsolt beszerzési bizonylat
         search: Dokumentumok keresése
       drop: Elvetés
       earlier: Korábbi döntések
@@ -4941,6 +4944,10 @@ desktop:
   signin:
     checking: A bejelentkezésed ellenőrzése…
     choose_profile: Válassz profilt
+    clear_saved: Mentett bejelentkezés törlése
+    clear_saved_lead: Add meg újra a jelszavadat a profil mentett bejelentkezésének
+      törléséhez ezen az eszközön. A profilod és az adózási adataid megmaradnak.
+    clearing_saved: Mentett bejelentkezés törlése…
     dismiss: Most nem
     hide_code: Rejtsd el a kódot
     hide_password: Jelszó elrejtése
@@ -4982,6 +4989,8 @@ desktop:
       receipt_expired: A bejelentkezésed lejárt. Jelentkezz be újra.
       runtime_unavailable: A Cadrumo háttérszolgáltatásai nem futnak.
       throttled: Túl sok próbálkozás. {seconds} mp múlva próbálhatod újra.
+    saved_cleared: A mentett bejelentkezés törölve. A bejelentkezéshez add meg újra
+      a jelszavadat.
     services_recovered: A háttérszolgáltatások készen állnak. Bejelentkezés ellenőrzése…
     show_code: Mutasd a kódot
     show_password: Jelszó megjelenítése
@@ -9682,6 +9691,23 @@ workspace:
       at_risk_cancel: A jelenlegi értékek megtartása
       at_risk_proceed: Újraszámítás
       at_risk_title: Újraszámítja a forrásai alapján?
+      evidence:
+        calculate: Számítás
+        cancel: Mégse
+        description: A bevallás kiszámítása előtt válaszolj ezekre a kérdésekre.
+        joint_return: Közös önbevallás (autoliquidación conjunta)?
+        modelo_390_confirm: Megerősítem, hogy a 390-es bevallás alóli mentességre
+          vonatkozó rész erre a bevallásra nem alkalmazható.
+        modelo_390_hint: Az utolsó időszakban meg kell erősítened a 390-es bevallás
+          alóli mentesség alkalmazhatóságát. Ha nem tudod megerősíteni az állítást,
+          szakítsd meg a műveletet, és ellenőrizd az adózási helyzetedet.
+        'no': Nem
+        stale: A bevallás megváltozott, amíg ezek a kérdések nyitva voltak. Válaszd
+          újra a Számítás gombot.
+        title: A számításhoz szükséges adatok
+        unavailable: A mentett megerősítés nem kérhető le ehhez a bevalláshoz. A folytatás
+          előtt ellenőrizd a műveletét; nem jött létre új megerősítés.
+        'yes': Igen
       kept: Semmi sem lett újraszámítva. Add meg a megtartandó értékeket, majd számolj
         újra.
       operator_entries_at_risk: 'Néhány rovat olyan értéket tartalmaz, amelyet nem
@@ -10594,8 +10620,14 @@ workspace:
       reload_list: Bevalláslista újratöltése
       reload_needed: A kérés befejeződött. Töltsd újra az adatokat, mielőtt további
         módosításokat végzel.
+      review_calculation: Aktuális bevallás áttekintése
+      review_calculation_hint: Töltsd be az aktuális bevallást, és döntsd el, hogyan
+        folytatod. Ez nem vonja vissza a korábbi módosításokat, és nem indít új számítást.
+      reviewed_calculation: Az aktuális bevallás betöltődött. A korábbi módosítások
+        nem lettek visszavonva. Tekintsd át, mielőtt új számítást választasz.
       saved_unread: A módosítás mentve lett, de az eredményét nem sikerült betölteni.
         Töltsd újra az adatokat, mielőtt további módosításokat végzel.
+      terminal_failed: A művelet hibával leállt. Előfordulhat, hogy módosított adatokat.
       unknown: Az eredmény nincs megerősítve. Lehet, hogy a kérés már végrehajtódott.
         A további módosítások szünetelnek.
       unresolved: A Cadrumo ebben a munkamenetben nem tudja megerősíteni a kérés eredményét.

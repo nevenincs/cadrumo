@@ -350,7 +350,9 @@ def config_login(
     )
 
 
-def _prove_logout_person(client: FrontendClient, machine_secret: MachineSecretSelection) -> None:
+def _prove_logout_person(
+    client: FrontendClient, machine_secret: MachineSecretSelection, *, require_password: bool = False
+) -> None:
     """Resume the person or prove the supplied password, wiping it on every outcome."""
     payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
     try:
@@ -358,6 +360,9 @@ def _prove_logout_person(client: FrontendClient, machine_secret: MachineSecretSe
     finally:
         del payload
     try:
+        if require_password:
+            client.login_password(proof, persist_receipt=False)
+            return
         try:
             # A stored sign-in that resumes proves the person; the password is the fallback
             # whenever it does not, whatever the reason the runtime gives.
@@ -370,6 +375,7 @@ def _prove_logout_person(client: FrontendClient, machine_secret: MachineSecretSe
 
 def config_logout(
     ctx: typer.Context,
+    name: str | None = None,
     secrets_stdin: bool = False,
     secrets_fd: int | None = None,
     output_language: OutputLanguage | None = None,
@@ -383,8 +389,12 @@ def config_logout(
     activate_subcommand_output_language(ctx, output_language)
 
     machine_secret = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-    selected = profile_selection.runtime_selected_profile_id()
-    target = None if selected is None else profile_selection.runtime_login_target(selected)
+    if name is None:
+        selected = profile_selection.runtime_selected_profile_id()
+        target = None if selected is None else profile_selection.runtime_login_target(selected)
+    else:
+        target = profile_selection.require_runtime_login_target(name)
+        selected = target.bucket_id
     outcome = None
     if selected is not None:
         client = asyncio.run(open_installed_client(profile_id=UUID(selected), frontend=OperationFrontendProjection.CLI))
@@ -395,7 +405,7 @@ def config_logout(
             if machine_secret is None:
                 outcome = client.human_sign_out()
             else:
-                _prove_logout_person(client, machine_secret)
+                _prove_logout_person(client, machine_secret, require_password=name is not None)
                 outcome = client.human_sign_out()
         except FrontendRefusedError as error:
             _raise_frontend_refusal(error)

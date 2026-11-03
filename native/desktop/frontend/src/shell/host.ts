@@ -165,6 +165,11 @@ export interface Host {
    * has selected where none is named. */
   signIn(password: Uint8Array, profile?: string): Promise<SignInResult>;
   signOut(): Promise<SignOutResult>;
+  /** Explicit password-proved sign-out of exactly the named profile. */
+  signOutWithPassword(
+    password: Uint8Array,
+    profile: string,
+  ): Promise<SignOutResult>;
   openTerminal(
     kind: TerminalKind,
     size: { cols: number; rows: number },
@@ -253,6 +258,7 @@ export function browserHost(location: Location): Host {
     signInStatus: unavailable,
     signIn: unavailable,
     signOut: unavailable,
+    signOutWithPassword: unavailable,
     subscribeLogs: unavailable,
     readClipboard: () =>
       navigator.clipboard?.readText

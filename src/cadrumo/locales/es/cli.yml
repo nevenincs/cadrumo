@@ -2488,6 +2488,8 @@ cli:
     logout:
       help: Cierra la sesión de este perfil en todas las sesiones de usuario de este
         dispositivo. Las sesiones de la AEAT siguen activas.
+      name_help: UUID o nombre exacto del perfil cuya sesión se cerrará; omítelo para
+        usar el perfil seleccionado.
       notices:
         already_logged_out: No hay ningún perfil seleccionado; no hay ninguna sesión
           que cerrar.

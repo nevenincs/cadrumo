@@ -45,6 +45,17 @@ pub struct SignInStatus {
     pub reconnecting: Option<Reconnecting>,
 }
 impl SignInStatus {
+    /// Keep runtime presence truthful while refusing to expose it as usable
+    /// person access before this desktop has restored its own session.
+    pub(super) fn require_person(&mut self, usable: bool, refused: Option<Refusal>) {
+        if self.state == Presence::Present && self.refusal.is_none() && !usable {
+            self.refusal = Some(refused.unwrap_or_else(|| Refusal {
+                code: "person_session_unavailable".into(),
+                retry_after_seconds: None,
+            }));
+        }
+    }
+
     pub fn runtime_ready(&self) -> bool {
         self.supported
             && self.runtime_available
@@ -382,6 +393,22 @@ pub fn logout(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFai
     }
 }
 
+pub fn logout_recovery(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFailure> {
+    if let Outcome::Success { result, .. } = &outcome
+        && (result
+            .get("human_receipt_revoked")
+            .and_then(serde_json::Value::as_bool)
+            != Some(true)
+            || result
+                .get("receipt_removed")
+                .and_then(serde_json::Value::as_bool)
+                != Some(true))
+    {
+        return Err(failure(ErrorCode::ReadFailed).into());
+    }
+    logout(outcome)
+}
+
 pub fn profiles(output: &Output) -> std::result::Result<ProfileList, CommandFailure> {
     match decode("profile.list", output)? {
         Outcome::Refused { refusal, .. } => Err(CommandFailure::Refused(refusal)),
@@ -515,6 +542,34 @@ mod contract_tests;
 mod tests {
     use super::*;
     use zeroize::Zeroizing;
+
+    #[test]
+    fn stored_presence_requires_this_windows_own_usable_person() {
+        let status = || SignInStatus {
+            supported: true,
+            state: Presence::Present,
+            active_profile: Some("Selected profile".into()),
+            runtime_available: true,
+            refusal: None,
+            reconnecting: None,
+        };
+        let mut blocked = status();
+        blocked.require_person(
+            false,
+            Some(Refusal {
+                code: "RECEIPT_EXPIRED".into(),
+                retry_after_seconds: None,
+            }),
+        );
+        assert_eq!(blocked.state, Presence::Present);
+        assert_eq!(blocked.active_profile.as_deref(), Some("Selected profile"));
+        assert!(!blocked.runtime_ready());
+        assert_eq!(blocked.refusal.unwrap().code, "RECEIPT_EXPIRED");
+        let mut restored = status();
+        restored.require_person(true, None);
+        assert!(restored.runtime_ready());
+        assert!(restored.refusal.is_none());
+    }
 
     fn output(success: bool, document: serde_json::Value) -> Output {
         let bytes = Zeroizing::new(serde_json::to_vec(&document).unwrap());

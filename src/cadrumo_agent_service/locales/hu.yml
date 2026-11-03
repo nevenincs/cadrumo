@@ -190,6 +190,7 @@ desktop:
     sending: Küldés…
     sent_files: Az üzenettel küldött fájlok
     sent_skills: Betöltött készségek
+    platform_unsupported: Az MI-ügynök ezen a platformon még nem támogatott.
     service_absent: Az ügynök nincs telepítve. Telepítsd újra a Cadrumót a hozzáadásához.
     service_credential_missing: A kezdéshez állíts be egy szolgáltatót a beállításokban.
     service_failed: Az ügynök leállt.

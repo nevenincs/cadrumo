@@ -1,3 +1,5 @@
+import type { TerminalOperationFailure } from "./ledger";
+
 /** Session-owned operation state. No request body, form value or financial
  * operand is retained here. The declarations memory owns this store and is
  * replaced with the signed-in reader. */
@@ -14,7 +16,11 @@ export type ModeloWriteLease = {
 export type ModeloWriteHold = ModeloWriteLease &
   (
     | { readonly phase: "running" }
-    | { readonly phase: "unknown"; readonly operationId: string | null }
+    | {
+        readonly phase: "unknown";
+        readonly operationId: string | null;
+        readonly terminalFailure?: TerminalOperationFailure;
+      }
     | {
         readonly phase: "refresh";
         readonly savedUnread: boolean;
@@ -43,11 +49,23 @@ export const modeloWriteConflicts = (target: string, held: string) =>
   (target === walletWriteKey && isDeclarationWriteKey(held)) ||
   (held === walletWriteKey && isDeclarationWriteKey(target));
 
+/** Only an observed, stopped calculation can be reviewed as a new work
+ * decision. This never claims that its earlier effects were rolled back. */
+export function reviewableFailedCalculation(hold: ModeloWriteHold): boolean {
+  return (
+    hold.phase === "unknown" &&
+    hold.key.startsWith('["work",') &&
+    hold.terminalFailure?.definition_id === "modelo.work.calculate" &&
+    hold.terminalFailure.operation_id === hold.operationId
+  );
+}
+
 export function createModeloWriteHolds() {
   let sequence = 0;
   let declarationVersion = 0;
   const holds = new Map<string, ModeloWriteHold>();
   const versions = new Map<string, number>();
+  const reviewed = new Map<string, TerminalOperationFailure>();
   const listeners = new Set<() => void>();
   let snapshot: readonly ModeloWriteHold[] = [];
   const publish = () => {
@@ -67,6 +85,7 @@ export function createModeloWriteHolds() {
     get: (key: string) => holds.get(key),
     /** Wallet writes affect the shared basis read by existing declarations. */
     blocking,
+    reviewedFailure: (key: string) => reviewed.get(key),
     /** A completed write still invalidates reads started before admission. */
     version: (key: string) => versions.get(key) ?? 0,
     /** Also retires a read when a conflicting write began and already ended. */
@@ -93,12 +112,24 @@ export function createModeloWriteHolds() {
       versions.set(key, lease.id);
       if (isDeclarationWriteKey(key)) declarationVersion = lease.id;
       holds.set(key, { ...lease, phase: "running" });
+      reviewed.delete(key);
       publish();
       return lease;
     },
-    unknown(lease: ModeloWriteLease, operationId: string | null) {
+    unknown(
+      lease: ModeloWriteLease,
+      operationId: string | null,
+      terminalFailure?: TerminalOperationFailure,
+    ) {
       if (!owns(lease)) return;
-      holds.set(lease.key, { ...lease, phase: "unknown", operationId });
+      holds.set(lease.key, {
+        ...lease,
+        phase: "unknown",
+        operationId,
+        ...(terminalFailure?.operation_id === operationId
+          ? { terminalFailure }
+          : {}),
+      });
       publish();
     },
     needsRead(
@@ -107,8 +138,47 @@ export function createModeloWriteHolds() {
       words: string | null = null,
     ) {
       if (!owns(lease)) return;
-      holds.set(lease.key, { ...lease, phase: "refresh", savedUnread, words });
+      holds.set(lease.key, {
+        ...lease,
+        phase: "refresh",
+        savedUnread,
+        words,
+      });
       publish();
+    },
+    /** Called only by the person's explicit Review current declaration
+     * action. The operation remains failed with unresolved effects in its
+     * journal. A successful current form read permits a separate new intent. */
+    async reviewCalculation(
+      hold: ModeloWriteHold,
+      readCurrent: () => Promise<boolean>,
+      current: () => boolean,
+    ): Promise<boolean> {
+      if (
+        !current() ||
+        holds.get(hold.key) !== hold ||
+        !reviewableFailedCalculation(hold)
+      )
+        return false;
+      let read: boolean;
+      try {
+        read = await readCurrent();
+      } catch {
+        return false;
+      }
+      if (
+        !read ||
+        !current() ||
+        holds.get(hold.key) !== hold ||
+        !reviewableFailedCalculation(hold) ||
+        hold.phase !== "unknown" ||
+        !hold.terminalFailure
+      )
+        return false;
+      reviewed.set(hold.key, hold.terminalFailure);
+      holds.delete(hold.key);
+      publish();
+      return true;
     },
     /** Only a definitive refusal/no-send path may release without a read. */
     notWritten(lease: ModeloWriteLease) {

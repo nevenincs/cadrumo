@@ -977,6 +977,28 @@ export function scenarioHost(
       return { kind: "signed-in", status: acknowledged ?? status() };
     },
 
+    async signOutWithPassword(_password, profile) {
+      say("signOutWithPassword");
+      const named = accounts.indexOf(profile);
+      say(`signOutWithPasswordProfile ${named + 1}`);
+      await wait(options.latencyMs);
+      if (named < 0) throw failure("invalid_arguments", "cli");
+      if (scenario.signIn.signOutFailure)
+        throw failure(scenario.signIn.signOutFailure, "cli");
+      presence = "absent";
+      reconnecting = undefined;
+      const access = scenario.signIn.signOutAccess;
+      return {
+        remainingAccess: {
+          automationEnabled: access ? access.automationEnabled : true,
+          automationAccessRemains: access
+            ? access.automationAccessRemains
+            : false,
+          automationRevoked: false,
+        },
+      };
+    },
+
     async signOut() {
       say("signOut");
       await wait(options.latencyMs);

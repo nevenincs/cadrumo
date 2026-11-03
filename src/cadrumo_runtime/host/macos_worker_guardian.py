@@ -11,6 +11,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Protocol
 
+from cadrumo.core.package_interpreter import interpreter_command
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ..adapters.macos_coalition import read_macos_resource_coalition, terminate_macos_coalition
@@ -20,7 +21,7 @@ from ..adapters.macos_process import (
     read_macos_incarnation,
     read_macos_process,
 )
-from ..adapters.worker_arguments import validated_worker_arguments
+from ..adapters.worker_arguments import validated_worker_arguments, worker_interpreter_arguments
 from ..adapters.worker_environment import worker_path_environment_names
 
 _CLEAN_ENVIRONMENT = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
@@ -72,8 +73,8 @@ async def _launch_and_supervise(
     try:
         # Sharing the guardian's group keeps launchd's exit cleanup effective from creation.
         worker = await asyncio.create_subprocess_exec(
-            sys.executable,
-            *arguments,
+            *interpreter_command(),
+            *arguments[len(worker_interpreter_arguments(arguments)) :],
             stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,

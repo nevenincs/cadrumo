@@ -61,6 +61,8 @@ export function accountFixture(
     choose: () => undefined,
     create: async () => false,
     submit: async () => undefined,
+    clearingSavedSignIn: false,
+    clearSavedSignIn: async () => false,
     signOut: async () => undefined,
     settle: () => undefined,
     recheck: async () => undefined,

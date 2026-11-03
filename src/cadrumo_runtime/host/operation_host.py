@@ -687,6 +687,23 @@ class ProfileWorkerOperationHost:
                 await self._settle_undelivered_admission(operation_id, session_id, refusal)
             raise
 
+    async def abandon_submission(self, operation_id: OperationId, session_id: UUID) -> bool:
+        """Settle a parent's withheld receipt without reviving its former authority.
+
+        Cleanup is restricted to this session's original admission before any
+        executor entry. Running or settled operations keep their own course.
+        """
+        original = self.submissions.get(operation_id)
+        if original is None or original[0] != session_id:
+            return False
+        snapshot = await self.composed().submission.supervisor.inspect(operation_id)
+        if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.executor_entered_at is not None:
+            return False
+        await self._settle_undelivered_admission(
+            operation_id, session_id, ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        )
+        return operation_id not in self.submissions
+
     async def _settle_undelivered_admission(
         self, operation_id: OperationId, session_id: UUID, refusal: ProfileAccessRefusedError | AutomationCustodyError
     ) -> None:
@@ -700,10 +717,14 @@ class ProfileWorkerOperationHost:
             else ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
         )
         try:
-            await self.composed().submission.supervisor.settle_refused_start(operation_id, reason)
+            services = self.composed()
+            await services.submission.supervisor.settle_refused_start(operation_id, reason)
         except (RepositoryError, ValueError):
             _log.warning("undelivered admission left unsettled operation=%s", operation_id)
             return
+        services.discard_review_actor(operation_id)
+        if original[1].response_capability is not None:
+            original[1].response_capability.close()
         self.submissions.pop(operation_id, None)
         if self.execution is not None:
             self.execution.discard(operation_id)

@@ -1,5 +1,5 @@
 //! Shared language comes only from the verified person's canonical profile fact.
-use super::sign_in::{Presence, SignIn};
+use super::sign_in::{Presence, SignIn, wire::SignInStatus};
 use crate::agent::person::{HeldPerson, PersonEvent};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use serde::Serialize;
@@ -16,6 +16,12 @@ pub(crate) fn supported(language: &str) -> bool {
 
 fn failed() -> ApplicationError {
     ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+}
+
+/// Read-only chrome may use its bootstrap language while person proof is
+/// unavailable. Only known absence permits a transient operator selection.
+fn transient_selection_allowed(status: &SignInStatus, changing: bool) -> bool {
+    !changing || !status.supported || status.state == Presence::Absent
 }
 
 fn lock<T>(value: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -124,10 +130,11 @@ impl LanguageHost {
             return Err(failed());
         }
         let status = self.sign_in.read_status().await?;
-        if status.state != Presence::Present {
-            // Unknown/unavailable is not evidence that a signed-in mutation can
-            // safely become a transient selection.
-            if status.supported && status.state == Presence::Unknown {
+        if status.state != Presence::Present || !status.runtime_ready() {
+            // An unauthenticated read may show the bootstrap language. A
+            // mutation on unknown/blocked presence must never silently become
+            // a transient choice instead of the intended profile write.
+            if !transient_selection_allowed(&status, language.is_some()) {
                 return Err(failed());
             }
             self.release_person().await?;
@@ -317,6 +324,34 @@ fn desktop_language_unobserve(host: State<'_, Arc<LanguageHost>>, subscription: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn blocked_person_allows_a_read_only_fallback_but_never_a_profile_write() {
+        for state in [Presence::Present, Presence::Unknown] {
+            let status = SignInStatus {
+                supported: true,
+                state,
+                active_profile: Some("Selected profile".into()),
+                runtime_available: true,
+                refusal: Some(super::super::sign_in::wire::Refusal {
+                    code: "RECEIPT_EXPIRED".into(),
+                    retry_after_seconds: None,
+                }),
+                reconnecting: None,
+            };
+            assert!(transient_selection_allowed(&status, false));
+            assert!(!transient_selection_allowed(&status, true));
+        }
+        let absent = SignInStatus {
+            supported: true,
+            state: Presence::Absent,
+            active_profile: Some("Selected profile".into()),
+            runtime_available: true,
+            refusal: None,
+            reconnecting: None,
+        };
+        assert!(transient_selection_allowed(&absent, true));
+    }
 
     #[test]
     fn revisions_follow_canonical_changes_and_account_switches() {

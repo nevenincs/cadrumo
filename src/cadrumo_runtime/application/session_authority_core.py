@@ -85,6 +85,27 @@ def _observable_login_ids(facts: SessionAuthorityFacts, os_owner_id: str) -> set
     return live_logins | uncertain_logins
 
 
+def _unavailable_observation_reason(session: AccessSession, facts: SessionAuthorityFacts) -> str:
+    """Describe an admission observation without exposing session or owner IDs."""
+    if not facts.context.private_work_available:
+        return "private_work_unavailable"
+    if session_requires_grant(session):
+        return "unattended_login_unavailable"
+    matching = tuple(
+        login
+        for login in facts.context.login_contexts
+        if login.login_id == session.originating_login_id and login.os_owner_id == session.binding.os_owner_id
+    )
+    if not matching:
+        return "originating_login_absent"
+    active = next((login for login in matching if login.active), None)
+    if active is None:
+        return "originating_login_inactive"
+    if active.lock_state is OsLockState.UNKNOWN:
+        return "originating_lock_unknown"
+    return "ancestor_or_other_observation_unavailable"
+
+
 class SessionAuthorityCore:
     """One profile's ephemeral leases for one runtime boot, serialized by its owner."""
 
@@ -310,6 +331,13 @@ class SessionAuthorityCore:
             profile=facts.profile,
             context=facts.context,
         )
+        if isinstance(decision, AccessDenied) and decision.code is AccessDenialCode.OS_SESSION_UNAVAILABLE:
+            diagnostic_event(
+                _log,
+                "runtime_session_observation_unavailable",
+                fields={"reason_code": _unavailable_observation_reason(session, facts)},
+                level=logging.DEBUG,
+            )
         if (
             isinstance(decision, AccessDenied)
             and session.session_id in self._sessions

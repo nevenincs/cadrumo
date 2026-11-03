@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import binascii
+import sys
+from dataclasses import dataclass
 from typing import Final, Protocol, cast
 from uuid import UUID
 
@@ -11,6 +13,7 @@ from .....core.logging import get_logger
 from .....core.profile_session import KeychainUnavailability
 from ..errors import KeyringUnavailableError, StorageValidationError
 from . import acceleration_receipt_crypto as _crypto
+from .macos_login_keychain import noninteractive_keychain_access
 
 _log = get_logger(__name__)
 
@@ -48,6 +51,25 @@ class _ProfileSessionKeyring(Protocol):
         ...
 
 
+@dataclass(frozen=True, slots=True)
+class _NoninteractiveKeyring:
+    """Keep optional acceleration from waiting on native Keychain interaction."""
+
+    backend: _ProfileSessionKeyring
+
+    def set_password(self, service_name: str, username: str, password: str) -> None:
+        with noninteractive_keychain_access():
+            self.backend.set_password(service_name, username, password)
+
+    def get_password(self, service_name: str, username: str) -> str | None:
+        with noninteractive_keychain_access():
+            return self.backend.get_password(service_name, username)
+
+    def delete_password(self, service_name: str, username: str) -> None:
+        with noninteractive_keychain_access():
+            self.backend.delete_password(service_name, username)
+
+
 def _keyring() -> tuple[_ProfileSessionKeyring, type[BaseException], type[BaseException]]:
     """Return the direct OS-keychain capability without master/provider reuse."""
     try:
@@ -68,7 +90,10 @@ def _keyring() -> tuple[_ProfileSessionKeyring, type[BaseException], type[BaseEx
             "no usable OS keychain is configured for profile-session acceleration",
             unavailability=KeychainUnavailability.NO_BACKEND,
         )
-    return cast(_ProfileSessionKeyring, keyring), KeyringError, PasswordDeleteError
+    backend = cast(_ProfileSessionKeyring, keyring)
+    if sys.platform == "darwin":
+        backend = _NoninteractiveKeyring(backend)
+    return backend, KeyringError, PasswordDeleteError
 
 
 def keychain_unavailability(error: BaseException) -> KeychainUnavailability:

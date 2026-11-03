@@ -23,6 +23,9 @@ import {
   EMPTY_STAGE,
   newDraft,
   reduceStage,
+  reconcileMovementSelection,
+  rekeyMovementSelection,
+  movementsToTrack,
   type StagedAction,
   type StagedContent,
 } from "../src/shell/ledgerStage";
@@ -36,6 +39,8 @@ import {
   type FakeAnswer,
 } from "./support/ledger";
 import { planRecorded } from "./support/stagedCheck";
+import { readSealed } from "../src/components/ledger/useSealedMovements";
+import { readWindow } from "../src/shell/ledgerWindow";
 
 // The apply runner over a fake port: these check the order and the
 // outcomes of the orchestration, not the ledger's own answers.
@@ -197,9 +202,12 @@ test("a mixed apply sends each step once, in order, under the ids earlier steps 
   ]);
   expect(report.paused).toBeNull();
   expect(report.stopped).toBeNull();
-  expect(report.rekeys).toEqual([{ from: A, to: NEW_A }]);
+  expect(report.rekeys).toEqual([
+    { from: A, to: NEW_A },
+    { from: draft.key, to: hexId("added") },
+  ]);
   // What saved and what was unchanged are both read again.
-  expect(report.reread.sort()).toEqual([B, NEW_A].sort());
+  expect(report.reread.sort()).toEqual([B, NEW_A, hexId("added")].sort());
   expect(keepAfterApply(content, report)).toEqual({
     rows: {},
     drafts: [],
@@ -480,6 +488,7 @@ test("a replayed add is unchanged, and a saved-but-unread write pauses but is no
     { "ledger.add": [added(hexId("x"), false)] },
   );
   expect(replay.report.steps[0]!.outcome).toEqual({ kind: "unchanged" });
+  expect(replay.report.rekeys).toEqual([{ from: draft.key, to: hexId("x") }]);
   expect(
     keepAfterApply({ rows: {}, drafts: [draft], actions: [] }, replay.report)
       .drafts,
@@ -497,6 +506,70 @@ test("a replayed add is unchanged, and a saved-but-unread write pauses but is no
   expect(keepAfterApply(content, unread.report).rows).toEqual({
     [B]: ["notes"],
   });
+});
+
+test("created draft selections follow returned stored ids and removed drafts leave no ghost selection", async () => {
+  const drafts = [newDraft(), newDraft()];
+  for (const draft of drafts)
+    draft.fields = {
+      booked_date: "2026-10-21",
+      amount: "12",
+      currency: "EUR",
+      direction: "OUTGOING",
+      description: "TAXI",
+    };
+  const content: StagedContent = { rows: {}, actions: [], drafts };
+  const created = [hexId("created-one"), hexId("created-two")];
+  const { report } = await apply(content, rowsOf(), {
+    "ledger.add": created.map((id) => added(id)),
+  });
+  let stage = { ...EMPTY_STAGE, content };
+  let selection = new Set([drafts[0]!.key, drafts[1]!.key, A]);
+  for (const event of stageAfterApply(content, report)) {
+    stage = reduceStage(stage, event);
+    // The page applies every mapping as it is dispatched, before its refresh can wait.
+    if (event.type === "rekey")
+      selection = rekeyMovementSelection(selection, event.from, event.to);
+  }
+  selection = reconcileMovementSelection(selection, stage.content.drafts);
+  expect([...selection]).toEqual([A, ...created]);
+  expect(movementsToTrack(stage.content, selection)).toEqual([A, ...created]);
+  expect(report.reread).toEqual(created);
+  expect(stage.content.drafts).toEqual([]);
+  const { port: storedPort, calls } = fakePort((call) =>
+    call.kind === "submit" && call.definition === "ledger.list"
+      ? {
+          settle: listPage(
+            created.map((id) => movement(id)),
+            created.length,
+            0,
+            250,
+          ),
+        }
+      : { settle: { participated_in: [] } },
+  );
+  const listed = await readWindow(storedPort, null);
+  expect(listed.kind).toBe("read");
+  if (listed.kind !== "read") throw new Error("stored window was not read");
+  const inspectable = listed.rows.filter((row) =>
+    selection.has(row.transaction.transaction_id),
+  );
+  expect(inspectable.map((row) => row.transaction.transaction_id)).toEqual(
+    created,
+  );
+  for (const row of inspectable)
+    expect(await readSealed(storedPort, row.transaction.transaction_id)).toBe(
+      false,
+    );
+  expect(
+    calls.filter(
+      (call) => call.kind === "submit" && call.definition === "ledger.track",
+    ),
+  ).toHaveLength(2);
+  // Removing an unsaved draft also retires its selection without removing an offscreen stored handle.
+  expect([
+    ...reconcileMovementSelection(new Set([drafts[0]!.key, A]), []),
+  ]).toEqual([A]);
 });
 
 test("the stage after an apply keeps what did not save under the movement's new id", async () => {
@@ -746,6 +819,7 @@ test("a document added as evidence is attached by the evidence id it settled wit
     file: "file-1" as never,
     name: "ticket.pdf",
     idempotencyKey: "desktop-evidence-1",
+    supplementary: false,
   };
   const content: StagedContent = { rows: {}, drafts: [], actions: [add] };
   const settled = {
@@ -776,6 +850,76 @@ test("a document added as evidence is attached by the evidence id it settled wit
     "ledger.attach": [{ refuse: "validation_error" }],
   });
   expect(keepAfterApply(content, kept.report).actions).toEqual(["doc"]);
+});
+
+test("a new file supplements an existing purchase reference by its stored blob", async () => {
+  const action: StagedAction = {
+    id: "supplement",
+    kind: "attach_file",
+    transactionId: A,
+    file: "file-extra" as never,
+    name: "extra.pdf",
+    idempotencyKey: "desktop-supplement-1",
+    supplementary: true,
+  };
+  const content: StagedContent = { rows: {}, drafts: [], actions: [action] };
+  const row = business(A);
+  row.transaction.purchase_invoice_evidence_id = "original-evidence";
+  const done = await apply(content, rowsOf(row), {
+    "ledger.evidence.add": [
+      {
+        settle: {
+          profile_id: PROFILE,
+          record: {
+            evidence_id: "new-evidence",
+            attachment_id: "b".repeat(64),
+          },
+        },
+      },
+    ],
+    "ledger.attach": [{ settle: { profile_id: PROFILE } }],
+  });
+  expect(
+    done.calls.map((call) => call.kind === "submit" && call.payload),
+  ).toEqual([
+    { source_path: "file-extra", idempotency_key: "desktop-supplement-1" },
+    {
+      transaction_id: A,
+      purchase_invoice_evidence_id: null,
+      attachment_ids: ["b".repeat(64)],
+    },
+  ]);
+  expect(keepAfterApply(content, done.report).actions).toEqual([]);
+  expect(row.transaction.purchase_invoice_evidence_id).toBe(
+    "original-evidence",
+  );
+});
+
+test("a supplementary file whose saved receipt omits the blob pauses without another attach", async () => {
+  const action: StagedAction = {
+    id: "supplement",
+    kind: "attach_file",
+    transactionId: A,
+    file: "file-extra" as never,
+    name: "extra.pdf",
+    idempotencyKey: "desktop-supplement-1",
+    supplementary: true,
+  };
+  const content: StagedContent = { rows: {}, drafts: [], actions: [action] };
+  const done = await apply(content, rowsOf(business(A)), {
+    "ledger.evidence.add": [
+      {
+        settle: {
+          profile_id: PROFILE,
+          record: { evidence_id: "new-evidence" },
+        },
+      },
+    ],
+  });
+  expect(done.calls).toHaveLength(1);
+  expect(done.report.steps[0]?.outcome.kind).toBe("saved_unread");
+  expect(done.report.paused).not.toBeNull();
+  expect(keepAfterApply(content, done.report).actions).toEqual([]);
 });
 
 test("a rule apply is one call, and the movements a rule classified are what saved", async () => {

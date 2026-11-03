@@ -29,17 +29,14 @@ import {
 /** The answer, found by what was asked about. */
 export type StagedCheck = {
   rows: ReadonlyMap<string, LedgerStagedRowAnswer>;
-  drafts: ReadonlyMap<
-    string,
-    readonly LedgerStagedCheckResult["drafts"][number]["blockers"][number][]
-  >;
+  drafts: ReadonlyMap<string, LedgerStagedCheckResult["drafts"][number]>;
   categories: ReadonlyMap<string, { business: boolean; mixed: boolean }>;
 };
 
 export function indexCheck(result: LedgerStagedCheckResult): StagedCheck {
   return {
     rows: new Map(result.rows.map((row) => [row.transaction_id, row])),
-    drafts: new Map(result.drafts.map((draft) => [draft.key, draft.blockers])),
+    drafts: new Map(result.drafts.map((draft) => [draft.key, draft])),
     categories: new Map(
       result.categories.map(({ category, business, mixed }) => [
         category,

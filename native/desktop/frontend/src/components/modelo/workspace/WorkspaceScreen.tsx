@@ -21,7 +21,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { ledgerFailure, type LedgerOutcome } from "../../../shell/ledger";
 import {
   MODELO_ACTOR,
-  calculateWorkRequest,
   modeloEditBody,
   type ModeloPort,
 } from "../../../shell/modelo";
@@ -57,6 +56,12 @@ import { useFormSession, type FormSession } from "../form/session";
 import type { BorradorPort } from "../../../shell/borrador";
 import { CheckView } from "./CheckView";
 import { ComparisonView, offersComparison } from "./ComparisonView";
+import { CalculationEvidenceDialog } from "./CalculationEvidenceDialog";
+import {
+  calculateWithEvidence,
+  calculationEvidenceMemory,
+  type CalculationEvidenceAnswer,
+} from "./calculationEvidence";
 import type { CorrectionAnswer, CorrectionResult } from "./CorrectionDialog";
 import { creditFields } from "./creditBoxes";
 import { CreditsPanel } from "./CreditsPanel";
@@ -143,7 +148,17 @@ function Ready({
     },
     [correcting, envelope, port],
   );
-  const [atRisk, setAtRisk] = useState(false);
+  const [atRisk, setAtRisk] = useState<ModeloWorkbenchFormProjectionV1 | null>(
+    null,
+  );
+  const [evidence, setEvidence] =
+    useState<ModeloWorkbenchFormProjectionV1 | null>(null);
+  const [calculating, setCalculating] = useState(false);
+  const calculationPending = useRef(false);
+  const latestEnvelope = useRef(envelope);
+  useLayoutEffect(() => {
+    latestEnvelope.current = envelope;
+  }, [envelope]);
   const [prerequisiteHeld, setPrerequisiteHeld] = useState(false);
   const operation = useModeloOperation();
   const held = operation.hold !== undefined;
@@ -380,14 +395,103 @@ function Ready({
     }
   };
 
-  const calculate = () =>
-    settledThenReread(() =>
-      port.submit("modelo.work.calculate", calculateWorkRequest(workUnit)),
+  const sameCalculation = (shown: ModeloWorkbenchFormProjectionV1) => {
+    const latest = latestEnvelope.current;
+    return (
+      shown.profile_id === latest.profile_id &&
+      shown.work_unit_id === latest.work_unit_id &&
+      shown.calculation_revision_id === latest.calculation_revision_id &&
+      shown.registry_revision_id === latest.registry_revision_id &&
+      shown.form.form.operator_entries_known ===
+        latest.form.form.operator_entries_known &&
+      shown.asks_m303_evidence === latest.asks_m303_evidence &&
+      shown.asks_modelo_390 === latest.asks_modelo_390
     );
+  };
+  const calculate = async (
+    shown: ModeloWorkbenchFormProjectionV1,
+    answer: CalculationEvidenceAnswer | null = null,
+  ) => {
+    if (
+      calculationPending.current ||
+      operation.holds.blocking(operation.target)
+    )
+      return;
+    if (!sameCalculation(shown)) {
+      setEvidence(null);
+      setNotice({
+        tone: "warning",
+        words: t("workspace.modelo.calculate.evidence.stale"),
+      });
+      return;
+    }
+    calculationPending.current = true;
+    setCalculating(true);
+    const mine = generation.current;
+    let writeVersion = operation.holds.admissionVersion(operation.target);
+    const current = () =>
+      alive.current &&
+      mine === generation.current &&
+      sameCalculation(shown) &&
+      operation.holds.admissionVersion(operation.target) === writeVersion;
+    setNotice(null);
+    try {
+      const outcome = await calculateWithEvidence({
+        envelope: shown,
+        answer,
+        memory: calculationEvidenceMemory(
+          operation.holds,
+          shown.profile_id,
+          shown.work_unit_id,
+        ),
+        port,
+        write: (send, isCurrent) =>
+          operation.run(() => {
+            writeVersion = operation.holds.admissionVersion(operation.target);
+            return send();
+          }, isCurrent),
+        reread,
+        current,
+      });
+      if (!current() || !outcome) return;
+      if (outcome.kind === "evidence_unavailable") {
+        setNotice({
+          tone: "warning",
+          words: t("workspace.modelo.calculate.evidence.unavailable"),
+        });
+        setEvidence(null);
+        return;
+      }
+      setNotice(runNotice(t, outcome));
+      if (
+        outcome.kind !== "unknown" &&
+        outcome.kind !== "saved_unread" &&
+        outcome.kind !== "not_sent"
+      )
+        await reread();
+      if (alive.current && mine === generation.current) setEvidence(null);
+    } finally {
+      calculationPending.current = false;
+      if (alive.current && mine === generation.current) setCalculating(false);
+    }
+  };
+  const beginCalculation = (shown: ModeloWorkbenchFormProjectionV1) => {
+    if (operation.holds.blocking(operation.target)) return;
+    if (!sameCalculation(shown)) {
+      setNotice({
+        tone: "warning",
+        words: t("workspace.modelo.calculate.evidence.stale"),
+      });
+      return;
+    }
+    if (shown.asks_m303_evidence) setEvidence(shown);
+    else void calculate(shown);
+  };
   const onRun = (action: ModeloFormNextAction) => {
     if (action === "calculate" || action === "recalculate") {
-      if (envelope.form.form.operator_entries_known) void calculate();
-      else setAtRisk(true);
+      if (held || prerequisiteHeld || calculationPending.current) return;
+      if (envelope.form.form.operator_entries_known) beginCalculation(envelope);
+      else setAtRisk(envelope);
     } else if (action === "verify" && envelope.calculation_revision_id) {
       const revision = envelope.calculation_revision_id;
       void settledThenReread(() =>
@@ -450,11 +554,12 @@ function Ready({
       detailsOpen={detailsOpen}
       busy={busy}
       writeHeld={held}
-      prerequisiteHeld={prerequisiteHeld}
+      prerequisiteHeld={prerequisiteHeld || evidence !== null}
       notice={
-        operation.hold &&
-        (operation.hold.phase !== "running" ||
-          operation.hold.key !== operation.target) ? (
+        (operation.hold &&
+          (operation.hold.phase !== "running" ||
+            operation.hold.key !== operation.target)) ||
+        operation.reviewedFailure ? (
           <>
             <div className="px-6 pt-3">
               <ScopedWriteHoldNotice />
@@ -680,7 +785,21 @@ function Ready({
                 </DialogContent>
               </Dialog>
             )}
-            <Dialog open={atRisk} onOpenChange={setAtRisk}>
+            {evidence && (
+              <CalculationEvidenceDialog
+                asksModelo390={evidence.asks_modelo_390}
+                busy={calculating}
+                held={held}
+                onCancel={() => setEvidence(null)}
+                onConfirm={(answer) => void calculate(evidence, answer)}
+              />
+            )}
+            <Dialog
+              open={atRisk !== null}
+              onOpenChange={(open) => {
+                if (!open) setAtRisk(null);
+              }}
+            >
               <DialogContent closeLabel={t("workspace.modelo.key.close")}>
                 <DialogHeader>
                   <DialogTitle>
@@ -691,13 +810,13 @@ function Ready({
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant="ghost" onClick={() => setAtRisk(false)}>
+                  <Button variant="ghost" onClick={() => setAtRisk(null)}>
                     {t("workspace.modelo.calculate.at_risk_cancel")}
                   </Button>
                   <Button
                     onClick={() => {
-                      setAtRisk(false);
-                      void calculate();
+                      setAtRisk(null);
+                      if (atRisk) beginCalculation(atRisk);
                     }}
                   >
                     {t("workspace.modelo.calculate.at_risk_proceed")}

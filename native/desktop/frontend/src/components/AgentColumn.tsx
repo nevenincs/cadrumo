@@ -172,6 +172,8 @@ function serviceWords(t: Translate, status: AgentServiceStatus): string | null {
 /** A refusal code of the agent's, in words where it is one we know. */
 function refusalWords(t: Translate, code: string): string {
   switch (code) {
+    case "agent_platform_unsupported":
+      return t("desktop.agent.platform_unsupported");
     case "agent_service_absent":
       return t("desktop.agent.service_absent");
     case "agent_service_incompatible":
@@ -357,6 +359,9 @@ export function AgentColumn({
   const readable = agent !== undefined && reader !== null && shown;
   const status = useAgentStatus(session, reader, readable);
   const ready = status?.state === "ready";
+  const serviceAvailable = ready || status?.state === "starting";
+  const unsupported =
+    status?.state === "refused" && status.code === "agent_platform_unsupported";
   // A signed-in profile can precede its agent service. Reopening this gate
   // also refreshes reads after the service has recovered.
   const serviceReadable = readable && (!session || ready);
@@ -477,6 +482,7 @@ export function AgentColumn({
   // offers reading and changing them.
   const localModelHost = useMemo((): LocalModelHost | null => {
     if (
+      !serviceAvailable ||
       !session?.localModels ||
       !session.addLocalModel ||
       !session.removeLocalModel ||
@@ -497,7 +503,7 @@ export function AgentColumn({
       remove: (lane, model, revision) => changed(remove(lane, model, revision)),
       reset: (revision) => changed(reset(revision)),
     };
-  }, [session]);
+  }, [session, serviceAvailable]);
   // Changes made to the lists in the settings, which the picker reads again.
   const [listChanges, setListChanges] = useState(0);
   const readingHost = useMemo((): ReadingModelHost | null => {
@@ -1623,21 +1629,23 @@ export function AgentColumn({
                 <Icon name="info" className="mt-0.5" />
                 <span className="grid justify-items-start gap-1.5">
                   {notice}
-                  {status?.state === "refused" && session?.retry && (
-                    <Button
-                      variant="outline"
-                      size="xs"
-                      onClick={() => {
-                        void session
-                          .retry?.()
-                          .catch((error: unknown) =>
-                            change({ sendFailure: failureCode(error) }),
-                          );
-                      }}
-                    >
-                      {t("desktop.agent.retry")}
-                    </Button>
-                  )}
+                  {status?.state === "refused" &&
+                    !unsupported &&
+                    session?.retry && (
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => {
+                          void session
+                            .retry?.()
+                            .catch((error: unknown) =>
+                              change({ sendFailure: failureCode(error) }),
+                            );
+                        }}
+                      >
+                        {t("desktop.agent.retry")}
+                      </Button>
+                    )}
                   {noProvider && openSettings && (
                     <Button variant="outline" size="xs" onClick={openSettings}>
                       {t("desktop.agent.set_up_providers")}

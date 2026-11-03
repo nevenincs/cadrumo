@@ -17,7 +17,7 @@ from cadrumo_client.transport.posix_channel import PosixChannel
 
 from .containment_commands import ContainmentCommand, run_containment_command_sync
 from .linux_pidfd import open_linux_pidfd
-from .worker_arguments import validated_worker_arguments
+from .worker_arguments import validated_worker_arguments, worker_interpreter_arguments
 from .worker_environment import worker_path_environment_names
 
 _PROPERTIES = {
@@ -293,6 +293,7 @@ def _guardian_launch_command(
         "-i",
         *clean,
         str(executable),
+        *worker_interpreter_arguments(arguments),
         "-I",
         "-m",
         "cadrumo_runtime.host.linux_worker_guardian",

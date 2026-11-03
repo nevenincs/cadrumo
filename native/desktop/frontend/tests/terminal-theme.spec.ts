@@ -118,6 +118,10 @@ async function openHost(page: Page) {
     }),
   );
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page
+    .locator(".rail")
+    .getByRole("button", { name: label("desktop.rail.tui") })
+    .click();
   await expect(page.locator('[data-terminal="tui"] .xterm')).toBeAttached();
   await write(page, "tui", sample);
   await expect(page.locator('[data-terminal="tui"] .xterm')).toBeVisible();

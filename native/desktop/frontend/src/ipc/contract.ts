@@ -729,7 +729,9 @@ export type Reconnecting = {
   passwordRequired: boolean;
 };
 
-/** Presence only: reading this never resumes or extends a sign-in. */
+/** Runtime presence plus this desktop's usable person standing. Reading may
+ * restore its own saved session, but never reports person activity. A refusal
+ * with present presence keeps the profile selected and requires fresh proof. */
 export type SignInStatus = {
   supported: boolean;
   state: "present" | "absent" | "unknown";
@@ -776,6 +778,9 @@ export type SignInResult =
   | { kind: "signed-in"; status: SignInStatus }
   | ({ kind: "refused" } & SignInRefusal);
 
+/** sign_out_with_password requires a raw UTF-8 password body and the exact
+ * profile label/id in x-cadrumo-profile; sign_out carries no secret. Both
+ * return the canonical logout result and preserve unknown cleanup outcomes. */
 export type SignOutResult = {
   remainingAccess: {
     /** The person's saved automation setting. A sign-out keeps it; it is not

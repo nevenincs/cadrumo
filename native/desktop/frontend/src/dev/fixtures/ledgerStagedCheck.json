@@ -6974,6 +6974,26 @@
       "blockers": [],
       "notes": []
     },
+    "{\"stored\":{\"booked_date\":\"2026-10-05\",\"value_date\":null,\"operation_date\":null,\"accrual_date\":null,\"amount\":\"36.30\",\"direction\":\"OUTGOING\",\"currency\":\"EUR\",\"counterparty\":\"Papelería Trazo\",\"description\":\"PAPELERIA TRAZO 0045\",\"group_label\":null,\"own_account_id\":null,\"business_classification\":\"BUSINESS\",\"business_pct\":null,\"category_id\":\"material_oficina\",\"usage_ratio_id\":null,\"taxable_base\":null,\"iva_rate\":null,\"iva_amount\":null,\"iva_category\":null,\"irpf_category\":null,\"notes\":null,\"deduction_fact_kind\":null,\"investment_asset_id\":null,\"counterparty_country\":null,\"counterparty_identification_state\":null},\"lifecycle\":\"ACTIVE\",\"evidence\":true,\"cells\":[],\"evidence_staged\":true,\"m210_staged\":false}": {
+      "found": true,
+      "classified": true,
+      "takes_expense_category": true,
+      "takes_share": false,
+      "category_askable": true,
+      "category_settable": true,
+      "category_on_income": false,
+      "takes_changes": true,
+      "takes_invoice": true,
+      "evidence_advised": false,
+      "lifecycle_actions": ["archive", "stash", "exclude"],
+      "tax_set_skip": null,
+      "transfer_locked_fields": [],
+      "classifying_fields": [],
+      "identity_fields": [],
+      "routes": [],
+      "blockers": [],
+      "notes": []
+    },
     "{\"stored\":{\"booked_date\":\"2026-10-05\",\"value_date\":null,\"operation_date\":null,\"accrual_date\":null,\"amount\":\"36.30\",\"direction\":\"OUTGOING\",\"currency\":\"EUR\",\"counterparty\":\"Papelería Trazo\",\"description\":\"PAPELERIA TRAZO 0045\",\"group_label\":null,\"own_account_id\":null,\"business_classification\":\"BUSINESS\",\"business_pct\":null,\"category_id\":null,\"usage_ratio_id\":null,\"taxable_base\":null,\"iva_rate\":null,\"iva_amount\":null,\"iva_category\":null,\"irpf_category\":null,\"notes\":null,\"deduction_fact_kind\":null,\"investment_asset_id\":null,\"counterparty_country\":null,\"counterparty_identification_state\":null},\"lifecycle\":\"ACTIVE\",\"evidence\":false,\"cells\":[],\"evidence_staged\":false,\"m210_staged\":false}": {
       "found": true,
       "classified": true,
@@ -21443,64 +21463,139 @@
     }
   },
   "drafts": {
-    "[]": [
-      {
-        "kind": "draft_incomplete",
-        "fields": [
-          "booked_date",
-          "amount",
-          "currency",
-          "direction",
-          "description"
-        ]
-      }
-    ],
-    "[{\"field\":\"amount\",\"value\":\"1\"},{\"field\":\"booked_date\",\"value\":\"2026-10-01\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"X\"},{\"field\":\"direction\",\"value\":\"INCOMING\"}]": [],
-    "[{\"field\":\"amount\",\"value\":\"1\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"X\"},{\"field\":\"direction\",\"value\":\"INCOMING\"}]": [],
-    "[{\"field\":\"amount\",\"value\":\"12\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"TAXI\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": [],
-    "[{\"field\":\"amount\",\"value\":\"12.4\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": [],
-    "[{\"field\":\"amount\",\"value\":\"12.4\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": [
-      {
-        "kind": "draft_incomplete",
-        "fields": ["currency"]
-      }
-    ],
-    "[{\"field\":\"amount\",\"value\":\"12.4\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"}]": [
-      {
-        "kind": "draft_incomplete",
-        "fields": ["currency", "direction"]
-      }
-    ],
-    "[{\"field\":\"amount\",\"value\":\"12.50\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"business_classification\",\"value\":\"BUSINESS\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"TAXI\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"},{\"field\":\"iva_rate\",\"value\":\"0.10\"}]": [],
-    "[{\"field\":\"amount\",\"value\":\"5\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"business_classification\",\"value\":\"MIXED\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"X\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": [
-      {
-        "kind": "mixed_needs_share",
-        "fields": []
-      }
-    ],
-    "[{\"field\":\"amount\",\"value\":\"5\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"X\"},{\"field\":\"direction\",\"value\":\"INTERNAL_TRANSFER\"},{\"field\":\"iva_amount\",\"value\":\"1\"}]": [
-      {
-        "kind": "transfer_with_tax",
-        "fields": ["iva_amount"]
-      }
-    ],
-    "[{\"field\":\"amount\",\"value\":\"5\"}]": [
-      {
-        "kind": "draft_incomplete",
-        "fields": ["booked_date", "currency", "direction", "description"]
-      }
-    ],
-    "[{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"}]": [
-      {
-        "kind": "draft_incomplete",
-        "fields": ["amount", "currency", "direction"]
-      }
-    ],
-    "[{\"field\":\"booked_date\",\"value\":\"2026-10-21\"}]": [
-      {
-        "kind": "draft_incomplete",
-        "fields": ["amount", "currency", "direction", "description"]
-      }
-    ]
+    "[]": {
+      "takes_expense_category": false,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": [
+            "booked_date",
+            "amount",
+            "currency",
+            "direction",
+            "description"
+          ]
+        }
+      ]
+    },
+    "[{\"field\":\"amount\",\"value\":\"1\"},{\"field\":\"booked_date\",\"value\":\"2026-10-01\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"X\"},{\"field\":\"direction\",\"value\":\"INCOMING\"}]": {
+      "takes_expense_category": false,
+      "blockers": []
+    },
+    "[{\"field\":\"amount\",\"value\":\"1\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"X\"},{\"field\":\"direction\",\"value\":\"INCOMING\"}]": {
+      "takes_expense_category": false,
+      "blockers": []
+    },
+    "[{\"field\":\"amount\",\"value\":\"12\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"TAXI\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": {
+      "takes_expense_category": true,
+      "blockers": []
+    },
+    "[{\"field\":\"amount\",\"value\":\"12.4\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": {
+      "takes_expense_category": true,
+      "blockers": []
+    },
+    "[{\"field\":\"amount\",\"value\":\"12.4\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": {
+      "takes_expense_category": true,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["currency"]
+        }
+      ]
+    },
+    "[{\"field\":\"amount\",\"value\":\"12.4\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"}]": {
+      "takes_expense_category": false,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["currency", "direction"]
+        }
+      ]
+    },
+    "[{\"field\":\"amount\",\"value\":\"12.50\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"business_classification\",\"value\":\"BUSINESS\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"TAXI\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"},{\"field\":\"iva_rate\",\"value\":\"0.10\"}]": {
+      "takes_expense_category": true,
+      "blockers": []
+    },
+    "[{\"field\":\"amount\",\"value\":\"5\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"business_classification\",\"value\":\"MIXED\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"X\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": {
+      "takes_expense_category": true,
+      "blockers": [
+        {
+          "kind": "mixed_needs_share",
+          "fields": []
+        }
+      ]
+    },
+    "[{\"field\":\"amount\",\"value\":\"5\"},{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"currency\",\"value\":\"EUR\"},{\"field\":\"description\",\"value\":\"X\"},{\"field\":\"direction\",\"value\":\"INTERNAL_TRANSFER\"},{\"field\":\"iva_amount\",\"value\":\"1\"}]": {
+      "takes_expense_category": false,
+      "blockers": [
+        {
+          "kind": "transfer_with_tax",
+          "fields": ["iva_amount"]
+        }
+      ]
+    },
+    "[{\"field\":\"amount\",\"value\":\"5\"}]": {
+      "takes_expense_category": false,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["booked_date", "currency", "direction", "description"]
+        }
+      ]
+    },
+    "[{\"field\":\"booked_date\",\"value\":\"2026-10-21\"},{\"field\":\"description\",\"value\":\"TAXI AEROPUERTO\"}]": {
+      "takes_expense_category": false,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["amount", "currency", "direction"]
+        }
+      ]
+    },
+    "[{\"field\":\"booked_date\",\"value\":\"2026-10-21\"}]": {
+      "takes_expense_category": false,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["amount", "currency", "direction", "description"]
+        }
+      ]
+    },
+    "[{\"field\":\"business_classification\",\"value\":\"BUSINESS\"},{\"field\":\"direction\",\"value\":\"INCOMING\"}]": {
+      "takes_expense_category": false,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["booked_date", "amount", "currency", "description"]
+        }
+      ]
+    },
+    "[{\"field\":\"business_classification\",\"value\":\"BUSINESS\"},{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": {
+      "takes_expense_category": true,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["booked_date", "amount", "currency", "description"]
+        }
+      ]
+    },
+    "[{\"field\":\"direction\",\"value\":\"INCOMING\"}]": {
+      "takes_expense_category": false,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["booked_date", "amount", "currency", "description"]
+        }
+      ]
+    },
+    "[{\"field\":\"direction\",\"value\":\"OUTGOING\"}]": {
+      "takes_expense_category": true,
+      "blockers": [
+        {
+          "kind": "draft_incomplete",
+          "fields": ["booked_date", "amount", "currency", "description"]
+        }
+      ]
+    }
   }
 }

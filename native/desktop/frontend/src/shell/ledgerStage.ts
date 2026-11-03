@@ -11,7 +11,7 @@ import type {
   LedgerDecision,
   LedgerRow,
 } from "./ledger";
-import { sameDecimal } from "./ledgerGrammar";
+import { isTransactionPrefix, sameDecimal } from "./ledgerGrammar";
 
 /** Every movement field the page can stage a change to. */
 export const STAGE_FIELDS = [
@@ -99,6 +99,8 @@ export type StagedAction =
       file: FileToken;
       name: string;
       idempotencyKey: string;
+      /** Existing immutable purchase evidence stays linked. */
+      supplementary: boolean;
     }
   | {
       id: string;
@@ -546,6 +548,38 @@ export function stagedMovements(content: StagedContent): Set<string> {
   return ids;
 }
 
+/** Selected and staged stored movements whose filing participation can be read. */
+export function movementsToTrack(
+  content: StagedContent,
+  selection: ReadonlySet<string>,
+): string[] {
+  return [...new Set([...selection, ...stagedMovements(content)])].filter(
+    isTransactionPrefix,
+  );
+}
+
+/** Follow the identity returned for a selected movement, preserving other selections. */
+export function rekeyMovementSelection(
+  selection: ReadonlySet<string>,
+  from: string,
+  to: string,
+): Set<string> {
+  const next = new Set(selection);
+  if (next.delete(from)) next.add(to);
+  return next;
+}
+
+/** Keep stored handles and drafts still present, including offscreen stored selections. */
+export function reconcileMovementSelection(
+  selection: ReadonlySet<string>,
+  drafts: readonly Draft[],
+): Set<string> {
+  const present = new Set(drafts.map((draft) => draft.key));
+  return new Set(
+    [...selection].filter((id) => isTransactionPrefix(id) || present.has(id)),
+  );
+}
+
 /** A movement field as the read shows it: null when empty, undefined when
  * the read does not carry it. */
 export function storedFieldValue(
@@ -558,9 +592,6 @@ export function storedFieldValue(
       return row.group_label;
     case "own_account_id":
       return row.own_account_id;
-    case "deduction_fact_kind":
-    case "investment_asset_id":
-      return undefined;
     case "counterparty":
     case "notes":
       return t[field] === "" ? null : t[field];

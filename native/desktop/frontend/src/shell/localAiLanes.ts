@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import type { AgentSession } from "./agentSession";
 import { useAgentRead } from "./agentViews";
+import { useAgentStatus } from "./agentLive";
 import { catalogLanes, type CatalogLane } from "./localModelLanes";
 import type { LocalModelHost } from "./localModels";
 import type { ProviderSettings } from "./providerSettings";
@@ -38,6 +39,8 @@ export function useLocalAiLanes(
   const session = source?.session ?? null;
   const providerSettings = source?.providerSettings ?? null;
   const reader = source?.reader ?? null;
+  const status = useAgentStatus(session ?? undefined, reader, active);
+  const available = status?.state === "ready" || status?.state === "starting";
   const [retries, setRetries] = useState(0);
   const request = useMemo(
     () => ({ session, providerSettings, reader, again, retries }),
@@ -45,7 +48,13 @@ export function useLocalAiLanes(
   );
   const readLanes = useMemo(() => {
     const { session, providerSettings, reader } = request;
-    if (!active || !session || !providerSettings || reader === null)
+    if (
+      !active ||
+      !available ||
+      !session ||
+      !providerSettings ||
+      reader === null
+    )
       return null;
     return async () => {
       const [catalog, settings] = await Promise.all([
@@ -59,11 +68,12 @@ export function useLocalAiLanes(
       );
       return catalogLanes(catalog).filter((lane) => keyless.has(lane.id));
     };
-  }, [active, request]);
+  }, [active, available, request]);
   const read = useAgentRead(readLanes);
   const retry = useCallback(() => setRetries((count) => count + 1), []);
   const host = useMemo((): LocalModelHost | null => {
     if (
+      !available ||
       !session?.localModels ||
       !session.addLocalModel ||
       !session.removeLocalModel ||
@@ -76,7 +86,7 @@ export function useLocalAiLanes(
       remove: session.removeLocalModel.bind(session),
       reset: session.resetLocalModels.bind(session),
     };
-  }, [session]);
+  }, [session, available]);
   return {
     lanes: read.kind === "ready" ? read.value : [],
     host,

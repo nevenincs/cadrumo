@@ -54,6 +54,7 @@ from cadrumo_client.contracts.view_stream import (
 )
 from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerOperationReceipt
+from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from .operation_projection import prepare_operation_projection
 from .profile_connection import ProfileConnection
@@ -87,6 +88,32 @@ type _RuntimeOperationReplyRequest = (
 def _require_scope_admits(connection: ProfileConnection, definition_id: str) -> None:
     if connection.requested_scope is not None and definition_id not in connection.requested_scope.operations:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+def authorize_operation_release(
+    host: RuntimeProfileHost,
+    connection: ProfileConnection,
+    release: WorkerAuthorityRequest,
+    release_guard: ExitStack,
+    fresh_admission: OperationId | None,
+) -> datetime:
+    """Retire a fresh unstarted admission if the final parent fence withholds its receipt."""
+    try:
+        allowed = release_guard.enter_context(host.authorize(release))
+    except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError):
+        if fresh_admission is not None:
+            try:
+                host.owner.operation_worker().abandon_submission(
+                    release.session_id, fresh_admission, frontend=connection.frontend
+                )
+            except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as cleanup:
+                _log.warning(
+                    "parent-withheld admission left unsettled operation=%s error=%s",
+                    fresh_admission,
+                    type(cleanup).__name__,
+                )
+        raise
+    return allowed.expires_at
 
 
 def _admitted_status(status: ProfileStatus | AccessDenied) -> ProfileStatus:
@@ -319,10 +346,14 @@ class ProfileConnectionOperationMixin:
                 if isinstance(request, OperationSecret):
                     self._operation_secret(host, connection, channel, request)
                     return
-                reply, expires_at = self._operation_reply(
-                    connection, host, context, channel, request, release_guard=release_guard
-                )
-                self._watch_observed_operation(connection, request, reply)
+                if isinstance(request, OperationObserve):
+                    reply, expires_at = self._observe_and_watch_operation(
+                        connection, host, context, channel, request, release_guard=release_guard
+                    )
+                else:
+                    reply, expires_at = self._operation_reply(
+                        connection, host, context, channel, request, release_guard=release_guard
+                    )
                 deadline = self._operation_deadline(expires_at)
             except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
                 release_guard.close()
@@ -332,8 +363,47 @@ class ProfileConnectionOperationMixin:
             # as a refusal. No private payload escapes the scope of its fence.
             write_document(channel, reply, deadline=deadline)
 
+    def _observe_and_watch_operation(
+        self: RuntimeProfileConnections,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: OperationObserve,
+        *,
+        release_guard: ExitStack,
+    ) -> tuple[OperationReply, datetime | None]:
+        """Authorize a watch, then read again so a commit between snapshot and watch cannot be lost."""
+        with ExitStack() as first_guard:
+            reply, expires_at = self._operation_reply(
+                connection, host, context, channel, request, release_guard=first_guard
+            )
+            self._watch_observed_operation(connection, request, reply)
+            if not (
+                isinstance(reply, OperationObserved)
+                and isinstance(reply.observation, OperationObservationSuccessV1)
+                and reply.observation.projection.lifecycle is not OperationLifecycle.TERMINAL
+            ):
+                release_guard.enter_context(first_guard.pop_all())
+                return reply, expires_at
+        # The first disclosure fence must be released before worker IPC: its
+        # authorization callbacks need the same profile guard. The watch now
+        # catches every later commit; the second read covers every earlier one.
+        try:
+            reply, expires_at = self._operation_reply(
+                connection, host, context, channel, request, release_guard=release_guard
+            )
+        except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError):
+            self._watch_observed_operation(connection, request, None)
+            raise
+        self._watch_observed_operation(connection, request, reply)
+        return reply, expires_at
+
     def _watch_observed_operation(
-        self: RuntimeProfileConnections, connection: ProfileConnection, request: OperationRequest, reply: OperationReply
+        self: RuntimeProfileConnections,
+        connection: ProfileConnection,
+        request: OperationRequest,
+        reply: OperationReply | None,
     ) -> None:
         """Keep cueing a connection about an operation it observed until it observes it terminal."""
         if not isinstance(request, OperationObserve) or connection.session_id is None:
@@ -345,6 +415,8 @@ class ProfileConnectionOperationMixin:
             and observation.projection.lifecycle is not OperationLifecycle.TERMINAL
         )
         with self._guard:
+            if connection.session_id != request.session_id:
+                return
             watches = self._operation_watches.setdefault(connection.context.connection_id, {})
             watches.pop(operation_id, None)
             if running:
@@ -448,9 +520,9 @@ class ProfileConnectionOperationMixin:
             return self._submit_payload_reply(connection, host, channel, request, release_guard=release_guard)
         # Worker callbacks need this same profile guard; never hold it while
         # waiting for the native execution channel.
-        reply, release = prepare_operation_projection(host, connection, request)
-        allowed = release_guard.enter_context(host.authorize(release))
-        return reply, allowed.expires_at
+        reply, release, fresh_admission = prepare_operation_projection(host, connection, request)
+        expires_at = authorize_operation_release(host, connection, release, release_guard, fresh_admission)
+        return reply, expires_at
 
     def _contract_reply(
         self: RuntimeProfileConnections,
@@ -518,7 +590,7 @@ class ProfileConnectionOperationMixin:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         if isinstance(request.descriptor, FinancialOperandInputDescriptor) and request.idempotency_key is not None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        reply, release = stream_operation_submission(
+        reply, release, fresh_admission = stream_operation_submission(
             host,
             connection,
             request,
@@ -527,8 +599,8 @@ class ProfileConnectionOperationMixin:
             require_session=lambda: self._require_upload_session(connection, host, request),
             deadline=time.monotonic() + SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
         )
-        allowed = release_guard.enter_context(host.authorize(release))
-        return reply, allowed.expires_at
+        expires_at = authorize_operation_release(host, connection, release, release_guard, fresh_admission)
+        return reply, expires_at
 
     def _operation_deadline(self: RuntimeProfileConnections, expires_at: datetime | None) -> float:
         if expires_at is None:

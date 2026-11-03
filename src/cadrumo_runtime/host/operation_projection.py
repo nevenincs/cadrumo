@@ -41,9 +41,10 @@ def prepare_operation_projection(
     | OperationResultPage
     | OperationReview
     | OperationManage,
-) -> tuple[OperationReply, WorkerAuthorityRequest]:
+) -> tuple[OperationReply, WorkerAuthorityRequest, OperationId | None]:
     """Use native worker policy without accepting client-supplied readiness or scopes."""
     worker = host.owner.operation_worker()
+    fresh_admission = None
     if isinstance(request, OperationSubmit):
         submitted = worker.submit_serialized(
             session_id=request.session_id,
@@ -61,6 +62,7 @@ def prepare_operation_projection(
             receipt=submitted.receipt,
         )
         expected_operation = submitted.receipt.operation_id
+        fresh_admission = expected_operation if submitted.newly_admitted else None
     elif isinstance(request, OperationObserve):
         observed = worker.observe(request.session_id, request.observation, frontend=connection.frontend)
         release, expected_action = observed.release, AccessAction.OBSERVE
@@ -132,7 +134,7 @@ def prepare_operation_projection(
         action=expected_action,
         operation_id=expected_operation,
     )
-    return reply, release
+    return reply, release, fresh_admission
 
 
 def validate_operation_release(
