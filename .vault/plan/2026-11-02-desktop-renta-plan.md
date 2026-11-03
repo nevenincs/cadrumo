@@ -17,7 +17,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:22e5c21a0b11694bc903c94d2557cf5756ed4af0eb6e299c8ba5cd4bf4b1acc4'
+body_hash: 'sha256:cf5f3bdc1604ef37c7aea6832caf6c3e08a9c58133f94e94ced4519254d2e8a7'
 ---
 
 # `desktop-renta` plan
@@ -88,6 +88,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S49` - [Sonnet high] mirror the merged backend on the desktop: regenerate the modelo and ledger contracts for the disagreement operations and the form note finding id, and give the withholding certificate record a certificate file picker with served words for the custody refusals; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
 - [x] `P01.S50` - [Sonnet high] let a projected Modelo 100 year resolve the Anexo D inventory applicability through the registry selection instead of an exact year match, and serve state-projection readiness at the grade the year reaches; `src/cadrumo/application/aggregation/inventory.py`.
 - [ ] `P01.S51` - [Opus medium] design and [Sonnet high] build the Modelo workspace door for a blocking credit or tier disagreement: list the served disagreements, accept one with a reason and revoke an acceptance at its expected revision, all in served words with stories and a scenario; `native/desktop/frontend/src/components/modelo/workspace`.
+- [ ] `P01.S52` - [Sonnet high] show the withholding record's served refusal words for the three certificate custody refusals in the withholding pane, as invoice add already shows its served words; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
 
 ### Phase `P02` - contracts and fixtures
 
