@@ -565,9 +565,8 @@ def test_a_different_certificate_file_still_replaces_the_one_it_corrects(
     assert old_kept
 
 
-_CUSTODY_KEY = "aggregation.retencion_soportada.errors.certificate_not_in_custody"
-_UNREADABLE_KEY = "aggregation.retencion_soportada.errors.certificate_file_unreadable"
-_MISMATCH_KEY = "aggregation.retencion_soportada.errors.certificate_fingerprint_mismatch"
+def _served_key(reason: str) -> str:
+    return f"aggregation.retencion_soportada.served.{reason}"
 
 
 def _refusal_of(context: _Context):
@@ -577,46 +576,122 @@ def _refusal_of(context: _Context):
     return result.refusal
 
 
+def _assert_served(context: _Context, *, reason: str, key: str, language: OutputLanguage, tmp_path: Path) -> None:
+    refusal = _refusal_of(context)
+    words = refusal.refusal_words
+    assert refusal.reason == reason
+    assert refusal.refusal_words_language is language
+    assert words == tr(_served_key(key), locale=language.value)
+    assert words is not None
+    assert not words.startswith("aggregation.")
+    assert "--" not in words
+    assert str(tmp_path) not in words
+    assert "payer-a.pdf" not in words
+    assert _sha256(b"never kept") not in words
+
+
 @pytest.mark.parametrize("language", list(OutputLanguage))
-def test_the_certificate_refusals_serve_their_own_sentence_in_the_workers_language(
+def test_every_refusal_the_operation_reaches_serves_its_own_sentence_in_the_workers_language(
     tmp_path: Path, operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
     files = tmp_path / "certificates"
     files.mkdir()
     _certificate_file(files, "payer-a.pdf")
+    _certificate_file(files, "second.pdf")
+    _certificate_file(files, "own.pdf")
+    attempts: list[tuple[str, str, _Context]] = []
     with (
         override_settings(cadrumo_output_language=language.value),
         isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE),
     ):
-        _, uncustodied = _run_in(operation, _request(_PAYER_A, retencion="5.00", fingerprint=_sha256(b"never kept")))
-        _, unreadable = _run_in(operation, _request(_PAYER_A, retencion="5.00", directory=files, file="missing.pdf"))
-        _, mismatched = _run_in(
-            operation,
+
+        def refused(reason: str, key: str, request: OperationRequest[BaseModel]) -> None:
+            outcome, context = _run_in(operation, request)
+            assert isinstance(outcome, OperationRefusalEvidence)
+            attempts.append((reason, key, context))
+
+        refused(
+            "certificate_not_in_custody",
+            "certificate_not_in_custody",
+            _request(_PAYER_A, retencion="5.00", fingerprint=_sha256(b"never kept")),
+        )
+        refused(
+            "certificate_file_unreadable",
+            "certificate_file_unreadable",
+            _request(_PAYER_A, retencion="5.00", directory=files, file="missing.pdf"),
+        )
+        refused(
+            "certificate_fingerprint_mismatch",
+            "certificate_fingerprint_mismatch",
             _request(
                 _PAYER_A, retencion="5.00", directory=files, file="payer-a.pdf", fingerprint=_sha256(b"other bytes")
             ),
         )
+        refused("own_tax_id", "own_tax_id", _request(_TAXPAYER, retencion="10.00", directory=files, file="own.pdf"))
+        refused(
+            "validation",
+            "validation",
+            _request(_PAYER_WRONG_CONTROL, retencion="100.00", directory=files, file="payer-a.pdf"),
+        )
+        refused(
+            "repercutido_exceeds_ingreso_a_cuenta",
+            "repercutido_exceeds_ingreso",
+            _request(
+                _PAYER_A, retencion="5.00", ingreso="1.00", repercutido="2.00", directory=files, file="payer-a.pdf"
+            ),
+        )
+        refused(
+            "certificate_fingerprint_required", "certificate_needs_fingerprint", _request(_PAYER_A, retencion="5.00")
+        )
+        _run(operation, _request(_PAYER_A, retencion="100.00", directory=files, file="payer-a.pdf"))
+        refused(
+            "stale_revision",
+            "stale_revision",
+            _request(_PAYER_A, retencion="200.00", directory=files, file="second.pdf"),
+        )
 
-    for context, reason, key in (
-        (uncustodied, "certificate_not_in_custody", _CUSTODY_KEY),
-        (unreadable, "certificate_file_unreadable", _UNREADABLE_KEY),
-        (mismatched, "certificate_fingerprint_mismatch", _MISMATCH_KEY),
+    assert len(attempts) == 8
+    for reason, key, context in attempts:
+        _assert_served(context, reason=reason, key=key, language=language, tmp_path=tmp_path)
+
+
+def test_a_refusal_for_a_profile_without_a_tax_id_serves_its_sentence(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    def no_taxpayer(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> RetencionSoportadaCertificadoPorts:
+        del profile_id
+        return RetencionSoportadaCertificadoPorts(
+            repository=_repository(),
+            authority=PinnedRetencionSoportadaWriteAuthority(operation),
+            custody=_custody(),
+            taxpayer_tax_id=lambda: None,
+        )
+
+    with (
+        override_settings(cadrumo_output_language="en"),
+        isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE),
     ):
-        refusal = _refusal_of(context)
-        assert refusal.reason == reason
-        assert refusal.refusal_words_language is language
-        assert refusal.refusal_words == tr(key, locale=language.value)
-        assert refusal.refusal_words is not None
-        assert not refusal.refusal_words.startswith("aggregation.")
-        assert str(tmp_path) not in refusal.refusal_words
-        assert "payer-a.pdf" not in refusal.refusal_words
-        assert _sha256(b"never kept") not in refusal.refusal_words
-    custody_words = _refusal_of(uncustodied).refusal_words
-    assert custody_words is not None and "--certificate-file" in custody_words
-    assert len({_refusal_of(context).refusal_words for context in (uncustodied, unreadable, mismatched)}) == 3
+        context = _Context(operation)
+        executor = RetencionSoportadaCertificadoExecutor(
+            no_taxpayer, definition_id=RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID
+        )
+        asyncio.run(
+            executor.execute(
+                _request(_PAYER_A, retencion="5.00", fingerprint=_sha256(b"x")),
+                cast(OperationExecutorContext, context),
+            )
+        )
+
+    _assert_served(
+        context,
+        reason="taxpayer_tax_id_unknown",
+        key="taxpayer_tax_id_unknown",
+        language=OutputLanguage.EN,
+        tmp_path=tmp_path,
+    )
 
 
-def test_the_certificate_sentences_differ_between_the_supported_languages(
+def test_the_served_sentences_differ_between_the_supported_languages(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     sentences: dict[OutputLanguage, str | None] = {}
@@ -630,26 +705,3 @@ def test_the_certificate_sentences_differ_between_the_supported_languages(
 
     assert all(sentences.values())
     assert len(set(sentences.values())) == len(OutputLanguage)
-
-
-def test_a_refusal_that_is_not_about_the_certificate_serves_no_sentence(
-    tmp_path: Path, operation: PinnedAuthorityOperation
-) -> None:
-    files = tmp_path / "certificates"
-    files.mkdir()
-    _certificate_file(files, "own.pdf")
-    _certificate_file(files, "first.pdf")
-    _certificate_file(files, "second.pdf")
-    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
-        _, own = _run_in(operation, _request(_TAXPAYER, retencion="10.00", directory=files, file="own.pdf"))
-        _run(operation, _request(_PAYER_A, retencion="100.00", directory=files, file="first.pdf"))
-        _, stale = _run_in(operation, _request(_PAYER_A, retencion="200.00", directory=files, file="second.pdf"))
-        _, invalid = _run_in(
-            operation, _request(_PAYER_WRONG_CONTROL, retencion="100.00", directory=files, file="first.pdf")
-        )
-
-    for context, reason in ((own, "own_tax_id"), (stale, "stale_revision"), (invalid, "validation")):
-        refusal = _refusal_of(context)
-        assert refusal.reason == reason
-        assert refusal.refusal_words is None
-        assert refusal.refusal_words_language is None

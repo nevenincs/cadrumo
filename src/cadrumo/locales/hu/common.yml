@@ -277,6 +277,36 @@ aggregation:
         nem zárható ki, hogy a kifizető te vagy. Előbb add meg a NIF-ed a profilban.
       validation: 'A levonási rekord nem lett mentve: ellenőrizd a kifizető NIF-jét,
         az összegeket (legfeljebb két tizedesjegy) és az igazolás ujjlenyomatát.'
+    served:
+      certificate_file_unreadable: Az igazolás fájlja nem olvasható. Ellenőrizd, hogy
+        még megvan, nem üres, és PDF, kép vagy XML dokumentum, majd válaszd ki újra.
+      certificate_fingerprint_mismatch: Az igazolás fájlja nem egyezik a hozzá rögzített
+        ujjlenyomattal, ezért semmi sem lett mentve. Válaszd ki a megfelelő fájlt,
+        és próbáld újra.
+      certificate_needs_fingerprint: A kifizetői igazoláshoz tartozik egy dokumentum.
+        Válaszd ki az igazolás fájlját, vagy ha nincs igazolásod, nyilatkozz magad
+        a levonásról.
+      certificate_not_in_custody: A Cadrumo nem tárol ilyen ujjlenyomatú igazolást,
+        vagy az eltárolt fájl már nem egyezik vele. Válaszd ki az igazolás fájlját,
+        hogy a Cadrumo a titkosított dokumentumaid között megőrizze.
+      ejercicio_unsupported: Ez az adóév kívül esik a Cadrumo által támogatott bevallási
+        éveken.
+      family_not_declared: Az adóév Modelo 100 változata nem olvas elszenvedett levonást,
+        így az itteni rekord soha nem jutna el egy számításhoz.
+      identity_mismatch: A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemosztállyal
+        vagy igazolással.
+      not_found: Ehhez az adóévhez, jövedelemosztályhoz és kifizetőhöz nincs levonási
+        rekord. Lehet, hogy már törölték.
+      own_tax_id: A kifizető adóazonosítója (NIF) a sajátod. Az általad végzett levonás
+        nem jár számodra jóváírással.
+      repercutido_exceeds_ingreso: A rád áthárított ingreso a cuenta nem lehet nagyobb
+        annál, amelyet a kifizető teljesített.
+      stale_revision: Ez a levonási rekord megváltozott, amióta elolvastad. Olvasd
+        be újra, és próbáld meg ismét.
+      taxpayer_tax_id_unknown: A profilodban még nincs adóazonosító (NIF), ezért nem
+        zárható ki, hogy a kifizető te vagy. Előbb add meg a NIF-ed a profilban.
+      validation: A levonási rekord nem lett mentve. Ellenőrizd a kifizető adóazonosítóját,
+        hogy az összegeknek legfeljebb két tizedesjegyük legyen, és az igazolást.
   retencion_soportada_absence:
     errors:
       already_attested: Erre a jövedelemosztályra és adóévre már van aktív hiánynyilatkozat.

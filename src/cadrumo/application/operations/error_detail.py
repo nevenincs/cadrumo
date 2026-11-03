@@ -372,6 +372,19 @@ def operation_refusal_words(error: BaseException) -> tuple[str, OutputLanguage] 
     return None
 
 
+def operation_catalogue_refusal_words(error_code: str, message_key: str) -> tuple[str, OutputLanguage]:
+    """The sentence a typed refusal serves from a catalogue key written for a frontend, worded as an error is.
+
+    A definition whose frontends show the served words verbatim keeps those
+    sentences under their own keys, apart from a command line's messages, which
+    may name options only a command line has. The key carries no placeholder:
+    nothing is interpolated, so the sentence discloses nothing the refusal's
+    registered ``error_code`` and key do not. A key that cannot be worded gives
+    way to the code's own sentence, then to one that names the code.
+    """
+    return _registered_error_words(get_registered_error_code_by_code(error_code), message_key, ())
+
+
 def _registered_cause(error: ValidationError) -> CadrumoError | None:
     """The registered error a validator raised for the first failed rule, where one crossed the boundary.
 
@@ -510,6 +523,7 @@ __all__ = [
     "OperationErrorDetailKind",
     "OperationErrorDetailV1",
     "build_operation_error_detail",
+    "operation_catalogue_refusal_words",
     "operation_error_detail_schema",
     "operation_refusal_words",
     "resolve_operation_error_detail",

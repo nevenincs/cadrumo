@@ -296,6 +296,37 @@ aggregation:
         que el pagador seas tú. Añade tu NIF al perfil primero.
       validation: 'El registro de retención no se guardó: revisa el NIF del pagador,
         los importes (como máximo dos decimales) y la huella del certificado.'
+    served:
+      certificate_file_unreadable: No se pudo leer el archivo del certificado. Comprueba
+        que sigue existiendo, que no está vacío y que es un PDF, una imagen o un documento
+        XML, y vuelve a elegirlo.
+      certificate_fingerprint_mismatch: El archivo del certificado no coincide con
+        la huella registrada para él, así que no se guardó nada. Elige el archivo
+        correcto e inténtalo de nuevo.
+      certificate_needs_fingerprint: Un certificado del pagador necesita su documento.
+        Elige el archivo del certificado o, si no tienes certificado, declara tú la
+        retención.
+      certificate_not_in_custody: Cadrumo no tiene guardado ningún certificado con
+        esa huella, o el archivo guardado ya no coincide con ella. Elige el archivo
+        del certificado para que Cadrumo lo guarde entre tus documentos cifrados.
+      ejercicio_unsupported: Este ejercicio está fuera de los años de presentación
+        que admite Cadrumo.
+      family_not_declared: El Modelo 100 de este ejercicio no lee retenciones soportadas,
+        así que un registro aquí nunca llegaría a un cálculo.
+      identity_mismatch: El registro no coincide con el pagador, la clase de renta
+        o el certificado ya guardados para él.
+      not_found: No hay ningún registro de retención para ese ejercicio, clase de
+        renta y pagador. Puede que ya se haya eliminado.
+      own_tax_id: El NIF del pagador es el tuyo. Una retención que practicas tú no
+        es un crédito a tu favor.
+      repercutido_exceeds_ingreso: El ingreso a cuenta que te han repercutido no puede
+        ser mayor que el que hizo el pagador.
+      stale_revision: Este registro de retención cambió desde que lo leíste. Vuelve
+        a leerlo y reinténtalo.
+      taxpayer_tax_id_unknown: Tu perfil todavía no tiene NIF, así que no se puede
+        descartar que el pagador seas tú. Añade primero tu NIF al perfil.
+      validation: El registro de retención no se guardó. Revisa el NIF del pagador,
+        que los importes tengan como máximo dos decimales y el certificado.
   retencion_soportada_absence:
     errors:
       already_attested: Ya hay una declaración de ausencia activa para esta clase

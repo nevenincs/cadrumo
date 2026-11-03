@@ -274,6 +274,34 @@ aggregation:
         is yourself cannot be ruled out. Add your NIF to the profile first.
       validation: 'The withholding record was not saved: check the payer ID, the amounts
         (at most two decimals) and the certificate fingerprint.'
+    served:
+      certificate_file_unreadable: The certificate file could not be read. Check that
+        it still exists, is not empty and is a PDF, an image or an XML document, then
+        choose it again.
+      certificate_fingerprint_mismatch: The certificate file does not match the fingerprint
+        recorded for it, so nothing was stored. Choose the right file and try again.
+      certificate_needs_fingerprint: A payer certificate needs its document. Choose
+        the certificate file, or declare the withholding yourself if you have no certificate.
+      certificate_not_in_custody: Cadrumo holds no stored certificate with that fingerprint,
+        or the stored file no longer matches it. Choose the certificate file so Cadrumo
+        keeps it among your encrypted documents.
+      ejercicio_unsupported: This year is outside the filing years Cadrumo supports.
+      family_not_declared: The Modelo 100 for this year reads no withholding suffered,
+        so a record here would never reach a calculation.
+      identity_mismatch: The record does not match the payer, income class or certificate
+        already stored for it.
+      not_found: No withholding record exists for that year, income class and payer.
+        It may already have been removed.
+      own_tax_id: The payer's tax ID (NIF) is your own. Withholding you practise yourself
+        is not a credit in your favour.
+      repercutido_exceeds_ingreso: The payment on account (ingreso a cuenta) passed
+        on to you cannot be larger than the one the payer made.
+      stale_revision: This withholding record changed since you read it. Read it again
+        and retry.
+      taxpayer_tax_id_unknown: Your profile has no tax ID (NIF) yet, so a payer that
+        is yourself cannot be ruled out. Add your NIF to your profile first.
+      validation: The withholding record was not saved. Check the payer's tax ID,
+        that the amounts have at most two decimals, and the certificate.
   retencion_soportada_absence:
     errors:
       already_attested: An active absence attestation already exists for this income
