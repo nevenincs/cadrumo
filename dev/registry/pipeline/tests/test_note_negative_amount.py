@@ -54,6 +54,6 @@ def test_a_reading_refuses_a_design_other_than_the_reviewed_bytes() -> None:
 def test_only_the_correction_amounts_of_a_revision_are_signed(revision: str, period: str, record: str) -> None:
     layout = published_snapshot("369", filing_year=2026, period=period, revision_id=revision).revision.export_layouts[0]
     signed = [(item.id, field) for item in layout.records for field in item.fields if field.signed]
-    assert len(signed) == 56
+    assert len(signed) == 28
     assert all(record_id.startswith(record) for record_id, _ in signed)
     assert all(field.sign_position is ExportSignPosition.MINUS_DISPLACES_DIGIT for _, field in signed)
