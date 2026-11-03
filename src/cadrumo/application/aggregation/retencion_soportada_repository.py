@@ -92,8 +92,15 @@ type RetencionSoportadaRefusalReason = Literal[
     "family_not_declared",
     "identity_mismatch",
     "certificate_not_in_custody",
+    "certificate_file_unreadable",
+    "certificate_fingerprint_mismatch",
 ]
-"""Why a write was refused before it reached storage."""
+"""Why a write was refused before it reached storage.
+
+The last two are refused by the operation that reads the certificate file before the
+write path runs; the one error type serves their sentences, so every certificate refusal
+is worded by the same catalogue keys.
+"""
 
 
 class RetencionSoportadaWriteRefusedError(CadrumoError):

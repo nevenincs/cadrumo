@@ -36,6 +36,7 @@ from ..aggregation.retencion_soportada_repository import (
 )
 from ..ledger.evidence import admit_evidence_file
 from ..ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ..operations.error_detail import operation_refusal_words
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
@@ -97,6 +98,22 @@ def _refusal_code(reason: RetencionSoportadaCertificadoRefusalReason) -> str:
     if reason == "stale_revision":
         return RETENCION_SOPORTADA_REVISION_REFUSAL_CODE
     return RETENCION_SOPORTADA_WRITE_REFUSAL_CODE
+
+
+def _served_words(reason: RetencionSoportadaCertificadoRefusalReason, ejercicio: int) -> dict[str, object]:
+    """The finished sentence and its language for a certificate custody or file refusal; nothing for the rest.
+
+    The sentence is worded from the catalogue key of the refusal alone, so it names
+    neither the file, its path nor any value the operator typed.
+    """
+    match reason:
+        case "certificate_not_in_custody" | "certificate_file_unreadable" | "certificate_fingerprint_mismatch":
+            words = operation_refusal_words(RetencionSoportadaWriteRefusedError(reason, ejercicio=ejercicio))
+        case _:
+            return {}
+    if words is None:
+        return {}
+    return {"refusal_words": words[0], "refusal_words_language": words[1]}
 
 
 def _read_certificate(request: RetencionSoportadaRecordRequest) -> _CertificateFile | _CertificateRefusal | None:
@@ -353,7 +370,12 @@ class RetencionSoportadaCertificadoExecutor:
     ) -> OperationRefusalEvidence:
         code = _refusal_code(refused.reason)
         refusal = RetencionSoportadaRefusalProjection.model_validate(
-            {"code": code, "reason": refused.reason, "ejercicio": request.ejercicio},
+            {
+                "code": code,
+                "reason": refused.reason,
+                "ejercicio": request.ejercicio,
+                **_served_words(refused.reason, request.ejercicio),
+            },
         )
         result = RetencionSoportadaOperationExecutionResult(
             operation_id=operation_id,

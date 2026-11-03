@@ -9,14 +9,16 @@ from __future__ import annotations
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.retencion_soportada_label import retencion_soportada_clase_label
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.public_scalar import PublicDecimal
 from .contracts import (
     RetencionSoportadaCertificadoRefusalReason,
@@ -73,6 +75,16 @@ class RetencionSoportadaRefusalProjection(BaseModel):
     code: Literal["REFUSED_RETENCION_SOPORTADA_WRITE", "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT"]
     reason: RetencionSoportadaCertificadoRefusalReason
     ejercicio: FilingYear
+    #: The finished sentence a frontend shows for the refusal and the language it is in, served for the
+    #: certificate custody and file refusals, worded by the operation error detail's rules.
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> RetencionSoportadaRefusalProjection:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
 
 class RetencionSoportadaListProjection(BaseModel):
