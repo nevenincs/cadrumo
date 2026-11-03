@@ -344,8 +344,9 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
+            # The first verification seeded the prior-year Modelo 100 evidence, which now supplies the
+            # previous-year income binding; a typed value that differs would contest it.
             casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
-            binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T4,
         ).revision
     report_two = verify_revision(

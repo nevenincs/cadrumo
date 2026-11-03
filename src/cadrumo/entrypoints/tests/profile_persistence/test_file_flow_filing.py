@@ -535,8 +535,9 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
         # Second filing: revision-2 with corrected inputs, filed at T5.
         revision_two = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
+            # The first verification seeded the prior-year Modelo 100 evidence, which now supplies the
+            # previous-year income binding; a typed value that differs would contest it.
             casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
-            binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_450,
             clock=T4,
         ).revision
@@ -682,8 +683,9 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
     ) as _calculation_ports_592:
         revision_two = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
+            # The first verification seeded the prior-year Modelo 100 evidence, which now supplies the
+            # previous-year income binding; a typed value that differs would contest it.
             casilla_inputs={**DEFAULT_130_BASELINE_INPUTS},
-            binding_values=DEFAULT_130_BINDING_VALUES,
             ports=_calculation_ports_592,
             clock=T4,
         ).revision
