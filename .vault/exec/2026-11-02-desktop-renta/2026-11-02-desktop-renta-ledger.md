@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ecb2c30847a18212d116632002b2291c790bcf4ee1c85547b5704e94d6e96693'
+body_hash: 'sha256:1671723ba9176aeaed43d63f3763177e3dc766a7578bdbf142f946ce744b7ff7'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -816,6 +816,26 @@ related:
 - `S49` `verify:` `tauri test-unit` -> `fail`
 - `S49` `verify:` `test_desktop_chrome` -> `fail`
 - `S49` `by:` `vaultspec-standard-executor`
+- `S48` `M` `src/cadrumo/application/modelo/profile_derived_facts.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_autonomic_deduccion_injection.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_autonomic_deduccion_advisory.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_profile_binding_real_path.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_non_derived_injector_preservation.py`
+- `S48` `M` `src/cadrumo/locales/en/application.yml`
+- `S48` `M` `src/cadrumo/locales/es/application.yml`
+- `S48` `M` `src/cadrumo/locales/ca/application.yml`
+- `S48` `M` `src/cadrumo/locales/hu/application.yml`
+- `S48` `M` `src/cadrumo/locales/en/common.yml`
+- `S48` `M` `src/cadrumo/locales/es/common.yml`
+- `S48` `M` `src/cadrumo/locales/ca/common.yml`
+- `S48` `M` `src/cadrumo/locales/hu/common.yml`
+- `S48` `M` `dev/locales/tests/test_audit.py`
+- `S48` `verify:` `ruff` -> `pass`
+- `S48` `verify:` `ty` -> `pass`
+- `S48` `verify:` `lint-imports` -> `pass`
+- `S48` `verify:` `pytest settlement, export, locale audit` -> `fail`
+- `S48` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S48` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -874,3 +894,4 @@ related:
 - `S44` Commit 8a53bf9e6f (readers, verification findings, work form, workspace and 8 locale catalogues also in it). A projected year reads at calculation grade through `reading_snapshot;` verify refuses with `registry_filing_year_projected,` export with `errors.snapshot.filing_year_projected.` Wide-suite failures attributed to other lanes (M130, 131, layout). Open: inventory-anexo-d-applicability is authored for 2025 only, blocking box 0177 for any projected year; state-projection readiness still requests filing grade.
 - `S50` Commit 4902820ea6. Anexo D applies from its first authored filing year on `(inventory_anexo_d_applies),` so a projected year resolves 0177/0181/0182. Readiness reads at the reachable grade and refuses in served words. Open: the typed modelo.readiness.summary still carries only the cause token to the window.
 - `S49` Commits af49eeff4c contract and fixtures, e0094299fc custody UI. Disagreement operations admitted in the relay with no UI (S51). Custody refusals show the generic not-saved notice because the backend serves no refusal words for the record; asked the withholding session to serve them. PARTIAL now its own call kind via settle.rs. Failures not from this Step: modelo-workspace.spec.ts:130/:156 (fail on pre-regeneration fixtures), `automation_picker.rs:163` Rust tests, 17 unused chrome keys.
+- `S48` Commits a2b0346b3f and the identity-inventory enrolment of the S49 certificate hints. `authored_year` required; settlement-unsupported words name the suspended and the waived refund (0693, 0694, art. 97.6 LIRPF). Remaining identity-inventory failure is other lanes' keys. s20-attribution-incomplete: af80a603c4, f734e601ba and 6720e519fc also own unused chrome keys. Fixtures `settlement-100-0A-unsupported-*` to re-record in S45.

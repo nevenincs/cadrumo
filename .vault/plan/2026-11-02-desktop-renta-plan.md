@@ -17,7 +17,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:0afdc5f737bc15d9e99f795ad9a07a6cad89d6a72545226fecff11ad21a9037f'
+body_hash: 'sha256:22e5c21a0b11694bc903c94d2557cf5756ed4af0eb6e299c8ba5cd4bf4b1acc4'
 ---
 
 # `desktop-renta` plan
@@ -84,7 +84,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [ ] `P01.S45` - [Sonnet high] derive the years every Renta test exercises from the support declaration and the authored editions, take the fixture generator year from the registry, and read projection from a served field instead of the revision id; `src/cadrumo/application/modelo/tests/test_modelo_100_art_50_3_compensation_verification.py`.
 - [ ] `P01.S46` - [Opus medium] serve, per withholding credit, the calculated boxes that depend on it so the credits panel stops walking formula operands in the window; `native/desktop/frontend/src/components/modelo/workspace/creditBoxes.ts`.
 - [x] `P01.S47` - [Opus medium] ground box 0506 in LIRPF art. 84.2.3 and the AEAT design, applying the remainder of the joint reduction to the savings base, so the joint calculation and comparison do not over-tax savings income; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
-- [ ] `P01.S48` - [Sonnet high] resolve the low plan-close findings: required authored_year, settlement-unsupported words naming a waived refund in all four locales; `src/cadrumo/application/modelo/profile_derived_facts.py`.
+- [x] `P01.S48` - [Sonnet high] resolve the low plan-close findings: required authored_year, settlement-unsupported words naming a waived refund in all four locales; `src/cadrumo/application/modelo/profile_derived_facts.py`.
 - [x] `P01.S49` - [Sonnet high] mirror the merged backend on the desktop: regenerate the modelo and ledger contracts for the disagreement operations and the form note finding id, and give the withholding certificate record a certificate file picker with served words for the custody refusals; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
 - [x] `P01.S50` - [Sonnet high] let a projected Modelo 100 year resolve the Anexo D inventory applicability through the registry selection instead of an exact year match, and serve state-projection readiness at the grade the year reaches; `src/cadrumo/application/aggregation/inventory.py`.
 - [ ] `P01.S51` - [Opus medium] design and [Sonnet high] build the Modelo workspace door for a blocking credit or tier disagreement: list the served disagreements, accept one with a reason and revoke an acceptance at its expected revision, all in served words with stories and a scenario; `native/desktop/frontend/src/components/modelo/workspace`.
