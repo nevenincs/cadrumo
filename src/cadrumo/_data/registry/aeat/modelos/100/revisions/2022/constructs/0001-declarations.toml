@@ -60,6 +60,7 @@ casilla_ids = [
     "1388",
     "1389",
     "1390",
+    "1391",
     "0501",
     "base-liq-neg-general-base-positiva-compensable",
     "base-liq-neg-general-em4-aplicada-maxima",
@@ -83,6 +84,7 @@ formulas = [
     "renta-base-liquidable-negativa-general-em3-pendiente-fin",
     "renta-base-liquidable-negativa-general-em2-pendiente-fin",
     "renta-base-liquidable-negativa-general-em1-pendiente-fin",
+    "renta-base-liquidable-negativa-general-generada",
 ]
 dependency_classifications = ["renta-dep-100"]
 [[revisions."2022".constructs]]

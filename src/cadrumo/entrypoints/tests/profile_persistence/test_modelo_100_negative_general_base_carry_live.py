@@ -42,9 +42,11 @@ from ....application.modelo.calculation_bucket_actions import (
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.error_codes import resolve_error_message
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.calculations.registry.tests.registry_observations import (
@@ -88,6 +90,11 @@ _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
 )
 _CASILLA_0501: CasillaId = validated_casilla_id("0501", surface="_CASILLA_0501")
+_BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435", surface="_BASE_IMPONIBLE_GENERAL")
+_BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500", surface="_BASE_LIQUIDABLE_GENERAL")
+_BASE_LIQUIDABLE_SOMETIDA: CasillaId = validated_casilla_id("0505", surface="_BASE_LIQUIDABLE_SOMETIDA")
+#: A direct-estimation expense the filer enters by hand, with no activity income against it.
+_ACTIVITY_MANUAL_EXPENSE: CasillaId = validated_casilla_id("0184", surface="_ACTIVITY_MANUAL_EXPENSE")
 _TRABAJO_INGRESOS: CasillaId = validated_casilla_id("0003", surface="_TRABAJO_INGRESOS")
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
@@ -236,7 +243,12 @@ def test_m100_prior_negative_general_base_carries_without_manual_0501_input(
 def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """A real 1389 amount becomes 0501 and reduces 0500 by the same amount."""
+    """A real 1389 amount becomes 0501 and reduces 0505, leaving 0500 before the compensation.
+
+    The AEAT design defines 0501 as the compensation applied "si la casilla [0500]
+    es positiva y hasta el límite máximo de su importe", so 0500 is the base
+    liquidable general before it and 0505 is the base after it.
+    """
     obs_repo = CalculationObservationRepository(objects=secure_objects)
     _seed_taxpayer_unit_profile(secure_objects)
     # The filer carries on an economic activity, so its Anexo D inventory rows
@@ -267,9 +279,79 @@ def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     assert Decimal(applied.casilla_values[validated_casilla_id("0435", surface="test")]) == Decimal(
         baseline.casilla_values[validated_casilla_id("0435", surface="test")]
     )
-    assert Decimal(applied.casilla_values[validated_casilla_id("0500", surface="test")]) == (
-        Decimal(baseline.casilla_values[validated_casilla_id("0500", surface="test")]) - Decimal("2000.00")
+    assert Decimal(applied.casilla_values[_BASE_LIQUIDABLE_GENERAL]) == Decimal(
+        baseline.casilla_values[_BASE_LIQUIDABLE_GENERAL]
     )
+    assert Decimal(applied.casilla_values[_BASE_LIQUIDABLE_SOMETIDA]) == (
+        Decimal(baseline.casilla_values[_BASE_LIQUIDABLE_SOMETIDA]) - Decimal("2000.00")
+    )
+    assert Decimal(applied.casilla_values[_GENERATED_PENDING]) == Decimal("0")
+
+
+def test_m100_negative_general_base_is_carried_in_1391_and_taxes_nothing(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A loss-making year leaves 0500 negative, 0505 at zero and its magnitude in 1391.
+
+    Art. 50.1 forbids the reductions from making the base negative, so 0500 is
+    negative only because the base imponible general is, and it then equals it.
+    Box 1391 holds this year's own negative base pending for the next four years.
+    """
+    obs_repo = CalculationObservationRepository(objects=secure_objects)
+    _seed_taxpayer_unit_profile(secure_objects)
+    InventoryLedgerRepository(objects=secure_objects).save(
+        InventoryLedgerDocument(ledgers=(inventory_ledger("actividad"),))
+    )
+    _seed_prior_m100_generated_pending(obs_repo, source_year=_NEWEST_EDITION - 1, value=Decimal("0"))
+    _seed_zero_pagos_quarters(obs_repo, filing_year=_NEWEST_EDITION)
+
+    revision = _calculate_m100(
+        secure_objects,
+        filing_year=_NEWEST_EDITION,
+        casilla_inputs={_ACTIVITY_MANUAL_EXPENSE: Decimal("5000.00")},
+    ).revision
+
+    base_imponible = Decimal(revision.casilla_values[_BASE_IMPONIBLE_GENERAL])
+    assert base_imponible < Decimal("0")
+    assert Decimal(revision.casilla_values[_BASE_LIQUIDABLE_GENERAL]) == base_imponible
+    assert Decimal(revision.casilla_values[_CASILLA_0501]) == Decimal("0")
+    assert Decimal(revision.casilla_values[_BASE_LIQUIDABLE_SOMETIDA]) == Decimal("0")
+    assert Decimal(revision.casilla_values[_GENERATED_PENDING]) == -base_imponible
+
+
+def test_m100_prior_return_without_the_older_remainders_refuses_naming_them(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A stored prior return that shows 1391 but not 1384, 1387 or 1390 names those boxes.
+
+    The older origin rows open from the prior return's remainders. A box the
+    return does not show is unknown, so the stock it opens cannot read as zero.
+    """
+    obs_repo = CalculationObservationRepository(objects=secure_objects)
+    _seed_taxpayer_unit_profile(secure_objects)
+    _save_observation(
+        obs_repo,
+        modelo="100",
+        filing_year=_NEWEST_EDITION - 1,
+        period=_PERIOD,
+        casilla_values={_GENERATED_PENDING: Decimal("1500.00")},
+    )
+    _seed_zero_pagos_quarters(obs_repo, filing_year=_NEWEST_EDITION)
+
+    with pytest.raises(RegistryValidationError) as refused:
+        _calculate_m100(secure_objects, filing_year=_NEWEST_EDITION)
+
+    assert refused.value.translated_message == "errors.calc.previous_filing_casillas_unobserved"
+    context = refused.value.context or {}
+    assert context["casilla_ids"] == "1384,1387,1390"
+    assert (context["source_modelo"], context["source_filing_year"], context["source_period"]) == (
+        "100",
+        _NEWEST_EDITION - 1,
+        _PERIOD,
+    )
+    words = resolve_error_message(refused.value, locale="es")
+    assert words.startswith(f"La declaración del modelo 100 de {_NEWEST_EDITION - 1} (0A)")
+    assert "las casillas 1384,1387,1390" in words
 
 
 def test_m100_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> None:

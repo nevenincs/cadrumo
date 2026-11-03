@@ -2,10 +2,12 @@
 # liability must be determined when the taxpayer reports a positive general
 # taxable base. casilla 0595 (cuota resultante de la autoliquidacion) is the
 # tax liability BEFORE pagos a cuenta (retenciones / pagos fraccionados); it is
-# the box that feeds the cuota diferencial (0610 = 0595 - 0609). When base
-# liquidable general (0500) is strictly positive but 0595 resolves to zero, the
-# return computes no tax on positive taxable activity -- a silent
-# under-declaration the verify gate would otherwise grant with zero findings.
+# the box that feeds the cuota diferencial (0610 = 0595 - 0609). When the base
+# liquidable general sometida a gravamen (0505, what is left of 0500 after the
+# compensation of earlier negative bases in 0501) is strictly positive but 0595
+# resolves to zero, the return computes no tax on positive taxable activity -- a
+# silent under-declaration the verify gate would otherwise grant with zero
+# findings. A base fully compensated in 0501 leaves 0505 at zero and taxes nothing.
 #
 # ADVISORY (non-blocking WARNING), not BLOCKING: a positive base liquidable
 # general with a legitimately zero cuota is possible (general base at or below
@@ -21,7 +23,7 @@
 [[revisions."2022".verification_predicates]]
 id = "implies-nonzero:cuota-resultante-determinada-cuando-base-liquidable-general-positiva"
 predicate_id = "modelo-100-2022-cuota-resultante-determinada-cuando-base-liquidable-general-positiva"
-expression = 'implies_nonzero(["0500", "0595"])'
+expression = 'implies_nonzero(["0505", "0595"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-63", "ley-35-2006:art-79"]
 

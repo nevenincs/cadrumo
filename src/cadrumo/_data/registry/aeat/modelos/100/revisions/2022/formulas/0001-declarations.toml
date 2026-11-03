@@ -861,12 +861,13 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["4ª Fase: Determinación del rendimiento neto de la actividad"]
 # Ley 35/2006 art. 50.3 compensation chain of Anexo C, oldest origin row
-# first. The positive base liquidable general before compensation is
-# max(0, 0435 − 0461 − 0468), the amount 0500 holds before it subtracts 0501.
+# first. Casilla 0500 is the base liquidable general before compensation, and
+# 0501 compensates "si la casilla [0500] es positiva y hasta el límite máximo de
+# su importe", so the positive base the chain consumes is max(0, 0500).
 [[revisions."2022".formulas]]
 id = "renta-base-liquidable-negativa-general-base-positiva-compensable"
 target_casilla_id = "base-liq-neg-general-base-positiva-compensable"
-expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ op = "subtract", args = [{ casilla_id = "0435" }, { casilla_id = "0461" }] }, { casilla_id = "0468" }] }] }
+expression = { op = "max", args = [{ literal = "0" }, { casilla_id = "0500" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-50"]
 source_refs = ["lirpf-cuota-chain-authority"]
@@ -982,3 +983,20 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2022".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["Si la base liquidable general resultase negativa", "La compensación deberá efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Casilla 1391, "Base liquidable general negativa de <ejercicio> pendiente de
+# compensar en los 4 ejercicios siguientes", holds only this year's own negative
+# base liquidable general: the older origin rows carry their remainders in 1384,
+# 1387 and 1390. Art. 50.1 forbids the reductions from making 0500 negative, so
+# 0500 is negative only when the base imponible general is, and 1391 is its
+# magnitude; a positive or zero 0500 leaves nothing to carry.
+[[revisions."2022".formulas]]
+id = "renta-base-liquidable-negativa-general-generada"
+target_casilla_id = "1391"
+expression = { op = "max", args = [{ literal = "0" }, { op = "negate", args = [{ casilla_id = "0500" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["sin que pueda resultar negativa como consecuencia de dichas disminuciones", "Si la base liquidable general resultase negativa, su importe podrá ser compensado"]

@@ -1698,9 +1698,9 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 # internal and read only by the blocking gates that require every applied row
 # (1381, 1383, 1386, 1389) to equal its maximum.
 #
-# The positive base before compensation: casilla 0500 subtracts the
-# compensation 0501 from 0435 − 0461 − 0468, so this is that difference before
-# the compensation, floored at zero because only a positive base compensates.
+# The positive base before compensation: casilla 0500 is the base liquidable
+# general before the compensation 0501, floored at zero because only a positive
+# base compensates.
 [[revisions."2022".casillas]]
 id = "base-liq-neg-general-base-positiva-compensable"
 continuidad_id = "irpf-anexo-c-base-liq-neg-base-positiva-compensable"

@@ -324,7 +324,7 @@ def _observed_casilla_values(
     match: _RegistryModeloObservationLike,
     expected_year: int,
     required_period: str,
-) -> list[Decimal]:
+) -> list[Decimal] | _UnobservedCasillas:
     source_ids = _previous_filing_source_ids(selector)
     required_ids = (
         frozenset(source_ids)
@@ -332,25 +332,33 @@ def _observed_casilla_values(
         else frozenset(selector.required_source_casilla_ids)
     )
     values: list[Decimal] = []
-    observed_count = 0
+    unobserved = tuple(casilla_id for casilla_id in source_ids if match.casilla_values.get(casilla_id) is None)
+    missing_required = tuple(casilla_id for casilla_id in unobserved if casilla_id in required_ids)
+    if missing_required or (source_ids and len(unobserved) == len(source_ids)):
+        return _UnobservedCasillas(
+            binding_id=binding.id,
+            source_key=(selector.source_modelo, expected_year, required_period),
+            casilla_ids=missing_required or unobserved,
+        )
     for casilla_id in source_ids:
         casilla_value = match.casilla_values.get(casilla_id)
-        if casilla_value is None:
-            if casilla_id in required_ids:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
-                    f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}",
-                )
-            values.append(Decimal("0"))
-            continue
-        observed_count += 1
-        values.append(casilla_value)
-    if source_ids and observed_count == 0:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} requires at least one observed source casilla "
-            f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}",
-        )
+        values.append(Decimal("0") if casilla_value is None else casilla_value)
     return values
+
+
+@dataclass(frozen=True)
+class _UnobservedCasillas:
+    """A matched earlier filing does not show boxes a binding reads.
+
+    Returned instead of values by :func:`_observed_casilla_values` and collected
+    by :func:`resolve_previous_filing_binding_values`, which names every such box
+    of every binding in one refusal instead of stopping at the first. A box the
+    observed return does not show is unknown, never zero.
+    """
+
+    binding_id: BindingId
+    source_key: tuple[str, int, str]
+    casilla_ids: tuple[CasillaId, ...]
 
 
 class _PreviousFilingObservationAbsentError(CadrumoError):
@@ -361,8 +369,9 @@ class _PreviousFilingObservationAbsentError(CadrumoError):
     can never be caught by a broad ``except RegistryValidationError`` /
     ``except CoreValidationError`` elsewhere in the tree — the raise site's
     OTHER two conditions (an ambiguous multiple-match, or a matched filing
-    missing a required source casilla) are structural defects and must keep
-    raising :class:`RegistryValidationError` unchanged. Absence is not a
+    missing a required source casilla) must keep refusing with
+    :class:`RegistryValidationError`; the second names every box the matched
+    filing does not show. Absence is not a
     validation failure: AEAT has simply never seen this filing yet, which is
     exactly the SAME condition the sibling relation-fold channel resolves to
     an unsatisfied slot rather than a refusal. Caught immediately by
@@ -379,7 +388,7 @@ def _resolve_anchor_values(
     *,
     expected_year: int,
     required_period: str,
-) -> list[Decimal]:
+) -> list[Decimal] | _UnobservedCasillas:
     matches = tuple(
         observation
         for observation in available
@@ -395,7 +404,10 @@ def _resolve_anchor_values(
             )
         values: list[Decimal] = []
         for member_match in matches:
-            values.extend(_observed_casilla_values(binding, selector, member_match, expected_year, required_period))
+            member_values = _observed_casilla_values(binding, selector, member_match, expected_year, required_period)
+            if isinstance(member_values, _UnobservedCasillas):
+                return member_values
+            values.extend(member_values)
         return values
     if not matches:
         raise _PreviousFilingObservationAbsentError(
@@ -418,7 +430,7 @@ def _resolve_binding_values(
     filing_year: int,
     period: str,
     activity_start_date: date | None = None,
-) -> list[Decimal] | None:
+) -> list[Decimal] | _UnobservedCasillas | None:
     selector = _previous_filing_selector(binding)
     required_anchors = selector.required_period_anchors_for_target(period)
     if not required_anchors:
@@ -435,14 +447,12 @@ def _resolve_binding_values(
             scoped_pre_activity = True
             continue
         try:
-            values.extend(
-                _resolve_anchor_values(
-                    binding,
-                    selector,
-                    available,
-                    expected_year=expected_year,
-                    required_period=required_period,
-                ),
+            anchor_values = _resolve_anchor_values(
+                binding,
+                selector,
+                available,
+                expected_year=expected_year,
+                required_period=required_period,
             )
         except _PreviousFilingObservationAbsentError:
             # The whole binding resolves to unsatisfied rather than a partial
@@ -450,6 +460,9 @@ def _resolve_binding_values(
             # A malformed binding (RegistryValidationError, not caught here)
             # still propagates unchanged.
             return None
+        if isinstance(anchor_values, _UnobservedCasillas):
+            return anchor_values
+        values.extend(anchor_values)
     if not values and scoped_pre_activity:
         return _zero_values_for_scoped_out_binding(selector)
     return values
@@ -475,6 +488,7 @@ def resolve_previous_filing_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     excluded = excluded_binding_ids or frozenset()
+    unobserved: list[_UnobservedCasillas] = []
     for binding in revision.bindings:
         if binding.id in excluded:
             continue
@@ -489,12 +503,25 @@ def resolve_previous_filing_binding_values(
             period=period,
             activity_start_date=activity_start_date,
         )
+        if isinstance(values, _UnobservedCasillas):
+            unobserved.append(values)
+            continue
         if values is None:
             continue
         resolved[binding.id] = _aggregate_previous_filing_binding(
             binding,
             values,
             source_casilla_ids=_previous_filing_source_ids(_previous_filing_selector(binding)),
+        )
+    if unobserved:
+        source_modelo, source_filing_year, source_period = unobserved[0].source_key
+        same_filing = tuple(signal for signal in unobserved if signal.source_key == unobserved[0].source_key)
+        raise RegistryValidationError.for_previous_filing_casillas_unobserved(
+            source_modelo=source_modelo,
+            source_filing_year=source_filing_year,
+            source_period=source_period,
+            casilla_ids=tuple(casilla_id for signal in same_filing for casilla_id in signal.casilla_ids),
+            binding_ids=tuple(signal.binding_id for signal in same_filing),
         )
     return resolved
 

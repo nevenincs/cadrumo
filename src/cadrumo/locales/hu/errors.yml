@@ -137,6 +137,11 @@ errors:
     m210_imputation_no_filing_year: Az M210 ingatlan-imputáció számításához nem nulla
       bevallási év szükséges.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
+    previous_filing_casillas_unobserved: 'A tárolt Modelo {source_modelo} bevallásodban
+      ({source_filing_year}, {source_period}) nem szerepelnek a(z) {casilla_ids} mezők,
+      amelyeket ez a számítás belőle visz tovább. Egy mező, amely nem szerepel, ismeretlen,
+      nem nulla: rögzítsd vagy vedd fel azt a bevallást ezekkel a mezőkkel, majd számolj
+      újra.'
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
     row_field_template_supplied_as_input: A(z) {casilla_ids} mezők a(z) {record_ids}
       minden részletsorában külön értéket kapnak, ezért nem adhatók meg egyetlen bemeneti

@@ -86,8 +86,13 @@ def _row(provider: RegistrySchemaAccessor, field_id: str) -> XmlDictionaryEntry:
     return next(entry for entry in entries if entry.field_id == field_id)
 
 
-def _draft(provider: RegistrySchemaAccessor, year: int, inputs: dict[str, ModeloInputValue]) -> ModeloDraft:
-    stated = filer_with_nothing_else(provider)
+def _draft(
+    provider: RegistrySchemaAccessor,
+    year: int,
+    inputs: dict[str, ModeloInputValue],
+    facts: dict[str, ModeloInputValue] | None = None,
+) -> ModeloDraft:
+    stated = {**filer_with_nothing_else(provider), **(facts or {})}
     amounts = {key: value for key, value in stated.items() if isinstance(value, Decimal)}
     bound = resolve_available_bound_inputs_by_casilla_id(provider.get_snapshot("100").revision, amounts)
     return build_draft(
@@ -174,3 +179,49 @@ def test_activity_figures_without_the_activity_key_refuse_by_that_box(
 
     assert str(refused.value.translated_message).endswith("xml_value_required_missing")
     assert (refused.value.context or {})["box"] == str(_row(provider, _ACTIVITY_KEY_FIELD).casilla_id)
+
+
+_COMPENSATION_BLOCK = "DatosEconomicos/Resultados/BaseLiquidableRes"
+# Origin years whose applied compensation the base liquidable general feeds, from the edition that applies it.
+_COMPENSATING_EDITIONS = tuple(year for year in sorted(_XSD_BY_YEAR) if year >= 2022)
+
+
+@pytest.mark.parametrize("year", _COMPENSATING_EDITIONS)
+def test_the_base_liquidable_general_is_exported_before_the_compensation_of_earlier_negative_bases(
+    operation: PinnedAuthorityOperation, year: int, tmp_path: Path
+) -> None:
+    """BLGRAL carries 0500 before JCOMPE is applied and BLGGRAV carries what is left.
+
+    The design orders BLGRAL, JCOMPE and BLGGRAV and defines JCOMPE as the
+    compensation applied "si la casilla [0500] es positiva", so the exported base
+    liquidable general does not already hold the compensation.
+    """
+    provider = _provider(operation, year)
+    if provider is None:
+        return
+    pending = Decimal("1000.00")
+    inputs: dict[str, ModeloInputValue] = {
+        **_activity_key_inputs(provider, key="A05"),
+        "0003": Decimal("20000.00"),
+        str(_row(provider, "C3BLAEM1").casilla_id): pending,
+        # The schema's tipo_Titular: 2 is DECLARANTE, the holder of the pending base.
+        str(_row(provider, "C3BLT").casilla_id): "2",
+    }
+    # Last year's own negative base opens this year's previous-year row.
+    draft = _draft(provider, year, inputs, {"renta-base-liquidable-negativa-general-anterior": pending})
+    values = {value.casilla_id: value.value for value in draft.values}
+    # Art. 50.1: the base imponible general less the joint and previsión social reductions.
+    base = Decimal(str(values["0435"])) - Decimal(str(values["0461"])) - Decimal(str(values["0468"]))
+    assert base > pending
+    assert values["1388"] == pending
+
+    payload = _render(provider, draft, tmp_path)
+
+    assert record_design_schema_violations(payload, xsd=_XSD_BY_YEAR[year]) == ()
+    block = etree.fromstring(payload).find(_COMPENSATION_BLOCK)
+    assert block is not None
+    assert Decimal(block.findtext("BLGRAL") or "") == base
+    assert Decimal(block.findtext("JCOMPE") or "") == pending
+    assert Decimal(block.findtext("BLGGRAV") or "") == base - pending
+    order = [child.tag for child in block]
+    assert order.index("BLGRAL") < order.index("JCOMPE") < order.index("BLGGRAV")

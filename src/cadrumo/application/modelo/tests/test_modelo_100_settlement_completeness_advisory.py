@@ -5,8 +5,9 @@ positive-income filer whose IRPF liability resolved to zero was granted
 ``verificado_completo`` with zero findings — the silent under-declaration class
 that the M200 base-determination and M131 pago-fraccionado advisories
 already guard. This module pins the M100 2024/2025 guard:
-``implies_nonzero(["0500", "0595"])`` — when base liquidable general (0500) is
-strictly positive, the cuota resultante de la autoliquidación (0595, the
+``implies_nonzero(["0505", "0595"])`` — when the base liquidable general
+sometida a gravamen (0505, the base left after the Art. 50.3 compensation of
+earlier negative bases) is strictly positive, the cuota resultante de la autoliquidación (0595, the
 liability BEFORE pagos a cuenta) must be non-zero.
 
 The consequent is 0595 (the liability), NOT the cuota diferencial (0610) or the
@@ -37,9 +38,9 @@ from ..verification_predicates import evaluate_advisory_predicate_fires, evaluat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_EXPRESSION = 'implies_nonzero(["0500", "0595"])'
+_EXPRESSION = 'implies_nonzero(["0505", "0595"])'
 _PREDICATE_ID_SUFFIX = "cuota-resultante-determinada-cuando-base-liquidable-general-positiva"
-_BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500", surface="m100 settlement advisory test")
+_BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0505", surface="m100 settlement advisory test")
 _CUOTA_RESULTANTE: CasillaId = validated_casilla_id("0595", surface="m100 settlement advisory test")
 
 
@@ -162,7 +163,7 @@ def test_settlement_advisory_registered_on_revision(filing_year: int) -> None:
     """The settlement-completeness ADVISORY is wired on the live revision.
 
     Reads the loaded snapshot — the predicate exists, is ADVISORY, references
-    0500 and 0595, and both operands resolve to declared casillas whose
+    0505 and 0595, and both operands resolve to declared casillas whose
     semantics are base liquidable general (antecedent) and cuota resultante de
     la autoliquidación (consequent). No formula output is asserted.
     """
@@ -175,7 +176,7 @@ def test_settlement_advisory_registered_on_revision(filing_year: int) -> None:
     assert "ley-35-2006:art-79" in {str(r) for r in predicate.legal_refs}
 
     casillas_by_id = {c.id: c for c in snapshot.revision.casillas}
-    assert _BASE_LIQUIDABLE_GENERAL in casillas_by_id, "antecedent 0500 must be a declared casilla"
+    assert _BASE_LIQUIDABLE_GENERAL in casillas_by_id, "antecedent 0505 must be a declared casilla"
     assert _CUOTA_RESULTANTE in casillas_by_id, "consequent 0595 must be a declared casilla"
     assert casillas_by_id[_BASE_LIQUIDABLE_GENERAL].label.startswith("Base liquidable general")
     assert casillas_by_id[_CUOTA_RESULTANTE].semantic_role == "irpf_cuota_resultante_autoliquidacion"

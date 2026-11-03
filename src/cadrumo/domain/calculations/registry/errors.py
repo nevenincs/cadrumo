@@ -240,6 +240,37 @@ class RegistryValidationError(RegistryError, CoreValidationError):
             context={"casilla_ids": _csv(ids), "record_ids": _csv(records)},
         )
 
+    @classmethod
+    def for_previous_filing_casillas_unobserved(
+        cls,
+        *,
+        source_modelo: str,
+        source_filing_year: int,
+        source_period: str,
+        casilla_ids: Sequence[CasillaId],
+        binding_ids: Sequence[str],
+    ) -> Self:
+        """A stored earlier return shows none of, or not all, the boxes a carry reads from it.
+
+        The return was observed, so this is not an absent filing; but a box it
+        does not show is unknown rather than zero, and the carry it feeds would
+        otherwise read as nothing pending.
+        """
+        ids = sorted(set(casilla_ids))
+        bindings = sorted(set(binding_ids))
+        return cls(
+            f"bindings {bindings!r} require observed casillas {ids!r} "
+            f"from {source_modelo!r}/{source_filing_year}/{source_period!r}",
+            translated_message="errors.calc.previous_filing_casillas_unobserved",
+            context={
+                "source_modelo": source_modelo,
+                "source_filing_year": source_filing_year,
+                "source_period": source_period,
+                "casilla_ids": _csv(ids),
+                "binding_ids": _csv(bindings),
+            },
+        )
+
 
 class GovernedFactNotApplicableError(RegistryValidationError):
     """A registered governed fact authors no variant covering the query coordinate.

@@ -278,11 +278,11 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
 
 
 def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> None:
-    """0435 = max(0, 0432 - 0433), where 0433 is the Art. 48 G/P-loss cap."""
+    """0435 = 0432 - 0433, where 0433 is the Art. 48 G/P-loss cap."""
     # AEAT convention (per 2025 record-design dictionary HSALDO3 entry):
     # 0421 = max(0, 0419 - 0418) — positive magnitude of the net G/P loss balance
     # 0433 = min(0421, 25% of 0432) — capped portion that integrates into the base
-    # 0435 = max(0, 0432 - 0433) — base imponible general after the Art. 48
+    # 0435 = 0432 - 0433 — base imponible general after the Art. 48
     #   in-year integration cap. The distinct Art. 50.3 base-liquidable carry
     #   is applied later through casilla 0501, and is zero here.
     # Inputs: 1585 = 5000 propagates through 1607 → 0419 → 0421 → 0433.
@@ -313,7 +313,11 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
 
 
 def test_base_liquidable_general_applies_reductions() -> None:
-    """0500 = 0435 - 0461 - 0501 — reducciones (tributación conjunta, bases negativas) reduce base liquidable.
+    """0500 = 0435 - 0461 before the Art. 50.3 compensation; 0505 = 0500 - 0501 after it.
+
+    The design defines 0501 as the compensation applied "si la casilla [0500] es
+    positiva", so 0500 is the base liquidable general before it and the reduction
+    lands in 0505, the base liquidable general sometida a gravamen.
 
     0461 is now computed by renta-reduccion-art-84-conjunta from binding values.
     declaration_type = 2 (conjunta) + family situation casado (tipo-1 matrimonio) → 0461 = €3,400.
@@ -370,8 +374,10 @@ def test_base_liquidable_general_applies_reductions() -> None:
                 operand_refs=(_C1381, _C1383, _C1386, _C1389),
                 operand_casilla_refs=(_C1381, _C1383, _C1386, _C1389),
             ),
-            # 0500 = 0435 - 0461 - 0501 = 40000 - 3400 - 1000 = 35600
-            _expected_output(target_casilla_id=_C0500, value=Decimal("35600.00")),
+            # 0500 = 0435 - 0461 = 40000 - 3400 = 36600, before the compensation
+            _expected_output(target_casilla_id=_C0500, value=Decimal("36600.00")),
+            # 0505 = 0500 - 0501 = 36600 - 1000 = 35600
+            _expected_output(target_casilla_id=_C0505, value=Decimal("35600.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario)

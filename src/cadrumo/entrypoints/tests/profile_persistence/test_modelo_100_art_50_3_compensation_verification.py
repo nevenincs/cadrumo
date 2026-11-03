@@ -303,7 +303,8 @@ def _art_50_3_findings(filing_year: int, revision: CalculationRevision) -> dict[
 def _statutory_maxima(revision: CalculationRevision, stocks: Mapping[str, Decimal]) -> dict[str, Decimal]:
     """Art. 50.3, oldest row first: each row takes the lesser of its stock and the base still left."""
     values = revision.casilla_values
-    left = max(Decimal("0"), values[_BASE_LIQUIDABLE_GENERAL] + values[_COMPENSATION])
+    # 0500 is the base liquidable general before the compensation 0501.
+    left = max(Decimal("0"), values[_BASE_LIQUIDABLE_GENERAL])
     maxima: dict[str, Decimal] = {}
     for row in _ROWS:
         maxima[row.name] = min(stocks[row.name], left)

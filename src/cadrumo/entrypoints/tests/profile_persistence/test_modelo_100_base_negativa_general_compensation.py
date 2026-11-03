@@ -3,15 +3,16 @@
 The prior-year generated negative base liquidable general (1391) is copied to
 the next filing's Anexo C opening balance (1388). Its current-year applied
 amount (1389) computes the Form 100 compensation line (0501), which the base
-liquidable general formula (0500) subtracts. Art. 50.3 supplies the four-year
+liquidable general sometida a gravamen (0505) subtracts from the base
+liquidable general (0500). Art. 50.3 supplies the four-year
 carry rule and requires compensation against positive base liquidable general.
 
 Art. 48 is separate: its 25-percent rule governs the base imponible general
 integration of gains and losses (0432/0433). It does not govern the 1391 →
 1388 → 1389 → 0501 carry, and 1389 must not alter 0435.
 
-The live differential asserts that applying an Anexo C amount reduces 0501 and
-0500 by that amount while leaving 0435 unchanged; it derives the expected
+The live differential asserts that applying an Anexo C amount raises 0501 and
+lowers 0505 by that amount while leaving 0435 and 0500 unchanged; it derives the expected
 relationship from the independently stated statutory base sequence, without
 reimplementing the registry formulas.
 """
@@ -81,6 +82,7 @@ _PENDIENTE_FIN: CasillaId = validated_casilla_id("1390")  # remainder rolled for
 _APLICADA_MAXIMA: CasillaId = validated_casilla_id("base-liq-neg-general-em1-aplicada-maxima")  # Art. 50.3 ceiling
 _BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435")
 _BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500")
+_BASE_LIQUIDABLE_SOMETIDA: CasillaId = validated_casilla_id("0505")
 _PRIOR_NEGATIVE_BASE_CASILLA: CasillaId = validated_casilla_id("1391")
 #: The prior return's remainders that open the three older Anexo C rows (1380, 1382, 1385).
 _PRIOR_OLDER_REMAINDERS: tuple[CasillaId, ...] = tuple(validated_casilla_id(box) for box in ("1384", "1387", "1390"))
@@ -259,12 +261,12 @@ def test_opening_and_applied_base_liquidable_casillas_cite_art50(filing_year: in
 
 
 def test_applied_compensation_reduces_base_liquidable_general_by_applied_amount(tmp_path: Path) -> None:
-    """An Anexo C applied amount reduces 0501 and 0500, not the Art. 48 base.
+    """An Anexo C applied amount reduces 0505 through 0501, not 0500 or the Art. 48 base.
 
     Two real calculations share every input except the applied amount 1389:
-    the baseline applies zero and the compensated run applies A. Art. 50.3
-    makes 0501 the base-liquidation compensation, so 0501 and 0500 change by
-    A while 0435 remains the unchanged Art. 48 base-imponible result.
+    the baseline applies zero and the compensated run applies A. The design
+    applies 0501 "si la casilla [0500] es positiva", so 0500 is the base before
+    the compensation, 0505 drops by A and 0435 remains the Art. 48 result.
     """
     ingreso = Decimal("40000.00")
     prior_negative = Decimal("3000.00")
@@ -288,14 +290,17 @@ def test_applied_compensation_reduces_base_liquidable_general_by_applied_amount(
     assert _v(baseline, _PENDIENTE_INICIO) == prior_negative
     assert _v(compensated, _PENDIENTE_INICIO) == prior_negative
 
-    # Art. 50.3 consumption: 0501 and base liquidable general drop by the
-    # applied amount, while the Art. 48 base imponible general stays fixed.
+    # Art. 50.3 consumption: the base sometida a gravamen drops by the applied
+    # amount, while the base liquidable general before it and the Art. 48 base
+    # imponible general stay fixed.
     base_liq_drop = _v(baseline, _BASE_LIQUIDABLE_GENERAL) - _v(compensated, _BASE_LIQUIDABLE_GENERAL)
+    base_sometida_drop = _v(baseline, _BASE_LIQUIDABLE_SOMETIDA) - _v(compensated, _BASE_LIQUIDABLE_SOMETIDA)
     base_imp_drop = _v(baseline, _BASE_IMPONIBLE_GENERAL) - _v(compensated, _BASE_IMPONIBLE_GENERAL)
     assert _v(baseline, validated_casilla_id("0501")) == Decimal("0")
     assert _v(compensated, validated_casilla_id("0501")) == applied
     assert base_imp_drop == Decimal("0")
-    assert base_liq_drop == applied
+    assert base_liq_drop == Decimal("0")
+    assert base_sometida_drop == applied
 
     # Remainder rolls forward: 1390 = 1388 − 1389.
     assert _v(compensated, _PENDIENTE_FIN) == prior_negative - applied

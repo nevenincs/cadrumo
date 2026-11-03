@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-renta'
 date: '2026-11-02'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ce683a3e1db3a23e570ebdb84007bf4150d3355d61ff98eb39e7887a324d091'
+body_hash: 'sha256:7411d68490c110109c82da2431c4a3d092c98c3733cd74d686ab1f88f9924da3'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -282,6 +282,351 @@ related:
 - `S22` `verify:` `test_registered_executor_conformance -k borrador` -> `pass`
 - `S22` `verify:` `desktop-host-unit-test` -> `pass`
 - `S22` `by:` `orchestrator`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/Credits.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/Estimate.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/creditBoxes.ts`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/BoxLabel.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/modelo/workspace/Credits.stories.tsx`
+- `S15` `A` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S15` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S15` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S15` `M` `native/desktop/frontend/src/shell/userProfile.ts`
+- `S15` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S15` `M` `native/desktop/frontend/src/App.tsx`
+- `S15` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPane.tsx`
+- `S15` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S15` `M` `dev/locales/desktop_workspace_keys.py`
+- `S15` `verify:` `tsc and eslint` -> `pass`
+- `S15` `verify:` `playwright renta-credits and modelo-workspace` -> `pass`
+- `S15` `verify:` `storybook:build` -> `pass`
+- `S15` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S15` `verify:` `modelo_fixtures.py validate` -> `fail`
+- `S15` `verify:` `test_desktop_chrome` -> `fail`
+- `S15` `by:` `sonnet-high`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/facts/0175-payment-instalment-split.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/facts/0159-modelo-result-casillas.toml`
+- `S25` `M` `src/cadrumo/domain/calculations/registry/result_casillas.py`
+- `S25` `M` `src/cadrumo/application/modelo/settlement_casilla.py`
+- `S25` `M` `src/cadrumo/application/modelo/export_settlement.py`
+- `S25` `M` `src/cadrumo/core/payment_instalment_election.py`
+- `S25` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S25` `A` `src/cadrumo/application/modelo/tests/test_export_settlement_without_a_settled_box.py`
+- `S25` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S25` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S25` `verify:` `pytest split, settlement, offer, through-export, e2e` -> `pass`
+- `S25` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S25` `verify:` `lint-imports` -> `pass`
+- `S25` `by:` `sonnet-high`
+- `S14` `A` `native/desktop/frontend/src/components/profile/Household.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/profile/HouseholdPersonDialog.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/profile/householdModel.ts`
+- `S14` `A` `native/desktop/frontend/src/components/profile/Household.stories.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/modelo/workspace/TodoRail.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.stories.tsx`
+- `S14` `A` `dev/desktop_household_fixture.py`
+- `S14` `A` `native/desktop/frontend/src/dev/fixtures/household.json`
+- `S14` `A` `native/desktop/frontend/src/dev/householdFixture.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S14` `A` `native/desktop/frontend/tests/scenarios/profile-household.spec.ts`
+- `S14` `M` `src/cadrumo/application/user_profile/family_rows.py`
+- `S14` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/user_profile/wire.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S14` `M` `dev/locales/desktop_profile_interface_keys.py`
+- `S14` `verify:` `tsc and eslint` -> `pass`
+- `S14` `verify:` `playwright profile-household` -> `pass`
+- `S14` `verify:` `storybook:build` -> `pass`
+- `S14` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S14` `verify:` `pytest family_rows and ascendants` -> `pass`
+- `S14` `verify:` `cargo shell::user_profile` -> `pass`
+- `S14` `by:` `sonnet-high`
+- `S25` `M` `src/cadrumo/locales/en/application.yml`
+- `S25` `M` `src/cadrumo/locales/es/application.yml`
+- `S25` `M` `src/cadrumo/locales/ca/application.yml`
+- `S25` `M` `src/cadrumo/locales/hu/application.yml`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_export_settlement.py`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_export_settlement_through_export.py`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_export_settlement_without_a_settled_box.py`
+- `S25` `verify:` `modelo export/settlement sweep -m ''` -> `pass`
+- `S25` `verify:` `four reported e2e/settlement tests` -> `pass`
+- `S25` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S25` `verify:` `test_desktop_chrome` -> `fail`
+- `S27` `M` `src/cadrumo/application/modelo/projection.py`
+- `S27` `M` `src/cadrumo/application/modelo/projection_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/projection_words.py`
+- `S27` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S27` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S27` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S27` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S27` `M` `src/cadrumo/core/errors/registry/_application_modelo.py`
+- `S27` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_region_and_remedies.py`
+- `S27` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S27` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S27` `M` `native/desktop/frontend/src/components/modelo/workspace/Estimate.tsx`
+- `S27` `M` `native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`
+- `S27` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S27` `M` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S27` `verify:` `new projection region/remedy/label tests` -> `pass`
+- `S27` `verify:` `playwright renta-credits` -> `pass`
+- `S27` `verify:` `storybook:build` -> `pass`
+- `S27` `verify:` `relay_contracts --check` -> `pass`
+- `S27` `verify:` `manifest surface tests` -> `fail`
+- `S27` `by:` `sonnet-high`
+- `S26` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S26` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S26` `M` `src/cadrumo/application/user_profile/profile_operation_execution.py`
+- `S26` `M` `src/cadrumo/application/aggregation/renta_imputation.py`
+- `S26` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S26` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S26` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S26` `A` `src/cadrumo/adapters/persistence/profile/tests/test_descendants_operation.py`
+- `S26` `A` `src/cadrumo/entrypoints/tests/test_modelo_work_form_imputation_election.py`
+- `S26` `M` `src/cadrumo_runtime/host/tests/test_descendants_operation.py`
+- `S26` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/modelo/workspace/SourcesView.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/modelo/workspace/ProfileCompanions.tsx`
+- `S26` `M` `native/desktop/frontend/src/dev/imputationElectionFixture.ts`
+- `S26` `M` `native/desktop/frontend/src/dev/householdFixture.ts`
+- `S26` `M` `dev/desktop_household_fixture.py`
+- `S26` `M` `native/desktop/frontend/src/dev/fixtures/household.json`
+- `S26` `M` `native/desktop/frontend/tests/scenarios/profile-household.spec.ts`
+- `S26` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S26` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S26` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S26` `verify:` `pytest descendants and election flag` -> `pass`
+- `S26` `verify:` `playwright imputation-election and profile-household` -> `pass`
+- `S26` `verify:` `storybook:build` -> `pass`
+- `S26` `verify:` `tauri test-unit shell::user_profile` -> `pass`
+- `S26` `verify:` `test_desktop_chrome` -> `fail`
+- `S26` `by:` `sonnet-high`
+- `S30` `A` `src/cadrumo/application/user_profile/household_person_tax_id.py`
+- `S30` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S30` `M` `src/cadrumo/application/user_profile/ascendant_rows.py`
+- `S30` `M` `src/cadrumo/adapters/persistence/profile/tests/test_descendants_operation.py`
+- `S30` `M` `src/cadrumo/locales/en/application.yml`
+- `S30` `M` `src/cadrumo/locales/es/application.yml`
+- `S30` `M` `src/cadrumo/locales/ca/application.yml`
+- `S30` `M` `src/cadrumo/locales/hu/application.yml`
+- `S30` `verify:` `pytest descendants, ascendants, family_rows, runtime descendants, window guard` -> `pass`
+- `S30` `verify:` `ruff, ty, lint-imports` -> `pass`
+- `S30` `verify:` `desktop_household_fixture --check` -> `pass`
+- `S30` `by:` `sonnet-high`
+- `S28` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S28` `M` `src/cadrumo/application/modelo/work_form_outline.py`
+- `S28` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_work_form_outline.py`
+- `S28` `M` `src/cadrumo/entrypoints/tui/modelo/tests/workbench_fixture.py`
+- `S28` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.tsx`
+- `S28` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.stories.tsx`
+- `S28` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S28` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S28` `verify:` `pytest outline parity across 100/130/131/182/184/303/390` -> `pass`
+- `S28` `verify:` `playwright modelo-workspace` -> `pass`
+- `S28` `verify:` `storybook:build` -> `pass`
+- `S28` `verify:` `manifest generate --check and relay_contracts --check` -> `pass`
+- `S28` `by:` `sonnet-high`
+- `S29` `M` `src/cadrumo/application/modelo/projection.py`
+- `S29` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S29` `M` `src/cadrumo/core/errors/registry/_application_modelo.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/projection_m130_seeding_support.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_region_and_remedies.py`
+- `S29` `M` `src/cadrumo/locales/en/errors.yml`
+- `S29` `M` `src/cadrumo/locales/es/errors.yml`
+- `S29` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S29` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S29` `verify:` `pytest projection region/remedies/declaration` -> `pass`
+- `S29` `verify:` `manifest, fixtures and relay --check` -> `pass`
+- `S29` `verify:` `test_desktop_chrome` -> `fail`
+- `S29` `by:` `sonnet-high`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/Settlement.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/Settlement.stories.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S17` `A` `native/desktop/frontend/tests/scenarios/renta-settlement.spec.ts`
+- `S17` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S17` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S17` `M` `dev/locales/desktop_workspace_keys.py`
+- `S17` `verify:` `tsc and eslint` -> `pass`
+- `S17` `verify:` `playwright renta-settlement` -> `pass`
+- `S17` `verify:` `storybook:build` -> `pass`
+- `S17` `verify:` `modelo_fixtures validate` -> `pass`
+- `S17` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S17` `verify:` `test_desktop_chrome` -> `fail`
+- `S17` `by:` `sonnet-high`
+- `S31` `A` `src/cadrumo/application/operations/next_step.py`
+- `S31` `A` `src/cadrumo/application/modelo/projection_next_steps.py`
+- `S31` `M` `src/cadrumo/application/operations/error_detail.py`
+- `S31` `M` `src/cadrumo/application/modelo/projection.py`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/workspace/Estimate.tsx`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/workspace/Credits.stories.tsx`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/declarations/NewDeclarationDialog.tsx`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/dialogs/operationRun.ts`
+- `S31` `M` `native/desktop/frontend/src/shell/modelo.ts`
+- `S31` `M` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S31` `verify:` `pytest projection remedies and error detail` -> `pass`
+- `S31` `verify:` `playwright renta-credits and modelo-operation-run` -> `pass`
+- `S31` `verify:` `storybook:build` -> `pass`
+- `S31` `verify:` `lint-imports` -> `pass`
+- `S31` `verify:` `import_gate` -> `fail`
+- `S31` `by:` `sonnet-high`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S25` `M` `src/cadrumo/application/modelo/export.py`
+- `S25` `M` `src/cadrumo/application/modelo/export_accounts.py`
+- `S25` `A` `src/cadrumo/application/modelo/tests/test_export_settlement_every_year_computing_the_settled_box.py`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_e2e_imputation_calculate_to_export.py`
+- `S25` `verify:` `export/settlement sweep -m ''` -> `pass`
+- `S25` `verify:` `registry result_casillas tests` -> `pass`
+- `S25` `verify:` `e2e imputation` -> `pass`
+- `S25` `verify:` `lint-imports` -> `pass`
+- `S33` `M` `src/cadrumo/application/modelo/verification_predicates.py`
+- `S33` `M` `src/cadrumo/domain/calculations/registry/schema_verification.py`
+- `S33` `M` `dev/registry/compiler/validate_verification_predicates.py`
+- `S33` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_predicates/0001-declarations.toml`
+- `S33` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S33` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_art_50_3_compensation_verification.py`
+- `S33` `M` `src/cadrumo/application/modelo/tests/test_verification_substance.py`
+- `S33` `M` `dev/registry/tests/test_verification_predicate_build_gate.py`
+- `S33` `verify:` `art. 50.3 real-run tests` -> `pass`
+- `S33` `verify:` `dev/registry schema and predicate gates` -> `pass`
+- `S33` `verify:` `modelo 100 verification sweep` -> `fail`
+- `S33` `by:` `opus-medium`
+- `S32` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S32` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
+- `S32` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S32` `M` `src/cadrumo/application/live/borrador_100_comparison.py`
+- `S32` `M` `src/cadrumo/domain/user_profile/setup_answers.py`
+- `S32` `M` `src/cadrumo/application/user_profile/completeness.py`
+- `S32` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S32` `M` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S32` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S32` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S32` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S32` `A` `src/cadrumo/application/modelo/tests/test_work_form_comparison_flags.py`
+- `S32` `verify:` `comparison, work-form, wizard, user_profile, live, registry-schema suites` -> `pass`
+- `S32` `verify:` `import_gate and lint-imports` -> `pass`
+- `S32` `verify:` `manifest, relay and modelo-fixtures --check` -> `pass`
+- `S32` `by:` `opus-medium`
+- `S36` `A` `src/cadrumo/application/modelo/projection_declaration.py`
+- `S36` `A` `src/cadrumo/application/modelo/projection_quarter_inputs.py`
+- `S36` `M` `src/cadrumo/application/modelo/projection.py`
+- `S36` `M` `src/cadrumo/application/operations/next_step.py`
+- `S36` `M` `src/cadrumo/application/modelo/projection_next_steps.py`
+- `S36` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_quarter_incomplete.py`
+- `S36` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S36` `M` `native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`
+- `S36` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S36` `M` `native/desktop/frontend/tests/scenarios/renta-credits.spec.ts`
+- `S36` `verify:` `pytest projection quarter incomplete and related` -> `pass`
+- `S36` `verify:` `playwright renta-credits` -> `pass`
+- `S36` `verify:` `storybook:build` -> `pass`
+- `S36` `verify:` `lint-imports` -> `pass`
+- `S36` `by:` `sonnet-high`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/TaxationComparison.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/taxationComparisonRead.ts`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/BorradorComparison.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/borradorComparisonRead.ts`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/ComparisonView.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/TaxationComparison.stories.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/modelo/workspace/BorradorComparison.stories.tsx`
+- `S17` `A` `native/desktop/frontend/src/dev/borradorFixture.ts`
+- `S17` `A` `native/desktop/frontend/tests/scenarios/renta-comparison.spec.ts`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/dialogs/operationRun.ts`
+- `S17` `verify:` `tsc and eslint` -> `pass`
+- `S17` `verify:` `storybook plays 124/124` -> `pass`
+- `S17` `verify:` `playwright renta scenarios 119` -> `pass`
+- `S17` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S17` `verify:` `test_desktop_chrome` -> `fail`
+- `S34` `M` `src/cadrumo/application/user_profile/family_rows.py`
+- `S34` `M` `src/cadrumo/application/user_profile/household_row_limit.py`
+- `S34` `M` `src/cadrumo/application/user_profile/ascendant_rows.py`
+- `S34` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S34` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S34` `M` `src/cadrumo/locales/en/common.yml`
+- `S34` `M` `src/cadrumo/locales/en/application.yml`
+- `S34` `M` `src/cadrumo/adapters/persistence/profile/tests/test_ascendants_operation.py`
+- `S34` `M` `src/cadrumo/adapters/persistence/profile/tests/test_descendants_operation.py`
+- `S34` `verify:` `user_profile and settlement tests` -> `pass`
+- `S34` `verify:` `lint-imports` -> `pass`
+- `S34` `verify:` `check-import-boundaries` -> `fail`
+- `S34` `verify:` `test_desktop_chrome` -> `fail`
+- `S34` `by:` `sonnet-high`
+- `S37` `A` `src/cadrumo/application/user_profile/family_question.py`
+- `S37` `A` `src/cadrumo/application/wizard/tests/test_family_cohabitation_question.py`
+- `S37` `A` `src/cadrumo/adapters/persistence/profile/tests/test_family_cohabitation_answer.py`
+- `S37` `M` `src/cadrumo/application/wizard/setup_family_sections.py`
+- `S37` `M` `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml`
+- `S37` `M` `src/cadrumo/application/user_profile/view_reader.py`
+- `S37` `M` `native/desktop/src-tauri/src/shell/user_profile/household.rs`
+- `S37` `M` `native/desktop/frontend/src/components/profile/Household.tsx`
+- `S37` `M` `native/desktop/frontend/src/components/profile/Household.stories.tsx`
+- `S37` `M` `native/desktop/frontend/tests/scenarios/profile-household.spec.ts`
+- `S37` `verify:` `wizard and profile suites` -> `pass`
+- `S37` `verify:` `rust household tests` -> `pass`
+- `S37` `verify:` `playwright profile-household` -> `pass`
+- `S37` `verify:` `storybook:build` -> `pass`
+- `S37` `verify:` `test_desktop_chrome` -> `fail`
+- `S37` `by:` `sonnet-high`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S35` `A` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S35` `D` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_predicates/0001-declarations.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/facts/0038-lirpf-art-20-trabajo-reduccion-rnt-ceiling.toml`
+- `S35` `M` `src/cadrumo/application/modelo/projection.py`
+- `S35` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S35` `verify:` `art. 50.3 suite` -> `pass`
+- `S35` `verify:` `import_gate` -> `pass`
+- `S35` `verify:` `focused fallout run` -> `fail`
+- `S35` `by:` `opus-medium`
+- `S39` `A` `src/cadrumo/application/modelo/work_form_answers.py`
+- `S39` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S39` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S39` `M` `src/cadrumo/application/modelo/work_form_outline.py`
+- `S39` `A` `src/cadrumo/application/modelo/tests/test_work_form_answers.py`
+- `S39` `A` `src/cadrumo/entrypoints/tests/test_modelo_work_form_answers.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`
+- `S39` `M` `native/desktop/frontend/src/components/modelo/form/FormView.tsx`
+- `S39` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.tsx`
+- `S39` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S39` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S39` `verify:` `work-form suites` -> `pass`
+- `S39` `verify:` `modelo-fixtures --check` -> `pass`
+- `S39` `verify:` `playwright modelo-workspace and renta scenarios` -> `pass`
+- `S39` `verify:` `storybook:build` -> `pass`
+- `S39` `verify:` `check-import-boundaries` -> `pass`
+- `S39` `by:` `opus-medium`
+- `S40` `A` `src/cadrumo/_data/registry/aeat/facts/0178-household-row-limit-owners.toml`
+- `S40` `A` `src/cadrumo/domain/calculations/registry/profile_row_limits.py`
+- `S40` `M` `src/cadrumo/application/user_profile/household_row_limit.py`
+- `S40` `A` `dev/registry/compiler/validate_household_row_owners.py`
+- `S40` `M` `dev/registry/compiler/validator.py`
+- `S40` `A` `dev/registry/compiler/tests/test_validate_household_row_owners.py`
+- `S40` `verify:` `user_profile and writer tests` -> `pass`
+- `S40` `verify:` `household row owner build check` -> `pass`
+- `S40` `verify:` `import_gate` -> `pass`
+- `S40` `by:` `sonnet-high`
+- `S42` `A` `src/cadrumo/application/modelo/row_filled_bindings.py`
+- `S42` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S42` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S42` `M` `src/cadrumo/application/modelo/work_form_answers.py`
+- `S42` `M` `src/cadrumo/application/modelo/tests/test_edit_admission.py`
+- `S42` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S42` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S42` `verify:` `edit-admission, work-form, scope and ladder suites` -> `pass`
+- `S42` `verify:` `manifest and relay --check` -> `pass`
+- `S42` `verify:` `import_gate` -> `fail`
+- `S42` `verify:` `dev/locales/tests` -> `fail`
+- `S42` `by:` `sonnet-high`
 
 ## Notes
 
@@ -309,3 +654,25 @@ related:
 - `S07` Review fixes in e232347dcd, f12928bdb4, 987d72d1f9 and 3dbcaea611; settlement composes from 0700; split is a dated registry fact; instalment figures advisory; follow-ups in S25
 - `S16` Committed in ba312d12d8 and sweep c9d6d73b82; chrome catalogue blocked by unauthored workspace.modelo.filing.reconciliation keys from another worker; profile write refusal words not forwarded by the host (S26)
 - `S22` Rerun after the `calculation_notes` block cleared; first host run hit a flaky child-read failure in a credential-save relay test, rerun 837 passed
+- `S15` Committed in 0dfe66e239 and earlier sweeps; validate fails on stale 130/347/390 envelopes lacking `context_field.box_number;` chrome failures are another worker's reconciliation keys; projection backend gaps moved to S27
+- `S25` Commits 516039960e and sweeps 3be7987f95, 025eb9b4ed. Decided: revisions without a computed 0700 settle from 0670 (dictionary RESINGDEV) while 0693 holds nothing and refuse `settlement_unsupported` otherwise; TIPODECLARACION stays on 0670 because no source grounds a suspended payment as a zero-result disposition; 2024 0700 stays typed. Unrelated failure `test_work_form_modelo_100_resultado` outline-count sum left to its owner
+- `S14` Commit a1c99cc26d and sweeps c9d6d73b82, 3be7987f95, 025eb9b4ed; served `max_rows` added; profile refusal words now forwarded (part of S26); Field gains `ejercicio_answer` and `country_options;` descendants writer serves no refusal words (S26)
+- `S25` Reopened on the renta-withholding report; the 0693 regression was the 3be7987f95 sweep state, already fixed by 516039960e. 2700480cbf types settlement refusals as `export_settlement_unknown/unsupported` instead of `export_draft_write_failed.` Chrome failures are another worker's reconciliation keys
+- `S27` Commit 3e22c374ab (84 files incl. 40 Renta fixtures). Explicit region now overrides the profile (was ignored). Manifest surface failures are `precedence_tier_divergence` from 9ad14071d6. Typed remedy actions are served but the window offers none yet; modelo.project does not itself check the mapping revision (S29)
+- `S26` Commit 6d20c75368. Manifest and 24 Renta envelopes generated from the working tree carry S28's pending outline model until S28 regenerates. cmake desktop-host-unit-test blocked by webdriverio not installed; Rust ran through tauri.mjs. Descendants NIF checksum gap goes to S30
+- `S30` Commit eddf531619; ascendants' private check moved to a shared defining module used by both writers
+- `S28` Commit f9796d30e5. Decided reading B: working figures and unplaced boxes stay counted and get kept-apart outline groups, because failed working figures (Art. 50.3 gate, maritime exemption) and unplaced needs-you boxes (182, 184, 721) have no placed reader. 130/303/347/390 envelopes stay stale until the full producer clears `precedence_tier_divergence`
+- `S29` Commit a66305e9c0: modelo.project refuses `REFUSED_MODELO_PROJECT_REVISION_NOT_MAPPED` through the same `modelo_projection_available` check that serves projectable. Window remedy offer split to S31: decided the backend serves a typed next step on the refusal (the form's `next_action` shape) rather than a window-side table of operator action ids
+- `S17` Settlement element only, commit 60b0e4ce56; taxation and Borrador comparison elements wait on S32's served flags and comparison basis; chrome-strings.json stale until the reconciliation keys are authored, so new titles show key text
+- `S31` Commit e0ab4d0f36; fixture-script hunks landed in 60b0e4ce56. Accepted a sibling typed next-step shape since the form's next step cannot name another declaration. `import_gate` fails only on S32's in-flight removal of `compare_taxation_modes`
+- `S25` Re-review fix 68c84d55d0: 0694 waiver refuses settlement where 0700 is not computed; 2024 computes 0700 by the 2025 RESINGDEV rule; a split leaving nothing refuses as `second_instalment_nothing.` 2022/2023 negative 0695 remainder not modelled, so they refuse on 0694; 2024 layout digest awaits S32's regeneration
+- `S33` Commit 95ca6d079a: stock gate `positive_application_le_present_stock;` new `application_equals_present_maximum` enforces the art. 50.3 maximum min(1388, max(0, 0435-0461-0468)); `cap_le_when_positive` fail-closed. Six sweep failures are `DP_APENOM_D` export refusals and `precedence_tier_divergence,` not 1389
+- `S32` Commit ea11ad0538: comparison runs on held values and refuses with a closed reason naming unresolved boxes; `compares_taxation/compares_borrador` served (100/2025 only). 0461 follows LIRPF art. 84.2.3/4 with new profile fact `renta_family.convive_con_otro_progenitor,` unresolved until stated; spouse tax ID required only for the married unit. No wizard question for cohabitation yet (S37); 2022-2024 lack the `tipo_tributacion` role (S38)
+- `S36` Commit 5e0bd39067: typed `QUARTER_INCOMPLETE` and `RESULT_UNRESOLVED` refusals, new `open_work` next step. The opened 130 quarter lists writable binding overrides with no placed field, so the person may still be unable to answer (S39)
+- `S17` Commit 652baeca66: comparison elements. `individual_lower_result,` `revision_outdated` and `entries_unknown` envelopes are built from application classes rather than a reached profile; record `individual_lower` through a two-earner household in S19. Modelo 100 envelopes need re-recording after S35 publishes
+- `S34` Commit 0a0f530917. Refusals raised outside the handler so neither `__cause__` nor `__context__` carries a typed value. Row limit now scans the registry (about 1.7 s on first call); a declared owner is S40. Import-boundary metadata stale from S37/S39 in-flight modules; Settlement.tsx comment and story name still say the official file cannot state the remainder (S19)
+- `S37` Commit 19b3eff46a. 0096 setup-field row awaits the shared authority republish after S35. Two 'household from the Modelo 100' scenarios fail on the Renta heading, to recheck after the envelope re-record. The agent removed a zero-byte .git/index.lock from 04:50 that no process held
+- `S35` Commit 448b84d73d: 0501 sums 1381/1383/1386/1389 for 2022-2025, oldest first, per-row stock and maximum gates; art. 20 ceiling gains 2022 and 2023 values from the AEAT manuals. EXCEPTION: one stale refusal hand-removed from the generated `casilla_lineage_ledger.toml` because its generator is blocked by a Modelo 303 contradiction. Open: 0500 placed after compensation (AEAT puts it before), 1391 still manual, `test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses` fails on 0171 (S41)
+- `S39` Commit 7d5c775e76 with 214 re-recorded envelopes against authority a2010d0f71b2. Two modelo.spec.ts failures believed pre-existing, unconfirmed. Edit admission still accepts overrides the form serves no answer for (S42)
+- `S40` Commit 33ff6d607d: fact household-row-limit-owners names the owning form and repeating group (Modelo 100 XSD maxOccurs 15 and 4); first lookup 0.07 s instead of 1.7 s; build check fails if the owner layout stops capping the object
+- `S42` Commit 63bdd87985: one row-filled derivation shared by admission and the form; new reason `not_read_by_calculation.` Import gate unavailable because the tree changed mid-run; dev/locales failures include export settlement and election keys and a non-literal `message_locale_key,` to resolve in S20

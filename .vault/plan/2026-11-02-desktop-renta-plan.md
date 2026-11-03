@@ -14,9 +14,9 @@ related:
   - '[[2026-11-01-export-parity-income-imputation-criterion-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-11-02-desktop-renta-renta-family-canonical-adr]]'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:ae85ed5599dd0e7284882a73230e7c34229dc9739e7633c53a41618acc9c27fd'
+body_hash: 'sha256:405013764a4617b076032c297eee3f28d34289fc30f2da403bff54cb9718e861'
 ---
 
 # `desktop-renta` plan
@@ -63,7 +63,21 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S22` - [Opus medium] keep the Borrador 100 printed result values as comparison-only observations (never calculation inputs) and author the 2024 and 2025 borrador extraction profiles so the borrador comparison has values to compare; `src/cadrumo/adapters/inbound/borrador`.
 - [x] `P01.S23` - [Sonnet high] reconcile the imputation-criterion ADR wording with the implemented rule that an unstated year stays undeclared and is never preselected as devengo; `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`.
 - [x] `P01.S24` - [Sonnet high] add a profile writer for renta_family.ascendiente rows mirroring user-profile.descendants, with the four-row cap from the 2025 design and NIF validation, and admit it in the desktop relay; `src/cadrumo/application/user_profile`.
-- [ ] `P01.S25` - [Sonnet high] ground the instalment-split fact back to every supported filing year so 2022-2024 returns keep the split, refuse the split when the second instalment would be zero, and refuse settlement for years without a computed 0700 while 0693 is above zero; `src/cadrumo/_data/registry/aeat/facts/0175-payment-instalment-split.toml`.
+- [x] `P01.S25` - [Sonnet high] ground the instalment-split fact back to every supported filing year so 2022-2024 returns keep the split, refuse the split when the second instalment would be zero, and refuse settlement for years without a computed 0700 while 0693 is above zero; `src/cadrumo/_data/registry/aeat/facts/0175-payment-instalment-split.toml`.
+- [x] `P01.S27` - [Sonnet high] make modelo.project default the region from the profile's tax residence, serve a per-revision projectable capability, serve words for the m100 projection and m130 accumulated figures, and replace the CLI command in its refusal words with a served desktop action; `src/cadrumo/application/modelo`.
+- [x] `P01.S28` - [Sonnet high] keep the form's attention counts equal to what its outline reaches by serving a kept-apart outline group for working figures and one for unplaced boxes whenever each is non-empty, so a failed working figure or an unplaced box that needs the filer stays counted and reachable; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P01.S29` - [Sonnet high] make modelo.project refuse a target whose revision the registry projection mapping does not name, using the same check that serves projectable; `src/cadrumo/application/modelo/projection_operation.py`.
+- [x] `P01.S30` - [Sonnet high] make the user-profile.descendants writer validate a descendant NIF's control letter with the same canonical validator the ascendants writer uses, refusing with a row-numbered served reason; `src/cadrumo/application/user_profile/descendant_rows.py`.
+- [x] `P01.S32` - [Opus medium] make modelo.work.compare_taxation run on the work unit's own held values (entered, imported, ledger and prior-period evidence) and refuse only when a box the comparison actually reads is unresolved, naming those boxes in served words; serve compares_taxation and compares_borrador on the work form from the revision's declarations so the window offers each comparison only where it applies; `src/cadrumo/application/modelo/taxation_comparison.py`.
+- [x] `P01.S33` - [Opus medium] make the Art. 50.3 compensation gates refuse a positive 1389 when the pending stock 1388 or the computed ceiling is zero or missing, and refuse a 1389 below the ceiling because art. 50.3 LIRPF requires compensation in the maximum amount each year allows; `src/cadrumo/application/modelo/verification_predicates.py`.
+- [x] `P01.S34` - [Sonnet high] apply the P01 re-review's low findings: settlement_unsupported words that say Cadrumo does not compute the remainder, the family rows docstring, a neutral synthetic fixture source key, a household row limit resolved from the registry instead of a modelo constant, and refused-NIF exceptions raised from None; `src/cadrumo/application/user_profile/household_row_limit.py`.
+- [x] `P01.S35` - [Opus medium] model the art. 50.3 compensation chain for every origin year: 0501 sums every applied row (1381, 1383, 1386, 1389 and their siblings) with each row capped by the maximum left after older rows are applied first, and give 2020 to 2024 the same stock and maximum gates instead of a free manual 0501; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_predicates/0001-declarations.toml`.
+- [x] `P01.S36` - [Sonnet high] make the estimate serve a typed next step when a calculated quarter cannot yet produce box 19 because its earlier-filing answers are missing, naming the quarter's open inputs, so the estimate never ends on the generic projection failure; `src/cadrumo/application/modelo/projection_next_steps.py`.
+- [ ] `P01.S38` - [Sonnet high] declare the filing-mode role on Modelo 100 revisions 2022 to 2024 where their official designs carry the individual or joint declaration type, so the taxation comparison is served for those years; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`.
+- [x] `P01.S39` - [Opus medium] serve every writable binding override a revision's edit surface admits as an answerable field on the work form, placed by the layout or in a served answers group, so a declaration never asks for an answer the window cannot take (such as Modelo 130's previous-year activity income and earlier negative results); `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P01.S40` - [Sonnet high] declare in the registry which declaration owns each household row object's repeat limit, so the profile writer reads the limit directly instead of scanning every modelo's annual revision; `src/cadrumo/application/user_profile/household_row_limit.py`.
+- [ ] `P01.S41` - [Opus medium] place box 0500 before the art. 50.3 compensation as the AEAT design does, compute 1391 from the chain instead of a manual input, and find whether 448b84d73d broke test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses on box 0171, fixing the cause if so; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`.
+- [x] `P01.S42` - [Sonnet high] make modelo edit admission refuse an override the work form serves no field or answer for (such as Modelo 720 baselines and the 131 and 720 row-field bindings), so the writable surface and the served form agree; `src/cadrumo/application/modelo/edit_admission.py`.
 
 ### Phase `P02` - contracts and fixtures
 
@@ -82,12 +96,14 @@ The desktop relay admits exactly the operations the Renta elements call, each th
 The window renders the outline, household, credits, election, comparison, settlement and borrador elements by payload kind over the one generated form.
 
 - [x] `P04.S13` - [Opus medium] build the Renta workspace shell and outline navigator over the served outline, replacing the prototype grouping; `native/desktop/frontend/src/components/modelo/workspace`.
-- [ ] `P04.S14` - [Sonnet high] build the household element from the served profile sections, descendants and minimum boxes; `native/desktop/frontend/src/components/modelo/workspace`.
-- [ ] `P04.S15` - [Sonnet high] build the credits element with withholding routing and the projection estimate in served words; `native/desktop/frontend/src/components/modelo/workspace`.
+- [x] `P04.S14` - [Sonnet high] build the household element from the served profile sections, descendants and minimum boxes; `native/desktop/frontend/src/components/modelo/workspace`.
+- [x] `P04.S15` - [Sonnet high] build the credits element with withholding routing and the projection estimate in served words; `native/desktop/frontend/src/components/modelo/workspace`.
 - [x] `P04.S16` - [Sonnet high] build the imputation election element over the registered profile operation; `native/desktop/frontend/src/components/modelo/workspace`.
-- [ ] `P04.S17` - [Sonnet high] build the taxation comparison, settlement and borrador comparison elements by payload kind; `native/desktop/frontend/src/components/modelo/workspace`.
+- [x] `P04.S17` - [Sonnet high] build the taxation comparison, settlement and borrador comparison elements by payload kind; `native/desktop/frontend/src/components/modelo/workspace`.
 - [x] `P04.S18` - [Sonnet high] retire the Renta prototypes and their prototype-only locale keys now (operator ruling 2026-11-02: Storybook shows only real components over generated fixtures; no prototype copies), so every Renta element is built and reviewed in the real components; `native/desktop/frontend/src/dev/prototypes/renta`.
-- [ ] `P04.S26` - [Sonnet high] forward the served refusal reason and words through the desktop host's profile write path instead of the bare code, and serve a per-revision flag naming which declarations ask the imputation election so the window stops gating on the profile source group; `native/desktop/src-tauri/src/shell/user_profile.rs`.
+- [x] `P04.S26` - [Sonnet high] forward the served refusal reason and words through the desktop host's profile write path instead of the bare code, and serve a per-revision flag naming which declarations ask the imputation election so the window stops gating on the profile source group; `native/desktop/src-tauri/src/shell/user_profile.rs`.
+- [x] `P04.S31` - [Sonnet high] serve the estimate refusal's remedy as a typed next step in the same shape the work form serves next_action (kind, target declaration address, served words) and let the window offer it through the existing next-action handling, so the window holds no table of operator action ids; `src/cadrumo/application/modelo/projection_operation.py`.
+- [x] `P04.S37` - [Sonnet high] ask whether a single parent lives with the child's other parent in the profile wizard's family section and the desktop household element, writing renta_family.convive_con_otro_progenitor through the canonical profile writer; `src/cadrumo/application/wizard/setup_family_sections.py`.
 
 ### Phase `P05` - proof
 

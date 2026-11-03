@@ -146,13 +146,22 @@ def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses
             )
         )
 
-        with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
+        with pytest.raises(RegistryValidationError, match="require observed casillas") as refused:
             resolve_bindings_from_local_store(
                 snapshot,
                 repository=repository,
                 iva_history_repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
+
+    assert refused.value.translated_message == "errors.calc.previous_filing_casillas_unobserved"
+    context = refused.value.context or {}
+    assert context["casilla_ids"] == ",".join(sorted(_SOURCE_CASILLAS))
+    assert (context["source_modelo"], context["source_filing_year"], context["source_period"]) == (
+        "100",
+        _M100_FILING_YEAR,
+        "0A",
+    )
 
 
 def test_an_ambiguous_multiple_observed_filing_match_still_refuses() -> None:

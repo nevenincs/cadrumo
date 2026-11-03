@@ -127,6 +127,10 @@ errors:
     m210_imputation_no_filing_year: M210 imputed real-estate calculation requires
       a non-zero filing year.
     parameter_unknown: Parameter {parameter_id} is not registered.
+    previous_filing_casillas_unobserved: 'Your stored Modelo {source_modelo} return
+      for {source_filing_year} ({source_period}) does not show boxes {casilla_ids},
+      which this calculation carries forward from it. A box it does not show is unknown,
+      not zero: capture or record that return with those boxes, then calculate again.'
     relation_value_missing: Relation {relation_id} has no supplied value.
     row_field_template_supplied_as_input: Casillas {casilla_ids} take one value per
       detail row of {record_ids}, so they cannot be supplied as a single input value.

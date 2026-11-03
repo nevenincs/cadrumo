@@ -133,6 +133,11 @@ errors:
     m210_imputation_no_filing_year: La imputación inmobiliaria M210 requiere un ejercicio
       de declaración no nulo.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
+    previous_filing_casillas_unobserved: 'La declaración del modelo {source_modelo}
+      de {source_filing_year} ({source_period}) que tienes guardada no muestra las
+      casillas {casilla_ids}, que este cálculo arrastra de ella. Una casilla que no
+      muestra es desconocida, no cero: captura o registra esa declaración con esas
+      casillas y vuelve a calcular.'
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     row_field_template_supplied_as_input: Las casillas {casilla_ids} toman un valor
       por cada fila de detalle de {record_ids}, por lo que no pueden suministrarse
