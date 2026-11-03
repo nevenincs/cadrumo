@@ -328,7 +328,7 @@ def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSe
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "05=0.00",
             "--casilla", "06=0.00",
-            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
+            "--binding", "irpf.previous_year_economic_activity_net_income=0",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],
     )  # fmt: skip

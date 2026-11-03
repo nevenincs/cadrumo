@@ -54,18 +54,19 @@ _YEAR = "2025"
 _PERIOD = "4T"
 _REASON = "unrouted_declarable_quantity"
 _BLOCKED_CODE = "REFUSED_MODELO_CALCULATION_BLOCKED"
-# The prior-year net income only varies so that the clearing recalculation is a
-# new calculation: calculations are content addressed, and an unchanged input set
-# would resolve to the earlier clean calculation instead of a newer one.
-_FIRST_PRIOR_YEAR_INCOME = "13000"
-_LATER_PRIOR_YEAR_INCOME = "14000"
+# Box 16 only varies so that the clearing recalculation is a new calculation:
+# calculations are content addressed, and an unchanged input set would resolve to
+# the earlier clean calculation instead of a newer one. The previous year's income
+# is left to its source: a typed figure that differs from it is a contested figure.
+_FIRST_BOX_16 = "0.00"
+_LATER_BOX_16 = "1.00"
 
 
-def _calculate_options(prior_year_income: str) -> tuple[str, ...]:
+def _calculate_options(box_16: str) -> tuple[str, ...]:
     return (
         "--casilla", "05=0.00",
         "--casilla", "06=0.00",
-        "--binding", f"irpf.previous_year_economic_activity_net_income={prior_year_income}",
+        "--casilla", f"16={box_16}",
         "--binding", "modelo-130-resultados-negativos-anteriores=0",
     )  # fmt: skip
 
@@ -96,13 +97,13 @@ def _calculate_and_verify() -> tuple[str, str]:
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)
-    revision_id = _recalculate(work_unit_id, _FIRST_PRIOR_YEAR_INCOME)
+    revision_id = _recalculate(work_unit_id, _FIRST_BOX_16)
     return work_unit_id, revision_id
 
 
-def _recalculate(work_unit_id: str, prior_year_income: str) -> str:
+def _recalculate(work_unit_id: str, box_16: str) -> str:
     calculated = invoke_cached_cli(
-        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_calculate_options(prior_year_income)]
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_calculate_options(box_16)]
     )
     assert calculated.exit_code == 0, calculated.output
     verified = invoke_cached_cli(
@@ -260,7 +261,7 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["filed_calculation_revision_id"] is None
 
-    cleared_revision_id = _recalculate(work_unit_id, _LATER_PRIOR_YEAR_INCOME)
+    cleared_revision_id = _recalculate(work_unit_id, _LATER_BOX_16)
     assert cleared_revision_id not in {blocked_revision_id, clean_revision_id}
     status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
