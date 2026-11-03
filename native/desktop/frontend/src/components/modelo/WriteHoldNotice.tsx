@@ -15,6 +15,16 @@ export const useModeloWriteHold = (holds: ModeloWriteHolds, target: string) =>
     () => undefined,
   );
 
+export const useModeloBlockingWriteHold = (
+  holds: ModeloWriteHolds,
+  target: string,
+) =>
+  useSyncExternalStore(
+    holds.subscribe,
+    () => holds.blocking(target),
+    () => undefined,
+  );
+
 /** A read of the form/list is not evidence that an unknown operation ended. */
 export function WriteHoldNotice({
   holds,
@@ -28,7 +38,7 @@ export function WriteHoldNotice({
   holds: ModeloWriteHolds;
   target: string;
   port: ModeloPort;
-  onReload: () => void;
+  onReload?: () => void;
   refreshing?: boolean;
   creation?: boolean;
   onCompleted?: () => void;
@@ -88,33 +98,33 @@ export function WriteHoldNotice({
             )}
       </p>
       {hold.phase === "refresh" && hold.words && <p>{hold.words}</p>}
-      {hold.phase === "refresh" ? (
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={refreshing}
-          onClick={onReload}
-        >
-          {refreshing && <Spinner />}
-          {t(
-            creation
-              ? "workspace.modelo.write_hold.reload_list"
-              : "workspace.modelo.read_again",
+      {hold.phase === "refresh"
+        ? onReload && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={refreshing}
+              onClick={onReload}
+            >
+              {refreshing && <Spinner />}
+              {t(
+                creation
+                  ? "workspace.modelo.write_hold.reload_list"
+                  : "workspace.modelo.read_again",
+              )}
+            </Button>
+          )
+        : hold.operationId !== null && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={checking === target}
+              onClick={() => void check()}
+            >
+              {checking === target && <Spinner />}
+              {t("workspace.modelo.write_hold.check_status")}
+            </Button>
           )}
-        </Button>
-      ) : (
-        hold.operationId !== null && (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={checking === target}
-            onClick={() => void check()}
-          >
-            {checking === target && <Spinner />}
-            {t("workspace.modelo.write_hold.check_status")}
-          </Button>
-        )
-      )}
     </Alert>
   );
 }

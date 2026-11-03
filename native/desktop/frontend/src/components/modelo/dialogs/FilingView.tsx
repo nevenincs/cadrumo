@@ -303,9 +303,15 @@ export function FilingView({
     picking.current = true;
     setPickerOpen(true);
     const mine = generation.current;
+    const version = holds.admissionVersion(target);
     try {
       const picks = await pick();
-      if (!alive.current || mine !== generation.current || holds.get(target)) {
+      if (
+        !alive.current ||
+        mine !== generation.current ||
+        holds.blocking(target) ||
+        holds.admissionVersion(target) !== version
+      ) {
         void port.forgetFiles(picks.files.map((file) => file.token));
         return null;
       }

@@ -4341,6 +4341,7 @@ desktop:
     view:
       credits: Withholdings
       form: Form
+      iva_wallet: IVA balance
     views:
       label: Declaration views
   navigation:
@@ -9906,6 +9907,52 @@ workspace:
         record_value: A value every record in a table needs
         records: In your records
         unnumbered: 'Values without a box number: {count}'
+    iva_wallet:
+      action: Action
+      active_balance: Active balance
+      amount: Amount (EUR)
+      as_of_year: Reference year
+      evidence_locator: Evidence reference
+      expired_balance: Expired balance
+      expiry_not_reported: No expiry year reported
+      help:
+        correct: Choose the source period of an existing opening balance and explain
+          the correction.
+        override: Choose the period receiving the carry. Your amount, reason and evidence
+          reference are recorded as a taxpayer override; the reference is not verified.
+        seed: Choose the source period and the balance carried forward from it. This
+          records your declaration of the opening balance.
+      lead: Calculated from local records for the reference year. This is not a live
+        AEAT balance.
+      loading: Reading the IVA balance…
+      lot_count: Credit lots
+      manage: Manage balance…
+      mode:
+        correct: Correct opening balance
+        override: Record taxpayer override
+        seed: Record opening balance
+      next_expiry_year: Next expiry year
+      previous_amount: Previous amount
+      read_failed: The IVA balance could not be read. Reload it to try again.
+      reason: Reason
+      receipt:
+        authority:
+          taxpayer_override: Taxpayer-declared amount
+        divergence:
+          override: Explicit taxpayer override
+        not_reported: Not reported
+        provenance:
+          operator_correction: Opening balance corrected by an operator
+          operator_seed: Opening balance declared by an operator
+        reconciliation_outcome: Reconciliation outcome
+        register_status: Register status
+        selected_source: Selected source
+        source: Source
+      recorded: Recorded locally. This action does not recalculate the declaration.
+      reload: Reload balance
+      title: IVA compensation balance
+      total_balance: Total balance
+      unallocated_applied_amount: Applied amount not assigned to a lot
     key:
       back: Back
       calculate: Calculate

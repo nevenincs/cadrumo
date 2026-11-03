@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a77eea19d7ad5e84628bcdfc7ddbc513784def773355a0040a97b6e06e06a45c'
+body_hash: 'sha256:dc24eea5b0ea2fdb85fe4efce6821b729ed9710b39436f5babff081c2f5bf1c1'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -242,6 +242,25 @@ related:
 - `S40` `verify:` `15 filing receipt comparison browser scenarios` -> `pass`
 - `S40` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
 - `S40` `verify:` `Terra review and shared-hold visual inspection` -> `pass`
+- `S39` `M` `dev/locales/desktop_workspace_keys.py`
+- `S39` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S39` `M` `native/desktop/frontend/src/App.tsx`
+- `S39` `M` `native/desktop/frontend/src/components/modelo/`
+- `S39` `M` `native/desktop/frontend/src/shell/modeloWriteHolds.ts`
+- `S39` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S39` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S39` `M` `native/desktop/frontend/tests/live/modelo-write-holds.unit.ts`
+- `S39` `M` `native/desktop/frontend/tests/scenarios/modelo-wallet.spec.ts`
+- `S39` `M` `src/cadrumo/locales/en/common.yml`
+- `S39` `M` `src/cadrumo/locales/es/common.yml`
+- `S39` `M` `src/cadrumo/locales/ca/common.yml`
+- `S39` `M` `src/cadrumo/locales/hu/common.yml`
+- `S39` `verify:` `canonical245-envelope generation and validation` -> `pass`
+- `S39` `verify:` `final TypeScript scoped ESLint Prettier Ruff chrome` -> `pass`
+- `S39` `verify:` `nine shared hold unit cases` -> `pass`
+- `S39` `verify:` `14 focused browser cases 20261103T001331Z-28880` -> `pass`
+- `S39` `verify:` `24 declaration workspace profile cases 20261103T001600Z-29224` -> `pass`
+- `S39` `verify:` `Terra integrated review and visual inspection` -> `pass`
 
 ## Notes
 

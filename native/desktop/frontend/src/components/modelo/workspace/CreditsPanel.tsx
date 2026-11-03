@@ -15,6 +15,9 @@ import {
   type EstimateRead,
 } from "./estimateRead";
 import type { FormSession } from "../form/session";
+import { hasIvaWallet } from "./ivaWalletRead";
+import { IvaWallet } from "./IvaWallet";
+import { parsePeriodCode } from "../../../shell/ledgerGrammar";
 
 /**
  * The credits view of one declaration: the boxes a register supplies and the
@@ -42,6 +45,7 @@ export function CreditsPanel({
 }) {
   const t = useStrings();
   const form = envelope.form.form;
+  const periodCode = parsePeriodCode(form.period.code);
   const credits = useMemo(() => creditFields(session.placed), [session.placed]);
   const dependents = useMemo(
     () => dependentFields(session.placed, credits),
@@ -60,25 +64,35 @@ export function CreditsPanel({
     );
   };
   return (
-    <Credits
-      credits={credits}
-      dependents={dependents}
-      lines={envelope.issue_lines}
-      onGo={onGo}
-      onOpenSurface={onOpenSurface}
-      canOpenSurface={canOpenSurface}
-      extraOf={inEstimate}
-      estimate={
-        <Estimate
-          read={estimate.read}
-          onAsk={estimate.ask}
-          locale={locale}
-          fieldAt={session.fieldAt}
-          results={form.result_addresses}
+    <div className="flex flex-col gap-8">
+      {credits.length > 0 && (
+        <Credits
+          credits={credits}
+          dependents={dependents}
+          lines={envelope.issue_lines}
+          onGo={onGo}
           onOpenSurface={onOpenSurface}
           canOpenSurface={canOpenSurface}
+          extraOf={inEstimate}
+          estimate={
+            <Estimate
+              read={estimate.read}
+              onAsk={estimate.ask}
+              locale={locale}
+              fieldAt={session.fieldAt}
+              results={form.result_addresses}
+              onOpenSurface={onOpenSurface}
+              canOpenSurface={canOpenSurface}
+            />
+          }
         />
-      }
-    />
+      )}
+      {hasIvaWallet(envelope) && periodCode.kind === "value" && (
+        <IvaWallet
+          period={{ year: form.period.filing_year, code: periodCode.value }}
+          locale={locale}
+        />
+      )}
+    </div>
   );
 }

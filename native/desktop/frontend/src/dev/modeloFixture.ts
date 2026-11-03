@@ -105,6 +105,7 @@ import { hex64 } from "./fixtures/ledger";
  * other filer is refused as the application refused it, for want of a
  * quarterly declaration. */
 export const MODELO_SHAPES = [
+  "wallet",
   "fixture",
   "checked",
   "filed",
@@ -413,6 +414,7 @@ export function modeloFixture(options: Options): ModeloPort {
   // What the scenario's writes did, as far as they settled.
   let applied = false;
   let recorded = false;
+  let walletStage: "empty" | "seed" | "correct" | "override" = "empty";
   // How many renewals were answered, granted or refused: after each the
   // window reads the declaration again.
   let renewals = 0;
@@ -469,11 +471,13 @@ export function modeloFixture(options: Options): ModeloPort {
     spoken = language;
     const name = await formName(workUnitId);
     const read =
-      name === LATER_STATES
-        ? laterState()
-        : name === RENTA
-          ? rentaForm(shape)
-          : name;
+      shape === "wallet" && name === "303-1T"
+        ? `303-1T-wallet-${walletStage}`
+        : name === LATER_STATES
+          ? laterState()
+          : name === RENTA
+            ? rentaForm(shape)
+            : name;
     const form =
       read &&
       (await envelope<ModeloWorkbenchFormProjectionV1>(
@@ -643,11 +647,13 @@ export function modeloFixture(options: Options): ModeloPort {
       await answer();
       const list = await envelope<ModeloDeclarationsListProjectionV1>(
         `declarations${
-          shape === "incomplete"
-            ? "-incomplete"
-            : shape.startsWith("renta")
-              ? "-renta"
-              : ""
+          shape === "wallet"
+            ? "-wallet"
+            : shape === "incomplete"
+              ? "-incomplete"
+              : shape.startsWith("renta")
+                ? "-renta"
+                : ""
         }-${language}`,
       );
       if (!list) return reject("unavailable");
@@ -697,6 +703,47 @@ export function modeloFixture(options: Options): ModeloPort {
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
       const result = await (async (): Promise<unknown> => {
         switch (definition) {
+          case "modelo.iva-wallet.balance":
+            return shape === "wallet" && request.as_of_year === 2026
+              ? written(`iva-wallet-balance-${walletStage}`)
+              : unserved();
+          case "modelo.iva-wallet.seed":
+          case "modelo.iva-wallet.correct":
+          case "modelo.iva-wallet.override": {
+            if (shape !== "wallet") return unserved();
+            const period = request.period as
+              { filing_year?: unknown; code?: unknown } | undefined;
+            const mode = definition.slice("modelo.iva-wallet.".length);
+            const matches =
+              mode === "seed"
+                ? walletStage === "empty" &&
+                  period?.filing_year === 2024 &&
+                  period.code === "4T" &&
+                  request.amount === "1200.50"
+                : mode === "correct"
+                  ? walletStage === "seed" &&
+                    period?.filing_year === 2024 &&
+                    period.code === "4T" &&
+                    request.amount === "900.25" &&
+                    request.reason === "Correct the recorded opening balance."
+                  : walletStage === "correct" &&
+                    period?.filing_year === 2026 &&
+                    period.code === "1T" &&
+                    request.amount === "850.00" &&
+                    request.reason ===
+                      "Use the taxpayer's reviewed carry balance." &&
+                    request.evidence_locator ===
+                      "fixture:reviewed-iva-balance-2026-1T";
+            if (!matches) return unserved();
+            const result = await written(`iva-wallet-${mode}`);
+            walletStage =
+              mode === "seed"
+                ? "seed"
+                : mode === "correct"
+                  ? "correct"
+                  : "override";
+            return result;
+          }
           case "modelo.project":
             return written(`project-${rentaForm(shape)}-${spoken}`);
           case "modelo.declarations.list":

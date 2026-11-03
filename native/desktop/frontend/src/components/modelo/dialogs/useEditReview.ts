@@ -212,7 +212,7 @@ export function useEditReview({
       ? renewed
       : admitted;
   const check = useCallback(async () => {
-    if (!alive.current || holds.get(target)) return;
+    if (!alive.current || holds.blocking(target)) return;
     if (!baseline) {
       setPhase({ kind: "check_failed", code: "not_admitted" });
       return;
@@ -220,7 +220,7 @@ export function useEditReview({
     setPhase({ kind: "checking" });
     // Only the latest check speaks: a renewal starts another.
     const ticket = ++checks.current;
-    const version = holds.version(target);
+    const version = holds.admissionVersion(target);
     const answer = await preflight(
       port,
       session,
@@ -230,8 +230,8 @@ export function useEditReview({
       (stale) => {
         if (
           !alive.current ||
-          holds.get(target) ||
-          holds.version(target) !== version
+          holds.blocking(target) ||
+          holds.admissionVersion(target) !== version
         )
           return Promise.resolve(null);
         const held = renewing.current;
@@ -249,8 +249,8 @@ export function useEditReview({
         const stillCurrent = () =>
           alive.current &&
           ticket === checks.current &&
-          !holds.get(target) &&
-          holds.version(target) === version;
+          !holds.blocking(target) &&
+          holds.admissionVersion(target) === version;
         const running = renewal(
           port,
           stale,
@@ -270,8 +270,8 @@ export function useEditReview({
     if (
       !alive.current ||
       ticket !== checks.current ||
-      holds.get(target) ||
-      holds.version(target) !== version
+      holds.blocking(target) ||
+      holds.admissionVersion(target) !== version
     )
       return;
     // A check that evaluated the edits ends the moving: a later stale
@@ -386,7 +386,7 @@ export function useEditReview({
   }, [standing, onPrerequisiteHeld]);
 
   const apply = useCallback(async () => {
-    if (!baseline || holds.get(target) || phase.kind !== "checked") return;
+    if (!baseline || holds.blocking(target) || phase.kind !== "checked") return;
     ++checks.current;
     setPhase({ kind: "applying" });
     const run = await runWrite(

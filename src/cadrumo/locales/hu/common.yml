@@ -4376,6 +4376,7 @@ desktop:
     view:
       credits: Levonások
       form: Nyomtatvány
+      iva_wallet: IVA-egyenleg
     views:
       label: Bevallásnézetek
   navigation:
@@ -10043,6 +10044,54 @@ workspace:
         record_value: Olyan adat, amelyet a táblázat minden tételéhez meg kell adni
         records: A nyilvántartásaidban
         unnumbered: 'Rovatszám nélküli értékek: {count}'
+    iva_wallet:
+      action: Művelet
+      active_balance: Érvényes egyenleg
+      amount: Összeg (EUR)
+      as_of_year: Referenciaév
+      evidence_locator: Bizonyíték hivatkozása
+      expired_balance: Lejárt egyenleg
+      expiry_not_reported: Nincs megadva lejárati év
+      help:
+        correct: Válaszd ki egy meglévő nyitóegyenleg forrásidőszakát, és indokold
+          a javítást.
+        override: Válaszd ki a továbbvitt összeget fogadó időszakot. Az összeget,
+          az indoklást és a bizonyíték hivatkozását adózói felülbírálatként rögzítjük;
+          a hivatkozást nem ellenőrizzük.
+        seed: Válaszd ki a forrásidőszakot és az abból továbbvitt egyenleget. Az általad
+          megadott nyitóegyenleget rögzítjük.
+      lead: A referenciaévre vonatkozó, helyi adatokból számított egyenleg. Nem az
+        AEAT élő egyenlege.
+      loading: IVA-egyenleg betöltése…
+      lot_count: Jóváírási tételek
+      manage: Egyenleg kezelése…
+      mode:
+        correct: Nyitóegyenleg javítása
+        override: Adózói felülbírálat rögzítése
+        seed: Nyitóegyenleg rögzítése
+      next_expiry_year: A következő lejárat éve
+      previous_amount: Korábbi összeg
+      read_failed: Nem sikerült beolvasni az IVA-egyenleget. Az újrapróbálkozáshoz
+        töltsd be újra.
+      reason: Indoklás
+      receipt:
+        authority:
+          taxpayer_override: Adózó által megadott összeg
+        divergence:
+          override: Kifejezett adózói felülbírálat
+        not_reported: Nincs megadva
+        provenance:
+          operator_correction: Kezelő által javított nyitóegyenleg
+          operator_seed: Kezelő által megadott nyitóegyenleg
+        reconciliation_outcome: Egyeztetés eredménye
+        register_status: Nyilvántartási állapot
+        selected_source: Kiválasztott forrás
+        source: Forrás
+      recorded: Helyileg rögzítve. Ez a művelet nem számítja újra a bevallást.
+      reload: Egyenleg újratöltése
+      title: Továbbvihető IVA-egyenleg
+      total_balance: Teljes egyenleg
+      unallocated_applied_amount: Tételhez nem rendelt felhasznált összeg
     key:
       back: Vissza
       calculate: Számítás

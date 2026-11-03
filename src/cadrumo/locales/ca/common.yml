@@ -4411,6 +4411,7 @@ desktop:
     view:
       credits: Retencions
       form: Formulari
+      iva_wallet: Saldo d'IVA
     views:
       label: Vistes de la declaració
   navigation:
@@ -10091,6 +10092,54 @@ workspace:
         record_value: Una dada que necessita cada registre d'una taula
         records: Als teus registres
         unnumbered: 'Valors sense número de casella: {count}'
+    iva_wallet:
+      action: Acció
+      active_balance: Saldo vigent
+      amount: Import (EUR)
+      as_of_year: Any de referència
+      evidence_locator: Referència de l'evidència
+      expired_balance: Saldo caducat
+      expiry_not_reported: No s'indica cap any de caducitat
+      help:
+        correct: Tria el període d'origen d'un saldo inicial existent i explica la
+          correcció.
+        override: Tria el període que rep la compensació. L'import, el motiu i la
+          referència de l'evidència es registren com una declaració del contribuent;
+          la referència no es verifica.
+        seed: Tria el període d'origen i el saldo que s'arrossega des d'aquest període.
+          Es registra el saldo inicial que declares.
+      lead: Calculat amb els registres locals per a l'any de referència. No és un
+        saldo consultat en directe a l'AEAT.
+      loading: Llegint el saldo d'IVA…
+      lot_count: Lots de crèdit
+      manage: Gestiona el saldo…
+      mode:
+        correct: Corregeix el saldo inicial
+        override: Registra un import declarat pel contribuent
+        seed: Registra el saldo inicial
+      next_expiry_year: Pròxim any de caducitat
+      previous_amount: Import anterior
+      read_failed: No s'ha pogut llegir el saldo d'IVA. Torna'l a carregar per provar-ho
+        de nou.
+      reason: Motiu
+      receipt:
+        authority:
+          taxpayer_override: Import declarat pel contribuent
+        divergence:
+          override: Substitució expressa de l'import pel contribuent
+        not_reported: No informat
+        provenance:
+          operator_correction: Saldo inicial corregit per un operador
+          operator_seed: Saldo inicial declarat per un operador
+        reconciliation_outcome: Resultat de la conciliació
+        register_status: Estat del registre
+        selected_source: Origen seleccionat
+        source: Origen
+      recorded: Registrat localment. Aquesta acció no recalcula la declaració.
+      reload: Torna a carregar el saldo
+      title: Saldo d'IVA per compensar
+      total_balance: Saldo total
+      unallocated_applied_amount: Import aplicat sense assignar a un lot
     key:
       back: Tornar
       calculate: Calcula

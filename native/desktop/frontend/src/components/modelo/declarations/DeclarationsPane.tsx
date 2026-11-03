@@ -19,6 +19,7 @@ export function DeclarationsPane({
   reader,
   workUnitId,
   onOpen,
+  onOpenWork,
   onCensus,
   onBack,
   onOpenSurface,
@@ -41,6 +42,8 @@ export function DeclarationsPane({
   /** The declaration open, or null for the list. */
   workUnitId: string | null;
   onOpen(workUnitId: string): void;
+  /** Switching an open workspace must honor its staged-edit guard. */
+  onOpenWork?: (workUnitId: string) => void;
   /** Asks for the window's one census flow, where it has one. */
   onCensus?: () => void;
   /** Back to the list; the shell asks first where edits are staged. */
@@ -108,6 +111,7 @@ export function DeclarationsPane({
           language={language}
           locale={locale}
           onBack={onBack}
+          onOpenWork={onOpenWork}
           onOpenSurface={onOpenSurface}
           canOpenSurface={canOpenSurface}
           openLink={openLink}

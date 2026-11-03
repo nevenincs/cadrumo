@@ -1,4 +1,7 @@
-import { useWorkspaceFocus, WORKSPACE_COLUMNS } from "./shell/useWorkspaceFocus";
+import {
+  useWorkspaceFocus,
+  WORKSPACE_COLUMNS,
+} from "./shell/useWorkspaceFocus";
 import { useShellShortcuts } from "./shell/useShellShortcuts";
 import settings from "virtual:operational-settings";
 import { useShellMenus } from "./shell/useShellMenus";
@@ -2377,10 +2380,24 @@ export function App({ host }: { host: Host }) {
 
   const tabOpen = (tab: PanelTab) => panelVisible && activePanes.includes(tab);
   const panelMaximized = useWorkspaceFocus({
-    agentVisible, tuiVisible, firstPaneShown, maximized, gated,
-    tuiPhase: status.tui.phase, tab: layout.tab,
-    focusView, focusRail, signInButton, profilePage, ledgerPage, declarationsPage,
-    calendarPage, aeatSyncPage, docs, agentBody, wantsAgent,
+    agentVisible,
+    tuiVisible,
+    firstPaneShown,
+    maximized,
+    gated,
+    tuiPhase: status.tui.phase,
+    tab: layout.tab,
+    focusView,
+    focusRail,
+    signInButton,
+    profilePage,
+    ledgerPage,
+    declarationsPage,
+    calendarPage,
+    aeatSyncPage,
+    docs,
+    agentBody,
+    wantsAgent,
   });
 
   // What a session's header says beside its state: how it ended, or why it
@@ -2684,6 +2701,7 @@ export function App({ host }: { host: Host }) {
           reader={reader}
           workUnitId={openDeclaration.workUnitId}
           onOpen={openWorkUnit}
+          onOpenWork={(id) => guarded(() => openWorkUnit(id))}
           // The one census flow, as the palette offers it.
           onCensus={
             signedIn && host.censo && host.userProfile ? askCenso : undefined

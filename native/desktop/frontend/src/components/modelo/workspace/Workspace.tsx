@@ -27,12 +27,7 @@ import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
 
 /** The views of one declaration, as its tabs name them. */
 export type WorkspaceView =
-  | "form"
-  | "check"
-  | "credits"
-  | "file"
-  | "sources"
-  | "history";
+  "form" | "check" | "credits" | "file" | "sources" | "history";
 
 /** What the other component lanes put into the workspace. */
 export type WorkspaceSlots = {
@@ -47,9 +42,9 @@ export type WorkspaceSlots = {
   filing: ReactNode;
   /** The Check, Sources and History views. */
   check: ReactNode;
-  /** The credits a register supplies and the estimate; the view is offered
-   * only where the form has credits to show. */
+  /** Credits, estimates, and the IVA wallet entry where the declaration uses it. */
   credits?: ReactNode;
+  creditsLabel?: string;
   sources: ReactNode;
   history: ReactNode;
   /** Dialogs drawn at the workspace's root. */
@@ -425,7 +420,10 @@ export function ModeloWorkspace({
             ),
           )}
           {slots.credits !== undefined &&
-            tab("credits", t("desktop.modelo.view.credits"))}
+            tab(
+              "credits",
+              slots.creditsLabel ?? t("desktop.modelo.view.credits"),
+            )}
           {tab("sources", t("workspace.modelo.key.sources"))}
           {tab("history", t("workspace.modelo.history.title"))}
         </TabsList>
