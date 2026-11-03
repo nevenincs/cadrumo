@@ -54,6 +54,18 @@ FIRST_QUARTER_PRIOR_PERIOD_BINDINGS: Final[dict[str, Decimal]] = {
 }
 """Grounded zeros for the first-quarter M130 test work unit."""
 
+_PREVIOUS_YEAR_INCOME_BINDING: Final = "irpf.previous_year_economic_activity_net_income"
+_BINDINGS_BESIDE_SEEDED_PRIOR_YEAR: Final[dict[str, Decimal]] = {
+    binding_id: value
+    for binding_id, value in FIRST_QUARTER_PRIOR_PERIOD_BINDINGS.items()
+    if binding_id != _PREVIOUS_YEAR_INCOME_BINDING
+}
+"""The prior-period zeros that leave the previous year's income to the prior-year return the seeding files.
+
+A typed value that differs from that filed figure is a contested figure the note gate refuses, so a
+calculation made after the seeding states only the bindings no seeded return supplies.
+"""
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 
@@ -109,7 +121,7 @@ def seeded_modelo_verification_report(profile_id: UUID, *, operation: PinnedAuth
             ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=verification_operation),
             actor=MODELO_OPERATION_TEST_ACTOR,
             casilla_inputs={},
-            binding_values=FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+            binding_values=_BINDINGS_BESIDE_SEEDED_PRIOR_YEAR,
         ).revision
         revision_id = str(revision.calculation_revision_id)
         report = verify_modelo_revision_with_preconditions(
