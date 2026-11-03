@@ -62,6 +62,13 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from .....domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
+from .....domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from .....domain.modelos.source_disagreement import (
+    DisagreementDecimalValue,
+    SourceDisagreementEntry,
+    SourceDisagreementFact,
+    SourceDisagreementRole,
+)
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.secure_object_records import SecureObjectRecord
@@ -153,7 +160,9 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
 
 
 def _populated_catalogue(
-    *, rendering_snapshot: CalculationRenderingSnapshot | None = None
+    *,
+    rendering_snapshot: CalculationRenderingSnapshot | None = None,
+    source_issues: tuple[CalculationSourceIssue, ...] = (),
 ) -> CalculationRevisionCatalogue:
     """Build a catalogue whose every defaultable field is non-default.
 
@@ -189,6 +198,7 @@ def _populated_catalogue(
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
         filing_instance_evidence=filing_instance_evidence,
+        source_issues=source_issues,
         source_provenance=(),
         rendering_snapshot=rendering_snapshot,
     )
@@ -248,6 +258,7 @@ def _populated_catalogue(
         updated_at=verified_at,
         verified_at=verified_at,
         verified_by="aeat.cli.modelo.verify",
+        source_issues=source_issues,
         source_provenance=(),
     )
     return CalculationRevisionCatalogue(revisions={revision_id: revision})
@@ -299,6 +310,93 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert outcome.legal_refs == ("ley-37-1992:art-90",)
     assert outcome.context == {"tipo_renta": "interest", "country": "ZW"}
     assert profile.paths.database_file.is_file()
+
+
+_DIVERGENT_BINDING = "modelo-303-compensacion-pendiente-anteriores"
+# Distinct, unmistakable amounts and an evidence reference, so their plaintext
+# bytes can be searched for in the stored database file.
+_BACKEND_AMOUNT = "48613.207"
+_CALLER_AMOUNT = "51729.403"
+_EVIDENCE_REF = "tier-evidence-fingerprint-7f3c91"
+
+
+def _tier_divergence_issue() -> CalculationSourceIssue:
+    """A blocking tier divergence whose fact carries both tiers' values and provenance."""
+    fact = SourceDisagreementFact.of(
+        modelo=registry_snapshot_ref().modelo,
+        filing_year=registry_snapshot_ref().modelo_year,
+        period=_DECL_PERIODO_CODE,
+        work_unit_id=parent_work_unit_id(_BUCKET_ID),
+        registry_revision_id=registry_snapshot_ref().revision_id,
+        inputs_digest=_hex("a"),
+        key=_DIVERGENT_BINDING,
+        value_channel="decimal",
+        reached_casillas=(_CASILLA_12,),
+        sources=(
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.BACKEND,
+                source_family="previous_filing",
+                resolver_id="calculate_backend_bindings",
+                source_ref=f"previous_filing:binding:{_DIVERGENT_BINDING}",
+                value=DisagreementDecimalValue.of(Decimal(_BACKEND_AMOUNT)),
+                evidence_ref=_EVIDENCE_REF,
+            ),
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.CALLER,
+                source_family="operator_input",
+                resolver_id="calculate_caller_bindings",
+                value=DisagreementDecimalValue.of(Decimal(_CALLER_AMOUNT)),
+            ),
+        ),
+        selected_role=SourceDisagreementRole.CALLER,
+    )
+    return CalculationSourceIssue(
+        reason="precedence_tier_divergence",
+        binding_source=None,
+        casilla_id=_CASILLA_12,
+        message="A higher source tier replaced a different value.",
+        resolver_id="calculate_caller_bindings",
+        disagreement=fact,
+    )
+
+
+def test_a_persisted_tier_divergence_survives_encrypted_storage_with_every_tier_value(tmp_path: Path) -> None:
+    """The divergence and its typed fact read back equal, and no value is stored in plaintext."""
+    issue = _tier_divergence_issue()
+    original = _populated_catalogue(source_issues=(issue,))
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
+        loaded = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+        record = profile.repository.load(
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
+        )
+        stored_files = [path for path in profile.paths.database_file.parent.rglob("*") if path.is_file()]
+        stored_bytes = b"".join(path.read_bytes() for path in stored_files)
+
+    assert loaded == original
+    (revision,) = loaded.values()
+    (persisted,) = revision.source_issues
+    assert persisted == issue
+    assert persisted.disagreement is not None
+    assert issue.disagreement is not None
+    assert persisted.disagreement.finding_key == issue.disagreement.finding_key
+    assert [(entry.role, entry.value) for entry in persisted.disagreement.sources] == [
+        (SourceDisagreementRole.BACKEND, DisagreementDecimalValue(amount=_BACKEND_AMOUNT)),
+        (SourceDisagreementRole.CALLER, DisagreementDecimalValue(amount=_CALLER_AMOUNT)),
+    ]
+    assert persisted.disagreement.sources[0].evidence_ref == _EVIDENCE_REF
+    # The decrypted payload does hold every value, so their absence from the
+    # stored files is the encryption's doing, not an omission.
+    assert record is not None
+    assert all(plaintext.encode() in record.payload for plaintext in (_BACKEND_AMOUNT, _CALLER_AMOUNT, _EVIDENCE_REF))
+    assert stored_files
+    for plaintext in (_BACKEND_AMOUNT, _CALLER_AMOUNT, _EVIDENCE_REF):
+        assert plaintext.encode() not in stored_bytes
 
 
 @pytest.mark.parametrize("revisioned", (False, True))

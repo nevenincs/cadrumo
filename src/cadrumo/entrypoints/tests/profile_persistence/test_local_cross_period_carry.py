@@ -20,7 +20,8 @@ The four behaviours under test:
   cross-period clean-state gate for FILING a dependent period — it still blocks with
   ``LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE``.
 * D2 (override precedence): a caller ``--binding`` beats the auto-carried value and is
-  NOT rejected as a source-owned collision.
+  NOT rejected as a source-owned collision; a caller value that differs from the carried
+  one is persisted as a tier divergence and blocks verify.
 * D3 (303 exclusion): the carry resolver never emits the M303 IVA-compensation
   binding (the iva-wallet decision owns it).
 * D4 (grupo fan-in non-goal): documented as out of scope in
@@ -66,6 +67,7 @@ from ....application.ledger.tests.manual_transaction_support import create_manua
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ....application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
 from ....application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -83,6 +85,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
+from ....domain.modelos.source_disagreement import DisagreementDecimalValue, SourceDisagreementRole
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -135,28 +138,25 @@ _M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = validated_casilla_id("14")
 # previous_filing saldo-negativo at the current positive C14 before it flows through.
 _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 
-# Positive operator-declared withholding makes 1T's partial result negative.
-# Home deduction stays zero, so the subsequent prior-payments aggregation
-# cannot manufacture a negative Casilla05. The carry seed is read from the
-# actually saved/filed revision, rather than derived here from the formulas.
+# No withholding is declared: no source states one, so box 06 is the ledger's
+# own zero and no operator value competes with it. A first-year filer's
+# previous-year net income is zero, so the art. 110.3.c minoración (box 13)
+# exceeds 1T's zero partial result and makes the Diferencia negative. Home
+# deduction stays zero, so the subsequent prior-payments aggregation cannot
+# manufacture a negative Casilla05. The carry seed is read from the actually
+# saved/filed revision, rather than derived here from the formulas.
 _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
-    _M130_WITHHELD_CASILLA: Decimal("5000"),
     _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
     _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 # Income/gastos remain resolver-owned. A real Q2 income receipt funds a
-# positive current C14 below the saved carry; withholding is cumulative and
-# retains the same operator-declared amount in both quarters. Casillas05/15
-# still come only from previous_filing, never from manual inputs.
-_2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = {
-    _M130_WITHHELD_CASILLA: Decimal("5000"),
-    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-}
+# positive current C14 below the saved carry: its 20 % partial result exceeds
+# the quarter's minoración by less than the 1T seed. Casillas05/15 still come
+# only from previous_filing, never from manual inputs.
+_2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = dict(_NEGATIVE_1T_INPUTS)
+_2T_INCOME = Decimal("750")
 
 
 def _seed_130(
@@ -196,12 +196,12 @@ def _seed_2t_130_income(repos_: _Repos) -> str:
                 bucket_id=_BUCKET_ID,
                 booked_date=date(2026, 5, 15),
                 value_date=date(2026, 5, 15),
-                amount=Decimal("25750"),
+                amount=_2T_INCOME,
                 direction=TransactionDirection.INCOMING,
                 counterparty="Cliente SA",
                 description="Q2 economic activity income for cross-period carry",
                 business_classification=BusinessClassification.BUSINESS,
-                taxable_base=Decimal("25750"),
+                taxable_base=_2T_INCOME,
                 irpf_category="actividad_economica",
                 actor="operator-A",
                 idempotency_key="m130-carry-q2-income",
@@ -212,8 +212,8 @@ def _seed_2t_130_income(repos_: _Repos) -> str:
     persisted = transactions.load().get(created.ref.transaction_id)
     assert persisted is not None
     assert persisted.raw.value_date == date(2026, 5, 15)
-    assert persisted.raw.amount == Decimal("25750")
-    assert persisted.taxable_base == Decimal("25750")
+    assert persisted.raw.amount == _2T_INCOME
+    assert persisted.taxable_base == _2T_INCOME
     return persisted.transaction_id
 
 
@@ -239,7 +239,7 @@ def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityO
             ports=_calculation_ports_190,
             clock=_T1,
         ).revision
-    assert Decimal(revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("5000")
+    assert Decimal(revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("0")
     assert Decimal(revision.casilla_values[_M130_HOME_DEDUCTION_CASILLA]) == Decimal("0")
     assert Decimal(revision.casilla_values[_M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")
     saldo = Decimal(revision.casilla_values[_M130_SALDO_NEGATIVO_CASILLA])
@@ -394,8 +394,8 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(
         )
 
     assert income_id in result.revision.source_transaction_ids
-    assert Decimal(result.revision.casilla_values[_M130_INCOME_CASILLA]) == Decimal("25750")
-    assert Decimal(result.revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("5000")
+    assert Decimal(result.revision.casilla_values[_M130_INCOME_CASILLA]) == _2T_INCOME
+    assert Decimal(result.revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("0")
     assert Decimal(result.revision.casilla_values[_M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")
     carried_casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
     c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
@@ -556,10 +556,11 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
     After filing 1T with a positive saldo-negativo carry, calculating 2T while supplying
     the carry binding id explicitly must (a) NOT be rejected as a source-owned collision
     and (b) drive casilla 15 to the caller's value, not the carried one. The carried
-    value is read back from the no-override calculation so the override case is proven to
-    actually differ.
+    value is read back from the filed 1T revision so the override case is proven to
+    actually differ. Because the two values differ on a filed figure, the calculation
+    persists the divergence with both values, and verify refuses until it is resolved.
     """
-    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
     carried_seed = _file_1t_with_negative_result(repos, operation=operation)
     assert carried_seed > Decimal("0")
@@ -586,6 +587,55 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
     assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == override_value
     assert override_value > c14 > Decimal("0")
     assert casilla_15 == c14
+
+    divergences = [
+        issue
+        for issue in result.revision.source_issues
+        if issue.reason == "precedence_tier_divergence"
+        and issue.disagreement is not None
+        and issue.disagreement.key == _CARRY_BINDING_ID
+    ]
+    assert len(divergences) == 1
+    finding = divergences[0].disagreement
+    assert finding is not None
+    held = {entry.role: entry.value for entry in finding.sources}
+    assert held == {
+        SourceDisagreementRole.BACKEND: DisagreementDecimalValue.of(carried_seed),
+        SourceDisagreementRole.CALLER: DisagreementDecimalValue.of(override_value),
+    }
+    assert finding.selected_role is SourceDisagreementRole.CALLER
+    assert _M130_CARRY_FORWARD_CASILLA in finding.reached_casillas
+    backend, caller = finding.sources
+    # The carried value is named by its declared source, the caller's by the
+    # operator channel; neither names a source object. A previous-filing carry
+    # records no content fingerprint, so its value has no evidence digest.
+    assert (backend.source_family, backend.source_ref) == (
+        "previous_filing",
+        f"previous_filing:binding:{_CARRY_BINDING_ID}",
+    )
+    assert backend.evidence_ref is None
+    assert (caller.source_family, caller.source_ref) == (
+        "operator_input",
+        f"operator_input:binding:{_CARRY_BINDING_ID}",
+    )
+    assert caller.evidence_ref is None
+
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        _verify_revision(
+            result.revision.calculation_revision_id,
+            revision=result.revision,
+            work_unit=work_unit_2t,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T4,
+        )
+    context = refused.value.context
+    assert context is not None
+    assert "precedence_tier_divergence" in str(context["reasons"]).split(",")
 
 
 @pytest.mark.parametrize(

@@ -17,7 +17,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from dataclasses import replace as _dataclass_replace
 from datetime import date, datetime
@@ -42,6 +42,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.deadlines.models import IVARegime
+from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.period import calculation_filing_date
@@ -162,6 +163,7 @@ def prepare_calculation(
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
     profile: ModeloWorkProfile | None,
+    backend_source_provenance: Sequence[CalculationSourceRef] = (),
 ) -> PreparedCalculation:
     """Prepare validated inputs, source channels, and gates for calculation.
 
@@ -268,6 +270,7 @@ def prepare_calculation(
         borrador_snapshot_repository=borrador_snapshot_repository,
         operation=operation,
         profile=checked_profile,
+        backend_source_provenance=backend_source_provenance,
     )
     channels = _with_required_profile_bindings(work_unit, snapshot, checked_profile, channels)
     _require_calculation_binding_resolution(

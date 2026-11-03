@@ -67,6 +67,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloCrossPeriodCleanStateError
 from cadrumo.application.modelo.calculation_bucket_actions import (
+    BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
@@ -80,6 +81,7 @@ from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, addres
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.external_constants import OutputLanguage
@@ -387,6 +389,30 @@ def _calculate_m303_quarter_revision(
     operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision]:
     """Run the live bucket-aggregation M303 calc for one quarter without projecting filed observations."""
+    work_unit, result = _calculate_m303_quarter(
+        secure_objects,
+        period=period,
+        filing_year=filing_year,
+        taxpayer_nif=taxpayer_nif,
+        calculated_at=calculated_at,
+        extra_casilla_inputs=extra_casilla_inputs,
+        operation=operation,
+    )
+    return work_unit, result.revision
+
+
+def _calculate_m303_quarter(
+    secure_objects: SecureObjectRepository,
+    *,
+    period: str,
+    filing_year: int = _YEAR,
+    taxpayer_nif: str = _TAX_ID,
+    calculated_at: datetime = _FILE_AT,
+    extra_casilla_inputs: dict[CasillaId, Decimal] | None = None,
+    extra_binding_values: dict[str, Decimal] | None = None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[WorkUnit, BucketAggregationCalculationResult]:
+    """Run the live bucket-aggregation M303 calc for one quarter and keep its source diagnostics."""
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     CalculationRevisionCatalogueRepository(objects=secure_objects)
     BucketEventHistoryRepository(objects=secure_objects)
@@ -420,7 +446,7 @@ def _calculate_m303_quarter_revision(
     )
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             actor="system",
@@ -433,6 +459,7 @@ def _calculate_m303_quarter_revision(
                 # is net-positive); autoconsumo del promotor is nil for this filer.
                 "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
                 "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+                **(extra_binding_values or {}),
             },
             iva_compensation_decision=decision,
             filing_instance_evidence=general_m303_filing_evidence(
@@ -441,8 +468,8 @@ def _calculate_m303_quarter_revision(
                 operation=operation,
             ),
             clock=calculated_at,
-        ).revision
-    return work_unit, revision
+        )
+    return work_unit, result
 
 
 def _calculate_and_file_m303_quarter(
@@ -1242,3 +1269,102 @@ def _assert_verify_export_and_file_refused(
             operation=file_operation,
         )
     assert not filing_repo.load().records
+
+
+_TIER_SCREEN_REASONS = frozenset(
+    {"precedence_tier_divergence", "precedence_tier_divergence_advisory", "operator_override_diverges_from_computed"}
+)
+_CASILLA_44_BINDING = "modelo-303-prorrata-regularizacion-casilla-44"
+
+
+def _tier_screen_reasons(result: BucketAggregationCalculationResult) -> set[str]:
+    """Every tier-screen reason the calculation raised, persisted or shown."""
+    persisted = {str(issue.reason) for issue in result.revision.source_issues}
+    shown = {str(diagnostic.reason) for diagnostic in result.source_diagnostics}
+    return (persisted | shown) & _TIER_SCREEN_REASONS
+
+
+def test_a_register_prorrata_percentage_is_a_governed_source_and_raises_no_tier_divergence(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The register's provisional and definitive percentages apportion the deduction; no tier contests them.
+
+    The percentage is read from the prorrata register and the 4T volumes are
+    boxes no source resolves, so nothing holds a second value for any figure.
+    The deductions still match the manual's printed figures, so the screen is
+    silent on a calculation that did apply the register.
+    """
+    _store_profile(secure_objects)
+    _save_general_prorrata_register(secure_objects)
+    persist_year_of_invoices(
+        secure_objects, facts_by_period=PRORRATA_QUARTER_FACTS, received_rate_percent=Decimal("10")
+    )
+
+    settled: BucketAggregationCalculationResult | None = None
+    for period in _QUARTER_ORDER:
+        work_unit, result = _calculate_m303_quarter(
+            secure_objects,
+            period=period,
+            extra_casilla_inputs=(
+                {_PRORRATA_VOLUMEN_CON_DERECHO: Decimal("25000.00"), _PRORRATA_VOLUMEN_TOTAL: Decimal("45000.00")}
+                if period == "4T"
+                else None
+            ),
+            operation=operation,
+        )
+        assert _tier_screen_reasons(result) == set(), period
+        expected = _MANUAL_PRACTISED_DEDUCTIONS_1T_3T.get(period, _MANUAL_4T_DEFINITIVE_DEDUCTION)
+        assert Decimal(result.revision.casilla_values[_SOPORTADO_INTERIORES]) == expected
+        persist_filed_revision_observation(
+            revision=result.revision,
+            work_unit=work_unit,
+            repository=CalculationObservationRepository(objects=secure_objects),
+            captured_at=_FILE_AT,
+            result_disposition=ResultDisposition.INGRESO,
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+        )
+        settled = result
+    assert settled is not None
+    assert Decimal(settled.revision.casilla_values[_CASILLA_44]) == _MANUAL_EXCESO_DE_DEDUCCION
+
+    # The annual summary of a general-regime filer declares the simplified-regime
+    # boxes, which their resolver settles as not applying rather than as zero.
+    annual_bindings = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A").revision.bindings
+    assert any(
+        binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for binding in annual_bindings
+    )
+    annual = _calculate_m390_annual(secure_objects, operation=operation)
+    assert {issue.reason for issue in annual.source_issues} & _TIER_SCREEN_REASONS == set()
+    assert Decimal(annual.casilla_values[_M390_PRORRATA_REGULARIZACION]) == _MANUAL_EXCESO_DE_DEDUCCION
+
+
+def test_an_operator_value_over_an_unresolved_regularisation_raises_no_tier_divergence(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """With 1T unfiled the regularisation source states no value, so the operator's figure is a fill.
+
+    The resolver leaves box 44 unresolved, the lower tier holds nothing, and the
+    operator's value is used without a divergence being raised.
+    """
+    _store_profile(secure_objects)
+    _save_general_prorrata_register(secure_objects)
+    persist_year_of_invoices(
+        secure_objects, facts_by_period=PRORRATA_QUARTER_FACTS, received_rate_percent=Decimal("10")
+    )
+    for period in ("2T", "3T"):
+        _calculate_and_file_m303_quarter(secure_objects, period=period, operation=operation)
+    operator_value = Decimal("-150.00")
+
+    _work_unit, result = _calculate_m303_quarter(
+        secure_objects,
+        period="4T",
+        extra_casilla_inputs={
+            _PRORRATA_VOLUMEN_CON_DERECHO: Decimal("25000.00"),
+            _PRORRATA_VOLUMEN_TOTAL: Decimal("45000.00"),
+        },
+        extra_binding_values={_CASILLA_44_BINDING: operator_value},
+        operation=operation,
+    )
+
+    assert _tier_screen_reasons(result) == set()
+    assert Decimal(result.revision.casilla_values[_CASILLA_44]) == operator_value

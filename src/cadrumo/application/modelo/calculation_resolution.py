@@ -23,7 +23,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.hashing import content_hash_hex
+from ...core.hashing import CONTENT_DIGEST_PREFIX, content_hash_hex
 from ...core.period import Period
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
 from ...domain.calculations.registry.bindings import (
@@ -56,6 +56,7 @@ from ...domain.modelos.calculation_binding_values import PERSISTED_BOOLEAN_BINDI
 from ...domain.modelos.calculation_revision_sources import (
     CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT,
     CalculationSourceIssue,
+    CalculationSourceRef,
 )
 from ...domain.modelos.filing_record import FilingDeclarationKind
 from ...domain.modelos.source_disagreement import SourceDisagreementFact, SourceDisagreementRole
@@ -150,6 +151,7 @@ def resolve_calculation_binding_channels(
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile,
+    backend_source_provenance: Sequence[CalculationSourceRef] = (),
 ) -> ResolvedCalculationChannels:
     """Resolve all binding channels for ``work_unit`` and ``snapshot``.
 
@@ -167,6 +169,10 @@ def resolve_calculation_binding_channels(
     verifies the registry-declared channel shape and
     :func:`application.modelo.binding_resolution.lift_previous_filing_casilla_overrides_to_bindings`
     mirrors eligible previous-filing casilla overrides onto their binding ids.
+
+    ``backend_source_provenance`` is the source mesh's provenance for the
+    backend values; a divergence names each backend value by its declared
+    source and locates it by a digest of the evidence fingerprints behind it.
     """
     borrador_resolution = resolve_borrador_source_tier(
         bucket_id=work_unit.bucket_id,
@@ -192,7 +198,6 @@ def resolve_calculation_binding_channels(
         binding_values=dict(caller_binding_values),
         enum_binding_values=dict(caller_enum_binding_values),
     )
-    declared_sources = {binding.id: binding.source.value for binding in snapshot.revision.bindings}
     overlay = merge_source_resolutions_by_precedence(
         (
             PrecedenceTier(
@@ -205,12 +210,9 @@ def resolve_calculation_binding_channels(
                 role=SourceDisagreementRole.BACKEND,
                 resolution=backend_tier,
                 source_family=_BACKEND_SOURCE_FAMILY,
-                provenance={
-                    binding_id: TierValueProvenance(
-                        source_family=declared_sources.get(binding_id, _BACKEND_SOURCE_FAMILY)
-                    )
-                    for binding_id in backend_binding_values
-                },
+                provenance=_backend_binding_provenance(
+                    snapshot.revision, backend_binding_values, backend_source_provenance
+                ),
             ),
             PrecedenceTier(
                 role=SourceDisagreementRole.BORRADOR,
@@ -230,6 +232,9 @@ def resolve_calculation_binding_channels(
                 role=SourceDisagreementRole.CALLER,
                 resolution=caller_tier,
                 source_family=OPERATOR_INPUT_SOURCE_FAMILY,
+                provenance=_caller_provenance(
+                    PrecedenceKeyKind.BINDING, (*caller_binding_values, *caller_enum_binding_values)
+                ),
             ),
         ),
     )
@@ -317,6 +322,52 @@ def _binding_keyed_provenance(
     return provenance
 
 
+def _backend_binding_provenance(
+    revision: ModeloRevision,
+    backend_binding_values: Mapping[BindingId, Decimal],
+    source_provenance: Sequence[CalculationSourceRef],
+) -> dict[str, TierValueProvenance]:
+    """Each backend value named by its declared source and located by the evidence behind it.
+
+    ``source_ref`` is ``<declared source>:binding:<id>``: it names the value
+    without naming any source object, because a mesh reference can carry a
+    third party's tax identifier. ``evidence_ref`` digests the fingerprints of
+    the provenance rows the declared source produced, so a reader can tell
+    which evidence the value rested on; it is ``None`` when those rows carry no
+    fingerprint.
+    """
+    bindings = revision_bindings_by_id(revision)
+    fingerprints_by_source: dict[BindingSourceKind, set[str]] = {}
+    for row in source_provenance:
+        if row.fingerprint is not None:
+            fingerprints_by_source.setdefault(row.resolved_binding_source, set()).add(row.fingerprint)
+    provenance: dict[str, TierValueProvenance] = {}
+    for binding_id in backend_binding_values:
+        binding = bindings.get(binding_id)
+        source = None if binding is None else binding.source
+        family = _BACKEND_SOURCE_FAMILY if source is None else source.value
+        fingerprints: frozenset[str] = (
+            frozenset() if source is None else frozenset(fingerprints_by_source.get(source, ()))
+        )
+        provenance[binding_id] = TierValueProvenance(
+            source_family=family,
+            source_ref=f"{family}{_BINDING_REF_MARKER}{binding_id}",
+            evidence_ref=f"{CONTENT_DIGEST_PREFIX}{content_hash_hex(sorted(fingerprints))}" if fingerprints else None,
+        )
+    return provenance
+
+
+def _caller_provenance(key_kind: PrecedenceKeyKind, keys: Iterable[str]) -> dict[str, TierValueProvenance]:
+    """Each operator value marked as the operator's: ``operator_input:<key kind>:<key>``."""
+    return {
+        key: TierValueProvenance(
+            source_family=OPERATOR_INPUT_SOURCE_FAMILY,
+            source_ref=f"{OPERATOR_INPUT_SOURCE_FAMILY}:{key_kind.value}:{key}",
+        )
+        for key in keys
+    }
+
+
 _LOWER_TIER_ROLES = (SourceDisagreementRole.PROFILE, SourceDisagreementRole.BORRADOR)
 
 
@@ -388,6 +439,7 @@ def _caller_casillas_over_tier_bound_values(
                 resolver_id="calculate_caller_casillas", bound_inputs_by_casilla_id=contested
             ),
             source_family=OPERATOR_INPUT_SOURCE_FAMILY,
+            provenance=_caller_provenance(PrecedenceKeyKind.CASILLA, contested),
         )
     )
     return merge_source_resolutions_by_precedence(tiers).divergences
@@ -547,6 +599,10 @@ def operator_over_source_divergences(
                     bound_inputs_by_casilla_id={key: operator_casillas[key] for key in contested_casillas},
                 ),
                 source_family=OPERATOR_INPUT_SOURCE_FAMILY,
+                provenance={
+                    **_caller_provenance(PrecedenceKeyKind.RELATION, contested_relations),
+                    **_caller_provenance(PrecedenceKeyKind.CASILLA, contested_casillas),
+                },
             ),
         )
     ).divergences
