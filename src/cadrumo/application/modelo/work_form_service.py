@@ -47,6 +47,7 @@ from ...domain.buckets.event import BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.iva_wallet_carry_targets import revision_offers_iva_wallet
 from ...domain.modelos.calculation_revision import (
     FILED_REVISION_STATES,
     SEALED_REVISION_STATES,
@@ -325,6 +326,7 @@ def load_modelo_work_form(
             "asks_imputation_election": revision_reads_imputation_criterion(snapshot.revision),
             "compares_taxation": revision_compares_taxation(snapshot),
             "compares_borrador": borrador_pdf_extraction_profile(snapshot) is not None,
+            "offers_iva_wallet": revision_offers_iva_wallet(modelo_id=snapshot.modelo.id, revision=snapshot.revision),
         }
     )
     state = review.lifecycle_state
