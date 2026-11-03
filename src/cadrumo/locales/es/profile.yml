@@ -88,6 +88,8 @@ profile:
     preferences:
       output_language: Idioma de salida de la CLI para este perfil
     renta_family:
+      convive_con_otro_progenitor: 'Unidad monoparental: convive con el padre o la
+        madre de algún hijo de la unidad'
       descendants_eu_eea_deduction: Descendientes UE/EEE en la deducción por unidad
         familiar
       minor_children_in_unit: Hijos menores en la unidad familiar
@@ -416,6 +418,8 @@ profile:
           label: Ascendiente
         ascendientes_count:
           label: Número de ascendientes
+        convive_con_otro_progenitor:
+          label: Convive con el padre o la madre de algún hijo del hogar
         cotizaciones_ss_madre_2024:
           label: Cotizaciones a la Seguridad Social de la madre (2024)
         descendants:

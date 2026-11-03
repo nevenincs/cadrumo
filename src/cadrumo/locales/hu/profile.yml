@@ -87,6 +87,8 @@ profile:
     preferences:
       output_language: CLI kimeneti nyelv ehhez a profilhoz
     renta_family:
+      convive_con_otro_progenitor: 'Egyszülős egység: együtt él az egység valamelyik
+        gyermekének másik szülőjével'
       descendants_eu_eea_deduction: EU/EGT-leszármazottak a családi egység levonásában
       minor_children_in_unit: Kiskorú gyermekek a családi egységben
       situacion_familiar: Családi helyzet (LIRPF 82. cikk)
@@ -418,6 +420,8 @@ profile:
           label: Felmenő
         ascendientes_count:
           label: Felmenők száma
+        convive_con_otro_progenitor:
+          label: Együtt él a háztartás valamelyik gyermekének másik szülőjével
         cotizaciones_ss_madre_2024:
           label: Anya társadalombiztosítási járulékai (2024)
         descendants:

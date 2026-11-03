@@ -261,6 +261,32 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "aeat-rent
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
 [[revisions."2022".bindings]]
+# Art. 82.1 LIRPF family situation: casado is the first modality of family unit,
+# every other situation the second. Calculation only; ECIVIL keeps its own code.
+id = "renta-profile-family-situacion-familiar"
+provider = { kind = "profile", profile_key = "renta_family.situacion_familiar" }
+value = { data_type = "text", channel = "text" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-84"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["unidad familiar"]
+[[revisions."2022".bindings]]
+# Art. 84.2.4º LIRPF: a single-parent unit loses the joint reduction while the
+# taxpayer lives with the father or mother of any child in the unit.
+id = "renta-profile-family-convive-otro-progenitor"
+provider = { kind = "profile", profile_key = "renta_family.convive_con_otro_progenitor" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-84"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["conviva con el padre o la madre"]
+[[revisions."2022".bindings]]
 id = "renta-profile-marital-status"
 provider = { kind = "profile", profile_key = "renta_taxpayer.marital_status", xsd_path = "/DatosIdentificativos/Declarante/ECIVIL", dictionary_field = "ECIVIL" }
 value = { data_type = "text", channel = "text" }

@@ -27,8 +27,10 @@ from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
+from ..calculation_action_ports import CalculationActionPorts
 from ..taxation_comparison import (
     TaxationComparisonError,
+    TaxationComparisonRefusal,
     TaxationComparisonResult,
     TaxationRecommendation,
     TaxationRecommendationReason,
@@ -51,6 +53,14 @@ _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
 _REVISION = "renta-test-2025"
 _AUTHORITY = cast(PinnedAuthorityOperation, object())
+_CALCULATION_PORTS = cast(CalculationActionPorts, object())
+
+
+def _unused_calculation_ports(
+    *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+) -> CalculationActionPorts:
+    del bucket_id, operation, profile_record
+    pytest.fail("access resolution must not build calculation ports")
 
 
 def _unit(
@@ -94,7 +104,7 @@ def _registered(reader: _Reader):
         factory_calls.append(bucket_id)
         return TaxationComparisonPorts(work_unit_reader=reader)
 
-    definition = build_modelo_taxation_comparison_definition(factory)
+    definition = build_modelo_taxation_comparison_definition(_unused_calculation_ports)
     registration = build_modelo_taxation_comparison_registration(definition, factory)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     return factory, factory_calls, definition, registration, registry
@@ -287,20 +297,21 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
 
     unit = _unit()
     request = _request(unit)
-    reader = _Reader(WorkUnitCatalogue(work_units={unit.work_unit_id: unit}))
-    factory_calls: list[str] = []
-    ports = TaxationComparisonPorts(work_unit_reader=reader)
+    factory_calls: list[tuple[str, PinnedAuthorityOperation]] = []
 
-    def factory(*, bucket_id: str) -> TaxationComparisonPorts:
-        factory_calls.append(bucket_id)
-        return ports
+    def factory(
+        *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+    ) -> CalculationActionPorts:
+        assert profile_record is None
+        factory_calls.append((bucket_id, operation))
+        return _CALCULATION_PORTS
 
     definition = build_modelo_taxation_comparison_definition(factory)
     authority = cast(PinnedAuthorityOperation, object())
-    submitted: list[tuple[str, str, TaxationComparisonPorts, object]] = []
+    submitted: list[tuple[str, str, CalculationActionPorts]] = []
 
-    def compare(work_unit_id: str, *, bucket_id: str, ports: TaxationComparisonPorts, operation: object):
-        submitted.append((work_unit_id, bucket_id, ports, operation))
+    def compare(work_unit_id: str, *, bucket_id: str, ports: CalculationActionPorts):
+        submitted.append((work_unit_id, bucket_id, ports))
         return _comparison(revision=unit.revision_id)
 
     monkeypatch.setattr(operation_module, "compare_taxation_for_work_unit", compare)
@@ -319,8 +330,8 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
         reference = asyncio.run(definition.executor_factory.create().execute(request, context))
 
     assert reference == "f" * 64
-    assert factory_calls == [str(_PROFILE)]
-    assert submitted == [(unit.work_unit_id, str(_PROFILE), ports, authority)]
+    assert factory_calls == [(str(_PROFILE), authority)]
+    assert submitted == [(unit.work_unit_id, str(_PROFILE), _CALCULATION_PORTS)]
     assert phases == [MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID]
     assert effects == [OperationEffect.NONE]
     assert len(stored) == 1
@@ -371,14 +382,15 @@ def test_executor_preserves_typed_comparison_refusal_and_rejects_oversized_proje
 
     unit = _unit()
     request = _request(unit)
-    ports = TaxationComparisonPorts(work_unit_reader=_Reader(WorkUnitCatalogue()))
-    definition = build_modelo_taxation_comparison_definition(lambda **_kwargs: ports)
+    definition = build_modelo_taxation_comparison_definition(lambda **_kwargs: _CALCULATION_PORTS)
     authority = cast(PinnedAuthorityOperation, object())
 
     monkeypatch.setattr(
         operation_module,
         "compare_taxation_for_work_unit",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(TaxationComparisonError("private calculation detail")),
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            TaxationComparisonError(TaxationComparisonRefusal.NOT_CALCULATED)
+        ),
     )
     stored: list[BaseModel] = []
     effects: list[OperationEffect] = []
@@ -392,7 +404,7 @@ def test_executor_preserves_typed_comparison_refusal_and_rejects_oversized_proje
     )
     with override_settings(cadrumo_active_profile=str(_PROFILE)), pytest.raises(TaxationComparisonError) as refused:
         asyncio.run(definition.executor_factory.create().execute(request, context))
-    assert str(refused.value) == "private calculation detail"
+    assert refused.value.refusal is TaxationComparisonRefusal.NOT_CALCULATED
     assert stored == []
     assert effects == []
 
@@ -410,9 +422,12 @@ def test_executor_requires_exact_active_profile_before_comparison() -> None:
     request = _request(unit)
     calls: list[str] = []
 
-    def factory(*, bucket_id: str) -> TaxationComparisonPorts:
+    def factory(
+        *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+    ) -> CalculationActionPorts:
+        del operation, profile_record
         calls.append(bucket_id)
-        return TaxationComparisonPorts(work_unit_reader=_Reader(WorkUnitCatalogue()))
+        return _CALCULATION_PORTS
 
     definition = build_modelo_taxation_comparison_definition(factory)
     authority = cast(PinnedAuthorityOperation, object())
@@ -439,49 +454,68 @@ def test_executor_requires_exact_active_profile_before_comparison() -> None:
     assert stored == []
 
 
-def test_work_unit_revision_must_equal_the_pinned_registry_selection() -> None:
-    selected = published_snapshot("100", filing_year=2025, period="0A")
-    stale_unit = _unit(revision="stale-revision")
-
-    class Authority:
-        def __init__(self) -> None:
-            self.selections: list[tuple[str, int, str]] = []
-
-        def snapshot(self, modelo: str, *, filing_year: int, period: str):
-            self.selections.append((modelo, filing_year, period))
-            return selected
-
-    class WorkUnits:
-        def load(self) -> WorkUnitCatalogue:
-            return WorkUnitCatalogue(work_units={stale_unit.work_unit_id: stale_unit})
-
-    authority = Authority()
-    with pytest.raises(TaxationComparisonError, match="no longer the published revision"):
-        compare_taxation_for_work_unit(
-            stale_unit.work_unit_id,
-            bucket_id=str(_PROFILE),
-            ports=TaxationComparisonPorts(work_unit_reader=WorkUnits()),
-            operation=cast(PinnedAuthorityOperation, cast(object, authority)),
-        )
-    assert authority.selections == [("100", 2025, "0A")]
-
-
-def test_work_unit_comparison_refuses_unproven_manual_and_relation_inputs() -> None:
-    selected = published_snapshot("100", filing_year=2025, period="0A")
-    unit = _unit(revision=selected.revision.id)
-
+def _comparison_ports(unit: WorkUnit, authority: object) -> CalculationActionPorts:
     class WorkUnits:
         def load(self) -> WorkUnitCatalogue:
             return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
 
-    authority = SimpleNamespace(snapshot=lambda _modelo, **_coordinates: selected)
-    with pytest.raises(TaxationComparisonError, match="complete resolved tax-input basis"):
+    class Calculations:
+        def load(self, *, operation: object = None) -> SimpleNamespace:
+            del operation
+            return SimpleNamespace(get=lambda _revision_id: None)
+
+    return cast(
+        CalculationActionPorts,
+        cast(
+            object,
+            SimpleNamespace(
+                operation=authority, work_unit_repository=WorkUnits(), calculation_repository=Calculations()
+            ),
+        ),
+    )
+
+
+def test_work_unit_revision_must_equal_the_pinned_registry_selection() -> None:
+    selected = published_snapshot("100", filing_year=2025, period="0A")
+    stale_unit = _unit(revision="stale-revision")
+    selections: list[tuple[str, int, str]] = []
+
+    def snapshot(modelo: str, *, filing_year: int, period: str):
+        selections.append((modelo, filing_year, period))
+        return selected
+
+    with pytest.raises(TaxationComparisonError) as refused:
         compare_taxation_for_work_unit(
-            unit.work_unit_id,
+            stale_unit.work_unit_id,
             bucket_id=str(_PROFILE),
-            ports=TaxationComparisonPorts(work_unit_reader=WorkUnits()),
-            operation=cast(PinnedAuthorityOperation, cast(object, authority)),
+            ports=_comparison_ports(stale_unit, SimpleNamespace(snapshot=snapshot)),
         )
+    assert refused.value.refusal is TaxationComparisonRefusal.REVISION_OUTDATED
+    assert selections == [("100", 2025, "0A")]
+
+
+def test_work_unit_without_a_calculation_refuses_before_any_run() -> None:
+    selected = published_snapshot("100", filing_year=2025, period="0A")
+    unit = _unit(revision=selected.revision.id)
+    authority = SimpleNamespace(snapshot=lambda _modelo, **_coordinates: selected)
+
+    with pytest.raises(TaxationComparisonError) as refused:
+        compare_taxation_for_work_unit(
+            unit.work_unit_id, bucket_id=str(_PROFILE), ports=_comparison_ports(unit, authority)
+        )
+    assert refused.value.refusal is TaxationComparisonRefusal.NOT_CALCULATED
+
+
+def test_revision_without_a_filing_mode_refuses_as_not_declared() -> None:
+    selected = published_snapshot("303", filing_year=2025, period="3T")
+    unit = _unit(revision=selected.revision.id, modelo="303")
+    authority = SimpleNamespace(snapshot=lambda _modelo, **_coordinates: selected)
+
+    with pytest.raises(TaxationComparisonError) as refused:
+        compare_taxation_for_work_unit(
+            unit.work_unit_id, bucket_id=str(_PROFILE), ports=_comparison_ports(unit, authority)
+        )
+    assert refused.value.refusal is TaxationComparisonRefusal.NOT_DECLARED
 
 
 def test_projection_rejects_non_finite_amount_and_unmodeled_scope() -> None:
@@ -502,9 +536,10 @@ def test_projection_rejects_non_finite_amount_and_unmodeled_scope() -> None:
         )
 
     unsupported = _comparison().model_copy(update={"modelo": "303"})
-    with pytest.raises(TaxationComparisonError, match="unsupported filing scope"):
+    with pytest.raises(TaxationComparisonError) as refused:
         ModeloTaxationComparisonProjection.from_comparison(
             unsupported,
             profile_id=_PROFILE,
             work_unit_id=_unit().work_unit_id,
         )
+    assert refused.value.refusal is TaxationComparisonRefusal.NOT_DECLARED

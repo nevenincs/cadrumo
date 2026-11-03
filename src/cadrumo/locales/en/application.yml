@@ -2532,6 +2532,28 @@ application:
         a rough guide, not as the amount to file.
       individual_lower_result: 'Individual filing comes out lower: your result is
         {individual} individually and {conjunta} jointly, a difference of {difference}.'
+      refusal:
+        entries_unknown: The saved calculation does not record which values you entered,
+          so the comparison cannot reuse them. Calculate the return again, then ask
+          for the comparison.
+        family_situation_unstated: Your profile does not state your family situation,
+          so it is not known whether you can file jointly. Add it to your profile,
+          then ask for the comparison again.
+        no_family_unit: Your profile states no minor children in your household, so
+          without a spouse you have no family unit that can file jointly. The comparison
+          does not apply.
+        not_calculated: This return has not been calculated yet. Calculate it, then
+          ask for the comparison.
+        not_declared: 'This return cannot compare joint and individual filing: its
+          form declares no filing mode to compare.'
+        revision_outdated: This return was calculated on an older version of its form.
+          Calculate it again, then ask for the comparison.
+        spouse_unstated: Joint filing for a married couple needs your spouse's tax
+          ID, and your profile does not state it. Add it to your profile, then ask
+          for the comparison again.
+        unresolved_boxes: 'The comparison cannot be worked out because these boxes
+          have no value yet, which is not the same as zero: %{casilla_ids}. Fill them
+          in or answer what they depend on, then ask for the comparison again.'
     value_date:
       month_01: Jan
       month_02: Feb

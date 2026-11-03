@@ -17,10 +17,12 @@ from ...domain.calculations.registry.renta_codes_catalogue import (
     fiscal_residency_requires_country,
     resolve_fiscal_residency_catalogue,
 )
+from ...domain.calculations.registry.situacion_familiar_catalogue import resolve_situacion_familiar_catalogue
 from ...domain.contribuyente.entity_type import (
     entity_type_legal_entity_token,
     entity_type_natural_person_token,
 )
+from ...domain.contribuyente.renta_codes import RentaDeclaracionType
 from ...domain.deadlines.models import irnr_representante_fiscal_required
 from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
 
@@ -38,6 +40,9 @@ IRPF_INCOME_CATEGORIES_PATH = "taxpayer_type.irpf_income_categories"
 IVA_REGIME_PATH = "iva.regime"
 AUTH_PROVIDER_PATH = "auth.provider"
 CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
+DECLARATION_TYPE_PATH = "renta_filing.declaration_type"
+SITUACION_FAMILIAR_PATH = "renta_family.situacion_familiar"
+SPOUSE_TAX_ID_PATH = "renta_spouse.tax_id"
 
 ATRIBUCION_SOCIOS_SECTION = "attribution_entity_socios"
 PARTICIPE_CLAVE_FIELD = "participe_clave"
@@ -110,6 +115,9 @@ def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[s
         # rather than merely redundant.
         required.append(LEGAL_NAME_PATH)
 
+    if _joint_return_of_married_unit(values):
+        required.append(SPOUSE_TAX_ID_PATH)
+
     residency = _token(values.get(FISCAL_RESIDENCY_PATH))
     # An undeclared token is refused by value validation; it cannot say whether
     # a country of residence is owed, so it adds no conditional requirement.
@@ -126,6 +134,24 @@ def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[s
     if irnr_representante_fiscal_required(country):
         required.extend((REPRESENTANTE_FISCAL_NIF_PATH, REPRESENTANTE_FISCAL_NOMBRE_PATH))
     return tuple(required)
+
+
+def _joint_return_of_married_unit(values: Mapping[str, object]) -> bool:
+    """Whether a joint return may be the married unit's, which declares the spouse.
+
+    Art. 82.1 LIRPF knows two units: spouses not legally separated, and a single
+    parent with the children. Only the first has a spouse to identify. A
+    situation that is unstated or undeclared could still be the married unit, so
+    it keeps the requirement; only a declared single-parent situation drops it.
+    """
+    joint_code = RentaDeclaracionType.form_codes()[RentaDeclaracionType.JOINT]
+    if _token(values.get(DECLARATION_TYPE_PATH)) != joint_code:
+        return False
+    situacion = _token(values.get(SITUACION_FAMILIAR_PATH))
+    catalogue = resolve_situacion_familiar_catalogue()
+    if situacion not in {str(token) for token in catalogue.all_situaciones}:
+        return True
+    return not catalogue.definition(situacion).monoparental_required
 
 
 def conditional_profile_missing_required(values: Mapping[str, object]) -> tuple[str, ...]:

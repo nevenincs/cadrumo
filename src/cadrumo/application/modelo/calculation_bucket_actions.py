@@ -92,7 +92,12 @@ if TYPE_CHECKING:
     )
 
 
-from .calculation_actions import calculate_modelo_revision_with_trusted_mesh_sources
+from ...core.time.clock import now as _utc_now
+from .calculation_actions import (
+    TrustedMeshEvaluation,
+    calculate_modelo_revision_with_trusted_mesh_sources,
+    evaluate_modelo_revision_with_trusted_mesh_sources,
+)
 from .calculation_resolution import (
     operator_over_source_divergences,
     precedence_divergence_diagnostics,
@@ -735,39 +740,25 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
 ) -> BucketAggregationCalculationResult:
     """Calculate from bucket sources and return the revision with diagnostics."""
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
-    preparation = _prepare_bucket_aggregation_calculation(
-        work_unit_id=work_unit_id,
-        work_unit_repository=ports.work_unit_repository,
-        operation=ports.operation,
+    run = _resolve_bucket_aggregation_run(
+        work_unit_id,
+        ports=ports,
         casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
         relation_values=relation_values,
-        text_casilla_inputs=text_casilla_inputs,
+        filing_period_date=filing_period_date,
+        foreign_asset_observations=foreign_asset_observations,
+        foreign_asset_row_observations=foreign_asset_row_observations,
         detail_rows=detail_rows,
         profile=profile,
     )
-    # Share contributor reads between the source mesh and the ledger snapshot anchor.
-    memoized_transaction_repository = MemoizedTransactionCatalogueRepository(ports.transaction_repository)
-    source_resolution = _resolve_bucket_aggregation_source_resolution(
-        preparation=preparation,
-        ports=ports,
-        foreign_asset_observations=foreign_asset_observations,
-        foreign_asset_row_observations=foreign_asset_row_observations,
-        text_casilla_inputs=text_casilla_inputs,
-        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
-        enum_binding_values=enum_binding_values,
-        filing_period_date=filing_period_date,
-        transaction_repository=memoized_transaction_repository,
-    )
-    channels = _bucket_aggregation_channels(
-        preparation=preparation,
-        operation=ports.operation,
-        source_resolution=source_resolution,
-        transaction_repository=memoized_transaction_repository,
-        detail_rows=detail_rows,
-    )
+    preparation = run.preparation
+    memoized_transaction_repository = run.transaction_repository
+    channels = run.channels
     calculation = calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
         ports=ports,
@@ -795,10 +786,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         row_casilla_provenance=channels.source_resolution.row_casilla_provenance,
         backend_casilla_inputs=channels.backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
-        enum_binding_values={
-            **dict(channels.source_resolution.enum_binding_values),
-            **dict(enum_binding_values or {}),
-        },
+        enum_binding_values=_run_enum_binding_values(run, enum_binding_values),
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=channels.reconciliation.merged_relation_values,
         unresolved_relation_ids=channels.reconciliation.unresolved_relation_ids,
@@ -839,6 +827,153 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         profile=preparation.profile,
         publication=publication,
         source_diagnostics=source_diagnostics,
+    )
+
+
+def evaluate_modelo_revision_from_bucket_aggregation(
+    work_unit_id: str,
+    *,
+    ports: CalculationActionPorts,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    cleared_casilla_ids: tuple[CasillaId, ...] = (),
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
+    binding_values: Mapping[BindingId, Decimal] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
+    borrador_snapshot_id: str | None = None,
+    relation_values: Mapping[RelationId, Decimal] | None = None,
+    filing_period_date: date | None = None,
+    detail_rows: tuple[ModeloDetailRow, ...] = (),
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
+    clock: datetime | None = None,
+    profile: ModeloWorkProfile | None = None,
+) -> TrustedMeshEvaluation:
+    """Evaluate a declaration from its bucket sources exactly as a calculation would, publishing nothing.
+
+    The same source mesh, caller reconciliation, preparation gates and engine
+    run that :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
+    publishes, for a reader that needs the answer of a calculation it must
+    not save: no revision, event or migration is written. ``profile`` is the
+    record every gate and resolver reads, so a caller can evaluate the
+    declaration under a profile it holds only in memory.
+    """
+    run = _resolve_bucket_aggregation_run(
+        work_unit_id,
+        ports=ports,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+        filing_period_date=filing_period_date,
+        foreign_asset_observations=(),
+        foreign_asset_row_observations=(),
+        detail_rows=detail_rows,
+        profile=profile,
+    )
+    channels = run.channels
+    return evaluate_modelo_revision_with_trusted_mesh_sources(
+        work_unit_id,
+        ports=ports,
+        evaluated_at=clock or _utc_now(),
+        casilla_inputs=run.preparation.casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+        cleared_casilla_ids=cleared_casilla_ids,
+        binding_values=run.preparation.binding_values,
+        enum_binding_values=_run_enum_binding_values(run, enum_binding_values),
+        backend_binding_values=channels.backend_binding_values,
+        row_binding_values=channels.source_resolution.row_binding_values,
+        closed_record_row_sets=channels.source_resolution.closed_record_row_sets,
+        backend_casilla_inputs=channels.backend_casilla_inputs,
+        borrador_snapshot_id=borrador_snapshot_id,
+        relation_values=channels.reconciliation.merged_relation_values,
+        unresolved_relation_ids=channels.reconciliation.unresolved_relation_ids,
+        unresolved_binding_ids=channels.reconciliation.unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids(channels.source_resolution),
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        filing_period_date=filing_period_date,
+        detail_rows=channels.detail_rows,
+        source_provenance=_source_provenance_refs(channels.source_resolution),
+        filing_instance_evidence=filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=(
+            channels.source_resolution.m303_regimen_simplificado_annual_summary_handoff
+        ),
+        profile=run.preparation.profile,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _BucketAggregationRun:
+    """The validated caller channels and the mesh-derived channels of one calculation, before the engine runs."""
+
+    preparation: _BucketAggregationPreparation
+    channels: _BucketAggregationChannels
+    transaction_repository: MemoizedTransactionCatalogueRepository
+
+
+def _run_enum_binding_values(
+    run: _BucketAggregationRun, enum_binding_values: Mapping[BindingId, str] | None
+) -> dict[BindingId, str]:
+    """The source enum bindings with the caller's own values winning."""
+    return {**dict(run.channels.source_resolution.enum_binding_values), **dict(enum_binding_values or {})}
+
+
+def _resolve_bucket_aggregation_run(
+    work_unit_id: str,
+    *,
+    ports: CalculationActionPorts,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    m210_official_tipo_renta_code: str | None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    filing_period_date: date | None,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
+    detail_rows: tuple[ModeloDetailRow, ...],
+    profile: ModeloWorkProfile | None,
+) -> _BucketAggregationRun:
+    """Validate the caller channels, resolve the source mesh and reconcile the two."""
+    preparation = _prepare_bucket_aggregation_calculation(
+        work_unit_id=work_unit_id,
+        work_unit_repository=ports.work_unit_repository,
+        operation=ports.operation,
+        casilla_inputs=casilla_inputs,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
+        binding_values=binding_values,
+        relation_values=relation_values,
+        text_casilla_inputs=text_casilla_inputs,
+        detail_rows=detail_rows,
+        profile=profile,
+    )
+    # Share contributor reads between the source mesh and the ledger snapshot anchor.
+    memoized_transaction_repository = MemoizedTransactionCatalogueRepository(ports.transaction_repository)
+    source_resolution = _resolve_bucket_aggregation_source_resolution(
+        preparation=preparation,
+        ports=ports,
+        foreign_asset_observations=foreign_asset_observations,
+        foreign_asset_row_observations=foreign_asset_row_observations,
+        text_casilla_inputs=text_casilla_inputs,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        enum_binding_values=enum_binding_values,
+        filing_period_date=filing_period_date,
+        transaction_repository=memoized_transaction_repository,
+    )
+    channels = _bucket_aggregation_channels(
+        preparation=preparation,
+        operation=ports.operation,
+        source_resolution=source_resolution,
+        transaction_repository=memoized_transaction_repository,
+        detail_rows=detail_rows,
+    )
+    return _BucketAggregationRun(
+        preparation=preparation, channels=channels, transaction_repository=memoized_transaction_repository
     )
 
 

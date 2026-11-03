@@ -1,49 +1,48 @@
 """Conjunta vs. individual taxation comparison for Modelo 100 (IRPF).
 
-Runs the registry engine twice -- once with ``declaration_type=2``
-(tributación conjunta, Art. 82-84 LIRPF) and once with
-``declaration_type=1`` (tributación individual) -- over identical
-casilla inputs and profile bindings, then surfaces the cuota
-differential so married couples can pick the lower-tax regime.
+Evaluates one declaration twice -- once as a joint return (tributación
+conjunta, Art. 82-84 LIRPF) and once as an individual return -- and compares
+the cuota diferencial so a family unit can pick the lower-tax mode.
 
-This is a pure, ephemeral operation: no work unit is required and no
-revision is persisted. The caller supplies all inputs explicitly via a
-:class:`RegistrySnapshot`; the registry
-formula engine evaluates both paths and returns a typed
-:class:`TaxationComparisonResult`.
+Both runs are the work unit's own calculation, evaluated and never saved. They
+replay the caller context of the current calculation head (the operator's
+entered boxes and answers, detail rows and the borrador snapshot) through the
+canonical source mesh, so imported, ledger-sourced and prior-period relation
+evidence is resolved exactly as a calculation of this declaration resolves it.
+The two runs differ only in the profile's declaration-type fact, which is
+replaced in memory, so every resolver and derived fact that reads it sees the
+mode it is evaluated for.
 
-Scope honesty: the individual run reuses the *single* input set assembled for
-the unidad familiar and only flips ``declaration_type`` to 1, so it faithfully
-models a **single-earner** household. It does not compute two separate spouse
-returns; a genuine two-earner individual comparison requires a per-spouse
-income axis that does not yet exist. Every result therefore carries
+The comparison refuses only what it cannot answer honestly. A revision that
+does not declare the declaration type and the two compared results cannot be
+compared. A household that is not a family unit (Art. 82 LIRPF), judged from
+the profile's family situation and the registry's family-situation vocabulary,
+cannot file jointly. A result one of the runs leaves unresolved is refused,
+naming the boxes the result formulas read that have no value, so an absent fact
+is never compared as zero.
+
+Scope honesty: the individual run reuses the single input set held for the
+household and only changes the declaration type, so it faithfully models a
+**single-earner** household. It does not compute two separate spouse returns;
+a genuine two-earner individual comparison requires a per-spouse income axis
+that does not yet exist. Every result therefore carries
 ``individual_branch_single_earner_only``, and the surfaces serve its caveat in
 words so none presents the individual figure as authoritative for a two-earner
 couple.
 
-The comparison is snapshot-grounded. It resolves the result casillas by their
-declared semantic roles, refuses ambiguous role matches before choosing a
-``CasillaId``, and requires the
-revision's ``profile-declaration-type`` binding so the stored profile value can
-be replaced independently for each run.
-
-:func:`compare_taxation_for_work_unit` resolves the registry snapshot and profile
-bindings from an exact-profile work unit, deliberately excludes the stored
-declaration-type value, and delegates to :func:`compare_taxation_modes`.
-
 See Also:
+    :func:`~cadrumo.application.modelo.calculation_bucket_actions.evaluate_modelo_revision_from_bucket_aggregation`:
+        The canonical calculation, evaluated without publishing a revision.
+    :mod:`~cadrumo.application.modelo.caller_context`:
+        The caller context a calculation head was computed from.
     :mod:`~cadrumo.application.modelo.semantic_role_resolution`:
-        Provides the canonical semantic-role-to-casilla resolver and ambiguity
-        refusal used for the cuota resultante and cuota diferencial roles.
-    :mod:`~cadrumo.application.modelo.binding_resolution`:
-        Supplies the profile-bound values used by the work-unit entry point.
-    :mod:`~cadrumo.application.modelo.work_selection`:
-        Resolves the exact work unit inside the authenticated profile.
+        The semantic-role-to-casilla resolver and its ambiguity refusal.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -53,50 +52,33 @@ from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreError
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period as _Period
-from ...domain.calculations.registry.form_codes import form_for_role
-from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ...domain.calculations.registry.ids import (
-    BindingId,
-    RelationId,
-)
-from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.runtime_graph import expression_binding_refs, expression_casilla_refs
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.contribuyente.renta_codes import RentaDeclaracionType
-from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
-from .taxation_comparison_ports import TaxationComparisonPorts
-from .work_selection import (
-    ModeloWorkResolution,
-    ModeloWorkSelectorRequest,
-    select_modelo_work_resolution,
-)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ..aggregation.source_mesh import CalculationSourceResolution
-
-# ---------------------------------------------------------------------------
-# Output types
-# ---------------------------------------------------------------------------
+    from .calculation_action_ports import CalculationActionPorts
+    from .calculation_actions import TrustedMeshEvaluation
+    from .caller_context import CallerContextCalculationInputs
+    from .work_profile import ModeloWorkProfile
 
 MATERIALITY_THRESHOLD: Final = Decimal(1)
 """The difference in euros below which either filing mode is acceptable; not a tax-law limit."""
 
-_DECLARATION_TYPE_BINDING_SUFFIX = "profile-declaration-type"
-_CUOTA_RESULTANTE_ROLE = "irpf_cuota_resultante_autoliquidacion"  # casilla 0595
-_RESULTADO_ROLE = "irpf_cuota_diferencial"  # casilla 0610
-
-
-def _select_taxation_work_unit(
-    request: ModeloWorkSelectorRequest,
-    *,
-    catalogue: WorkUnitCatalogue,
-    bucket_id: str,
-) -> ModeloWorkResolution:
-    """Resolve one taxation target from the caller-captured work catalogue."""
-    return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
+_DECLARATION_TYPE_ROLE: Final = "irpf_declaracion_tipo_tributacion"
+_CUOTA_RESULTANTE_ROLE: Final = "irpf_cuota_resultante_autoliquidacion"
+_RESULTADO_ROLE: Final = "irpf_cuota_diferencial"
+_SITUACION_FAMILIAR_PATH: Final = "renta_family.situacion_familiar"
+_MINOR_CHILDREN_IN_UNIT_PATH: Final = "renta_family.minor_children_in_unit"
+_REFUSAL_KEY_PREFIX: Final = "application.modelo.taxation_comparison_words.refusal."
+_SPOUSE_TAX_ID_PATH: Final = "renta_spouse.tax_id"
+"""The profile rule that refuses a joint return whose spouse the profile does not identify."""
 
 
 class TaxationRecommendation(StrEnum):
@@ -124,6 +106,49 @@ class TaxationRecommendationReason(StrEnum):
     BELOW_MATERIALITY = "below_materiality"
 
 
+class TaxationComparisonRefusal(StrEnum):
+    """Why a comparison could not be made, as a closed token with served words."""
+
+    NOT_DECLARED = "not_declared"
+    """The revision declares no declaration type or no unique compared result."""
+    REVISION_OUTDATED = "revision_outdated"
+    """The work unit was created on a revision the authority no longer selects."""
+    NOT_CALCULATED = "not_calculated"
+    """The declaration has no calculation whose held values the runs could replay."""
+    ENTRIES_UNKNOWN = "entries_unknown"
+    """The calculation predates recorded operator entries, so what was entered is unknown."""
+    SPOUSE_UNSTATED = "spouse_unstated"
+    """The profile does not identify the spouse a joint return declares."""
+    FAMILY_SITUATION_UNSTATED = "family_situation_unstated"
+    """The profile does not state the facts that decide whether the household is a family unit."""
+    NO_FAMILY_UNIT = "no_family_unit"
+    """The household is not a family unit, so it cannot file jointly."""
+    UNRESOLVED_BOXES = "unresolved_boxes"
+    """A box the compared results read has no value in one of the runs."""
+
+
+class TaxationComparisonError(CoreError):
+    """Raised when a conjunta-vs-individual comparison cannot be performed.
+
+    ``refusal`` is the closed reason; ``casilla_ids`` names the unresolved
+    boxes of an :attr:`TaxationComparisonRefusal.UNRESOLVED_BOXES` refusal.
+    The served words name the boxes and never an amount.
+    """
+
+    def __init__(self, refusal: TaxationComparisonRefusal, *, casilla_ids: tuple[CasillaId, ...] = ()) -> None:
+        """Carry the refusal token and, for unresolved boxes, the boxes it names."""
+        self.refusal = refusal
+        self.casilla_ids = casilla_ids
+        context: dict[str, object] = {"refusal": refusal.value}
+        if casilla_ids:
+            context["casilla_ids"] = ", ".join(casilla_ids)
+        super().__init__(
+            f"taxation comparison refused: {refusal.value}",
+            translated_message=f"{_REFUSAL_KEY_PREFIX}{refusal.value}",
+            context=context,
+        )
+
+
 class TaxationComparisonResult(BaseModel):
     """Typed result of a conjunta-vs-individual comparison run.
 
@@ -141,14 +166,12 @@ class TaxationComparisonResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     filing_year: int
-    modelo: str = Modelo("100").value
+    modelo: str
     revision: str
 
-    # Cuota resultante autoliquidación (casilla 0595) for each path.
     conjunta_cuota_resultante: Decimal
     individual_cuota_resultante: Decimal
 
-    # Cuota diferencial / resultado (casilla 0610) for each path.
     conjunta_resultado: Decimal
     individual_resultado: Decimal
 
@@ -158,353 +181,384 @@ class TaxationComparisonResult(BaseModel):
     recommendation: TaxationRecommendation
     recommendation_reason: TaxationRecommendationReason
 
-    # Honesty scope: the individual branch reuses the unidad familiar's single
-    # input set, so it is faithful only for a single-earner household.
-    # ``individual_branch_single_earner_only`` is always True today; a genuine
-    # two-earner individual comparison (two separate spouse returns) requires a
-    # per-spouse income axis that does not yet exist. The operator-facing words
-    # of this disclosure are served by
-    # :func:`~cadrumo.application.modelo.taxation_comparison_words.individual_branch_caveat_words`
-    # so no surface presents the individual figure as authoritative for a
-    # two-earner couple.
+    # Honesty scope: the individual branch reuses the household's single input
+    # set, so it is faithful only for a single-earner household. The words of
+    # this disclosure are served by
+    # :func:`~cadrumo.application.modelo.taxation_comparison_words.individual_branch_caveat_words`.
     individual_branch_single_earner_only: bool = True
 
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
+@dataclass(frozen=True, slots=True)
+class TaxationComparisonBasis:
+    """What a revision declares that a joint-versus-individual comparison reads.
 
-
-def _casilla_by_semantic_role(snapshot: RegistrySnapshot, role: str) -> CasillaId | None:
-    """Return the unique casilla id for ``role`` or ``None`` when absent.
-
-    Ambiguous matches are promoted to :class:`TaxationComparisonError` so the
-    comparison never silently chooses among duplicated semantic roles.
+    ``declaration_binding`` is the binding of the revision's declaration-type
+    box, and ``declaration_profile_key`` the profile fact it is sourced from;
+    the comparison replaces that fact for each run. ``cuota_casilla`` and
+    ``resultado_casilla`` are the compared results.
     """
+
+    declaration_binding: BindingId
+    declaration_profile_key: str
+    declaration_casilla: CasillaId
+    cuota_casilla: CasillaId
+    resultado_casilla: CasillaId
+
+    @property
+    def result_casillas(self) -> tuple[CasillaId, CasillaId]:
+        """The two compared boxes, cuota resultante first."""
+        return (self.cuota_casilla, self.resultado_casilla)
+
+
+def _unique_role(snapshot: RegistrySnapshot, role: str) -> CasillaId | None:
     try:
         return casilla_id_for_unique_semantic_role(snapshot, role)
-    except AmbiguousSemanticRoleCasillaError as exc:
-        raise TaxationComparisonError(str(exc)) from exc
+    except AmbiguousSemanticRoleCasillaError:
+        return None
 
 
-def _declaration_type_binding_id(snapshot: RegistrySnapshot) -> BindingId | None:
-    """Return the binding id for ``profile-declaration-type`` in this revision.
+def taxation_comparison_basis(snapshot: RegistrySnapshot) -> TaxationComparisonBasis | None:
+    """Return what ``snapshot`` declares for the comparison, or ``None`` when it cannot be compared.
 
-    The suffix match preserves the revision-authored binding namespace while
-    locating the declaration-type input that the comparison injects as ``1`` or
-    ``2`` for each run.
+    A revision can be compared when one box carries the declaration-type role
+    and is bound to a profile-sourced binding, and one box each carries the
+    cuota resultante and the cuota diferencial roles. An ambiguous role is
+    not a basis: the comparison never picks among duplicated boxes.
     """
-    suffix = _DECLARATION_TYPE_BINDING_SUFFIX
-    for binding in snapshot.revision.bindings:
-        if binding.id.endswith(suffix):
-            return binding.id
-    return None
+    declaration_casilla = _unique_role(snapshot, _DECLARATION_TYPE_ROLE)
+    cuota_casilla = _unique_role(snapshot, _CUOTA_RESULTANTE_ROLE)
+    resultado_casilla = _unique_role(snapshot, _RESULTADO_ROLE)
+    if declaration_casilla is None or cuota_casilla is None or resultado_casilla is None:
+        return None
+    declaration = next(casilla for casilla in snapshot.revision.casillas if casilla.id == declaration_casilla)
+    binding = next((item for item in snapshot.revision.bindings if item.id == declaration.binding), None)
+    if binding is None:
+        return None
+    profile_key = selector_as_dict(binding).get("profile_key")
+    if not isinstance(profile_key, str) or not profile_key:
+        return None
+    return TaxationComparisonBasis(
+        declaration_binding=binding.id,
+        declaration_profile_key=profile_key,
+        declaration_casilla=declaration_casilla,
+        cuota_casilla=cuota_casilla,
+        resultado_casilla=resultado_casilla,
+    )
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+def revision_compares_taxation(snapshot: RegistrySnapshot) -> bool:
+    """Whether ``snapshot`` declares what a joint-versus-individual comparison reads."""
+    return taxation_comparison_basis(snapshot) is not None
 
 
-def _require_taxation_result_casillas(
-    conjunta_values: Mapping[CasillaId, Decimal],
-    individual_values: Mapping[CasillaId, Decimal],
-    cuota_casilla: CasillaId,
-    resultado_casilla: CasillaId,
-) -> None:
-    """Require both result casillas after both independent engine runs finish."""
-    for mode, values in (("conjunta", conjunta_values), ("individual", individual_values)):
-        missing = [casilla for casilla in (cuota_casilla, resultado_casilla) if casilla not in values]
-        if missing:
-            raise TaxationComparisonError(f"{mode} calculation did not produce required result casillas: {missing!r}")
-
-
-def compare_taxation_modes(
-    snapshot: RegistrySnapshot,
+def compare_taxation_results(
+    basis: TaxationComparisonBasis,
     *,
-    inputs: Mapping[CasillaId, Decimal],
-    binding_values: Mapping[BindingId, Decimal],
-    enum_binding_values: Mapping[BindingId, str],
-    relation_values: Mapping[RelationId, Decimal] | None = None,
-    date_binding_values: Mapping[BindingId, date] | None = None,
-    boolean_binding_values: Mapping[BindingId, bool] | None = None,
-    date_context: Mapping[str, date] | None = None,
+    snapshot: RegistrySnapshot,
+    conjunta: Mapping[CasillaId, Decimal],
+    individual: Mapping[CasillaId, Decimal],
 ) -> TaxationComparisonResult:
-    """Run the registry engine for conjunta and individual, then diff the results.
+    """Compare the joint and individual results of two settled runs.
 
-    The function is pure and does not read, create, or persist work units. It
-    requires the caller to provide a loaded
-    :class:`RegistrySnapshot`, casilla inputs,
-    and already-resolved profile bindings. It then injects ``declaration_type``
-    separately for the conjunta and individual runs and compares the calculated
-    cuota diferencial/result casilla.
-
-    Args:
-        snapshot: The :class:`RegistrySnapshot` whose revision is executed for both
-            conjunta and individual taxation modes.
-        inputs: Casilla input values shared across both runs.
-        binding_values: Pre-resolved Decimal binding values; must include all
-            profile-sourced bindings except ``declaration_type``.
-        enum_binding_values: Pre-resolved string enum binding values.
-        relation_values: Optional cross-revision aggregation values.
-        date_binding_values: Optional date-typed binding values.
-        boolean_binding_values: Optional truth values for bindings whose
-            registry value contract declares the boolean channel.
-        date_context: Optional date context for temporal casilla resolution.
-
-    Returns:
-        A :class:`TaxationComparisonResult` with both run outcomes, the signed
-        ``individual - conjunta`` delta, and the recommendation after the one-euro
-        materiality threshold.
-
-    The caller must supply all profile-sourced bindings (CCAA, birth date, etc.)
-    that the revision needs, except ``declaration_type``: this function injects
-    ``declaration_type=2`` for the conjunta run and ``declaration_type=1`` for
-    the individual run automatically.
-
-    Raises :class:`TaxationComparisonError` when the revision does not
-    declare a ``declaration_type`` binding or lacks the cuota casillas
-    required to build the differential. Ambiguous semantic-role casillas are also
-    refused through the same error type.
+    Both runs must hold both compared boxes; a missing one is refused rather
+    than read as zero. The recommendation applies the one-euro materiality
+    threshold to ``individual - conjunta``.
     """
-    decl_binding = _declaration_type_binding_id(snapshot)
-    if decl_binding is None:
-        raise TaxationComparisonError(
-            f"revision {snapshot.revision.id!r} of modelo "
-            f"{snapshot.modelo.id!r} does not declare a "
-            f"'{_DECLARATION_TYPE_BINDING_SUFFIX}' binding; "
-            "conjunta-vs-individual comparison is not available for this modelo",
-        )
-
-    cuota_casilla = _casilla_by_semantic_role(snapshot, _CUOTA_RESULTANTE_ROLE)
-    resultado_casilla = _casilla_by_semantic_role(snapshot, _RESULTADO_ROLE)
-    if cuota_casilla is None or resultado_casilla is None:
-        raise TaxationComparisonError(
-            f"revision {snapshot.revision.id!r} is missing expected "
-            f"casilla roles '{_CUOTA_RESULTANTE_ROLE}' or "
-            f"'{_RESULTADO_ROLE}'; cannot build cuota differential",
-        )
-
-    resolved_relations = dict(relation_values or {})
-    resolved_dates = dict(date_binding_values or {})
-    resolved_booleans = dict(boolean_binding_values or {})
-    resolved_date_ctx: dict[str, date] = dict(date_context or {})
-
-    def _run(declaration_type: RentaDeclaracionType) -> Mapping[CasillaId, Decimal]:
-        merged_bindings = {**binding_values, decl_binding: Decimal(declaration_type.code)}
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context=resolved_date_ctx,
-            binding_values=merged_bindings,
-            enum_binding_values=enum_binding_values,
-            relation_values=resolved_relations,
-            date_binding_values=resolved_dates or None,
-            boolean_binding_values=resolved_booleans or None,
-            # The individual/joint cuota differential is an IRPF comparison, so
-        )
-        return result.values
-
-    conjunta_values = _run(RentaDeclaracionType.JOINT)
-    individual_values = _run(RentaDeclaracionType.INDIVIDUAL)
-
-    _require_taxation_result_casillas(conjunta_values, individual_values, cuota_casilla, resultado_casilla)
-    conjunta_cuota = conjunta_values[cuota_casilla]
-    individual_cuota = individual_values[cuota_casilla]
-    conjunta_resultado = conjunta_values[resultado_casilla]
-    individual_resultado = individual_values[resultado_casilla]
-
-    # delta > 0 → conjunta is cheaper (individual is more expensive)
-    delta = individual_resultado - conjunta_resultado
-
-    threshold = MATERIALITY_THRESHOLD
-    if delta > threshold:
+    missing = tuple(
+        casilla_id for casilla_id in basis.result_casillas if casilla_id not in conjunta or casilla_id not in individual
+    )
+    if missing:
+        raise TaxationComparisonError(TaxationComparisonRefusal.UNRESOLVED_BOXES, casilla_ids=missing)
+    delta = individual[basis.resultado_casilla] - conjunta[basis.resultado_casilla]
+    if delta > MATERIALITY_THRESHOLD:
         recommendation = TaxationRecommendation.CONJUNTA
         reason = TaxationRecommendationReason.CONJUNTA_LOWER_RESULT
-    elif delta < -threshold:
+    elif delta < -MATERIALITY_THRESHOLD:
         recommendation = TaxationRecommendation.INDIVIDUAL
         reason = TaxationRecommendationReason.INDIVIDUAL_LOWER_RESULT
     else:
         recommendation = TaxationRecommendation.INDIFFERENT
         reason = TaxationRecommendationReason.BELOW_MATERIALITY
-
     return TaxationComparisonResult(
         filing_year=snapshot.filing_year,
         modelo=snapshot.modelo.id,
         revision=snapshot.revision.id,
-        conjunta_cuota_resultante=conjunta_cuota,
-        individual_cuota_resultante=individual_cuota,
-        conjunta_resultado=conjunta_resultado,
-        individual_resultado=individual_resultado,
+        conjunta_cuota_resultante=conjunta[basis.cuota_casilla],
+        individual_cuota_resultante=individual[basis.cuota_casilla],
+        conjunta_resultado=conjunta[basis.resultado_casilla],
+        individual_resultado=individual[basis.resultado_casilla],
         delta_resultado=delta,
         recommendation=recommendation,
         recommendation_reason=reason,
     )
 
 
-# ---------------------------------------------------------------------------
-# Error type
-# ---------------------------------------------------------------------------
-
-
-class TaxationComparisonError(CoreError):
-    """Raised when a conjunta-vs-individual comparison cannot be performed.
-
-    Covers unsupported revisions, missing declaration-type bindings, missing
-    result casillas, and ambiguous semantic-role resolution.
-    """
-
-
-# ---------------------------------------------------------------------------
-# Work-unit entry point for the registered runtime operation
-# ---------------------------------------------------------------------------
-
-
-def _require_taxation_input_basis(snapshot: RegistrySnapshot) -> None:
-    """Refuse unresolved manual or prior-period evidence before resolving a profile."""
-    from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
-
-    if any(
-        casilla.formula is None and casilla.binding is None and not casilla.alternate_bindings
-        for casilla in snapshot.revision.casillas
-    ) or relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period):
-        # This work-unit entry receives neither manual/ledger casilla evidence nor
-        # prior-period relation evidence. Formula evaluation would silently treat
-        # those absent facts as zero and could return a false recommendation.
-        raise TaxationComparisonError("comparison requires a complete resolved tax-input basis")
-
-
-def _require_resolved_taxation_bindings(
-    snapshot: RegistrySnapshot, decl_binding: BindingId | None, resolution: CalculationSourceResolution
-) -> None:
-    """Require every declared non-injected binding on one resolved scalar channel."""
-    resolved_binding_ids = (
-        set(resolution.binding_values)
-        | set(resolution.enum_binding_values)
-        | set(resolution.date_binding_values)
-        | set(resolution.boolean_binding_values)
+def _boxes_reading_binding(revision: ModeloRevision, binding_id: BindingId) -> tuple[CasillaId, ...]:
+    """The boxes a binding fills, or else the formula boxes that read it directly."""
+    bound = casillas_by_binding(revision).get(binding_id, ())
+    if bound:
+        return bound
+    return tuple(
+        formula.target_casilla_id
+        for formula in revision.formulas
+        if binding_id in expression_binding_refs(formula.expression)
     )
-    if any(
-        binding.id != decl_binding and binding.id not in resolved_binding_ids for binding in snapshot.revision.bindings
-    ):
-        raise TaxationComparisonError("comparison has unresolved registry bindings")
+
+
+def unresolved_result_boxes(
+    revision: ModeloRevision,
+    *,
+    results: tuple[CasillaId, ...],
+    values: Mapping[CasillaId, Decimal],
+    unresolved_binding_ids: frozenset[BindingId],
+) -> tuple[CasillaId, ...]:
+    """Name the boxes without a value that the formulas of ``results`` read, in box order.
+
+    The walk follows the formula dependency graph down from each result that
+    has no value. A box with no value and no formula is an unresolved input; a
+    formula box whose own operands all hold values could not be evaluated
+    itself, so it is named; an unresolved binding a formula reads names the
+    boxes it fills. A result that holds a value is never descended into, so a
+    gap the compared results do not read is never blamed.
+    """
+    formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
+    named: set[CasillaId] = set()
+    seen: set[CasillaId] = set()
+    pending = [casilla_id for casilla_id in results if casilla_id not in values]
+    while pending:
+        casilla_id = pending.pop()
+        if casilla_id in seen or casilla_id in values:
+            continue
+        seen.add(casilla_id)
+        formula = formulas.get(casilla_id)
+        if formula is None:
+            named.add(casilla_id)
+            continue
+        operand_boxes = [ref for ref in expression_casilla_refs(formula.expression) if ref not in values]
+        gaps = [ref for ref in expression_binding_refs(formula.expression) if ref in unresolved_binding_ids]
+        for binding_id in gaps:
+            named.update(_boxes_reading_binding(revision, binding_id))
+        if not operand_boxes and not gaps:
+            named.add(casilla_id)
+        pending.extend(operand_boxes)
+    return tuple(sorted(named))
+
+
+def _with_declaration_type(
+    profile: ModeloWorkProfile, *, profile_key: str, declaration_type: RentaDeclaracionType
+) -> ModeloWorkProfile:
+    """The same profile with its declaration-type fact replaced, held in memory only."""
+    from dataclasses import replace
+
+    from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+
+    record = profile.record
+    facts = (
+        *(fact for fact in record.facts if fact.path != profile_key),
+        UserProfileFact(path=profile_key, value=declaration_type.code),
+    )
+    payload = record.model_dump(mode="python") | {"facts": facts, "content_digest": ""}
+    return replace(
+        profile,
+        record=UserProfileRecord.model_validate(payload, context=profile.profile_decode_context),
+    )
+
+
+def _require_family_unit(
+    profile: ModeloWorkProfile, *, filing_period: date, operation: PinnedAuthorityOperation
+) -> None:
+    """Refuse a household that is not a family unit (Art. 82 LIRPF) or does not say whether it is.
+
+    The profile states the family situation; the registry's family-situation
+    vocabulary says whether that situation forms a unit only with children
+    (the single-parent modality), and the profile states whether minor
+    children belong to the unit. The married unit must name the spouse.
+    """
+    from ...domain.calculations.registry.errors import RegistryValidationError
+    from ...domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_monoparental_required
+    from ..user_profile.projections import profile_fact_index
+
+    facts = profile_fact_index(profile.record, profile.profile_decode_context.schema)
+    situacion = facts.get(_SITUACION_FAMILIAR_PATH)
+    if not isinstance(situacion, str) or not situacion.strip():
+        raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
+    try:
+        needs_children = situacion_familiar_monoparental_required(
+            situacion.strip(), effective_date=filing_period, authority=operation
+        )
+    except RegistryValidationError as exc:
+        raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED) from exc
+    if not needs_children:
+        # The married unit (Art. 82.1.1ª) files jointly with the spouse it names.
+        spouse = facts.get(_SPOUSE_TAX_ID_PATH)
+        if not isinstance(spouse, str) or not spouse.strip():
+            raise TaxationComparisonError(TaxationComparisonRefusal.SPOUSE_UNSTATED)
+        return
+    children = facts.get(_MINOR_CHILDREN_IN_UNIT_PATH)
+    if not isinstance(children, bool):
+        raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
+    if not children:
+        raise TaxationComparisonError(TaxationComparisonRefusal.NO_FAMILY_UNIT)
+
+
+def _without[Key, Value](mapping: Mapping[Key, Value], excluded: object) -> dict[Key, Value]:
+    """The mapping without ``excluded``."""
+    return {key: value for key, value in mapping.items() if key != excluded}
+
+
+def _evaluate_mode(
+    work_unit_id: str,
+    *,
+    ports: CalculationActionPorts,
+    revision: ModeloRevision,
+    basis: TaxationComparisonBasis,
+    profile: ModeloWorkProfile,
+    declaration_type: RentaDeclaracionType,
+    replay: CallerContextCalculationInputs,
+) -> TrustedMeshEvaluation:
+    """Evaluate the declaration under one declaration type through the canonical calculation.
+
+    The replayed caller context never carries the declaration type itself:
+    an entered declaration-type box or answer would otherwise override the
+    mode this run is for.
+    """
+    from .calculation_bucket_actions import evaluate_modelo_revision_from_bucket_aggregation
+    from .work_missing_input import ModeloWorkMissingInputError
+
+    try:
+        return evaluate_modelo_revision_from_bucket_aggregation(
+            work_unit_id,
+            ports=ports,
+            casilla_inputs=_without(replay.casilla_inputs, basis.declaration_casilla),
+            text_casilla_inputs=_without(replay.text_casilla_inputs, basis.declaration_casilla),
+            cleared_casilla_ids=tuple(
+                casilla_id for casilla_id in replay.cleared_casilla_ids if casilla_id != basis.declaration_casilla
+            ),
+            m210_official_tipo_renta_code=replay.m210_official_tipo_renta_code,
+            m210_gross_income_source_mode=replay.m210_gross_income_source_mode,
+            binding_values=_without(replay.binding_values, basis.declaration_binding),
+            enum_binding_values=_without(replay.enum_binding_values, basis.declaration_binding),
+            borrador_snapshot_id=replay.borrador_snapshot_id,
+            detail_rows=replay.detail_rows,
+            filing_instance_evidence=replay.filing_instance_evidence,
+            profile=_with_declaration_type(
+                profile, profile_key=basis.declaration_profile_key, declaration_type=declaration_type
+            ),
+        )
+    except ModeloWorkMissingInputError as exc:
+        raise TaxationComparisonError(
+            TaxationComparisonRefusal.UNRESOLVED_BOXES,
+            casilla_ids=tuple(sorted(_boxes_reading_binding(revision, exc.binding_id))),
+        ) from exc
+
+
+def _require_settled_results(
+    revision: ModeloRevision, basis: TaxationComparisonBasis, evaluations: tuple[TrustedMeshEvaluation, ...]
+) -> None:
+    """Refuse when either run left a compared result unresolved, naming the boxes behind it."""
+    named: set[CasillaId] = set()
+    for evaluation in evaluations:
+        named.update(
+            unresolved_result_boxes(
+                revision,
+                results=basis.result_casillas,
+                values=evaluation.casilla_values,
+                unresolved_binding_ids=frozenset(
+                    (*evaluation.unresolved_binding_ids, *evaluation.unresolved_relation_ids)
+                ),
+            )
+        )
+    if named:
+        raise TaxationComparisonError(TaxationComparisonRefusal.UNRESOLVED_BOXES, casilla_ids=tuple(sorted(named)))
 
 
 def compare_taxation_for_work_unit(
     work_unit_id: str,
     *,
     bucket_id: str,
-    ports: TaxationComparisonPorts,
-    operation: PinnedAuthorityOperation,
+    ports: CalculationActionPorts,
 ) -> TaxationComparisonResult:
-    """Run conjunta-vs-individual comparison for an existing Modelo 100 work unit.
+    """Compare joint and individual filing for one work unit of the authenticated profile.
 
-    Resolves the registry snapshot and all profile-sourced bindings from the
-    supplied work-unit read capability, then delegates to
-    :func:`compare_taxation_modes`. The ``declaration_type`` binding is injected
-    by the comparison engine; the stored profile value is intentionally ignored
-    so both paths are always evaluated.
+    Both runs evaluate the work unit's current calculation through the
+    canonical source mesh and publish nothing; see the module docstring for
+    what each run holds and what is refused.
 
-    Returns:
-        A :class:`TaxationComparisonResult` with the conjunta and individual
-        calculation outcomes.
-
-    Raises :class:`TaxationComparisonError` when the work unit's modelo
-    does not support the comparison (e.g. not Modelo 100).
-    Raises :class:`~cadrumo.application.modelo.action_errors.WorkUnitNotFoundError`
-    when ``work_unit_id`` does not exist in the active bucket.
-
-    See Also:
-        :func:`compare_taxation_modes`:
-            Performs the pure snapshot comparison after this function resolves
-            work-unit state.
+    Raises :class:`TaxationComparisonError` with a closed refusal, and
+    :class:`~cadrumo.application.modelo.action_errors.WorkUnitNotFoundError`
+    when ``work_unit_id`` is not a work unit of ``bucket_id``.
     """
-    from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
     from ...domain.calculations.registry.errors import RegistrySnapshotError
-    from ...domain.modelos.filing_record import FilingDeclarationKind
-    from ..aggregation.source_mesh import CalculationSourceContext
-    from ..aggregation.source_profile import ProfileSourceResolver
+    from ...domain.period import calculation_filing_date
     from .action_errors import WorkUnitNotFoundError
-    from .binding_resolution import resolve_declaration_period_inputs
-    from .work_selection import ModeloWorkSelectorState
+    from .caller_context import caller_context_calculation_inputs, caller_context_of
+    from .profile_readiness_gate import load_modelo_work_profile
+    from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 
-    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id, bucket_id=bucket_id)
-    catalogue = ports.work_unit_reader.load()
-    resolution = _select_taxation_work_unit(
-        request,
-        catalogue=catalogue,
+    operation = ports.operation
+    selection = select_modelo_work_resolution(
+        ModeloWorkSelectorRequest(work_unit_id=work_unit_id, bucket_id=bucket_id),
+        catalogue=ports.work_unit_repository.load(),
         bucket_id=bucket_id,
     )
-    if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
+    if selection.state is ModeloWorkSelectorState.ABSENT or selection.work_unit is None:
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": work_unit_id},
         )
-    work_unit = resolution.work_unit
-    if str(work_unit.modelo) != form_for_role("renta.annual"):
-        raise TaxationComparisonError("taxation comparison requires Modelo 100")
-
+    work_unit = selection.work_unit
     try:
         snapshot = operation.snapshot(
-            str(work_unit.modelo),
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
+            str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period.registry_token
         )
     except (FileNotFoundError, RegistrySnapshotError) as exc:
-        raise TaxationComparisonError(
-            f"registry snapshot unavailable for trabajo unit {work_unit_id!r}: {exc}",
-        ) from exc
+        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED) from exc
+    basis = taxation_comparison_basis(snapshot)
+    if basis is None:
+        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED)
     if snapshot.revision.id != work_unit.revision_id:
-        raise TaxationComparisonError("work unit registry revision is no longer the published revision")
-    _require_taxation_input_basis(snapshot)
-
-    # Resolve profile bindings — exclude declaration_type so the comparison
-    # engine can inject 1 or 2 independently for each run.
-    decl_binding = _declaration_type_binding_id(snapshot)
-    resolution = ProfileSourceResolver(
-        caller_binding_ids=({decl_binding} if (decl_binding is not None and decl_binding) else set()),
-        registry_snapshot=snapshot,
-        operation=operation,
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=work_unit.bucket_id,
-            modelo=snapshot.modelo.id,
-            filing_year=snapshot.filing_year,
-            period=_Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+        raise TaxationComparisonError(TaxationComparisonRefusal.REVISION_OUTDATED)
+    head_id = work_unit.current_calculation_revision_id
+    head = None if head_id is None else ports.calculation_repository.load(operation=operation).get(head_id)
+    if head is None:
+        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_CALCULATED)
+    context = caller_context_of(head)
+    if not context.operator_layer_known:
+        raise TaxationComparisonError(TaxationComparisonRefusal.ENTRIES_UNKNOWN)
+    profile = load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=operation.profile_decode_context())
+    if profile is None:
+        raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
+    _require_family_unit(profile, filing_period=calculation_filing_date(work_unit.period), operation=operation)
+    replay = caller_context_calculation_inputs(context, revision=snapshot.revision)
+    conjunta, individual = (
+        _evaluate_mode(
+            work_unit_id,
+            ports=ports,
             revision=snapshot.revision,
-        ),
+            basis=basis,
+            profile=profile,
+            declaration_type=declaration_type,
+            replay=replay,
+        )
+        for declaration_type in (RentaDeclaracionType.JOINT, RentaDeclaracionType.INDIVIDUAL)
     )
-    _require_resolved_taxation_bindings(snapshot, decl_binding, resolution)
-
-    from ...domain.period import calculation_filing_date
-
-    period_date = calculation_filing_date(work_unit.period)
-
-    # Build resolved inputs the same way the calculation service does,
-    # using zero casilla overrides (the work unit has no explicit inputs here —
-    # the comparison uses pure profile bindings).
-    # ``compare_taxation_modes`` is Modelo 100 only, and no Modelo 100 revision
-    # declares a ``filing_period`` semantic role, so the text channel of this
-    # projection is empty here; only the Decimal ``filing_year`` role applies.
-    declaration_inputs = resolve_declaration_period_inputs(
-        snapshot.revision,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        declaration_kind=FilingDeclarationKind.ORIGINAL,
-    ).casilla_inputs
-    bound_inputs = resolve_available_bound_inputs_by_casilla_id(
-        snapshot.revision,
-        resolution.binding_values,
+    _require_settled_results(snapshot.revision, basis, (conjunta, individual))
+    return compare_taxation_results(
+        basis, snapshot=snapshot, conjunta=conjunta.casilla_values, individual=individual.casilla_values
     )
-    resolved_inputs = dict(sorted({**declaration_inputs, **bound_inputs}.items()))
 
-    return compare_taxation_modes(
-        snapshot,
-        inputs=resolved_inputs,
-        binding_values=resolution.binding_values,
-        enum_binding_values=resolution.enum_binding_values,
-        relation_values={},
-        date_binding_values=resolution.date_binding_values or None,
-        boolean_binding_values=resolution.boolean_binding_values or None,
-        date_context={"filing_period": period_date},
-    )
+
+__all__ = [
+    "MATERIALITY_THRESHOLD",
+    "TaxationComparisonBasis",
+    "TaxationComparisonError",
+    "TaxationComparisonRefusal",
+    "TaxationComparisonResult",
+    "TaxationRecommendation",
+    "TaxationRecommendationReason",
+    "compare_taxation_for_work_unit",
+    "compare_taxation_results",
+    "revision_compares_taxation",
+    "taxation_comparison_basis",
+    "unresolved_result_boxes",
+]

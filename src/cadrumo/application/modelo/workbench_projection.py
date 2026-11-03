@@ -365,6 +365,8 @@ class PublicModeloWorkForm(BaseModel):
     aeat_data: ModeloFormAeatData | None
     projectable: bool = False
     asks_imputation_election: bool = False
+    compares_taxation: bool = False
+    compares_borrador: bool = False
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None

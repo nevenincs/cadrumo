@@ -47,7 +47,6 @@ from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import CasillaDataType
-from ...domain.calculations.registry.schema_extraction import ExtractionSurface
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.filing.schema import ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
@@ -65,6 +64,7 @@ from ..modelo.work_form_models import ModeloFormText
 from ..modelo.work_review import ModeloWorkReview, ModeloWorkReviewCasilla, build_modelo_work_review
 from ..operations.public_scalar import PublicDecimal
 from .borrador_100 import Borrador100PrintedObservation, Borrador100Snapshot, Borrador100SnapshotReading
+from .borrador_100_import import borrador_pdf_extraction_profile
 from .borrador_100_keys import borrador_admitted_bindings, printed_box_casilla
 
 _ANNUAL: Final = "0A"
@@ -330,14 +330,10 @@ def _stale_reasons(
 
 def _draft_read_casillas(snapshot: RegistrySnapshot) -> frozenset[str]:
     """The boxes the borrador import reads from the printed draft; none when the revision declares no reading."""
-    profiles = [
-        profile
-        for profile in snapshot.extraction_profiles.values()
-        if profile.surface == ExtractionSurface.BORRADOR_PDF
-    ]
-    if len(profiles) != 1:
+    profile = borrador_pdf_extraction_profile(snapshot)
+    if profile is None:
         return frozenset[str]()
-    return frozenset(str(target.casilla_id) for target in profiles[0].target_casillas)
+    return frozenset(str(target.casilla_id) for target in profile.target_casillas)
 
 
 def _calculation_value(row: ModeloWorkReviewCasilla | None) -> object | None:

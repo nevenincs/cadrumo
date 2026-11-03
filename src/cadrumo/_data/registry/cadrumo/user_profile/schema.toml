@@ -1620,6 +1620,16 @@ model_selectors = ["family.minor_children_in_unit", "modelo_100"]
 legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
+key = "convive_con_otro_progenitor"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "In a single-parent family unit, whether the taxpayer lives with the father or mother of any child in the unit; the joint-taxation reduction does not apply while they do."
+model_selectors = ["family.convive_con_otro_progenitor", "modelo_100"]
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-84"]
+
+[[sections.fields]]
 key = "descendants_eu_eea_deduction"
 type = "boolean"
 required = false
@@ -1673,6 +1683,7 @@ enum_values = [
   "separado_divorciado",
 ]
 model_selectors = ["family.situacion_familiar"]
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-84"]
 
 [[sections.fields]]
 key = "descendientes_count"

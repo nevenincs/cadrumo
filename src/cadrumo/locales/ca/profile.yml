@@ -88,6 +88,8 @@ profile:
     preferences:
       output_language: Idioma de sortida de la CLI per a aquest perfil
     renta_family:
+      convive_con_otro_progenitor: 'Unitat monoparental: conviu amb el pare o la mare
+        d''algun fill de la unitat'
       descendants_eu_eea_deduction: Descendents UE/EEE en la deducció per unitat familiar
       minor_children_in_unit: Fills menors a la unitat familiar
       situacion_familiar: Situació familiar (Art. 82 LIRPF)
@@ -415,6 +417,8 @@ profile:
           label: Ascendent
         ascendientes_count:
           label: Nombre d'ascendents
+        convive_con_otro_progenitor:
+          label: Conviu amb el pare o la mare d'algun fill de la llar
         cotizaciones_ss_madre_2024:
           label: Cotitzacions a la Seguretat Social de la mare (2024)
         descendants:

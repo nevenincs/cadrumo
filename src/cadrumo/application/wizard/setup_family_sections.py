@@ -143,17 +143,15 @@ def _spouse_questions(
 ) -> tuple[WizardQuestion, ...]:
     return (
         WizardQuestion(
-            # Required *when visible*: a joint declaration is invalid
-            # without the spouse NIF (SetupAnswers enforces the same
-            # invariant). The widget validator still accepts a blank
-            # answer for a gated question; the conditional requirement
-            # is enforced at `validate_profile_values` via the compiled
-            # `required_when_*` pair.
+            # Owed only by a joint return of the married unit (Art. 82.1.1ª
+            # LIRPF); a single-parent unit has no spouse. That two-fact
+            # requirement has no single gate pair, so the profile
+            # completeness rules own it, as SetupAnswers does.
             id="spouse-tax-id",
             profile_key="renta_spouse.tax_id",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-tax-id.prompt"),
-            required=True,
+            required=False,
             visible_when=_joint_declaration,
             answer_type=str,
         ),

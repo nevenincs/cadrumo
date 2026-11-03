@@ -310,7 +310,7 @@ def test_base_liquidable_general_applies_reductions() -> None:
     """0500 = 0435 - 0461 - 0501 — reducciones (tributación conjunta, bases negativas) reduce base liquidable.
 
     0461 is now computed by renta-reduccion-art-84-conjunta from binding values.
-    declaration_type = 2 (conjunta) + minor_children_in_unit = 0 (tipo-1 matrimonio) → 0461 = €3,400.
+    declaration_type = 2 (conjunta) + family situation casado (tipo-1 matrimonio) → 0461 = €3,400.
     """
     base_inputs = _base_2025_inputs()
     base_inputs.update(
@@ -331,7 +331,7 @@ def test_base_liquidable_general_applies_reductions() -> None:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-            # declaration_type = 2 (conjunta) + minor_children_in_unit = 0 → 0461 = 3400
+            # declaration_type = 2 (conjunta) + situacion casado → 0461 = 3400
             "renta-profile-declaration-type": Decimal("2"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             # married full year (required by marriage-axis formulas in revision)
@@ -344,7 +344,11 @@ def test_base_liquidable_general_applies_reductions() -> None:
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         },
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        # casado: the first Art. 82 unit (Art. 84.2.3º), whose reducción is €3,400.
+        enum_binding_values={
+            "renta-profile-tax-residence-ccaa": "madrid",
+            "renta-profile-family-situacion-familiar": "casado",
+        },
         relation_values=_RELATION_ZERO_VALUES_2025,
         # Age 44 at year-end 2025 → no age increment → 0511 = 5,550 base only.
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},

@@ -2633,6 +2633,28 @@ application:
         durva tájékoztatásnak, nem a benyújtandó összegnek.
       individual_lower_result: 'Az egyéni adózás kedvezőbb: az eredményed egyénileg
         {individual}, közösen {conjunta}, a különbség {difference}.'
+      refusal:
+        entries_unknown: A mentett számítás nem rögzíti, milyen értékeket adtál meg,
+          így az összehasonlítás nem tudja újra felhasználni őket. Számold ki újra
+          a bevallást, aztán kérd az összehasonlítást.
+        family_situation_unstated: A profilod nem tartalmazza a családi helyzetedet,
+          így nem tudható, adózhatsz-e közösen. Add meg a profilodban, aztán kérd
+          újra az összehasonlítást.
+        no_family_unit: A profilod szerint nincs kiskorú gyermek a háztartásodban,
+          így házastárs nélkül nem alkotsz közösen adózó családi egységet. Az összehasonlítás
+          nem alkalmazható.
+        not_calculated: Ezt a bevallást még nem számoltad ki. Számold ki, aztán kérd
+          az összehasonlítást.
+        not_declared: 'Ez a bevallás nem tudja összehasonlítani a közös és az egyéni
+          adózást: a nyomtatványa nem határoz meg összehasonlítható adózási módot.'
+        revision_outdated: Ezt a bevallást a nyomtatvány egy korábbi változatával
+          számoltad ki. Számold ki újra, aztán kérd az összehasonlítást.
+        spouse_unstated: Házaspár közös adózásához szükség van a házastársad adóazonosítójára,
+          de a profilod nem tartalmazza. Add meg a profilodban, aztán kérd újra az
+          összehasonlítást.
+        unresolved_boxes: 'Az összehasonlítás nem számolható ki, mert ezeknek a mezőknek
+          még nincs értéke, ami nem azonos a nullával: %{casilla_ids}. Töltsd ki őket,
+          vagy válaszolj arra, amitől függnek, aztán kérd újra az összehasonlítást.'
     value_date:
       month_01: jan.
       month_02: febr.

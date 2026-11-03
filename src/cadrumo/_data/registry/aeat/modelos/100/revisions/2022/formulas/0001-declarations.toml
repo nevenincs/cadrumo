@@ -409,9 +409,13 @@ required_text = ["cuota diferencial", "pagos a cuenta"]
 [[revisions."2022".formulas]]
 id = "renta-reduccion-art-84-conjunta"
 target_casilla_id = "0461"
-# Art. 84 LIRPF: reducción por tributación conjunta.
-# Tipo 1 (matrimonio, Art. 82.1.1°): declaration_type = 2 AND minor_children_in_unit = 0 → €3.400
-# Tipo 2 (monoparental, Art. 82.1.2°): declaration_type = 2 AND minor_children_in_unit = 1 → €2.150
+# Art. 84.2 LIRPF: reducción por tributación conjunta.
+# 3.º First modality (Art. 82.1.1ª, spouses not legally separated, with or
+#     without children): family situation casado → €3.400.
+# 4.º Second modality (Art. 82.1.2ª, single parent with the children) → €2.150,
+#     except when the taxpayer lives with the father or mother of any child in
+#     the unit → €0. The cohabitation fact is read only on this branch and stays
+#     unresolved until the profile states it.
 # Individual (declaration_type = 1): → €0
 expression = { op = "if_then_else", args = [
     { op = "equal", args = [
@@ -419,12 +423,16 @@ expression = { op = "if_then_else", args = [
         { literal = "2" },
     ] },
     { op = "if_then_else", args = [
-        { op = "equal", args = [
-            { binding = "renta-profile-family-minor-children-in-unit" },
-            { literal = "0" },
+        { op = "text_equal", args = [
+            { binding = "renta-profile-family-situacion-familiar" },
+            { text_literal = "casado" },
         ] },
         { literal = "3400" },
-        { literal = "2150" },
+        { op = "if_then_else", args = [
+            { binding = "renta-profile-family-convive-otro-progenitor" },
+            { literal = "0" },
+            { literal = "2150" },
+        ] },
     ] },
     { literal = "0" },
 ] }

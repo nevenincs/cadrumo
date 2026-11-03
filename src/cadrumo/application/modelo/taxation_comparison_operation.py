@@ -41,8 +41,10 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .calculation_action_ports import CalculationActionPortsFactory
 from .taxation_comparison import (
     TaxationComparisonError,
+    TaxationComparisonRefusal,
     TaxationComparisonResult,
     TaxationRecommendation,
     TaxationRecommendationReason,
@@ -135,13 +137,13 @@ class ModeloTaxationComparisonProjection(BaseModel):
             comparison.modelo != form_for_role("renta.annual")
             or comparison.individual_branch_single_earner_only is not True
         ):
-            raise TaxationComparisonError("comparison has an unsupported filing scope")
+            raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED)
         language = OutputLanguage(output_language())
         return cls(
             profile_id=profile_id,
             work_unit_id=work_unit_id,
             filing_year=comparison.filing_year,
-            modelo="100",
+            modelo=comparison.modelo,
             revision=comparison.revision,
             conjunta_cuota_resultante=str(comparison.conjunta_cuota_resultante),
             individual_cuota_resultante=str(comparison.individual_cuota_resultante),
@@ -164,11 +166,11 @@ class ModeloTaxationComparisonProjection(BaseModel):
 
 
 class ModeloTaxationComparisonExecutor:
-    """Read and calculate under the worker's exact profile and authority pin."""
+    """Evaluate both filing modes under the worker's exact profile and authority pin, saving nothing."""
 
-    def __init__(self, factory: TaxationComparisonPortsFactory) -> None:
-        """Capture the exact-profile port factory."""
-        self._factory = factory
+    def __init__(self, calculation_action_ports_factory: CalculationActionPortsFactory) -> None:
+        """Capture the exact-profile calculation port factory."""
+        self._calculation_action_ports_factory = calculation_action_ports_factory
 
     async def execute(
         self, request: OperationRequest[ModeloTaxationComparisonRequest], context: OperationExecutorContext
@@ -184,8 +186,9 @@ class ModeloTaxationComparisonExecutor:
             result = compare_taxation_for_work_unit(
                 payload.work_unit_id,
                 bucket_id=str(payload.profile_id),
-                ports=self._factory(bucket_id=str(payload.profile_id)),
-                operation=context.authority_operation,
+                ports=self._calculation_action_ports_factory(
+                    bucket_id=str(payload.profile_id), operation=context.authority_operation
+                ),
             )
             return ModeloTaxationComparisonProjection.from_comparison(
                 result, profile_id=payload.profile_id, work_unit_id=payload.work_unit_id
@@ -202,7 +205,9 @@ class ModeloTaxationComparisonExecutor:
         return await await_cancellation_complete(capture(), task_name="modelo-taxation-comparison")
 
 
-def build_modelo_taxation_comparison_definition(factory: TaxationComparisonPortsFactory) -> OperationDefinition:
+def build_modelo_taxation_comparison_definition(
+    calculation_action_ports_factory: CalculationActionPortsFactory,
+) -> OperationDefinition:
     """Declare a recorded, nonmutating, profile-bound calculation."""
     return build_single_phase_definition(
         definition_id=MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,
@@ -210,7 +215,7 @@ def build_modelo_taxation_comparison_definition(factory: TaxationComparisonPorts
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloTaxationComparisonProjection,
         executor_type=ModeloTaxationComparisonExecutor,
-        build=lambda: ModeloTaxationComparisonExecutor(factory),
+        build=lambda: ModeloTaxationComparisonExecutor(calculation_action_ports_factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 

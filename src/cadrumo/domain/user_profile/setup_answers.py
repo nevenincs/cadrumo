@@ -42,7 +42,10 @@ from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.irpf_income_categories import require_irpf_income_category
 from ..calculations.registry.irpf_regimes import require_irpf_estimation_regime, require_irpf_special_regime
 from ..calculations.registry.iva_regime_vocabulary import require_iva_regime
-from ..calculations.registry.situacion_familiar_catalogue import require_situacion_familiar
+from ..calculations.registry.situacion_familiar_catalogue import (
+    require_situacion_familiar,
+    situacion_familiar_monoparental_required,
+)
 from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ..contribuyente.ccaa import CCAA
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
@@ -659,13 +662,19 @@ class SetupAnswers(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
-        if self.taxation_type == RentaDeclaracionType.JOINT and not self.spouse_tax_id:
+        # Only the married unit (Art. 82.1.1ª LIRPF) declares a spouse; a
+        # single-parent unit (Art. 82.1.2ª) has none. An unstated situation
+        # keeps the requirement, since the unit could be the married one.
+        single_parent_unit = bool(self.situacion_familiar) and situacion_familiar_monoparental_required(
+            self.situacion_familiar
+        )
+        if self.taxation_type == RentaDeclaracionType.JOINT and not single_parent_unit and not self.spouse_tax_id:
             # A stable custom error type (not the generic ``value_error``) lets
             # the operator-facing boundary route this cross-field refusal to its
             # own localized message rather than the raw English text below.
             raise PydanticCustomError(
                 "spouse_tax_id_required_joint",
-                "spouse_tax_id is required when taxation_type is joint",
+                "spouse_tax_id is required when taxation_type is joint for a married family unit",
             )
         return self
 

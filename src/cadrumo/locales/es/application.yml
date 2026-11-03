@@ -2679,6 +2679,29 @@ application:
       individual_lower_result: 'La tributación individual sale más barata: tu resultado
         es {individual} en individual y {conjunta} en conjunta, una diferencia de
         {difference}.'
+      refusal:
+        entries_unknown: El cálculo guardado no registra qué valores introdujiste,
+          así que la comparación no puede reutilizarlos. Vuelve a calcular la declaración
+          y pide después la comparación.
+        family_situation_unstated: Tu perfil no indica tu situación familiar, así
+          que no se sabe si puedes tributar conjuntamente. Añádela a tu perfil y vuelve
+          a pedir la comparación.
+        no_family_unit: Tu perfil indica que no hay hijos menores en tu hogar, así
+          que sin cónyuge no formas una unidad familiar que pueda tributar conjuntamente.
+          La comparación no procede.
+        not_calculated: Esta declaración aún no se ha calculado. Calcúlala y pide
+          después la comparación.
+        not_declared: 'Esta declaración no puede comparar la tributación conjunta
+          con la individual: su modelo no declara ninguna modalidad de tributación
+          que comparar.'
+        revision_outdated: Esta declaración se calculó con una versión anterior de
+          su modelo. Vuelve a calcularla y pide después la comparación.
+        spouse_unstated: La tributación conjunta de un matrimonio necesita el NIF
+          de tu cónyuge, y tu perfil no lo indica. Añádelo a tu perfil y vuelve a
+          pedir la comparación.
+        unresolved_boxes: 'La comparación no se puede calcular porque estas casillas
+          aún no tienen valor, lo que no equivale a cero: %{casilla_ids}. Rellénalas
+          o responde a lo que necesitan y vuelve a pedir la comparación.'
     value_date:
       month_01: ene
       month_02: feb

@@ -261,6 +261,27 @@ def _trusted_backend_casilla_inputs(
 
 
 @dataclass(frozen=True, slots=True)
+class TrustedMeshEvaluation:
+    """One engine run over the canonical prepared channels, before anything is published.
+
+    ``casilla_values`` holds every box the run settled; a box the engine left
+    unresolved is absent from it, never zero. ``unresolved_binding_ids`` and
+    ``unresolved_relation_ids`` are the source gaps the run was told about, so
+    a reader can name the boxes they left without a value.
+    """
+
+    prepared: _PreparedCalculation
+    engine_result: RegistryCalculationResult
+    replay_payloads: CalculationReplayPayloads
+    casilla_values: dict[CasillaId, Decimal]
+    typed_observations: tuple[CasillaObservation, ...]
+    filing_instance_evidence: FilingInstanceEvidence | None
+    resolved_text_inputs: Mapping[CasillaId, str]
+    unresolved_binding_ids: tuple[BindingId, ...]
+    unresolved_relation_ids: tuple[RelationId, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class TrustedMeshCalculation:
     """A persisted calculation and the precedence divergences its binding overlay found.
 
@@ -330,57 +351,44 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     now = _trusted_calculation_clock(clock)
-    prepared = _prepare_calculation(
+    evaluation = evaluate_modelo_revision_with_trusted_mesh_sources(
+        work_unit_id,
+        ports=ports,
         evaluated_at=now,
-        work_unit_id=work_unit_id,
-        work_unit_repository=ports.work_unit_repository,
         casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-        ledger_preflight_transaction_repository=ports.transaction_repository,
-        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
-        operation=ports.operation,
-        iva_compensation_decision=iva_compensation_decision,
-        observation_repository=ports.observation_repository,
-        iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
-        iva_compensation_history_repository=ports.iva_compensation_history_repository,
+        text_casilla_inputs=text_casilla_inputs,
+        cleared_casilla_ids=cleared_casilla_ids,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         backend_binding_values=backend_binding_values,
-        filing_period_date=filing_period_date,
+        row_binding_values=row_binding_values,
+        closed_record_row_sets=closed_record_row_sets,
+        backend_casilla_inputs=backend_casilla_inputs,
+        iva_compensation_decision=iva_compensation_decision,
         borrador_snapshot_id=borrador_snapshot_id,
-        borrador_snapshot_repository=ports.borrador_snapshot_repository,
+        relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        filing_period_date=filing_period_date,
+        detail_rows=detail_rows,
+        source_provenance=source_provenance,
+        filing_instance_evidence=filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         profile=profile,
-        backend_source_provenance=source_provenance,
     )
+    prepared = evaluation.prepared
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
     channels = prepared.channels
     revision_source_issues = (*source_issues, *_precedence_issues(channels.precedence_diagnostics))
-    (
-        engine_result,
-        replay_payloads,
-        casilla_values,
-        typed_observations,
-        validated_filing_instance_evidence,
-        resolved_text_inputs,
-    ) = _evaluate_prepared_calculation(
-        prepared,
-        ports,
-        detail_rows,
-        m210_official_tipo_renta_code,
-        relation_values,
-        text_casilla_inputs,
-        cleared_casilla_ids,
-        unresolved_relation_ids,
-        unresolved_binding_ids,
-        settled_binding_ids,
-        closed_record_row_sets,
-        row_binding_values,
-        filing_instance_evidence,
-        m303_regimen_simplificado_annual_summary_handoff,
-    )
+    engine_result = evaluation.engine_result
+    replay_payloads = evaluation.replay_payloads
+    casilla_values = evaluation.casilla_values
+    typed_observations = evaluation.typed_observations
+    validated_filing_instance_evidence = evaluation.filing_instance_evidence
+    resolved_text_inputs = evaluation.resolved_text_inputs
     ledger_filing_snapshot, invoice_fingerprint = _draft_anchors(
         work_unit=work_unit,
         source_transaction_ids=source_transaction_ids,
@@ -433,6 +441,101 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     return TrustedMeshCalculation(publication=publication, precedence_diagnostics=channels.precedence_diagnostics)
+
+
+def evaluate_modelo_revision_with_trusted_mesh_sources(
+    work_unit_id: str,
+    *,
+    ports: CalculationActionPorts,
+    evaluated_at: datetime,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    cleared_casilla_ids: tuple[CasillaId, ...] = (),
+    binding_values: Mapping[BindingId, Decimal] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
+    backend_binding_values: Mapping[BindingId, Decimal] | None = None,
+    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    iva_compensation_decision: object | None = None,
+    borrador_snapshot_id: str | None = None,
+    relation_values: Mapping[RelationId, Decimal] | None = None,
+    unresolved_relation_ids: tuple[RelationId, ...] = (),
+    unresolved_binding_ids: tuple[BindingId, ...] = (),
+    settled_binding_ids: tuple[BindingId, ...] = (),
+    m210_official_tipo_renta_code: str | None = None,
+    filing_period_date: date | None = None,
+    detail_rows: tuple[ModeloDetailRow, ...] = (),
+    source_provenance: tuple[CalculationSourceRef, ...],
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
+    profile: ModeloWorkProfile | None,
+) -> TrustedMeshEvaluation:
+    """Run the preparation gates and the engine over trusted source evidence, publishing nothing.
+
+    This is the evaluation the persisting calculation publishes, so a reader
+    that only needs the engine's answer gets exactly what a calculation would
+    have saved. Preparation may still persist a refreshed Modelo 303 IVA-wallet
+    decision, as it does for every calculation of that modelo.
+    """
+    prepared = _prepare_calculation(
+        evaluated_at=evaluated_at,
+        work_unit_id=work_unit_id,
+        work_unit_repository=ports.work_unit_repository,
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
+        ledger_preflight_transaction_repository=ports.transaction_repository,
+        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+        operation=ports.operation,
+        iva_compensation_decision=iva_compensation_decision,
+        observation_repository=ports.observation_repository,
+        iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
+        iva_compensation_history_repository=ports.iva_compensation_history_repository,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        backend_binding_values=backend_binding_values,
+        filing_period_date=filing_period_date,
+        borrador_snapshot_id=borrador_snapshot_id,
+        borrador_snapshot_repository=ports.borrador_snapshot_repository,
+        unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=unresolved_binding_ids,
+        profile=profile,
+        backend_source_provenance=source_provenance,
+    )
+    (
+        engine_result,
+        replay_payloads,
+        casilla_values,
+        typed_observations,
+        validated_filing_instance_evidence,
+        resolved_text_inputs,
+    ) = _evaluate_prepared_calculation(
+        prepared,
+        ports,
+        detail_rows,
+        m210_official_tipo_renta_code,
+        relation_values,
+        text_casilla_inputs,
+        cleared_casilla_ids,
+        unresolved_relation_ids,
+        unresolved_binding_ids,
+        settled_binding_ids,
+        closed_record_row_sets,
+        row_binding_values,
+        filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff,
+    )
+    return TrustedMeshEvaluation(
+        prepared=prepared,
+        engine_result=engine_result,
+        replay_payloads=replay_payloads,
+        casilla_values=casilla_values,
+        typed_observations=typed_observations,
+        filing_instance_evidence=validated_filing_instance_evidence,
+        resolved_text_inputs=resolved_text_inputs,
+        unresolved_binding_ids=unresolved_binding_ids,
+        unresolved_relation_ids=unresolved_relation_ids,
+    )
 
 
 def _reject_clears_of_source_fed_casillas(

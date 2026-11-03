@@ -1020,6 +1020,15 @@ class ModeloWorkForm(ModeloFormBase):
     #: registry declares a binding whose resolver places activity income or expense by the taxpayer's
     #: dated criterion. ``False`` says the declaration does not ask for it, never that none is stated.
     asks_imputation_election: bool = False
+    #: Whether joint and individual filing can be compared (``modelo.work.compare_taxation``) for this
+    #: declaration: its revision declares the declaration-type box, bound to the profile, and the cuota
+    #: resultante and cuota diferencial it compares. ``False`` says the comparison cannot be asked, never
+    #: that either mode comes out lower.
+    compares_taxation: bool = False
+    #: Whether the AEAT draft (Borrador) can be compared with the calculation (``live.borrador.100.compare``)
+    #: for this declaration: its revision declares one Borrador PDF extraction profile. ``False`` says no
+    #: draft can be read for it, never that a draft agrees.
+    compares_borrador: bool = False
     #: Set when the declaration is recorded as filed.
     filing: ModeloFormFiling | None = None
     #: The latest file exported for this declaration, or ``None`` when none was ever exported.

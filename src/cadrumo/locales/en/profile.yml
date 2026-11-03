@@ -88,6 +88,8 @@ profile:
     preferences:
       output_language: CLI output language for this profile
     renta_family:
+      convive_con_otro_progenitor: 'Single-parent unit: lives with the other parent
+        of a child in the unit'
       descendants_eu_eea_deduction: EU/EEA descendants in family-unit deduction
       minor_children_in_unit: Minor children in family unit
       situacion_familiar: Family situation (Art. 82 LIRPF)
@@ -417,6 +419,8 @@ profile:
           label: Ascendant
         ascendientes_count:
           label: Ascendant count
+        convive_con_otro_progenitor:
+          label: Lives with the other parent of a child in the household
         cotizaciones_ss_madre_2024:
           label: Mother's Social Security contributions (2024)
         descendants:

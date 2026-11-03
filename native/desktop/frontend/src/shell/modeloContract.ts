@@ -8047,6 +8047,8 @@ export type PublicModeloWorkForm = {
   aeat_data: ModeloFormAeatData | null;
   projectable: boolean;
   asks_imputation_election: boolean;
+  compares_taxation: boolean;
+  compares_borrador: boolean;
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;

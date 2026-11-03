@@ -627,8 +627,7 @@ def compose_modelo_taxation_comparison_operation(inputs: OperationCompositionInp
         build_modelo_taxation_comparison_registration,
     )
 
-    del inputs
-    definition = build_modelo_taxation_comparison_definition(build_taxation_comparison_ports)
+    definition = build_modelo_taxation_comparison_definition(inputs.calculation_actions())
     return built(
         (definition,), (build_modelo_taxation_comparison_registration(definition, build_taxation_comparison_ports),)
     )

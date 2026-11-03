@@ -16,7 +16,7 @@ from ...core.identity.documents import IdentityError
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionSurface
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from .borrador_100 import Borrador100PrintedObservation
@@ -105,14 +105,25 @@ def _resolve_import_profile(
     if period.filing_year != filing_year:
         raise ValueError("borrador import period differs from filing year")
     snapshot = operation.snapshot("100", filing_year=filing_year, period=period.registry_token)
+    profile = borrador_pdf_extraction_profile(snapshot)
+    if profile is None:
+        raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_profile_unresolved")
+    return snapshot.revision, profile
+
+
+def borrador_pdf_extraction_profile(snapshot: RegistrySnapshot) -> ExtractionProfileDefinition | None:
+    """The one extraction profile ``snapshot`` declares for reading the AEAT draft PDF, or ``None``.
+
+    ``None`` when the revision declares none, or more than one, so no draft
+    can be read for it: an import refuses, and a comparison has nothing to
+    compare.
+    """
     profiles = tuple(
         profile
         for profile in snapshot.extraction_profiles.values()
         if profile.surface == ExtractionSurface.BORRADOR_PDF
     )
-    if len(profiles) != 1:
-        raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_profile_unresolved")
-    return snapshot.revision, profiles[0]
+    return profiles[0] if len(profiles) == 1 else None
 
 
 def _require_parser_receipt(
