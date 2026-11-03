@@ -9,6 +9,7 @@ from pydantic import BaseModel, ValidationError
 
 from cadrumo.core import aggregation
 from cadrumo.core import period as _period
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from cadrumo.core.period import (
     FilingPeriodCode,
     Period,
@@ -302,7 +303,7 @@ class TestPeriodConstruction:
                 Period.from_year_and_code(2026, bad)
 
     def test_out_of_range_year_refuses(self) -> None:
-        for year in (1979, 2201):
+        for year in (FOUR_DIGIT_YEAR_FIRST - 1, FOUR_DIGIT_YEAR_LAST + 1):
             with pytest.raises(PeriodError):
                 Period.from_year_and_code(year, "1T")
 
