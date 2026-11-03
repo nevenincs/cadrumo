@@ -13,6 +13,9 @@ a removal and a move in as an addition:
 - The renta income source also adds what accrued and is still unpaid, and nets
   corrections, with no row at all, so from field-set version 2 every issued invoice
   entering its window under the declared criterion counts.
+- The renta expense sources refuse an unpaid received invoice and net a received
+  correction, with no row at all, so from field-set version 3 every received invoice
+  entering its window counts too.
 
 The field set is the union of what those readers consult, including the
 decomposition contract that grounds income evidence. What is left out, and why:
@@ -69,7 +72,7 @@ from .invoice_devengo import resolve_invoice_devengo
 from .ledger_membership import ledger_transaction_ref_identity
 from .modelo_bindings import aggregation_period_for_modelo
 from .renta_imputation import ActivityImputationCriterion, ImputationCriteria
-from .renta_income_diagnostics import issued_invoice_enters_window
+from .renta_income_diagnostics import invoice_enters_window
 
 # Append-only and versioned for the reasons the ledger field sets are: widening a
 # set in place would report every stored draft as drifted at once.
@@ -111,14 +114,29 @@ _INVOICE_FIELDS_V1: Final[tuple[str, ...]] = (
 # A correction nets against the invoice it names, so the name moves a figure.
 _INVOICE_FIELDS_V2: Final[tuple[str, ...]] = (*_INVOICE_FIELDS_V1, "rectifies_invoice_number")
 
-_INVOICE_FIELD_SETS: Final[Mapping[int, tuple[str, ...]]] = {1: _INVOICE_FIELDS_V1, 2: _INVOICE_FIELDS_V2}
+# Version 3 widens the scope, not the fields.
+_INVOICE_FIELD_SETS: Final[Mapping[int, tuple[str, ...]]] = {
+    1: _INVOICE_FIELDS_V1,
+    2: _INVOICE_FIELDS_V2,
+    3: _INVOICE_FIELDS_V2,
+}
 
 #: The version every new fingerprint is captured under.
-CURRENT_INVOICE_FIELD_SET_VERSION: Final = 2
+CURRENT_INVOICE_FIELD_SET_VERSION: Final = 3
 
 #: The first version whose scope holds the invoices renta income reads with no row.
 #: An older snapshot keeps its narrower scope, or its every draft would read as drifted.
 _ACCRUED_INVOICE_SCOPE_VERSION: Final = 2
+
+#: The first version whose scope holds the invoices renta expense reads with no row.
+_ACCRUED_EXPENSE_SCOPE_VERSION: Final = 3
+
+_ACCRUED_EXPENSE_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
+    {
+        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+    }
+)
 
 _LINKED_INVOICE_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
     {
@@ -140,6 +158,7 @@ class _InvoiceReadSelection:
     oss: bool
     linked: bool
     accrued_income: bool
+    accrued_expense: bool
 
     @property
     def reads_invoices(self) -> bool:
@@ -157,6 +176,7 @@ def _read_selection(revision: ModeloRevision, *, work_unit: WorkUnit) -> _Invoic
         # The objective instalment's income has no accrued path: it reads activity volume.
         accrued_income=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION in declared
         and work_unit.modelo != form_for_role("renta.objective_instalment"),
+        accrued_expense=bool(declared & _ACCRUED_EXPENSE_SOURCES),
     )
 
 
@@ -172,11 +192,11 @@ def fingerprint_scope_is_narrower(
     work_unit: WorkUnit,
     criteria: ImputationCriteria,
 ) -> bool:
-    """Whether this stored fingerprint leaves out invoices the draft's accrued income may rest on."""
-    return (
-        snapshot.field_set_version < _ACCRUED_INVOICE_SCOPE_VERSION
-        and _read_selection(revision, work_unit=work_unit).accrued_income
-        and criteria.usable(work_unit.filing_year) is ActivityImputationCriterion.DEVENGO
+    """Whether this stored fingerprint leaves out invoices the draft's accrued income or expense may rest on."""
+    selection = _read_selection(revision, work_unit=work_unit)
+    return criteria.usable(work_unit.filing_year) is ActivityImputationCriterion.DEVENGO and (
+        (snapshot.field_set_version < _ACCRUED_INVOICE_SCOPE_VERSION and selection.accrued_income)
+        or (snapshot.field_set_version < _ACCRUED_EXPENSE_SCOPE_VERSION and selection.accrued_expense)
     )
 
 
@@ -248,7 +268,8 @@ def _invoices_in_scope(
     work_unit: WorkUnit,
     linked_invoice_ids: frozenset[str],
     contributors: frozenset[str],
-    accrued_scope_criteria: ImputationCriteria | None,
+    accrued_kinds: frozenset[InvoiceKind],
+    criteria: ImputationCriteria,
 ) -> tuple[Invoice, ...]:
     period = work_unit.period
     bucket_id = work_unit.bucket_id
@@ -262,20 +283,21 @@ def _invoices_in_scope(
     direct_period = period if selection.direct_sources and period.has_date_span() else None
     accrued_end = (
         aggregation_period_for_modelo(filing_year=work_unit.filing_year, code=period.registry_token).end_date
-        if accrued_scope_criteria is not None
+        if accrued_kinds
         else None
     )
 
     def in_accrued_scope(invoice: Invoice) -> bool:
         return (
-            accrued_scope_criteria is not None
-            and accrued_end is not None
-            and issued_invoice_enters_window(
+            accrued_end is not None
+            and invoice.kind in accrued_kinds
+            and invoice_enters_window(
                 invoice,
+                kind=invoice.kind,
                 bucket_id=bucket_id,
                 window_start=date(work_unit.filing_year, 1, 1),
                 window_end=accrued_end,
-                criteria=accrued_scope_criteria,
+                criteria=criteria,
             )
         )
 
@@ -372,6 +394,16 @@ def _linked_invoice_ids(ports: InvoiceCatalogueReadPorts, contributors: frozense
     return frozenset(named)
 
 
+def _accrued_kinds(selection: _InvoiceReadSelection, *, field_set_version: int) -> frozenset[InvoiceKind]:
+    """Return the kinds whose window-entering invoices this version's scope holds."""
+    kinds: set[InvoiceKind] = set()
+    if selection.accrued_income and field_set_version >= _ACCRUED_INVOICE_SCOPE_VERSION:
+        kinds.add(InvoiceKind.ISSUED)
+    if selection.accrued_expense and field_set_version >= _ACCRUED_EXPENSE_SCOPE_VERSION:
+        kinds.add(InvoiceKind.RECEIVED)
+    return frozenset(kinds)
+
+
 def _current_rows(
     *,
     work_unit: WorkUnit,
@@ -388,9 +420,8 @@ def _current_rows(
         work_unit=work_unit,
         linked_invoice_ids=_linked_invoice_ids(ports, contributors) if selection.linked else frozenset(),
         contributors=contributors,
-        accrued_scope_criteria=(
-            criteria if selection.accrued_income and field_set_version >= _ACCRUED_INVOICE_SCOPE_VERSION else None
-        ),
+        accrued_kinds=_accrued_kinds(selection, field_set_version=field_set_version),
+        criteria=criteria,
     )
     return {
         invoice.invoice_id: invoice_row_fingerprint(invoice, field_set_version=field_set_version)

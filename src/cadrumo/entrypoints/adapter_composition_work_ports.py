@@ -142,7 +142,10 @@ def build_calculation_action_ports(
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
     from ..adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
-    from ..adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
+    from ..adapters.persistence.profile.invoice_source_resolver import (
+        InvoiceCatalogueSourceResolverAdapter,
+        M349FiledDeclarationAdapter,
+    )
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -224,6 +227,10 @@ def build_calculation_action_ports(
         invoice_source_ports=InvoiceSourceResolverPorts(
             catalogue_reader=InvoiceCatalogueSourceResolverAdapter(
                 repository=invoice_repository,
+            ),
+            m349_filed_declarations=M349FiledDeclarationAdapter(
+                repository=calculation_binding.calculation_repository(),
+                operation=operation,
             ),
         ),
         filing_repository=ModeloRecordCatalogueRepository(

@@ -12,6 +12,7 @@ from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction
+from ..invoices.source_observations import is_rectificativa
 from .currency_predicates import (
     effective_eur_iva_amount,
     effective_eur_taxable_base,
@@ -163,7 +164,8 @@ def _purchase_invoice_payload_for_totals(
             reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
             detail="linked invoice or transaction has no EUR value to compare or fold in",
         )
-    if not comparison.settled:
+    # A refund on a correction has no reading of its own here: the correction netting owns it.
+    if not comparison.settled and (is_rectificativa(invoice) or not comparison.reversed):
         return RentaLedgerAggregationIssue(
             transaction_id=transaction.transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,

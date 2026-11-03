@@ -315,40 +315,7 @@ def test_spain_is_an_ordinary_state_of_consumption_outside_the_union_scheme(
 
 
 @pytest.mark.parametrize("regime", _REGIMES, ids=_regime_ids)
-def test_a_tier_the_design_cannot_code_is_refused(operation: PinnedAuthorityOperation, regime: _Regime) -> None:
-    """DR369 offers a row "R" or "S" only; France's published 2.1 is neither by name."""
-    supply = _first_day_of_the_french_super_reduced_rate(operation)
-    with pytest.raises(AggregationValidationError) as refused:
-        _resolve(
-            operation,
-            regime,
-            (
-                _invoice(
-                    regime,
-                    "SYNTHETIC-1",
-                    country="FR",
-                    tier="super_reduced",
-                    base="100.00",
-                    cuota="2.10",
-                    supply_date=supply,
-                ),
-            ),
-            period=regime.period(supply),
-        )
-    assert refused.value.translated_message == "aggregation.oss_ioss.errors.detail_rate_kind_unsupported"
-
-
-def _first_day_of_the_french_super_reduced_rate(operation: PinnedAuthorityOperation) -> date:
-    for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants:
-        selectors = {selector.name: selector.value for selector in variant.selectors}
-        if selectors.get("member_state") == "fr" and selectors.get("kind") == "super_reduced":
-            assert variant.valid_from is not None
-            return variant.valid_from
-    raise AssertionError("the published schedule declares no French super-reduced rate")
-
-
-@pytest.mark.parametrize("regime", _REGIMES, ids=_regime_ids)
-def test_a_date_before_the_published_rates_is_refused_not_priced(
+def test_a_date_before_the_published_rates_refuses_a_figure_the_projection_does_not_explain(
     operation: PinnedAuthorityOperation, regime: _Regime
 ) -> None:
     earliest = min(
@@ -366,7 +333,7 @@ def test_a_date_before_the_published_rates_is_refused_not_priced(
                     country="FR",
                     tier="general",
                     base="100.00",
-                    cuota="20.00",
+                    cuota="19.60",
                     supply_date=uncovered,
                 ),
             ),

@@ -49,7 +49,7 @@ def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
 
 
 def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholding() -> None:
-    """M115 count/base come from retenciones aggregation; retención remains the registry formula."""
+    """M115 count/base come from retenciones aggregation; box 03 is the withholding practised, not 19 % of the base."""
 
     modelo, catalogues = bundled_modelo_components("115")
     snapshot = build_snapshot(
@@ -68,10 +68,14 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
     assert casillas["02"].input_kind is InputKind.BOUND
     assert casillas["02"].binding == "modelo-115-base-retenciones"
     assert bindings["modelo-115-base-retenciones"].source == "retenciones_aggregation"
+    assert casillas["03"].input_kind is InputKind.BOUND
+    assert casillas["03"].binding == "modelo-115-retenciones"
+    assert bindings["modelo-115-retenciones"].source == "retenciones_aggregation"
 
     binding_values = {
         "modelo-115-perceptores": Decimal("1"),
         "modelo-115-base-retenciones": Decimal("2700.00"),
+        "modelo-115-retenciones": Decimal("513.01"),
     }
     inputs = {
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
@@ -86,5 +90,5 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
 
     assert result.values["01"] == Decimal("1")
     assert result.values["02"] == Decimal("2700.00")
-    assert result.values["03"] == Decimal("513.00")
-    assert result.values["05"] == Decimal("513.00")
+    assert result.values["03"] == Decimal("513.01")
+    assert result.values["05"] == Decimal("513.01")

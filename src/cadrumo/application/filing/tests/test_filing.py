@@ -79,7 +79,6 @@ _M115_CASILLA_02: CasillaId = validated_casilla_id("02", surface="test_filing.ca
 _M115_CASILLA_03: CasillaId = validated_casilla_id("03", surface="test_filing.casilla")
 _M115_CASILLA_04: CasillaId = validated_casilla_id("04", surface="test_filing.casilla")
 _M115_CASILLA_05: CasillaId = validated_casilla_id("05", surface="test_filing.casilla")
-_M115_CASILLA_03_TRACE: tuple[CasillaId, ...] = (_M115_CASILLA_02,)
 _M115_CASILLA_05_TRACE: tuple[CasillaId, ...] = (_M115_CASILLA_03, _M115_CASILLA_04)
 
 _M123_CASILLA_01: CasillaId = validated_casilla_id("01", surface="test_filing.casilla")
@@ -308,6 +307,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
         inputs={
             _M115_CASILLA_01: Decimal("1"),
             _M115_CASILLA_02: Decimal("1250.50"),
+            _M115_CASILLA_03: Decimal("237.60"),
             _M115_CASILLA_04: Decimal("10.00"),
         },
         schema_provider=_unscoped_schema_provider(),
@@ -317,8 +317,8 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert draft.schema_version == "registry:115:2019-y-siguientes"
     assert {_M115_CASILLA_03, _M115_CASILLA_05} <= set(values)
-    assert values[_M115_CASILLA_03].kind is ModeloValueKind.COMPUTED
-    assert values[_M115_CASILLA_03].formula_trace_casilla_ids == _M115_CASILLA_03_TRACE
+    assert values[_M115_CASILLA_03].value == Decimal("237.60")
+    assert values[_M115_CASILLA_05].kind is ModeloValueKind.COMPUTED
     assert values[_M115_CASILLA_05].formula_trace_casilla_ids == _M115_CASILLA_05_TRACE
 
 
@@ -604,6 +604,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint(operation: Pi
         inputs={
             _M115_CASILLA_01: Decimal("1"),
             _M115_CASILLA_02: Decimal("1250.50"),
+            _M115_CASILLA_03: Decimal("237.60"),
             _M115_CASILLA_04: Decimal("10.00"),
         },
         schema_provider=schema_provider,

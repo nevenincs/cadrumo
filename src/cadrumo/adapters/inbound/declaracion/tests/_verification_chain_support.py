@@ -577,7 +577,7 @@ _M390_PREVIOUS_FILING_BINDING_IDS = (
     "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
 )
 
-_COMPUTED_CASILLAS_M115: frozenset[CasillaId] = frozenset(validated_casilla_id(_v) for _v in ("03", "05"))
+_COMPUTED_CASILLAS_M115: frozenset[CasillaId] = frozenset(validated_casilla_id(_v) for _v in ("05",))
 
 _COMPUTED_CASILLAS_M123_2019: frozenset[CasillaId] = frozenset(validated_casilla_id(_v) for _v in ("06", "08"))
 

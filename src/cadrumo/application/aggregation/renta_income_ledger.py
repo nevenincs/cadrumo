@@ -25,7 +25,7 @@ cumulative window are excluded with a traceable issue record.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import NamedTuple
@@ -237,6 +237,7 @@ def aggregate_renta_income_ledger(
 
     observations: list[RentaIncomeObservation] = []
     issues: list[RentaIncomeLedgerAggregationIssue] = []
+    receipts_by_invoice = None if criteria is None else _active_receipts_by_invoice(transactions, resolved_invoices)
 
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
@@ -244,6 +245,7 @@ def aggregate_renta_income_ledger(
         outcome = _classify_income_transaction(
             transaction,
             invoices=resolved_invoices,
+            receipts_by_invoice=receipts_by_invoice,
             bucket_id=bucket_id,
             cumulative_start=window.start,
             cumulative_end=window.end,
@@ -269,6 +271,7 @@ def aggregate_renta_income_ledger(
         if criteria is None
         else rectificativa_reading(
             resolved_invoices,
+            transactions,
             bucket_id=bucket_id,
             window_start=window.start,
             window_end=window.end,
@@ -450,6 +453,7 @@ def aggregate_renta_m100_income_ledger(
         if criteria is None
         else rectificativa_reading(
             resolved_invoices,
+            transactions,
             bucket_id=bucket_id,
             window_start=window_start,
             window_end=window_end,
@@ -745,6 +749,7 @@ def _project_income_onto_casilla(
     observations: list[RentaIncomeObservation] = []
     issues: list[RentaIncomeLedgerAggregationIssue] = []
     unadmitted: list[RentaIncomeObservation] = []
+    receipts_by_invoice = None if criteria is None else _active_receipts_by_invoice(transactions, invoices)
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
@@ -752,6 +757,7 @@ def _project_income_onto_casilla(
         outcome = _classify_income_transaction(
             transaction,
             invoices=invoices,
+            receipts_by_invoice=receipts_by_invoice,
             bucket_id=bucket_id,
             cumulative_start=window_start,
             cumulative_end=window_end,
@@ -777,10 +783,27 @@ def _project_income_onto_casilla(
     return _ProjectedIncome(tuple(observations), tuple(issues), tuple(unadmitted))
 
 
+def _active_receipts_by_invoice(
+    transactions: TransactionCatalogue, invoices: InvoiceCatalogue
+) -> dict[str, list[Transaction]]:
+    """Group the active rows each issued invoice links back, for what they settle together."""
+    grouped: dict[str, list[Transaction]] = {}
+    for row in transactions.values():
+        invoice = None if row.invoice_id is None else invoices.get(row.invoice_id)
+        if (
+            invoice is not None
+            and row.lifecycle_state is TransactionLifecycleState.ACTIVE
+            and row.transaction_id in invoice.linked_transaction_ids
+        ):
+            grouped.setdefault(invoice.invoice_id, []).append(row)
+    return grouped
+
+
 def _classify_income_transaction(
     transaction: Transaction,
     *,
     invoices: InvoiceCatalogue,
+    receipts_by_invoice: Mapping[str, Sequence[Transaction]] | None,
     bucket_id: str,
     cumulative_start: date,
     cumulative_end: date,
@@ -847,7 +870,7 @@ def _classify_income_transaction(
         gross_amount=gross_amount,
         filing_date=filing_date,
         target_casilla_id=target_casilla_id,
-        allocate_part_payments=criteria is not None,
+        receipts_by_invoice=receipts_by_invoice,
     )
 
 
@@ -943,11 +966,11 @@ def _receipt_unresolved(
     # Under accrual a correction reduces the year's income, so money coming in on one has no reading.
     if is_rectificativa(invoice):
         return ImputationUnresolved.RECTIFICATIVA_WITH_RECEIPT
-    # A shared receipt of an invoice whose figures cannot be shared out stands for nothing known.
+    # A shared receipt of an invoice whose figures cannot be shared out, or a lone receipt
+    # above the invoice, stands for nothing known: cash past the invoice is not its income.
     if (
-        len(invoice.linked_transaction_ids) != 1
-        and renta_income_evidence.part_payment_share(invoice, transaction) is None
-    ):
+        len(invoice.linked_transaction_ids) != 1 or renta_income_evidence.receipt_overpays_invoice(invoice, transaction)
+    ) and renta_income_evidence.part_payment_share(invoice, transaction) is None:
         return ImputationUnresolved.ACCRUAL_UNKNOWN
     return None
 
@@ -993,7 +1016,7 @@ def _income_observation(
     gross_amount: Decimal,
     filing_date: date,
     target_casilla_id: CasillaId,
-    allocate_part_payments: bool = False,
+    receipts_by_invoice: Mapping[str, Sequence[Transaction]] | None = None,
 ) -> RentaIncomeObservation:
     """Enrich an eligible income row with invoice evidence and withholding."""
     transaction_id = transaction.transaction_id
@@ -1004,7 +1027,7 @@ def _income_observation(
         invoices=invoices,
         bucket_id=bucket_id,
         transaction=transaction,
-        allocate_part_payments=allocate_part_payments,
+        receipts_by_invoice=receipts_by_invoice,
     )
 
     # The linked invoice's own base takes precedence over the transaction's tax

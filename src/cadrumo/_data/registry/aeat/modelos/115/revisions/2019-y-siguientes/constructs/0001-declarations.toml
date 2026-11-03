@@ -14,9 +14,8 @@ source_refs = [
     "aeat-calendario-contribuyente-2026",
 ]
 casilla_ids = ["01", "02", "03", "04", "05"]
-bindings = ["modelo-115-perceptores", "modelo-115-base-retenciones"]
-formulas = ["modelo-115-retenciones", "modelo-115-resultado-ingresar"]
-parameters = ["irpf.urban_rental_withholding_rate"]
+bindings = ["modelo-115-perceptores", "modelo-115-base-retenciones", "modelo-115-retenciones"]
+formulas = ["modelo-115-resultado-ingresar"]
 extraction_profiles = ["modelo-115-declaracion-pdf"]
 live_cross_references = ["modelo-115-static-official", "modelo-115-filed-declarations-read"]
 workbook_parity_refs = ["modelo-115-dr-xls"]

@@ -22,6 +22,7 @@ from ...domain.calculations.registry.third_party_declaration_roles import (
     resolve_third_party_declaration_role_catalogue,
 )
 from ...domain.invoices.business_premises import SITUACIONES_CON_REFERENCIA_CATASTRAL
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ...domain.iva.schema import InvoiceKind
@@ -38,6 +39,7 @@ from .source_observations import (
     invoice_source_kind,
     is_rectificativa,
     m347_category_exclusion,
+    rectified_invoice,
 )
 
 
@@ -111,6 +113,9 @@ _M347_GOODS_EXCLUSION_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-33.2.g",)
 
 
 _M347_NET_TOTAL_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-33", "rd-1065-2007:art-34.4")
+
+
+_M347_NETTING_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-34.4", "rd-1065-2007:art-35")
 
 
 _M347_WITHHELD_ISSUED_LEGAL_REFS: tuple[str, ...] = (
@@ -221,26 +226,28 @@ def _m347_nonpositive_total_advisory(
     )
 
 
-def _m347_floored_nonpositive_total_advisory(
+def _m347_earlier_year_modification_left_out_advisory(
     declarable: M347DeclarableSet,
     m347_items: Sequence[ObservedInvoice],
     *,
     context: CalculationSourceContext,
     resolver_id: str,
 ) -> CalculationSourceDiagnostic | None:
-    """Name the counterparties a floored bucket leaves out because their net total is nil or negative.
+    """Name the corrections of an earlier year whose counterparty has no record this year to carry them.
 
-    Art. 33.1 relates a party whose operations "hayan superado" the floor, and
-    a total netted to nothing or below by its rectifications (art. 34.4) never
-    exceeds it, so no record is emitted. The record design nonetheless carries
-    an "N" sign for a negative annual amount and no text in the corpus says
-    whether such a party must still be related, so the omission is disclosed.
+    RD 1065/2007 art. 35.2 has a correction consigned in the year it happens where
+    the operation "debió incluirse" in an earlier declaration, and the record's "N"
+    sign exists for an annual amount below zero. Art. 33.1 relates only a party
+    whose operations of the year exceed the floor, and whether the earlier
+    operation had to be declared turns on that earlier year's total. Nothing in
+    the corpus says how the two meet for a party this year leaves below the floor.
     """
     left_out = sorted(
         invoice.invoice_number
         for invoice, observation in m347_items
-        if observation.operation_clave is not None
-        and declarable.leaves_out_floored_nonpositive(observation.party_tax_id, observation.operation_clave)
+        if observation.earlier_year_modification
+        and observation.operation_clave is not None
+        and not declarable.admits(observation.party_tax_id, observation.operation_clave)
     )
     if not left_out:
         return None
@@ -248,74 +255,70 @@ def _m347_floored_nonpositive_total_advisory(
         reason="unsettled_legal_reading",
         source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
         resolver_id=resolver_id,
-        source_ref="m347-threshold-bucket:nonpositive-total-left-out",
+        source_ref="m347-threshold-bucket:earlier-year-modification-left-out",
         message=(
-            f"Modelo 347 operations ({', '.join(left_out)}) net to zero or less for their counterparty once "
-            "the rectifications are netted (RD 1065/2007 art. 34.4), so no record is declared for ejercicio "
-            f"{context.filing_year}: art. 33.1 relates a party only above its floor. Whether a negative annual "
-            "total must still be related, as the record's N sign allows, is not settled."
+            f"Modelo 347 corrections of an earlier year ({', '.join(left_out)}) have no record for ejercicio "
+            f"{context.filing_year}: their counterparty's operations of the year stay below the floor (RD 1065/2007 "
+            "art. 33.1), and art. 35.2 does not say whether such a party must still be related to carry them."
         ),
         remedy=(
-            "Check whether these counterparties must still appear with a negative annual amount before filing; "
-            "the declaration shown leaves them out."
+            "If the corrected operation was declared in its own year, check whether the correction must still appear "
+            "for this counterparty before filing; the declaration shown leaves it out."
         ),
-        asserted_legal_refs=_M347_NET_TOTAL_LEGAL_REFS,
+        asserted_legal_refs=_M347_NETTING_LEGAL_REFS,
     )
 
 
 def _m347_rectificativa_netting_advisory(
     m347_items: Sequence[ObservedInvoice],
-    source_invoices: Sequence[Invoice],
+    catalogue: InvoiceCatalogue,
     *,
     context: CalculationSourceContext,
     resolver_id: str,
 ) -> CalculationSourceDiagnostic | None:
-    """Name the rectificativas netted as reductions, and those whose rectified invoice is not in this ejercicio.
+    """Name the rectificativas netted as reductions, and those whose rectified invoice cannot be dated.
 
-    The invoice stores a correction as a non-negative amount and its class, not
-    the direction of the correction, so every rectificativa nets as a reduction
-    of the amount it states. A rectificativa that raises the price, or replaces
-    the original in full, would net the wrong way, and one rectifying an
-    invoice not related in this ejercicio reduces this year's total although
-    art. 34.4 speaks of operations "en el mismo año natural".
+    The law is settled: art. 34.4 nets the corrections of the year and counts "las
+    alteraciones del precio", and art. 35.2 brings a correction of another year
+    into the amount of the year it happens. What is missing is a fact. The invoice
+    stores a correction as a non-negative amount and its class, not its direction,
+    so every rectificativa nets as a reduction of the amount it states, and one
+    that raises the price or replaces the original in full nets the wrong way.
     """
     rectificativas = [invoice for invoice, _observation in m347_items if is_rectificativa(invoice)]
     if not rectificativas:
         return None
-    related = {(invoice.kind, invoice.counterparty_tax_id, invoice.invoice_number) for invoice in source_invoices}
-    outside = sorted(
-        invoice.invoice_number
-        for invoice in rectificativas
-        if (invoice.kind, invoice.counterparty_tax_id, invoice.rectifies_invoice_number) not in related
+    undated = sorted(
+        invoice.invoice_number for invoice in rectificativas if rectified_invoice(invoice, catalogue) is None
     )
     message = (
         f"Modelo 347 nets the rectificativas {', '.join(sorted(item.invoice_number for item in rectificativas))} "
         "as reductions of their counterparty's total for ejercicio "
-        f"{context.filing_year} (RD 1065/2007 art. 34.4). Each records its amount but not whether it lowers "
+        f"{context.filing_year} (RD 1065/2007 arts. 34.4 and 35.2). Each records its amount but not whether it lowers "
         "the price, so one that raises it or replaces the original in full nets the wrong way."
     )
-    if outside:
+    if undated:
         message += (
-            f" {', '.join(outside)} rectify an invoice not related in this ejercicio, and art. 34.4 nets "
-            "operations of the same año natural."
+            f" {', '.join(undated)} correct an invoice not in your records, so they count with this year's "
+            "operations against the floor."
         )
     return CalculationSourceDiagnostic(
-        reason="unsettled_legal_reading",
+        reason="source_issue",
         source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
         resolver_id=resolver_id,
         source_ref="m347-rectificativa:netted-as-reduction",
         message=message,
         remedy=(
-            "Check each listed rectificativa: one that raises the price, replaces the original in full or "
-            "corrects an earlier ejercicio needs its counterparty's declarado amount corrected before filing."
+            "Check each listed rectificativa: one that raises the price or replaces the original in full needs its "
+            "counterparty's declarado amount corrected before filing."
         ),
-        asserted_legal_refs=("rd-1065-2007:art-34.4",),
+        asserted_legal_refs=_M347_NETTING_LEGAL_REFS,
     )
 
 
 def m347_declaration_advisories(
     observed_items: Sequence[ObservedInvoice],
-    source_invoices: Sequence[Invoice],
+    catalogue: InvoiceCatalogue,
     *,
     context: CalculationSourceContext,
     resolver_id: str,
@@ -336,9 +339,8 @@ def m347_declaration_advisories(
     - a bucket with no floor admits a counterparty whose net total is zero or
       negative, which the bucket declares but whose place on the declaration
       no rule settles;
-    - a bucket with a floor leaves out a counterparty whose rectifications net
-      its total to zero or below, which the floor does not relate although the
-      record's sign field could carry it;
+    - a correction of an earlier year whose counterparty stays below the floor
+      this year has no record to carry it;
     - rectificativas are netted as reductions of the amount they state, a
       direction the invoice record does not carry.
 
@@ -373,7 +375,7 @@ def m347_declaration_advisories(
     )
     if nonpositive_advisory is not None:
         diagnostics.append(nonpositive_advisory)
-    left_out_advisory = _m347_floored_nonpositive_total_advisory(
+    left_out_advisory = _m347_earlier_year_modification_left_out_advisory(
         declarable,
         m347_items,
         context=context,
@@ -383,7 +385,7 @@ def m347_declaration_advisories(
         diagnostics.append(left_out_advisory)
     netting_advisory = _m347_rectificativa_netting_advisory(
         m347_items,
-        source_invoices,
+        catalogue,
         context=context,
         resolver_id=resolver_id,
     )

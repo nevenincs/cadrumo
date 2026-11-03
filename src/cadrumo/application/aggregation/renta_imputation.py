@@ -133,7 +133,10 @@ class ImputationUnresolved(StrEnum):
     """A correction states a retencion, and what that does to the credit already taken is not settled."""
 
     RECTIFICATIVA_WITH_RECEIPT = "rectificativa_with_receipt"
-    """Money came in on a correction, which contradicts reading it as a reduction of accrued income."""
+    """Money moved towards a correction, which contradicts reading it as a reduction of the accrued figure."""
+
+    RECTIFICATIVA_REFUND_UNDER_CASH = "rectificativa_refund_under_cash"
+    """Under cash, money returned on a correction: art. 7.2 places cobros and pagos, not which year a refund nets."""
 
 
 #: The binding sources whose resolvers place activity income and expense in an ejercicio by the
@@ -515,9 +518,9 @@ def rows_touching_window(
     """Keep the rows banked in the window or linked to an invoice accruing in it or carried into it.
 
     A date stated on the row counts as its invoice's does. Only these can land in
-    the window, so other years' rows raise no refusal here. Every receipt of a carried
-    invoice stays, including one banked in an earlier cash year, because what it settled
-    decides the rest the window computes.
+    the window, so other years' rows raise no refusal here. Every row of a kept row's
+    invoice stays, including one banked in another year, because what the rows settle
+    together decides what each of them computes.
     """
 
     def carried_in(accrual: date | None) -> bool:
@@ -534,7 +537,10 @@ def rows_touching_window(
         accrual = linked_accrual_date(None if invoice_id is None else invoices.get(invoice_id), kind=kind)
         return (accrual is not None and start <= accrual <= end) or carried_in(accrual) or carried_in(row.accrual_date)
 
-    return TransactionCatalogue.from_transactions(tuple(row for row in transactions.values() if touches(row)))
+    touching_invoices = {invoice_id_of(row) for row in transactions.values() if touches(row)} - {None}
+    return TransactionCatalogue.from_transactions(
+        tuple(row for row in transactions.values() if touches(row) or invoice_id_of(row) in touching_invoices)
+    )
 
 
 def rows_left_out_summary(

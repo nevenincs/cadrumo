@@ -3,8 +3,8 @@
 Modelo 115 is the quarterly retención-arrendamiento autoliquidación (RD
 439/2007 art. 100, Orden de 20 de noviembre de 2000): a property-rental
 withholder files 1T–4T each year, declaring the number of perceptores
-(casilla 01), the rental base (casilla 02, manual), and the 19 % withholding
-computed from base (casilla 03, formula). Modelo 180 is the annual resumen:
+(casilla 01), the rental base (casilla 02) and the withholdings practised
+(casilla 03), each bound from the ledger. Modelo 180 is the annual resumen:
 it aggregates the four quarters' monetary figures via
 ``source = "relation_prefill"`` relations (``annual_summary``, ``op=sum``),
 binding ids ``modelo-180-115-base-anual`` and
@@ -33,8 +33,7 @@ Both calculated resumen years are recorded through the
 ``cross-year observation`` and cross-checked against the authorization
 manifest via ``the cross-year behavior assertion``.
 
-Grounding (non-tautological): the 115 casilla 03 (retenciones) is _produced
-by the registry engine from the manual base (19 % × casilla 02). The 180
+Grounding (non-tautological): the 180
 assertion is the *wiring* invariant — each monetary 180 output equals the sum
 across all four 115 quarters — grounded in the AEAT form instructions
 (resúmenes de retenciones: "suma de los importes del período"). The test uses
@@ -91,6 +90,7 @@ _M115_BASE_RETENCIONES_BINDING: BindingId = "modelo-115-base-retenciones"
 _M115_BOUND_BINDINGS_BY_CASILLA: dict[CasillaId, BindingId] = {
     _M115_PERCEPTORES_CASILLA: _M115_PERCEPTORES_BINDING,
     _M115_BASE_CASILLA: _M115_BASE_RETENCIONES_BINDING,
+    _M115_RETENCIONES_CASILLA: "modelo-115-retenciones",
 }
 _M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
 _M180_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
@@ -102,35 +102,38 @@ _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retencio
 #
 # Casilla 01 = perceptores (integer, manual)
 # Casilla 02 = base retenciones (money, manual)
-# Casilla 03 = retenciones (computed: 19% × casilla 02)
+# Casilla 03 = retenciones practised (bound, a cent off 19 % of the base on purpose)
 # Casilla 04 = resultado anteriores autoliquidaciones (manual, zero here)
 # Casilla 05 = resultado a ingresar (computed: 03 − 04)
 #
 # The 180 wiring assertion is: for each of 01, 02, 03 the annual total
-# equals the sum of the four 115 quarterly values. Casilla 03 is _produced
-# by the engine (19 % of 02); we supply distinct bases so the engine computes
-# distinct retenciones and the sum is unambiguous.
+# equals the sum of the four 115 quarterly values. Distinct values make the sum
+# unambiguous.
 # ---------------------------------------------------------------------------
 
 _YEAR_N_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
         _M115_PERCEPTORES_CASILLA: Decimal("2"),
         _M115_BASE_CASILLA: Decimal("1200.00"),
+        _M115_RETENCIONES_CASILLA: Decimal("228.01"),
         _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
     },
     "2T": {
         _M115_PERCEPTORES_CASILLA: Decimal("2"),
         _M115_BASE_CASILLA: Decimal("1350.00"),
+        _M115_RETENCIONES_CASILLA: Decimal("256.51"),
         _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
     },
     "3T": {
         _M115_PERCEPTORES_CASILLA: Decimal("3"),
         _M115_BASE_CASILLA: Decimal("900.00"),
+        _M115_RETENCIONES_CASILLA: Decimal("171.01"),
         _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
     },
     "4T": {
         _M115_PERCEPTORES_CASILLA: Decimal("2"),
         _M115_BASE_CASILLA: Decimal("1100.00"),
+        _M115_RETENCIONES_CASILLA: Decimal("209.01"),
         _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
     },
 }
@@ -139,21 +142,25 @@ _YEAR_N_PLUS_1_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
         _M115_PERCEPTORES_CASILLA: Decimal("1"),
         _M115_BASE_CASILLA: Decimal("750.00"),
+        _M115_RETENCIONES_CASILLA: Decimal("142.51"),
         _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
     },
     "2T": {
         _M115_PERCEPTORES_CASILLA: Decimal("2"),
         _M115_BASE_CASILLA: Decimal("2000.00"),
+        _M115_RETENCIONES_CASILLA: Decimal("380.01"),
         _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
     },
     "3T": {
         _M115_PERCEPTORES_CASILLA: Decimal("2"),
         _M115_BASE_CASILLA: Decimal("1800.00"),
+        _M115_RETENCIONES_CASILLA: Decimal("342.01"),
         _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
     },
     "4T": {
         _M115_PERCEPTORES_CASILLA: Decimal("3"),
         _M115_BASE_CASILLA: Decimal("1600.00"),
+        _M115_RETENCIONES_CASILLA: Decimal("304.01"),
         _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
     },
 }
@@ -252,10 +259,9 @@ def _compute_year_115_totals(
 
 
 def test_modelo_115_quarterly_engine_produces_retenciones_casilla(tmp_path: Path) -> None:
-    """The 115 engine computes retenciones (casilla 03) as 19 % of the base.
+    """The 115 engine carries the withholdings practised into casilla 03, not 19 % of the base.
 
-    The value is _produced by the real engine from the manual base input, never
-    hand-computed against the formula under test. This is the seed fed to the
+    The seed is deliberately a cent off the rate: this is the figure fed to the
     180 reconciliation.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -264,7 +270,7 @@ def test_modelo_115_quarterly_engine_produces_retenciones_casilla(tmp_path: Path
             period="1T",
             casilla_inputs=_YEAR_N_QUARTERS["1T"],
         )
-    assert result.values[_M115_RETENCIONES_CASILLA] > Decimal("0")
+    assert result.values[_M115_RETENCIONES_CASILLA] == _YEAR_N_QUARTERS["1T"][_M115_RETENCIONES_CASILLA]
     assert result.values[_M115_PERCEPTORES_CASILLA] == _YEAR_N_QUARTERS["1T"][_M115_PERCEPTORES_CASILLA]
 
 

@@ -14,7 +14,7 @@ re-pointed to the ``retenciones_aggregation`` source, simulated here via
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from functools import cache
 
@@ -23,8 +23,11 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
+from ....core.casilla_id import validated_casilla_id
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
+from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
@@ -38,6 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _PERCEPTOR_BINDING_ID = "modelo-180-115-perceptores-anual"
 _M115_PERCEPTOR_BINDING_ID = "modelo-115-perceptores"
 _M115_BASE_BINDING_ID = "modelo-115-base-retenciones"
+_M115_RETENCIONES_BINDING_ID = "modelo-115-retenciones"
 _M111_BINDING_VALUES = {
     "modelo-111-trabajo-dinerario-perceptores": Decimal("1"),
     "modelo-111-trabajo-dinerario-base": Decimal("100.00"),
@@ -237,9 +241,62 @@ def test_resolver_materialises_modelo_115_count_and_base_from_application_port()
     assert resolution.binding_values == {
         _M115_PERCEPTOR_BINDING_ID: Decimal("1"),
         _M115_BASE_BINDING_ID: Decimal("2700.00"),
+        _M115_RETENCIONES_BINDING_ID: Decimal("513.00"),
     }
     assert resolution.diagnostics == ()
     assert {item.source_ref for item in resolution.provenance} == {"perceptor:B12345678"}
+
+
+def test_modelo_115_box_03_and_the_modelo_180_total_are_the_withholdings_practised() -> None:
+    """Rent of 1000.03 a month, 190.01 withheld: 570.03 a quarter, 2280.12 a year, against rows of 2280.12.
+
+    19 % of the quarter's base gives 570.02, and four of those 2280.08. Box 03 of
+    Modelo 115 is "Retenciones e ingresos a cuenta" and the Modelo 180 total is
+    "la suma de las cantidades reflejadas" in the rows' withholding field.
+    """
+    repository = _InMemoryRetencionObservationRepository()
+    quarters = {"1T": (1, 2, 3), "2T": (4, 5, 6), "3T": (7, 8, 9), "4T": (10, 11, 12)}
+    quarter_withheld: list[Decimal] = []
+    for code, months in quarters.items():
+        period = Period.from_year_and_code(2026, code)
+        repository.replace_observations(
+            modelo="115",
+            filing_year=2026,
+            period=period,
+            observations=[
+                RetencionObservation(
+                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                    source_object_id=f"rent-ledger-row-{month:02d}",
+                    perceptor_nif="B12345678",
+                    perceptor_name="Arrendador Ejemplo SL",
+                    scheme=RetencionScheme("arrendamiento_urbano"),
+                    taxable_base=Decimal("1000.03"),
+                    retencion_amount=Decimal("190.01"),
+                    accrued_on=f"2026-{month:02d}-15",
+                )
+                for month in months
+            ],
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+        )
+        snapshot = _authority_snapshot("115", 2026, code)
+        resolution = _resolver(repository).resolve(
+            _context_for(modelo="115", filing_year=2026, period=code, revision=snapshot.revision),
+        )
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs={
+                **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, resolution.binding_values),
+                validated_casilla_id("04"): Decimal("0"),
+            },
+            binding_values=resolution.binding_values,
+            date_context={"filing_period": date(2026, 12, 31)},
+        )
+        assert result.values[validated_casilla_id("02")] == Decimal("3000.09")
+        assert result.values[validated_casilla_id("03")] == Decimal("570.03")
+        assert result.values[validated_casilla_id("05")] == Decimal("570.03")
+        quarter_withheld.append(result.values[validated_casilla_id("03")])
+
+    assert sum(quarter_withheld, Decimal("0")) == Decimal("2280.12")
 
 
 def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_application_port() -> None:
@@ -345,6 +402,7 @@ def test_resolver_materialises_empty_modelo_115_only_for_exact_no_relevant_payme
     assert resolution.binding_values == {
         _M115_PERCEPTOR_BINDING_ID: Decimal("0"),
         _M115_BASE_BINDING_ID: Decimal("0"),
+        _M115_RETENCIONES_BINDING_ID: Decimal("0"),
     }
     assert len(resolution.diagnostics) == 1
     assert "explicit no-relevant-payment attestation" in resolution.diagnostics[0].message

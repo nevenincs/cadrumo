@@ -146,6 +146,12 @@ class InvoiceObservation(BaseModel):
     rectified_year: FilingYear | None = None
     rectified_period: str | None = Field(default=None, max_length=16)
     rectified_base_previous: Decimal | None = None
+    earlier_year_modification: bool = False
+    """The operation corrects one of an earlier year (RD 1065/2007 art. 35.2).
+
+    Modelo 347 keeps its amount in the total declared but not among the operations
+    art. 33.1 compares with the floor, which are those "durante el año natural".
+    """
     party_legal_name: str | None = Field(default=None, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
     cash_accounting_operation: bool = False
     """The operation falls under the régimen especial del criterio de caja (LIVA arts. 163 decies ff.).
@@ -987,6 +993,9 @@ def m347_declarable_set(
     The one place the row family, the declarante summary and the source
     resolver's advisories obtain the declarable set from, so every consumer
     reads the same per-(party, clave) totals the floor was compared against.
+    A correction of an earlier year adds nothing to the comparison: it enters the
+    amount declared (RD 1065/2007 art. 35.2), but the floor of art. 33.1 is about
+    the operations of this year.
 
     Args:
         observations: Invoice observations; those without an operation_clave
@@ -1001,7 +1010,8 @@ def m347_declarable_set(
         if observation.operation_clave is None:
             continue
         key = (observation.party_tax_id, observation.operation_clave)
-        clave_totals[key] = clave_totals.get(key, Decimal("0")) + _invoice_total_amount(observation)
+        amount = Decimal("0") if observation.earlier_year_modification else _invoice_total_amount(observation)
+        clave_totals[key] = clave_totals.get(key, Decimal("0")) + amount
     return m347_declarable_party_buckets(clave_totals, effective_date=effective_date)
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
@@ -89,8 +90,13 @@ def _declares_no_activity(work_unit: WorkUnit, target: CalculationRevision) -> b
     period = work_unit.period
     # An Exterior token such as EXT-1T files the calendar quarter it names, which carries the date.
     quarter = period.scheme_quarter
-    dated = period if quarter is None else Period.from_year_and_code(period.filing_year, quarter.value)
-    declaration = resolve_oss_ioss_regime_catalogue(effective_date=dated.end_date).no_activity
+    if quarter is not None:
+        effective_date = Period.from_year_and_code(period.filing_year, quarter.value).end_date
+    elif period.has_date_span():
+        effective_date = period.end_date
+    else:
+        effective_date = date(period.filing_year, 12, 31)
+    declaration = resolve_oss_ioss_regime_catalogue(effective_date=effective_date).no_activity
     if declaration is None:
         return False
     for binding_id, entered in target.binding_overrides.items():

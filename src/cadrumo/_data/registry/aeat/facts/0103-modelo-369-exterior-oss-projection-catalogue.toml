@@ -57,6 +57,7 @@ entries = [
   { key = "section.ioss_distance_sale_low_value.record", value = "modelo-369-importacion-t36910" },
   { key = "rate_code.general", value = "S" },
   { key = "rate_code.reduced", value = "R" },
+  { key = "rate_code.super_reduced", value = "R" },
   { key = "country_code.at", value = "AT" },
   { key = "country_code.be", value = "BE" },
   { key = "country_code.bg", value = "BG" },

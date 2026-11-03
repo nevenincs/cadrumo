@@ -35,22 +35,15 @@ _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
 )
 
 
-def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_double_count(
+def test_year_end_carry_partition_keeps_the_last_period_result_apart_from_carried_credit(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Carried-pending FIFO scenario: box 97 + box 662 = total pending, counted once.
+    """Box 97 holds the last period's own result; credit of earlier periods carried through it is box 662.
 
-    The case both pre-fix relations get wrong. 1T generates 100 carried forward;
-    2T applies 30 of it (70 remains, carries on); 4T generates 50. Everything
-    still pending (70 + 50 = 120) carries into 4T's autoliquidación, so the FIFO
-    partition puts ALL of it in box 97 and box 662 is zero.
-
-    Non-tautological oracle: the per-period relations would emit box 97 = 4T
-    generada = 50 and box 662 = sum(1T-3T generada) = 100 → 150, which both
-    DOUBLE-COUNTS the 30 already applied and mis-splits the carry. The AEAT
-    identity demands box 97 + box 662 == the year's total pending remaining
-    (120), counted once. This asserts that identity against the FIFO total, not
-    a per-period sum.
+    1T generates 100; 2T applies 30, leaving 70; 4T generates 50, so 120 is
+    pending at year end. Manual IVA 2025 p. 278, with 500 generated in 3T and 200
+    in 4T: "Casilla 97: 200", "Casilla 662: 500". Here box 97 is 50 and box 662 is
+    70, and the two still account for the 120 once.
     """
     states = (
         _state(filing_year=2026, period="1T", generated=Decimal("100.00"), available=Decimal("100.00")),
@@ -62,13 +55,9 @@ def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_dou
 
     partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
 
-    total_pending = sum((lot.remaining_amount for lot in report.lots if lot.source_filing_year == 2026), Decimal("0"))
-    assert total_pending == states[-1].available_end_amount
-    assert partition.last_period_amount + partition.generated_not_in_last_amount == total_pending
-    assert partition.last_period_amount == total_pending
-    assert partition.generated_not_in_last_amount == Decimal("0.00")
-    naive_per_period = Decimal("50.00") + Decimal("100.00")
-    assert partition.last_period_amount + partition.generated_not_in_last_amount != naive_per_period
+    assert partition.last_period_amount == Decimal("50.00")
+    assert partition.generated_not_in_last_amount == Decimal("70.00")
+    assert partition.total_year_remaining_amount == states[-1].available_end_amount
 
 
 def test_year_end_carry_partition_uncarried_credit_lands_in_box_662(
