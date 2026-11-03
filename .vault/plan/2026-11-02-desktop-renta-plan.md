@@ -16,7 +16,7 @@ related:
   - '[[2026-11-02-desktop-renta-renta-family-canonical-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:9b4501fc58b5e7949b1081ca32eb2ff46b5f6847fb3824380617caaba4052659'
+body_hash: 'sha256:ccde4a98648262a79c9f288f7aeb8b85fdd6fd3870d1e93ffd8be7480e22cd78'
 ---
 
 # `desktop-renta` plan
@@ -110,7 +110,7 @@ The window renders the outline, household, credits, election, comparison, settle
 
 Stories, Playwright journeys, the no-tax-data guard and locale coverage prove the workspace in en, es, ca and hu.
 
-- [ ] `P05.S19` - [Sonnet high] add Storybook stories over served fixtures for every element state and Playwright journeys for a salaried and an activity filer; `native/desktop/frontend/tests`.
+- [x] `P05.S19` - [Sonnet high] add Storybook stories over served fixtures for every element state and Playwright journeys for a salaried and an activity filer; `native/desktop/frontend/tests`.
 - [ ] `P05.S20` - [Sonnet high] run the no-tax-data guard, desktop chrome and locale parity checks for en, es, ca and hu; `dev/quality/tests/test_window_holds_no_tax_data.py`.
 
 ## Parallelization

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc1e466f4fdcf12bf7b7b1cd02a2f3d3a59048cc574f00d3ab8389614fe48843'
+body_hash: 'sha256:4fcff1f1a80a7ee95e2068d8b8dc8e04f5902189471c2a99d8b7637cceeec63e'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -673,6 +673,32 @@ related:
 - `S43` `verify:` `pytest projected-year, comparison, carry gate, Madrid deduction suites` -> `pass`
 - `S43` `verify:` `pytest wide aggregation/calculations/modelo run` -> `fail`
 - `S43` `by:` `vaultspec-standard-executor`
+- `S19` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S19` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S19` `M` `native/desktop/frontend/src/dev/fixtures/imputationElection.json`
+- `S19` `M` `native/desktop/frontend/src/dev/fixtures/userProfile.json`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/form/FormView.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/Credits.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/OutlineNavigator.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/Settlement.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/Settlement.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/workspace/TaxationComparison.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/profile/ProfileEditor.stories.tsx`
+- `S19` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S19` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S19` `A` `native/desktop/frontend/src/components/modelo/workspace/Years.stories.tsx`
+- `S19` `A` `native/desktop/frontend/src/dev/servedRentaYears.ts`
+- `S19` `A` `native/desktop/frontend/tests/scenarios/renta-journeys.spec.ts`
+- `S19` `verify:` `tsc` -> `pass`
+- `S19` `verify:` `eslint` -> `pass`
+- `S19` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S19` `verify:` `storybook:build` -> `pass`
+- `S19` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S19` `verify:` `relay_contracts.py --check` -> `pass`
+- `S19` `verify:` `renta-journeys.spec.ts` -> `pass`
+- `S19` `verify:` `playwright scenarios modelo specs` -> `fail`
+- `S19` `verify:` `test_desktop_chrome` -> `fail`
+- `S19` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -725,3 +751,4 @@ related:
 - `S41` Hunks swept into WIP commit 3ab1f97ff4 plus a948bba8b4. 0500 is the base before compensation from 2022, 1391 = max(0, -0500), unobserved prior boxes refuse with typed `errors.calc.previous_filing_casillas_unobserved.` 0171 test failure dates from 0f570046bf (no stated imputation criterion), not 448b84d73d. Open for S20: registry formula parity on renta-resultado-ingresar-o-devolver 2024/2025 and `casilla_record_order` 1997-2148, window guard failure unidentified
 - `S38` WIP checkpoint a950a0438d then 6aa82fb235. TIPOTRIBUTACION design identical 2022-2025 so the role sits on the 2022 base only; redundant 2024/2025 overrides removed. `compares_taxation` served 2022-2025; 2020/2021 below support floor. The registry failure is `test_every_relation_prefill_binding_has_a_typed_source_coordinate` on 130/131 pagos-fraccionados bindings 2020-2025, outside S38's diff, carried to S20.
 - `S43` Commit 2441755ff6. Every `contains_date` gate replaced by `select_revision_metadata_for_year;` revision carry gate projects within the support span; Madrid deduction gate compares the snapshot's authored year. A 2026 Modelo 100 calculates end to end. Wide run 9988 passed, 83 failed: 81 trace to the Modelo 130 art. 32.1 split and `box_number` length from the renta-withholding merge 24e2cef114, plus `minimo_descendientes` and 2025 prorrata tests, none touching S43 paths. Supported-filing-years floor 2022 left as declared.
+- `S19` Commits 5e0ec02dfc fixtures, 3567b54052 stories and journeys. Final single re-record via the full producer; years from the registry incl. projected 2026 calculated. projectable true only for 2025/2026: the m130 projection mapping is authored for revision 2025 only. Two-earner `individual_lower_result` not recordable: the comparison models a single input set per household. 46 Playwright failures are raw chrome keys `(workspace.modelo.filing.*,` `iva_wallet.*)` from a chrome declaration mismatch shown by `test_desktop_chrome,` plus 2 pre-existing modelo-workspace scenarios; carried to S20.
