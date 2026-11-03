@@ -48,7 +48,10 @@ from .....application.actividad_asset.operations import (
     M130AccrualProjection,
 )
 from .....application.actividad_asset.schedule_walk import PlanFigureAbsence
+from .....application.actividad_asset.served_words import worded_limits, worded_list_row, worded_plan_row
 from .....application.operations.public_scalar import PublicDecimal
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import output_language
 from .....domain.renta.actividad_asset.claims import ClaimProjection
 from .....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from .....domain.renta.actividad_asset.election import (
@@ -221,7 +224,9 @@ class ActivityAssetActionStub:
         self.requests.append(("plan", asset_id))
         if self.plan_error is not None:
             raise self.plan_error
-        return ActivityAssetPlanProjection(
+        # The worker serves the sentences of the plan in the language asked; the stub serves them the same way.
+        language = OutputLanguage(output_language())
+        plan = ActivityAssetPlanProjection(
             profile_id=UUID(int=1),
             authority=ActivityAssetAuthorityProvenance(
                 logical_generation="a" * 64,
@@ -279,6 +284,12 @@ class ActivityAssetActionStub:
                 maximum_period_last_day=date(2034, 12, 31),
             ),
         )
+        return plan.model_copy(
+            update={
+                "rows": tuple(worded_plan_row(row, language) for row in plan.rows or ()),
+                "limits": None if plan.limits is None else worded_limits(plan.limits, language),
+            }
+        )
 
     def dispose(self, asset_id: str, disposal: ActivityAssetDisposalSnapshot) -> ActivityAssetHistory:
         self.requests.append(("dispose", (asset_id, disposal)))
@@ -315,7 +326,7 @@ class ActivityAssetActionStub:
             profile_id=UUID(int=1),
             authority=ActivityAssetAuthorityProvenance(logical_generation="a" * 64, reader_incarnation="b" * 64),
             outcome="succeeded",
-            rows=self.list_rows,
+            rows=tuple(worded_list_row(row, OutputLanguage(output_language())) for row in self.list_rows),
             default_year=self.register_default_year,
         )
 

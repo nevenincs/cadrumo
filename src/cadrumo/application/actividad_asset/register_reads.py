@@ -286,6 +286,7 @@ def _plan_row(
         claims=_plan_claims(revision, row.tax_year, context),
         minimum_through=_amount(min(basis, round_to_cents(minimum))) if minimum_reason_key is None else None,
         minimum_reason_key=minimum_reason_key,
+        minimum_has_no_table=minimum_reason_key == NO_TABLE_MINIMUM_REASON_KEY,
         minimum_complete=minimum_reason_key is None,
     )
 

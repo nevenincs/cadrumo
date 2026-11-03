@@ -10,11 +10,12 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Self
+from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -31,6 +32,7 @@ from ...domain.renta.actividad_asset.lifecycle import (
 )
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 from ...domain.renta.actividad_asset.schedule import last_day_covered
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.public_scalar import PublicDecimal
 from .fact_wording import (
     timeline_field_paths,
@@ -46,6 +48,8 @@ ACTIVITY_ASSET_LABEL_NAMESPACE: Final = "ledger.actividad_asset."
 DISPOSAL_FINDING_FAMILY: Final = "disposal_finding"
 PLAN_ADVISORY_FAMILY: Final = "plan_advisory"
 _REASON_FACT_KEY_LIMIT: Final = 64
+ServedWords = Annotated[str, Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)]
+"""A finished sentence a frontend shows as served, in the language its record names."""
 _REASON_FACT_VALUE_LIMIT: Final = 2048
 NON_DEDUCTIBLE_IVA_STATE_FAMILY: Final = "non_deductible_iva_state"
 
@@ -268,6 +272,10 @@ class ActivityAssetListRow(_ReadModel):
     pending: PublicDecimal | None = None
     opening_remedy_field_key: str | None = None
     """The catalogue word of the field that supplies the unknown opening amount, which leaves ``pending`` null."""
+    opening_remedy_words: ServedWords | None = None
+    """The sentence telling where to enter the unknown opening amount; set exactly when the field key is."""
+    words_language: OutputLanguage | None = None
+    """The language of the sentence this row carries."""
     pending_applies: bool = True
     """False once a baja is recorded: ``pending`` stays the basis less the deductions, but none is left to amortize."""
     findings: ActivityAssetFindingCounts
@@ -348,6 +356,10 @@ class ActivityAssetPlanRow(_ReadModel):
     absence_reason_facts: tuple[ActivityAssetReasonFact, ...] = ()
     absence_remedy_field_key: str | None = None
     """The catalogue word of the register field that supplies what the absence lacks, when entering it is the remedy."""
+    absence_reason_words: ServedWords | None = None
+    """The sentence for ``absence_reason_key`` filled in with its facts; null where it cannot be said whole."""
+    absence_remedy_words: ServedWords | None = None
+    """The sentence telling where to enter what the absence lacks; set exactly when the field key is."""
     applies: bool = True
     """Whether the year has something to work out: false for a known state of nothing to work out with no span open."""
     claimed: PublicDecimal
@@ -356,6 +368,9 @@ class ActivityAssetPlanRow(_ReadModel):
     claimable_refusal_key: str | None = None
     claimable_refusal_facts: tuple[ActivityAssetReasonFact, ...] = ()
     claimable_refusal_remedy_field_key: str | None = None
+    claimable_refusal_words: ServedWords | None = None
+    """The sentence for ``claimable_refusal_key`` filled in with its facts; null where it cannot be said whole."""
+    claimable_refusal_remedy_words: ServedWords | None = None
     edition: ActivityAssetEdition | None = None
     service_days: int | None = None
     calendar_days: int | None = None
@@ -367,8 +382,28 @@ class ActivityAssetPlanRow(_ReadModel):
     """
     minimum_reason_key: str | None = None
     """Why ``minimum_through`` is null."""
+    minimum_reason_words: ServedWords | None = None
+    """The sentence for ``minimum_reason_key``."""
+    minimum_has_no_table: bool = False
+    """True when ``minimum_through`` is null because the method has no table minimum: a year that adds nothing to the
+    reduction of cost, not a figure left unknown."""
     minimum_complete: bool = True
     """False when a year up to this one has no minimum authority."""
+    words_language: OutputLanguage | None = None
+    """The language of every sentence this year carries."""
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> Self:
+        served = (
+            self.absence_reason_words,
+            self.absence_remedy_words,
+            self.claimable_refusal_words,
+            self.claimable_refusal_remedy_words,
+            self.minimum_reason_words,
+        )
+        if any(words is not None for words in served) and self.words_language is None:
+            raise ValueError("served words name the language they are in")
+        return self
 
 
 class ActivityAssetPlanAdvisory(_ReadModel):
@@ -376,6 +411,9 @@ class ActivityAssetPlanAdvisory(_ReadModel):
 
     kind: ActivityAssetPlanAdvisoryKind
     label_key: str
+    words: ServedWords | None = None
+    """The advisory said whole."""
+    words_language: OutputLanguage | None = None
 
 
 class ActivityAssetLegalCitation(_ReadModel):
@@ -408,6 +446,9 @@ class ActivityAssetElectionLimits(_ReadModel):
     not_table_bound: ActivityAssetNotTableBoundReason | None = None
     unavailable_reason_key: str | None = None
     unavailable_reason_facts: tuple[ActivityAssetReasonFact, ...] = ()
+    unavailable_reason_words: ServedWords | None = None
+    """The sentence for ``unavailable_reason_key`` filled in with its facts; null where it cannot be said whole."""
+    words_language: OutputLanguage | None = None
 
 
 class ActivityAssetTimelineChangeKind(StrEnum):
@@ -511,6 +552,9 @@ class ActivityAssetDisposalFindingView(_ReadModel):
 
     kind: ActivityAssetDisposalFindingKind
     label_key: str
+    words: ServedWords | None = None
+    """The finding said whole."""
+    words_language: OutputLanguage | None = None
     tax_year: int | None = None
     effect_on_cost: PublicDecimal | None = None
 
@@ -677,6 +721,24 @@ class ActivityAssetM130Contribution(_ReadModel):
     schedule_fingerprint: Hex64Str | None = None
 
 
+class ActivityAssetHandoffLeftOutReason(StrEnum):
+    """Why a Modelo 130 amount leaves some elements out."""
+
+    FREE_GAP = "free_gap"
+    AGRARIAN_EXCLUDED = "agrarian_excluded"
+    UNAVAILABLE = "unavailable"
+
+
+class ActivityAssetHandoffLeftOut(_ReadModel):
+    """The elements one reason leaves out of the handoff's Modelo 130 amounts, said whole."""
+
+    reason: ActivityAssetHandoffLeftOutReason
+    asset_ids: tuple[str, ...] = Field(min_length=1)
+    words: ServedWords
+    """The sentence naming the elements the register names, or counting them when it does not name them all."""
+    words_language: OutputLanguage
+
+
 class ActivityAssetM130ProjectionSnapshot(_ReadModel):
     """The accrual of one asset kind for the Modelo 130 box its edition binds."""
 
@@ -691,6 +753,10 @@ class ActivityAssetM130ProjectionSnapshot(_ReadModel):
     unavailable_asset_ids: tuple[str, ...] = ()
     free_gap_asset_ids: tuple[str, ...] = ()
     agrarian_excluded_asset_ids: tuple[str, ...] = ()
+    partial_words: ServedWords | None = None
+    """The sentence saying the amount leaves out the elements that could not be worked out; set exactly when some
+    could not."""
+    words_language: OutputLanguage | None = None
 
 
 __all__ = [
@@ -722,6 +788,8 @@ __all__ = [
     "ActivityAssetElectionLimits",
     "ActivityAssetFindingCounts",
     "ActivityAssetFormOptionsView",
+    "ActivityAssetHandoffLeftOut",
+    "ActivityAssetHandoffLeftOutReason",
     "ActivityAssetListDisposal",
     "ActivityAssetListRow",
     "ActivityAssetM130Contribution",
@@ -745,6 +813,7 @@ __all__ = [
     "ActivityAssetTimelineClaimUse",
     "ActivityAssetTimelineEvent",
     "ActivityAssetTimelineEventKind",
+    "ServedWords",
     "activity_asset_label_key",
     "project_reason_facts",
     "reason_fact_kind",

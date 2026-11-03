@@ -1,4 +1,41 @@
 application:
+  actividad_asset:
+    served:
+      handoff:
+        gap_accrued: 'Model 100: {name} no té dotació registrada del {start} al {end}.
+          Els {amount} que es van meritar en aquest temps no són als imports de dalt.'
+        gap_box_unbound: 'Model 100: aquesta edició no té casella per a la dotació
+          de {name}, així que no es declara res per a aquest element del {start} al
+          {end}.'
+        gap_free: 'Model 100: {name} no té dotació registrada del {start} al {end}.
+          El seu mètode deixa l''import a les teves mans, així que no se''n pot calcular
+          cap.'
+        gap_unavailable: 'Model 100: {name} no té dotació registrada del {start} al
+          {end}, i no s''ha pogut calcular.'
+        left_out:
+          agrarian_count: 'Queden fora del Model 130, perquè pertanyen a una activitat
+            agrícola, que paga un percentatge dels ingressos: {count} elements.'
+          agrarian_count_one: 'Queda fora del Model 130, perquè pertany a una activitat
+            agrícola, que paga un percentatge dels ingressos: 1 element.'
+          agrarian_named: 'Queden fora del Model 130, perquè pertanyen a una activitat
+            agrícola, que paga un percentatge dels ingressos: {names}.'
+          free_count: 'No compten al Model 130, perquè el seu mètode et deixa la dotació
+            a tu: {count} elements.'
+          free_count_one: 'No compta al Model 130, perquè el seu mètode et deixa la
+            dotació a tu: 1 element.'
+          free_named: 'No compten al Model 130, perquè el seu mètode et deixa la dotació
+            a tu: {names}.'
+          unavailable_count: '{count} elements no s''han pogut calcular, així que
+            queden fora.'
+          unavailable_count_one: 1 element no s'ha pogut calcular, així que queda
+            fora.
+          unavailable_named: 'No s''han pogut calcular, així que queden fora: {names}.'
+        partial: 'Parcial: {count} elements no es poden calcular i queden fora d''aquest
+          import.'
+        partial_one: 'Parcial: 1 element no es pot calcular i queda fora d''aquest
+          import.'
+        unnamed_element: un element sense nom
+      opening_remedy: Omple «{field}» per poder-ho calcular.
   auth:
     acquisition_lock:
       errors:
@@ -1935,6 +1972,22 @@ application:
         one_box: 'Això respon a la casella {box}: l''import en ús és {accepted}, mentre
           que les fonts indiquen {sources}.'
         source_amount: '{source} ({amount})'
+      served_lead:
+        accept: El teu motiu queda registrat amb l'acceptació.
+        revoke: Es retira l'acceptació. El teu motiu continua constant al registre.
+      served_row:
+        current:
+          'no': 'El càlcul actual ja no té aquesta discrepància: les fonts o els imports
+            han canviat, així que l''acceptació ja no s''aplica.'
+          'yes': El càlcul actual encara té aquesta discrepància, així que l'acceptació
+            s'aplica.
+        revoke_refusal:
+          not_resolved: Aquesta acceptació ja s'ha retirat.
+          unreadable: No s'ha pogut trobar ni llegir aquesta acceptació, així que
+            no es pot retirar.
+        state:
+          active: Acceptada
+          revoked: Retirada
       served_source:
         backend: el valor calculat a partir dels teus registres
         borrador: l'esborrany de l'AEAT
@@ -2940,6 +2993,14 @@ application:
           No la buidis per continuar: presenta aquesta declaració amb una altra eina
           o espera que se''n revisin les cel·les.'
       inspection_heading: Totes les caselles, per número de casella
+      served_action:
+        credit_source_disagreement: Compara l'import amb el certificat de cada pagador,
+          corregeix la font que estigui malament i torna a calcular. Si has comprovat
+          que l'import utilitzat és correcte, accepta'l i indica'n el motiu.
+        precedence_tier_divergence: Compara les fonts i corregeix la que sigui incorrecta;
+          després torna a calcular. La comprovació, l'exportació i el registre esperen
+          fins que coincideixin, o fins que acceptis el valor utilitzat i n'indiquis
+          el motiu.
       unnamed_box: Casella sense nom
   operations:
     error_detail:
@@ -2977,14 +3038,6 @@ application:
         base bruta declarada per a aquesta liquidació, així que no hi ha res a eliminar.'
       gross_declaration_duplicate: 'El registre ha rebutjat la base bruta: ja n''hi
         ha una de declarada per a aquesta liquidació. No s''ha desat res.'
-      served_action:
-        credit_source_disagreement: Compara l'import amb el certificat de cada pagador,
-          corregeix la font que estigui malament i torna a calcular. Si has comprovat
-          que l'import utilitzat és correcte, accepta'l i indica'n el motiu.
-        precedence_tier_divergence: Compara les fonts i corregeix la que sigui incorrecta;
-          després torna a calcular. La comprovació, l'exportació i el registre esperen
-          fins que coincideixin, o fins que acceptis el valor utilitzat i n'indiquis
-          el motiu.
       gross_declaration_sector_unknown: 'El registre ha rebutjat la base bruta: el
         sector no és un sector diferenciat declarat. No s''ha desat res.'
       provenance_not_electable: 'El registre ha rebutjat l''opció: no pots triar aquesta

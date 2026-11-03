@@ -32,7 +32,7 @@ from ..operations.models import CredentialFreeOperationRequest
 from ..operations.public_scalar import PublicDecimal
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort
-from .activity_asset_read_models import ActivityAssetReasonFact
+from .activity_asset_read_models import ActivityAssetReasonFact, ServedWords
 from .operation_dtos import (
     ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetDisposalSnapshot,
@@ -171,11 +171,16 @@ class ActivityAssetRefusal(BaseModel):
     accelerated_da18: ActivityAssetAcceleratedDa18Facts | None = None
     reason_key: ActivityAssetRefusalReasonKey | None = None
     reason_facts: tuple[ActivityAssetReasonFact, ...] = ()
+    refusal_words: ServedWords | None = None
+    """The finished sentence a frontend shows for the refusal; null only on one recorded before they were served."""
+    refusal_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _da18_facts_match_code(self) -> Self:
         require_da18_facts_match(self.code, self.accelerated_da18)
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
         return self
 
     def to_domain_error(self, *, context: Mapping[str, object]) -> ActividadAssetError:
@@ -239,6 +244,8 @@ class ActivityAssetDisposalCalculateRequest(BaseModel):
     profile_id: UUID
     asset_id: ActivityAssetId
     disposal: ActivityAssetDisposalSnapshot | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the figures' findings are said in."""
 
 
 class ActivityAssetInspectRequest(BaseModel):
@@ -334,6 +341,8 @@ class ActivityAssetListRequest(CredentialFreeOperationRequest):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the register's sentences are said in."""
 
 
 class ActivityAssetPlanRequest(BaseModel):
@@ -343,6 +352,8 @@ class ActivityAssetPlanRequest(BaseModel):
 
     profile_id: UUID
     asset_id: ActivityAssetId
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the plan's reasons are said in."""
 
 
 class ActivityAssetTimelineRequest(BaseModel):

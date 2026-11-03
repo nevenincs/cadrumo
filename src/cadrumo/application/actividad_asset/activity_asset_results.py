@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -32,6 +33,7 @@ from .activity_asset_read_models import (
     ActivityAssetPlanRow,
     ActivityAssetReasonFactKind,
     ActivityAssetTimelineEvent,
+    ServedWords,
 )
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .operation_dtos import ActivityAssetFilingHandoffSnapshot, ActivityAssetRevisionSnapshot
@@ -52,11 +54,15 @@ class ActivityAssetRefusalResult(BaseModel):
     reason_key: ActivityAssetRefusalReasonKey | None = None
     reason_facts: dict[str, str] = Field(default_factory=dict)
     reason_fact_kinds: dict[str, ActivityAssetReasonFactKind] = Field(default_factory=dict)
+    refusal_words: ServedWords | None = None
+    refusal_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _da18_facts_match_code(self) -> Self:
         require_da18_facts_match(self.code, self.accelerated_da18)
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
         return self
 
 

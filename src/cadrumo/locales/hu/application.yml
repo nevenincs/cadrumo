@@ -1,4 +1,39 @@
 application:
+  actividad_asset:
+    served:
+      handoff:
+        gap_accrued: '100-as: {name} esetében nincs rögzített értékcsökkenési leírás
+          {start} és {end} között. Az ez alatt felmerült {amount} nincs benne a fenti
+          összegekben.'
+        gap_box_unbound: '100-as: ebben a kiadásban nincs rovat {name} értékcsökkenési
+          leírásához, ezért {start} és {end} között nem szerepel róla semmi.'
+        gap_free: '100-as: {name} esetében nincs rögzített értékcsökkenési leírás
+          {start} és {end} között. A módszere az összeget rád hagyja, ezért egyik
+          sem számítható ki.'
+        gap_unavailable: '100-as: {name} esetében nincs rögzített értékcsökkenési
+          leírás {start} és {end} között, és nem számítható ki.'
+        left_out:
+          agrarian_count: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
+            tartoznak, amely a bevétel egy részét fizeti: {count} elem.'
+          agrarian_count_one: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
+            tartozik, amely a bevétel egy részét fizeti: 1 elem.'
+          agrarian_named: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
+            tartoznak, amely a bevétel egy részét fizeti: {names}.'
+          free_count: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
+            leírás összegét rád hagyja: {count} elem.'
+          free_count_one: 'Nem számít bele a 130-asba, mert a módszere az értékcsökkenési
+            leírás összegét rád hagyja: 1 elem.'
+          free_named: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
+            leírás összegét rád hagyja: {names}.'
+          unavailable_count: '{count} elemet nem sikerült kiszámolni, ezért kimaradnak.'
+          unavailable_count_one: 1 elemet nem sikerült kiszámolni, ezért kimarad.
+          unavailable_named: 'Nem sikerült kiszámolni, ezért kimarad: {names}.'
+        partial: 'Részleges: {count} elem nem számítható ki, ezért kimarad ebből az
+          összegből.'
+        partial_one: 'Részleges: 1 elem nem számítható ki, ezért kimarad ebből az
+          összegből.'
+        unnamed_element: egy név nélküli elem
+      opening_remedy: 'A kiszámításhoz add meg ezt: „{field}”.'
   auth:
     acquisition_lock:
       errors:
@@ -1891,6 +1926,22 @@ application:
         one_box: 'Ez a(z) {box} rovatra válaszol: a használt összeg {accepted}, míg
           a források ezt adják: {sources}.'
         source_amount: '{source} ({amount})'
+      served_lead:
+        accept: Az indoklásod rögzül az elfogadással együtt.
+        revoke: Az elfogadás visszavonásra kerül. Az indoklásod megmarad a nyilvántartásban.
+      served_row:
+        current:
+          'no': 'A jelenlegi számításban már nincs meg ez az eltérés: a források vagy
+            az összegek megváltoztak, ezért az elfogadás már nem érvényes.'
+          'yes': A jelenlegi számításban még megvan ez az eltérés, ezért az elfogadás
+            érvényes.
+        revoke_refusal:
+          not_resolved: Ezt az elfogadást már visszavontad.
+          unreadable: Ez az elfogadás nem található vagy nem olvasható, ezért nem
+            vonható vissza.
+        state:
+          active: Elfogadva
+          revoked: Visszavonva
       served_source:
         backend: a nyilvántartásaidból számított érték
         borrador: az AEAT-tervezet
@@ -2892,6 +2943,14 @@ application:
           Ne ürítsd ki a továbblépéshez: ezt a bevallást más eszközzel add be, vagy
           várd meg, amíg a cellákat felülvizsgálják.'
       inspection_heading: Minden rovat, rovatszám szerint
+      served_action:
+        credit_source_disagreement: Vesd össze az összeget az egyes kifizetők igazolásával,
+          javítsd a hibás forrást, és számold újra. Ha ellenőrizted, hogy a felhasznált
+          összeg helyes, fogadd el, és add meg az indokát.
+        precedence_tier_divergence: Hasonlítsd össze a forrásokat, javítsd ki a hibásat,
+          majd számolj újra. Az ellenőrzés, az exportálás és a rögzítés megvárja,
+          amíg egyeznek, vagy amíg el nem fogadod a felhasznált értéket, és meg nem
+          adod az indokát.
       unnamed_box: Név nélküli rovat
   operations:
     error_detail:
@@ -2927,14 +2986,6 @@ application:
         modelo_blank: A nyomtatvány azonosítója nem lehet üres.
   prorrata_register:
     served:
-      served_action:
-        credit_source_disagreement: Vesd össze az összeget az egyes kifizetők igazolásával,
-          javítsd a hibás forrást, és számold újra. Ha ellenőrizted, hogy a felhasznált
-          összeg helyes, fogadd el, és add meg az indokát.
-        precedence_tier_divergence: Hasonlítsd össze a forrásokat, javítsd ki a hibásat,
-          majd számolj újra. Az ellenőrzés, az exportálás és a rögzítés megvárja,
-          amíg egyeznek, vagy amíg el nem fogadod a felhasznált értéket, és meg nem
-          adod az indokát.
       gross_declaration_absent: 'A nyilvántartás elutasította a törlést: erre a bevallási
         időszakra nincs megadott bruttó alap, így nincs mit törölni.'
       gross_declaration_duplicate: 'A nyilvántartás elutasította a bruttó alapot:

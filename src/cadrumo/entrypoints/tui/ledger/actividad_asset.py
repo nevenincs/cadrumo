@@ -43,7 +43,6 @@ from .actividad_asset_words import (
     list_row_line,
     m100_gap_line,
     plan_row_line,
-    reason_text,
     timeline_line,
 )
 from .controller import LedgerWorkspaceController
@@ -423,7 +422,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             plan_row_line(row, minimum_label=minimum_label, minimum_incomplete=minimum_incomplete)
             for row in plan.rows or ()
         )
-        lines.extend(advisory for item in plan.advisories if (advisory := reason_text(item.label_key)) is not None)
+        lines.extend(item.words for item in plan.advisories if item.words is not None)
         return _ActivityAssetScreenResult(
             message="\n".join(lines) or tr("desktop.ledger.assets.plan.empty"),
             fills=self._claim_period_fills(asset_id, plan),

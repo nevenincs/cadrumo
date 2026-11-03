@@ -1,4 +1,41 @@
 application:
+  actividad_asset:
+    served:
+      handoff:
+        gap_accrued: 'Modelo 100: {name} no tiene dotación registrada del {start}
+          al {end}. Los {amount} que se devengaron en ese tiempo no están en los importes
+          de arriba.'
+        gap_box_unbound: 'Modelo 100: esta edición no tiene casilla para la dotación
+          de {name}, así que no se declara nada por ese elemento del {start} al {end}.'
+        gap_free: 'Modelo 100: {name} no tiene dotación registrada del {start} al
+          {end}. Su método deja el importe en tus manos, así que no se puede calcular
+          ninguno.'
+        gap_unavailable: 'Modelo 100: {name} no tiene dotación registrada del {start}
+          al {end}, y no se pudo calcular.'
+        left_out:
+          agrarian_count: 'Quedan fuera del Modelo 130, porque pertenecen a una actividad
+            agrícola, que paga un porcentaje de los ingresos: {count} elementos.'
+          agrarian_count_one: 'Queda fuera del Modelo 130, porque pertenece a una
+            actividad agrícola, que paga un porcentaje de los ingresos: 1 elemento.'
+          agrarian_named: 'Quedan fuera del Modelo 130, porque pertenecen a una actividad
+            agrícola, que paga un porcentaje de los ingresos: {names}.'
+          free_count: 'No cuentan en el Modelo 130, porque su método te deja la dotación
+            a ti: {count} elementos.'
+          free_count_one: 'No cuenta en el Modelo 130, porque su método te deja la
+            dotación a ti: 1 elemento.'
+          free_named: 'No cuentan en el Modelo 130, porque su método te deja la dotación
+            a ti: {names}.'
+          unavailable_count: '{count} elementos no se han podido calcular, así que
+            quedan fuera.'
+          unavailable_count_one: 1 elemento no se ha podido calcular, así que queda
+            fuera.
+          unavailable_named: 'No se han podido calcular, así que quedan fuera: {names}.'
+        partial: 'Parcial: {count} elementos no se pueden calcular y quedan fuera
+          de este importe.'
+        partial_one: 'Parcial: 1 elemento no se puede calcular y queda fuera de este
+          importe.'
+        unnamed_element: un elemento sin nombre
+      opening_remedy: Rellena «{field}» para poder calcularlo.
   auth:
     acquisition_lock:
       errors:
@@ -1931,6 +1968,22 @@ application:
         one_box: 'Esto responde a la casilla {box}: el importe en uso es {accepted},
           mientras que las fuentes indican {sources}.'
         source_amount: '{source} ({amount})'
+      served_lead:
+        accept: Tu motivo queda registrado con la aceptación.
+        revoke: Se retira la aceptación. Tu motivo sigue constando en el registro.
+      served_row:
+        current:
+          'no': 'El cálculo actual ya no tiene esta discrepancia: sus fuentes o importes
+            cambiaron, así que la aceptación ya no se aplica.'
+          'yes': El cálculo actual sigue teniendo esta discrepancia, así que la aceptación
+            se aplica.
+        revoke_refusal:
+          not_resolved: Esta aceptación ya se retiró.
+          unreadable: No se pudo encontrar ni leer esta aceptación, así que no se
+            puede retirar.
+        state:
+          active: Aceptada
+          revoked: Retirada
       served_source:
         backend: el valor calculado a partir de tus registros
         borrador: el borrador de la AEAT
@@ -2936,6 +2989,14 @@ application:
           la vacíes para continuar: presenta esta declaración con otra herramienta
           o espera a que se revisen sus celdas.'
       inspection_heading: Todas las casillas, por número de casilla
+      served_action:
+        credit_source_disagreement: Compara el importe con el certificado de cada
+          pagador, corrige la fuente que esté mal y vuelve a calcular. Si has comprobado
+          que el importe utilizado es correcto, acéptalo e indica el motivo.
+        precedence_tier_divergence: Compara las fuentes y corrige la que esté mal;
+          después vuelve a calcular. La comprobación, la exportación y el registro
+          esperan hasta que coincidan, o hasta que aceptes el valor utilizado e indiques
+          el motivo.
       unnamed_box: Casilla sin nombre
   operations:
     error_detail:
@@ -2973,14 +3034,6 @@ application:
         base bruta declarada para esa liquidación, así que no hay nada que eliminar.'
       gross_declaration_duplicate: 'El registro ha rechazado la base bruta: ya hay
         una declarada para esa liquidación. No se ha guardado nada.'
-      served_action:
-        credit_source_disagreement: Compara el importe con el certificado de cada
-          pagador, corrige la fuente que esté mal y vuelve a calcular. Si has comprobado
-          que el importe utilizado es correcto, acéptalo e indica el motivo.
-        precedence_tier_divergence: Compara las fuentes y corrige la que esté mal;
-          después vuelve a calcular. La comprobación, la exportación y el registro
-          esperan hasta que coincidan, o hasta que aceptes el valor utilizado e indiques
-          el motivo.
       gross_declaration_sector_unknown: 'El registro ha rechazado la base bruta: el
         sector no es un sector diferenciado declarado. No se ha guardado nada.'
       provenance_not_electable: 'El registro ha rechazado la opción: no puedes elegir

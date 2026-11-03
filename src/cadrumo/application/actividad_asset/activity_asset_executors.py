@@ -17,6 +17,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import OutputLanguage
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...core.tipos_actividad import TipoActividad
@@ -95,7 +96,7 @@ from .activity_asset_contracts import (
     ActivityAssetPlanRequest,
     ActivityAssetTimelineRequest,
 )
-from .activity_asset_read_models import reason_fact_kind, reason_fact_text
+from .activity_asset_read_models import project_reason_facts, reason_fact_kind, reason_fact_text
 from .activity_asset_results import (
     ActivityAssetAcquisitionCandidatesResult,
     ActivityAssetClaimResult,
@@ -128,6 +129,14 @@ from .operations import (
 )
 from .register_reads import register_years
 from .schedule_walk import error_reason_facts
+from .served_words import (
+    refusal_words,
+    worded_advisory,
+    worded_disposal_calculation,
+    worded_limits,
+    worded_list_row,
+    worded_plan_row,
+)
 
 _AGRARIAN_INSTALMENT_SELECTOR = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras"
 """The activities whose instalment is a share of income under RIRPF art. 110.1.c."""
@@ -260,13 +269,17 @@ def _worker_bucket[T: BaseModel](
     return bucket_id
 
 
-def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
+def _refusal(error: Exception, language: OutputLanguage | None = None) -> ActivityAssetRefusalResult | None:
     if not isinstance(error, ActividadAssetError):
         return None
     reason_key = error.translated_message
     stated = error_reason_facts(error)
     reason_facts = {name: reason_fact_text(value) for name, value in stated.items()}
     reason_fact_kinds = {name: reason_fact_kind(value) for name, value in stated.items()}
+    sentence = refusal_words(
+        error, key=reason_key, facts=project_reason_facts(stated, reason_fact_kinds), language=language
+    )
+    served = {} if sentence is None else {"refusal_words": sentence[0], "refusal_words_language": sentence[1]}
     if isinstance(error, ActividadAssetIncompleteError):
         verdict = error.terminal_precondition_verdict
         return ActivityAssetRefusalResult(
@@ -275,6 +288,7 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
+            **served,
         )
     if isinstance(error, ActividadAssetAcceleratedDa18DepreciationError):
         return ActivityAssetRefusalResult(
@@ -283,6 +297,7 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
+            **served,
         )
     if isinstance(error, ActividadAssetUnsupportedError):
         return ActivityAssetRefusalResult(
@@ -290,6 +305,7 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
+            **served,
         )
     if isinstance(error, ActividadAssetClaimConflictError):
         return ActivityAssetRefusalResult(
@@ -297,6 +313,7 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
+            **served,
         )
     if isinstance(error, ActividadAssetValidationError):
         return ActivityAssetRefusalResult(
@@ -304,6 +321,7 @@ def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
             reason_key=reason_key,
             reason_facts=reason_facts,
             reason_fact_kinds=reason_fact_kinds,
+            **served,
         )
     return None
 
@@ -318,8 +336,9 @@ async def _store_refusal(
     asset_id: str | None = None,
     tax_year: int | None = None,
     m130_period: str | None = None,
+    language: OutputLanguage | None = None,
 ) -> OperationRefusalEvidence:
-    refusal = _refusal(error)
+    refusal = _refusal(error, language)
     if refusal is None:
         raise error
     result = result_type(
@@ -770,6 +789,7 @@ class ActivityAssetFilingHandoffExecutor:
                     error=error,
                     tax_year=payload.tax_year,
                     m130_period=payload.m130_period,
+                    language=payload.output_language,
                 )
             result = ActivityAssetFilingHandoffResult(
                 profile_id=payload.profile_id,
@@ -908,6 +928,13 @@ type _ReadRequest = (
 )
 
 
+def _request_language(payload: _ReadRequest) -> OutputLanguage | None:
+    """The language a read asks its sentences in, or ``None`` for a read that serves no sentence of its own."""
+    if isinstance(payload, (ActivityAssetListRequest, ActivityAssetPlanRequest, ActivityAssetDisposalCalculateRequest)):
+        return payload.output_language
+    return None
+
+
 class _ActivityAssetReadExecutor[RequestT: _ReadRequest]:
     """One read of the register: bind the profile, run, keep the result or the typed refusal."""
 
@@ -950,6 +977,7 @@ class _ActivityAssetReadExecutor[RequestT: _ReadRequest]:
                     authority=authority,
                     error=error,
                     asset_id=getattr(payload, "asset_id", None),
+                    language=_request_language(payload),
                 )
             result = self.result_type.model_validate(
                 {"profile_id": profile_id, "authority": authority, "outcome": "succeeded", **fields},
@@ -969,8 +997,7 @@ class ActivityAssetListExecutor(_ActivityAssetReadExecutor[ActivityAssetListRequ
 
     @override
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetListRequest) -> dict[str, object]:
-        del payload
-        rows = operations.list_elements()
+        rows = tuple(worded_list_row(row, payload.output_language) for row in operations.list_elements())
         years = register_years(rows)
         return {"rows": rows, "years": years, "default_year": operations.default_register_year(years)}
 
@@ -983,11 +1010,14 @@ class ActivityAssetPlanExecutor(_ActivityAssetReadExecutor[ActivityAssetPlanRequ
 
     @override
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetPlanRequest) -> dict[str, object]:
+        language = payload.output_language
         return {
             "asset_id": payload.asset_id,
-            "rows": operations.plan(payload.asset_id),
-            "limits": operations.plan_limits(payload.asset_id),
-            "advisories": operations.plan_advisories(payload.asset_id),
+            "rows": tuple(worded_plan_row(row, language) for row in operations.plan(payload.asset_id)),
+            "limits": worded_limits(operations.plan_limits(payload.asset_id), language),
+            "advisories": tuple(
+                worded_advisory(item, language) for item in operations.plan_advisories(payload.asset_id)
+            ),
         }
 
 
@@ -1016,7 +1046,12 @@ class ActivityAssetDisposalCalculateExecutor(_ActivityAssetReadExecutor[Activity
     ) -> dict[str, object]:
         stated = None if payload.disposal is None else payload.disposal.to_domain()
         disposal, calculation = operations.disposal_calculation(payload.asset_id, stated)
-        return {"asset_id": payload.asset_id, "calculation": project_disposal_calculation(disposal, calculation)}
+        return {
+            "asset_id": payload.asset_id,
+            "calculation": worded_disposal_calculation(
+                project_disposal_calculation(disposal, calculation), payload.output_language
+            ),
+        }
 
 
 class ActivityAssetFormOptionsExecutor(_ActivityAssetReadExecutor[ActivityAssetFormOptionsRequest]):

@@ -14,11 +14,13 @@ from textual.widgets import Button, Input, Static
 from .....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
 from .....application.actividad_asset.operations import M100ClaimGapProjection
 from .....application.actividad_asset.schedule_walk import M100GapKind
+from .....application.actividad_asset.served_words import m100_gap_words
 from .....application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
-from .....core.i18n.render import tr
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import output_language, tr
 from .....core.operations import OperationEffect
 from .....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from .....domain.renta.actividad_asset.errors import (
@@ -476,7 +478,7 @@ async def test_activity_asset_plan_says_each_year_in_words_with_its_glyph_and_re
             await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
             plan = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
         remedy = tr(
-            "desktop.ledger.assets.opening_unknown",
+            "application.actividad_asset.served.opening_remedy",
             field=tr("ledger.actividad_asset.field.opening_history.accumulated_amount"),
         )
         not_applicable = tr("desktop.ledger.assets.mark.not_applicable")
@@ -510,7 +512,7 @@ async def test_activity_asset_list_does_not_read_a_pending_that_does_not_apply_a
         not_applicable = tr("desktop.ledger.assets.mark.not_applicable")
         in_service = tr("ledger.actividad_asset.register_state.in_service")
         remedy = tr(
-            "desktop.ledger.assets.opening_unknown",
+            "application.actividad_asset.served.opening_remedy",
             field=tr("ledger.actividad_asset.field.opening_history.accumulated_amount"),
         )
 
@@ -931,15 +933,23 @@ async def test_activity_asset_screen_holds_its_writes_after_an_unexpected_failur
         assert _writes_disabled(screen) == [True, True, True, True, True]
 
 
-def _gap(kind: M100GapKind, **served: object) -> M100ClaimGapProjection:
-    return M100ClaimGapProjection.model_validate(
-        {
-            "asset_id": "laptop-1",
-            "kind": kind,
-            "covered_from": date(2025, 1, 1),
-            "covered_until": date(2026, 1, 1),
-            **served,
-        }
+def _gap(kind: M100GapKind, *, accrued: Decimal | None = None) -> M100ClaimGapProjection:
+    """An interval as the worker serves it: the sentence is the application's, in the language asked."""
+    return M100ClaimGapProjection(
+        asset_id="laptop-1",
+        kind=kind,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        accrued=accrued,
+        words=m100_gap_words(
+            kind,
+            name="Office laptop",
+            covered_from=date(2025, 1, 1),
+            covered_through=date(2025, 12, 31),
+            accrued=accrued,
+            language=OutputLanguage(output_language()),
+        ),
+        words_language=OutputLanguage(output_language()),
     )
 
 
@@ -982,17 +992,15 @@ async def test_activity_asset_filing_with_a_quarter_states_both_modelos() -> Non
 @pytest.mark.asyncio
 async def test_activity_asset_filing_says_why_a_box_is_left_out_with_the_last_day_it_covers() -> None:
     revision = activity_asset_revision("tui-gaps")
-    actions = ActivityAssetActionStub(
-        revision,
-        handoff_gaps=(
+    with override_settings(cadrumo_output_language="en"):
+        gaps = (
             _gap(M100GapKind.ACCRUED, accrued=Decimal("520.00")),
             _gap(M100GapKind.ACCRUED),
             _gap(M100GapKind.FREE_METHOD),
             _gap(M100GapKind.UNAVAILABLE),
             _gap(M100GapKind.BOX_UNBOUND),
-        ),
-        unbound_material_box=True,
-    )
+        )
+    actions = ActivityAssetActionStub(revision, handoff_gaps=gaps, unbound_material_box=True)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -1002,16 +1010,9 @@ async def test_activity_asset_filing_says_why_a_box_is_left_out_with_the_last_da
             await _activate(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
             shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="filing_handoff")
         first, *lines = shown.splitlines()
-        wanted = [
-            tr(key, name="laptop-1", start="Jan 1, 2025", end="Dec 31, 2025", amount=amount)
-            for key, amount in (
-                ("desktop.ledger.assets.handoff_gap_accrued", "520.00"),
-                ("desktop.ledger.assets.handoff_gap_unavailable", ""),
-                ("desktop.ledger.assets.handoff_gap_free", ""),
-                ("desktop.ledger.assets.handoff_gap_unavailable", ""),
-                ("desktop.ledger.assets.handoff_gap_box_unbound", ""),
-            )
-        ]
 
-    assert first == "filing_handoff\tm100_material=box_unbound\tm100_intangible=0.00"
-    assert lines == wanted
+    assert first == "filing_handoff	m100_material=box_unbound	m100_intangible=0.00"
+    # The screen shows each sentence exactly as the application served it.
+    assert lines == [gap.words for gap in gaps]
+    assert all("Office laptop" in line and "Dec 31, 2025" in line for line in lines)
+    assert "laptop-1" not in shown

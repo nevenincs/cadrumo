@@ -1,4 +1,39 @@
 application:
+  actividad_asset:
+    served:
+      handoff:
+        gap_accrued: 'Modelo 100: {name} has no depreciation charge recorded from
+          {start} to {end}. The {amount} it accrued in that time is not in the amounts
+          above.'
+        gap_box_unbound: 'Modelo 100: this edition has no box for the depreciation
+          of {name}, so nothing is declared for it from {start} to {end}.'
+        gap_free: 'Modelo 100: {name} has no depreciation charge recorded from {start}
+          to {end}. Its method leaves the amount to you, so none can be worked out.'
+        gap_unavailable: 'Modelo 100: {name} has no depreciation charge recorded from
+          {start} to {end}, and it could not be worked out.'
+        left_out:
+          agrarian_count: 'Left out of Modelo 130, because they belong to an agricultural
+            activity, which pays a share of income: {count} elements.'
+          agrarian_count_one: 'Left out of Modelo 130, because it belongs to an agricultural
+            activity, which pays a share of income: 1 element.'
+          agrarian_named: 'Left out of Modelo 130, because they belong to an agricultural
+            activity, which pays a share of income: {names}.'
+          free_count: 'Not counted in Modelo 130, because their method leaves the
+            depreciation charge to you: {count} elements.'
+          free_count_one: 'Not counted in Modelo 130, because its method leaves the
+            depreciation charge to you: 1 element.'
+          free_named: 'Not counted in Modelo 130, because their method leaves the
+            depreciation charge to you: {names}.'
+          unavailable_count: '{count} elements couldn''t be worked out, so they are
+            left out.'
+          unavailable_count_one: 1 element couldn't be worked out, so it is left out.
+          unavailable_named: 'Couldn''t be worked out, so left out: {names}.'
+        partial: 'Partial: {count} elements can''t be worked out and are left out
+          of this amount.'
+        partial_one: 'Partial: 1 element can''t be worked out and is left out of this
+          amount.'
+        unnamed_element: an element with no name
+      opening_remedy: Fill in “{field}” to work this out.
   auth:
     acquisition_lock:
       errors:
@@ -1834,6 +1869,22 @@ application:
         one_box: 'This answers box {box}: the amount in use is {accepted}, while the
           sources state {sources}.'
         source_amount: '{source} ({amount})'
+      served_lead:
+        accept: Your reason is recorded with the acceptance.
+        revoke: The acceptance is taken back. Your reason stays on record.
+      served_row:
+        current:
+          'no': 'The current calculation no longer has this disagreement: its sources
+            or amounts changed, so the acceptance no longer applies.'
+          'yes': The current calculation still has this disagreement, so the acceptance
+            applies.
+        revoke_refusal:
+          not_resolved: This acceptance was already taken back.
+          unreadable: This acceptance could not be found or read, so it cannot be
+            taken back.
+        state:
+          active: Accepted
+          revoked: Taken back
       served_source:
         backend: the value calculated from your records
         borrador: the AEAT borrador
@@ -2783,6 +2834,13 @@ application:
           it to get past this: file this declaration with another tool, or wait until
           its cells have been reviewed.'
       inspection_heading: All boxes, in box-number order
+      served_action:
+        credit_source_disagreement: Compare the amount with each payer's certificate,
+          correct the source that is wrong, and recalculate. If you have checked that
+          the amount in use is right, accept it and say why.
+        precedence_tier_divergence: Compare the sources and correct the one that is
+          wrong, then calculate again. Checking, exporting and recording wait until
+          they agree, or until you accept the value in use and say why.
       unnamed_box: Unnamed box
   operations:
     error_detail:
@@ -2818,13 +2876,6 @@ application:
     served:
       gross_declaration_absent: 'The register refused the removal: no gross base is
         declared for that liquidation period, so there is nothing to remove.'
-      served_action:
-        credit_source_disagreement: Compare the amount with each payer's certificate,
-          correct the source that is wrong, and recalculate. If you have checked that
-          the amount in use is right, accept it and say why.
-        precedence_tier_divergence: Compare the sources and correct the one that is
-          wrong, then calculate again. Checking, exporting and recording wait until
-          they agree, or until you accept the value in use and say why.
       gross_declaration_duplicate: 'The register refused the gross base: one is already
         declared for that liquidation period. Nothing was written.'
       gross_declaration_sector_unknown: 'The register refused the gross base: the

@@ -74,6 +74,8 @@ from cadrumo.application.actividad_asset.operation_dtos import (
 from cadrumo.application.actividad_asset.operations import ActivityAssetFilingHandoff
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
@@ -388,6 +390,7 @@ class RuntimeActivityAssetTuiActionsV1:
                 profile_id=self._profile_id,
                 tax_year=int(request.tax_year),
                 m130_period=period,
+                output_language=OutputLanguage(output_language()),
             ),
             definition_id=ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetFilingHandoffProjection,
@@ -440,7 +443,12 @@ class RuntimeActivityAssetTuiActionsV1:
             return projection.calculation
 
         return self._call(
-            ActivityAssetDisposalCalculateRequest(profile_id=self._profile_id, asset_id=asset_id, disposal=disposal),
+            ActivityAssetDisposalCalculateRequest(
+                profile_id=self._profile_id,
+                asset_id=asset_id,
+                disposal=disposal,
+                output_language=OutputLanguage(output_language()),
+            ),
             definition_id=ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetDisposalCalculateProjection,
             success_effect=OperationEffect.NONE,
@@ -456,7 +464,7 @@ class RuntimeActivityAssetTuiActionsV1:
             return projection
 
         return self._call(
-            ActivityAssetListRequest(profile_id=self._profile_id),
+            ActivityAssetListRequest(profile_id=self._profile_id, output_language=OutputLanguage(output_language())),
             definition_id=ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetListProjection,
             success_effect=OperationEffect.NONE,
@@ -472,7 +480,9 @@ class RuntimeActivityAssetTuiActionsV1:
             return projection
 
         return self._call(
-            ActivityAssetPlanRequest(profile_id=self._profile_id, asset_id=asset_id),
+            ActivityAssetPlanRequest(
+                profile_id=self._profile_id, asset_id=asset_id, output_language=OutputLanguage(output_language())
+            ),
             definition_id=ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetPlanProjection,
             success_effect=OperationEffect.NONE,

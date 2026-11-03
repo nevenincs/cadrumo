@@ -1,8 +1,10 @@
 """The words the activity-asset screen reads the register's served results in.
 
-The application serves tokens, catalogue keys and the facts that fill them; this
-module words them for the operator and does no tax arithmetic. A token or key the
-catalogue has no word for reads as a generic word, never as the raw token.
+The application serves the sentence of every reason, finding, advisory and filing
+interval and the language it is in; this module shows them as served and words
+only the register's tokens, which it draws beside the glyphs it owns. It does no tax
+arithmetic. A token or key the catalogue has no word for reads as a generic word,
+never as the raw token.
 """
 
 from __future__ import annotations
@@ -20,19 +22,14 @@ from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetListDisposal,
     ActivityAssetListRow,
     ActivityAssetPlanRow,
-    ActivityAssetReasonFact,
-    ActivityAssetReasonFactKind,
     ActivityAssetTimelineChange,
     ActivityAssetTimelineEvent,
     activity_asset_label_key,
 )
 from ....application.actividad_asset.operations import M100ClaimGapProjection
-from ....application.actividad_asset.schedule_walk import M100GapKind
-from ....application.modelo.edit_value_grammar import ModeloEditRatioUnit
 from ....application.modelo.value_presentation import format_casilla_value
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation, output_language, tr
-from ....domain.renta.actividad_asset.schedule import last_day_covered
 
 #: The glyph a year's claim state is drawn with; the state's word stands beside it.
 _CLAIM_STATE_GLYPH: Final = {
@@ -44,19 +41,14 @@ _CLAIM_STATE_GLYPH: Final = {
     ActivityAssetClaimState.EDITION_UNAVAILABLE: "?",
 }
 
-_UNFILLED: Final = re.compile(r"%\{\w+\}|\{\w+\}")
 _ISO_DATE: Final = re.compile(r"\d{4}-\d{2}-\d{2}")
 _LOOKS_INTERNAL: Final = re.compile(r"(?i)[a-z0-9]+(?:[_.:-][a-z0-9]+)+|[0-9a-f]{16,}")
-
-#: Fact names a sentence is never filled with; they identify records for a screen to act on.
-_NOT_SAID_FACTS: Final = frozenset({"conflicting_claim_ids"})
 
 _ASSET_LOCALE_KEYS: Final = {
     "no_name": "desktop.ledger.assets.list.no_name",
     "not_known": "desktop.ledger.assets.not_known",
     "not_applicable": "desktop.ledger.assets.mark.not_applicable",
     "nothing_recorded": "desktop.ledger.assets.mark.nothing_recorded",
-    "opening_unknown": "desktop.ledger.assets.opening_unknown",
     "baja": "desktop.ledger.assets.plan.baja",
     "planned_missing": "desktop.ledger.assets.plan.planned_missing",
     "minimum_missing": "desktop.ledger.assets.plan.minimum_missing",
@@ -76,15 +68,6 @@ _ASSET_LOCALE_KEYS: Final = {
     "field_other": "desktop.ledger.assets.field.other",
     "unrecognised": "desktop.ledger.assets.unrecognised",
     "quarter": "desktop.ledger.assets.quarter",
-}
-
-
-#: What Modelo 100 leaves out of an element, by what can be said of the interval.
-_HANDOFF_GAP_LOCALE_KEYS: Final = {
-    M100GapKind.ACCRUED: "desktop.ledger.assets.handoff_gap_accrued",
-    M100GapKind.FREE_METHOD: "desktop.ledger.assets.handoff_gap_free",
-    M100GapKind.UNAVAILABLE: "desktop.ledger.assets.handoff_gap_unavailable",
-    M100GapKind.BOX_UNBOUND: "desktop.ledger.assets.handoff_gap_box_unbound",
 }
 
 
@@ -109,31 +92,8 @@ def amount_text(value: str) -> str:
 
 
 def m100_gap_line(gap: M100ClaimGapProjection) -> str:
-    """Say an interval of an element that Modelo 100 leaves out, by the element's identifier and its last day."""
-    unworked = gap.kind is M100GapKind.ACCRUED and gap.accrued is None
-    return tr(
-        _HANDOFF_GAP_LOCALE_KEYS[M100GapKind.UNAVAILABLE if unworked else gap.kind],
-        name=gap.asset_id,
-        start=date_text(gap.covered_from),
-        end=date_text(last_day_covered(gap.covered_until)),
-        # The sentence names the currency itself, so the figure is bare.
-        amount=""
-        if gap.accrued is None
-        else format_casilla_value(gap.accrued, data_type="decimal", language=_language()),
-    )
-
-
-def _fact_text(fact: ActivityAssetReasonFact) -> str:
-    kind = fact.kind
-    if kind is ActivityAssetReasonFactKind.DATE:
-        return date_text(fact.value)
-    if kind is ActivityAssetReasonFactKind.AMOUNT:
-        return amount_text(fact.value)
-    if kind is ActivityAssetReasonFactKind.PERCENT:
-        return format_casilla_value(
-            Decimal(fact.value), data_type="ratio", language=_language(), ratio_unit=ModeloEditRatioUnit.FRACTION
-        )
-    return fact.value
+    """Show an interval of an element that Modelo 100 leaves out, in the sentence the application served."""
+    return gap.words if gap.words is not None else _text("unrecognised")
 
 
 def word_of_key(key: str | None) -> str | None:
@@ -145,26 +105,12 @@ def word_of_key(key: str | None) -> str | None:
     return tr(key)
 
 
-def reason_text(key: str | None, facts: tuple[ActivityAssetReasonFact, ...] = ()) -> str | None:
-    """Say a reason as its sentence filled in with its facts, or ``None`` when it cannot be said whole."""
-    if word_of_key(key) is None or key is None:
-        return None
-    said = tr(key, **{fact.key: _fact_text(fact) for fact in facts if fact.key not in _NOT_SAID_FACTS})
-    return None if _UNFILLED.search(said) else said
-
-
 def token_word(family: str, token: str | None) -> str:
     """Say a token of one of the register's families, or the generic word the catalogue has for an unknown one."""
     if token is None:
         return _text("unrecognised")
     word = word_of_key(f"{ACTIVITY_ASSET_LABEL_NAMESPACE}{family}.{token}")
     return word if word is not None else _text("unrecognised")
-
-
-def opening_remedy(field_key: str | None) -> str | None:
-    """Say which entry settles an unknown opening amount, or ``None`` when the field has no word."""
-    field = word_of_key(field_key)
-    return None if field is None else _text("opening_unknown", field=field)
 
 
 def baja_text(disposal: ActivityAssetListDisposal) -> str:
@@ -199,7 +145,7 @@ def list_row_line(row: ActivityAssetListRow) -> str:
         if row.disposal is not None:
             pending = f"{pending} ({baja_text(row.disposal)})"
     elif row.pending is None:
-        remedy = opening_remedy(row.opening_remedy_field_key)
+        remedy = row.opening_remedy_words
         pending = _text("not_known") if remedy is None else f"{_text('not_known')} ({remedy})"
     else:
         pending = amount_text(row.pending.decimal)
@@ -224,9 +170,8 @@ def limits_line(limits: ActivityAssetElectionLimits) -> str | None:
     )
     if word is not None:
         fields.append(word)
-    unavailable = reason_text(limits.unavailable_reason_key, limits.unavailable_reason_facts)
-    if unavailable is not None:
-        fields.append(unavailable)
+    if limits.unavailable_reason_words is not None:
+        fields.append(limits.unavailable_reason_words)
     if limits.maximum_period_last_day is not None:
         fields.append(f"{_text('limits_ends_on')}: {date_text(limits.maximum_period_last_day)}")
     return "\t".join(fields) if fields else None
@@ -238,12 +183,10 @@ def _planned_text(row: ActivityAssetPlanRow) -> str:
     if not row.applies:
         return _text("not_applicable")
     parts = [token_word("plan_absence", row.absence.value)] if row.absence is not None else []
-    reason = reason_text(row.absence_reason_key, row.absence_reason_facts)
-    if reason is not None:
-        parts.append(reason)
-    remedy = opening_remedy(row.absence_remedy_field_key)
-    if remedy is not None:
-        parts.append(remedy)
+    if row.absence_reason_words is not None:
+        parts.append(row.absence_reason_words)
+    if row.absence_remedy_words is not None:
+        parts.append(row.absence_remedy_words)
     return " ".join(parts) if parts else _text("planned_missing")
 
 
@@ -257,7 +200,7 @@ def _recorded_text(row: ActivityAssetPlanRow) -> str:
 def minimum_text(label: str, incomplete: str, row: ActivityAssetPlanRow) -> str:
     """Say the minimum amortisation to a year's end, naming a year without authority rather than hiding it."""
     if row.minimum_through is None:
-        return f"{label}: {reason_text(row.minimum_reason_key) or _text('minimum_missing')}"
+        return f"{label}: {row.minimum_reason_words or _text('minimum_missing')}"
     figure = f"{label}: {amount_text(row.minimum_through.decimal)}"
     return figure if row.minimum_complete else f"{figure} ({incomplete})"
 
@@ -266,9 +209,9 @@ def _nothing_open_text(row: ActivityAssetPlanRow) -> str | None:
     """Say why no span is open to record in a year, with the entry to fill in when that is the remedy."""
     if row.claimable_intervals:
         return None
-    refusal = reason_text(row.claimable_refusal_key, row.claimable_refusal_facts)
+    refusal = row.claimable_refusal_words
     if refusal is not None:
-        remedy = opening_remedy(row.claimable_refusal_remedy_field_key)
+        remedy = row.claimable_refusal_remedy_words
         return refusal if remedy is None else f"{refusal} {remedy}"
     return None if row.claim_state is ActivityAssetClaimState.NOT_DUE else _text("claimable_none")
 
@@ -383,10 +326,8 @@ __all__ = [
     "list_row_line",
     "m100_gap_line",
     "minimum_text",
-    "opening_remedy",
     "plan_row_line",
     "quarters_text",
-    "reason_text",
     "timeline_line",
     "token_word",
     "word_of_key",

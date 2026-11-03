@@ -71,6 +71,8 @@ from ...application.actividad_asset.operation_dtos import (
     ScheduledAmortizationChargeSnapshot,
 )
 from ...application.operations.public_scalar import PublicDecimal
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.renta.actividad_asset.claims import AmortizationClaim
@@ -359,6 +361,7 @@ def filing_handoff_activity_asset(
         profile_id=client.profile_id,
         tax_year=tax_year,
         m130_period=m130_period,
+        output_language=OutputLanguage(output_language()),
     )
     completed = _submit(
         client,
@@ -429,7 +432,9 @@ def list_activity_assets(ctx: typer.Context) -> ActivityAssetListProjection:
     """Summarise the register."""
     return _read(
         ctx,
-        lambda profile_id: ActivityAssetListRequest(profile_id=profile_id),
+        lambda profile_id: ActivityAssetListRequest(
+            profile_id=profile_id, output_language=OutputLanguage(output_language())
+        ),
         definition_id=ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
         result_type=ActivityAssetListProjection,
     )
@@ -448,6 +453,7 @@ def calculate_activity_asset_disposal(
             profile_id=profile_id,
             asset_id=asset_id,
             disposal=disposal,
+            output_language=OutputLanguage(output_language()),
         ),
         definition_id=ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
         result_type=ActivityAssetDisposalCalculateProjection,
@@ -458,7 +464,9 @@ def plan_activity_asset(ctx: typer.Context, *, asset_id: str) -> ActivityAssetPl
     """Read one element's amortization plan."""
     return _read(
         ctx,
-        lambda profile_id: ActivityAssetPlanRequest(profile_id=profile_id, asset_id=asset_id),
+        lambda profile_id: ActivityAssetPlanRequest(
+            profile_id=profile_id, asset_id=asset_id, output_language=OutputLanguage(output_language())
+        ),
         definition_id=ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
         result_type=ActivityAssetPlanProjection,
     )

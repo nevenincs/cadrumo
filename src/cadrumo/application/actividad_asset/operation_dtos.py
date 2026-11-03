@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, ValidationError, model_validator
 from ...application.operations.public_scalar import PublicDecimal, project_scalar
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -54,7 +55,12 @@ from .acquisition_dtos import (
     FurtherAcquisitionSnapshot,
     OpeningHistorySnapshot,
 )
-from .activity_asset_read_models import ActivityAssetM130Contribution, ActivityAssetM130ProjectionSnapshot
+from .activity_asset_read_models import (
+    ActivityAssetHandoffLeftOut,
+    ActivityAssetM130Contribution,
+    ActivityAssetM130ProjectionSnapshot,
+    ServedWords,
+)
 from .election_fact_dtos import (
     ApprovedAmortizationPlanSnapshot,
     LowValueElectionSnapshot,
@@ -558,6 +564,8 @@ def _m130_snapshot(value: M130AccrualProjection, asset_kind: AssetKind) -> Activ
         unavailable_asset_ids=value.unavailable_asset_ids,
         free_gap_asset_ids=value.free_gap_asset_ids,
         agrarian_excluded_asset_ids=value.agrarian_excluded_asset_ids,
+        partial_words=value.partial_words,
+        words_language=value.words_language,
     )
 
 
@@ -579,6 +587,8 @@ def _m130_domain(value: ActivityAssetM130ProjectionSnapshot) -> M130AccrualProje
         unavailable_asset_ids=value.unavailable_asset_ids,
         free_gap_asset_ids=value.free_gap_asset_ids,
         agrarian_excluded_asset_ids=value.agrarian_excluded_asset_ids,
+        partial_words=value.partial_words,
+        words_language=value.words_language,
     )
 
 
@@ -594,11 +604,16 @@ class ActivityAssetM100GapSnapshot(BaseModel):
     covered_through: date
     """The last day the interval covers, the day before the exclusive ``covered_until``."""
     accrued: PublicDecimal | None = None
+    words: ServedWords | None = None
+    """The interval said whole, by the name the register holds for the element."""
+    words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _inclusive_end_follows(self) -> Self:
         _require_covered_through(self.covered_until, self.covered_through)
+        if self.words is not None and self.words_language is None:
+            raise ValueError("served words name the language they are in")
         return self
 
     @classmethod
@@ -611,6 +626,8 @@ class ActivityAssetM100GapSnapshot(BaseModel):
             covered_until=value.covered_until,
             covered_through=last_day_covered(value.covered_until),
             accrued=None if value.accrued is None else project_scalar(value.accrued),
+            words=value.words,
+            words_language=value.words_language,
         )
 
     def to_domain(self) -> M100ClaimGapProjection:
@@ -621,6 +638,8 @@ class ActivityAssetM100GapSnapshot(BaseModel):
             covered_from=self.covered_from,
             covered_until=self.covered_until,
             accrued=None if self.accrued is None else Decimal(self.accrued.decimal),
+            words=self.words,
+            words_language=self.words_language,
         )
 
 
@@ -636,6 +655,8 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
     material_m130: ActivityAssetM130ProjectionSnapshot | None = None
     intangible_m130: ActivityAssetM130ProjectionSnapshot | None = None
     """Both set for a Modelo 130 period, and both null when the handoff states Modelo 100 alone."""
+    left_out: tuple[ActivityAssetHandoffLeftOut, ...] = ()
+    """What the Modelo 130 amounts leave out, one entry per reason across both asset kinds."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -661,6 +682,7 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
             intangible_m130=None
             if value.intangible_m130 is None
             else _m130_snapshot(value.intangible_m130, AssetKind.INTANGIBLE),
+            left_out=value.left_out,
         )
 
     def to_domain(self) -> ActivityAssetFilingHandoff:
@@ -673,6 +695,7 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
             intangible_m100_box_name=None if self.intangible_m100 is None else self.intangible_m100.box_name,
             material_m130=None if self.material_m130 is None else _m130_domain(self.material_m130),
             intangible_m130=None if self.intangible_m130 is None else _m130_domain(self.intangible_m130),
+            left_out=self.left_out,
         )
 
 
