@@ -600,13 +600,19 @@ def _registry_readiness_refusal(
     from ..core.errors.error_codes import resolve_error_message
     from ..core.i18n.render import tr
 
-    coordinate = {"modelo": request.modelo, "filing_year": request.filing_year, "period": period_token}
     if not isinstance(exc, CadrumoError):
-        return tr("application.modelo.errors.readiness_registry_snapshot_unresolved", **coordinate)
+        return tr(
+            "application.modelo.errors.readiness_registry_snapshot_unresolved",
+            modelo=request.modelo,
+            filing_year=request.filing_year,
+            period=period_token,
+        )
     return tr(
         "application.modelo.errors.readiness_registry_snapshot_unresolved_reason",
+        modelo=request.modelo,
+        filing_year=request.filing_year,
+        period=period_token,
         reason=resolve_error_message(exc),
-        **coordinate,
     )
 
 
