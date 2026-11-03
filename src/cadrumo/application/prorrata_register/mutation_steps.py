@@ -54,6 +54,7 @@ from .projection_contracts import (
 from .projection_contracts import (
     ProrrataRefusalReason as _ProrrataRefusalReason,
 )
+from .refusal_words import served_refusal_words
 from .seed import ProrrataPriorDefinitivaSeed, ProrrataSeedFinding
 from .service import (
     ProrrataRegisterService,
@@ -106,7 +107,8 @@ def build_prorrata_refusal_projection(
     existing_provenance: str | None = None,
     code: _ProrrataRefusalCode = _PRORRATA_VALIDATION_REFUSAL_CODE,
 ) -> _ProrrataRefusalProjection:
-    """Create the typed refusal projection with its safe contextual evidence."""
+    """Create the typed refusal projection with its safe contextual evidence and the sentence it serves."""
+    words, language = served_refusal_words(reason, error_code=code)
     return _ProrrataRefusalProjection(
         code=code,
         reason=reason,
@@ -116,6 +118,8 @@ def build_prorrata_refusal_projection(
         findings=tuple(_ProrrataFindingProjection.from_finding(item) for item in findings),
         accepted_provenances=accepted_provenances,
         existing_provenance=existing_provenance,
+        refusal_words=words,
+        refusal_words_language=language,
     )
 
 

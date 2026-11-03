@@ -2912,6 +2912,36 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de model no pot estar en blanc.
+  prorrata_register:
+    served:
+      gross_declaration_absent: 'El registre ha rebutjat l''eliminació: no hi ha cap
+        base bruta declarada per a aquesta liquidació, així que no hi ha res a eliminar.'
+      gross_declaration_duplicate: 'El registre ha rebutjat la base bruta: ja n''hi
+        ha una de declarada per a aquesta liquidació. No s''ha desat res.'
+      gross_declaration_sector_unknown: 'El registre ha rebutjat la base bruta: el
+        sector no és un sector diferenciat declarat. No s''ha desat res.'
+      provenance_not_electable: 'El registre ha rebutjat l''opció: no pots triar aquesta
+        procedència.'
+      provenance_required: 'El registre ha rebutjat l''opció: indica la procedència
+        del percentatge provisional.'
+      reference_not_permitted: 'El registre ha rebutjat l''opció: aquesta procedència
+        no admet referència d''autorització.'
+      reference_required: 'El registre ha rebutjat l''opció: aquesta procedència necessita
+        una referència d''autorització.'
+      regulated_override_standing: 'El registre ha rebutjat el trasllat: ja consta
+        un percentatge provisional regulat per a aquest any.'
+      sector_prior_definitive_absent: 'El registre ha rebutjat el trasllat: el sector
+        no té prorrata definitiva anterior.'
+      sector_settlement_entry_absent: 'El registre ha rebutjat la liquidació: el sector
+        no té entrada per a aquest any.'
+      seed_existing_blocked: 'El registre ha rebutjat el trasllat: l''entrada existent
+        d''aquest any el bloqueja.'
+      seed_source_absent: 'El registre ha rebutjat el trasllat: no hi ha liquidació
+        de l''any anterior de la qual traslladar.'
+      seed_source_blocked: 'El registre ha rebutjat el trasllat: la font de l''any
+        anterior té avisos que bloquegen.'
+      validation: 'El registre de prorrata ha rebutjat el canvi: no supera la validació
+        del registre.'
   reader:
     refusal:
       column_names_unavailable: el model que llegeix els noms de les columnes d'aquest

@@ -2907,6 +2907,36 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
+  prorrata_register:
+    served:
+      gross_declaration_absent: 'El registro ha rechazado la eliminación: no hay ninguna
+        base bruta declarada para esa liquidación, así que no hay nada que eliminar.'
+      gross_declaration_duplicate: 'El registro ha rechazado la base bruta: ya hay
+        una declarada para esa liquidación. No se ha guardado nada.'
+      gross_declaration_sector_unknown: 'El registro ha rechazado la base bruta: el
+        sector no es un sector diferenciado declarado. No se ha guardado nada.'
+      provenance_not_electable: 'El registro ha rechazado la opción: no puedes elegir
+        esa procedencia.'
+      provenance_required: 'El registro ha rechazado la opción: indica la procedencia
+        del porcentaje provisional.'
+      reference_not_permitted: 'El registro ha rechazado la opción: esa procedencia
+        no admite referencia de autorización.'
+      reference_required: 'El registro ha rechazado la opción: esa procedencia necesita
+        una referencia de autorización.'
+      regulated_override_standing: 'El registro ha rechazado el traslado: ya consta
+        un porcentaje provisional regulado para este año.'
+      sector_prior_definitive_absent: 'El registro ha rechazado el traslado: el sector
+        no tiene prorrata definitiva anterior.'
+      sector_settlement_entry_absent: 'El registro ha rechazado la liquidación: el
+        sector no tiene entrada para este año.'
+      seed_existing_blocked: 'El registro ha rechazado el traslado: la entrada existente
+        de este año lo bloquea.'
+      seed_source_absent: 'El registro ha rechazado el traslado: no hay liquidación
+        del año anterior de la que trasladar.'
+      seed_source_blocked: 'El registro ha rechazado el traslado: la fuente del año
+        anterior tiene avisos que bloquean.'
+      validation: 'El registro de prorrata ha rechazado el cambio: no supera la validación
+        del registro.'
   reader:
     refusal:
       column_names_unavailable: el modelo que lee los nombres de las columnas de este

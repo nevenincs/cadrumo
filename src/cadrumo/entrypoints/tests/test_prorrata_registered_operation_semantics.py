@@ -34,9 +34,11 @@ from ...application.prorrata_register.operation_requests import (
     ProrrataSettleSectorRequest,
 )
 from ...application.prorrata_register.projection_contracts import ProrrataMutationProjection
+from ...application.prorrata_register.refusal_words import served_refusal_words
 from ...application.prorrata_register.result_contracts import ProrrataOperationExecutionResult
 from ...application.prorrata_register.result_projections import project_prorrata_mutation_result
 from ...application.prorrata_register.service import ProrrataRegisterService
+from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -189,10 +191,15 @@ def _assert_refusal_projection(
 ) -> ProrrataMutationProjection:
     if execution.refusal is None:
         raise AssertionError("expected refusal result lacks typed refusal detail")
-    return project_prorrata_mutation_result(
+    projection = project_prorrata_mutation_result(
         execution,
         _receipt(identity, refused=True, refusal_code=execution.refusal.code),
     )
+    served = projection.refusal
+    assert served is not None
+    expected, language = served_refusal_words(served.reason, error_code=served.code)
+    assert (served.refusal_words, served.refusal_words_language) == (expected, language)
+    return projection
 
 
 def test_standing_override_refusal_preserves_exact_provenance_and_writes_nothing(
@@ -345,6 +352,7 @@ def test_settle_sector_without_a_current_entry_refuses_without_writing(
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.NONE]
     assert projection.refusal is not None
     assert projection.refusal.reason == "sector_settlement_entry_absent"
+    assert projection.refusal.refusal_words == tr("application.prorrata_register.served.sector_settlement_entry_absent")
     assert projection.refusal.sector_id == sector_id
     with validating_governed_facts(authority_operation):
         after = ProrrataRegisterService(

@@ -8799,29 +8799,6 @@ tui:
         prompt: La prorrata d'IVA de cada exercici tal com la desa el registre. Tria
           un canvi, omple'n els camps, revisa'l i confirma'l. El registre mateix calcula
           cada xifra definitiva.
-        refusal:
-          provenance_not_electable: 'El registre ha rebutjat l''opció: no pots triar
-            aquesta procedència.'
-          provenance_required: 'El registre ha rebutjat l''opció: indica la procedència
-            del percentatge provisional.'
-          reference_not_permitted: 'El registre ha rebutjat l''opció: aquesta procedència
-            no admet referència d''autorització.'
-          reference_required: 'El registre ha rebutjat l''opció: aquesta procedència
-            necessita una referència d''autorització.'
-          regulated_override_standing: 'El registre ha rebutjat el trasllat: ja consta
-            un percentatge provisional regulat per a aquest any.'
-          sector_prior_definitive_absent: 'El registre ha rebutjat el trasllat: el
-            sector no té prorrata definitiva anterior.'
-          sector_settlement_entry_absent: 'El registre ha rebutjat la liquidació:
-            el sector no té entrada per a aquest any.'
-          seed_existing_blocked: 'El registre ha rebutjat el trasllat: l''entrada
-            existent d''aquest any el bloqueja.'
-          seed_source_absent: 'El registre ha rebutjat el trasllat: no hi ha liquidació
-            de l''any anterior de la qual traslladar.'
-          seed_source_blocked: 'El registre ha rebutjat el trasllat: la font de l''any
-            anterior té avisos que bloquegen.'
-          validation: 'El registre de prorrata ha rebutjat el canvi: no supera la
-            validació del registre.'
         result:
           entry: '%{ejercicio} · %{sector} · %{regime} · provisional %{provisional}
             · definitiva %{definitive}'

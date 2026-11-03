@@ -9,6 +9,7 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Select, Static
 
 from .....application.operations.public_scalar import PublicDecimal
+from .....application.prorrata_register.mutation_steps import build_prorrata_refusal_projection
 from .....application.prorrata_register.operation_requests import (
     ProrrataDeclareSectorRequest,
     ProrrataElectEspecialRequest,
@@ -21,7 +22,6 @@ from .....application.prorrata_register.operation_requests import (
 )
 from .....application.prorrata_register.projection_contracts import (
     ProrrataFindingProjection,
-    ProrrataRefusalProjection,
     ProrrataSectorDefinitionProjection,
 )
 from .....core.config import override_settings
@@ -120,13 +120,16 @@ async def test_the_register_lists_entries_and_a_confirmed_election_shows_in_the_
 @pytest.mark.asyncio
 async def test_an_election_the_register_refuses_shows_its_registered_refusal_and_stays_staged() -> None:
     door = MemoryProrrataRegisterDoor(entries=(synthetic_prorrata_entry(2025),))
-    door.refusal = ProrrataRefusalProjection(
-        code="REFUSED_PRORRATA_ELECTION",
-        reason="provenance_required",
-        detail="synthetic: a provisional provenance is required",
-        ejercicio=2026,
-        accepted_provenances=("synthetic_a", "synthetic_b"),
-    )
+    with override_settings(cadrumo_output_language="en"):
+        door.refusal = build_prorrata_refusal_projection(
+            code="REFUSED_PRORRATA_ELECTION",
+            reason="provenance_required",
+            detail="synthetic: a provisional provenance is required",
+            ejercicio=2026,
+            accepted_provenances=("synthetic_a", "synthetic_b"),
+        )
+    served = door.refusal.refusal_words
+    assert served is not None and "provenance" in served
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
@@ -136,7 +139,7 @@ async def test_an_election_the_register_refuses_shows_its_registered_refusal_and
             await _press(pilot, screen, "register-review")
             await _press(pilot, screen, "register-confirm")
             refusal = _text(screen, "#ledger-refusal")
-            assert tr("tui.ledger.registers.prorrata.refusal.provenance_required") in refusal
+            assert refusal.startswith(served)
             assert "synthetic: a provisional provenance is required" in refusal
             accepted = tr("tui.ledger.registers.prorrata.accepted_provenances", values="synthetic_a, synthetic_b")
             assert accepted in refusal
@@ -376,14 +379,13 @@ def test_a_seed_refusal_lists_only_its_blocking_findings() -> None:
             selected_revision_id=None,
         )
 
-    text = prorrata_refusal_text(
-        ProrrataRefusalProjection(
-            code="REFUSED_PROFILE_PRORRATA_WHOLE_SEED",
-            reason="seed_source_blocked",
-            detail="synthetic detail",
-            findings=(finding("BLOCK", blocking=True), finding("NOTE", blocking=False)),
+    with override_settings(cadrumo_output_language="en"):
+        served = build_prorrata_refusal_projection(
+            code="REFUSED_PROFILE_PRORRATA_WHOLE_SEED", reason="seed_source_blocked", detail="synthetic detail"
         )
-    )
-    assert tr("tui.ledger.registers.prorrata.refusal.seed_source_blocked") in text
+    refusal = served.model_copy(update={"findings": (finding("BLOCK", blocking=True), finding("NOTE", blocking=False))})
+    assert served.refusal_words is not None
+    text = prorrata_refusal_text(refusal)
+    assert text.startswith(served.refusal_words)
     assert "[BLOCK] synthetic BLOCK" in text
     assert "NOTE" not in text

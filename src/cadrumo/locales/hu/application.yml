@@ -2868,6 +2868,36 @@ application:
     explain:
       errors:
         modelo_blank: A nyomtatvány azonosítója nem lehet üres.
+  prorrata_register:
+    served:
+      gross_declaration_absent: 'A nyilvántartás elutasította a törlést: erre a bevallási
+        időszakra nincs megadott bruttó alap, így nincs mit törölni.'
+      gross_declaration_duplicate: 'A nyilvántartás elutasította a bruttó alapot:
+        erre a bevallási időszakra már van megadva egy. Semmi sem került mentésre.'
+      gross_declaration_sector_unknown: 'A nyilvántartás elutasította a bruttó alapot:
+        az ágazat nem bejelentett elkülönített ágazat. Semmi sem került mentésre.'
+      provenance_not_electable: 'A nyilvántartás elutasította a választást: ezt az
+        eredetet nem választhatod.'
+      provenance_required: 'A nyilvántartás elutasította a választást: add meg az
+        ideiglenes százalék eredetét.'
+      reference_not_permitted: 'A nyilvántartás elutasította a választást: ehhez az
+        eredethez nem adható engedélyhivatkozás.'
+      reference_required: 'A nyilvántartás elutasította a választást: ehhez az eredethez
+        engedélyhivatkozás kell.'
+      regulated_override_standing: 'A nyilvántartás elutasította az átvételt: erre
+        az évre már szabályozott ideiglenes százalék van rögzítve.'
+      sector_prior_definitive_absent: 'A nyilvántartás elutasította az átvételt: az
+        ágazatnak nincs előző végleges prorratája.'
+      sector_settlement_entry_absent: 'A nyilvántartás elutasította a rögzítést: az
+        ágazatnak nincs bejegyzése erre az évre.'
+      seed_existing_blocked: 'A nyilvántartás elutasította az átvételt: az évre már
+        meglévő bejegyzés akadályozza.'
+      seed_source_absent: 'A nyilvántartás elutasította az átvételt: nincs előző évi
+        elszámolás, amelyből átvehető lenne.'
+      seed_source_blocked: 'A nyilvántartás elutasította az átvételt: az előző évi
+        forrásban blokkoló észrevételek vannak.'
+      validation: 'A prorrata-nyilvántartás elutasította a módosítást: nem felel meg
+        a nyilvántartás ellenőrzésének.'
   reader:
     refusal:
       column_names_unavailable: a fájl oszlopneveit olvasó modell jelenleg nem érhető

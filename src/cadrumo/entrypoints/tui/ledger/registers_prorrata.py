@@ -105,19 +105,6 @@ _DONE_LOCALE_KEYS: Final[dict[str, str]] = {
     "seed_sector": "tui.ledger.registers.prorrata.done.seed_sector",
     "settle_sector": "tui.ledger.registers.prorrata.done.settle_sector",
 }
-_REFUSAL_LOCALE_KEYS: Final[dict[str, str]] = {
-    "validation": "tui.ledger.registers.prorrata.refusal.validation",
-    "provenance_required": "tui.ledger.registers.prorrata.refusal.provenance_required",
-    "provenance_not_electable": "tui.ledger.registers.prorrata.refusal.provenance_not_electable",
-    "reference_required": "tui.ledger.registers.prorrata.refusal.reference_required",
-    "reference_not_permitted": "tui.ledger.registers.prorrata.refusal.reference_not_permitted",
-    "seed_source_absent": "tui.ledger.registers.prorrata.refusal.seed_source_absent",
-    "seed_source_blocked": "tui.ledger.registers.prorrata.refusal.seed_source_blocked",
-    "seed_existing_blocked": "tui.ledger.registers.prorrata.refusal.seed_existing_blocked",
-    "regulated_override_standing": "tui.ledger.registers.prorrata.refusal.regulated_override_standing",
-    "sector_prior_definitive_absent": "tui.ledger.registers.prorrata.refusal.sector_prior_definitive_absent",
-    "sector_settlement_entry_absent": "tui.ledger.registers.prorrata.refusal.sector_settlement_entry_absent",
-}
 _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "action": "tui.ledger.registers.prorrata.field.action",
     "ejercicio": "tui.ledger.registers.prorrata.field.ejercicio",
@@ -215,8 +202,8 @@ def _sector_line(sector: ProrrataSectorDefinitionProjection) -> str:
 
 
 def prorrata_refusal_text(refusal: ProrrataRefusalProjection) -> str:
-    """The operation's own refusal: its reason in words, then the detail and findings it carried."""
-    lines = [tr(_REFUSAL_LOCALE_KEYS[refusal.reason]), refusal.detail]
+    """The operation's own refusal: the words it served, then the detail and findings it carried."""
+    lines = [refusal.refusal_words or refusal.code, refusal.detail]
     lines.extend(f"[{finding.code}] {finding.message}" for finding in refusal.findings if finding.blocking)
     if refusal.accepted_provenances:
         lines.append(

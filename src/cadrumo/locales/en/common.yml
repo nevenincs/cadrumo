@@ -8626,29 +8626,6 @@ tui:
         prompt: Each exercise's IVA prorrata as the register holds it. Choose a change,
           fill in its fields, review it, then confirm. The register itself works out
           every definitive figure.
-        refusal:
-          provenance_not_electable: 'The register refused the election: you cannot
-            elect that provenance.'
-          provenance_required: 'The register refused the election: name the provenance
-            of the provisional percentage.'
-          reference_not_permitted: 'The register refused the election: that provenance
-            takes no authorisation reference.'
-          reference_required: 'The register refused the election: that provenance
-            needs an authorisation reference.'
-          regulated_override_standing: 'The register refused the carry: a regulated
-            provisional percentage already stands for this year.'
-          sector_prior_definitive_absent: 'The register refused the carry: the sector
-            has no prior definitive prorrata.'
-          sector_settlement_entry_absent: 'The register refused the settlement: the
-            sector has no entry for this year.'
-          seed_existing_blocked: 'The register refused the carry: the existing entry
-            for this year blocks it.'
-          seed_source_absent: 'The register refused the carry: there is no prior-year
-            settlement to carry from.'
-          seed_source_blocked: 'The register refused the carry: the prior-year source
-            has blocking findings.'
-          validation: 'The prorrata register refused the change: it does not pass
-            the register''s validation.'
         result:
           entry: '%{ejercicio} · %{sector} · %{regime} · provisional %{provisional}
             · definitive %{definitive}'

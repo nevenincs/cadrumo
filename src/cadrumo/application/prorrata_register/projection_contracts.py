@@ -7,14 +7,16 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.prorrata_register.register import (
     ProrrataOperatorGrossDeclaration,
     ProrrataRegisterEntry,
     SectorDefinition,
 )
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.public_scalar import PublicDecimal
 from . import operation_requests as _requests
 from .seed import ProrrataPriorDefinitivaSeed, ProrrataSeedFinding
@@ -259,6 +261,16 @@ class ProrrataRefusalProjection(BaseModel):
     findings: tuple[ProrrataFindingProjection, ...] = ()
     accepted_provenances: tuple[str, ...] = ()
     existing_provenance: str | None = None
+    #: The finished sentence a frontend shows for the refusal and the language it is in, served by the
+    #: operation so no frontend words a reason of its own.
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> ProrrataRefusalProjection:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
     @model_validator(mode="after")
     def _standing_provenance_is_exact(self) -> ProrrataRefusalProjection:
