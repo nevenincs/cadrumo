@@ -45,6 +45,11 @@ from .scenario import money
 
 _ACTOR: Final[str] = "persona-acceptance"
 _NORMAL_MODALITY_BINDING: Final[str] = "renta-modelo-100-estimacion-directa-es-normal"
+# The 2024 return states the mother's social-security contributions behind the maternity deduction as an operator
+# figure; later revisions retired the ceiling that needed it. These taxpayers have no such deduction, so the
+# journey states the zero a 2024 filer without children declares, and the calculation must then take it as given.
+_LAST_YEAR_NEEDING_COTIZACIONES: Final[int] = 2024
+_COTIZACIONES_BINDING: Final[str] = "renta-profile-cotizaciones-ss-madre"
 _ACTIVITY_CHAIN_CASILLAS: Final[tuple[str, ...]] = ("0171", "0180", "0218", "0220", "0224")
 _CREDIT_CASILLAS: Final[tuple[str, ...]] = ("0596", "0597", "0598", "0599", "0603", "0604", "0609")
 
@@ -301,8 +306,9 @@ def run_employee(cli: InstalledCli, *, year: int, directory: Path) -> PersonaEvi
         cli,
         year=year,
         inputs=("--casilla", WORK_HOLDER_INPUT, *_casilla_inputs(oracle)),
-        extra=("--binding", f"{_NORMAL_MODALITY_BINDING}=1", *_zero_relations()),
+        extra=("--binding", f"{_NORMAL_MODALITY_BINDING}=1", *_zero_relations(), *_cotizaciones_bindings(year)),
     )
+    _require_no_maternity_deduction(annual["calculation"], year)
     credits = _require_credits(
         annual["calculation"],
         {
@@ -326,6 +332,24 @@ def run_employee(cli: InstalledCli, *, year: int, directory: Path) -> PersonaEvi
 
 def _casilla_inputs(oracle: EmployeeOracle) -> tuple[str, ...]:
     return tuple(item for code, value in oracle.salary_casillas for item in ("--casilla", f"{code}={value:.2f}"))
+
+
+def _cotizaciones_bindings(year: int) -> tuple[str, ...]:
+    """The zero maternity-contributions figure the 2024 return asks for, and nothing for later returns."""
+    if year <= _LAST_YEAR_NEEDING_COTIZACIONES:
+        return ("--binding", f"{_COTIZACIONES_BINDING}=0")
+    return ()
+
+
+def _require_no_maternity_deduction(calculation: dict[str, Any], year: int) -> None:
+    """A 2024 return given zero contributions must leave the maternity deduction at zero."""
+    if year > _LAST_YEAR_NEEDING_COTIZACIONES:
+        return
+    values = calculation.get("casilla_values")
+    if not isinstance(values, dict):
+        raise JourneyError("Modelo 100 returned no casilla map")
+    if "0611" in values and money(Decimal(str(values["0611"]))) != 0:
+        raise JourneyError(f"Modelo 100 maternity deduction is not zero: {values['0611']}")
 
 
 def _zero_relations() -> tuple[str, ...]:
@@ -398,8 +422,9 @@ def run_employee_autonomo(
             "--casilla",
             ACTIVITY_KEY_INPUT,
         ),
-        extra=("--binding", f"{_NORMAL_MODALITY_BINDING}=0"),
+        extra=("--binding", f"{_NORMAL_MODALITY_BINDING}=0", *_cotizaciones_bindings(year)),
     )
+    _require_no_maternity_deduction(annual["calculation"], year)
     credits = _require_credits(
         annual["calculation"],
         {
