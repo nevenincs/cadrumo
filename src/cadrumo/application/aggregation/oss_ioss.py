@@ -419,7 +419,8 @@ def _observations_at_row_level(
     row's rate: the only reading that keeps a declared cuota equal to its base times its rate.
     """
     grouped: dict[
-        tuple[str, EUMemberState, IvaRateKind, InvoiceKind, TransactionKind, Decimal], list[OssIossLedgerObservation]
+        tuple[str, EUMemberState, IvaRateKind, InvoiceKind, TransactionKind, Period | None, Decimal],
+        list[OssIossLedgerObservation],
     ] = {}
     for observation in observations:
         applied = _applied_rate(
@@ -438,6 +439,8 @@ def _observations_at_row_level(
             observation.rate_kind,
             observation.invoice_direction,
             observation.transaction_kind,
+            # A correction of an earlier period answers on that period's row, never this one's.
+            observation.corrected_period,
             applied.pct,
         )
         grouped.setdefault(key, []).append(observation)
