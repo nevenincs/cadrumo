@@ -797,8 +797,9 @@ _CORRECTION_ROW = 26
 def _reducing(scenario: _Scenario) -> tuple[Invoice, Invoice]:
     """F-OLD, filed the year before at 1.000,00 + 200,00, and the rectificativa issued in this return's period."""
     first = _invoice(scenario, "F-OLD", "FR", "general", "1000.00", "200.00", supply=_PREVIOUS_YEAR_SUPPLY)
-    correction = _invoice(scenario, "R-1", "FR", "general", "100.00", "20.00").model_copy(
-        update={
+    correction = Invoice.model_validate(
+        {
+            **_invoice(scenario, "R-1", "FR", "general", "100.00", "20.00").model_dump(exclude={"invoice_id"}),
             "invoice_class": invoice_class_rectificativa(),
             "series": "R",
             "counterparty_tax_id": "FR40303265045",
@@ -843,7 +844,11 @@ def test_a_reduction_of_an_earlier_period_settles_against_this_periods_services(
     result, _ = _calculate(
         objects,
         scenario,
-        (*_reducing(scenario), _invoice(scenario, "OSS-1", "FR", "general", "250.00", "50.00")),
+        (
+            *_reducing(scenario),
+            _invoice(scenario, "OSS-1", "FR", "general", "125.00", "25.00"),
+            _invoice(scenario, "OSS-2", "FR", "general", "125.00", "25.00"),
+        ),
         operation,
     )
     values = result.revision.casilla_values
@@ -916,6 +921,10 @@ def test_an_entered_increase_of_an_earlier_period_files_with_no_sign(
     values = result.revision.casilla_values
     assert Decimal(values[f"{page.prefix}.resultado.pl.correcciones-positivas"]) == Decimal("15.00")
     assert Decimal(values[f"{page.prefix}.resultado.pl.ingresar"]) == Decimal("38.00")
+    report = _verify(result)
+    assert report.granted_verificado_completo is True, [
+        (finding.message_locale_key, finding.message_facts) for finding in report.findings
+    ]
     wire = _export(objects, tmp_path, scenario, result)
     assert _correction_page_rows(wire, scenario, 1) == _correction_wire(scenario, "PL", "00000000000001500")
     assert _parsed_correction_amounts(wire, scenario) == [Decimal("15.00")]
