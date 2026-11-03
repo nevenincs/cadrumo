@@ -129,6 +129,9 @@ def _seed_filer(*, criterion: str, family: tuple[UserProfileFact, ...] = ()) -> 
                 UserProfileFact(path="identity.name", value="Annual"),
                 UserProfileFact(path="identity.surnames", value="Renta Tester"),
                 UserProfileFact(path="activities.description", value="design services"),
+                # An epigraph outside group 861 proves the filer carries on no urban rental as an activity,
+                # so that credit class reads as a proven zero rather than as unknown.
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
                 *GENERAL_REGIME_NATURAL_PERSON_FACTS,
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 *single,
