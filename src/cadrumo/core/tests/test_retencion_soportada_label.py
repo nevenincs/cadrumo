@@ -7,7 +7,10 @@ import pytest
 from cadrumo.core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from cadrumo.core.i18n.render import clear_output_language_cache
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
-from cadrumo.core.retencion_soportada_label import RETENCION_SOPORTADA_CLASE_LABEL_KEYS, retencion_soportada_clase_label
+from cadrumo.core.retencion_soportada_label import (
+    RETENCION_SOPORTADA_CLASE_LABEL_LOCALE_KEYS,
+    retencion_soportada_clase_label,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -31,8 +34,8 @@ def output_language(monkeypatch: pytest.MonkeyPatch):
 
 
 def test_every_class_has_exactly_one_label_key() -> None:
-    assert set(RETENCION_SOPORTADA_CLASE_LABEL_KEYS) == set(RetencionSoportadaClase)
-    assert len(set(RETENCION_SOPORTADA_CLASE_LABEL_KEYS.values())) == len(RetencionSoportadaClase)
+    assert set(RETENCION_SOPORTADA_CLASE_LABEL_LOCALE_KEYS) == set(RetencionSoportadaClase)
+    assert len(set(RETENCION_SOPORTADA_CLASE_LABEL_LOCALE_KEYS.values())) == len(RetencionSoportadaClase)
 
 
 @pytest.mark.parametrize("language", _LANGUAGES)
@@ -42,7 +45,7 @@ def test_every_class_resolves_to_a_distinct_translated_label(language: str, outp
     assert len(set(labels.values())) == len(RetencionSoportadaClase)
     for income_class, label in labels.items():
         assert label.strip()
-        assert label != RETENCION_SOPORTADA_CLASE_LABEL_KEYS[income_class]
+        assert label != RETENCION_SOPORTADA_CLASE_LABEL_LOCALE_KEYS[income_class]
         assert "retencion_soportada" not in label
 
 

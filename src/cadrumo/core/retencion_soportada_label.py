@@ -12,9 +12,9 @@ from typing import Final
 from .i18n.render import tr
 from .retencion_soportada import RetencionSoportadaClase
 
-__all__ = ["RETENCION_SOPORTADA_CLASE_LABEL_KEYS", "retencion_soportada_clase_label"]
+__all__ = ["RETENCION_SOPORTADA_CLASE_LABEL_LOCALE_KEYS", "retencion_soportada_clase_label"]
 
-RETENCION_SOPORTADA_CLASE_LABEL_KEYS: Final[dict[RetencionSoportadaClase, str]] = {
+RETENCION_SOPORTADA_CLASE_LABEL_LOCALE_KEYS: Final[dict[RetencionSoportadaClase, str]] = {
     RetencionSoportadaClase.TRABAJO: "aggregation.retencion_soportada.clase.trabajo",
     RetencionSoportadaClase.CAPITAL_MOBILIARIO: "aggregation.retencion_soportada.clase.capital_mobiliario",
     RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO: (
@@ -44,10 +44,10 @@ RETENCION_SOPORTADA_CLASE_LABEL_KEYS: Final[dict[RetencionSoportadaClase, str]] 
 }
 """The locale key of each income class's label; every member has one."""
 
-if frozenset(RETENCION_SOPORTADA_CLASE_LABEL_KEYS) != frozenset(RetencionSoportadaClase):
+if frozenset(RETENCION_SOPORTADA_CLASE_LABEL_LOCALE_KEYS) != frozenset(RetencionSoportadaClase):
     raise ImportError("every suffered-withholding income class needs exactly one label key")
 
 
 def retencion_soportada_clase_label(income_class: RetencionSoportadaClase) -> str:
     """Return the label of ``income_class`` in the configured output language."""
-    return tr(RETENCION_SOPORTADA_CLASE_LABEL_KEYS[RetencionSoportadaClase(income_class)])
+    return tr(RETENCION_SOPORTADA_CLASE_LABEL_LOCALE_KEYS[RetencionSoportadaClase(income_class)])
