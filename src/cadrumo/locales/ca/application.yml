@@ -1011,6 +1011,44 @@ application:
         reader_unavailable: 'El lector automàtic no ha pogut funcionar, així que els
           %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Emplena''ls
           tu.'
+    periods:
+      served:
+        annual: Any
+        april: Abril
+        august: Agost
+        december: Desembre
+        february: Febrer
+        january: Gener
+        july: Juliol
+        june: Juny
+        label: '{year} · {name}'
+        march: Març
+        may: Maig
+        november: Novembre
+        october: Octubre
+        september: Setembre
+    staged_check:
+      served:
+        blocker:
+          cannot_clear: 'Aquest valor no es pot buidar: el camp ha de tenir un valor.'
+          draft_incomplete: Un moviment nou necessita data comptable, import, moneda,
+            sentit i descripció abans de poder-se desar.
+          mixed_needs_share: Un moviment Mixt necessita una part professional.
+          needs_classification: Aquest canvi necessita que el moviment estigui classificat
+            abans.
+          share_needs_mixed: La part professional només s'aplica a un moviment Mixt.
+          transfer_with_tax: Un traspàs entre els teus propis comptes no porta dades
+            fiscals.
+        fix:
+          cannot_clear: Conserva el valor desat.
+          draft_incomplete: Completa el que li falta al moviment nou.
+          mixed_needs_share: Indica la part professional com a percentatge, per exemple
+            50 per al 50 %.
+          needs_classification: Classifica el moviment com a Professional o Personal.
+          share_needs_mixed: Treu la part o classifica el moviment com a Mixt.
+          transfer_with_tax: Treu les dades fiscals del traspàs o canvia'n el sentit.
+        share_refusal: 'Això no és una part: escriu un percentatge, com 50 per al
+          50 %.'
   live:
     borrador:
       comparison:
@@ -1653,8 +1691,8 @@ application:
         pot calcular, i la casella {box} només declara el que està registrat.'
       credit_cross_check_absent: 'Casella {box}: segons {cross_check}, no hi ha res
         per comparar, així que aquesta xifra no està contrastada.'
-      credit_resolution_applied: 'Casella {box}: vas acceptar {accepted} tot i que
-        les fonts donen {sources} (discrepància {finding}). El teu motiu: {reason}'
+      credit_resolution_applied: 'Casella {box}: vas acceptar {accepted}, l''import
+        en ús, tot i que les fonts donen {sources}. El teu motiu: {reason}'
       credit_resolution_stale: 'Casella {box}: vas acceptar una discrepància anterior
         d''aquesta xifra, però les seves fonts ara donen altres imports, així que
         l''acceptació ja no s''aplica.'
@@ -1877,7 +1915,7 @@ application:
           que les fonts indiquen {sources}.'
         source_amount: '{source} ({amount})'
       served_source:
-        backend: el càlcul propi de Cadrumo
+        backend: el valor calculat a partir dels teus registres
         borrador: l'esborrany de l'AEAT
         caller: el valor aportat al càlcul
         cross_check: una altra font

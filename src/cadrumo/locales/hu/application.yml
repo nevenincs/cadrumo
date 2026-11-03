@@ -995,6 +995,42 @@ application:
         reader_unavailable: 'Az automatikus olvasó nem tudott elindulni, ezért a címkék
           által nem lefedett %{count} mező üres marad: %{fields}. Töltsd ki ezeket
           a mezőket.'
+    periods:
+      served:
+        annual: Év
+        april: Április
+        august: Augusztus
+        december: December
+        february: Február
+        january: Január
+        july: Július
+        june: Június
+        label: '{year} · {name}'
+        march: Március
+        may: Május
+        november: November
+        october: Október
+        september: Szeptember
+    staged_check:
+      served:
+        blocker:
+          cannot_clear: 'Ez az érték nem törölhető: a mezőnek értéket kell tartalmaznia.'
+          draft_incomplete: Az új tételhez mentés előtt kell könyvelési dátum, összeg,
+            pénznem, irány és leírás.
+          mixed_needs_share: A Vegyes tételnek üzleti arány kell.
+          needs_classification: Ehhez a változtatáshoz előbb be kell sorolni a tételt.
+          share_needs_mixed: Üzleti arány csak Vegyes tételnél van.
+          transfer_with_tax: A saját számlák közötti átvezetés nem hordoz adóadatot.
+        fix:
+          cannot_clear: Tartsd meg a tárolt értéket.
+          draft_incomplete: Egészítsd ki, ami az új tételből hiányzik.
+          mixed_needs_share: Add meg az üzleti arányt százalékként, például 50-et
+            az 50%-hoz.
+          needs_classification: Sorold be a tételt Üzletinek vagy Magánnak.
+          share_needs_mixed: Vesd el az arányt, vagy sorold a tételt Vegyesnek.
+          transfer_with_tax: Vedd le az adóadatokat az átvezetésről, vagy változtasd
+            meg az irányát.
+        share_refusal: 'Ez nem arány: írj százalékot, például 50-et az 50%-hoz.'
   live:
     borrador:
       comparison:
@@ -1620,8 +1656,8 @@ application:
         mező pedig csak a rögzítettet tartalmazza.'
       credit_cross_check_absent: '{box}. mező: {cross_check} alapján nincs mit összevetni,
         ezért ez az összeg nincs összevetve.'
-      credit_resolution_applied: '{box}. mező: elfogadtad ezt: {accepted}, bár a források
-        ezt adják: {sources} (eltérés: {finding}). Az indoklásod: {reason}'
+      credit_resolution_applied: '{box}. mező: elfogadtad a használt összeget, ezt:
+        {accepted}, bár a források ezt adják: {sources}. Az indoklásod: {reason}'
       credit_resolution_stale: '{box}. mező: korábban elfogadtad ennek az összegnek
         egy eltérését, de a forrásai most más összegeket adnak, ezért az elfogadás
         már nem érvényes.'
@@ -1835,7 +1871,7 @@ application:
           a források ezt adják: {sources}.'
         source_amount: '{source} ({amount})'
       served_source:
-        backend: a Cadrumo saját számítása
+        backend: a nyilvántartásaidból számított érték
         borrador: az AEAT-tervezet
         caller: a számításnak átadott érték
         cross_check: egy másik forrás

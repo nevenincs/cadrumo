@@ -2,7 +2,8 @@
 
 The window's fixtures hold no rule: they look ``ledger.staged.check`` up in a recording
 made here. Set ``CADRUMO_STAGED_CHECK_UNRECORDED`` to a file of questions the fixtures could
-not answer, one JSON object per line, to answer them and refresh the recording.
+not answer, one JSON object per line, to answer them and refresh the recording. Set it to ``all`` to
+answer again every question the recording holds, as after the backend's answer gained a field.
 """
 
 from __future__ import annotations
@@ -148,7 +149,13 @@ if os.environ.get("CADRUMO_STAGED_CHECK_UNRECORDED", "") != "":
 
     def test_record_the_questions_the_fixtures_could_not_answer() -> None:
         recording = _recording() if _RECORDING.exists() else {"rows": {}, "drafts": {}}
-        asked = Path(os.environ["CADRUMO_STAGED_CHECK_UNRECORDED"]).read_text(encoding="utf-8").splitlines()
+        source = os.environ["CADRUMO_STAGED_CHECK_UNRECORDED"]
+        if source == "all":
+            asked = [json.dumps({"kind": "row", "question": question}) for question in recording["rows"]] + [
+                json.dumps({"kind": "draft", "question": question}) for question in recording["drafts"]
+            ]
+        else:
+            asked = Path(source).read_text(encoding="utf-8").splitlines()
         for line in asked:
             entry = json.loads(line)
             if entry["kind"] == "row":

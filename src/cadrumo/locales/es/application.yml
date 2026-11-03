@@ -1015,6 +1015,45 @@ application:
         reader_unavailable: 'El lector automático no ha podido funcionar, así que
           los %{count} campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}.
           Rellénalos tú.'
+    periods:
+      served:
+        annual: Año
+        april: Abril
+        august: Agosto
+        december: Diciembre
+        february: Febrero
+        january: Enero
+        july: Julio
+        june: Junio
+        label: '{year} · {name}'
+        march: Marzo
+        may: Mayo
+        november: Noviembre
+        october: Octubre
+        september: Septiembre
+    staged_check:
+      served:
+        blocker:
+          cannot_clear: 'Este valor no se puede vaciar: el campo tiene que tener un
+            valor.'
+          draft_incomplete: Un movimiento nuevo necesita fecha contable, importe,
+            moneda, sentido y descripción antes de poder guardarse.
+          mixed_needs_share: Un movimiento Mixto necesita una parte profesional.
+          needs_classification: Este cambio necesita que el movimiento esté clasificado
+            antes.
+          share_needs_mixed: La parte profesional solo se aplica a un movimiento Mixto.
+          transfer_with_tax: Un traspaso entre tus propias cuentas no lleva datos
+            fiscales.
+        fix:
+          cannot_clear: Conserva el valor guardado.
+          draft_incomplete: Completa lo que le falta al movimiento nuevo.
+          mixed_needs_share: Indica la parte profesional como porcentaje, por ejemplo
+            50 para el 50 %.
+          needs_classification: Clasifica el movimiento como Profesional o Personal.
+          share_needs_mixed: Quita la parte o clasifica el movimiento como Mixto.
+          transfer_with_tax: Quita los datos fiscales del traspaso o cambia su sentido.
+        share_refusal: 'Eso no es una parte: escribe un porcentaje, como 50 para el
+          50 %.'
   live:
     borrador:
       comparison:
@@ -1656,8 +1695,8 @@ application:
         casilla {box} solo declara lo registrado.'
       credit_cross_check_absent: 'Casilla {box}: según {cross_check}, no hay nada
         que comparar, así que esta cifra no está contrastada.'
-      credit_resolution_applied: 'Casilla {box}: aceptaste {accepted} aunque las fuentes
-        dan {sources} (discrepancia {finding}). Tu motivo: {reason}'
+      credit_resolution_applied: 'Casilla {box}: aceptaste {accepted}, el importe
+        en uso, aunque las fuentes dan {sources}. Tu motivo: {reason}'
       credit_resolution_stale: 'Casilla {box}: aceptaste una discrepancia anterior
         de esta cifra, pero sus fuentes ahora dan otros importes, así que la aceptación
         ya no se aplica.'
@@ -1872,7 +1911,7 @@ application:
           mientras que las fuentes indican {sources}.'
         source_amount: '{source} ({amount})'
       served_source:
-        backend: el propio cálculo de Cadrumo
+        backend: el valor calculado a partir de tus registros
         borrador: el borrador de la AEAT
         caller: el valor aportado al cálculo
         cross_check: otra fuente

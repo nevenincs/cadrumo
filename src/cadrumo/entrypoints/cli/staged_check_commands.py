@@ -25,7 +25,8 @@ from ...application.ledger.staged_check_contracts import (
     LedgerStagedRow,
 )
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.i18n.render import tr
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language, tr
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.errors import TransactionValidationError
 from .common import emit_envelope
@@ -54,6 +55,7 @@ def _request(
             rows=tuple(LedgerStagedRow.model_validate_json(text) for text in row),
             drafts=tuple(LedgerStagedDraft.model_validate_json(text) for text in draft),
             categories=tuple(category),
+            output_language=OutputLanguage(output_language()),
         )
     except (ValueError, ValidationError) as exc:
         # The values are private figures, so the refusal names the shape and not the input.

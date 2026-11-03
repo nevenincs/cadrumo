@@ -7,8 +7,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.transactions.classification_effects import LifecycleAction
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 
 LEDGER_STAGED_CHECK_OPERATION_DEFINITION_ID: Final = "ledger.staged.check"
 
@@ -76,6 +78,14 @@ DraftFieldName = Literal[
 WriteRoute = Literal["bulk", "classify", "update"]
 RouteRefusal = Literal["cannot_clear", "needs_classification"]
 TaxSetSkip = Literal["transfer", "personal"]
+StagedBlockerKind = Literal[
+    "cannot_clear",
+    "needs_classification",
+    "mixed_needs_share",
+    "share_needs_mixed",
+    "transfer_with_tax",
+    "draft_incomplete",
+]
 
 _Text = Annotated[str, Field(max_length=4096)]
 _Key = Annotated[str, Field(min_length=1, max_length=128)]
@@ -134,6 +144,8 @@ class LedgerStagedCheckRequest(BaseModel):
     rows: Annotated[tuple[LedgerStagedRow, ...], Field(max_length=50_000)] = ()
     drafts: Annotated[tuple[LedgerStagedDraft, ...], Field(max_length=_MAX_DRAFTS)] = ()
     categories: Annotated[tuple[_Key, ...], Field(max_length=_MAX_CATEGORIES)] = ()
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    """The language the answer's sentences are said in."""
 
 
 class LedgerStagedRoute(BaseModel):
@@ -151,15 +163,13 @@ class LedgerStagedBlocker(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    kind: Literal[
-        "cannot_clear",
-        "needs_classification",
-        "mixed_needs_share",
-        "share_needs_mixed",
-        "transfer_with_tax",
-        "draft_incomplete",
-    ]
+    kind: StagedBlockerKind
     fields: tuple[str, ...] = ()
+    words: Annotated[str, Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)]
+    """The sentence saying why the staged work cannot be sent; it names no field, value or command option."""
+    fix_words: Annotated[str, Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)]
+    """The sentence saying what puts it right."""
+    words_language: OutputLanguage
 
 
 class LedgerStagedNote(BaseModel):
@@ -228,6 +238,9 @@ class LedgerStagedCheckResult(BaseModel):
     rows: tuple[LedgerStagedRowAnswer, ...]
     drafts: tuple[LedgerStagedDraftAnswer, ...]
     categories: tuple[LedgerStagedCategoryFit, ...]
+    share_refusal_words: Annotated[str, Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)]
+    """The sentence a window shows beside a business share it could not read as a percentage."""
+    share_refusal_words_language: OutputLanguage
 
 
 class LedgerStagedCheckExecutionResult(BaseModel):
@@ -256,6 +269,7 @@ __all__ = [
     "LedgerStagedRowAnswer",
     "RouteRefusal",
     "StageFieldName",
+    "StagedBlockerKind",
     "TaxSetSkip",
     "WriteRoute",
 ]

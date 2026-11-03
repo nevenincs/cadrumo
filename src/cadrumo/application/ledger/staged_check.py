@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import Final
 from uuid import UUID
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
@@ -49,14 +50,33 @@ from .staged_check_contracts import (
     LedgerStagedRow,
     LedgerStagedRowAnswer,
     RouteRefusal,
+    StagedBlockerKind,
     StageFieldName,
     TaxSetSkip,
     WriteRoute,
 )
+from .staged_check_words import blocker_words, share_refusal_words
 from .staged_identity import staged_identity_fields
 from .update_contracts import LEDGER_UPDATE_FIELD_NAMES, LEDGER_UPDATE_REQUIRED_FIELD_NAMES
 
 _BULK_COLUMN_OF_FIELD: Final = {"business_classification": "classification"}
+
+
+@dataclass(frozen=True, slots=True)
+class _Blocked:
+    """What holds a movement back, before it is worded for a reader."""
+
+    kind: StagedBlockerKind
+    fields: tuple[str, ...] = ()
+
+
+def _worded(blocked: _Blocked, language: OutputLanguage) -> LedgerStagedBlocker:
+    """Say what holds a movement back, and what puts it right, in ``language``."""
+    words, fix_words = blocker_words(blocked.kind, language)
+    return LedgerStagedBlocker(
+        kind=blocked.kind, fields=blocked.fields, words=words, fix_words=fix_words, words_language=language
+    )
+
 
 TRANSFER_TAX_FIELDS: Final[tuple[StageFieldName, ...]] = (
     "business_pct",
@@ -250,13 +270,13 @@ def _shares_business(classification: BusinessClassification | None) -> bool:
     return classification is not None and takes_business_share(classification)
 
 
-def _unroutable_blockers(cannot_clear: list[str], needs_classification: list[str]) -> list[LedgerStagedBlocker]:
+def _unroutable_blockers(cannot_clear: list[str], needs_classification: list[str]) -> list[_Blocked]:
     """Block on the cells no write takes: those that cannot be cleared and those that need a classification."""
-    blockers: list[LedgerStagedBlocker] = []
+    blockers: list[_Blocked] = []
     if cannot_clear:
-        blockers.append(LedgerStagedBlocker(kind="cannot_clear", fields=tuple(cannot_clear)))
+        blockers.append(_Blocked(kind="cannot_clear", fields=tuple(cannot_clear)))
     if needs_classification:
-        blockers.append(LedgerStagedBlocker(kind="needs_classification", fields=tuple(needs_classification)))
+        blockers.append(_Blocked(kind="needs_classification", fields=tuple(needs_classification)))
     return blockers
 
 
@@ -272,31 +292,31 @@ def _share_findings(
     after: dict[str, str | None],
     routed: set[WriteRoute | None],
     sends_classification: bool,
-) -> tuple[list[LedgerStagedBlocker], list[LedgerStagedNote]]:
+) -> tuple[list[_Blocked], list[LedgerStagedNote]]:
     """What the staged state says about the business share and the classification a write resends."""
     staged_fields = {cell.field for cell in row.cells}
     shares = _shares_business(classification)
-    blockers: list[LedgerStagedBlocker] = []
+    blockers: list[_Blocked] = []
     notes: list[LedgerStagedNote] = []
     if sends_classification and shares:
         if not _filled(after["business_pct"]):
-            blockers.append(LedgerStagedBlocker(kind="mixed_needs_share"))
+            blockers.append(_Blocked(kind="mixed_needs_share"))
         elif "business_pct" not in staged_fields:
             notes.append(LedgerStagedNote(kind="sends_current_share", value=after["business_pct"]))
     if _share_staged_without_mixed(row, shares):
-        blockers.append(LedgerStagedBlocker(kind="share_needs_mixed"))
+        blockers.append(_Blocked(kind="share_needs_mixed"))
     if "bulk" in routed and "business_classification" not in staged_fields:
         notes.append(LedgerStagedNote(kind="sends_current_classification", value=after["business_classification"]))
     return blockers, notes
 
 
-def _transfer_with_tax(found: list[str], classification: BusinessClassification | None) -> LedgerStagedBlocker | None:
+def _transfer_with_tax(found: list[str], classification: BusinessClassification | None) -> _Blocked | None:
     """Block a transfer the writer would refuse; a classification it refuses counts, listed first."""
     if classification is not None and not takes_classification(TransactionDirection.INTERNAL_TRANSFER, classification):
         found.insert(0, "business_classification")
     if not found:
         return None
-    return LedgerStagedBlocker(kind="transfer_with_tax", fields=tuple(found))
+    return _Blocked(kind="transfer_with_tax", fields=tuple(found))
 
 
 def _stored_transfer_tax_fields(row: LedgerStagedRow, transaction: Transaction) -> list[str]:
@@ -314,7 +334,7 @@ def _transfer_blocker(
     transaction: Transaction,
     classification: BusinessClassification | None,
     after: dict[str, str | None],
-) -> LedgerStagedBlocker | None:
+) -> _Blocked | None:
     # Any write revalidates the whole row, so a cell far from the tax fields is refused for them too.
     if not row.cells and not row.m210_staged and not row.evidence_staged:
         return None
@@ -375,7 +395,7 @@ def _row_findings(
     routes: tuple[LedgerStagedRoute, ...],
     cannot_clear: list[str],
     needs_classification: list[str],
-) -> tuple[list[LedgerStagedBlocker], list[LedgerStagedNote], tuple[StageFieldName, ...]]:
+) -> tuple[list[_Blocked], list[LedgerStagedNote], tuple[StageFieldName, ...]]:
     """Gather what the staged state of the row would refuse, note, and change about its identity."""
     if row.m210_staged and not state.classified:
         needs_classification.append("m210_income_classification")
@@ -400,8 +420,10 @@ def _row_findings(
     return blockers, notes, identity
 
 
-def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerStagedRowAnswer:
-    """Answer one stored movement as it would be once its staged work is saved."""
+def check_stored_row(
+    row: LedgerStagedRow, transaction: Transaction, *, language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+) -> LedgerStagedRowAnswer:
+    """Answer one stored movement as it would be once its staged work is saved, in ``language``."""
     state = _staged_state(row, transaction)
     classification = state.classification
     has_evidence = transaction.purchase_invoice_evidence_id is not None or row.evidence_staged
@@ -435,39 +457,41 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
         classifying_fields=tuple(cell.field for cell in row.cells if cell.field in _CLASSIFYING_FIELDS),
         identity_fields=identity,
         routes=routes,
-        blockers=tuple(blockers),
+        blockers=tuple(_worded(blocked, language) for blocked in blockers),
         notes=tuple(notes),
     )
 
 
 def _draft_share_blockers(
     fields: dict[str, str | None], classification: BusinessClassification | None
-) -> list[LedgerStagedBlocker]:
+) -> list[_Blocked]:
     """Block a draft whose business share and classification disagree."""
     share_bearing = _shares_business(classification)
-    blockers: list[LedgerStagedBlocker] = []
+    blockers: list[_Blocked] = []
     if share_bearing and not _filled(fields.get("business_pct")):
-        blockers.append(LedgerStagedBlocker(kind="mixed_needs_share"))
+        blockers.append(_Blocked(kind="mixed_needs_share"))
     if not share_bearing and _filled(fields.get("business_pct")):
-        blockers.append(LedgerStagedBlocker(kind="share_needs_mixed"))
+        blockers.append(_Blocked(kind="share_needs_mixed"))
     return blockers
 
 
 def _draft_transfer_blocker(
     fields: dict[str, str | None], classification: BusinessClassification | None
-) -> LedgerStagedBlocker | None:
+) -> _Blocked | None:
     """Block a draft transfer that names tax fields."""
     found = [field for field in _DRAFT_TRANSFER_TAX_FIELDS if _filled(fields.get(field))]
     return _transfer_with_tax(found, classification)
 
 
-def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
-    """Answer one new movement."""
+def check_draft(
+    draft: LedgerStagedDraft, *, language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+) -> LedgerStagedDraftAnswer:
+    """Answer one new movement, in ``language``."""
     fields: dict[str, str | None] = {item.field: item.value for item in draft.fields}
     missing = tuple(field for field in DRAFT_REQUIRED_FIELDS if not _filled(fields.get(field)))
-    blockers: list[LedgerStagedBlocker] = []
+    blockers: list[_Blocked] = []
     if missing:
-        blockers.append(LedgerStagedBlocker(kind="draft_incomplete", fields=missing))
+        blockers.append(_Blocked(kind="draft_incomplete", fields=missing))
     classification = _classification(fields.get("business_classification"))
     direction = _direction(fields.get("direction"))
     blockers.extend(_draft_share_blockers(fields, classification))
@@ -478,7 +502,7 @@ def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
     return LedgerStagedDraftAnswer(
         key=draft.key,
         takes_expense_category=direction is not None and takes_expense_category(direction, has_purchase_evidence=False),
-        blockers=tuple(blockers),
+        blockers=tuple(_worded(blocked, language) for blocked in blockers),
     )
 
 
@@ -504,9 +528,10 @@ def check_staged_work(
     operation: PinnedAuthorityOperation,
     profile_id: UUID,
 ) -> LedgerStagedCheckResult:
-    """Answer every row, draft and category of ``request`` against the stored rows."""
+    """Answer every row, draft and category of ``request`` against the stored rows, in the request's language."""
+    language = request.output_language
     rows = tuple(
-        check_stored_row(row, transactions[row.transaction_id])
+        check_stored_row(row, transactions[row.transaction_id], language=language)
         if row.transaction_id in transactions
         else LedgerStagedRowAnswer(transaction_id=row.transaction_id, found=False)
         for row in request.rows
@@ -515,8 +540,10 @@ def check_staged_work(
         profile_id=profile_id,
         input_digest=request_digest(request),
         rows=rows,
-        drafts=tuple(check_draft(draft) for draft in request.drafts),
+        drafts=tuple(check_draft(draft, language=language) for draft in request.drafts),
         categories=tuple(_category_fit(category, operation=operation) for category in request.categories),
+        share_refusal_words=share_refusal_words(language),
+        share_refusal_words_language=language,
     )
 
 

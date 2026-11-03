@@ -953,6 +953,41 @@ application:
       label_reading:
         reader_unavailable: 'The automatic reader could not run, so the %{count} field(s)
           the labels did not cover stay empty: %{fields}. Fill them in yourself.'
+    periods:
+      served:
+        annual: Year
+        april: April
+        august: August
+        december: December
+        february: February
+        january: January
+        july: July
+        june: June
+        label: '{year} · {name}'
+        march: March
+        may: May
+        november: November
+        october: October
+        september: September
+    staged_check:
+      served:
+        blocker:
+          cannot_clear: 'This value can''t be cleared: the field has to hold a value.'
+          draft_incomplete: A new movement needs a booked date, an amount, a currency,
+            a direction and a description before it can be saved.
+          mixed_needs_share: A Mixed movement needs a business share.
+          needs_classification: This change needs the movement to be classified first.
+          share_needs_mixed: A business share only applies to a Mixed movement.
+          transfer_with_tax: A transfer between your own accounts carries no tax fields.
+        fix:
+          cannot_clear: Keep the stored value.
+          draft_incomplete: Fill in what the new movement is missing.
+          mixed_needs_share: Enter the business share as a percentage, such as 50
+            for 50%.
+          needs_classification: Classify the movement as Business or Personal.
+          share_needs_mixed: Drop the share, or classify the movement as Mixed.
+          transfer_with_tax: Take the tax fields off the transfer, or change its direction.
+        share_refusal: 'That is not a share: write a percentage, such as 50 for 50%.'
   live:
     borrador:
       comparison:
@@ -1570,8 +1605,8 @@ application:
         and box {box} declares only what is recorded.'
       credit_cross_check_absent: 'Box {box}: there is nothing in {cross_check} to
         compare, so this figure is not cross-checked.'
-      credit_resolution_applied: 'Box {box}: you accepted {accepted} although the
-        sources state {sources} (finding {finding}). Your reason: {reason}'
+      credit_resolution_applied: 'Box {box}: you accepted {accepted}, the amount in
+        use, although the sources state {sources}. Your reason: {reason}'
       credit_resolution_stale: 'Box {box}: you accepted an earlier disagreement of
         this figure, but its sources now state other amounts, so the acceptance no
         longer applies.'
@@ -1780,7 +1815,7 @@ application:
           sources state {sources}.'
         source_amount: '{source} ({amount})'
       served_source:
-        backend: Cadrumo's own calculation
+        backend: the value calculated from your records
         borrador: the AEAT borrador
         caller: the value supplied to the calculation
         cross_check: another source

@@ -48,6 +48,7 @@ from ...core.parsing.codes import IsoCurrencyCode
 from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr
 from ...core.unit_proportion import is_unit_proportion
+from .ledger_period_results import LedgerPeriodsPayload
 
 # ---------------------------------------------------------------------------
 # Shared nested models (not direct CommandSpec schema targets)
@@ -111,6 +112,7 @@ class LedgerEntryOptionsResult(OutputSchema):
 
     families: list[LedgerEntryOptionFamilyPayload]
     limits: LedgerEntryLimitsPayload
+    periods: LedgerPeriodsPayload
 
 
 class LedgerStagedRoutePayload(OutputSchema):
@@ -122,10 +124,13 @@ class LedgerStagedRoutePayload(OutputSchema):
 
 
 class LedgerStagedBlockerPayload(OutputSchema):
-    """Why a movement's staged work cannot be sent as it stands."""
+    """Why a movement's staged work cannot be sent as it stands, and what puts it right, in words."""
 
     kind: str
     fields: list[str]
+    words: str
+    fix_words: str
+    words_language: str
 
 
 class LedgerStagedNotePayload(OutputSchema):
@@ -285,6 +290,8 @@ class LedgerStagedCheckEnvelope(OutputSchema):
     rows: list[LedgerStagedRowPayload]
     drafts: list[LedgerStagedDraftPayload]
     categories: list[LedgerStagedCategoryFitPayload]
+    share_refusal_words: str
+    share_refusal_words_language: str
 
 
 class LedgerInvoicePreviewRateSlotPayload(OutputSchema):
