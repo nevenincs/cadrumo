@@ -76,10 +76,10 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
+    AMENDMENT_DECLARATION_KINDS,
     m303_rectificativa_motive_is_applicable,
 )
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.cli.modelo_amend_wizard_commands import (
@@ -141,11 +141,11 @@ def _m303_revision_id(*, filing_year: int, period: str) -> str:
 
 def _context_amendment_options(
     *, unit: WorkUnit, baseline_revision: CalculationRevision, operation: PinnedAuthorityOperation
-) -> tuple[tuple[CalculationRevisionAmendmentKind, ...], bool]:
+) -> tuple[tuple[FilingDeclarationKind, ...], bool]:
     """Read legal kind and M303 motive options from the pinned authority."""
     with validating_governed_facts(operation):
         permitted_values = permitted_amendment_kind_values_for_period(str(unit.modelo), unit.period)
-    permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted_values)
+    permitted_kinds = tuple(kind for kind in AMENDMENT_DECLARATION_KINDS if kind.value in permitted_values)
 
     motive_applicable = False
     evidence = baseline_revision.filing_instance_evidence

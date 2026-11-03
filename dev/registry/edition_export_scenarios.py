@@ -167,13 +167,13 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.calculation_revision_m303_evidence import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
 )
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.prorrata_register.register import (
     ProrrataActivityRow,
     ProrrataRegister,
@@ -1117,7 +1117,7 @@ def _m322_producer_snapshot() -> FilingProducerSnapshot:
     return _general_producer_snapshot(
         "322",
         amendment_evidence=AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             m303_rectificativa_motive=None,
             original_aeat_receipt="3220000000000",
         ),

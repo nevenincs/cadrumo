@@ -38,7 +38,8 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.modelo import Modelo
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from ._modelo_cli_support import (
     parse_calculation_wire_row_spec,
     resolve_actor_option,
@@ -259,7 +260,7 @@ def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
 def _missing_amendment_options(
     *,
     from_filing_record_id: str | None,
-    kind: CalculationRevisionAmendmentKind | None,
+    kind: str | None,
     reason: str | None,
     set_overrides: list[str] | None,
 ) -> tuple[str, ...]:
@@ -278,10 +279,10 @@ def _missing_amendment_options(
 def _required_amendment_inputs(
     *,
     from_filing_record_id: str | None,
-    kind: CalculationRevisionAmendmentKind | None,
+    kind: str | None,
     reason: str | None,
     set_overrides: list[str] | None,
-) -> tuple[str, CalculationRevisionAmendmentKind, str, tuple[str, ...]]:
+) -> tuple[str, FilingDeclarationKind, str, tuple[str, ...]]:
     """Return raw amendment CLI inputs or raise one combined option error."""
     missing = _missing_amendment_options(
         from_filing_record_id=from_filing_record_id,
@@ -296,7 +297,7 @@ def _required_amendment_inputs(
                 missing=", ".join(missing),
             ),
         )
-    return from_filing_record_id, kind, reason, tuple(set_overrides or ())
+    return from_filing_record_id, FilingDeclarationKind(kind), reason, tuple(set_overrides or ())
 
 
 def _resolve_amendment_detail_rows(
@@ -342,7 +343,7 @@ def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId
 def work_amend(
     ctx: typer.Context,
     from_filing_record_id: str | None = None,
-    kind: CalculationRevisionAmendmentKind | None = None,
+    kind: str | None = None,
     reason: str | None = None,
     m303_rectificativa_motive: M303RectificativaMotive | None = None,
     actor: str | None = None,
@@ -357,7 +358,7 @@ def work_amend(
     run missing several flags reports every absent one in a single
     refusal instead of forcing the operator to rediscover them one
     invocation at a time. The command then parses the requested
-    :class:`CalculationRevisionAmendmentKind`, validates each override as a
+    :class:`FilingDeclarationKind`, validates each override as a
     ``CasillaId`` decimal, delegates to the profile-bound registered
     amendment operation, and emits a
     :class:`WorkAmendResult`.

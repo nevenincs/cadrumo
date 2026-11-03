@@ -94,6 +94,35 @@ MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
 )
 
 
+class _AmendmentDeclarationKind(click.ParamType[str]):
+    """Admit only the declaration kinds an amendment can be filed as."""
+
+    name = "kind"
+
+    @property
+    def choices(self) -> tuple[str, ...]:
+        """Report the amendment kinds when a schema asks for the choice set."""
+        from ...domain.modelos.calculation_revision_amendment import AMENDMENT_DECLARATION_KINDS
+
+        return tuple(kind.value for kind in AMENDMENT_DECLARATION_KINDS)
+
+    @override
+    def convert(
+        self,
+        value: object,
+        param: click.Parameter | None,
+        ctx: click.Context | None,
+    ) -> str:
+        """Return the kind token, refusing the original, which no amendment files as."""
+        return click.Choice(self.choices).convert(value, param, ctx)
+
+
+AMENDMENT_DECLARATION_KIND_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    _AmendmentDeclarationKind(),
+)
+
+
 class _PublishedIvaTerritorialScope(click.ParamType[str]):
     """Project an IVA territorial scope through the published fact at argument use."""
 

@@ -21,7 +21,7 @@ See Also:
         resolution.
     :func:`~application.modelo.amend_modelo_revision`
         Public application composition path exercised end to end here.
-    :class:`~CalculationRevisionAmendmentKind`
+    :class:`~FilingDeclarationKind`
         Domain enum for ``complementaria``, ``rectificativa``, and
         ``sustitutiva`` values.
 """
@@ -69,7 +69,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ....domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidence,
@@ -289,7 +289,7 @@ def test_rectificativa_kind_refused_for_pre_boundary_period(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
             reason="illegal rectificativa for a pre-boundary period",
             actor="operator-A",
             clock=_T4,
@@ -319,13 +319,14 @@ def test_complementaria_permitted_for_pre_boundary_liability_increase(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="under-reported cuota discovered in audit",
             result_disposition=_correction_disposition(Decimal("150.00"), Period.from_year_and_code(2024, "2T")),
             actor="operator-A",
             clock=_T4,
         )
     assert record.amends_filing_record_id == baseline.filing_record_id
+    assert record.declaration_kind is FilingDeclarationKind.COMPLEMENTARIA
 
 
 def test_complementaria_refused_for_pre_boundary_liability_decrease(
@@ -350,7 +351,7 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="illegal liability-decreasing complementaria",
             actor="operator-A",
             clock=_T4,
@@ -382,7 +383,7 @@ def test_complementaria_kind_refused_for_post_boundary_period(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="illegal complementaria for a post-boundary period",
             actor="operator-A",
             clock=_T4,
@@ -415,7 +416,7 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             reason="lawful rectificativa lowering the declared result",
             result_disposition=_correction_disposition(Decimal("40.00"), Period.from_year_and_code(2024, "3T")),
@@ -423,6 +424,7 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(
             clock=_T4,
         )
     assert record.amends_filing_record_id == baseline.filing_record_id
+    assert record.declaration_kind is FilingDeclarationKind.RECTIFICATIVA
 
 
 def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
@@ -440,10 +442,40 @@ def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos, *, operation:
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.SUSTITUTIVA,
+            amendment_kind=FilingDeclarationKind.SUSTITUTIVA,
             reason="material restatement, sustitutiva always permitted",
             result_disposition=_correction_disposition(Decimal("40.00"), Period.from_year_and_code(2024, "2T")),
             actor="operator-A",
             clock=_T4,
         )
     assert record.amends_filing_record_id == baseline.filing_record_id
+    assert record.declaration_kind is FilingDeclarationKind.SUSTITUTIVA
+
+
+def test_an_amendment_cannot_be_filed_as_the_original(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    """The original is the declaration an amendment amends, never one it files as."""
+    _, _, baseline = _seed_m303_external_baseline(
+        repos,
+        result_casilla_value=Decimal("100.00"),
+        filing_year=2024,
+        period_code="2T",
+        operation=operation,
+    )
+
+    with (
+        bundled_indexed_authority().operation() as operation,
+        pytest.raises(AmendmentKindNotPermittedError) as exc_info,
+    ):
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
+            amendment_kind=FilingDeclarationKind.ORIGINAL,
+            reason="an original is not an amendment",
+            result_disposition=_correction_disposition(Decimal("150.00"), Period.from_year_and_code(2024, "2T")),
+            actor="operator-A",
+            clock=_T4,
+        )
+    assert exc_info.value.context is not None
+    assert exc_info.value.context.get("requested_kind") == "original"
+    assert "original" not in str(exc_info.value.context.get("accepted_kinds"))

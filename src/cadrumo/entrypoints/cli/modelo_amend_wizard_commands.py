@@ -85,10 +85,8 @@ from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWid
 from ...core.i18n.render import output_language, tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
-from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
-    M303RectificativaMotive,
-)
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from ._modelo_cli_support import bad_parameter_from_error, resolve_actor_option
 from ._modelo_rendering import filing_record_lines
 from .common import emit_envelope, no_active_profile_refusal
@@ -396,13 +394,13 @@ def _prompt_values_kind_reason(
     *,
     selected: tuple[ModeloCasillaRow, ...],
     baseline_values: Mapping[str, Decimal],
-    permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
+    permitted_amendment_kinds: tuple[FilingDeclarationKind, ...],
     m303_rectificativa_motive_applicable: bool,
     grammars: Mapping[str, ModeloEditValueGrammarV1],
     run_token: str,
 ) -> tuple[
     tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...],
-    CalculationRevisionAmendmentKind,
+    FilingDeclarationKind,
     M303RectificativaMotive | None,
     str,
 ]:
@@ -430,7 +428,7 @@ def _prompt_values_kind_reason(
         corrections.append(
             (row, previous, _wizard_corrected_amount(state, row.casilla_id, grammars.get(row.casilla_id)))
         )
-    amendment_kind = CalculationRevisionAmendmentKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
+    amendment_kind = FilingDeclarationKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
     raw_motive = (state.answers.get(_MOTIVE_PAGE_ID) or "").strip()
     motive = M303RectificativaMotive(raw_motive) if raw_motive else None
     reason = (state.answers.get(_REASON_PAGE_ID) or "").strip()
@@ -443,7 +441,7 @@ def _values_kind_reason_definition(
     *,
     selected: tuple[ModeloCasillaRow, ...],
     baseline_values: Mapping[str, Decimal],
-    permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
+    permitted_amendment_kinds: tuple[FilingDeclarationKind, ...],
     m303_rectificativa_motive_applicable: bool,
     run_token: str,
 ) -> FlowDefinition:
@@ -510,7 +508,7 @@ def _value_help_ref(*, row: ModeloCasillaRow, run_token: str, table: dict[str, s
 
 
 def _amendment_kind_page(
-    *, permitted_kinds: tuple[CalculationRevisionAmendmentKind, ...], run_token: str, table: dict[str, str]
+    *, permitted_kinds: tuple[FilingDeclarationKind, ...], run_token: str, table: dict[str, str]
 ) -> FlowPage:
     kind_choices = tuple(
         _amendment_kind_choice(kind=kind, run_token=run_token, table=table) for kind in permitted_kinds
@@ -535,9 +533,7 @@ def _amendment_kind_page(
     )
 
 
-def _amendment_kind_choice(
-    *, kind: CalculationRevisionAmendmentKind, run_token: str, table: dict[str, str]
-) -> FlowChoice:
+def _amendment_kind_choice(*, kind: FilingDeclarationKind, run_token: str, table: dict[str, str]) -> FlowChoice:
     kind_label_ref = _copy_ref(run_token, f"kind:choice:{kind.value}")
     table[kind_label_ref] = kind.value
     return FlowChoice(value=kind.value, label=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=kind_label_ref))
@@ -565,7 +561,7 @@ def _m303_motive_page(
         help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=motive_help_ref),
         choices=motive_choices,
         required=True,
-        visible_when=FlowCondition(page_id=_KIND_PAGE_ID, equals=CalculationRevisionAmendmentKind.RECTIFICATIVA.value),
+        visible_when=FlowCondition(page_id=_KIND_PAGE_ID, equals=FilingDeclarationKind.RECTIFICATIVA.value),
         answer_type=str,
     )
 
@@ -609,7 +605,7 @@ def _emit_amend_wizard_result(
     ctx: typer.Context,
     *,
     record: ModeloRecord,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     m303_rectificativa_motive: M303RectificativaMotive | None,
     reason: str,
     corrections: tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...],

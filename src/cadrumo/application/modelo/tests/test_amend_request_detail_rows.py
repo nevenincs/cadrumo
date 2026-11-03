@@ -31,7 +31,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.modelos.row_models import Modelo232VinculadaRow
 from .._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ..work_amend_contracts import ModeloWorkAmendBaseline, ModeloWorkAmendOverride, ModeloWorkAmendRequest
@@ -55,7 +55,7 @@ def _request(**overrides: object) -> ModeloWorkAmendRequest:
     """
     valid = ModeloWorkAmendRequest(
         baseline=ModeloWorkAmendBaseline(from_filing_record_id="filing-1"),
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
         overrides=(ModeloWorkAmendOverride(casilla_id="01", value="1250.00"),),
         reason="corrected a mistyped base",
         actor="operator-1",

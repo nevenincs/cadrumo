@@ -39,7 +39,6 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.calculation_revision_aggregate import CalculationRevisionAggregateContext
 from cadrumo.domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
 )
 from cadrumo.domain.modelos.filing_record import (
@@ -204,7 +203,7 @@ def _persist_rectificativa_with_nota_three(
     amended = verified.model_copy(
         update={
             "amendment_identity": CalculationRevisionAmendmentIdentity(
-                kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                kind=FilingDeclarationKind.RECTIFICATIVA,
                 amends_filing_record_id=original.filing_record_id,
                 m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             ),

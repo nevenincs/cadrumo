@@ -3,7 +3,7 @@
 :func:`~cadrumo.application.modelo.amendment_actions.amend_modelo_revision` starts from a current, externally evidenced
 :class:`ModeloRecord`, builds a corrected
 :class:`CalculationRevision` with an explicit
-:class:`CalculationRevisionAmendmentKind`, supersedes the
+:class:`FilingDeclarationKind`, supersedes the
 baseline filing, and stores the new amendment record as current.
 
 The side effects update the work-unit pointers and emit ``modelo.amended``
@@ -70,9 +70,7 @@ from ...domain.modelos.calculation_revision_aggregate import (
 )
 from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
-    declaration_kind_for_amendment_kind,
     m303_rectificativa_motive_is_applicable,
 )
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
@@ -260,7 +258,7 @@ def _resolve_m303_rectificativa_motive_before_identity(
     *,
     work_unit: WorkUnit,
     baseline_revision: CalculationRevision,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     supplied: M303RectificativaMotive | None,
     operation: PinnedAuthorityOperation,
 ) -> M303RectificativaMotive | None:
@@ -271,8 +269,7 @@ def _resolve_m303_rectificativa_motive_before_identity(
         operation=operation,
     )
     requires_motive = (
-        work_unit.modelo == form_for_role("iva.periodic")
-        and amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+        work_unit.modelo == form_for_role("iva.periodic") and amendment_kind is FilingDeclarationKind.RECTIFICATIVA
     )
     if (requires_motive and applicable and supplied is not None) or (not requires_motive and supplied is None):
         return supplied
@@ -352,7 +349,7 @@ def _prepare_amendment_identity(
     in_force: ModeloRecord,
     revisions: CalculationRevisionCatalogue,
     corrected_values: Mapping[CasillaId, Decimal],
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     m303_rectificativa_motive: M303RectificativaMotive | None,
     detail_rows: Sequence[ModeloDetailRow] | None,
     operation: PinnedAuthorityOperation,
@@ -464,7 +461,7 @@ def amend_modelo_revision[CasillaKey](
     *,
     from_filing_record_id: str,
     overrides: Mapping[CasillaKey, Decimal],
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     m303_rectificativa_motive: M303RectificativaMotive | None = None,
     detail_rows: Sequence[ModeloDetailRow] | None = None,
     reason: str,
@@ -616,7 +613,7 @@ def _finalize_amendment(
     in_force: ModeloRecord,
     filing_catalogue: ModeloRecordCatalogue,
     new_revision_id: CalculationRevisionId,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     result_disposition: ResultDisposition | None,
     catalogue_revisions: _AmendmentCatalogueRevisions,
     work_units: WorkUnitCatalogue,
@@ -655,7 +652,7 @@ def _finalize_amendment(
         in_force=in_force,
         filing_catalogue=filing_catalogue,
         new_revision_id=new_revision_id,
-        declaration_kind=declaration_kind_for_amendment_kind(amendment_kind),
+        declaration_kind=amendment_kind,
         actor=actor,
         now=now,
     )
@@ -983,7 +980,7 @@ def _persist_amendment_side_effects(
     discarded: ModeloRecord | None,
     new_revision_id: CalculationRevisionId,
     new_filing_id: str,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     override_count: int,
     observation_writes: tuple[SecureObjectWrite, ...],
     actor: str,

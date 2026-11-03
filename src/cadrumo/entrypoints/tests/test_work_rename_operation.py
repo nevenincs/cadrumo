@@ -70,7 +70,6 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.models import IVARegime, TaxpayerProfile
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -603,7 +602,7 @@ def test_an_amendment_cannot_be_filed_without_a_stated_reason() -> None:
     with pytest.raises(ValidationError):
         ModeloWorkAmendRequest(
             baseline=ModeloWorkAmendBaseline(from_filing_record_id="record-1"),
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             overrides=(ModeloWorkAmendOverride(casilla_id="03", value="10.00"),),
             reason="",
             actor="operator",
@@ -615,7 +614,7 @@ def test_an_amendment_must_correct_at_least_one_casilla() -> None:
     with pytest.raises(ValidationError):
         ModeloWorkAmendRequest(
             baseline=ModeloWorkAmendBaseline(from_filing_record_id="record-1"),
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             overrides=(),
             reason="corrected base",
             actor="operator",

@@ -23,10 +23,10 @@ from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
 from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
+    AMENDMENT_DECLARATION_KINDS,
     m303_rectificativa_motive_is_applicable,
 )
-from ...domain.modelos.filing_record import ModeloRecord
+from ...domain.modelos.filing_record import FilingDeclarationKind, ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
 from ..operations.access_resolution import (
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
@@ -77,7 +77,7 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
     unit: ModeloWorkMetadataSnapshot
     calculation: ModeloCalculationSnapshot
     casilla_rows: tuple[ModeloCasillaRow, ...]
-    permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...]
+    permitted_amendment_kinds: tuple[FilingDeclarationKind, ...]
     m303_rectificativa_motive_applicable: bool
     #: The correction worded in the requested language; ``None`` when no language was requested.
     correction: ModeloAmendmentCorrectionContextV1 | None = None
@@ -161,7 +161,7 @@ def _capture(
         )
     with validating_governed_facts(context.authority_operation):
         permitted_values = permitted_amendment_kind_values_for_period(str(unit.modelo), unit.period)
-    permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted_values)
+    permitted_kinds = tuple(kind for kind in AMENDMENT_DECLARATION_KINDS if kind.value in permitted_values)
     if frozenset(kind.value for kind in permitted_kinds) != permitted_values:
         raise ValueError("amendment context contains an unknown permitted kind")
     calculation = ModeloCalculationSnapshot.from_revision(

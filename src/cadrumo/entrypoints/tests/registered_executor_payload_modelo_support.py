@@ -45,8 +45,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from ...domain.modelos.filing_record import ExternalEvidenceKind
+from ...domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.user_profile.values import UserProfileFact
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -649,7 +648,7 @@ def _modelo_work_amend(ctx: PayloadContext) -> PayloadResult:
             # not their loose equivalents. A `.value` string and a list both
             # round-trip through JSON but are refused at the boundary, which
             # is the point of declaring the schema strict.
-            "amendment_kind": CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            "amendment_kind": FilingDeclarationKind.COMPLEMENTARIA,
             "overrides": ({"casilla_id": casilla_id, "value": "150.00"},),
             "reason": "corrected the declared base for the conformance matrix",
             "actor": modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,

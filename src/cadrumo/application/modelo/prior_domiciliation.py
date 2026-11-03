@@ -21,8 +21,7 @@ from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord
+from ...domain.modelos.filing_record import ExternalEvidence, FilingDeclarationKind, ModeloRecord
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.m303_carry_ingress import m303_declaration_type_header_key
@@ -51,7 +50,7 @@ def _require_rectificativa_baseline_link(
             context={"modelo": str(work_unit.modelo)},
         )
     amendment_identity = revision.amendment_identity
-    if amendment_identity is None or amendment_identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA:
+    if amendment_identity is None or amendment_identity.kind is not FilingDeclarationKind.RECTIFICATIVA:
         raise ModeloPriorDomiciliationElectionRefusedError(
             "prior domiciliation cancellation/modification requires a Modelo 303 rectificativa",
             context={"amendment_kind": amendment_identity.kind.value if amendment_identity is not None else ""},

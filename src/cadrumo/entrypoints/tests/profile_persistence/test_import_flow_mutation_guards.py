@@ -48,8 +48,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...adapter_composition_work_ports import build_amendment_action_ports, build_calculation_action_ports
@@ -223,7 +222,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(
         amend_modelo_revision(
             from_filing_record_id=locally_filed.filing_record_id,
             overrides={_M111_AMENDMENT_CASILLA: Decimal("1700")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="needed to amend",
             actor="operator-A",
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),

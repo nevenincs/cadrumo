@@ -8,7 +8,8 @@ from typing import Annotated, Final, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from .edit_apply_row_contracts import ModeloDetailRowWireV1
 
 
@@ -63,7 +64,7 @@ class ModeloWorkAmendRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     baseline: ModeloWorkAmendBaseline
-    amendment_kind: CalculationRevisionAmendmentKind
+    amendment_kind: FilingDeclarationKind
     overrides: Annotated[tuple[ModeloWorkAmendOverride, ...], Field(min_length=1, max_length=512)]
     reason: Annotated[str, Field(min_length=1, max_length=512)]
     m303_rectificativa_motive: M303RectificativaMotive | None = None

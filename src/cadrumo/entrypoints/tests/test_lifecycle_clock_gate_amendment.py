@@ -35,7 +35,6 @@ from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidence,
@@ -202,7 +201,7 @@ def _amend(baseline: _Baseline, *, clock: datetime) -> ModeloRecord:
             ports=build_amendment_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             from_filing_record_id=baseline.record.filing_record_id,
             overrides={_INCOME: Decimal("1100")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="synthetic under-reported turnover",
             actor="operator-A",
             clock=clock,

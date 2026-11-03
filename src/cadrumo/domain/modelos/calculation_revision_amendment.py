@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import assert_never
+from typing import Final
 
 from pydantic import BaseModel, model_validator
 
@@ -21,24 +21,22 @@ from ..calculations.registry.temporal import select_revision_metadata_for_year
 from .errors import ModeloValidationError
 from .filing_record import FilingDeclarationKind
 
+AMENDMENT_DECLARATION_KINDS: Final[tuple[FilingDeclarationKind, ...]] = tuple(
+    kind for kind in FilingDeclarationKind if kind is not FilingDeclarationKind.ORIGINAL
+)
+"""The declaration kinds an amendment can be filed as.
 
-class CalculationRevisionAmendmentKind(StrEnum):
-    """Closed catalogue of amendment kinds a calculation revision may carry.
+Every member of :class:`FilingDeclarationKind` except ``ORIGINAL``, which is
+the declaration an amendment amends and never one it files. Each member names
+the instrument it files, so the article travels with the kind:
 
-    Each member names the instrument it files, so the article travels with the
-    kind rather than only with the regime that admits it:
-
-    * ``COMPLEMENTARIA`` -- an additional declaration correcting an
-      already-presented one upward.
-    * ``SUSTITUTIVA`` -- a material restatement that replaces an
-      already-presented filing in full.
-    * ``RECTIFICATIVA`` -- the ordinary-correction mechanism selected by the
-      applicable modelo revision.
-    """
-
-    COMPLEMENTARIA = "complementaria"
-    SUSTITUTIVA = "sustitutiva"
-    RECTIFICATIVA = "rectificativa"
+* ``COMPLEMENTARIA`` -- an additional declaration correcting an
+  already-presented one upward.
+* ``SUSTITUTIVA`` -- a material restatement that replaces an already-presented
+  filing in full.
+* ``RECTIFICATIVA`` -- the ordinary-correction mechanism selected by the
+  applicable modelo revision.
+"""
 
 
 class M303RectificativaMotive(StrEnum):
@@ -53,35 +51,24 @@ class CalculationRevisionAmendmentIdentity(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    kind: CalculationRevisionAmendmentKind
+    kind: FilingDeclarationKind
     amends_filing_record_id: FilingRecordId
     m303_rectificativa_motive: M303RectificativaMotive | None
 
     @model_validator(mode="after")
-    def _motive_requires_rectificativa_kind(self) -> CalculationRevisionAmendmentIdentity:
-        if (
-            self.m303_rectificativa_motive is not None
-            and self.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA
-        ):
-            raise ModeloValidationError("an M303 rectificativa motive is valid only for amendment kind rectificativa")
+    def _kind_is_an_amendment_kind(self) -> CalculationRevisionAmendmentIdentity:
+        if self.kind not in AMENDMENT_DECLARATION_KINDS:
+            raise ModeloValidationError(
+                f"an amendment cannot be filed as declaration kind {self.kind.value}; "
+                "a revision without an amendment identity is the original"
+            )
         return self
 
-
-def declaration_kind_for_amendment_kind(kind: CalculationRevisionAmendmentKind) -> FilingDeclarationKind:
-    """Return the declaration kind an amendment of ``kind`` is filed as.
-
-    Spelled out member by member, so a new amendment kind makes this match
-    non-exhaustive -- a type error -- rather than reaching a filing record
-    through a string-value cast.
-    """
-    match kind:
-        case CalculationRevisionAmendmentKind.COMPLEMENTARIA:
-            return FilingDeclarationKind.COMPLEMENTARIA
-        case CalculationRevisionAmendmentKind.SUSTITUTIVA:
-            return FilingDeclarationKind.SUSTITUTIVA
-        case CalculationRevisionAmendmentKind.RECTIFICATIVA:
-            return FilingDeclarationKind.RECTIFICATIVA
-    assert_never(kind)
+    @model_validator(mode="after")
+    def _motive_requires_rectificativa_kind(self) -> CalculationRevisionAmendmentIdentity:
+        if self.m303_rectificativa_motive is not None and self.kind is not FilingDeclarationKind.RECTIFICATIVA:
+            raise ModeloValidationError("an M303 rectificativa motive is valid only for amendment kind rectificativa")
+        return self
 
 
 def filing_declaration_kind_for_amendment(
@@ -93,7 +80,7 @@ def filing_declaration_kind_for_amendment(
     """
     if amendment_identity is None:
         return FilingDeclarationKind.ORIGINAL
-    return declaration_kind_for_amendment_kind(amendment_identity.kind)
+    return amendment_identity.kind
 
 
 def _registry_m303_rectificativa_declarations(
@@ -184,10 +171,9 @@ def m303_rectificativa_record_design_from_snapshot(
 
 
 __all__ = [
+    "AMENDMENT_DECLARATION_KINDS",
     "CalculationRevisionAmendmentIdentity",
-    "CalculationRevisionAmendmentKind",
     "M303RectificativaMotive",
-    "declaration_kind_for_amendment_kind",
     "filing_declaration_kind_for_amendment",
     "m303_rectificativa_motive_is_applicable",
     "m303_rectificativa_record_design_from_snapshot",

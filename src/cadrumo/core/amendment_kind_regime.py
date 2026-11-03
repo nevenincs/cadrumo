@@ -73,7 +73,7 @@ class AmendmentKindRegime:
 
     Attributes:
         permitted_kinds: The closed set of
-            :class:`~CalculationRevisionAmendmentKind`
+            :class:`~FilingDeclarationKind`
             string values legally available for this modelo and period.
             Empty when the modelo adjusts a filed period only through a later
             period's return. Otherwise ``"sustitutiva"`` is always permitted
@@ -82,7 +82,7 @@ class AmendmentKindRegime:
             reached; ``"complementaria"`` is permitted only before that
             point (once rectificativa applies, it *replaces* complementaria
             for the modelo's ordinary corrective filings — see
-            ``CalculationRevisionAmendmentKind.RECTIFICATIVA``'s docstring).
+            ``FilingDeclarationKind.RECTIFICATIVA``'s docstring).
         rectificativa_effective: Whether the resolved period is within the
             modelo's rectificativa-supported window (``True``) or the
             pre-rectificativa dual regime still applies (``False``).
@@ -102,7 +102,7 @@ def resolve_amendment_kind_regime(
     """Resolve the codified amendment-kind regime for ``modelo`` at ``period``.
 
     Returns an :class:`AmendmentKindRegime` naming the legally-permitted
-    :class:`~CalculationRevisionAmendmentKind` string
+    :class:`~FilingDeclarationKind` string
     values for this ``(modelo, period)`` pair. A modelo with no registry-
     declared boundary always resolves to the projected pre-rectificativa pair;
     the core never invents rectificativa support.

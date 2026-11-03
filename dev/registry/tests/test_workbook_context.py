@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.form_context import resolve_form_conte
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordRepeat
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 
 from ..compiler import form_layout_integrity
 from ..compiler.authority import compiled_bundled_authority
@@ -65,7 +65,7 @@ def _producer(*, modelo: str = "111", complementaria: bool = False) -> FilingPro
             prior_domiciliation=PriorDomiciliationElection.KEEP,
         ),
         amendment_evidence=AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             m303_rectificativa_motive=None,
             original_aeat_receipt="1234567890123",
         )

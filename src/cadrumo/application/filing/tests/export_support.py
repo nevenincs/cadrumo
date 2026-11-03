@@ -23,7 +23,7 @@ from ....domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ....domain.filing.protocols import ModeloInputValue
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..producer_snapshot import (
@@ -48,7 +48,7 @@ _SCHEMA_PROVIDER_CACHE: dict[tuple[int, str, tuple[str, ...]], RegistrySchemaAcc
 def typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerSnapshot:
     amendment = (
         AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             m303_rectificativa_motive=None,
             original_aeat_receipt="1234567890123",
         )

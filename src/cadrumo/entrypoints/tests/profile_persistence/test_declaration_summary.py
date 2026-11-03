@@ -20,11 +20,9 @@ from ....application.modelo.declarations_workspace_contracts import Declarations
 from ....application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from ....core.external_constants import OutputLanguage
 from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ....domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-)
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentIdentity
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -111,7 +109,7 @@ def test_the_summary_retains_correction_identity_instead_of_calling_it_an_origin
 ) -> None:
     original = persisted.require_head()
     identity = CalculationRevisionAmendmentIdentity(
-        kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        kind=FilingDeclarationKind.COMPLEMENTARIA,
         amends_filing_record_id="f" * 64,
         m303_rectificativa_motive=None,
     )

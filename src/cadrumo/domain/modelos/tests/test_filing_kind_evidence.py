@@ -15,7 +15,6 @@ from pydantic import ValidationError
 from ....core.casilla_id import validated_casilla_id
 from ..calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     filing_declaration_kind_for_amendment,
 )
 from ..filing_kind_evidence import (
@@ -142,13 +141,13 @@ def test_a_stored_page_indicator_reading_is_ignored_when_the_projection_loads() 
     ("identity_kind", "expected"),
     [
         (None, FilingDeclarationKind.ORIGINAL),
-        (CalculationRevisionAmendmentKind.COMPLEMENTARIA, FilingDeclarationKind.COMPLEMENTARIA),
-        (CalculationRevisionAmendmentKind.SUSTITUTIVA, FilingDeclarationKind.SUSTITUTIVA),
-        (CalculationRevisionAmendmentKind.RECTIFICATIVA, FilingDeclarationKind.RECTIFICATIVA),
+        (FilingDeclarationKind.COMPLEMENTARIA, FilingDeclarationKind.COMPLEMENTARIA),
+        (FilingDeclarationKind.SUSTITUTIVA, FilingDeclarationKind.SUSTITUTIVA),
+        (FilingDeclarationKind.RECTIFICATIVA, FilingDeclarationKind.RECTIFICATIVA),
     ],
 )
 def test_a_local_revision_is_original_without_an_amendment_identity_and_its_kind_otherwise(
-    identity_kind: CalculationRevisionAmendmentKind | None, expected: FilingDeclarationKind
+    identity_kind: FilingDeclarationKind | None, expected: FilingDeclarationKind
 ) -> None:
     identity = (
         None

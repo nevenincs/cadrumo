@@ -38,7 +38,6 @@ from ...domain.calculations.registry.form_codes import form_fit_validator, form_
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
@@ -52,6 +51,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoFilingEvidence,
 )
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from ...domain.prorrata_register.register import ProrrataRegister
 from ..aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
@@ -530,34 +530,31 @@ class AmendmentEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    kind: CalculationRevisionAmendmentKind
+    kind: FilingDeclarationKind
     m303_rectificativa_motive: M303RectificativaMotive | None
     original_aeat_receipt: _AeatReceiptNumber
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _motive_belongs_only_to_rectificativa(self) -> AmendmentEvidence:
-        if (
-            self.m303_rectificativa_motive is not None
-            and self.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA
-        ):
+        if self.m303_rectificativa_motive is not None and self.kind is not FilingDeclarationKind.RECTIFICATIVA:
             raise ValueError("M303 rectificativa motive is valid only for rectificativa evidence")
         return self
 
     @property
     def is_complementaria(self) -> bool:
         """True when this evidence records a complementaria amendment."""
-        return self.kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
+        return self.kind is FilingDeclarationKind.COMPLEMENTARIA
 
     @property
     def is_sustitutiva(self) -> bool:
         """True when this evidence records a sustitutiva amendment."""
-        return self.kind is CalculationRevisionAmendmentKind.SUSTITUTIVA
+        return self.kind is FilingDeclarationKind.SUSTITUTIVA
 
     @property
     def is_rectificativa(self) -> bool:
         """True when this evidence records a rectificativa amendment."""
-        return self.kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+        return self.kind is FilingDeclarationKind.RECTIFICATIVA
 
 
 class RefundAccountSelection(BaseModel):

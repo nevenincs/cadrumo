@@ -64,8 +64,8 @@ from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.rates import IVA_RATE_FACT_ID
 from cadrumo.domain.iva.schema import InvoiceKind, IvaRateKind
 from cadrumo.domain.modelos.calculation_revision_amendment import (
+    AMENDMENT_DECLARATION_KINDS,
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
 )
 from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.verification_report import VerificationReport
@@ -573,7 +573,7 @@ def test_an_amended_return_refuses_export_because_the_design_cannot_declare_it(
         work_unit=WorkUnitCatalogueRepository(objects=objects),
         calculation=CalculationRevisionCatalogueRepository(objects=objects),
     )
-    for kind in CalculationRevisionAmendmentKind:
+    for kind in AMENDMENT_DECLARATION_KINDS:
         amended = result.revision.model_copy(
             update={
                 "amendment_identity": CalculationRevisionAmendmentIdentity(

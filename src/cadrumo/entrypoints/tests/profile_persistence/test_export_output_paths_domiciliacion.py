@@ -52,7 +52,6 @@ from cadrumo.domain.modelos.calculation_repository import upsert_calculation_rev
 from cadrumo.domain.modelos.calculation_revision_aggregate import CalculationRevisionAggregateContext
 from cadrumo.domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
 )
 from cadrumo.domain.modelos.filing_record import (
@@ -175,7 +174,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
     _amended = verified.model_copy(
         update={
             "amendment_identity": CalculationRevisionAmendmentIdentity(
-                kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                kind=FilingDeclarationKind.RECTIFICATIVA,
                 amends_filing_record_id=baseline.filing_record_id,
                 m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             ),

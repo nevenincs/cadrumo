@@ -22,11 +22,11 @@ from ...domain.modelos.calculation_revision_aggregate import (
 )
 from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
 )
 from ...domain.modelos.errors import ModeloExportError
 from ...domain.modelos.filing_record import (
+    FilingDeclarationKind,
     ModeloRecord,
     ModeloRecordCatalogue,
     is_justificante_backed_external_evidence,
@@ -193,9 +193,7 @@ def _evidence(
     receipt_number = receipt.presentation_id
     if receipt_number is None:
         _raise(command, "persisted justificante has no AEAT presentation receipt")
-    if identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA or work_unit.modelo != form_for_role(
-        "iva.periodic"
-    ):
+    if identity.kind is not FilingDeclarationKind.RECTIFICATIVA or work_unit.modelo != form_for_role("iva.periodic"):
         return identity.m303_rectificativa_motive, receipt_number
     validated = validate_calculation_revision_aggregate(
         revision,

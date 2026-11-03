@@ -17,7 +17,8 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from ...domain.modelos.filing_text import OperatorReason
 from .modelo_results import ModeloRecordPayload
 
@@ -55,7 +56,7 @@ class WorkAmendWizardResult(ModeloRecordPayload):
     """
 
     operation: str = "modelo.work.amend_wizard"
-    amendment_kind: CalculationRevisionAmendmentKind
+    amendment_kind: FilingDeclarationKind
     m303_rectificativa_motive: M303RectificativaMotive | None
     amendment_reason: OperatorReason
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()

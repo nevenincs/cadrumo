@@ -11,7 +11,6 @@ from cadrumo.application.calculations.observations_repository import Observation
 from cadrumo.application.modelo.action_errors import AmendmentEvidenceMissingError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, ModeloRecordStatus
 from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
@@ -38,7 +37,7 @@ def _amend(work_unit_bucket_id: str, record_id: str, income: str, *, operation: 
         ports=build_amendment_action_ports(bucket_id=work_unit_bucket_id, operation=operation),
         from_filing_record_id=record_id,
         overrides={_IMPORT_INCOME_CASILLA: Decimal(income)},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
         reason="revenue correction",
         actor="operator-A",
         clock=clock,

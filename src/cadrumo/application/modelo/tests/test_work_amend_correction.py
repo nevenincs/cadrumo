@@ -23,7 +23,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ....domain.modelos.calculation_revision_amendment import AMENDMENT_DECLARATION_KINDS, M303RectificativaMotive
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -119,7 +119,7 @@ def _context(
         snapshot=modelo_form_snapshot(operation, unit.modelo, 2026, unit.period, unit.revision_id),
         casilla_rows=rows,
         filed_values=_FILED,
-        permitted_kinds=tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted),
+        permitted_kinds=tuple(kind for kind in AMENDMENT_DECLARATION_KINDS if kind.value in permitted),
         motive_applicable=motive_applicable,
         language=language,
     )
@@ -158,7 +158,7 @@ def test_the_kinds_are_the_period_permits_each_worded_and_motives_only_where_the
         assert english.help != spanish_option.help
         assert english.words and english.help
     assert not plain.motive_applies and plain.motives == () and plain.motive_help is None
-    assert m303.motive_applies and m303.motive_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+    assert m303.motive_applies and m303.motive_kind is FilingDeclarationKind.RECTIFICATIVA
     assert tuple(option.motive for option in m303.motives) == tuple(M303RectificativaMotive)
     assert m303.motive_help is not None
     assert not m303_unknown.motive_applies and m303_unknown.motives == ()

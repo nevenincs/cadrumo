@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/segmented-control";
 import { facts } from "../../../shell/compose";
 import type {
-  CalculationRevisionAmendmentKind,
+  FilingDeclarationKind,
   M303RectificativaMotive,
   ModeloAmendmentCorrectionContextV1,
   ModeloAmendmentCorrectionRowV1,
@@ -38,7 +38,7 @@ import { entryField, takesEntry } from "../form/entryField";
  * applies, the reason, and each corrected box's text as typed, which the
  * application reads. */
 export type CorrectionAnswer = {
-  kind: CalculationRevisionAmendmentKind;
+  kind: FilingDeclarationKind;
   motive: M303RectificativaMotive | null;
   reason: string;
   entries: { row: ModeloAmendmentCorrectionRowV1; lexeme: string }[];
@@ -97,9 +97,7 @@ export function CorrectionDialog({
   disabled?: boolean;
 }) {
   const t = useStrings();
-  const [kind, setKind] = useState<CalculationRevisionAmendmentKind | null>(
-    null,
-  );
+  const [kind, setKind] = useState<FilingDeclarationKind | null>(null);
   const [motive, setMotive] = useState<M303RectificativaMotive | null>(null);
   const [reason, setReason] = useState("");
   const [values, setValues] = useState<Record<string, string>>({});
@@ -188,9 +186,7 @@ export function CorrectionDialog({
               <SegmentedControl
                 aria-labelledby={`${ids}-kind`}
                 value={chosen ?? ""}
-                onValueChange={(v) =>
-                  setKind(v as CalculationRevisionAmendmentKind)
-                }
+                onValueChange={(v) => setKind(v as FilingDeclarationKind)}
               >
                 {context.kinds.map((option) => (
                   <SegmentedControlItem key={option.kind} value={option.kind}>

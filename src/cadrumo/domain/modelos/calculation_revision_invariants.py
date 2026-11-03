@@ -17,9 +17,9 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ..calculations.record_row_membership import validate_closed_record_row_sets
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ..calculations.row_source_identity import RowBindingKey
-from .calculation_revision_amendment import CalculationRevisionAmendmentKind
 from .calculation_revision_identity import outputs_for_hash_from_mapping, outputs_for_hash_from_observations
 from .errors import ModeloValidationError
+from .filing_record import FilingDeclarationKind
 
 if TYPE_CHECKING:
     from .calculation_revision import CalculationRevision
@@ -237,7 +237,7 @@ def validate_rectificativa_aggregate_context(
     """Refuse a rectificativa revision that is not validated against its aggregate context."""
     if (
         revision.amendment_identity is None
-        or revision.amendment_identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA
+        or revision.amendment_identity.kind is not FilingDeclarationKind.RECTIFICATIVA
     ):
         return
     from .calculation_revision_aggregate import (

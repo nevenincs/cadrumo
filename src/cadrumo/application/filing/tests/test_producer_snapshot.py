@@ -22,7 +22,7 @@ from ....domain.deadlines.models import (
     TaxpayerProfile,
 )
 from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.submission.models import ModeloDraftStatus
 from ..export_producer import filing_producer_values
 from ..producer_snapshot import (
@@ -391,7 +391,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
 def test_amendment_evidence_requires_original_aeat_thirteen_digit_receipt(receipt: str, refusal: str) -> None:
     with pytest.raises(ValidationError, match=refusal):
         AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             m303_rectificativa_motive=None,
             original_aeat_receipt=receipt,
         )
@@ -399,7 +399,7 @@ def test_amendment_evidence_requires_original_aeat_thirteen_digit_receipt(receip
 
 def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
     evidence = AmendmentEvidence(
-        kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        kind=FilingDeclarationKind.COMPLEMENTARIA,
         m303_rectificativa_motive=None,
         original_aeat_receipt="1234567890123",
     )
@@ -429,7 +429,7 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
 def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence() -> None:
     """The 303 complementaria and no-activity markers read one immutable amendment and disposition state."""
     amendment = AmendmentEvidence(
-        kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        kind=FilingDeclarationKind.COMPLEMENTARIA,
         m303_rectificativa_motive=None,
         original_aeat_receipt="1234567890123",
     )

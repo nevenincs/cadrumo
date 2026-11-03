@@ -30,15 +30,13 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionState,
 )
 from ...domain.modelos.calculation_revision_aggregate import CalculationRevisionAggregateContext
-from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
-    filing_declaration_kind_for_amendment,
-)
+from ...domain.modelos.calculation_revision_amendment import filing_declaration_kind_for_amendment
 from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
 )
 from ...domain.modelos.filing_record import (
     AeatConfirmationState,
+    FilingDeclarationKind,
     FilingOrigin,
     IvaCreditSnapshot,
     IvaSettlementRefundState,
@@ -473,7 +471,7 @@ def _rectificativa_aggregate_context(
 ) -> CalculationRevisionAggregateContext | None:
     """Join the evidence a rectificativa revalidates against, or ``None`` for any other revision."""
     identity = revision.amendment_identity
-    if identity is None or identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA:
+    if identity is None or identity.kind is not FilingDeclarationKind.RECTIFICATIVA:
         return None
     if justificante_repository is None:
         raise ValueError("filing a rectificativa requires the justificante repository its evidence resolves against")

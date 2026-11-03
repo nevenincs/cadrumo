@@ -4,7 +4,7 @@
 filing coordinates, actor, timestamps, status, supersession, evidence, and
 submission posture as bare strings instead of projecting the canonical
 ``ModeloRecordPayload`` (:class:`~ModeloRecord`) and
-``CalculationRevisionAmendmentKind``. It now derives from
+``FilingDeclarationKind``. It now derives from
 ``ModeloRecordPayload`` directly, so a malformed field is refused rather than
 accepted.
 """
@@ -17,7 +17,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -54,7 +53,7 @@ def _valid_kwargs(**overrides: object) -> dict[str, object]:
         "kind": "internal_filing",
         "live_submission": False,
         "operation": "modelo.work.amend_wizard",
-        "amendment_kind": CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        "amendment_kind": FilingDeclarationKind.COMPLEMENTARIA,
         "amendment_reason": "corrected an under-reported base",
         # Required but nullable, so every construction site must state it: this
         # row is a COMPLEMENTARIA, not an M303 rectificativa, so it has no motive.
@@ -68,7 +67,7 @@ def _valid_kwargs(**overrides: object) -> dict[str, object]:
 def test_work_amend_wizard_result_round_trips_valid_row() -> None:
     result = WorkAmendWizardResult.model_validate(_valid_kwargs())
 
-    assert result.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
+    assert result.amendment_kind is FilingDeclarationKind.COMPLEMENTARIA
     assert result.status is ModeloRecordStatus.VIGENTE
     assert result.kind == "internal_filing"
 

@@ -31,7 +31,6 @@ from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_amendment_action_ports,
@@ -262,7 +261,7 @@ def test_source_payload_import_creates_exact_amendable_baseline(
     amended = _amend_modelo_revision(
         from_filing_record_id=filing.filing_record_id,
         overrides={_IMPORT_INCOME_CASILLA: Decimal("1600")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
         reason="source-only baseline is immediately amendable",
         actor="operator",
         work_unit_repository=wu_repo,

@@ -10,7 +10,7 @@ lower a taxpayer's own declared liability. This module is the single place
 that:
 
 * refuses an operator-requested
-  :class:`~CalculationRevisionAmendmentKind` that the
+  :class:`~FilingDeclarationKind` that the
   resolved ``(modelo, period)`` does not legally permit, naming the accepted
   kind set in the refusal (never a bare "invalid" message); and
 * classifies, for a pre-rectificativa period, whether the requested
@@ -26,7 +26,7 @@ illegal kind can never reach the catalogue.
 See Also:
     :func:`~domain.calculations.registry.amendment_regime_policy.resolve_amendment_kind_regime_for_period`:
         Registry-projected per-modelo, period-aware permitted-kind policy this
-        module binds to :class:`~CalculationRevisionAmendmentKind`.
+        module binds to :class:`~FilingDeclarationKind`.
     :func:`~application.modelo.amendment_actions.amend_modelo_revision`:
         The composition path that calls this module's guard before building
         the amendment revision.
@@ -45,7 +45,7 @@ from ...core.casilla_id import CasillaId
 from ...core.period import Period
 from ...domain.calculations.registry.amendment_regime_policy import resolve_amendment_kind_regime_for_period
 from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from .action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
 
 __all__ = [
@@ -59,7 +59,7 @@ def assert_amendment_kind_permitted(
     *,
     modelo: str,
     period: Period,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
 ) -> None:
     """Refuse ``amendment_kind`` unless the resolved period legally permits it.
 
@@ -150,7 +150,7 @@ def assert_complementaria_liability_direction_permitted(
     *,
     modelo: str,
     period: Period,
-    amendment_kind: CalculationRevisionAmendmentKind,
+    amendment_kind: FilingDeclarationKind,
     baseline_casilla_values: Mapping[CasillaId, Decimal],
     corrected_casilla_values: Mapping[CasillaId, Decimal],
 ) -> None:
@@ -176,7 +176,7 @@ def assert_complementaria_liability_direction_permitted(
         AmendmentComplementariaLiabilityDecreaseError: When a pre-rectificativa
             complementaria would lower the taxpayer's declared liability.
     """
-    if amendment_kind is not CalculationRevisionAmendmentKind.COMPLEMENTARIA:
+    if amendment_kind is not FilingDeclarationKind.COMPLEMENTARIA:
         return
     if resolve_amendment_kind_regime_for_period(modelo, period).rectificativa_effective:
         return

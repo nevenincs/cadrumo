@@ -74,7 +74,6 @@ from ....domain.modelos.calculation_revision_aggregate import (
 )
 from ....domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
     m303_rectificativa_record_design_from_snapshot,
@@ -242,7 +241,7 @@ def _authorities(
         expected_taxpayer_tax_id=_TAX_ID,
     )
     identity = CalculationRevisionAmendmentIdentity(
-        kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+        kind=FilingDeclarationKind.RECTIFICATIVA,
         amends_filing_record_id=target.filing_record_id,
         m303_rectificativa_motive=motive,
     )
@@ -294,24 +293,24 @@ def test_identifier_refuses_invalid_syntax_and_every_identity_axis_diverges(
     _, _, target, _, _, revision = _authorities(operation=operation)
     with pytest.raises(ValidationError):
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             amends_filing_record_id=target.filing_record_id,
             m303_rectificativa_motive="other",  # type: ignore[arg-type]
         )
     identities = (
         revision.amendment_identity,
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             amends_filing_record_id=target.filing_record_id,
             m303_rectificativa_motive=M303RectificativaMotive.DISCREPANCIA_CRITERIO_ADMINISTRATIVO,
         ),
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             amends_filing_record_id=target.filing_record_id,
             m303_rectificativa_motive=None,
         ),
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             amends_filing_record_id="f" * 64,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
         ),
@@ -644,7 +643,7 @@ def test_public_amend_service_refuses_missing_motive_before_identity_with_real_p
             amend_modelo_revision(
                 from_filing_record_id=target.filing_record_id,
                 overrides={},
-                amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
                 m303_rectificativa_motive=None,
                 reason="rectificaciones and a lower result are only operator prose",
                 actor="operator",
@@ -734,7 +733,7 @@ def test_two_motive_producer_keys_have_the_complete_truth_table(
 ) -> None:
     evidence = (
         AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             m303_rectificativa_motive=motive,
             original_aeat_receipt=_RECEIPT,
         )
@@ -762,7 +761,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(
         JustificanteRepository(objects=objects).save(receipt)
         justificante_repo = JustificanteRepository(objects=objects)
         exact = AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             original_aeat_receipt=_RECEIPT,
         )
@@ -805,7 +804,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(
                 }
             ),
             exact.model_copy(update={"original_aeat_receipt": "9999999999999"}),
-            exact.model_copy(update={"kind": CalculationRevisionAmendmentKind.SUSTITUTIVA}),
+            exact.model_copy(update={"kind": FilingDeclarationKind.SUSTITUTIVA}),
         )
         for replacement in substitutions:
             substituted = command.model_copy(update={"amendment_evidence": replacement})
@@ -925,7 +924,7 @@ def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
                 prior_domiciliation=PriorDomiciliationElection.KEEP,
             ),
             amendment_evidence=AmendmentEvidence(
-                kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                kind=FilingDeclarationKind.RECTIFICATIVA,
                 m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
                 original_aeat_receipt=_RECEIPT,
             ),
@@ -938,7 +937,7 @@ def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
 def test_non_rectificativa_motive_state_refuses() -> None:
     with pytest.raises(ModeloValidationError, match="valid only for amendment kind rectificativa"):
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             amends_filing_record_id="f" * 64,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
         )

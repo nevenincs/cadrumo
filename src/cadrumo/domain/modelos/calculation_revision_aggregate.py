@@ -21,13 +21,12 @@ from ..justificante.schema import Justificante
 from .calculation_revision import CalculationRevision
 from .calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
 from .calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from .errors import ModeloValidationError
-from .filing_record import ModeloRecordCatalogue, is_justificante_backed_external_evidence
+from .filing_record import FilingDeclarationKind, ModeloRecordCatalogue, is_justificante_backed_external_evidence
 from .work_unit import WorkUnit, WorkUnitCatalogue
 
 CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY = "calculation_revision_aggregate_context"
@@ -95,7 +94,7 @@ def validate_calculation_revision_aggregate(
 def _rectificativa_identity(revision: CalculationRevision) -> CalculationRevisionAmendmentIdentity | None:
     """Return the revision identity when this revision is rectificativa."""
     identity = revision.amendment_identity
-    if identity is None or identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA:
+    if identity is None or identity.kind is not FilingDeclarationKind.RECTIFICATIVA:
         return None
     return identity
 

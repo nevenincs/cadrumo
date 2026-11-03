@@ -50,7 +50,7 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
     MODELO_OPERATION_TEST_ACTOR,
@@ -271,7 +271,7 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
 
         payload = ModeloWorkAmendRequest(
             baseline=ModeloWorkAmendBaseline(from_filing_record_id=filing_record_id),
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             overrides=(ModeloWorkAmendOverride(casilla_id=casilla_id, value="101"),),
             reason="corrected source amount",
             actor=MODELO_OPERATION_TEST_ACTOR,

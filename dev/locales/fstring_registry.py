@@ -492,7 +492,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     )
     from cadrumo.core.export_layout_format import ExportLayoutFormat
     from cadrumo.domain.modelos.calculation_revision_amendment import (
-        CalculationRevisionAmendmentKind,
+        AMENDMENT_DECLARATION_KINDS,
         M303RectificativaMotive,
     )
     from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteSentence
@@ -526,7 +526,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ("editor.placeholder", EDITOR_HINT_KINDS),
         ("editor.format", EDITOR_HINT_KINDS),
         ("review.effect", TYPING_EFFECTS),
-        ("amend.kind_help", _enum_values(CalculationRevisionAmendmentKind)),
+        ("amend.kind_help", tuple(kind.value for kind in AMENDMENT_DECLARATION_KINDS)),
         ("amend.motive", _enum_values(M303RectificativaMotive)),
         ("export.file_format", _enum_values(ExportLayoutFormat)),
         ("review.finding", WORDED_FINDING_CODES),

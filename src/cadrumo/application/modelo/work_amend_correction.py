@@ -29,10 +29,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.identifiers import canonical_decimal_string
-from ...domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentKind,
-    M303RectificativaMotive,
-)
+from ...domain.modelos.calculation_revision_amendment import AMENDMENT_DECLARATION_KINDS, M303RectificativaMotive
 from ...domain.modelos.filing_record import FilingDeclarationKind
 from ..operations.public_scalar import PublicDecimal
 from .edit_models import ModeloEditCorrectionAddressV1
@@ -61,8 +58,8 @@ CORRECTION_FRACTION_DIGITS: Final = 6
 CORRECTION_MAGNITUDE: Final = "999999999999999.999999"
 
 _KIND_WORDS_LOCALE_KEY: Final = "workspace.declarations.declaration_kind.{kind}"
-_KIND_HELP_LOCALE_KEYS: Final[Mapping[CalculationRevisionAmendmentKind, str]] = MappingProxyType(
-    {kind: f"workspace.modelo.amend.kind_help.{kind.value}" for kind in CalculationRevisionAmendmentKind}
+_KIND_HELP_LOCALE_KEYS: Final[Mapping[FilingDeclarationKind, str]] = MappingProxyType(
+    {kind: f"workspace.modelo.amend.kind_help.{kind.value}" for kind in AMENDMENT_DECLARATION_KINDS}
 )
 _MOTIVE_LOCALE_KEYS: Final[Mapping[M303RectificativaMotive, str]] = MappingProxyType(
     {motive: f"workspace.modelo.amend.motive.{motive.value}" for motive in M303RectificativaMotive}
@@ -146,7 +143,7 @@ class ModeloAmendmentKindOptionV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    kind: CalculationRevisionAmendmentKind
+    kind: FilingDeclarationKind
     words: str = Field(min_length=1)
     help: str = Field(min_length=1)
 
@@ -195,7 +192,7 @@ class ModeloAmendmentCorrectionContextV1(BaseModel):
     filed: ModeloAmendmentFiledRecordV1
     kinds: tuple[ModeloAmendmentKindOptionV1, ...] = Field(min_length=1)
     motive_applies: bool
-    motive_kind: CalculationRevisionAmendmentKind | None
+    motive_kind: FilingDeclarationKind | None
     motive_help: str | None
     motives: tuple[ModeloAmendmentMotiveOptionV1, ...]
     reason_prompt: str = Field(min_length=1)
@@ -209,7 +206,7 @@ def worded_amendment_context(
     snapshot: RegistrySnapshot,
     casilla_rows: tuple[ModeloCasillaRow, ...],
     filed_values: Mapping[str, Decimal],
-    permitted_kinds: tuple[CalculationRevisionAmendmentKind, ...],
+    permitted_kinds: tuple[FilingDeclarationKind, ...],
     motive_applicable: bool,
     language: OutputLanguage,
 ) -> ModeloAmendmentCorrectionContextV1:
@@ -229,7 +226,7 @@ def worded_amendment_context(
         language: The filer's language.
     """
     locale = language.value
-    motive_applies = motive_applicable and CalculationRevisionAmendmentKind.RECTIFICATIVA in permitted_kinds
+    motive_applies = motive_applicable and FilingDeclarationKind.RECTIFICATIVA in permitted_kinds
     return ModeloAmendmentCorrectionContextV1(
         language=language,
         filed=ModeloAmendmentFiledRecordV1(
@@ -250,7 +247,7 @@ def worded_amendment_context(
             for kind in permitted_kinds
         ),
         motive_applies=motive_applies,
-        motive_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA if motive_applies else None,
+        motive_kind=FilingDeclarationKind.RECTIFICATIVA if motive_applies else None,
         motive_help=tr(_MOTIVE_HELP_LOCALE_KEY, locale=locale) if motive_applies else None,
         motives=(
             tuple(

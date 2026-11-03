@@ -441,20 +441,6 @@ export type CalculationReportRowRole =
   | "informational"
   | "projection_only";
 
-/**
- * Closed catalogue of amendment kinds a calculation revision may carry.
- *
- * Each member names the instrument it files, so the article travels with the
- * kind rather than only with the regime that admits it:
- *
- * * `COMPLEMENTARIA` -- an additional declaration correcting an already-
- * presented one upward. * `SUSTITUTIVA` -- a material restatement that
- * replaces an already-presented filing in full. * `RECTIFICATIVA` -- the
- * ordinary-correction mechanism selected by the applicable modelo revision.
- */
-export type CalculationRevisionAmendmentKind =
-  "complementaria" | "sustitutiva" | "rectificativa";
-
 export type CalculationRevisionId = string;
 
 /**
@@ -2124,7 +2110,7 @@ export type ModeloAmendmentCorrectionContextV1 = {
   filed: ModeloAmendmentFiledRecordV1;
   kinds: ModeloAmendmentKindOptionV1[];
   motive_applies: boolean;
-  motive_kind: CalculationRevisionAmendmentKind | null;
+  motive_kind: FilingDeclarationKind | null;
   motive_help: string | null;
   motives: ModeloAmendmentMotiveOptionV1[];
   reason_prompt: string;
@@ -2169,7 +2155,7 @@ export type ModeloAmendmentFiledRecordV1 = {
  * One kind of correction the period permits, with its name and what it does.
  */
 export type ModeloAmendmentKindOptionV1 = {
-  kind: CalculationRevisionAmendmentKind;
+  kind: FilingDeclarationKind;
   words: string;
   help: string;
 };
@@ -6421,7 +6407,7 @@ export type ModeloWorkAmendPublicResultV2 = {
   record: ModeloFilingRecordSnapshot;
   source_filing_record_id: FilingRecordId;
   amended_from_filing_record_id: FilingRecordId;
-  amendment_kind: CalculationRevisionAmendmentKind;
+  amendment_kind: FilingDeclarationKind;
   corrected_casilla_count: number;
   m303_rectificativa_motive: M303RectificativaMotive | null;
   handoff_required: true;
@@ -6436,7 +6422,7 @@ export type ModeloWorkAmendPublicResultV2 = {
  */
 export type ModeloWorkAmendRequest = {
   baseline: ModeloWorkAmendBaseline;
-  amendment_kind: CalculationRevisionAmendmentKind;
+  amendment_kind: FilingDeclarationKind;
   overrides: ModeloWorkAmendOverride[];
   reason: string;
   m303_rectificativa_motive?: M303RectificativaMotive | null;
@@ -6454,7 +6440,7 @@ export type ModeloWorkAmendmentContextProjection = {
   unit: ModeloWorkMetadataSnapshot;
   calculation: ModeloCalculationSnapshot;
   casilla_rows: ModeloCasillaRow[];
-  permitted_amendment_kinds: CalculationRevisionAmendmentKind[];
+  permitted_amendment_kinds: FilingDeclarationKind[];
   m303_rectificativa_motive_applicable: boolean;
   correction: ModeloAmendmentCorrectionContextV1 | null;
 };

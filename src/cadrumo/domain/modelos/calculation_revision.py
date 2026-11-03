@@ -73,7 +73,7 @@ from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ..calculations.row_coordinate import index_unique_row_coordinates
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
-from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind
+from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity
 from .calculation_revision_identity import (
     canonical_row_binding_values,
     canonical_row_casilla_provenance,
@@ -1035,7 +1035,6 @@ def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) ->
 __all__ = [
     "CalculationRevision",
     "CalculationRevisionAmendmentIdentity",
-    "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
     "CalculationRevisionState",
     "FilingInstanceEvidence",

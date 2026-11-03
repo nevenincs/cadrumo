@@ -24,7 +24,6 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind, ModeloRecordStatus
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_amendment_action_ports,
@@ -308,7 +307,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: P
             ports=build_amendment_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             from_filing_record_id=imported.filing_record_id,
             overrides={_IMPORT_INCOME_CASILLA: Decimal("1650")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="under-reported revenue discovered in subsequent audit",
             actor="operator-A",
             clock=_T2,

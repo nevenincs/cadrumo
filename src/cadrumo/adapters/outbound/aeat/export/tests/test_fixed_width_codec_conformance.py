@@ -37,8 +37,8 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.schema import ModeloDraft, registry_schema_version
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.errors import ModeloExportError
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -48,7 +48,7 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
     """Build the minimal public producer snapshot required by the renderer."""
     amendment = (
         AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             m303_rectificativa_motive=None,
             original_aeat_receipt="1234567890123",
         )
