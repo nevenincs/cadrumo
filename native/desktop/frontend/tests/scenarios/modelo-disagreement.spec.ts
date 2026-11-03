@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import type {
   CreditResolutionListProjection,
   CreditResolutionMutationProjection,
@@ -25,6 +25,12 @@ const stored = <T>(name: string): T =>
       "utf8",
     ),
   ) as T;
+
+/** A command line, flag or markup an action would show had it not been
+ * worded for the person. */
+const UNWORDED = /aeat |--|</;
+
+const FIXTURES = new URL("../../src/dev/fixtures/modelo/", import.meta.url);
 
 const workspace = (target: Page) => target.locator(".declarations-workspace");
 const tab = (target: Page, key: string, language: Language) =>
@@ -99,7 +105,22 @@ for (const language of LANGUAGES)
     });
     await expect(blocks).toContainText(open.message);
     await expect(offered(target, "revoke", language)).toHaveCount(0);
+    // Every action the check shows is worded for the person.
+    for (const action of await blocks.locator("li").allInnerTexts())
+      expect(action).not.toMatch(UNWORDED);
 
+    await offered(target, "accept", language).click();
+    // The dialog leads with what the acceptance records, as served.
+    await expect(target.getByRole("dialog")).toContainText(
+      open.answer_lead_words!,
+    );
+    expect(open.answer_lead_words_language).toBe(language);
+    await target
+      .getByRole("dialog")
+      .getByRole("button", {
+        name: label("workspace.modelo.editor.cancel", {}, language),
+      })
+      .click();
     const dialog = await accept(target, language);
     await expect(dialog).toBeHidden();
     // Read again, the line offers to revoke, and the answer is listed in the
@@ -112,11 +133,16 @@ for (const language of LANGUAGES)
       name: label("desktop.modelo.disagreement.list_title", {}, language),
     });
     await expect(answers).toContainText(listed.answer_words);
+    await expect(answers).toContainText(listed.state_words);
+    await expect(answers).toContainText(listed.current_words);
     await expect(answers.locator("[data-answer-state=active]")).toHaveCount(1);
 
     await offered(target, "revoke", language).click();
     const revoking = target.getByRole("dialog");
     await expect(revoking).toContainText(listed.answer_words);
+    await expect(revoking).toContainText(
+      disagreementLine("130-1T-accepted", language).answer_lead_words!,
+    );
     await revoking
       .getByRole("button", {
         name: label("desktop.modelo.disagreement.confirm_revoke", {}, language),
@@ -124,7 +150,15 @@ for (const language of LANGUAGES)
       .click();
     await expect(revoking).toBeHidden();
     await expect(offered(target, "accept", language)).toBeVisible();
-    await expect(answers.locator("[data-answer-state=revoked]")).toHaveCount(1);
+    const revoked = stored<CreditResolutionListProjection>(
+      `disagreements-130-1T-revoked-${language}`,
+    ).resolutions.find((row) => row.state === "revoked")!;
+    const shown = answers.locator("[data-answer-state=revoked]");
+    await expect(shown).toHaveCount(1);
+    await expect(shown).toContainText(revoked.state_words);
+    // A revoked answer cannot be taken back again; the application says why.
+    expect(revoked.revocable).toBe(false);
+    await expect(shown).toContainText(revoked.revoke_refusal_words!);
   });
 
 for (const language of LANGUAGES)
@@ -177,4 +211,23 @@ test("a declaration whose check states no disagreement offers no answer", async 
       name: label("desktop.modelo.disagreement.list_title"),
     }),
   ).toHaveCount(0);
+});
+
+test("no stored check line words its action as a command", () => {
+  const forms = readdirSync(FIXTURES).filter((name) =>
+    /^modelo-.*\.json$/.test(name),
+  );
+  expect(forms.length).toBeGreaterThan(0);
+  for (const name of forms) {
+    const form = JSON.parse(
+      readFileSync(new URL(name, FIXTURES), "utf8"),
+    ) as Partial<ModeloWorkbenchFormProjectionV1>;
+    for (const line of form.issue_lines ?? []) {
+      expect(line.action, name).not.toMatch(UNWORDED);
+      // A lead is served exactly where an answer is offered.
+      expect(line.answer_lead_words === null, name).toBe(
+        line.resolution_answer === null,
+      );
+    }
+  }
 });

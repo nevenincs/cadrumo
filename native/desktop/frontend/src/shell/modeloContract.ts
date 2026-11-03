@@ -403,7 +403,8 @@ export type CalculationNoteSentence =
   | "credit_cross_check_absent"
   | "credit_resolution_stale"
   | "credit_resolution_applied"
-  | "household_rows_incomplete";
+  | "household_rows_incomplete"
+  | "profile_fact_unrecorded";
 
 /**
  * Closed set of serialisations of one modelo calculation report.
@@ -1016,6 +1017,14 @@ export type CreditResolutionRowProjection = {
   applies: boolean;
   answer_words: string;
   answer_words_language: OutputLanguage;
+  state_words: string;
+  state_words_language: OutputLanguage;
+  current: boolean;
+  current_words: string;
+  current_words_language: OutputLanguage;
+  revocable: boolean;
+  revoke_refusal_words: string | null;
+  revoke_refusal_words_language: OutputLanguage | null;
 };
 
 /**
@@ -4816,6 +4825,8 @@ export type ModeloFormIssueLine = {
   recalculates: boolean;
   finding_id: string | null;
   resolution_answer: ModeloFormResolutionAnswer | null;
+  answer_lead_words: string | null;
+  answer_lead_words_language: OutputLanguage | null;
 };
 
 /**

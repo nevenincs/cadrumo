@@ -277,6 +277,8 @@ function withAssetNotes(
         recalculates: false,
         finding_id: null,
         resolution_answer: null,
+        answer_lead_words: null,
+        answer_lead_words_language: null,
       })),
     ],
   };
@@ -307,6 +309,8 @@ function withWithholdingLine(
         recalculates: false,
         finding_id: null,
         resolution_answer: null,
+        answer_lead_words: null,
+        answer_lead_words_language: null,
       },
       ...form.issue_lines,
     ],

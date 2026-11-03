@@ -69,13 +69,16 @@ export function DisagreementDialog({
   const offered = line?.resolution_answer ?? null;
   const findingId = line?.finding_id ?? null;
   const revoking = offered === "revoke";
+  // The application says when the stored acceptance cannot be taken back:
+  // its words are shown and nothing offers to revoke it.
+  const unrevocable = revoking && answer !== null && !answer.revocable;
   // An outcome nobody saw may have committed: the dialog sends nothing more.
   const held = outcome?.kind === "unknown";
   const ready =
     onAnswer !== null &&
     findingId !== null &&
     !held &&
-    (revoking ? answer !== null : reason.trim() !== "");
+    (revoking ? answer !== null && answer.revocable : reason.trim() !== "");
   const close = (open: boolean) => {
     if (open) return;
     setReason("");
@@ -127,6 +130,11 @@ export function DisagreementDialog({
         </DialogHeader>
         {line && (
           <div className="flex flex-col gap-4">
+            {line.answer_lead_words && (
+              <p className="text-sm text-muted-foreground" data-answer-lead="">
+                {line.answer_lead_words}
+              </p>
+            )}
             <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-lg border border-border px-3 py-2">
               <BoxNumber box={line.box} size="sm" />
               <span className="flex flex-col gap-1">
@@ -160,6 +168,14 @@ export function DisagreementDialog({
                       reason: answer.reason,
                     })}
                   </span>
+                  {unrevocable && answer.revoke_refusal_words && (
+                    <span
+                      className="text-sm text-foreground"
+                      data-answer-unrevocable=""
+                    >
+                      {answer.revoke_refusal_words}
+                    </span>
+                  )}
                 </div>
               )
             ) : (
@@ -181,17 +197,19 @@ export function DisagreementDialog({
           <Button variant="ghost" onClick={() => close(false)}>
             {t("workspace.modelo.editor.cancel")}
           </Button>
-          <Button
-            data-answer-confirm=""
-            disabled={disabled || !ready || busy}
-            onClick={submit}
-          >
-            {t(
-              revoking
-                ? "desktop.modelo.disagreement.confirm_revoke"
-                : "desktop.modelo.disagreement.confirm_accept",
-            )}
-          </Button>
+          {!unrevocable && (
+            <Button
+              data-answer-confirm=""
+              disabled={disabled || !ready || busy}
+              onClick={submit}
+            >
+              {t(
+                revoking
+                  ? "desktop.modelo.disagreement.confirm_revoke"
+                  : "desktop.modelo.disagreement.confirm_accept",
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

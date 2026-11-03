@@ -4,8 +4,9 @@ import type { DisagreementsRead } from "./disagreementRead";
 
 /**
  * The answers the person gave to this declaration's source disagreements, as
- * the application lists them: what each covers in its words and the reason
- * the person gave. Nothing is drawn while no answer was given.
+ * the application lists them: its state, what it covers, whether the current
+ * calculation still has it, all in its words, and the reason the person gave.
+ * Nothing is drawn while no answer was given.
  */
 export function DisagreementAnswers({ read }: { read: DisagreementsRead }) {
   const t = useStrings();
@@ -30,16 +31,34 @@ export function DisagreementAnswers({ read }: { read: DisagreementsRead }) {
           <li
             key={`${row.finding_id}-${row.revision_id}`}
             data-answer-state={row.state}
+            data-answer-current={row.current}
             className="flex flex-col gap-1 px-4 py-3"
           >
+            <span className="text-xs text-faint" data-answer-state-words="">
+              {row.state_words}
+            </span>
             <span className="text-base text-foreground">
               {row.answer_words}
+            </span>
+            <span
+              className="text-sm text-muted-foreground"
+              data-answer-current-words=""
+            >
+              {row.current_words}
             </span>
             <span className="text-sm text-muted-foreground">
               {t("desktop.modelo.disagreement.your_reason", {
                 reason: row.reason,
               })}
             </span>
+            {!row.revocable && row.revoke_refusal_words && (
+              <span
+                className="text-sm text-muted-foreground"
+                data-answer-unrevocable=""
+              >
+                {row.revoke_refusal_words}
+              </span>
+            )}
           </li>
         ))}
       </ul>

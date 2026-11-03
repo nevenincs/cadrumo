@@ -140,6 +140,22 @@ test("a calculation whose settlement was not seen is unknown and holds", async (
     name: label("workspace.modelo.calculate.at_risk_proceed"),
   });
   if (await proceed.isVisible()) await proceed.click();
+  // The form asks the 303's calculation evidence first; it is answered so
+  // the calculation is sent.
+  const evidence = target.getByRole("dialog", {
+    name: label("workspace.modelo.calculate.evidence.title"),
+  });
+  await expect(evidence).toBeVisible();
+  await evidence
+    .getByRole("radio", {
+      name: label("workspace.modelo.calculate.evidence.no"),
+    })
+    .click();
+  await evidence
+    .getByRole("button", {
+      name: label("workspace.modelo.calculate.evidence.calculate"),
+    })
+    .click();
   const alert = workspace(target)
     .getByRole("alert")
     .filter({
