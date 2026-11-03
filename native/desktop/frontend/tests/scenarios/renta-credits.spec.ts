@@ -138,21 +138,28 @@ const ask = (panel: ReturnType<Page["locator"]>) =>
 
 type ServedStep =
   | { kind: "create_work"; words: string }
-  | { kind: "calculate_work"; work_unit_id: string; words: string };
+  | { kind: "calculate_work"; work_unit_id: string; words: string }
+  | { kind: "open_work"; work_unit_id: string; words: string };
+
+/** The refusal the application recorded as `refusal`, in `language`. */
+const servedRefusal = (refusal: string, language: Language) =>
+  JSON.parse(
+    readFileSync(
+      new URL(
+        `../../src/dev/fixtures/modelo/refusal-${refusal}-${language}.json`,
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  ) as {
+    refusal_words: string;
+    context: { key: string; value: string }[];
+    next_step: ServedStep;
+  };
 
 /** The step the application named on the refusal recorded as `refusal`. */
 const servedStep = (refusal: string, language: Language): ServedStep =>
-  (
-    JSON.parse(
-      readFileSync(
-        new URL(
-          `../../src/dev/fixtures/modelo/refusal-${refusal}-${language}.json`,
-          import.meta.url,
-        ),
-        "utf8",
-      ),
-    ) as { next_step: ServedStep }
-  ).next_step;
+  servedRefusal(refusal, language).next_step;
 
 for (const language of LANGUAGES) {
   test(`credits with no payer record are unresolved and never zero (${language})`, async ({
@@ -378,10 +385,57 @@ test("choosing the offered steps creates the quarter, calculates it, and offers 
   await calculate.click();
   await expect(section.locator("[data-estimate-step]")).toHaveCount(0);
   await expect(ask(panel)).toBeEnabled();
-  // The quarter is calculated; what it still lacks is the application's to
-  // say, and no step is offered for it.
+  // The quarter is calculated without the answers it refuses without: the
+  // application names the boxes it cannot work out and offers opening it.
   await ask(panel).click();
-  await expect(section.getByRole("status")).toBeVisible();
-  await expect(section.locator("[data-estimate-step]")).toHaveCount(0);
+  const incomplete = servedRefusal("project-quarter-incomplete", "en");
+  await expect(section.getByRole("status")).toContainText(
+    incomplete.refusal_words,
+  );
+  expect(incomplete.next_step.kind).toBe("open_work");
+  const open = section.locator("[data-estimate-step=open_work]");
+  await expect(open).toHaveText(incomplete.next_step.words);
   await expect(section.locator("[data-estimate-result]")).toHaveCount(0);
+  // Opening it leaves the Modelo 100 for the quarter the step names, whose
+  // own form is read.
+  await open.click();
+  await expect(
+    workspace(target).getByRole("heading", { level: 1 }),
+  ).toBeVisible();
+  await expect(workspace(target).locator("[data-estimate]")).toHaveCount(0);
 });
+
+for (const language of LANGUAGES) {
+  test(`a quarter calculated without its earlier-filing answers is refused in words naming its open boxes, and opening it is offered (${language})`, async ({
+    page: target,
+  }) => {
+    const panel = await openCredits(target, "renta", language);
+    const section = panel.locator("[data-estimate]");
+    await ask(panel).click();
+    await section.locator("[data-estimate-step=create_work]").click();
+    await expect(ask(panel)).toBeEnabled();
+    await ask(panel).click();
+    await section.locator("[data-estimate-step=calculate_work]").click();
+    await expect(ask(panel)).toBeEnabled();
+    await ask(panel).click();
+    const served = servedRefusal("project-quarter-incomplete", language);
+    // The sentence and the step are the application's, in this language.
+    await expect(section.getByRole("status")).toHaveText(served.refusal_words);
+    expect(served.next_step.kind).toBe("open_work");
+    await expect(section.locator("[data-estimate-step=open_work]")).toHaveText(
+      served.next_step.words,
+    );
+    // The open boxes are named in the sentence, never by an amount, and the
+    // words name no command or action identifier.
+    expect(
+      served.context.find((entry) => entry.key === "inputs")?.value,
+    ).toBeTruthy();
+    expect(served.refusal_words).not.toMatch(/operator\.|`|--/);
+    expect(served.next_step.words).not.toMatch(/operator\.|`|--/);
+    // The generic failure it replaces is never shown.
+    await expect(section.getByRole("status")).not.toHaveText(
+      label("desktop.modelo.credits.estimate.refused", {}, language),
+    );
+    await expect(section.locator("[data-estimate-result]")).toHaveCount(0);
+  });
+}

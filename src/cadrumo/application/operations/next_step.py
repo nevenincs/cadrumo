@@ -1,11 +1,12 @@
 """The step a refused operation serves for putting the refusal right.
 
-A refusal can name one registered operation the filer runs next: creating a
-declaration that does not exist yet, or calculating one that has no
-calculation. The step says which of the two, which declaration it concerns and
-the words that offer it, so a frontend runs the operation it already knows for
-that kind and keeps no table of operator action identifiers. The kind is
-closed; an address that cannot be run is refused when the step is built.
+A refusal can name one thing the filer does next: creating a declaration that
+does not exist yet, calculating one that has no calculation, or opening one
+whose own form says what it still lacks. The step says which of the three, which
+declaration it concerns and the words that offer it, so a frontend does what it
+already knows for that kind and keeps no table of operator action identifiers.
+The kind is closed; an address that cannot be run is refused when the step is
+built.
 
 The words are in the language the refusal's own sentence is in
 (``refusal_words_language`` of the error detail that carries the step): the
@@ -50,8 +51,19 @@ class OperationCalculateWorkStepV1(BaseModel):
     words: _Words
 
 
+class OperationOpenWorkStepV1(BaseModel):
+    """Open the declaration one work unit holds, where its own form says what it still lacks."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["open_work"] = "open_work"
+    work_unit_id: WorkUnitId
+    words: _Words
+
+
 type OperationNextStepV1 = Annotated[
-    OperationCreateWorkStepV1 | OperationCalculateWorkStepV1, Field(discriminator="kind")
+    OperationCreateWorkStepV1 | OperationCalculateWorkStepV1 | OperationOpenWorkStepV1,
+    Field(discriminator="kind"),
 ]
 """The step a refusal serves: a closed kind, the declaration it concerns, and the words that offer it."""
 
@@ -94,5 +106,6 @@ __all__ = [
     "OperationNextStepErrorMixin",
     "OperationNextStepV1",
     "OperationNextStepWording",
+    "OperationOpenWorkStepV1",
     "error_next_step",
 ]

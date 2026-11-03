@@ -155,7 +155,9 @@ export type ModeloShape = (typeof MODELO_SHAPES)[number];
 const LATER_STATES = "130-1T";
 
 /** The refusal recorded for an estimate asked for at each stage of the first
- * quarter's Modelo 130. */
+ * quarter's Modelo 130: each names the step that puts it right, and the last,
+ * once the quarter is calculated without the answers it refuses without,
+ * names the quarter's open boxes and the step that opens it. */
 const PROJECT_REFUSAL = {
   none: "project-no-quarters",
   drafted: "project-no-calculation",
@@ -398,6 +400,16 @@ export function modeloFixture(options: Options): ModeloPort {
     if (shape === "unavailable") reject("unavailable");
     if (!signedIn()) reject("not_signed_in");
   };
+    // The first quarter the scenario created is the declaration whose form
+    // was read, so the estimate's step that opens it finds one.
+    if (!forms[workUnitId] && quarter !== "none") {
+      const created = await envelope<ModeloWorkCreateProjection>("create-130");
+      if (
+        created?.outcome.kind === "success" &&
+        created.outcome.unit.work_unit_id === workUnitId
+      )
+        forms[workUnitId] = LATER_STATES;
+    }
   const nextOperation = () => {
     operations += 1;
     return hex64(`modelo-operation:${operations}`);

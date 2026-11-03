@@ -22,10 +22,14 @@ function Credits({
   shape,
   locale,
   onOpenSurface = () => undefined,
+  onOpenWork,
 }: {
   shape: ModeloShape;
   locale: OutputLanguage;
   onOpenSurface?: (surface: string) => void;
+  /** Opens another declaration, as the shell does; without it the estimate
+   * offers no step that opens one. */
+  onOpenWork?: (workUnitId: string) => void;
 }) {
   const port = useRef<ModeloPort | null>(null);
   port.current ??= modeloFixture({
@@ -46,6 +50,7 @@ function Credits({
         onOpenSurface={onOpenSurface}
         canOpenSurface={() => true}
         openLink={() => undefined}
+        onOpenWork={onOpenWork}
         initialView="credits"
       />
     </div>
@@ -241,26 +246,34 @@ export const EstimateOffersCreation: Story = {
   },
 };
 
+const openedWork = fn();
+
+/** Steps the first quarter from not created to calculated without its
+ * answers, asking for the estimate again after each, and asks once more. */
+const reachTheIncompleteQuarter = async (canvasElement: HTMLElement) => {
+  await ask(canvasElement);
+  await userEvent.click(await offeredStep(canvasElement, "create_work"));
+  await askedAgain(canvasElement);
+  await userEvent.click(
+    canvasElement.querySelector<HTMLElement>("[data-estimate-ask]")!,
+  );
+  // The declaration just created is the one to calculate.
+  await userEvent.click(await offeredStep(canvasElement, "calculate_work"));
+  await askedAgain(canvasElement);
+  await userEvent.click(
+    canvasElement.querySelector<HTMLElement>("[data-estimate-ask]")!,
+  );
+};
+
 export const EstimateOffersCalculation: Story = {
   name: "Estimate: the first quarter created, calculating it is offered, and the estimate is asked for again after each step",
   render: (_, { globals }) => (
     <Credits shape="renta" locale={language(globals)} />
   ),
   play: async ({ canvasElement }) => {
-    await ask(canvasElement);
-    await userEvent.click(await offeredStep(canvasElement, "create_work"));
-    await askedAgain(canvasElement);
-    await userEvent.click(
-      canvasElement.querySelector<HTMLElement>("[data-estimate-ask]")!,
-    );
-    // The declaration just created is the one to calculate.
-    await userEvent.click(await offeredStep(canvasElement, "calculate_work"));
-    await askedAgain(canvasElement);
-    await userEvent.click(
-      canvasElement.querySelector<HTMLElement>("[data-estimate-ask]")!,
-    );
-    // What the quarter still lacks is the application's to say, and it names
-    // no further step.
+    await reachTheIncompleteQuarter(canvasElement);
+    // What the quarter still lacks is the application's to say, and with no
+    // shell to open another declaration in, it names no step to take here.
     await waitFor(
       () =>
         expect(
@@ -270,5 +283,36 @@ export const EstimateOffersCalculation: Story = {
     );
     expect(canvasElement.querySelector("[data-estimate-step]")).toBeNull();
     expect(canvasElement.querySelector("[data-estimate-result]")).toBeNull();
+  },
+};
+
+export const EstimateOffersOpeningTheQuarter: Story = {
+  name: "Estimate: the quarter calculated without its earlier-filing answers, its open boxes are named and opening it is offered",
+  render: (_, { globals }) => (
+    <Credits shape="renta" locale={language(globals)} onOpenWork={openedWork} />
+  ),
+  play: async ({ canvasElement }) => {
+    openedWork.mockClear();
+    await reachTheIncompleteQuarter(canvasElement);
+    const step = await offeredStep(canvasElement, "open_work");
+    // Both the sentence and the button are the application's words: the open
+    // boxes are named in the sentence, never an amount, and the button names
+    // no action identifier or command.
+    const sentence = canvasElement.querySelector<HTMLElement>(
+      "[data-estimate] [role=status]",
+    );
+    expect(sentence?.textContent?.trim()).not.toBe("");
+    expect(sentence?.textContent).toMatch(/\b13\b/);
+    expect(sentence?.textContent).toMatch(/\b15\b/);
+    expect(step.textContent?.trim()).not.toBe("");
+    expect(step.textContent).not.toMatch(/operator\.|`|--/);
+    expect(canvasElement.querySelector("[data-estimate-result]")).toBeNull();
+    await userEvent.click(step);
+    // The shell is asked to open the declaration the step addresses; nothing
+    // was sent to the application.
+    expect(openedWork).toHaveBeenCalledTimes(1);
+    expect(openedWork).toHaveBeenCalledWith(
+      expect.stringMatching(/^[0-9a-f]{64}$/),
+    );
   },
 };

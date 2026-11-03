@@ -1134,9 +1134,11 @@ def _write_projection_steps(directory: Path) -> None:
 
     The profile is the projected filer's, with its income booked and no quarter yet. Its first quarter is created
     through the registered creation, which the first refusal's step names, and the refusal that follows names the
-    declaration just created as the one to calculate. That is calculated through the registered calculation, and
-    the estimate is then refused for want of a result the quarter does not yet hold. Each refusal is recorded as a
-    stopped executor's detail is, in every language; the two results are recorded once.
+    declaration just created as the one to calculate. That is calculated through the registered calculation, with
+    none of the answers about earlier filings it refuses without, and the estimate is then refused for want of a
+    result the quarter does not yet hold: the refusal names the quarter's open boxes from its own form and serves
+    the step that opens it. Each refusal is recorded as a stopped executor's detail is, in every language; the two
+    results are recorded once.
     """
     from dataclasses import replace
 

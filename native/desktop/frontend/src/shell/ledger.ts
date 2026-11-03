@@ -307,8 +307,9 @@ export type LedgerErrorDetail = {
 
 /** The step a refusal serves for putting it right: a closed kind, the
  * declaration it concerns and the words that offer it, in the language of the
- * refusal's own sentence. The window runs the operation it already knows for
- * the kind; it holds no table of operator actions. */
+ * refusal's own sentence. The window does what it already knows for the kind:
+ * runs the creation or the calculation, or opens the declaration whose own
+ * form says what it lacks. It holds no table of operator actions. */
 export type LedgerNextStep =
   | {
       kind: "create_work";
@@ -317,7 +318,8 @@ export type LedgerNextStep =
       period_code: string;
       words: string;
     }
-  | { kind: "calculate_work"; work_unit_id: string; words: string };
+  | { kind: "calculate_work"; work_unit_id: string; words: string }
+  | { kind: "open_work"; work_unit_id: string; words: string };
 
 /** The step the backend served on a refusal's detail; null when it served
  * none, or one of a kind this window does not run. */
@@ -346,11 +348,11 @@ export function servedNextStep(detail: unknown): LedgerNextStep | null {
         }
       : null;
   }
-  if (served.kind === "calculate_work") {
+  if (served.kind === "calculate_work" || served.kind === "open_work") {
     const unit = text("work_unit_id");
     return unit === null
       ? null
-      : { kind: "calculate_work", work_unit_id: unit, words };
+      : { kind: served.kind, work_unit_id: unit, words };
   }
   return null;
 }

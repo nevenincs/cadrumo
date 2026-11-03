@@ -2644,6 +2644,7 @@ application:
       next_step:
         calculate_work: Calcula el %{modelo}, %{period}
         create_work: Crea el %{modelo}, %{period}
+        open_work: Abre el %{modelo}, %{period}
       no_m130_revisions: Las declaraciones del Modelo 130 del ejercicio %{year} aún
         no se han calculado, así que no hay base para estimar la declaración anual.
         Calcula un trimestre y vuelve a pedir la estimación.
@@ -2653,9 +2654,21 @@ application:
       profile_fact_missing: 'La estimación no puede obtener la base liquidable ni
         las casillas de cuota porque tu perfil no indica: %{profile_facts}. Añádelo
         al perfil y vuelve a pedir la estimación.'
+      quarter_incomplete: 'La declaración del %{modelo} (%{period}) está calculada,
+        pero todavía no puede dar su resultado final, así que no hay base para estimar
+        la declaración anual. Aún faltan valores detrás de estas casillas: %{inputs}.
+        Ábrela, indica esos valores, vuelve a calcularla y pide de nuevo la estimación.'
+      quarter_incomplete_unnamed: La declaración del %{modelo} (%{period}) está calculada,
+        pero todavía no puede dar su resultado final, así que no hay base para estimar
+        la declaración anual. Ábrela para ver qué falta, indícalo, vuelve a calcularla
+        y pide de nuevo la estimación.
+      quarter_input: '%{label} (casilla %{box})'
       region_unstated: Tu perfil no indica la comunidad autónoma en la que tributas,
         así que no se puede hacer la estimación. Añade tu comunidad de residencia
         fiscal al perfil y vuelve a pedir la estimación.
+      result_unresolved: 'La declaración anual no ha podido obtener estas casillas
+        a partir de tus declaraciones trimestrales y de tu perfil, así que no se puede
+        hacer la estimación: %{boxes}.'
       revision_not_mapped: 'No se puede estimar la declaración anual del ejercicio
         %{year}: la forma de trasladar las declaraciones trimestrales a la declaración
         anual no está preparada para el modelo de ese año.'

@@ -2600,6 +2600,7 @@ application:
       next_step:
         calculate_work: 'Számítsd ki: %{modelo}, %{period}'
         create_work: 'Hozd létre: %{modelo}, %{period}'
+        open_work: 'Nyisd meg: %{modelo}, %{period}'
       no_m130_revisions: A(z) %{year} adóév Modelo 130 bevallásait még nem számoltad
         ki, így nincs miből becslést készíteni az éves bevallásról. Számolj ki egy
         negyedévet, majd kérd újra a becslést.
@@ -2609,9 +2610,22 @@ application:
       profile_fact_missing: 'A becslés nem tudja kiszámítani az adóalap- és adórovatokat,
         mert a profilod nem tartalmazza: %{profile_facts}. Add meg őket a profilodban,
         majd kérd újra a becslést.'
+      quarter_incomplete: 'A %{modelo} bevallás (%{period}) ki van számolva, de még
+        nem tudja megadni a végeredményét, így nincs miből becslést készíteni az éves
+        bevallásról. Ezeknek a rovatoknak a mögül még hiányoznak értékek: %{inputs}.
+        Nyisd meg, add meg ezeket az értékeket, számold ki újra, majd kérd újra a
+        becslést.'
+      quarter_incomplete_unnamed: A %{modelo} bevallás (%{period}) ki van számolva,
+        de még nem tudja megadni a végeredményét, így nincs miből becslést készíteni
+        az éves bevallásról. Nyisd meg, hogy lásd, mi hiányzik, add meg, számold ki
+        újra, majd kérd újra a becslést.
+      quarter_input: '%{label} (%{box}. rovat)'
       region_unstated: A profilodban nincs megadva, melyik régióban adózol, így a
         becslés nem készíthető el. Add meg az adóügyi lakóhelyed régióját a profilodban,
         majd kérd újra a becslést.
+      result_unresolved: 'Az éves bevallás nem tudta kiszámítani ezeket a rovatokat
+        a negyedéves bevallásaidból és a profilodból, így a becslés nem készíthető
+        el: %{boxes}.'
       revision_not_mapped: 'A(z) %{year}. évi éves bevallás becslése nem készíthető
         el: a negyedéves bevallások éves bevallásra vetítése még nincs beállítva az
         adott évi nyomtatványhoz.'

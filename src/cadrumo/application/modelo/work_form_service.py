@@ -68,7 +68,7 @@ from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .effective_deadline import resolve_effective_filing_deadline
 from .profile_binding import resolve_profile_sourced_bindings
-from .projection import modelo_projection_available
+from .projection_declaration import modelo_projection_available
 from .taxation_comparison import revision_compares_taxation
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form

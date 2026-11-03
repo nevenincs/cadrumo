@@ -20,6 +20,7 @@ export function DeclarationsPane({
   workUnitId,
   onOpen,
   onCensus,
+  onSwitch,
   onBack,
   onOpenSurface,
   canOpenSurface,
@@ -42,6 +43,9 @@ export function DeclarationsPane({
   onOpen(workUnitId: string): void;
   /** Asks for the window's one census flow, where it has one. */
   onCensus?: () => void;
+  /** Opens another declaration from the one open; the shell asks first where
+   * edits are staged. */
+  onSwitch(workUnitId: string): void;
   /** Back to the list; the shell asks first where edits are staged. */
   onBack(): void;
   onOpenSurface(surface: OpenableSurface): void;
@@ -112,6 +116,7 @@ export function DeclarationsPane({
           // The list is read again on return only after a write.
           onWritten={() => {
             ownedMemory.stale = true;
+          onOpenWork={onSwitch}
           }}
         />
       </section>

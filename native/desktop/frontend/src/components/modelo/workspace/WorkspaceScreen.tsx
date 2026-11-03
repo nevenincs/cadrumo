@@ -103,6 +103,7 @@ function Ready({
   openLink,
   initialView,
   onLeaveGuard,
+  onOpenWork,
   profileCompanions,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
@@ -119,6 +120,7 @@ function Ready({
   initialView: WorkspaceView;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   profileCompanions?: ProfileCompanionKit;
+  onOpenWork?: (workUnitId: string) => void;
 }) {
   const t = useStrings();
   const session: FormSession = useFormSession({ envelope, port, language });
@@ -219,6 +221,7 @@ function Ready({
   const settledThenReread = async <Result,>(
     send: () => Promise<LedgerOutcome<Result>>,
   ) => (await run(send))?.kind === "settled";
+    open: onOpenWork,
 
   const readUnit = useCallback(async () => {
     try {
@@ -715,6 +718,7 @@ export function WorkspaceScreen({
   /** The view the declaration opens on. */
   initialView?: WorkspaceView;
   /** Hands the shell the guard that asks before staged edits are dropped. */
+  onOpenWork,
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   /** Told whenever the workspace sends a write, whatever its outcome. */
   onWritten?: () => void;
@@ -733,6 +737,9 @@ export function WorkspaceScreen({
     () => () => {
       latest.current += 1;
     },
+  /** Opens another declaration, where the shell can; the estimate offers the
+   * step that opens one only with it. */
+  onOpenWork?: (workUnitId: string) => void;
     [port, workUnitId, language, holds],
   );
   // A read that fails while a declaration is shown keeps it, with what the
@@ -809,3 +816,4 @@ export function WorkspaceScreen({
     </ModeloWriteScope>
   );
 }
+        onOpenWork={onOpenWork}

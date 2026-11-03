@@ -2646,6 +2646,7 @@ application:
       next_step:
         calculate_work: Calcula el %{modelo}, %{period}
         create_work: Crea el %{modelo}, %{period}
+        open_work: Obre el %{modelo}, %{period}
       no_m130_revisions: Les declaracions del Modelo 130 de l'exercici %{year} encara
         no s'han calculat, de manera que no hi ha base per estimar la declaració anual.
         Calcula un trimestre i torna a demanar l'estimació.
@@ -2655,9 +2656,22 @@ application:
       profile_fact_missing: 'L''estimació no pot obtenir la base liquidable ni les
         caselles de quota perquè el teu perfil no indica: %{profile_facts}. Afegeix-ho
         al perfil i torna a demanar l''estimació.'
+      quarter_incomplete: 'La declaració del %{modelo} (%{period}) està calculada,
+        però encara no pot donar el resultat final, de manera que no hi ha base per
+        estimar la declaració anual. Encara manquen valors darrere d''aquestes caselles:
+        %{inputs}. Obre-la, indica aquests valors, torna a calcular-la i torna a demanar
+        l''estimació.'
+      quarter_incomplete_unnamed: La declaració del %{modelo} (%{period}) està calculada,
+        però encara no pot donar el resultat final, de manera que no hi ha base per
+        estimar la declaració anual. Obre-la per veure què falta, indica-ho, torna
+        a calcular-la i torna a demanar l'estimació.
+      quarter_input: '%{label} (casella %{box})'
       region_unstated: El teu perfil no indica la comunitat autònoma on tributes,
         de manera que no es pot fer l'estimació. Afegeix la teva comunitat de residència
         fiscal al perfil i torna a demanar l'estimació.
+      result_unresolved: 'La declaració anual no ha pogut obtenir aquestes caselles
+        a partir de les teves declaracions trimestrals i del teu perfil, de manera
+        que no es pot fer l''estimació: %{boxes}.'
       revision_not_mapped: 'No es pot estimar la declaració anual de l''exercici %{year}:
         la manera de traslladar les declaracions trimestrals a la declaració anual
         no està preparada per al model d''aquell any.'

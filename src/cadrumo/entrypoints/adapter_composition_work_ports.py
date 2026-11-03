@@ -205,6 +205,7 @@ def build_calculation_action_ports(
             bucket_event_repository=bucket_event_repository,
         ),
         calculation_repository=calculation_binding.calculation_repository(),
+        verification_repository=calculation_binding.verification_repository(),
         bucket_event_repository=bucket_event_repository,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=normalized_bucket_id,

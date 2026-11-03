@@ -18,8 +18,8 @@ from cadrumo.application.modelo.projection import (
     ModeloProjectNoM130UnitsError,
     ModeloProjectRegionUnstatedError,
     ModeloProjectRevisionNotMappedError,
-    modelo_projection_available,
 )
+from cadrumo.application.modelo.projection_declaration import modelo_projection_available
 from cadrumo.application.modelo.projection_operation import ModeloProjectOperationProjection
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.next_step import OperationCalculateWorkStepV1, OperationCreateWorkStepV1

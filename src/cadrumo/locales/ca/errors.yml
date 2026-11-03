@@ -1025,8 +1025,12 @@ errors:
       selecciona un perfil i torna-ho a provar.
     modelo_project_invalid_decimal_override: Una sobreescriptura de projecció no és
       un import decimal vàlid.
+    modelo_project_quarter_incomplete: No es fa la projecció mentre una declaració
+      trimestral calculada no tingui una casella que la projecció llegeix.
     modelo_project_region_unstated: La projecció necessita la comunitat autònoma on
       tributa el contribuent i el perfil no n'indica cap.
+    modelo_project_result_unresolved: No es fa la projecció quan la declaració anual
+      no ha pogut obtenir una xifra que la projecció comunica.
     modelo_project_revision_not_mapped: No es fa una projecció per a un any la declaració
       anual del qual no nomena la declaració de projecció del registre.
     modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.

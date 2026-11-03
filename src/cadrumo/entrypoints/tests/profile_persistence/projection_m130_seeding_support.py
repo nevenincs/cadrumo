@@ -73,11 +73,12 @@ ACTIVITY_ONLY = "actividad_economica"
 # The four Modelo 130 boxes the projection reads: cumulative ingresos, gastos and
 # rendimiento neto, and the quarter's final result, which becomes casilla 0604.
 M130_Q1_RESULTADO = Decimal("1200.00")
+_M130_Q1_RESULT_BOX = validated_casilla_id("19", surface="projection seeding")
 _M130_Q1_VALUES: dict[CasillaId, Decimal] = {
     validated_casilla_id("01", surface="projection seeding"): Decimal("10000.00"),
     validated_casilla_id("02", surface="projection seeding"): Decimal("4000.00"),
     validated_casilla_id("03", surface="projection seeding"): Decimal("6000.00"),
-    validated_casilla_id("19", surface="projection seeding"): M130_Q1_RESULTADO,
+    _M130_Q1_RESULT_BOX: M130_Q1_RESULTADO,
 }
 
 
@@ -85,6 +86,8 @@ class QuarterSeeding(StrEnum):
     """How much of the first Modelo 130 quarter a scenario stores."""
 
     CALCULATED = "calculated"
+    #: Calculated, but without the final-result box, as a calculation stores one that could not work it out.
+    WITHOUT_RESULT = "without_result"
     DRAFT_ONLY = "draft_only"
     NONE = "none"
 
@@ -136,7 +139,7 @@ def _seed_profile(
 def _seed_first_quarter(
     profile: TestRuntimeProfile, operation: PinnedAuthorityOperation, *, seeding: QuarterSeeding
 ) -> None:
-    """Store the Modelo 130 1T draft, and with ``CALCULATED`` its revision carrying the boxes the projection reads."""
+    """Store the Modelo 130 1T draft, and with a calculated seeding its revision carrying the boxes it holds."""
     if seeding is QuarterSeeding.NONE:
         return
     work_unit = create_work_unit(
@@ -151,13 +154,18 @@ def _seed_first_quarter(
     )
     if seeding is QuarterSeeding.DRAFT_ONLY:
         return
-    inputs = {casilla_id: str(value) for casilla_id, value in _M130_Q1_VALUES.items()}
+    held = {
+        casilla_id: value
+        for casilla_id, value in _M130_Q1_VALUES.items()
+        if seeding is not QuarterSeeding.WITHOUT_RESULT or casilla_id != _M130_Q1_RESULT_BOX
+    }
+    inputs = {casilla_id: str(value) for casilla_id, value in held.items()}
     revision = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit.work_unit_id,
             input_values_by_casilla_id=inputs,
             binding_overrides={},
-            casilla_values=_M130_Q1_VALUES,
+            casilla_values=held,
             filing_instance_evidence=None,
             source_provenance=(),
         ),
@@ -171,12 +179,12 @@ def _seed_first_quarter(
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=inputs,
         binding_overrides={},
-        casilla_values=_M130_Q1_VALUES,
+        casilla_values=held,
         observations=registry_grounded_observations(
             modelo="130",
             filing_year=PROJECTION_YEAR,
             period="1T",
-            casilla_values=_M130_Q1_VALUES,
+            casilla_values=held,
         ),
         created_at=_T0,
         updated_at=_T0,

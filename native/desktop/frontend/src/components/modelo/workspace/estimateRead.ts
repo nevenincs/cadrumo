@@ -49,22 +49,35 @@ function afterStep<Result>(
   return { phase: "failed" };
 }
 
+/** The step, where this window can do what it names; opening another
+ * declaration needs the shell to open it. */
+function runnable(
+  step: LedgerNextStep | null,
+  open: ((workUnitId: string) => void) | undefined,
+): LedgerNextStep | null {
+  return step?.kind === "open_work" && open === undefined ? null : step;
+}
+
 /**
  * The estimate of one declaration's year. `projectable` is the form's own
  * statement that the application can estimate this declaration; `run` is the
  * workspace's one way to send a write. The region is the application's to
- * resolve from the profile, so none is sent.
+ * resolve from the profile, so none is sent. `open` opens another declaration
+ * in the shell, where a step names one whose own form says what it lacks; a
+ * window with no way to open it is not offered that step.
  */
 export function useEstimate({
   port,
   year,
   projectable,
   run,
+  open,
 }: {
   port: ModeloPort;
   year: number;
   projectable: boolean;
   run: SendWrite;
+  open?: (workUnitId: string) => void;
 }) {
   const [read, setRead] = useState<EstimateRead>({ phase: "idle" });
   const alive = useRef(true);
@@ -82,13 +95,23 @@ export function useEstimate({
     else if (outcome.kind === "settled")
       setRead({ phase: "ready", projection: outcome.result });
     else if (outcome.kind === "refused")
-      setRead({ phase: "refused", words: outcome.words, step: outcome.step });
+      setRead({
+        phase: "refused",
+        words: outcome.words,
+        step: runnable(outcome.step, open),
+      });
     else setRead({ phase: "failed" });
-  }, [port, run, year]);
+  }, [port, run, year, open]);
   // The step the application named, run as the window runs it anywhere else.
   // Once it has settled the estimate is asked for again, not shown stale.
   const take = useCallback(
     async (step: LedgerNextStep) => {
+      if (step.kind === "open_work") {
+        // Nothing is sent: the declaration's own form says what it lacks, and
+        // the shell opens it.
+        open?.(step.work_unit_id);
+        return;
+      }
       setRead({ phase: "reading" });
       const next =
         step.kind === "create_work"
@@ -109,7 +132,7 @@ export function useEstimate({
             );
       if (alive.current) setRead(next);
     },
-    [port, run],
+    [port, run, open],
   );
   return {
     read,

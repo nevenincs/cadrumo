@@ -957,8 +957,12 @@ errors:
       létre vagy válassz ki egy profilt, és próbáld újra.
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
       decimális összeg.
+    modelo_project_quarter_incomplete: A vetítés nem készül el, amíg egy kiszámított
+      negyedéves bevallásból hiányzik egy rovat, amelyet a vetítés beolvas.
     modelo_project_region_unstated: Az előrejelzéshez szükség van arra a régióra,
       ahol az adózó adózik, a profil pedig egyet sem ad meg.
+    modelo_project_result_unresolved: A vetítés nem készül el, ha az éves bevallás
+      nem tudott kiszámítani egy számot, amelyet a vetítés közöl.
     modelo_project_revision_not_mapped: Nem készül előrejelzés olyan évre, amelynek
       éves bevallását a nyilvántartás vetítési megadása nem nevezi meg.
     modelo_revision_pick: A nyomtatványváltozat kiválasztása érvénytelen.

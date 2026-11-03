@@ -8,17 +8,16 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import validated_casilla_id
+from ....core.config import override_settings
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ....domain.calculations.registry.schema_base import DateAxis
-from ..projection import (
-    _m100_projection_result,
-    _projection_declaration_from,
-    _registry_projection_declaration,
-    _source_quarter_count,
-)
+from ...operations.error_detail import build_operation_error_detail
+from ..projection import ModeloProjectResultUnresolvedError, _m100_projection_result, _source_quarter_count
+from ..projection_declaration import projection_declaration_from, registry_projection_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,7 +27,7 @@ _SUPPORTED_YEARS = (2022, 2023, 2024, 2025, 2026)
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
 def test_the_published_fact_declares_the_modelo_130_and_100_boxes(year: int) -> None:
     with bundled_indexed_authority().operation() as operation:
-        declaration = _registry_projection_declaration(year, operation=operation)
+        declaration = registry_projection_declaration(year, operation=operation)
         source = operation.revision_for_context(declaration.source_modelo, filing_year=year, period="1T")
         target = operation.revision_for_context(
             declaration.target_modelo, filing_year=year, period=declaration.target_period
@@ -73,7 +72,7 @@ def test_the_published_fact_declares_the_modelo_130_and_100_boxes(year: int) -> 
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
 def test_the_modelo_130_revision_serves_four_quarters(year: int) -> None:
     with bundled_indexed_authority().operation() as operation:
-        declaration = _registry_projection_declaration(year, operation=operation)
+        declaration = registry_projection_declaration(year, operation=operation)
         count = _source_quarter_count(
             declaration,
             year=year,
@@ -87,7 +86,7 @@ def test_the_modelo_130_revision_serves_four_quarters(year: int) -> None:
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
 def test_the_projection_reports_the_quotas_and_not_the_withholding_boxes(year: int) -> None:
     with bundled_indexed_authority().operation() as operation:
-        declaration = _registry_projection_declaration(year, operation=operation)
+        declaration = registry_projection_declaration(year, operation=operation)
     # Distinct figures per box, so a mapping onto the wrong box changes the result.
     values = {
         validated_casilla_id(box, surface="test"): Decimal(figure)
@@ -126,4 +125,40 @@ def test_a_mapping_without_a_required_key_is_refused() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match=r"source\.casilla\.ingresos"):
-        _projection_declaration_from(resolved.model_copy(update={"payload": payload}))
+        projection_declaration_from(resolved.model_copy(update={"payload": payload}))
+
+
+def test_a_figure_the_annual_return_left_without_a_value_is_refused_and_its_boxes_named() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        declaration = registry_projection_declaration(2025, operation=operation)
+    left_out = (declaration.cuota_integra_estatal, declaration.cuota_resultante)
+    values = {
+        box: Decimal("1.00")
+        for box in (
+            declaration.base_liquidable_general,
+            declaration.pagos_fraccionados,
+            declaration.cuota_integra_estatal,
+            declaration.cuota_integra_autonomica,
+            declaration.cuota_liquida_estatal,
+            declaration.cuota_liquida_autonomica,
+            declaration.cuota_resultante,
+        )
+        if box not in left_out
+    }
+
+    with pytest.raises(ModeloProjectResultUnresolvedError) as refused:
+        _m100_projection_result(values, declaration=declaration)
+
+    sentences: set[str] = set()
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            detail = build_operation_error_detail(refused.value)
+        assert detail is not None and detail.refusal_words is not None
+        assert detail.refusal_words_language is OutputLanguage(language)
+        assert detail.error_code == "REFUSED_MODELO_PROJECT_RESULT_UNRESOLVED"
+        # Only the boxes without a value are named, and no step is offered for what the quarters cannot supply.
+        assert all(box in detail.refusal_words for box in left_out)
+        assert declaration.base_liquidable_general not in detail.refusal_words
+        assert detail.next_step is None
+        sentences.add(detail.refusal_words)
+    assert len(sentences) == len(SUPPORTED_OUTPUT_LANGUAGES)

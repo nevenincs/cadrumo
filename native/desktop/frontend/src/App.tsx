@@ -2764,6 +2764,9 @@ export function App({ host }: { host: Host }) {
           reader={reader}
           workUnitId={openDeclaration.workUnitId}
           onOpen={openWorkUnit}
+          // The estimate's step to a quarter whose own form says what it
+          // lacks; staged edits are asked about first, as on leaving.
+          onSwitch={(workUnitId) => guarded(() => openWorkUnit(workUnitId))}
           // The one census flow, as the palette offers it.
           onCensus={
             signedIn && host.censo && host.userProfile ? askCenso : undefined

@@ -24,6 +24,7 @@ from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -84,6 +85,7 @@ class CalculationActionPorts:
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     work_lifecycle_ports: WorkLifecyclePorts
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
+    verification_repository: VerificationReportCatalogueRepositoryProtocol
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
     transaction_repository: CalculationTransactionRepositoryProtocol
     activity_asset_history_repository: ActivityAssetHistoryRepository

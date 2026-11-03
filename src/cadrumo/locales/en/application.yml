@@ -2500,6 +2500,7 @@ application:
       next_step:
         calculate_work: Calculate %{modelo}, %{period}
         create_work: Create %{modelo}, %{period}
+        open_work: Open %{modelo}, %{period}
       no_m130_revisions: The Modelo 130 declarations for filing year %{year} have
         not been calculated yet, so there is nothing to base an estimate of the annual
         return on. Calculate a quarter, then ask for the estimate again.
@@ -2509,9 +2510,21 @@ application:
       profile_fact_missing: 'The estimate cannot work out the taxable base and the
         tax boxes because your profile does not state: %{profile_facts}. Add them
         to your profile, then ask for the estimate again.'
+      quarter_incomplete: 'The %{modelo} declaration (%{period}) is calculated, but
+        it cannot give its final result yet, so there is nothing to base an estimate
+        of the annual return on. Values behind these boxes are still missing: %{inputs}.
+        Open it, give those values, calculate it again, then ask for the estimate
+        again.'
+      quarter_incomplete_unnamed: The %{modelo} declaration (%{period}) is calculated,
+        but it cannot give its final result yet, so there is nothing to base an estimate
+        of the annual return on. Open it to see what is missing, give it, calculate
+        it again, then ask for the estimate again.
+      quarter_input: '%{label} (box %{box})'
       region_unstated: Your profile does not state the region you pay tax in, so the
         estimate cannot be made. Add your region of tax residence to your profile,
         then ask for the estimate again.
+      result_unresolved: 'The annual return could not work out these boxes from your
+        quarterly declarations and your profile, so the estimate cannot be made: %{boxes}.'
       revision_not_mapped: 'The annual return cannot be estimated for filing year
         %{year}: the way the quarterly declarations are carried onto the annual return
         has not been set up for that year''s form.'

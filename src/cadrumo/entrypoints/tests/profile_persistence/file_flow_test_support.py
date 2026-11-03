@@ -209,6 +209,9 @@ def calculation_ports_for_test(
                 bucket_event_repository=resolved_bucket_event_repository,
             ),
             calculation_repository=resolved_calculation_repository,
+            verification_repository=VerificationReportCatalogueRepository(
+                bucket_id=normalized_bucket_id, objects=objects
+            ),
             bucket_event_repository=resolved_bucket_event_repository,
             transaction_repository=resolved_transaction_repository,
             activity_asset_history_repository=ActividadAssetHistoryRepository(

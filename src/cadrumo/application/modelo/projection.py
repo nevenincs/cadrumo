@@ -31,9 +31,11 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ...core.aggregation import BindingSourceKind
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
@@ -42,12 +44,7 @@ from ...core.period import Period, StandardPeriodCode
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from ...domain.calculations.registry.errors import (
-    GovernedFactNotApplicableError,
-    RegistrySnapshotError,
-    RegistryValidationError,
-)
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -61,7 +58,6 @@ from ...domain.calculations.registry.runtime_graph import (
     revision_date_binding_ids,
 )
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
@@ -84,7 +80,10 @@ from .calculation_source_guards import reject_caller_overrides_of_source_binding
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .profile_binding import resolve_profile_sourced_bindings
 from .profile_readiness_gate import load_modelo_work_profile
-from .projection_next_steps import calculate_work_step, create_work_step
+from .projection_declaration import ProjectionDeclaration, modelo_projection_available, registry_projection_declaration
+from .projection_next_steps import calculate_work_step, create_work_step, open_work_step
+from .projection_quarter_inputs import quarter_open_inputs
+from .work_form_wording import modelo_number, period_words
 from .work_lifecycle import list_work_units
 from .work_profile import ModeloWorkProfile
 
@@ -175,23 +174,29 @@ class ModeloProjectRevisionNotMappedError(TerminalPreconditionErrorMixin[Precond
     """
 
 
+class ModeloProjectQuarterIncompleteError(OperationNextStepErrorMixin, ModeloProjectionError):
+    """Raised when a calculated quarterly declaration lacks a box the estimate reads.
+
+    The quarter's calculation could not work out every box, because values
+    behind some of them were never given. The sentence names the boxes the
+    quarter's own form says are open, and the error serves a step that opens
+    that quarter, where they are given. Nothing a catalogue action can supply
+    puts it right from here, so it carries no precondition verdict.
+    """
+
+
+class ModeloProjectResultUnresolvedError(ModeloProjectionError):
+    """Raised when the annual return's calculation left a figure the estimate reports without a value.
+
+    The sentence names the boxes the annual return could not work out from the
+    quarters and the profile. Which operand is missing is told by the
+    unresolved boxes and bindings a projection that does resolve reports, so
+    this refusal serves no step of its own.
+    """
+
+
 class ModeloProjectInvalidDecimalOverrideError(ModeloProjectionError):
     """Raised when a projection override cannot be parsed as a decimal."""
-
-
-def _required_casilla_value(
-    values: Mapping[CasillaId, Decimal],
-    casilla_id: CasillaId,
-    *,
-    source: str,
-) -> Decimal:
-    try:
-        return values[casilla_id]
-    except KeyError as exc:
-        raise ModeloProjectionError(
-            translated_message="errors.error.modelo_projection",
-            context={"source": source, "casilla_id": casilla_id, "casilla_produced": False},
-        ) from exc
 
 
 class ModeloProjectionCasillaObservation(BaseModel):
@@ -332,103 +337,8 @@ def _relation_id(value: object, *, surface: str) -> RelationId:
         raise RegistryValidationError(f"{surface} must be a canonical relation id: {value!r}") from exc
 
 
-@dataclass(frozen=True, slots=True)
-class _ProjectionDeclaration:
-    """The modelos, period and boxes the dated cross-model projection fact declares."""
-
-    source_modelo: str
-    target_modelo: str
-    target_period: str
-    target_revision: str
-    ingresos: CasillaId
-    gastos: CasillaId
-    rendimiento_neto: CasillaId
-    resultado_final: CasillaId
-    rendimiento_neto_projected: CasillaId
-    base_liquidable_general: CasillaId
-    cuota_integra_estatal: CasillaId
-    cuota_integra_autonomica: CasillaId
-    cuota_liquida_estatal: CasillaId
-    cuota_liquida_autonomica: CasillaId
-    cuota_resultante: CasillaId
-    pagos_fraccionados: CasillaId
-
-
-def _registry_projection_declaration(year: int, *, operation: PinnedAuthorityOperation) -> _ProjectionDeclaration:
-    """Resolve the dated cross-model projection declaration from the registry."""
-    resolved = operation.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id="modelo-100-m130-projection-mapping",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(year, 12, 31),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise TypeError("selected projection declaration must resolve as a mapping fact")
-    return _projection_declaration_from(resolved)
-
-
-def _projection_declaration_from(resolved: ResolvedMappingFact) -> _ProjectionDeclaration:
-    """Read the declared entries, refusing a mapping that omits one."""
-    entries = {entry.key: str(entry.value) for entry in resolved.payload.entries}
-
-    def declared(key: str) -> str:
-        try:
-            return entries[key]
-        except KeyError as exc:
-            raise RegistryValidationError(f"projection mapping is missing {key!r}") from exc
-
-    def box(key: str) -> CasillaId:
-        return validated_casilla_id(declared(key), surface=f"projection mapping {key}")
-
-    return _ProjectionDeclaration(
-        source_modelo=declared("source.modelo"),
-        target_modelo=declared("target.modelo"),
-        target_period=declared("period.default"),
-        target_revision=declared("revision"),
-        ingresos=box("source.casilla.ingresos"),
-        gastos=box("source.casilla.gastos"),
-        rendimiento_neto=box("source.casilla.rendimiento_neto"),
-        resultado_final=box("source.casilla.resultado_final"),
-        rendimiento_neto_projected=box("target.casilla.rendimiento_neto_projected"),
-        base_liquidable_general=box("target.casilla.base_liquidable_general"),
-        cuota_integra_estatal=box("target.casilla.cuota_integra_estatal"),
-        cuota_integra_autonomica=box("target.casilla.cuota_integra_autonomica"),
-        cuota_liquida_estatal=box("target.casilla.cuota_liquida_estatal"),
-        cuota_liquida_autonomica=box("target.casilla.cuota_liquida_autonomica"),
-        cuota_resultante=box("target.casilla.cuota_resultante"),
-        pagos_fraccionados=box("target.casilla.pagos_fraccionados"),
-    )
-
-
-def modelo_projection_available(
-    *,
-    modelo: str,
-    period: Period,
-    filing_year: int,
-    registry_revision_id: str,
-    operation: PinnedAuthorityOperation,
-) -> bool:
-    """Whether the registry lets this declaration's revision ask for the annual projection.
-
-    The dated cross-model projection declaration names the modelo, period and
-    revision it was authored against. A declaration is projectable only when it
-    is exactly that target, so the answer follows the registry and never the
-    modelo's number. A year the declaration does not reach is not projectable.
-    """
-    try:
-        declaration = _registry_projection_declaration(filing_year, operation=operation)
-    except GovernedFactNotApplicableError:
-        return False
-    return (
-        declaration.target_modelo == modelo
-        and declaration.target_period == period.registry_token
-        and declaration.target_revision == registry_revision_id
-    )
-
-
 def _require_declared_target(
-    declaration: _ProjectionDeclaration,
+    declaration: ProjectionDeclaration,
     *,
     year: int,
     target_revision_id: str,
@@ -462,7 +372,7 @@ def _require_declared_target(
 
 
 def _source_quarter_count(
-    declaration: _ProjectionDeclaration,
+    declaration: ProjectionDeclaration,
     *,
     year: int,
     period: Period,
@@ -477,7 +387,7 @@ def _source_quarter_count(
     return len(revision.period_selector.periods_for_year(year))
 
 
-def _no_quarter_remedy(year: int, *, declaration: _ProjectionDeclaration) -> PreconditionVerdict:
+def _no_quarter_remedy(year: int, *, declaration: ProjectionDeclaration) -> PreconditionVerdict:
     """The verdict that names creating the first quarter's declaration as the way to a projection."""
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key="modelo.project",
@@ -498,7 +408,7 @@ def _earliest_quarter(units: list[WorkUnit]) -> WorkUnit:
 
 
 def _uncalculated_quarter_remedy(
-    year: int, *, declaration: _ProjectionDeclaration, earliest: WorkUnit
+    year: int, *, declaration: ProjectionDeclaration, earliest: WorkUnit
 ) -> PreconditionVerdict:
     """The verdict that names calculating the earliest quarter that has no calculation."""
     return build_modelo_precondition_failure_for_scenario(
@@ -516,12 +426,20 @@ def _uncalculated_quarter_remedy(
     ).verdict
 
 
+@dataclass(frozen=True, slots=True)
+class _CalculatedQuarter:
+    """One quarterly declaration and its latest persisted calculation."""
+
+    unit: WorkUnit
+    revision: CalculationRevision
+
+
 def _m130_quarter_revisions(
     year: int,
     *,
-    declaration: _ProjectionDeclaration,
+    declaration: ProjectionDeclaration,
     ports: CalculationActionPorts,
-) -> dict[Period, CalculationRevision]:
+) -> dict[Period, _CalculatedQuarter]:
     """Read the latest persisted draft revision for each filed M130 quarter."""
     all_units = list_work_units(ports=ports.work_lifecycle_ports)
     m130_units = [
@@ -542,11 +460,11 @@ def _m130_quarter_revisions(
             ),
         )
 
-    m130_quarters: dict[Period, CalculationRevision] = {}
+    m130_quarters: dict[Period, _CalculatedQuarter] = {}
     for unit in m130_units:
         revisions = list_calculation_revisions(work_unit_id=unit.work_unit_id, ports=ports)
         if revisions:
-            m130_quarters[unit.period] = revisions[-1]
+            m130_quarters[unit.period] = _CalculatedQuarter(unit=unit, revision=revisions[-1])
 
     if not m130_quarters:
         earliest = _earliest_quarter(m130_units)
@@ -557,6 +475,59 @@ def _m130_quarter_revisions(
             next_step=calculate_work_step(earliest),
         )
     return m130_quarters
+
+
+def _boxes_read_from(period: Period, *, latest: Period, declaration: ProjectionDeclaration) -> tuple[CasillaId, ...]:
+    """The boxes the estimate reads from the quarter of ``period``.
+
+    Every quarter's final result is a paid instalment; the cumulative income,
+    expenses and net income are read from the latest quarter alone.
+    """
+    if period == latest:
+        return (declaration.ingresos, declaration.gastos, declaration.rendimiento_neto, declaration.resultado_final)
+    return (declaration.resultado_final,)
+
+
+def _quarter_incomplete(
+    quarter: _CalculatedQuarter, *, ports: CalculationActionPorts, operation: PinnedAuthorityOperation
+) -> ModeloProjectQuarterIncompleteError:
+    """The refusal for a calculated quarter that lacks a box the estimate reads.
+
+    It names the boxes the quarter's own form says are open, in the language
+    of the refusal's words, and serves a step that opens that quarter.
+    """
+    language = OutputLanguage(output_language())
+    unit = quarter.unit
+    inputs = quarter_open_inputs(unit, ports=ports, operation=operation, language=language)
+    return ModeloProjectQuarterIncompleteError(
+        context={
+            "modelo": modelo_number(str(unit.modelo), language),
+            "period": period_words(unit.period, language),
+            **({"inputs": inputs} if inputs else {}),
+        },
+        translated_message=(
+            "application.modelo.projection_words.quarter_incomplete"
+            if inputs
+            else "application.modelo.projection_words.quarter_incomplete_unnamed"
+        ),
+        next_step=open_work_step(unit),
+    )
+
+
+def _require_quarters_give_their_boxes(
+    quarters: Mapping[Period, _CalculatedQuarter],
+    *,
+    declaration: ProjectionDeclaration,
+    latest: Period,
+    ports: CalculationActionPorts,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse an estimate while a calculated quarter lacks a box it reads, the earliest such quarter first."""
+    for period in sorted(quarters, key=lambda quarter: quarter.quarter_ordinal or 0):
+        quarter = quarters[period]
+        read = _boxes_read_from(period, latest=latest, declaration=declaration)
+        if not all(box in quarter.revision.casilla_values for box in read):
+            raise _quarter_incomplete(quarter, ports=ports, operation=operation)
 
 
 @dataclass(frozen=True, slots=True)
@@ -576,57 +547,35 @@ class _M130AnnualProjection:
 def _m130_annual_projection(
     year: int,
     *,
-    declaration: _ProjectionDeclaration,
+    declaration: ProjectionDeclaration,
     ports: CalculationActionPorts,
     operation: PinnedAuthorityOperation,
 ) -> _M130AnnualProjection:
     """Read the stored M130 quarters and annualise the cumulative basis."""
-    m130_quarters = _m130_quarter_revisions(year, declaration=declaration, ports=ports)
-    quarters_filed = len(m130_quarters)
+    quarters = _m130_quarter_revisions(year, declaration=declaration, ports=ports)
+    quarters_filed = len(quarters)
     # The ingresos, gastos and rendimiento neto boxes are year-to-date cumulative:
     # each quarter's value already aggregates Jan 1 through quarter end. The annual
     # basis is therefore the latest available quarter, not a sum of snapshots.
-    latest_period = max(m130_quarters, key=lambda period: period.quarter_ordinal or 0)
+    latest_period = max(quarters, key=lambda period: period.quarter_ordinal or 0)
     latest_ordinal = latest_period.quarter_ordinal
     if latest_ordinal is None:
         raise ModeloProjectionError(
             translated_message="errors.error.modelo_projection",
             context={"modelo": declaration.source_modelo, "period_is_quarter": False},
         )
-    latest_revision = m130_quarters[latest_period]
-    latest_source = (
-        f"modelo {declaration.source_modelo} {latest_period.registry_token} "
-        f"revision {latest_revision.calculation_revision_id}"
+    _require_quarters_give_their_boxes(
+        quarters, declaration=declaration, latest=latest_period, ports=ports, operation=operation
     )
-    total_rendimiento_neto = _required_casilla_value(
-        latest_revision.casilla_values,
-        declaration.rendimiento_neto,
-        source=latest_source,
-    )
-    total_ingresos = _required_casilla_value(
-        latest_revision.casilla_values,
-        declaration.ingresos,
-        source=latest_source,
-    )
-    total_gastos = _required_casilla_value(
-        latest_revision.casilla_values,
-        declaration.gastos,
-        source=latest_source,
-    )
+    m130_quarters = {period: quarter.revision for period, quarter in quarters.items()}
+    latest_values = m130_quarters[latest_period].casilla_values
+    total_rendimiento_neto = latest_values[declaration.rendimiento_neto]
+    total_ingresos = latest_values[declaration.ingresos]
+    total_gastos = latest_values[declaration.gastos]
     # The final-result box is the incremental payment of each quarter; the annual
     # credit is the sum of the available quarter results.
     total_pagos_fraccionados = sum(
-        (
-            _required_casilla_value(
-                revision.casilla_values,
-                declaration.resultado_final,
-                source=(
-                    f"modelo {declaration.source_modelo} {period.registry_token} "
-                    f"revision {revision.calculation_revision_id}"
-                ),
-            )
-            for period, revision in m130_quarters.items()
-        ),
+        (revision.casilla_values[declaration.resultado_final] for revision in m130_quarters.values()),
         Decimal("0"),
     )
     quarter_count = _source_quarter_count(declaration, year=year, period=latest_period, operation=operation)
@@ -829,7 +778,7 @@ def _raise_if_absent_profile_facts_block_projection(
     revision: ModeloRevision,
     *,
     absent_profile_binding_ids: tuple[BindingId, ...],
-    declaration: _ProjectionDeclaration,
+    declaration: ProjectionDeclaration,
 ) -> None:
     """Refuse a projection a missing profile fact blocks, naming each fact the profile never declared.
 
@@ -1013,17 +962,32 @@ def _source_resolved_casilla_ids(
 def _m100_projection_result(
     values: Mapping[CasillaId, Decimal],
     *,
-    declaration: _ProjectionDeclaration,
+    declaration: ProjectionDeclaration,
 ) -> ModeloProjectM100Projection:
-    source = f"modelo {declaration.target_modelo} projection engine result"
+    """The seven annual figures the estimate reports, refusing and naming the boxes the calculation left without one."""
+    boxes = (
+        declaration.base_liquidable_general,
+        declaration.pagos_fraccionados,
+        declaration.cuota_integra_estatal,
+        declaration.cuota_integra_autonomica,
+        declaration.cuota_liquida_estatal,
+        declaration.cuota_liquida_autonomica,
+        declaration.cuota_resultante,
+    )
+    unresolved = [box for box in boxes if box not in values]
+    if unresolved:
+        raise ModeloProjectResultUnresolvedError(
+            translated_message="application.modelo.projection_words.result_unresolved",
+            context={"boxes": ", ".join(unresolved)},
+        )
     return ModeloProjectM100Projection(
-        base_liquidable_general=_required_casilla_value(values, declaration.base_liquidable_general, source=source),
-        pagos_fraccionados=_required_casilla_value(values, declaration.pagos_fraccionados, source=source),
-        cuota_integra_estatal=_required_casilla_value(values, declaration.cuota_integra_estatal, source=source),
-        cuota_integra_autonomica=_required_casilla_value(values, declaration.cuota_integra_autonomica, source=source),
-        cuota_liquida_estatal=_required_casilla_value(values, declaration.cuota_liquida_estatal, source=source),
-        cuota_liquida_autonomica=_required_casilla_value(values, declaration.cuota_liquida_autonomica, source=source),
-        cuota_resultante=_required_casilla_value(values, declaration.cuota_resultante, source=source),
+        base_liquidable_general=values[declaration.base_liquidable_general],
+        pagos_fraccionados=values[declaration.pagos_fraccionados],
+        cuota_integra_estatal=values[declaration.cuota_integra_estatal],
+        cuota_integra_autonomica=values[declaration.cuota_integra_autonomica],
+        cuota_liquida_estatal=values[declaration.cuota_liquida_estatal],
+        cuota_liquida_autonomica=values[declaration.cuota_liquida_autonomica],
+        cuota_resultante=values[declaration.cuota_resultante],
     )
 
 
@@ -1076,7 +1040,7 @@ def _projection_service_result(
     engine_result: RegistryCalculationResult,
     credits: CalculationSourceResolution,
     revision: ModeloRevision,
-    declaration: _ProjectionDeclaration,
+    declaration: ProjectionDeclaration,
 ) -> ModeloProjectServiceResult:
     """Assemble the projection result from the annual M130 figures and the engine's observations."""
     return ModeloProjectServiceResult(
@@ -1174,7 +1138,7 @@ def project_modelo_100_from_m130(
     declaration does not name is refused with
     :class:`ModeloProjectRevisionNotMappedError`.
     """
-    declaration = _registry_projection_declaration(year, operation=operation)
+    declaration = registry_projection_declaration(year, operation=operation)
     m100_snapshot = operation.snapshot(declaration.target_modelo, filing_year=year, period=declaration.target_period)
     _require_declared_target(
         declaration, year=year, target_revision_id=str(m100_snapshot.revision.id), operation=operation
@@ -1302,7 +1266,9 @@ __all__ = [
     "ModeloProjectM130Accumulated",
     "ModeloProjectNoM130RevisionsError",
     "ModeloProjectNoM130UnitsError",
+    "ModeloProjectQuarterIncompleteError",
     "ModeloProjectRegionUnstatedError",
+    "ModeloProjectResultUnresolvedError",
     "ModeloProjectRevisionNotMappedError",
     "ModeloProjectServiceResult",
     "ModeloProjectionCasillaObservation",
@@ -1311,6 +1277,5 @@ __all__ = [
     "ModeloProjectionUnresolvedCasilla",
     "RegistrySnapshotError",
     "RegistryValidationError",
-    "modelo_projection_available",
     "project_modelo_100_from_m130",
 ]

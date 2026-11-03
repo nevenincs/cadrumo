@@ -941,8 +941,12 @@ errors:
       a profile and try again.
     modelo_project_invalid_decimal_override: A projection override is not a valid
       decimal amount.
+    modelo_project_quarter_incomplete: A projection is not made while a calculated
+      quarterly declaration lacks a box the projection reads.
     modelo_project_region_unstated: A projection needs the region the filer pays tax
       in, and the profile states none.
+    modelo_project_result_unresolved: A projection is not made when the annual return
+      could not work out a figure the projection reports.
     modelo_project_revision_not_mapped: A projection is not made for a year whose
       annual return the registry's projection declaration does not name.
     modelo_revision_pick: Could not select the requested calculation revision.

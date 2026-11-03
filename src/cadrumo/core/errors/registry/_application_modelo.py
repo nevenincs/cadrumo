@@ -108,6 +108,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.projection.ModeloProjectQuarterIncompleteError",
+        ErrorCode(
+            code="REFUSED_MODELO_PROJECT_QUARTER_INCOMPLETE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_project_quarter_incomplete",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.projection.ModeloProjectResultUnresolvedError",
+        ErrorCode(
+            code="REFUSED_MODELO_PROJECT_RESULT_UNRESOLVED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_project_result_unresolved",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.projection.ModeloProjectInvalidDecimalOverrideError",
         ErrorCode(
             code="REFUSED_MODELO_PROJECT_INVALID_DECIMAL_OVERRIDE",

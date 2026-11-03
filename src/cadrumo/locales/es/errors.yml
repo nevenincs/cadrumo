@@ -1017,8 +1017,12 @@ errors:
       o selecciona un perfil y vuelve a intentarlo.
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
+    modelo_project_quarter_incomplete: No se hace la proyección mientras una declaración
+      trimestral calculada carezca de una casilla que la proyección lee.
     modelo_project_region_unstated: La proyección necesita la comunidad autónoma en
       la que tributa el contribuyente y el perfil no indica ninguna.
+    modelo_project_result_unresolved: No se hace la proyección cuando la declaración
+      anual no ha podido obtener una cifra que la proyección comunica.
     modelo_project_revision_not_mapped: No se hace una proyección para un año cuya
       declaración anual no nombra la declaración de proyección del registro.
     modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
