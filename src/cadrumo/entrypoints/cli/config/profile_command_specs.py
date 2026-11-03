@@ -69,6 +69,7 @@ _TOGGLE = ValueContract(
 _ENTITY_TYPE_CHOICES: tuple[str, ...] = ()
 _LEGAL_ENTITY_FORM_CHOICES: tuple[str, ...] = ()
 _IRPF_ESTIMATION_REGIME_CHOICES: tuple[str, ...] = ()
+_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICES: tuple[str, ...] = ()
 _IRPF_SPECIAL_REGIME_CHOICES: tuple[str, ...] = ()
 _FISCAL_RESIDENCY_CHOICES: tuple[str, ...] = ()
 # This public wire vocabulary is shown by the import-pure command graph.  The
@@ -261,6 +262,7 @@ _WIZARD = "....application.wizard.results"
 _WIZARD_CONFIRM_FIELDS = frozenset(
     {
         "new-entity-first-two-profit-periods",
+        "irpf-codigo-comercio-accounting",
         "iva-roi-enrolled",
         "iva-oss-enrolled",
         "iva-group-member-enrolled",
@@ -355,6 +357,9 @@ _WIZARD_FIELDS = (
     "modelo-111-no-retenciones-periods",
     "modelo-115-no-relevant-payment-periods",
     "irpf-estimation-regime",
+    "irpf-activity-income-imputation-criterion",
+    "irpf-activity-income-imputation-year",
+    "irpf-codigo-comercio-accounting",
     "irpf-special-regime",
     "irpf-special-regime-start-date",
     "does-intracomunitario",
@@ -377,6 +382,9 @@ _WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
     "entity-type": ValueContract(DeferredTarget("builtins", "str"), choices=_ENTITY_TYPE_CHOICES),
     "legal-entity-form": ValueContract(DeferredTarget("builtins", "str"), choices=_LEGAL_ENTITY_FORM_CHOICES),
     "irpf-estimation-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_ESTIMATION_REGIME_CHOICES),
+    "irpf-activity-income-imputation-criterion": ValueContract(
+        DeferredTarget("builtins", "str"), choices=_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICES
+    ),
     "irpf-special-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_SPECIAL_REGIME_CHOICES),
     "fiscal-residency": ValueContract(DeferredTarget("builtins", "str"), choices=_FISCAL_RESIDENCY_CHOICES),
 }

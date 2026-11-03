@@ -171,6 +171,10 @@ class CalculationNoteSentence(StrEnum):
     """A suffered-withholding class that may have income has neither a payer record nor an absence attestation."""
     RETENCION_SOPORTADA_ABSENCE_CONTRADICTED = "retencion_soportada_absence_contradicted"
     """A suffered-withholding class holds payer records and an operator's attestation that it has none."""
+    CREDIT_SOURCE_DISAGREEMENT = "credit_source_disagreement"
+    """A credit casilla's value and one of its declared cross-check sources state different amounts."""
+    CREDIT_CROSS_CHECK_ABSENT = "credit_cross_check_absent"
+    """A declared cross-check source of a credit casilla holds nothing to compare."""
     HOUSEHOLD_ROWS_INCOMPLETE = "household_rows_incomplete"
     """A household group states more people than the profile records."""
 
@@ -248,8 +252,8 @@ class RecordedCalculationNote(BaseModel):
     """What kind of note this is, in the same language."""
 
 
-DISAGREEMENT_REASONS: Final[frozenset[str]] = frozenset({"precedence_tier_divergence"})
-"""The persisted reasons whose issue states a :class:`SourceDisagreementFact`, and only those."""
+DISAGREEMENT_REASONS: Final[frozenset[str]] = frozenset({"credit_source_disagreement", "precedence_tier_divergence"})
+"""The persisted reasons that carry a source disagreement, and only those."""
 
 
 class CalculationSourceIssue(BaseModel):
@@ -304,6 +308,14 @@ class CalculationSourceIssue(BaseModel):
     what the resolver stated beside that value: a proven zero persists too, so a
     reopened declaration still shows the zero was proven, and withholds nothing;
     a capped note without a stated outcome withholds. Only that reason carries an
+    outcome. ``credit_source_disagreement`` is a credit casilla whose value
+    source and a declared cross-check source differ by any amount; it carries
+    the whole :class:`~.source_disagreement.SourceDisagreementFact` in
+    ``disagreement`` and withholds filing. ``credit_cross_check_absent`` is a
+    declared cross-check source with nothing to compare, which reads "not
+    cross-checked", never agreement, and withholds nothing. ``fact`` states such a note's own row, element, interval and
+    amount. ``binding_source`` is ``None`` only where the condition names no
+    binding source kind.
     outcome. ``household_rows_incomplete`` is a household group whose stated
     count is larger than the rows the profile records: the recorded rows are
     used and the group is not proven complete; it withholds nothing. ``fact``
@@ -345,6 +357,8 @@ class CalculationSourceIssue(BaseModel):
         "ledger_expense_may_be_durable",
         "household_rows_incomplete",
         "advisory_binding_value",
+        "credit_source_disagreement",
+        "credit_cross_check_absent",
         "precedence_tier_divergence",
     ]
     binding_source: BindingSourceKind | None

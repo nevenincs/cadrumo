@@ -560,6 +560,55 @@ def part_payment_diagnostics(
     )
 
 
+def paid_after_cut_off_diagnostics(
+    observations: Sequence[RentaIncomeObservation], *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report the retencion imputed to a pago fraccionado's window whose receipt is dated after it."""
+    held = [row for row in observations if row.withheld_derivation is LedgerWithholdingDerivation.PAID_AFTER_CUT_OFF]
+    if not held:
+        return ()
+    total = sum((row.withheld_amount for row in held), Decimal("0"))
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"{len(held)} receipt(s) paid after the end of this window carry {total} EUR of retencion on "
+                "income imputed to it. It is deducted only once paid (RIRPF art. 110.3.a; TEAC 00/03187/2011), "
+                "so this pago fraccionado leaves it out; the annual return credits it."
+            ),
+            source_ref="withholding_paid_after_cut_off",
+        ),
+    )
+
+
+def rental_activity_component_diagnostics(
+    observations: Sequence[RentaIncomeObservation], *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report the retencion of rental activity rows, which the activity credit leaves to the rental credit."""
+    rental = [
+        row for row in observations if row.withheld_derivation is LedgerWithholdingDerivation.RENTAL_ACTIVITY_COMPONENT
+    ]
+    if not rental:
+        return ()
+    total = sum((row.withheld_amount for row in rental), Decimal("0"))
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"{len(rental)} receipt(s) of an arrendador de inmuebles activity (tipo de actividad A01) carry "
+                f"{total} EUR of retencion. The annual return credits urban-rental withholding apart from the "
+                "activity credit, so it is left out of that credit; record it with the payer certificates of "
+                "the rental activity, whose credit carries it."
+            ),
+            source_ref="withholding_rental_activity_component",
+        ),
+    )
+
+
 def rectification_diagnostics(
     transactions: TransactionCatalogue,
     invoices: InvoiceCatalogue,

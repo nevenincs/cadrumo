@@ -44,6 +44,7 @@ from .binding_temporal import (
 )
 from .binding_terminal_origin import TerminalOriginExpectation
 from .binding_value_contract import BindingValueChannel, BindingValueContract
+from .credit_reconciliation import CreditReconciliationEntry
 from .errors import RegistryValidationError
 from .ids import (
     ApplicationLinkId,
@@ -623,6 +624,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
     live_cross_references: Annotated[tuple[LiveCrossReferenceDecision, ...], SCHEMA_FAMILY] = ()
     workbook_parity_refs: Annotated[tuple[WorkbookParityReference, ...], SCHEMA_FAMILY] = ()
     verification_expectations: Annotated[tuple[VerificationExpectationDefinition, ...], SCHEMA_FAMILY] = ()
+    credit_reconciliation: Annotated[tuple[CreditReconciliationEntry, ...], SCHEMA_FAMILY] = ()
     application_links: Annotated[tuple[_ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
     deadline_windows: Annotated[tuple[_DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
     filing_schedules: Annotated[tuple[_ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()

@@ -25,6 +25,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.period import Period
+from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
 from ....domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
@@ -249,6 +250,135 @@ def test_the_withholding_of_a_boundary_invoice_follows_its_income(operation: Pin
     later = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
     assert earlier.binding_values[_CREDIT_0599] == _RETENCION
     assert later.binding_values[_CREDIT_0599] == _ZERO
+
+
+def test_under_accrual_the_withholding_is_also_stated_by_the_year_the_payer_paid(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Issued 20 December, paid 10 January: the payer certifies the 150,00 in the later year."""
+    row, invoice = _paid_invoice(*_BOTH_YEARS)
+    facts = _declared((_EARLIER, _DEVENGO), (_LATER, _DEVENGO))
+    earlier = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_EARLIER)
+    later = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
+    assert earlier.payment_year_binding_values == {_CREDIT_0599: _ZERO}
+    assert later.payment_year_binding_values == {_CREDIT_0599: _RETENCION}
+
+
+def test_the_fourth_quarter_basis_leaves_out_withholding_paid_after_the_year(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Issued 20 December, paid 10 January: 0599 credits the 150,00, the fourth quarter could not."""
+    row, invoice = _paid_invoice(*_BOTH_YEARS)
+    facts = _declared((_EARLIER, _DEVENGO), (_LATER, _DEVENGO))
+    earlier = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_EARLIER)
+    assert earlier.binding_values[_CREDIT_0599] == _RETENCION
+    assert earlier.instalment_basis_binding_values == {_CREDIT_0599: _ZERO}
+
+
+_IN_YEAR = (date(_LATER, 3, 2), date(_LATER, 3, 20))
+_ALSO_IN_YEAR = (date(_LATER, 6, 2), date(_LATER, 6, 20))
+
+
+def _invoice_paid_in_year(
+    dates: tuple[date, date], number: str, tipo: TipoActividad | None
+) -> tuple[Transaction, Invoice]:
+    unlinked = _receipt(dates[1])
+    invoice = _issued(dates[0], linked=(unlinked.transaction_id,), number=number)
+    receipt = _receipt(dates[1], invoice_id=invoice.invoice_id).model_copy(update={"tipo_actividad": tipo})
+    return receipt, invoice
+
+
+def _rental_findings(resolution: CalculationSourceResolution) -> list[str]:
+    return [
+        item.message
+        for item in resolution.diagnostics
+        if item.reason == "source_issue" and item.source_ref == "withholding_rental_activity_component"
+    ]
+
+
+def test_a_rental_activity_receipt_leaves_its_withholding_out_of_the_activity_credit(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A01 receipt with 150,00 retained: 0599 holds 0,00 and the 150,00 is reported for the rental credit."""
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-A01", TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES)
+    resolution = _resolve(operation, _declared((_LATER, _DEVENGO)), rows=(row,), invoices=(invoice,), year=_LATER)
+    assert resolution.binding_values[_CREDIT_0599] == _ZERO
+    assert _CREDIT_0599 not in _unresolved_bindings(resolution)
+    (finding,) = _rental_findings(resolution)
+    assert "150.00 EUR" in finding
+
+
+def test_an_untagged_receipt_beside_a_rental_activity_leaves_the_activity_credit_unresolved(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    rental, rental_invoice = _invoice_paid_in_year(_IN_YEAR, "F-A01", TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES)
+    untagged, untagged_invoice = _invoice_paid_in_year(_ALSO_IN_YEAR, "F-2", None)
+    resolution = _resolve(
+        operation,
+        _declared((_LATER, _DEVENGO)),
+        rows=(rental, untagged),
+        invoices=(rental_invoice, untagged_invoice),
+        year=_LATER,
+    )
+    assert _CREDIT_0599 in _unresolved_bindings(resolution)
+    (message,) = [
+        item.message
+        for item in resolution.diagnostics
+        if item.reason == "unresolved_binding" and str(item.binding_id) == _CREDIT_0599
+    ]
+    assert "tipo_actividad" in message
+    assert untagged.transaction_id in message
+
+
+def test_an_untagged_receipt_is_unresolved_when_the_profile_declares_a_rental_activity(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-1", None)
+    facts = (*_declared((_LATER, _DEVENGO)), UserProfileFact(path="activities.iae_epigraph", value="861.1"))
+    resolution = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
+    assert _CREDIT_0599 in _unresolved_bindings(resolution)
+
+
+def test_an_untagged_receipt_without_a_rental_activity_credits_the_activity(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-1", None)
+    facts = (*_declared((_LATER, _DEVENGO)), UserProfileFact(path="activities.iae_epigraph", value="844"))
+    resolution = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
+    assert resolution.binding_values[_CREDIT_0599] == _RETENCION
+    assert _CREDIT_0599 not in _unresolved_bindings(resolution)
+    assert _rental_findings(resolution) == []
+
+
+def test_a_quarterly_return_keeps_a_rental_activity_withholding(operation: PinnedAuthorityOperation) -> None:
+    """RIRPF art. 110.3.a.2.º deducts the withholding of an urban rental carried on as an activity."""
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-A01", TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES)
+    resolution = _resolve(
+        operation,
+        _declared((_LATER, _DEVENGO)),
+        rows=(row,),
+        invoices=(invoice,),
+        year=_LATER,
+        modelo="130",
+        period="1T",
+    )
+    assert resolution.binding_values[_CREDIT_M130_06] == _RETENCION
+
+
+def test_the_fourth_quarter_basis_keeps_a_rental_activity_withholding(operation: PinnedAuthorityOperation) -> None:
+    """The activity credit leaves the A01 150,00 to the rental credit; the fourth quarter deducts it."""
+    row, invoice = _invoice_paid_in_year(_IN_YEAR, "F-A01", TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES)
+    resolution = _resolve(operation, _declared((_LATER, _DEVENGO)), rows=(row,), invoices=(invoice,), year=_LATER)
+    assert resolution.binding_values[_CREDIT_0599] == _ZERO
+    assert resolution.instalment_basis_binding_values == {_CREDIT_0599: _RETENCION}
+
+
+def test_under_cash_no_payment_year_figure_is_stated(operation: PinnedAuthorityOperation) -> None:
+    row, invoice = _paid_invoice(*_BOTH_YEARS)
+    facts = _declared((_EARLIER, _CASH), (_LATER, _CASH))
+    later = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
+    assert later.binding_values[_CREDIT_0599] == _RETENCION
+    assert later.payment_year_binding_values == {}
 
 
 def test_an_unset_criterion_picks_no_year_and_keeps_the_box_withheld(operation: PinnedAuthorityOperation) -> None:
@@ -527,7 +657,7 @@ _FIRST_QUARTER_ACCRUAL = (date(2025, 3, 20), date(2025, 4, 10))
 
 @pytest.mark.parametrize(
     ("criterion", "income", "credit"),
-    [(_DEVENGO, _BASE, _RETENCION), (_CASH, _ZERO, _ZERO)],
+    [(_DEVENGO, _BASE, _ZERO), (_CASH, _ZERO, _ZERO)],
 )
 def test_m130_first_quarter_income_and_credit_follow_the_criterion(
     operation: PinnedAuthorityOperation, criterion: str, income: Decimal, credit: Decimal
@@ -547,26 +677,54 @@ def test_m130_first_quarter_income_and_credit_follow_the_criterion(
     assert resolution.binding_values[_CREDIT_M130_06] == credit
 
 
-@pytest.mark.parametrize(
-    ("modelo", "period", "capped", "follow_the_criterion"),
-    [
-        ("100", "0A", "0599", ("0171",)),
-        ("130", "1T", "06", ("01", "02")),
-    ],
-)
-def test_only_the_retencion_credit_stays_capped_beside_the_boxes_the_criterion_places(
-    operation: PinnedAuthorityOperation, modelo: str, period: str, capped: str, follow_the_criterion: tuple[str, ...]
+def _first_quarter_accrual(operation: PinnedAuthorityOperation, period: str) -> CalculationSourceResolution:
+    row, invoice = _paid_invoice(*_FIRST_QUARTER_ACCRUAL)
+    return _resolve(
+        operation,
+        _declared((2025, _DEVENGO)),
+        rows=(row,),
+        invoices=(invoice,),
+        year=2025,
+        modelo="130",
+        period=period,
+    )
+
+
+def _paid_after_cut_off_findings(resolution: CalculationSourceResolution) -> list[str]:
+    return [
+        item.message
+        for item in resolution.diagnostics
+        if item.reason == "source_issue" and item.source_ref == "withholding_paid_after_cut_off"
+    ]
+
+
+def test_a_retencion_paid_after_the_quarter_is_reported_and_left_out_of_it(
+    operation: PinnedAuthorityOperation,
 ) -> None:
+    """Accrued 20 March, paid 10 April: the 150,00 is practised in April, after the first quarter ends."""
+    first = _first_quarter_accrual(operation, "1T")
+    assert first.binding_values[_CREDIT_M130_06] == _ZERO
+    (finding,) = _paid_after_cut_off_findings(first)
+    assert "1 receipt(s)" in finding
+    assert "150.00 EUR" in finding
+
+
+def test_the_next_quarter_credits_the_retencion_once_paid(operation: PinnedAuthorityOperation) -> None:
+    second = _first_quarter_accrual(operation, "2T")
+    assert second.binding_values[_INCOME_M130_01] == _BASE
+    assert second.binding_values[_CREDIT_M130_06] == _RETENCION
+    assert _paid_after_cut_off_findings(second) == []
+
+
+@pytest.mark.parametrize(("modelo", "period"), [("100", "0A"), ("130", "1T")])
+def test_the_retencion_credit_is_filing_grade_beside_the_boxes_the_criterion_places(
+    operation: PinnedAuthorityOperation, modelo: str, period: str
+) -> None:
+    """The criterion places each row's retencion with its income, so no box the ledger feeds is capped."""
     snapshot = operation.snapshot(modelo, filing_year=2025, period=period)
-    reached = {
-        str(casilla_id)
-        for entry in capped_binding_reach(
-            snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
-        ).values()
-        for casilla_id in entry.casilla_ids
-    }
-    assert capped in reached
-    assert not reached.intersection(follow_the_criterion)
+    assert not capped_binding_reach(
+        snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+    )
     expense_sources = {
         "ledger_renta_gastos_estimacion_directa_aggregation",
         "ledger_renta_gastos_pago_fraccionado_aggregation",

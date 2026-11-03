@@ -140,6 +140,7 @@ _BASE_BINDINGS = {
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
     # No other unidad-familiar members' base for the Madrid nacimiento/adopción
     # límite-unidad-familiar check (madrid-dl-1-2010:art-18).
     "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),

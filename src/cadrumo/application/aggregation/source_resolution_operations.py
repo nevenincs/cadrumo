@@ -455,6 +455,8 @@ class _SourceResolutionMergeState:
     borrador_provenance: BorradorSourceProvenance | None = None
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
     value_outcomes: dict[BindingId, BindingValueOutcome] = field(default_factory=dict)
+    payment_year_binding_values: dict[BindingId, Decimal] = field(default_factory=dict)
+    instalment_basis_binding_values: dict[BindingId, Decimal] = field(default_factory=dict)
 
     def absorb(self, resolution: CalculationSourceResolution) -> None:
         self._absorb_closed_record_rows(resolution)
@@ -512,6 +514,8 @@ class _SourceResolutionMergeState:
         self.unresolved_relation_ids.update(resolution.unresolved_relation_ids)
         self.unresolved_binding_ids.update(resolution.unresolved_binding_ids)
         self.inapplicable_binding_ids.update(resolution.inapplicable_binding_ids)
+        self.payment_year_binding_values.update(resolution.payment_year_binding_values)
+        self.instalment_basis_binding_values.update(resolution.instalment_basis_binding_values)
         if resolution.borrador_provenance is not None:
             self.borrador_provenance = resolution.borrador_provenance
         handoff = resolution.m303_regimen_simplificado_annual_summary_handoff
@@ -659,6 +663,8 @@ class _SourceResolutionMergeState:
             diagnostics=tuple(self.diagnostics),
             provenance=tuple(self.provenance),
             value_outcomes=self.value_outcomes,
+            payment_year_binding_values=self.payment_year_binding_values,
+            instalment_basis_binding_values=self.instalment_basis_binding_values,
         )
 
 

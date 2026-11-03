@@ -75,7 +75,7 @@ from ....domain.user_profile.values import create_user_profile_record as _create
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
-from .proven_zero_withholding_support import assert_only_proven_zero_capped_diagnostics
+from .unchecked_credit_note_support import assert_only_unchecked_credit_notes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -219,6 +219,8 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="economic activity"),
+            # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
+            UserProfileFact(path="activities.iae_epigraph", value="844"),
             *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
@@ -348,8 +350,8 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(
         diag.reason == "unhandled_binding_source" and diag.source_kind == _RELATION_PREFILL_SOURCE
         for diag in result.source_diagnostics
     )
-    # The only diagnostics are the capped boxes' proven zeros: the gate lets them through.
-    assert_only_proven_zero_capped_diagnostics(result.source_diagnostics)
+    # The only diagnostics are credit boxes noted as not cross-checked: the gate lets them through.
+    assert_only_unchecked_credit_notes(result.source_diagnostics)
 
 
 def test_m100_explicit_m130_binding_resolves_relation_formula_without_m131_filing(

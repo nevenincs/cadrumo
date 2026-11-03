@@ -31,6 +31,12 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 
+[revisions."2019-2023".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This pago fraccionado of objective estimation credits withholding suffered on activity income in its own box, but the per-casilla credit reconciliation is a Modelo 100 declaration, and no casilla here is a Modelo 100 credit casilla."""
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1264-2018:art-4", "orden-hac-1164-2019:art-4", "orden-hac-1155-2020:art-4", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4", "rd-439-2007:art-95"]
+source_refs = ["boe-2015-1656-modelos-130-131-form", "aeat-dr-131-2019-2023-v101", "aeat-modelo-131-instructions", "aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023", "boe-modelo-131-2007-form"]
+
 [revisions."2019-2023".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-131-2019-2023-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \

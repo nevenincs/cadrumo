@@ -1,12 +1,13 @@
 """A grade-capped retención credit is shown by the calculation and refused at check, export and recording.
 
-The Modelo 130 casilla 06 binding is capped at calculation grade in the
-published registry, because the year a suffered retención belongs to is not yet
-grounded. Each case runs the real ledger renta-income resolver over synthetic
-ledger rows against the published Modelo 130 revision, then the real
-post-merge emission, the real durable projection a calculation persists, and
-the real calculation-note gate on a revision stamped as a calculation stamps
-it. Every expected figure is invoice arithmetic worked out in the test.
+The published registry caps no binding since the withholding credits were
+promoted, so this module declares the cap in memory on the Modelo 130 casilla
+06 binding, the binding it was first declared on. Each case runs the real
+ledger renta-income resolver over synthetic ledger rows against that copy of
+the published Modelo 130 revision, then the real post-merge emission, the real
+durable projection a calculation persists, and the real calculation-note gate
+on a revision stamped as a calculation under the published authority stamps it.
+Every expected figure is invoice arithmetic worked out in the test.
 
 The resolver states what a capped value rests on. A zero over rows that carry
 no retención is a proven zero and withholds nothing. A zero over rows whose
@@ -31,6 +32,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.grade_cap_support import recapped_snapshot
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -58,6 +60,7 @@ from ..advisory_binding_value import add_advisory_binding_value_diagnostics
 from ..calculation_bucket_actions import unrouted_source_issues
 from ..calculation_note_gate import (
     ModeloCalculationBlockedError,
+    _filed_before_grade_cap,
     calculation_filed_before_grade_cap,
     calculation_screen_outdated,
     gate_refuses,
@@ -69,7 +72,6 @@ from ..calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
     FILED_BEFORE_GRADE_CAP_REASON,
     GATE_REFUSED_REASONS,
-    what_locale_key,
 )
 from ..calculation_screen import calculation_screen_stamp
 from ..printed_boxes import snapshot_printed_boxes
@@ -96,8 +98,13 @@ _IVA = Decimal("420.00")
 _SHORT_PAID_CASH = Decimal("2120.00")
 
 
-def _snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
+def _published(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
     return operation.snapshot("130", filing_year=_YEAR, period=_QUARTER)
+
+
+def _snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
+    """The published Modelo 130 revision with casilla 06's binding capped in memory."""
+    return recapped_snapshot(_published(operation), _CAPPED_BINDING)
 
 
 def _work_unit(snapshot: RegistrySnapshot) -> WorkUnit:
@@ -167,7 +174,8 @@ def _short_paid() -> tuple[TransactionCatalogue, InvoiceCatalogue]:
 
 
 def _stamp(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> CalculationScreenStamp:
-    return calculation_screen_stamp(snapshot, operation=operation)
+    """The stamp a calculation under the published authority carries, which the gate recomputes."""
+    return calculation_screen_stamp(_published(operation), operation=operation)
 
 
 def _revision(
@@ -370,9 +378,10 @@ def _export_refusal(
     return refused.value
 
 
-def test_a_revision_filed_before_the_cap_with_a_capped_figure_is_refused_at_export(
+def test_a_revision_filed_before_the_cap_with_a_capped_figure_is_found_by_the_reach(
     operation: PinnedAuthorityOperation,
 ) -> None:
+    """Under a revision that caps casilla 06, a filed unstamped figure there is the box export refuses on."""
     snapshot = _snapshot(operation)
     unit = _work_unit(snapshot)
 
@@ -383,15 +392,15 @@ def test_a_revision_filed_before_the_cap_with_a_capped_figure_is_refused_at_expo
             ({}, _CAPPED_BOXES),
         ):
             revision = _revision(unit, (), stamp=None, state=state, casilla_values=values)
-            refused = _export_refusal(operation, revision, unit)
-            context = refused.context or {}
-            assert context["reason"] == FILED_BEFORE_GRADE_CAP_REASON, (state, values)
-            assert context["box"] in boxes, (state, values)
-            assert refused.translated_message == what_locale_key(FILED_BEFORE_GRADE_CAP_REASON)
-            found = calculation_filed_before_grade_cap(
-                revision, modelo="130", filing_year=_YEAR, period=unit.period, operation=operation
+            assert _filed_before_grade_cap(revision, snapshot, operation) in boxes, (state, values)
+            # The published revision caps nothing, so the same filed revision exports.
+            assert _refused_reasons(operation, revision) is None, (state, values)
+            assert (
+                calculation_filed_before_grade_cap(
+                    revision, modelo="130", filing_year=_YEAR, period=unit.period, operation=operation
+                )
+                is None
             )
-            assert found == context["box"]
     assert gate_refuses(FILED_BEFORE_GRADE_CAP_REASON, None)
     assert FILED_BEFORE_GRADE_CAP_REASON not in GATE_REFUSED_REASONS, "the reason is derived, never persisted"
 
@@ -463,9 +472,12 @@ def test_a_filed_revision_carrying_a_blocking_note_is_still_refused_at_export(
 
 
 def test_the_stamp_reads_only_the_screen_declarations(operation: PinnedAuthorityOperation) -> None:
-    """A change no screen reads keeps the stamp; a changed cap moves it."""
+    """A change no screen reads keeps the stamp; a declared or changed cap moves it."""
+    published = _published(operation)
     snapshot = _snapshot(operation)
-    current = _stamp(snapshot, operation)
+    uncapped = calculation_screen_stamp(published, operation=operation)
+    current = calculation_screen_stamp(snapshot, operation=operation)
+    assert current != uncapped
     revision = snapshot.revision
     unrelated = revision.model_copy(update={"legal_refs": (*revision.legal_refs, "ley-35-2006:art-14")})
     bindings = tuple(
@@ -478,8 +490,8 @@ def test_the_stamp_reads_only_the_screen_declarations(operation: PinnedAuthority
     )
     recapped = revision.model_copy(update={"bindings": bindings})
 
-    assert _stamp(snapshot.model_copy(update={"revision": unrelated}), operation) == current
-    assert _stamp(snapshot.model_copy(update={"revision": recapped}), operation) != current
+    assert calculation_screen_stamp(snapshot.model_copy(update={"revision": unrelated}), operation=operation) == current
+    assert calculation_screen_stamp(snapshot.model_copy(update={"revision": recapped}), operation=operation) != current
 
 
 def test_an_instalment_period_without_a_date_span_is_read_at_the_close_of_its_ejercicio(

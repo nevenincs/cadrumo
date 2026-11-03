@@ -1308,6 +1308,17 @@ application:
           sobre sus cifras, así que no se puede comprobar, exportar ni registrar tal
           como está.
         what_to_do: Vuelve a calcular la declaración y compruébala después.
+      credit_cross_check_absent:
+        what: Una deducción por retenciones tiene una fuente con la que contrastarla
+          que no contiene nada, así que la cifra se mantiene, pero sin contrastar.
+        what_to_do: Si esa fuente debería contener esta retención, añádela y vuelve
+          a calcular; si no, no tienes que hacer nada.
+      credit_source_disagreement:
+        what: Dos fuentes dan importes distintos para la misma deducción por retenciones,
+          así que Cadrumo no puede comprobar, exportar ni registrar la declaración
+          con ella.
+        what_to_do: Compara el importe con el certificado de cada pagador, corrige
+          la fuente que esté mal y vuelve a calcular.
       deferred_binding_source:
         what: Cadrumo todavía no rellena automáticamente una cifra de esta declaración.
         what_to_do: No tienes que hacer nada, salvo que esa cifra te afecte. Si te
@@ -1629,6 +1640,10 @@ application:
       claim_gap_free_method: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no se puede calcular, y la
         casilla {box} solo declara lo registrado.'
+      credit_cross_check_absent: 'Casilla {box}: según {cross_check}, no hay nada
+        que comparar, así que esta cifra no está contrastada.'
+      credit_source_disagreement: 'Casilla {box}: la fuente declarada da {amount};
+        según {cross_check}, son {compared_amount}.'
       disposal_claim_gap: '{element}: su baja es el {date} y parte de {year} no tiene
         dotación registrada. Su mínimo reduce igualmente el coste.'
       disposal_exemption_not_computed: '{element}: cualquier exención o diferimiento
@@ -1799,6 +1814,11 @@ application:
       verification_complete: Completa
       verification_incomplete: Incompleta
       verification_none: Sin comprobación registrada
+    credit_cross_check_source:
+      borrador: el borrador de la AEAT
+      filed_observation: la declaración que presentaste
+      ledger: tu libro de registro
+      retencion_soportada: los certificados de los pagadores
     edit:
       parse:
         above_maximum: El valor máximo es {bound}.

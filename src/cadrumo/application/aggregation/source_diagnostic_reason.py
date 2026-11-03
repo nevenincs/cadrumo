@@ -138,6 +138,14 @@ CalculationSourceDiagnosticReason = Literal[
     # and carrying the resolver's stated outcome so a proven zero withholds
     # nothing while every other case withholds verify, export and filing.
     "advisory_binding_value",
+    # A credit casilla whose declared value source and one of its declared
+    # cross-check sources state different amounts, compared exactly at the cent.
+    # Raised by the registry-declared credit reconciliation after the formulas
+    # run, never by a resolver, and persisted with every source and amount.
+    "credit_source_disagreement",
+    # A declared cross-check source with nothing to compare. It reads "not
+    # cross-checked", never agreement, and withholds nothing.
+    "credit_cross_check_absent",
     # A Modelo 349 clave the resolver INFERRED from the invoice's IVA category
     # because the record stated no operation type. Correct for an ordinary LIVA
     # art. 25 exempt supply, but a supply following an exempt importation (art.

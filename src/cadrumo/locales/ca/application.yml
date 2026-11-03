@@ -1303,6 +1303,17 @@ application:
           sobre les seves xifres, així que no es pot comprovar, exportar ni registrar
           tal com està.
         what_to_do: Torna a calcular la declaració i comprova-la després.
+      credit_cross_check_absent:
+        what: Una deducció per retencions té una font amb què contrastar-la que no
+          conté res, així que la xifra es manté, però sense contrastar.
+        what_to_do: Si aquesta font hauria de contenir aquesta retenció, afegeix-la
+          i torna a calcular; si no, no cal que facis res.
+      credit_source_disagreement:
+        what: Dues fonts donen imports diferents per a la mateixa deducció per retencions,
+          així que Cadrumo no pot comprovar, exportar ni registrar la declaració amb
+          aquesta xifra.
+        what_to_do: Compara l'import amb el certificat de cada pagador, corregeix
+          la font que estigui malament i torna a calcular.
       deferred_binding_source:
         what: Cadrumo encara no emplena automàticament una xifra d'aquesta declaració.
         what_to_do: No has de fer res, tret que aquesta xifra t'afecti. Si t'afecta,
@@ -1627,6 +1638,10 @@ application:
       claim_gap_free_method: '{element}: no hi ha dotació registrada de {start} a
         {end}. El seu mètode deixa l''import a la teva elecció, de manera que no es
         pot calcular, i la casella {box} només declara el que està registrat.'
+      credit_cross_check_absent: 'Casella {box}: segons {cross_check}, no hi ha res
+        per comparar, així que aquesta xifra no està contrastada.'
+      credit_source_disagreement: 'Casella {box}: la font declarada dona {amount};
+        segons {cross_check}, són {compared_amount}.'
       disposal_claim_gap: '{element}: la seva baixa és el {date} i part de {year}
         no té dotació registrada. El seu mínim redueix igualment el cost.'
       disposal_exemption_not_computed: '{element}: qualsevol exempció o diferiment
@@ -1803,6 +1818,11 @@ application:
       verification_complete: Completa
       verification_incomplete: Incompleta
       verification_none: Sense comprovació registrada
+    credit_cross_check_source:
+      borrador: l'esborrany de l'AEAT
+      filed_observation: la declaració que vas presentar
+      ledger: el teu llibre de registre
+      retencion_soportada: els certificats dels pagadors
     edit:
       parse:
         above_maximum: El valor màxim és {bound}.

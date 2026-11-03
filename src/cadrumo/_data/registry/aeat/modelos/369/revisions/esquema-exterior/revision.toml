@@ -24,6 +24,12 @@ source_refs = [
     "boe-modelo-369-2021-form",
 ]
 
+[revisions."esquema-exterior".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-octiesdecies", "ley-37-1992:art-163-noniesdecies", "ley-37-1992:art-163-vicies"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
 [revisions."esquema-exterior".predecessor.none]
 cause = "parallel_scheme_variants"
 reason = """

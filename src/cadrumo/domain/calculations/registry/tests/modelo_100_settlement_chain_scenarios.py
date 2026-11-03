@@ -131,6 +131,7 @@ def binding_values() -> dict[BindingId, Decimal]:
         "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
     }
 
 

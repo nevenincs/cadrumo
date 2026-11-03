@@ -46,6 +46,12 @@ source_refs = [
 family_storage_baseline = "2023"
 scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
+[revisions."2024-2025".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["orden-eha-3434-2007:art-1", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2024-2025", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025"]
+
 [revisions."2024-2025".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification names another modelo whose filing this one depends on. 322 depends on none: it is the LEAF of the grupo de entidades chain, the member entity's own monthly liquidation of its own operations, and every value it reports originates in that member's ledger. The dependency runs the other way -- Modelo 353 declares 'modelo-353-dep-322' because the group aggregate reads these results -- and a classification is authored on the DEPENDENT revision, not the source. Empty by \

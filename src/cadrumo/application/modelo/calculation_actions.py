@@ -116,6 +116,7 @@ from .calculation_resolution import build_calculation_replay_payloads as _build_
 from .calculation_resolution import precedence_tier_issue
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_screen import calculation_screen_stamp
+from .credit_reconciliation import credit_reconciliation_issues, load_credit_cross_check_sources
 from .imputation_filings import imputation_filings_from_repositories
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
@@ -329,6 +330,8 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
     row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    payment_year_binding_values: Mapping[BindingId, Decimal] | None = None,
+    instalment_basis_binding_values: Mapping[BindingId, Decimal] | None = None,
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
@@ -399,6 +402,23 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     typed_observations = evaluation.typed_observations
     validated_filing_instance_evidence = evaluation.filing_instance_evidence
     resolved_text_inputs = evaluation.resolved_text_inputs
+    revision_source_issues = (
+        *revision_source_issues,
+        *credit_reconciliation_issues(
+            snapshot,
+            work_unit,
+            casilla_values=casilla_values,
+            binding_values=channels.bindings,
+            sources=load_credit_cross_check_sources(
+                snapshot,
+                work_unit,
+                ports=ports,
+                borrador_snapshot_id=channels.borrador_snapshot_id,
+                payment_year_binding_values=payment_year_binding_values or {},
+                instalment_basis_binding_values=instalment_basis_binding_values or {},
+            ),
+        ),
+    )
     ledger_filing_snapshot, invoice_fingerprint = _draft_anchors(
         work_unit=work_unit,
         source_transaction_ids=source_transaction_ids,

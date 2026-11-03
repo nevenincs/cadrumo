@@ -21,6 +21,12 @@ reviewed_at = 2026-10-08
 # DP30303 box112 Nota2: "Sólo para periodo 02 y siguientes".
 # BOE-A-2026-1761 final provision: first February or Q2 2026.
 # Its 2026 transport slot remains present; early-period nonzero deduction is refused.
+[revisions."2026-hasta-01-y-1t".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-orden-hac-1425-2025-iva-authority", "boe-modelo-303-2008-form", "boe-modelo-303-2024-form-pdf"]
+
 [[revisions."2026-hasta-01-y-1t".casilla_overrides]]
 selector = { revision = "2026-y-siguientes", id = "112" }
 fields = { constraints = { min_value = "0", max_value = "0", legal_refs = ["orden-eha-3786-2008:art-1"], source_refs = ["aeat-dr-303-2026", "boe-modelo-303-2026-form-pdf"] }, semantic_role = "m303_pago_a_cuenta_deposito_distinto_del_aduanero_no_aplicable",  semantic_role_cardinality_reason = "The 2026 record retains this slot in January/Q1, but Nota2 and BOE first-February/Q2 applicability make it zero-only and absent from the prior paper annex. It is not a substitution-compatible active deduction.", continuidad_origin = "not_on_form", continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx.extracted.md:429,449 (sha256 0be8b156da22) identifies DP30303 field m303-2026.dp30303.f028 [112] and its Nota 2 period restriction to 02 and later. BOE-A-2026-1761 final provision first applies the replacement Modelo 303 to February 2026 or 2T, leaving January/1T on the prior BOE-A-2024-16129 annex (printed p. 99218 has no box 112). This zero-only no-applicable row is an early transport carrier with no printed counterpart; it does not classify the later active deduction as unprinted. The 2025 design's numeric field 112 is an unrelated Módulo Mesas field (corpus/aeat_official/disenos_registro/modelo_303/files/06-303-ejercicio-2025-actualizado-04-12-2025-380-kb-xlsx.xlsx.extracted.md:295, sha256 6c3d7eeb714e)." }

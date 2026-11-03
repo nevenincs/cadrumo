@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -75,6 +75,7 @@ _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
         "rd-439-2007:art-95",
     }
 )
+_M130_STATUTORY_CLOSE = {1: (4, 20), 2: (7, 20), 3: (10, 20), 4: (1, 30)}
 _M130_SUPPORTED_DEADLINES = {
     2022: (
         ("2022-04-20", "2022-04-15"),
@@ -104,7 +105,7 @@ _M130_SUPPORTED_DEADLINES = {
         ("2026-04-20", "2026-04-15"),
         ("2026-07-20", "2026-07-15"),
         ("2026-10-20", "2026-10-15"),
-        ("2027-01-30", None),
+        ("2027-02-01", None),
     ),
 }
 
@@ -158,7 +159,17 @@ def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
             assert select_revision(modelo, filing_year=filing_year, period=period) is revision
             assert window.id == f"modelo-130-{filing_year}-{period.lower()}"
             assert window.filing_year == window.period.filing_year == filing_year
-            assert window.opens_on == date(window.closes_on.year, window.closes_on.month, 1)
+            # RIRPF art. 110: 1-20 April, July and October; 1-30 January of the next year.
+            # A statutory last day on a weekend moves to the next working day (Ley 39/2015
+            # art. 30.5); the opening day stays on the first of the statutory month.
+            statutory_month, statutory_day = _M130_STATUTORY_CLOSE[quarter]
+            statutory_year = filing_year + 1 if quarter == 4 else filing_year
+            statutory_close = date(statutory_year, statutory_month, statutory_day)
+            expected_close = statutory_close
+            while expected_close.weekday() >= 5:
+                expected_close += timedelta(days=1)
+            assert window.opens_on == date(statutory_year, statutory_month, 1)
+            assert window.closes_on == expected_close
             assert window.closes_on == date.fromisoformat(close_text)
             assert window.payment_cutoff_on == (None if cutoff_text is None else date.fromisoformat(cutoff_text))
             expected_sources = {"aeat-modelo-130-instructions"}

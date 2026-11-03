@@ -39,6 +39,12 @@ scoped_families = ["workbook_parity_refs"]
 
 family_disposition_removals = ["bindings"]
 
+[revisions."2023-2024".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This informative return states the withholding an entity in attribution of income bore, for attribution to its members. The entity credits nothing here; each member credits its share on the member's own Modelo 100."""
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-2", "orden-hap-2250-2015:art-3", "orden-hap-2250-2015:art-4", "orden-hap-2250-2015:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure", "boe-dr-184-2023-2024", "boe-modelo-184-2015-form"]
+
 [revisions."2023-2024".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint's projection_ref accepts only FilingProjectionRef, which is a CLOSED discriminated union in cadrumo.core whose every member is an m303_ engine-computed IVA fact. No declaration naming this modelo's own rows can validate against it, so the family is empty by construction rather than by omission -- the same structural reading modelo 131 already records for its own repeating rows. This modelo's repetition is served by the other mechanism: its repeated detail rows materialise \

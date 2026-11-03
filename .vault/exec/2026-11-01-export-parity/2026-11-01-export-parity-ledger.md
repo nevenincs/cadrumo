@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-02'
+modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5f14c852a4ab6e89ff6e2defe788ae3add96a10cd7e71012cb9a595d694e5487'
+body_hash: 'sha256:1e30eeea60d57c2b177ef035e6439d16bf5c4df54f59d2cc967a9c21bab7acea'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -713,6 +713,302 @@ related:
 - `S06` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 - `S06` `verify:` `just check-types (no findings in touched files)` -> `pass`
 - `S06` `by:` `implementation-high`
+- `S06` `M` `dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py`
+- `S06` `verify:` `pytest dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py` -> `pass`
+- `S06` `by:` `implementer-low`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_calculation_note_wording.py`
+- `S06` `verify:` `pytest-test_calculation_note_wording` -> `pass`
+- `S06` `by:` `implementation-engineer-high`
+- `S19` `M` `dev/locales/tests/test_audit.py`
+- `S19` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S19` `M` `dev/quality/metadata/import_load_targets.json`
+- `S19` `M` `dev/registry/compiler/validate_bindings.py`
+- `S19` `M` `dev/registry/tests/test_modelo_100_filing_surface_across_supported_years.py`
+- `S19` `M` `dev/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S19` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/credit_reconciliation/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2019-2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026-3t-4t/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2025-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2024/export/_generation.provenance.json`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2025/export/_generation.provenance.json`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-hasta-01-y-1t/export/_generation.provenance.json`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-hasta-01-y-1t/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2021/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/revision.toml`
+- `S19` `M` `src/cadrumo/adapters/inbound/borrador/tests/test_verification_chain_borrador.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/profile/retencion_soportada_records.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/storage/envelope/secure_bound_repository.py`
+- `S19` `M` `src/cadrumo/application/aggregation/retencion_soportada_source.py`
+- `S19` `M` `src/cadrumo/application/aggregation/source_diagnostic_reason.py`
+- `S19` `M` `src/cadrumo/application/aggregation/tests/test_ledger_asset_amortization_chain_worked_example.py`
+- `S19` `M` `src/cadrumo/application/aggregation/tests/test_ledger_income_chain_aeat_exempt_worked_example.py`
+- `S19` `M` `src/cadrumo/application/filing/tests/test_date_relation_routing.py`
+- `S19` `M` `src/cadrumo/application/live/tests/test_borrador_100_keys.py`
+- `S19` `M` `src/cadrumo/application/modelo/borrador_binding.py`
+- `S19` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S19` `M` `src/cadrumo/application/modelo/calculation_bucket_actions.py`
+- `S19` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S19` `M` `src/cadrumo/application/modelo/calculation_screen.py`
+- `S19` `A` `src/cadrumo/application/modelo/credit_reconciliation.py`
+- `S19` `M` `src/cadrumo/application/modelo/tests/test_actions.py`
+- `S19` `M` `src/cadrumo/application/modelo/tests/test_calculation_note_gate.py`
+- `S19` `M` `src/cadrumo/application/modelo/tests/test_calculation_note_wording.py`
+- `S19` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison.py`
+- `S19` `M` `src/cadrumo/application/modelo/tests/test_work_form_gate_agreement.py`
+- `S19` `A` `src/cadrumo/domain/calculations/registry/credit_reconciliation.py`
+- `S19` `A` `src/cadrumo/domain/calculations/registry/credit_reconciliation_checks.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/keyed_families.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/schema_surfaces.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/_modelo_100_eo_agraria_support.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/m100_rental_reduccion_art23_2_scenarios.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/modelo_100_retenciones_binding_wiring_scenarios.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/modelo_100_settlement_chain_scenarios.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/modelo_100_tarifa_real_scenarios.py`
+- `S19` `A` `src/cadrumo/domain/calculations/registry/tests/test_credit_reconciliation_checks.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_deduccion_madrid_nacimiento_adopcion.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_m100_final_settlement_chain_manual_anchor.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_minimo_contribuyente_age_increment.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_ahorro_base_chain.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_anualidades_separate_escala_multiyear.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_reduccion_art_84_conjunta.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_registry_scenarios.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_renta_chain_behaviour.py`
+- `S19` `M` `src/cadrumo/domain/modelos/calculation_revision_identity.py`
+- `S19` `M` `src/cadrumo/domain/modelos/calculation_revision_sources.py`
+- `S19` `A` `src/cadrumo/domain/modelos/source_disagreement.py`
+- `S19` `A` `src/cadrumo/domain/modelos/tests/source_disagreement_support.py`
+- `S19` `A` `src/cadrumo/domain/modelos/tests/test_source_disagreement.py`
+- `S19` `M` `src/cadrumo/domain/renta/retencion_soportada_applicability.py`
+- `S19` `M` `src/cadrumo/domain/renta/tests/test_retencion_soportada_absence.py`
+- `S19` `A` `src/cadrumo/domain/renta/tests/test_retencion_soportada_rental_activity_applicability.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/proven_zero_withholding_support.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_imputation_calculate_to_export.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_quarters_to_m100_annual.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_pagos_fold_in_live.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_pagos_fraccionados_fold_in_live.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_retencion_soportada_credits_live.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_source_owned_overrides.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_unresolved_words.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_retencion_soportada_absence_m100.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/registered_executor_seeding_support.py`
+- `S19` `M` `src/cadrumo/locales/ca/application.yml`
+- `S19` `M` `src/cadrumo/locales/en/application.yml`
+- `S19` `M` `src/cadrumo/locales/es/application.yml`
+- `S19` `M` `src/cadrumo/locales/hu/application.yml`
+- `S19` `verify:` `registry_status` -> `pass`
+- `S19` `verify:` `grade_earned` -> `pass`
+- `S19` `verify:` `ruff` -> `pass`
+- `S19` `verify:` `test_modelo_100_retencion_soportada_credits_live` -> `pass`
+- `S19` `by:` `implementation-engineer-high`
+- `S22` `M` `src/cadrumo/core/aggregation.py`
+- `S22` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S22` `M` `src/cadrumo/application/aggregation/renta_income_diagnostics.py`
+- `S22` `M` `src/cadrumo/application/aggregation/renta_income_ledger.py`
+- `S22` `M` `src/cadrumo/application/aggregation/renta_income_models.py`
+- `S22` `M` `src/cadrumo/application/aggregation/retencion_soportada_source.py`
+- `S22` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S22` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S22` `M` `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`
+- `S22` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S22` `M` `src/cadrumo/application/modelo/calculation_bucket_actions.py`
+- `S22` `M` `src/cadrumo/application/modelo/credit_reconciliation.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_retencion_soportada_credits_live.py`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/facts/0082-m036-activity-selector-catalogue.toml`
+- `S22` `A` `src/cadrumo/_data/registry/aeat/facts/0178-modelo-100-selector-m036-arrendadores-inmuebles.toml`
+- `S22` `verify:` `pytest test_renta_imputation_criterion.py test_modelo_100_retencion_soportada_credits_live.py` -> `pass`
+- `S22` `verify:` `pytest aggregation modelo profile_persistence registry renta-credit subset` -> `fail`
+- `S22` `verify:` `ruff ty touched files` -> `pass`
+- `S22` `verify:` `registry_status --check` -> `pass`
+- `S22` `verify:` `grade_earned under_supported=0` -> `pass`
+- `S22` `by:` `implementation-engineer-high`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_suffered_withholding_credits.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_payer_side_returns_leave_credits_unchanged_live.py`
+- `S19` `verify:` `pytest test_projection_suffered_withholding_credits.py test_modelo_100_payer_side_returns_leave_credits_unchanged_live.py` -> `pass`
+- `S30` `M` `dev/registry/compiler/registry_scope.py`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/credit_reconciliation/0001-declarations.toml`
+- `S30` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S30` `M` `src/cadrumo/application/aggregation/renta_income_ledger.py`
+- `S30` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S30` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_bucket_actions.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S30` `M` `src/cadrumo/application/modelo/credit_reconciliation.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/credit_reconciliation.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/credit_reconciliation_checks.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/tests/test_credit_reconciliation_checks.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_retencion_soportada_credits_live.py`
+- `S30` `M` `src/cadrumo/locales/ca/application.yml`
+- `S30` `M` `src/cadrumo/locales/en/application.yml`
+- `S30` `M` `src/cadrumo/locales/es/application.yml`
+- `S30` `M` `src/cadrumo/locales/hu/application.yml`
+- `S30` `A` `dev/registry/compiler/_validate_credit_filed_observation_sources.py`
+- `S30` `M` `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`
+- `S30` `verify:` `pytest test_modelo_100_retencion_soportada_credits_live.py test_credit_reconciliation_checks.py test_renta_imputation_criterion.py` -> `pass`
+- `S30` `verify:` `registry_status --check --json` -> `pass`
+- `S30` `verify:` `grade_earned under_supported=0` -> `pass`
+- `S30` `verify:` `lint-imports` -> `fail`
+- `S30` `by:` `implementation-engineer-high`
+- `S31` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0001-declarations.toml`
+- `S31` `A` `src/cadrumo/domain/calculations/registry/tests/grade_cap_support.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_advisory_binding_value_gate.py`
+- `S31` `M` `dev/registry/compiler/tests/test_binding_grade_cap_validation.py`
+- `S31` `M` `src/cadrumo/domain/renta/tests/test_retenciones_routing_integrity.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_art109_activity_income_period_evidence.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_carry_forward_continuity.py`
+- `S31` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_retenciones.py`
+- `S31` `D` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_capped_retenciones.py`
+- `S31` `M` `.vault/adr/2026-11-01-export-parity-binding-capability-grade-adr.md`
+- `S31` `verify:` `pytest focused S31 tests` -> `pass`
+- `S31` `verify:` `pytest wide renta/130/100/note-gate suites` -> `fail`
+- `S31` `verify:` `registry_status --check --json` -> `pass`
+- `S31` `verify:` `grade_earned under_supported 0` -> `pass`
+- `S31` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S31` `verify:` `lint-imports --config .importlinter --no-cache` -> `fail`
+- `S31` `verify:` `python -m dev.docs.sequences refresh quickstart-modelo-130` -> `fail`
+- `S31` `by:` `implementation-engineer-high`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S08` `M` `src/cadrumo/application/aggregation/tests/test_modelo_100_actividad_retencion_credit.py`
+- `S08` `M` `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`
+- `S08` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger_imputation_period.py`
+- `S08` `D` `src/cadrumo/entrypoints/tests/profile_persistence/proven_zero_withholding_support.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/profile_persistence/unchecked_credit_note_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_pagos_fold_in_live.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_pagos_fraccionados_fold_in_live.py`
+- `S08` `verify:` `pytest focused S08 tests` -> `pass`
+- `S08` `verify:` `pytest wide renta/130/100/note-gate suites` -> `fail`
+- `S08` `verify:` `registry_status --check --json` -> `pass`
+- `S08` `verify:` `grade_earned under_supported 0` -> `pass`
+- `S08` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
+- `S07` `M` `dev/locales/tests/test_audit.py`
+- `S07` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S07` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S07` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`
+- `S07` `M` `src/cadrumo/application/aggregation/tests/test_precedence_overlay_screen.py`
+- `S07` `M` `src/cadrumo/application/modelo/_calculation_preparation.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_resolution.py`
+- `S07` `M` `src/cadrumo/application/modelo/tests/test_calculation_resolution_precedence.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_quarters_to_m390_annual.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_local_cross_period_carry.py`
+- `S07` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S07` `verify:` `137 focused tests (resolution precedence, overlay screen, note gate, ladder conformance, repository roundtrip, local cross-period carry, e2e M303 to M390)` -> `pass`
+- `S07` `verify:` `operation contract manifest, desktop modelo fixtures and contract checks` -> `pass`
+- `S07` `by:` `CADRUMO-IVA`
+- `S31` `M` `src/cadrumo/entrypoints/cli/config/profile_command_specs.py`
+- `S31` `A` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_profile_imputation_election_cli.py`
+- `S31` `M` `docs/_sequences/contracts/how-to/quickstart/quickstart-modelo-130.seq`
+- `S31` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S31` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/modelo-130-first-quarter.seq`
+- `S31` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S31` `M` `docs/_sequences/contracts/how-to/irpf-lifecycle/irpf-lifecycle-q1.seq`
+- `S31` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S31` `M` `docs/_sequences/contracts/how-to/modelo-130/modelo-130-quarterly.seq`
+- `S31` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S31` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-review-saved.seq`
+- `S31` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S31` `verify:` `pytest test_profile_imputation_election_cli.py` -> `pass`
+- `S31` `verify:` `pytest entrypoints/cli/tests, runtime cli config tests, wizard tests` -> `fail`
+- `S31` `verify:` `python -m dev.docs.sequences refresh (five Modelo 130 sequences)` -> `pass`
+- `S31` `verify:` `python -m dev.docs.sequences check (five Modelo 130 sequences)` -> `pass`
+- `S31` `verify:` `pytest dev/docs/sequences/tests and sequence golden tests` -> `pass`
+- `S31` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S31` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S31` `verify:` `lint-imports --config .importlinter --no-cache` -> `fail`
 
 ## Notes
 
@@ -748,3 +1044,12 @@ related:
 - `S06` The 18 test and support files from `file_flow_test_support.py` to `test_work_missing_input_publication.py` are this Step's work; their content landed in 009999acb4, another worker's commit, which swallowed them while staged.
 - `S06` `test_art109_activity_income_period_evidence.py` and `test_modelo_130_carry_forward_continuity.py` assert verify refusal `advisory_binding_value` on box 01; their verify expectations flip to COMPLETE when the activity-box grade cap is lifted.
 - `S06` Broad run: 3560 passed, 16 failed, all in `test_calculation_note_wording.py` on `retencion_soportada_evidence_required` and `retencion_soportada_absence_contradicted,` which leave `{income_class}` unfilled; those come from withholding-note wording outside this Step.
+- `S19` content first landed in external snapshots 55af68e5bf and 70192a59e1; completed with 0f41170526, merges d127bf7e00 and ad39fcf220, sweep f54ea2a700, and follow-ups ac48cf2241 56f3dc3a81 3742b00591 c723b9215c 96ccc4eec1 7a31179a16 b2e0e07ff8
+- `S19` ty and lint-imports fail only in tui-owned files from 3be7987f95, c9d6d73b82 and b1cafbb63d; M100 2024 export refusals come from the settlement suspension rule of 3be7987f95
+- `S22` Casilla 06 cut-off: a declared retencion whose receipt is dated after the M130 window stays out of that window's 06 and is reported. Primary text: RIRPF art. 110.3.a deducts 'las retenciones practicadas ... correspondientes al periodo ... hasta el ultimo dia del trimestre' `(src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-110.html.extracted.md,` apartado 3.a); art. 78.1 makes withholding arise when the income is paid; TEAC 00/03187/2011 allows no deduction before payment; DGT V3298-15 places it in the window of its income's imputation. Research 2026-11-01-export-parity-withholding-legal-readings-research finds a payment after quarter end but before filing not excluded by any text, and limiting inclusion to payments by the window end lawful; the next quarter's cumulative 06 and annual 0599 pick it up. The V4965-16 payer-year comparison covers the `retencion_soportada` certificate cross-check; `datos_fiscales` does not exist yet and the borrador is not payer-year compared, as the ADR names certificate and `datos_fiscales` only. Wide-run failures present at 553bba5402 and untouched by S22: `test_projection` and payer-side credit tests (S19 regressions, fixed in b7450a5dd6), `test_local_cross_period_carry` (6, tier-divergence screen), 7 dev/registry date-window tests; tui settlement failures (3) unchanged.
+- `S19` Post-close fix b7450a5dd6: the S19 rental-activity credit asks for payer evidence when no IAE epigraph is declared; these scenarios now declare a non-rental epigraph 844.
+- `S30` lint-imports fails only on the tui tooling lane `(dev.desktop_household_fixture,` `dev.desktop_imputation_election_fixture).` The wide run over application/aggregation, application/modelo, domain/calculations/registry, `entrypoints/tests/profile_persistence` and dev/registry/tests shows no credit or filed-observation failure; its failures are pre-existing or another lane's: M100 export settlement refusal (tui 3be7987f95, failing before S30), `precedence_tier_divergence` on M130 06, OSS year window, desktop frontend deps, registry date windows. The filed-observation comparison restates rows on the fourth-quarter basis (RIRPF art. 110.3.a), keeping A01 withholding and dropping withholding paid after 31 December; this itemised-basis tolerance follows the ADR principle but is not spelled out in its wording.
+- `S31` Operator ruling 2026-11-02 recorded as an ADR amendment. Wide run: 2857 passed, 12 failed, all 12 in the S30 baseline (cross-period carry precedence, OSS year 2012, M100 export settlement refusal, Sonnet-owned imputation e2e). lint-imports breaks only on the pre-existing undeclared `dev.desktop_*` fixture modules. Docs sequence refresh stays open: verify exits 2 with `unresolved_binding` because the seeds declare no imputation criterion and no operator CLI flag sets `irpf.activity_income_imputation_criterion;` no golden was changed. Commit 76a3922534.
+- `S08` Operator ruling 2026-11-02, recorded in the binding-capability-grade ADR amendment committed with S31. Both promotions were verified against one republished worktree authority. Wide run failures are the 12 S30-baseline failures only. DGT V4965-16 is cited in the binding comment, not `legal_refs:` the catalogue has no DGT consulta kind. Commit 898bc7f5d8.
+- `S07` Implemented by the IVA session on feature/iva-period as 950d71d157 (operator assignment), merged to feature/tui as 11597ef030; the source-disagreement type it reuses is b09654e5bb and 0f41170526. The row for the fixtures directory covers 173 regenerated desktop Modelo fixtures.
+- `S31` Docs refresh basis: operator ruling 2026-11-03, relayed by the orchestrator, to expose the three existing wizard election flags (--irpf-activity-income-imputation-criterion, --irpf-activity-income-imputation-year, --irpf-codigo-comercio-accounting) through the CLI option table, reusing their help keys with no new wizard logic. The criterion choice contract follows the table's import-pure convention: an empty static placeholder, validated by the flow against the profile schema's `enum_values` (a refused token reports choices `cobros_y_pagos,` devengo). The sequences state `directa_simplificada,` `cobros_y_pagos` for 2026 and no Codigo de Comercio accounting, because their rows are payment-dated without accrual documents (devengo leaves them `accrual_unknown)` and cash is admissible only with a declared regime (RIRPF art. 7.2). All five verify frames end COMPLETE with `granted_verificado_completo` true and no blocking finding, with casilla values and notices unchanged from the prior goldens. The CLI reference is a build output under ignored docs/cli and the operation contract manifest is unaffected. CLI suite failures: 3, all pre-existing with this change undone `(test_operation_invoice_catalogue` `settlement_amount` payload, two justificante cotejo persistence tests). lint-imports breaks only on the known undeclared `dev.desktop_*` fixture modules. Commits 70fa5bf1e9 and 77d5436a4c.

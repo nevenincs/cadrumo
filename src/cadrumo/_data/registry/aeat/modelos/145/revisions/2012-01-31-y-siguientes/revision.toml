@@ -25,6 +25,12 @@ source_refs = [
 ]
 
 
+[revisions."2012-01-31-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion", "resolucion-dgt-2013-12-17-modelo-145:amendment", "resolucion-dgt-2014-12-18-modelo-145:amendment"]
+source_refs = ["aeat-modelo-145-procedure", "aeat-modelo-145-obligaciones-retenedor", "aeat-modelo-145-form", "aeat-dr-145-v20"]
+
 [revisions."2012-01-31-y-siguientes".family_dispositions.applicability]
 reason = "Modelo 145 is the perceptor's communication to the pagador under RIRPF art. 88.1, never an AEAT filing or calendar obligation, so the product treats it as out of scope for obligation coverage. An applicability rule would make it a positively decidable obligation and contradict that scope, so none is authored."
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]

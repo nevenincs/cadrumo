@@ -74,6 +74,8 @@ _VALUES = {
     "stated": "3",
     "recorded": "1",
     "income_class": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD.value,
+    "compared_amount": "1199.99",
+    "cross_check": "retencion_soportada",
 }
 _RAW = re.compile(
     r"[0-9a-f]{12,}"  # a hash or the tail of one

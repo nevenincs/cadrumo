@@ -12,6 +12,10 @@ import hashlib
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from .....application.aggregation.retencion_soportada_absence_repository import (
+    RetencionSoportadaAbsenceWritePorts,
+    attest_retencion_soportada_absence,
+)
 from .....application.aggregation.retencion_soportada_repository import (
     PinnedRetencionSoportadaWriteAuthority,
     record_retencion_soportada,
@@ -20,10 +24,14 @@ from .....core.retencion_soportada import RetencionSoportadaClase
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
+from .....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
+from ..retencion_soportada_records import (
+    RetencionSoportadaAbsenceRepositoryAdapter,
+    RetencionSoportadaRecordRepositoryAdapter,
+)
 
-__all__ = ["seed_payer_certificate"]
+__all__ = ["seed_absence_attestation", "seed_payer_certificate"]
 
 _CAPTURED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 
@@ -70,3 +78,29 @@ def seed_payer_certificate(
         expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
     )
     return record
+
+
+def seed_absence_attestation(
+    *,
+    operation: PinnedAuthorityOperation,
+    ejercicio: int,
+    income_class: RetencionSoportadaClase,
+) -> RetencionSoportadaAbsence:
+    """Attest in the active bucket that no payer withheld on one income class, and return the attestation."""
+    objects = secure_object_repository_for_active_bucket()
+    attestation = RetencionSoportadaAbsence(
+        ejercicio=ejercicio,
+        income_class=income_class,
+        note="Synthetic note: no payer withheld on this income.",
+        attested_at=_CAPTURED_AT,
+    )
+    attest_retencion_soportada_absence(
+        attestation,
+        ports=RetencionSoportadaAbsenceWritePorts(
+            attestations=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
+            records=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
+            authority=PinnedRetencionSoportadaWriteAuthority(operation),
+        ),
+        expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+    return attestation

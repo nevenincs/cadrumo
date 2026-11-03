@@ -10,7 +10,14 @@
         "--quiet",
         "--accept-defaults",
         "--activity-start-date",
-        "2026-01-01"
+        "2026-01-01",
+        "--irpf-estimation-regime",
+        "directa_simplificada",
+        "--irpf-activity-income-imputation-criterion",
+        "cobros_y_pagos",
+        "--irpf-activity-income-imputation-year",
+        "2026",
+        "--no-irpf-codigo-comercio-accounting"
       ],
       "captures": [],
       "envelope": null,
@@ -228,7 +235,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "e732ec58100569804655c10982380f72297bb76235792583279a392cdda91471",
+          "calculation_revision_id": "af5dc9bddb0c75b07fe6473e53e30b65f9f54038f766924f2af6d22277c37b9b",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -364,7 +371,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision e732ec58100569804655c10982380f72297bb76235792583279a392cdda91471 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision af5dc9bddb0c75b07fe6473e53e30b65f9f54038f766924f2af6d22277c37b9b (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -478,7 +485,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "e732ec58100569804655c10982380f72297bb76235792583279a392cdda91471",
+          "calculation_revision_id": "af5dc9bddb0c75b07fe6473e53e30b65f9f54038f766924f2af6d22277c37b9b",
           "completeness_status": "complete",
           "findings": [
             {
@@ -524,7 +531,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "8de0d62c5e68bb8783d2549380e81b593a7adf1b82dd73e3bffe546f239a4840",
+          "verification_report_id": "394ece1141011c31d4d7eb27396557474f431c85440a10825d8402a347d1dc56",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -591,10 +598,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "f52d588887f63b217ce15dd88aa49f11da002fcd5e342d8d7afb86fdc2e506ff",
+          "bucket_event_id": "b16f84909def051318ee06ec7516a1df1726a337f577f5a071342eb57f370317",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "e732ec58100569804655c10982380f72297bb76235792583279a392cdda91471",
+          "calculation_revision_id": "af5dc9bddb0c75b07fe6473e53e30b65f9f54038f766924f2af6d22277c37b9b",
           "file_sha256": "2f214c53d547645260dcf5747f4d57803e68cfeb3bf181e7312272deb70efe05",
           "filing_year": 2026,
           "format": "fichero-boe",
