@@ -26,6 +26,7 @@ from cadrumo.application.modelo.projection import (
     ModeloProjectServiceResult,
     project_modelo_100_from_m130,
 )
+from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, address_key
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.next_step import OperationOpenWorkStepV1
@@ -48,9 +49,12 @@ _EARLIER_FILING_ANSWERS = (
     ("modelo-130-resultados-negativos-anteriores", "0"),
     ("modelo-130-pagos-fraccionados-anteriores", "0"),
 )
-#: The boxes the bare quarter could not work out for want of those answers: the reduction for net yields and the
-#: negative results of earlier quarters.
-_OPEN_BOXES = ("13", "15")
+#: What the form asks the filer for in the bare quarter, by address: the negative results of earlier quarters, behind
+#: box 15, and the previous year's net income, behind the reduction for net yields, which has no box of its own.
+_OPEN_ADDRESSES = (
+    ("binding", "modelo-130-resultados-negativos-anteriores"),
+    ("binding", "irpf.previous_year_economic_activity_net_income"),
+)
 _FACTS = (
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -98,8 +102,8 @@ def _refused_in(work: SeededOperatorWork, language: str) -> OperationErrorDetail
         return _served(refusal, language)
 
 
-def _form_labels(work: SeededOperatorWork, language: str) -> dict[str, str]:
-    """The label each box of the quarter's form carries in ``language``, read through the form loader itself."""
+def _open_fields(work: SeededOperatorWork, language: str) -> dict[tuple[str, str], tuple[str, str | None]]:
+    """The label and printed box of each value the quarter's form asks the filer for, in ``language``."""
     loaded = load_modelo_work_form(
         work.work_unit.bucket_id,
         work.work_unit.modelo,
@@ -112,7 +116,11 @@ def _form_labels(work: SeededOperatorWork, language: str) -> dict[str, str]:
         admission=None,
         language=OutputLanguage(language),
     )
-    return {field.box: field.label.text for field in loaded.form.fields() if field.box is not None}
+    return {
+        address_key(field.address): (field.label.text, field.box)
+        for field in loaded.form.fields()
+        if field.origin is ModeloFormOrigin.NEEDS_INPUT
+    }
 
 
 def _answer(work: SeededOperatorWork) -> None:
@@ -139,15 +147,19 @@ def test_a_quarter_calculated_without_its_earlier_filing_answers_names_what_is_o
         words: dict[str, str] = {}
         for language in SUPPORTED_OUTPUT_LANGUAGES:
             detail = _refused_in(quarter, language)
-            labels = _form_labels(quarter, language)
+            asked = _open_fields(quarter, language)
             assert detail.error_code == "REFUSED_MODELO_PROJECT_QUARTER_INCOMPLETE"
             sentence = detail.refusal_words
             assert sentence is not None
-            # Each open box is named by the label its form serves and its printed number.
-            for box in _OPEN_BOXES:
-                assert labels[box] in sentence and re.search(rf"\b{box}\b", sentence)
-            # Nothing else of the quarter is named: no amount, only the declaration, its year and the open boxes.
-            assert {*re.findall(r"\d+", sentence)} <= {"130", str(_YEAR), "1", *_OPEN_BOXES}
+            # Each value the form asks for is named by the label the form serves and its printed number.
+            assert set(_OPEN_ADDRESSES) <= set(asked)
+            for label, box in asked.values():
+                assert label in sentence
+                assert box is None or re.search(rf"@BS@b{box}@BS@b", sentence)
+            # Nothing else of the quarter is named: no amount, only the declaration, its year and the numbers the
+            # served labels and boxes print.
+            printed = {*re.findall(r"@BS@d+", " ".join(f"{label} {box or ''}" for label, box in asked.values()))}
+            assert {*re.findall(r"@BS@d+", sentence)} <= {"130", str(_YEAR), "1", *printed}
             assert "`" not in sentence and "--" not in sentence and "aeat" not in sentence.lower()
             words[language] = sentence
         assert len(set(words.values())) == len(SUPPORTED_OUTPUT_LANGUAGES)
