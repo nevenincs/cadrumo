@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e30eeea60d57c2b177ef035e6439d16bf5c4df54f59d2cc967a9c21bab7acea'
+body_hash: 'sha256:95276e488e11104ffc0b0374da87f7fa090e2ee6fc0f88fc6bd8a712aff89a67'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -1009,6 +1009,15 @@ related:
 - `S31` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
 - `S31` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
 - `S31` `verify:` `lint-imports --config .importlinter --no-cache` -> `fail`
+- `S21` `M` `src/cadrumo/application/aggregation/renta_imputation.py`
+- `S21` `M` `src/cadrumo/application/aggregation/tests/test_renta_imputation_criterion.py`
+- `S21` `verify:` `pytest test_renta_imputation_criterion.py test_renta_imputation_findings.py (96)` -> `pass`
+- `S21` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
+- `S25` `M` `src/cadrumo/application/modelo/m193_settled_row_gate.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_settled_row_export_gate.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/test_m193_settled_row_file_verify_gate.py`
+- `S25` `verify:` `pytest test_m193_settled_row_file_verify_gate.py test_m193_settled_row_export_gate.py -m integration (14)` -> `pass`
+- `S25` `verify:` `pytest test_m193_disclosure_phase_calculation.py (8)` -> `pass`
 
 ## Notes
 
@@ -1053,3 +1062,5 @@ related:
 - `S08` Operator ruling 2026-11-02, recorded in the binding-capability-grade ADR amendment committed with S31. Both promotions were verified against one republished worktree authority. Wide run failures are the 12 S30-baseline failures only. DGT V4965-16 is cited in the binding comment, not `legal_refs:` the catalogue has no DGT consulta kind. Commit 898bc7f5d8.
 - `S07` Implemented by the IVA session on feature/iva-period as 950d71d157 (operator assignment), merged to feature/tui as 11597ef030; the source-disagreement type it reuses is b09654e5bb and 0f41170526. The row for the fixtures directory covers 173 regenerated desktop Modelo fixtures.
 - `S31` Docs refresh basis: operator ruling 2026-11-03, relayed by the orchestrator, to expose the three existing wizard election flags (--irpf-activity-income-imputation-criterion, --irpf-activity-income-imputation-year, --irpf-codigo-comercio-accounting) through the CLI option table, reusing their help keys with no new wizard logic. The criterion choice contract follows the table's import-pure convention: an empty static placeholder, validated by the flow against the profile schema's `enum_values` (a refused token reports choices `cobros_y_pagos,` devengo). The sequences state `directa_simplificada,` `cobros_y_pagos` for 2026 and no Codigo de Comercio accounting, because their rows are payment-dated without accrual documents (devengo leaves them `accrual_unknown)` and cash is admissible only with a declared regime (RIRPF art. 7.2). All five verify frames end COMPLETE with `granted_verificado_completo` true and no blocking finding, with casilla values and notices unchanged from the prior goldens. The CLI reference is a build output under ignored docs/cli and the operation contract manifest is unaffected. CLI suite failures: 3, all pre-existing with this change undone `(test_operation_invoice_catalogue` `settlement_amount` payload, two justificante cotejo persistence tests). lint-imports breaks only on the known undeclared `dev.desktop_*` fixture modules. Commits 70fa5bf1e9 and 77d5436a4c.
+- `S21` Delivered mostly by other lanes: 0f570046bf, 33b3364ed4 (facts, RIRPF art. 7.2 eligibility, 0169 at the 2022 baseline), e9b64e8fb5, d5ca77a721 (wizard), 843833d8da (operations), 54bb1caaee (TUI/desktop), 632b246526, 70fa5bf1e9 (CLI flags). e6bfa3c6ff closes the gap: the blocking refusal now names the provision. Casillas 1443 and 1487 stay manual, since no producer enumerates those blocks per the ADR.
+- `S25` 0d22d4b7c3: hand-declared rows with EJERCICIO DEVENGO before the filing year (Orden EHA/3377/2011 positions 118-121) now count as settled prior-accrual rows in the one gate. Follow-up: the gate opens its own bundled authority instead of the caller's pin.

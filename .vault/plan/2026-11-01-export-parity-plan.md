@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:7b7cc65cbd452a5d1bd59dd5c62c4ceaf105e9cd3b0368249a37528c23d57a64'
+body_hash: 'sha256:8675ee4a102387d920211feb72eb72d469d3ab97144ed35882d9230820fce69b'
 ---
 
 # `export-parity` plan
@@ -75,7 +75,7 @@ Compare every credit casilla against its declared cross-check sources at cent pr
 
 Key activity income and withholding by accrual or receipt date per the elected criterion, so 0599 and Modelo 130 casilla 06 credit the right year.
 
-- [ ] `P05.S21` - Add the imputation-criterion profile fact and its wizard question; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/wizard/ and the Modelo 100 registry at the 2022 baseline`.
+- [x] `P05.S21` - Add the imputation-criterion profile fact and its wizard question; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/wizard/ and the Modelo 100 registry at the 2022 baseline`.
 - [x] `P05.S22` - Key ledger activity income, expenses and withholding by the criterion and surface accrued-but-unpaid withholding as a rectification finding; `src/cadrumo/application/aggregation/renta_income_ledger.py and _renta_income_evidence.py`.
 - [x] `P05.S30` - Add the 0599 against fourth-quarter Modelo 130 casilla 06 cross-check under the imputation criterion; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
 - [x] `P05.S31` - Present the Modelo 130 casilla 06 filing-grade promotion for operator ruling; `.vault/adr/`.
@@ -94,7 +94,7 @@ Read datos fiscales through a manual import and a read-only live pull into one c
 
 Prove the mixed personas end to end against independent oracles, close the remaining withholding gates and hand off for publication.
 
-- [ ] `P07.S25` - Make manual prior-accrual Modelo 193 rows face the settled-amount export gate; `src/cadrumo/application/filing/ and src/cadrumo/application/modelo/`.
+- [x] `P07.S25` - Make manual prior-accrual Modelo 193 rows face the settled-amount export gate; `src/cadrumo/application/filing/ and src/cadrumo/application/modelo/`.
 - [ ] `P07.S26` - Prove the employee, employee-autonomo and payer personas end to end with independent oracles and extend the income-tax journey to 0599; `src/cadrumo/entrypoints/tests/ and dev/acceptance/income_tax/`.
 - [ ] `P07.S32` - Retire CalculationRevisionAmendmentKind in favour of the one filing declaration kind; `src/cadrumo/domain/modelos/ and src/cadrumo/application/modelo/`.
 - [ ] `P07.S11` - Record the 1577 and 0598 follow-ups and hand off the touched modelos and revisions for authority publication; `.vault/plan/`.
