@@ -4330,6 +4330,41 @@ desktop:
   modelo:
     box_notes:
       label: El que el càlcul ha anotat sobre aquesta casella
+    compare:
+      again: Torna a comparar
+      borrador:
+        ask: Compara amb l'esborrany
+        calculation: El teu càlcul
+        difference: 'Càlcul menys esborrany: {amount}'
+        draft: Esborrany de l'AEAT
+        lead: 'L''esborrany que has importat és el que va imprimir l''AEAT: una observació,
+          no una presentació, i mai omple aquesta declaració. El teu càlcul es fa
+          en aquest equip. Cada casella mostra tots dos.'
+        no_value: Sense valor
+        observation: Observació
+        outdated: 'Esborranys desats en un format anterior, que no es poden llegir:
+          {count}.'
+        refused: 'Esborranys desats que no es poden llegir: {count}.'
+        title: Esborrany de l'AEAT i el teu càlcul
+      failed: No s'ha pogut llegir la comparació. No s'ha canviat res.
+      lead: Comprovacions de només lectura al costat d'aquesta declaració. Res del
+        que veus aquí la modifica.
+      taxation:
+        ask: Compara les dues opcions
+        boxes: Caselles sense valor
+        individual: Declaració individual
+        joint: Declaració conjunta
+        lead: Calcula aquesta declaració dues vegades, presentada de manera conjunta
+          i de manera individual, amb els valors que ja té. No es desa ni es canvia
+          res.
+        open_profile: Obre el teu perfil
+        recommended: Recomanada
+        refused: S'ha rebutjat la comparació.
+        result: Resultat
+        tax: Quota de la declaració
+        title: Declaració conjunta o individual
+      title: Comparacions
+      words_language: Aquestes explicacions estan escrites en {language}.
     correction:
       kind_label: Tipus de correcció
       motive_label: Motiu de la rectificació
@@ -4401,6 +4436,7 @@ desktop:
       label: Al costat del formulari
       outline: Esquema
     view:
+      compare: Compara
       credits: Retencions
       form: Formulari
     views:

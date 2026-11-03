@@ -4332,6 +4332,41 @@ desktop:
   modelo:
     box_notes:
       label: Lo que el cálculo ha anotado sobre esta casilla
+    compare:
+      again: Comparar de nuevo
+      borrador:
+        ask: Comparar con el borrador
+        calculation: Tu cálculo
+        difference: 'Cálculo menos borrador: {amount}'
+        draft: Borrador de la AEAT
+        lead: 'El borrador que importaste es lo que imprimió la AEAT: una observación,
+          no una presentación, y nunca rellena esta declaración. Tu cálculo se hace
+          en este equipo. Cada casilla muestra ambos.'
+        no_value: Sin valor
+        observation: Observación
+        outdated: 'Borradores guardados en un formato anterior, que no se pueden leer:
+          {count}.'
+        refused: 'Borradores guardados que no se pueden leer: {count}.'
+        title: Borrador de la AEAT y tu cálculo
+      failed: No se pudo leer la comparación. No se ha cambiado nada.
+      lead: Comprobaciones de solo lectura junto a esta declaración. Nada de lo que
+        ves aquí la modifica.
+      taxation:
+        ask: Comparar ambas opciones
+        boxes: Casillas sin valor
+        individual: Declaración individual
+        joint: Declaración conjunta
+        lead: Calcula esta declaración dos veces, presentada de forma conjunta y de
+          forma individual, con los valores que ya tiene. No se guarda ni se cambia
+          nada.
+        open_profile: Abre tu perfil
+        recommended: Recomendada
+        refused: Se rechazó la comparación.
+        result: Resultado
+        tax: Cuota de la declaración
+        title: Declaración conjunta o individual
+      title: Comparaciones
+      words_language: Estas explicaciones están escritas en {language}.
     correction:
       kind_label: Tipo de corrección
       motive_label: Motivo de la rectificación
@@ -4403,6 +4438,7 @@ desktop:
       label: Junto al formulario
       outline: Esquema
     view:
+      compare: Comparar
       credits: Retenciones
       form: Formulario
     views:

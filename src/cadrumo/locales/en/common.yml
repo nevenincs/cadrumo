@@ -4262,6 +4262,38 @@ desktop:
   modelo:
     box_notes:
       label: What the calculation noted about this box
+    compare:
+      again: Compare again
+      borrador:
+        ask: Compare with the draft
+        calculation: Your calculation
+        difference: 'Calculation minus draft: {amount}'
+        draft: AEAT draft
+        lead: 'The draft you imported is what the AEAT printed: an observation, not
+          a filing, and it never fills this declaration. Your calculation is worked
+          out on this computer. Each box shows both.'
+        no_value: No value
+        observation: Observation
+        outdated: 'Drafts stored in an older format, which cannot be read: {count}.'
+        refused: 'Stored drafts that cannot be read: {count}.'
+        title: AEAT draft and your calculation
+      failed: The comparison could not be read. Nothing was changed.
+      lead: Read-only checks beside this declaration. Nothing here changes it.
+      taxation:
+        ask: Compare both ways
+        boxes: Boxes without a value
+        individual: Individual filing
+        joint: Joint filing
+        lead: Works this return out twice, filed jointly and filed individually, on
+          the values this declaration holds. Nothing is saved or changed.
+        open_profile: Open your profile
+        recommended: Recommended
+        refused: The comparison was refused.
+        result: Result
+        tax: Tax on the return
+        title: Joint or individual filing
+      title: Comparisons
+      words_language: These explanations are written in {language}.
     correction:
       kind_label: Kind of correction
       motive_label: Reason for the rectification
@@ -4331,6 +4363,7 @@ desktop:
       label: Beside the form
       outline: Outline
     view:
+      compare: Compare
       credits: Withholdings
       form: Form
     views:

@@ -145,10 +145,14 @@ HELP_BOXES: Mapping[str, tuple[str, ...]] = {
 #: The tax year and period of the Renta the envelopes read.
 RENTA_YEAR = 2025
 RENTA_PERIOD = "0A"
-#: What the filer answers for the 2025 Renta: the earlier year's negative general base, and whether direct
-#: estimation is normal. The calculation refuses without both.
+#: What the filer answers for the 2025 Renta: the earlier year's negative general base, the negative general base
+#: still pending at the start of each of the three years before, and whether direct estimation is normal. The
+#: calculation refuses without all of them.
 RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
     ("renta-base-liquidable-negativa-general-anterior", "0"),
+    ("renta-base-liquidable-negativa-general-em4-pendiente-inicio", "0"),
+    ("renta-base-liquidable-negativa-general-em3-pendiente-inicio", "0"),
+    ("renta-base-liquidable-negativa-general-em2-pendiente-inicio", "0"),
     ("renta-modelo-100-estimacion-directa-es-normal", "1"),
 )
 #: The boxes a salaried filer states: the cash remuneration and the Social Security contributions, as typed.
@@ -940,12 +944,21 @@ class RentaFiler:
     #: The day the filer's profile is read on, where it matters: the filing period of the 2025 return runs to the end
     #: of June 2026, and a result to pay is offered in two instalments only within it. ``None`` reads on today's date.
     read_on: datetime | None = None
+    #: What the profile states of the household, by name (see ``_household_facts``).
+    household: str = "single"
+    #: Whether the declaration is calculated; the comparison of the filing modes is refused for one that is not.
+    calculated: bool = True
+    #: The filing modes compared, recorded for this filer when it is named: the comparison is read in every
+    #: language, and a refusal as a stopped executor's detail is recorded.
+    compared: bool = False
+    #: Whether the comparison is also recorded for the states the filer's own income does not reach.
+    compared_states: bool = False
 
 
 RENTA_FILERS: tuple[RentaFiler, ...] = (
     # Salaried, with income from savings and a capital gain declared, and no certificate in the register:
     # the three withholding credits and the totals that read them stay unresolved.
-    RentaFiler("", "trabajo,capital_mobiliario,ganancias_patrimoniales", salary=("30000", "1900")),
+    RentaFiler("", "trabajo,capital_mobiliario,ganancias_patrimoniales", salary=("30000", "1900"), compared=True),
     # Salaried, one certificate in the register: a credit smaller than the tax, so the result is to pay.
     RentaFiler("pay", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00")),
     # The same income with a certificate stating more than the tax: the result is to refund.
@@ -979,13 +992,90 @@ RENTA_FILERS: tuple[RentaFiler, ...] = (
         certified=Decimal("2000.00"),
         read_on=RENTA_FILING_PERIOD_DAY,
     ),
+    # A married couple whose profile states the spouse, one certificate in the register: the filing modes can be
+    # compared, and joint filing comes out lower.
+    RentaFiler(
+        "married",
+        "trabajo",
+        salary=("30000", "1900"),
+        certified=Decimal("2000.00"),
+        household="married",
+        compared=True,
+        compared_states=True,
+    ),
+    # The same couple with no certificate in the register: the credits the results read have no value, so the
+    # comparison names those boxes instead of comparing.
+    RentaFiler("uncredited", "trabajo", salary=("30000", "1900"), household="married", compared=True),
+    # A married filer whose profile does not state the spouse.
+    RentaFiler(
+        "spouseless",
+        "trabajo",
+        salary=("30000", "1900"),
+        certified=Decimal("2000.00"),
+        household="married-no-spouse",
+        compared=True,
+    ),
+    # A single filer with no child in the household, who has no family unit to file jointly.
+    RentaFiler(
+        "alone",
+        "trabajo",
+        salary=("30000", "1900"),
+        certified=Decimal("2000.00"),
+        household="alone",
+        compared=True,
+    ),
+    # A married couple whose return was never calculated.
+    RentaFiler("uncalculated", "trabajo", household="married", calculated=False, compared=True),
 )
 
 
-@contextmanager
-def _renta_seeded(tmp: Path, filer: RentaFiler) -> Generator[Any]:
-    """One synthetic profile whose first declaration is the filer's 2025 Modelo 100, not yet calculated."""
+#: The tax id the profile states for a married filer's spouse.
+RENTA_SPOUSE_TAX_ID = "98765432M"
+
+
+def _household_facts(name: str) -> tuple[Any, ...]:
+    """What the profile states of the taxpayer's household, by the name a filer gives it.
+
+    ``single`` is one unmarried taxpayer who states nothing of a family situation. ``married`` is a married couple
+    that states the spouse and the family situation; ``married-no-spouse`` leaves the spouse out. ``alone`` is an
+    unmarried taxpayer who states a family situation with no child in the household.
+    """
+    from datetime import date
+
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
     from cadrumo.domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
+    from cadrumo.domain.user_profile.values import UserProfileFact
+
+    # The form codes the profile stores are the registry's own, read under a pinned authority.
+    with bundled_indexed_authority().operation():
+        married_code = RentaMaritalStatus.CASADO.code
+        individual_code = RentaDeclaracionType.INDIVIDUAL.code
+    if name == "single":
+        return RENTA_UNMARRIED_TAXPAYER_FACTS
+    if name == "alone":
+        stated = UserProfileFact(path="renta_family.situacion_familiar", value="soltero")
+        return (*RENTA_UNMARRIED_TAXPAYER_FACTS, stated)
+    married = (
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+        UserProfileFact(path="renta_taxpayer.marital_status", value=married_code),
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=True),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("1")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("12")),
+        UserProfileFact(path="renta_filing.declaration_type", value=individual_code),
+        UserProfileFact(path="renta_family.situacion_familiar", value="casado"),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+    )
+    if name == "married":
+        return (*married, UserProfileFact(path="renta_spouse.tax_id", value=RENTA_SPOUSE_TAX_ID))
+    if name == "married-no-spouse":
+        return married
+    raise SystemExit(f"no household is named {name}")
+
+
+@contextmanager
+def _renta_seeded(tmp: Path, filer: RentaFiler, *, year: int = RENTA_YEAR) -> Generator[Any]:
+    """One synthetic profile whose first declaration is the filer's Modelo 100 of ``year``, not yet calculated."""
     from cadrumo.domain.user_profile.values import UserProfileFact
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
@@ -993,13 +1083,11 @@ def _renta_seeded(tmp: Path, filer: RentaFiler) -> Generator[Any]:
     facts = (
         UserProfileFact(path="taxpayer_type.irpf_income_categories", value=filer.categories),
         UserProfileFact(path="tax_residence.ccaa", value=RENTA_CCAA),
-        *RENTA_UNMARRIED_TAXPAYER_FACTS,
+        *_household_facts(filer.household),
     )
     with (
         profile_adapter_composition(),
-        seeded_operator_work(
-            tmp, modelo="100", filing_year=RENTA_YEAR, period_code=RENTA_PERIOD, extra_facts=facts
-        ) as work,
+        seeded_operator_work(tmp, modelo="100", filing_year=year, period_code=RENTA_PERIOD, extra_facts=facts) as work,
     ):
         yield work
 
@@ -1022,8 +1110,11 @@ def _record_certificate(work: Any, filer: RentaFiler) -> None:
     )
 
 
-def _calculate_renta(work: Any, filer: RentaFiler) -> None:
-    """Calculate the filer's declaration through the registered calculation, with the answers it refuses without."""
+def _calculate_renta(work: Any, filer: RentaFiler, *, borrador_snapshot_id: str | None = None) -> None:
+    """Calculate the filer's declaration through the registered calculation, with the answers it refuses without.
+
+    A draft imported earlier is replayed into the calculation when ``borrador_snapshot_id`` names it.
+    """
     from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
     from cadrumo.application.modelo.calculation_request_fields import (
         ModeloCalculationInputFieldsV1,
@@ -1054,6 +1145,7 @@ def _calculate_renta(work: Any, filer: RentaFiler) -> None:
                     ModeloCalculationOverride(key=key, value=value) for key, value in RENTA_ANSWERS
                 ),
                 casilla_overrides=tuple(ModeloCalculationOverride(key=box, value=value) for box, value in stated),
+                borrador_snapshot_id=borrador_snapshot_id,
             ),
         ),
     )
@@ -1127,6 +1219,123 @@ def _write_projection_refusal(directory: Path, work: Any, name: str) -> None:
         if detail is None:
             raise SystemExit("the projection's refusal records no error detail")
         _write(directory, f"refusal-{name}-{language}.json", detail)
+
+
+def _write_taxation_comparison(directory: Path, work: Any, name: str) -> None:
+    """Read the comparison of joint and individual filing of the filer's declaration, in each language.
+
+    The application words the comparison in the language it is run in, so each is run in its own. A comparison
+    the application refuses is recorded as a stopped executor's detail is, with its served sentence.
+    """
+    from cadrumo.application.modelo.taxation_comparison import TaxationComparisonError
+    from cadrumo.application.modelo.taxation_comparison_operation import ModeloTaxationComparisonRequest
+    from cadrumo.application.operations.error_detail import build_operation_error_detail
+    from cadrumo.core.config import override_settings
+
+    request = ModeloTaxationComparisonRequest(profile_id=UUID(work.work_unit.bucket_id), work_unit_id=work.work_unit_id)
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            try:
+                compared = _operate(work, "modelo.work.compare_taxation", request, subject_ref=_profile_subject(work))
+            except TaxationComparisonError as refusal:
+                detail = build_operation_error_detail(refusal)
+                if detail is None:
+                    raise SystemExit("the comparison's refusal records no error detail") from refusal
+                _write(directory, f"refusal-compare-{name}-{language}.json", detail)
+            else:
+                _write(directory, f"compare-{name}-{language}.json", compared)
+
+
+#: The salary and contributions of a household too small for either filing mode to owe tax on.
+RENTA_SMALL_SALARY: tuple[str, str] = ("5000", "300")
+#: What a comparison that recommends individual filing states, as amounts in euros: the joint result, the individual
+#: one, and the cuota resultante of each. No household of these synthetic filers reaches it.
+INDIVIDUAL_LOWER = ("2400.00", "2100.00", "3000.00", "2700.00")
+
+
+#: A tax year whose Modelo 100 declares no filing mode, so it cannot be compared.
+UNDECLARED_YEAR = 2024
+
+
+def _write_undeclared_comparison(directory: Path) -> None:
+    """Read the comparison of a declaration whose form declares no filing mode: the application refuses it.
+
+    The window offers a comparison only where the form says it applies, so this refusal is one it is never asked
+    for; the application still words it.
+    """
+    filer = RentaFiler("undeclared", "trabajo")
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        _renta_seeded(Path(tmp), filer, year=UNDECLARED_YEAR) as work,
+    ):
+        _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-undeclared")
+
+
+#: The refusals of the comparison that no declaration of these synthetic profiles reaches: one on a form the authority
+#: no longer selects, and one on a calculation saved before the entries were recorded.
+UNREACHED_COMPARISON_REFUSALS: tuple[str, ...] = ("revision_outdated", "entries_unknown")
+
+
+def _write_unreached_comparison_refusals(directory: Path) -> None:
+    """Record the comparison refusals the profiles above cannot reach, as the executor raises them, in each language.
+
+    A work unit made on an older revision, or a calculation saved before entries were recorded, cannot be made
+    through the current application. The error is the one the comparison raises for it, recorded as a stopped
+    executor's detail is, with its served sentence.
+    """
+    from cadrumo.application.modelo.taxation_comparison import TaxationComparisonError, TaxationComparisonRefusal
+    from cadrumo.application.operations.error_detail import build_operation_error_detail
+    from cadrumo.core.config import override_settings
+
+    for refusal in UNREACHED_COMPARISON_REFUSALS:
+        error = TaxationComparisonError(TaxationComparisonRefusal(refusal))
+        for language in LANGUAGES:
+            with override_settings(cadrumo_output_language=language):
+                detail = build_operation_error_detail(error)
+            if detail is None:
+                raise SystemExit("the comparison's refusal records no error detail")
+            _write(directory, f"refusal-compare-100-{RENTA_PERIOD}-{refusal.replace('_', '-')}-{language}.json", detail)
+
+
+def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> None:
+    """Record the comparison states the filer's own income does not reach, in each language.
+
+    The same household is calculated again on an income too small for either mode to owe tax on, so the results do
+    not differ, and read through the registered comparison. A comparison that recommends individual filing cannot be
+    reached by the single-earner household the application models, so the real projection and its served words
+    state one built from amounts: the application's own result, projected and worded as any comparison is.
+    """
+    from dataclasses import replace
+
+    from cadrumo.application.modelo.taxation_comparison import (
+        TaxationComparisonResult,
+        TaxationRecommendation,
+        TaxationRecommendationReason,
+    )
+    from cadrumo.application.modelo.taxation_comparison_operation import ModeloTaxationComparisonProjection
+    from cadrumo.core.config import override_settings
+
+    _calculate_renta(work, replace(filer, salary=RENTA_SMALL_SALARY))
+    _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-{filer.envelope}-small")
+    conjunta, individual, conjunta_cuota, individual_cuota = (Decimal(amount) for amount in INDIVIDUAL_LOWER)
+    built = TaxationComparisonResult(
+        filing_year=RENTA_YEAR,
+        modelo="100",
+        revision=str(RENTA_YEAR),
+        conjunta_cuota_resultante=conjunta_cuota,
+        individual_cuota_resultante=individual_cuota,
+        conjunta_resultado=conjunta,
+        individual_resultado=individual,
+        delta_resultado=individual - conjunta,
+        recommendation=TaxationRecommendation.INDIVIDUAL,
+        recommendation_reason=TaxationRecommendationReason.INDIVIDUAL_LOWER_RESULT,
+    )
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            projection = ModeloTaxationComparisonProjection.from_comparison(
+                built, profile_id=UUID(work.work_unit.bucket_id), work_unit_id=work.work_unit_id
+            )
+        _write(directory, f"compare-100-{RENTA_PERIOD}-{filer.envelope}-individual-{language}.json", projection)
 
 
 def _write_projection_steps(directory: Path) -> None:
@@ -1206,9 +1415,14 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
             seed_m130_income_transaction(amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta")
         if filer.quarter_130:
             _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
-        _calculate_renta(work, filer)
+        if filer.calculated:
+            _calculate_renta(work, filer)
         suffix = f"-{filer.envelope}" if filer.envelope else ""
         _write_form(directory, work, f"modelo-100-{RENTA_PERIOD}{suffix}", with_help=first)
+        if filer.compared:
+            _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}{suffix}")
+        if filer.compared_states:
+            _write_comparison_states(directory, work, filer)
         if filer.quarter_130:
             _write_projection(directory, work, f"project-100-{RENTA_PERIOD}{suffix}")
         if first:
@@ -1217,14 +1431,178 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
             _write_settlement_states(directory, work)
 
 
+#: The filer whose profile holds the Borrador drafts: a salaried filer with one certificate in the register.
+BORRADOR_FILER = RentaFiler("borrador", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00"))
+#: The boxes an AEAT draft prints as results, which no binding owns: they are kept only to be compared. The draft
+#: prints what the calculation works out for each, except the last, which it prints a euro and a quarter higher.
+BORRADOR_PRINTED_RESULTS: tuple[str, ...] = ("0505", "0545", "0546", "0585", "0586")
+BORRADOR_PRINTED_OFF = ("0585", Decimal("1.25"))
+#: Boxes the draft prints that its import does not read: the cash remuneration, stated lower than the filer typed,
+#: and the Social Security contributions, stated as typed.
+BORRADOR_PRINTED_EXTRA: tuple[tuple[str, str], ...] = (("0003", "29500.00"), ("0013", "1900.00"))
+#: When a draft the rules refuse was stored, when the first draft was imported and when the second was.
+BORRADOR_REFUSED_AT = datetime(2026, 4, 2, 10, 0, tzinfo=UTC)
+BORRADOR_FIRST_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
+BORRADOR_SECOND_AT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
+
+
+def _borrador_comparison(work: Any, language: str) -> BaseModel:
+    """The comparison of the year's AEAT draft with the saved calculation, as the registered read serves it."""
+    from cadrumo.application.live.borrador_100_comparison_operation import Borrador100CompareRequest
+    from cadrumo.core.external_constants import OutputLanguage
+
+    request = Borrador100CompareRequest(
+        profile_id=UUID(work.work_unit.bucket_id), filing_year=RENTA_YEAR, output_language=OutputLanguage(language)
+    )
+    return _operate(work, "live.borrador.100.compare", request, subject_ref=_profile_subject(work), no_effect=True)
+
+
+def _write_borrador_comparison(directory: Path | None, work: Any, state: str) -> None:
+    """Write the comparison in each language; nowhere when no directory is given."""
+    if directory is None:
+        return
+    for language in LANGUAGES:
+        _write(directory, f"borrador-100-{RENTA_PERIOD}-{state}-{language}.json", _borrador_comparison(work, language))
+
+
+def _import_borrador(
+    work: Any, tmp: Path, *, captured_at: datetime, results: Mapping[str, Decimal], shift: Decimal = Decimal(0)
+) -> str:
+    """Read a synthetic draft PDF through the real parser and keep it in the profile's encrypted custody.
+
+    The printed ``results`` are kept as comparison-only observations, with the printed boxes the import does not
+    read. ``shift`` moves every printed result, so a second draft differs from the first.
+    """
+    from cadrumo.application.live.borrador_100 import Borrador100PrintedObservation, Borrador100SnapshotService
+    from cadrumo.application.live.borrador_100_import import prepare_borrador_100_import
+    from cadrumo.core.period import Period
+    from cadrumo.entrypoints.adapter_composition_ports import build_borrador_100_snapshot_repository
+    from cadrumo.entrypoints.live_borrador_operation_composition import build_borrador_100_operation_ports
+    from cadrumo.tests.fixtures.borrador.generate import render_borrador_pdf
+
+    bucket = work.work_unit.bucket_id
+    period = Period.from_year_and_code(RENTA_YEAR, RENTA_PERIOD)
+    printed = {box: value + shift for box, value in results.items()}
+    source = tmp / "borrador.pdf"
+    source.write_bytes(render_borrador_pdf(RENTA_YEAR, printed))
+    ports = build_borrador_100_operation_ports(profile_id=UUID(bucket), operation=work.operation)
+    prepared = prepare_borrador_100_import(
+        source,
+        filing_year=RENTA_YEAR,
+        period=period,
+        operation=work.operation,
+        parser=ports.parser,
+        profile_tax_id=ports.profile_tax_id,
+    )
+    extra = tuple(
+        Borrador100PrintedObservation(casilla_id=box, continuidad_id=None, value=Decimal(value))
+        for box, value in BORRADOR_PRINTED_EXTRA
+    )
+    repository = build_borrador_100_snapshot_repository(bucket_id=bucket)
+    return (
+        Borrador100SnapshotService(bucket_id=bucket, repository=repository)
+        .capture(
+            filing_year=RENTA_YEAR,
+            period=period,
+            captured_at=captured_at,
+            source_url=prepared.source_url,
+            binding_values=prepared.binding_values,
+            printed_observations=(*prepared.printed_observations, *extra),
+            operation=work.operation,
+        )
+        .snapshot_id
+    )
+
+
+def _store_refused_borrador(work: Any) -> None:
+    """Store a draft the pinned rules refuse: it names a box key no binding owns, so it can be named and never read."""
+    from cadrumo.application.live.borrador_100 import Borrador100Snapshot, derive_borrador_100_snapshot_id
+    from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
+    from cadrumo.core.period import Period
+    from cadrumo.entrypoints.adapter_composition_ports import build_borrador_100_snapshot_repository
+
+    bucket = work.work_unit.bucket_id
+    period = Period.from_year_and_code(RENTA_YEAR, RENTA_PERIOD)
+    reference = work.operation.snapshot("100", filing_year=RENTA_YEAR, period=RENTA_PERIOD).snapshot_ref
+    values: dict[str, Decimal | str] = {"casilla.0596": Decimal("15.25")}
+    source_url = "file-import:sha256:" + "b" * 64
+    build_borrador_100_snapshot_repository(bucket_id=bucket).save(
+        Borrador100Snapshot(
+            snapshot_id=derive_borrador_100_snapshot_id(
+                filing_year=RENTA_YEAR,
+                period=period,
+                registry_snapshot_ref=reference,
+                source_url=source_url,
+                binding_values=values,
+            ),
+            bucket_id=bucket,
+            modelo="100",
+            filing_year=RENTA_YEAR,
+            period=period,
+            registry_snapshot_ref=reference,
+            captured_at=BORRADOR_REFUSED_AT,
+            source_url=source_url,
+            state=SnapshotLifecycleState.ACTIVE,
+            binding_values=values,
+        )
+    )
+
+
+def _borrador_chain(directory: Path | None, results: Mapping[str, Decimal]) -> dict[str, Decimal]:
+    """Take one salaried filer's profile through the stages a draft and a calculation reach, in order.
+
+    Each stage is read through the registered comparison and written in every language where a directory is given:
+    nothing imported, a draft the rules refuse, a readable draft with no calculation, the calculation that replays
+    it, and a second draft imported after the calculation. What the calculation holds for each box the draft prints
+    as a result is returned.
+    """
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        _renta_seeded(Path(tmp), BORRADOR_FILER) as work,
+    ):
+        _record_certificate(work, BORRADOR_FILER)
+        _write_borrador_comparison(directory, work, "no-capture")
+        _store_refused_borrador(work)
+        _write_borrador_comparison(directory, work, "capture-refused")
+        first = _import_borrador(work, Path(tmp), captured_at=BORRADOR_FIRST_AT, results=results)
+        _write_borrador_comparison(directory, work, "no-calculation")
+        _calculate_renta(work, BORRADOR_FILER, borrador_snapshot_id=first)
+        _write_borrador_comparison(directory, work, "compared")
+        compared = json.loads(_borrador_comparison(work, LANGUAGES[0]).model_dump_json())
+        _import_borrador(work, Path(tmp), captured_at=BORRADOR_SECOND_AT, results=results, shift=Decimal(7))
+        _write_borrador_comparison(directory, work, "stale")
+    calculated = {
+        row["casilla_id"]: Decimal(row["calculation_value"]["decimal"])
+        for row in compared["rows"]
+        if isinstance(row["calculation_value"], dict)
+    }
+    return {box: calculated[box] for box in BORRADOR_PRINTED_RESULTS}
+
+
+def _write_borrador_comparisons(directory: Path) -> None:
+    """Read the AEAT draft against the saved calculation at each stage a profile reaches, in each language.
+
+    A first pass reads what the calculation holds for the boxes a draft prints as results; the draft then prints
+    those figures, one of them a little higher, so the comparison has boxes that agree and one that differs.
+    """
+    calculated = _borrador_chain(None, dict.fromkeys(BORRADOR_PRINTED_RESULTS, Decimal(0)))
+    box, off = BORRADOR_PRINTED_OFF
+    printed = {key: value + (off if key == box else Decimal(0)) for key, value in calculated.items()}
+    _borrador_chain(directory, printed)
+
+
 def _write_renta(directory: Path) -> None:
     """Read every filer's 2025 Modelo 100 in every language, and the declarations list of the first filer.
 
-    A filer with a calculated first quarter is also read for its projection of the annual return.
+    A filer with a calculated first quarter is also read for its projection of the annual return. The profile that
+    holds the Borrador drafts is read for its comparison of each draft with the calculation.
     """
     for number, filer in enumerate(RENTA_FILERS):
         _write_renta_filer(directory, filer, first=number == 0)
     _write_projection_steps(directory)
+    _write_undeclared_comparison(directory)
+    _write_unreached_comparison_refusals(directory)
+    _write_borrador_comparisons(directory)
 
 
 #: The settlement states a result can be in that the filers above do not reach, by name: the result's amount and
@@ -1295,8 +1673,11 @@ def _registry() -> OperationRegistry:
     return build_production_operation_registry()
 
 
-def _published(definition_id: str, result: BaseModel, subject_ref: str) -> BaseModel:
-    """A settled result as the runtime publishes it: through its registered projector, where it has one."""
+def _published(definition_id: str, result: BaseModel, subject_ref: str, *, no_effect: bool = False) -> BaseModel:
+    """A settled result as the runtime publishes it: through its registered projector, where it has one.
+
+    A read that changed nothing settles with no effect, which its projector checks.
+    """
     from cadrumo.application.operations.models import OperationIdentity, OperationTerminalReceipt
     from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
     from cadrumo.core.time.clock import now
@@ -1308,19 +1689,24 @@ def _published(definition_id: str, result: BaseModel, subject_ref: str) -> BaseM
         identity=OperationIdentity(operation_id="e" * 64, definition_id=definition_id, subject_ref=subject_ref),
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.UPDATED,
+        effect=OperationEffect.NONE if no_effect else OperationEffect.UPDATED,
         settled_at=now(),
         result_ref="f" * 64,
     )
     return projector(result, receipt)
 
 
-def _operate(work: Any, definition_id: str, payload: BaseModel, *, subject_ref: str | None = None) -> BaseModel:
+def _operate(
+    work: Any, definition_id: str, payload: BaseModel, *, subject_ref: str | None = None, no_effect: bool = False
+) -> BaseModel:
     """Run one registered operation through its production executor, as the supervisor would; its public result."""
     subject = work.work_unit_id if subject_ref is None else subject_ref
     executor = _registry().lookup(definition_id).executor_factory.create()
     return _published(
-        definition_id, _run_executor(work, definition_id, executor, payload, subject_ref=subject), subject
+        definition_id,
+        _run_executor(work, definition_id, executor, payload, subject_ref=subject),
+        subject,
+        no_effect=no_effect,
     )
 
 
@@ -2168,6 +2554,7 @@ def pack_envelopes(directory: Path) -> None:
 
 
 def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
+    from cadrumo.application.live.borrador_100_comparison import Borrador100ComparisonProjection
     from cadrumo.application.modelo.declarations_list_operation import ModeloDeclarationsListProjectionV1
     from cadrumo.application.modelo.work_form_export_offer import ModeloFormExportOffer
     from cadrumo.application.modelo.workbench_operations import (
@@ -2180,6 +2567,8 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
 
     return [
         ("refusal-*.json", OperationErrorDetailV1),
+        ("borrador-*.json", Borrador100ComparisonProjection),
+        ("compare-*.json", _result_model("modelo.work.compare_taxation")),
         ("modelo-*.json", ModeloWorkbenchFormProjectionV1),
         ("help-*.json", ModeloCasillaHelpProjectionV1),
         ("declarations-*.json", ModeloDeclarationsListProjectionV1),

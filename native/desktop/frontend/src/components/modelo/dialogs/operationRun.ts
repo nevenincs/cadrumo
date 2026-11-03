@@ -2,6 +2,7 @@ import {
   ledgerFailure,
   servedNextStep,
   servedRefusalWords,
+  type LedgerErrorDetail,
   type LedgerFailureCode,
   type LedgerNextStep,
   type LedgerOutcome,
@@ -18,13 +19,16 @@ export type OperationRun<Result> =
   /** The runtime settled it without changing anything. `words` is the
    * sentence the backend served for why, shown as served; null when it
    * served none. `step` is the operation the backend names for putting the
-   * refusal right, null when it names none. */
+   * refusal right, null when it names none. `detail` is the registered error
+   * detail the refusal settled with, for a caller that reads a context fact
+   * the backend served with it; null when the refusal carried none. */
   | {
       kind: "refused";
       operationId: string;
       reason: string | null;
       words: string | null;
       step: LedgerNextStep | null;
+      detail: LedgerErrorDetail | null;
     }
   /** The request never reached the runtime; nothing was changed. */
   | { kind: "not_sent"; code: LedgerFailureCode }
@@ -66,6 +70,7 @@ export async function runOperation<Result>(
         reason: failure.reason ?? null,
         words: null,
         step: null,
+        detail: null,
       };
     if (NOT_SENT.has(failure.code))
       return { kind: "not_sent", code: failure.code };
@@ -81,6 +86,7 @@ export async function runOperation<Result>(
         reason: outcome.reason,
         words: servedRefusalWords(outcome.detail),
         step: servedNextStep(outcome.detail),
+        detail: outcome.detail,
       };
     // A write of this family never pauses for a review; one that does is
     // not followed here, and what it did is not known.

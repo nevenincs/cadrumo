@@ -2,6 +2,7 @@ import type { ReactNode, RefObject } from "react";
 import { PaneHeader, type PaneControl } from "../../PaneHeader";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import type { OpenableSurface } from "../details/Details";
+import type { BorradorPort } from "../../../shell/borrador";
 import type { ProfileCompanionKit } from "../workspace/ProfileCompanions";
 import { WorkspaceScreen } from "../workspace/WorkspaceScreen";
 import type { ModeloPort } from "../../../shell/modelo";
@@ -19,8 +20,8 @@ export function DeclarationsPane({
   reader,
   workUnitId,
   onOpen,
-  onCensus,
   onSwitch,
+  onCensus,
   onBack,
   onOpenSurface,
   canOpenSurface,
@@ -34,6 +35,7 @@ export function DeclarationsPane({
   page,
   pane,
   profileCompanions,
+  borrador,
 }: {
   port: ModeloPort;
   /** Whose declarations, or null while the account withholds them. */
@@ -41,11 +43,11 @@ export function DeclarationsPane({
   /** The declaration open, or null for the list. */
   workUnitId: string | null;
   onOpen(workUnitId: string): void;
-  /** Asks for the window's one census flow, where it has one. */
-  onCensus?: () => void;
   /** Opens another declaration from the one open; the shell asks first where
    * edits are staged. */
   onSwitch(workUnitId: string): void;
+  /** Asks for the window's one census flow, where it has one. */
+  onCensus?: () => void;
   /** Back to the list; the shell asks first where edits are staged. */
   onBack(): void;
   onOpenSurface(surface: OpenableSurface): void;
@@ -65,6 +67,9 @@ export function DeclarationsPane({
   /** The profile's reads and write door for the open declaration's profile
    * elements; none are offered without it. */
   profileCompanions?: ProfileCompanionKit;
+  /** The profile's AEAT drafts, for the open declaration's comparison; none
+   * is offered without it. */
+  borrador?: BorradorPort;
   pane: {
     title: string;
     controls: PaneControl[];
@@ -111,12 +116,13 @@ export function DeclarationsPane({
           onOpenSurface={onOpenSurface}
           canOpenSurface={canOpenSurface}
           openLink={openLink}
+          onOpenWork={onSwitch}
           onLeaveGuard={guardLeave}
           profileCompanions={profileCompanions}
+          borrador={borrador}
           // The list is read again on return only after a write.
           onWritten={() => {
             ownedMemory.stale = true;
-          onOpenWork={onSwitch}
           }}
         />
       </section>

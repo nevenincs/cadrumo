@@ -20,6 +20,7 @@ import type {
 } from "../ipc/contract";
 import { censoFixture } from "./censoFixture";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
+import { borradorFixture, type BorradorScenario } from "./borradorFixture";
 import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import { translator } from "../shell/strings";
 import { sedeViewFixture } from "./sedeViewFixture";
@@ -127,6 +128,9 @@ export type ScenarioHostOptions = {
   /** What the made-up profile states for the imputation election; where it
    * is left out, nothing is stated. */
   election?: ElectionScenario | null;
+  /** The stage the made-up profile's AEAT draft and calculation are at; where
+   * it is left out, the host offers no drafts and no comparison with one. */
+  borrador?: BorradorScenario | null;
   /** What the made-up profile states for the household; where it is left
    * out, nothing is stated. */
   household?: HouseholdScenario | null;
@@ -766,6 +770,9 @@ export function scenarioHost(
       },
     },
     userProfile,
+    ...(options.borrador
+      ? { borrador: borradorFixture({ scenario: options.borrador, say }) }
+      : {}),
     profileCompanions: {
       household: household.reads.household,
       imputationElection: election.reads.imputationElection,

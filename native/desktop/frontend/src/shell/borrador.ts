@@ -6,6 +6,8 @@
 // missing capture, a refused capture and a missing calculation each have a
 // status of their own. Nothing here contacts AEAT.
 
+import type { ModeloFormText } from "./modeloContract";
+
 export type BorradorState = "active" | "superseded" | "discarded" | "all";
 
 /** Which stored drafts a read asks for. */
@@ -69,7 +71,7 @@ export type BorradorCompared = {
   /** The box as the form prints it; null where it has no printed number. */
   box: string | null;
   casilla_id: string;
-  label: { text: string; disclosure: string };
+  label: ModeloFormText;
   /** Null means the draft holds no value for the box, never zero. */
   borrador_value: BorradorScalar | null;
   /** Null means the calculation holds no value for the box, never zero. */

@@ -27,7 +27,7 @@ import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
 
 /** The views of one declaration, as its tabs name them. */
 export type WorkspaceView =
-  "form" | "check" | "credits" | "file" | "sources" | "history";
+  "form" | "check" | "credits" | "compare" | "file" | "sources" | "history";
 
 /** What the other component lanes put into the workspace. */
 export type WorkspaceSlots = {
@@ -45,6 +45,9 @@ export type WorkspaceSlots = {
   /** The credits a register supplies and the estimate; the view is offered
    * only where the form has credits to show. */
   credits?: ReactNode;
+  /** The comparisons the declaration asks for; the view is offered only
+   * where it has one. */
+  compare?: ReactNode;
   sources: ReactNode;
   history: ReactNode;
   /** Dialogs drawn at the workspace's root. */
@@ -421,6 +424,8 @@ export function ModeloWorkspace({
           )}
           {slots.credits !== undefined &&
             tab("credits", t("desktop.modelo.view.credits"))}
+          {slots.compare !== undefined &&
+            tab("compare", t("desktop.modelo.view.compare"))}
           {tab("sources", t("workspace.modelo.key.sources"))}
           {tab("history", t("workspace.modelo.history.title"))}
         </TabsList>
@@ -483,6 +488,7 @@ export function ModeloWorkspace({
         >
           {view === "check" && slots.check}
           {view === "credits" && slots.credits}
+          {view === "compare" && slots.compare}
           {view === "file" && slots.filing}
           {view === "sources" && slots.sources}
           {view === "history" && slots.history}

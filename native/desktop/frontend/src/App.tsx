@@ -2815,6 +2815,7 @@ export function App({ host }: { host: Host }) {
                 }
               : undefined
           }
+          borrador={host.borrador}
           pane={{
             title: t("workspace.declarations.destination.overview"),
             onToggleMaximize: () => toggleMaximize("docs"),

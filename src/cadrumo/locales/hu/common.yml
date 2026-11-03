@@ -4297,6 +4297,40 @@ desktop:
   modelo:
     box_notes:
       label: Amit a számítás erről a rovatról feljegyzett
+    compare:
+      again: Összevetés újra
+      borrador:
+        ask: Összevetés a tervezettel
+        calculation: A számításod
+        difference: 'Számítás mínusz tervezet: {amount}'
+        draft: AEAT-tervezet
+        lead: 'Az importált tervezet azt tartalmazza, amit az AEAT kinyomtatott: megfigyelés,
+          nem benyújtás, és soha nem tölti ki ezt a bevallást. A számításod ezen a
+          gépen készül. Minden rovat mindkettőt mutatja.'
+        no_value: Nincs érték
+        observation: Megfigyelés
+        outdated: 'Régebbi formátumban tárolt, nem olvasható tervezetek: {count}.'
+        refused: 'Nem olvasható tárolt tervezetek: {count}.'
+        title: Az AEAT tervezete és a számításod
+      failed: Az összevetést nem sikerült beolvasni. Semmi sem változott.
+      lead: Csak olvasható ellenőrzések a bevallás mellett. Semmi, amit itt látsz,
+        nem módosítja.
+      taxation:
+        ask: A két mód összevetése
+        boxes: Érték nélküli rovatok
+        individual: Egyéni bevallás
+        joint: Közös bevallás
+        lead: Kétszer számítja ki ezt a bevallást, közösen és egyénileg benyújtva,
+          a bevallás meglévő értékeiből. Semmit sem ment el és semmit sem változtat
+          meg.
+        open_profile: Nyisd meg a profilodat
+        recommended: Ajánlott
+        refused: Az összevetést elutasították.
+        result: Eredmény
+        tax: A bevallás adója
+        title: Közös vagy egyéni bevallás
+      title: Összevetések
+      words_language: 'Ezek a magyarázatok ezen a nyelven íródtak: {language}.'
     correction:
       kind_label: A helyesbítés fajtája
       motive_label: A helyesbítés oka
@@ -4366,6 +4400,7 @@ desktop:
       label: A nyomtatvány mellett
       outline: Vázlat
     view:
+      compare: Összevetés
       credits: Levonások
       form: Nyomtatvány
     views:

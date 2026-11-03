@@ -51,7 +51,9 @@ import {
 import { ReviewDialog } from "../dialogs/ReviewDialog";
 import { FormView } from "../form/FormView";
 import { useFormSession, type FormSession } from "../form/session";
+import type { BorradorPort } from "../../../shell/borrador";
 import { CheckView } from "./CheckView";
+import { ComparisonView, offersComparison } from "./ComparisonView";
 import type { CorrectionAnswer, CorrectionResult } from "./CorrectionDialog";
 import { creditFields } from "./creditBoxes";
 import { CreditsPanel } from "./CreditsPanel";
@@ -101,10 +103,11 @@ function Ready({
   onOpenSurface,
   canOpenSurface,
   openLink,
+  onOpenWork,
   initialView,
   onLeaveGuard,
-  onOpenWork,
   profileCompanions,
+  borrador,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   port: ModeloPort;
@@ -117,10 +120,11 @@ function Ready({
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface: (surface: OpenableSurface) => boolean;
   openLink(url: string): void;
+  onOpenWork?: (workUnitId: string) => void;
   initialView: WorkspaceView;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   profileCompanions?: ProfileCompanionKit;
-  onOpenWork?: (workUnitId: string) => void;
+  borrador?: BorradorPort;
 }) {
   const t = useStrings();
   const session: FormSession = useFormSession({ envelope, port, language });
@@ -217,11 +221,11 @@ function Ready({
     year: envelope.form.form.filing_year,
     projectable: envelope.form.form.projectable,
     run,
+    open: onOpenWork,
   });
   const settledThenReread = async <Result,>(
     send: () => Promise<LedgerOutcome<Result>>,
   ) => (await run(send))?.kind === "settled";
-    open: onOpenWork,
 
   const readUnit = useCallback(async () => {
     try {
@@ -546,6 +550,22 @@ function Ready({
               canOpenSurface={canOpenSurface}
             />
           ) : undefined,
+        compare: offersComparison(envelope, borrador) ? (
+          <ComparisonView
+            envelope={envelope}
+            port={port}
+            borrador={borrador}
+            session={session}
+            language={language}
+            locale={locale}
+            onGo={(address) => {
+              setView("form");
+              session.selectAddress(address);
+            }}
+            onOpenSurface={onOpenSurface}
+            canOpenSurface={canOpenSurface}
+          />
+        ) : undefined,
         sources: (
           <SourcesView
             groups={envelope.form.form.source_groups}
@@ -698,11 +718,13 @@ export function WorkspaceScreen({
   onOpenSurface,
   canOpenSurface = () => false,
   openLink,
+  onOpenWork,
   initialView = "form",
   onLeaveGuard,
   onWritten,
   holds: suppliedHolds,
   profileCompanions,
+  borrador,
 }: {
   port: ModeloPort;
   workUnitId: string;
@@ -715,10 +737,12 @@ export function WorkspaceScreen({
   canOpenSurface?: (surface: OpenableSurface) => boolean;
   /** Opens a legal reference's page outside the window. */
   openLink(url: string): void;
+  /** Opens another declaration, where the shell can; the estimate offers the
+   * step that opens one only with it. */
+  onOpenWork?: (workUnitId: string) => void;
   /** The view the declaration opens on. */
   initialView?: WorkspaceView;
   /** Hands the shell the guard that asks before staged edits are dropped. */
-  onOpenWork,
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   /** Told whenever the workspace sends a write, whatever its outcome. */
   onWritten?: () => void;
@@ -726,6 +750,9 @@ export function WorkspaceScreen({
   /** The profile's reads and write door, for the elements a profile source
    * group holds; none are drawn without it. */
   profileCompanions?: ProfileCompanionKit;
+  /** The profile's AEAT drafts, for the comparison with the calculation;
+   * that comparison is not offered without it. */
+  borrador?: BorradorPort;
 }) {
   const t = useStrings();
   const [localHolds] = useState(createModeloWriteHolds);
@@ -737,9 +764,6 @@ export function WorkspaceScreen({
     () => () => {
       latest.current += 1;
     },
-  /** Opens another declaration, where the shell can; the estimate offers the
-   * step that opens one only with it. */
-  onOpenWork?: (workUnitId: string) => void;
     [port, workUnitId, language, holds],
   );
   // A read that fails while a declaration is shown keeps it, with what the
@@ -798,9 +822,11 @@ export function WorkspaceScreen({
         onOpenSurface={onOpenSurface}
         canOpenSurface={canOpenSurface}
         openLink={openLink}
+        onOpenWork={onOpenWork}
         initialView={initialView}
         onLeaveGuard={onLeaveGuard}
         profileCompanions={profileCompanions}
+        borrador={borrador}
       />
     );
   return (
@@ -816,4 +842,3 @@ export function WorkspaceScreen({
     </ModeloWriteScope>
   );
 }
-        onOpenWork={onOpenWork}

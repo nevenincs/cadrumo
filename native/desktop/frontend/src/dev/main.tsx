@@ -17,6 +17,7 @@ import {
   type CalendarShape,
 } from "./scenarioHost";
 import { HOUSEHOLD_SCENARIOS } from "./householdFixture";
+import { BORRADOR_SCENARIOS } from "./borradorFixture";
 import { ELECTION_SCENARIOS } from "./imputationElectionFixture";
 import { LEDGER_SHAPES } from "./ledgerFixture";
 import { MODELO_SHAPES } from "./modeloFixture";
@@ -104,6 +105,10 @@ function readParams() {
     // What the made-up profile states for the imputation election.
     election: ELECTION_SCENARIOS.find(
       (state) => state === params.get("election"),
+    ),
+    // The stage the made-up profile's AEAT draft and calculation are at.
+    borrador: BORRADOR_SCENARIOS.find(
+      (state) => state === params.get("borrador"),
     ),
     // A made-up window port, for how the page answers a close.
     window: params.get("window") === "port",
@@ -222,6 +227,7 @@ function Scenarios() {
       ledger: initial.ledger,
       modelo: initial.modelo,
       election: initial.election,
+      borrador: initial.borrador,
       household: initial.household,
       window: initial.window,
       language: run.language,

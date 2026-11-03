@@ -110,7 +110,15 @@ import { hex64 } from "./fixtures/ledger";
  * step that calculates it, and once that is calculated it is refused for the
  * result the quarter does not yet produce. `renta-instalment` is the
  * salaried filer with a result to pay, read within the filing period, so the
- * settlement offers the result in two instalments and states both amounts. */
+ * settlement offers the result in two instalments and states both amounts.
+ * `renta-married` is a married couple whose profile states the spouse, with a
+ * certificate in the register: the comparison of joint and individual filing
+ * is answered. The same couple without a certificate (`renta-uncredited`),
+ * without the spouse in the profile (`renta-spouseless`), a single filer with
+ * no child in the household (`renta-alone`) and a couple whose return is not
+ * calculated (`renta-uncalculated`) have that comparison refused as the
+ * application refused it. The first filer's is refused for want of the family
+ * situation. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
@@ -144,6 +152,11 @@ export const MODELO_SHAPES = [
   "renta-projected",
   "renta-credited",
   "renta-instalment",
+  "renta-married",
+  "renta-uncredited",
+  "renta-spouseless",
+  "renta-alone",
+  "renta-uncalculated",
   "refused",
   "unknown",
   "unavailable",
@@ -387,6 +400,16 @@ export function modeloFixture(options: Options): ModeloPort {
       const form = await envelope<ModeloWorkbenchFormProjectionV1>(name);
       if (form) forms[form.work_unit_id] = declaration;
     }
+    // The first quarter the scenario created is the declaration whose form
+    // was read, so the estimate's step that opens it finds one.
+    if (!forms[workUnitId] && quarter !== "none") {
+      const created = await envelope<ModeloWorkCreateProjection>("create-130");
+      if (
+        created?.outcome.kind === "success" &&
+        created.outcome.unit.work_unit_id === workUnitId
+      )
+        forms[workUnitId] = LATER_STATES;
+    }
     return forms[workUnitId] ?? null;
   }
   let operations = 0;
@@ -400,16 +423,6 @@ export function modeloFixture(options: Options): ModeloPort {
     if (shape === "unavailable") reject("unavailable");
     if (!signedIn()) reject("not_signed_in");
   };
-    // The first quarter the scenario created is the declaration whose form
-    // was read, so the estimate's step that opens it finds one.
-    if (!forms[workUnitId] && quarter !== "none") {
-      const created = await envelope<ModeloWorkCreateProjection>("create-130");
-      if (
-        created?.outcome.kind === "success" &&
-        created.outcome.unit.work_unit_id === workUnitId
-      )
-        forms[workUnitId] = LATER_STATES;
-    }
   const nextOperation = () => {
     operations += 1;
     return hex64(`modelo-operation:${operations}`);
@@ -726,8 +739,21 @@ export function modeloFixture(options: Options): ModeloPort {
           PROJECT_REFUSAL[quarter],
           spoken,
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
+      if (
+        definition === "modelo.work.compare_taxation" &&
+        shape.startsWith("renta") &&
+        !catalogue[`compare-${rentaForm(shape)}-${spoken}`]
+      )
+        return (await refusedWith(
+          `compare-${rentaForm(shape)}`,
+          spoken,
+        )) as LedgerOutcome<ModeloResult<typeof definition>>;
       const result = await (async (): Promise<unknown> => {
         switch (definition) {
+          case "modelo.work.compare_taxation":
+            return shape.startsWith("renta")
+              ? written(`compare-${rentaForm(shape)}-${spoken}`)
+              : unserved();
           case "modelo.project":
             return written(`project-${rentaForm(shape)}-${spoken}`);
           case "modelo.declarations.list":
