@@ -6,15 +6,17 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.retencion_soportada_label import retencion_soportada_clase_label
 from ...core.time.utc import validate_utc_aware
 from ...domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence, RetencionSoportadaAbsenceState
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from .contracts import RetencionSoportadaAbsenceOperationId, RetencionSoportadaAbsenceOperationRefusalReason
 
 __all__ = [
@@ -107,6 +109,16 @@ class RetencionSoportadaAbsenceRefusalProjection(BaseModel):
     reason: RetencionSoportadaAbsenceOperationRefusalReason
     ejercicio: FilingYear
     income_class: RetencionSoportadaClase
+    #: The finished sentence a frontend shows for the refusal and the language it is in, worded by the
+    #: operation error detail's rules from a key written for frontends.
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> RetencionSoportadaAbsenceRefusalProjection:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
 
 
 class RetencionSoportadaAbsenceMutationProjection(BaseModel):

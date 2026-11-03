@@ -37,6 +37,7 @@ from .contracts import (
     RetencionSoportadaAbsenceOperationRefusalReason,
 )
 from .ports import RetencionSoportadaAbsencePortsFactory
+from .refusal_words import served_absence_refusal_words
 from .requests import (
     RetencionSoportadaAbsenceAttestRequest,
     RetencionSoportadaAbsenceListRequest,
@@ -210,8 +211,16 @@ class RetencionSoportadaAbsenceExecutor:
             if reason == "stale_revision"
             else RETENCION_SOPORTADA_ABSENCE_REFUSAL_CODE
         )
+        words, language = served_absence_refusal_words(reason, error_code=code)
         refusal = RetencionSoportadaAbsenceRefusalProjection.model_validate(
-            {"code": code, "reason": reason, "ejercicio": request.ejercicio, "income_class": request.income_class},
+            {
+                "code": code,
+                "reason": reason,
+                "ejercicio": request.ejercicio,
+                "income_class": request.income_class,
+                "refusal_words": words,
+                "refusal_words_language": language,
+            },
         )
         result = RetencionSoportadaAbsenceExecutionResult(
             operation_id=operation_id,

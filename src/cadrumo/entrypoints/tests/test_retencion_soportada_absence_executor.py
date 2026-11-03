@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+from decimal import Decimal
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -16,7 +17,10 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.retencion_soportada_absence_repository import RetencionSoportadaAbsenceWritePorts
+from cadrumo.application.aggregation.retencion_soportada_repository import PinnedRetencionSoportadaWriteAuthority
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
@@ -34,8 +38,12 @@ from cadrumo.application.retencion_soportada_absence.requests import (
 from cadrumo.application.retencion_soportada_absence.results import RetencionSoportadaAbsenceExecutionResult
 from cadrumo.application.tests.operation_host_fakes import RecordingEvents
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.renta.retencion_soportada_absence import RetencionSoportadaAbsenceState
 from cadrumo.entrypoints.retencion_soportada_absence_composition import build_retencion_soportada_absence_ports
@@ -235,3 +243,104 @@ def test_the_composed_ports_refuse_a_profile_other_than_the_active_one(
         build_retencion_soportada_absence_ports(
             profile_id=UUID("22222222-2222-4222-8222-222222222222"), operation=operation
         )
+
+
+class _UndeclaredFamilyAuthority:
+    """A generation whose Modelo 100 declares no member of the family for any ejercicio."""
+
+    def __init__(self, operation: PinnedAuthorityOperation) -> None:
+        self._pinned = PinnedRetencionSoportadaWriteAuthority(operation)
+
+    def admits_ejercicio(self, ejercicio: int) -> bool:
+        return self._pinned.admits_ejercicio(ejercicio)
+
+    def declares_family(self, ejercicio: int) -> bool:
+        del ejercicio
+        return False
+
+
+def _attest_without_a_declared_family(
+    authority_operation: PinnedAuthorityOperation,
+) -> RetencionSoportadaAbsenceExecutionResult:
+    def factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> RetencionSoportadaAbsenceWritePorts:
+        ports = build_retencion_soportada_absence_ports(profile_id=profile_id, operation=operation)
+        return RetencionSoportadaAbsenceWritePorts(
+            attestations=ports.attestations, records=ports.records, authority=_UndeclaredFamilyAuthority(operation)
+        )
+
+    definition_id = RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID
+    context = _Context(authority_operation, definition_id)
+    request = OperationRequest(
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(_PROFILE),
+        payload=RetencionSoportadaAbsenceAttestRequest(
+            profile_id=UUID(_PROFILE),
+            ejercicio=_EJERCICIO,
+            income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+            note=_NOTE,
+        ),
+    )
+    executor = RetencionSoportadaAbsenceExecutor(factory, definition_id=definition_id)
+    asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
+    retained = context.operands.value
+    assert isinstance(retained, RetencionSoportadaAbsenceExecutionResult)
+    return retained
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_every_refusal_reason_serves_its_own_sentence_in_the_workers_language(
+    tmp_path: Path, operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    refusals: dict[str, RetencionSoportadaAbsenceExecutionResult] = {}
+    with (
+        override_settings(cadrumo_output_language=language.value),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE),
+    ):
+        _, attested, _ = _attest(operation)
+        assert attested.attestation is not None
+        revision_id = attested.attestation.revision_id
+        refusals["already_attested"] = _attest(operation, expected=revision_id)[1]
+        refusals["stale_revision"] = _withdraw(operation, "f" * 64)[1]
+        refusals["not_attested"] = _withdraw(
+            operation, ABSENT_SECURE_OBJECT_REVISION_ID, income_class=RetencionSoportadaClase.GANANCIA_PATRIMONIAL
+        )[1]
+        refusals["ejercicio_unsupported"] = _run(
+            operation,
+            RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
+            RetencionSoportadaAbsenceAttestRequest(
+                profile_id=UUID(_PROFILE),
+                ejercicio=2000,
+                income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+                note=_NOTE,
+            ),
+        )[1]
+        refusals["family_not_declared"] = _attest_without_a_declared_family(operation)
+        seed_payer_certificate(
+            operation=operation,
+            taxpayer_tax_id="00000000T",
+            ejercicio=_EJERCICIO,
+            payer_tax_id="B00000001",
+            income_class=RetencionSoportadaClase.TRABAJO,
+            retencion=Decimal("1200.00"),
+        )
+        refusals["records_present"] = _attest(operation, income_class=RetencionSoportadaClase.TRABAJO)[1]
+
+    assert set(refusals) == {
+        "already_attested",
+        "stale_revision",
+        "not_attested",
+        "ejercicio_unsupported",
+        "family_not_declared",
+        "records_present",
+    }
+    for reason, result in refusals.items():
+        assert result.refusal is not None
+        assert result.refusal.reason == reason
+        words = result.refusal.refusal_words
+        assert words == tr(f"aggregation.retencion_soportada_absence.served.{reason}", locale=language.value)
+        assert result.refusal.refusal_words_language is language
+        assert words is not None
+        assert "--" not in words
+        assert not words.startswith("aggregation.")
+        assert _NOTE not in words
+        assert "B00000001" not in words
