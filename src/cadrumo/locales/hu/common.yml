@@ -4359,6 +4359,9 @@ desktop:
       save: Név mentése
     search:
       label: Rovat keresése
+    settlement:
+      advisory: Tájékoztató
+      title: Az elszámolás módja
     side:
       label: A nyomtatvány mellett
       outline: Vázlat

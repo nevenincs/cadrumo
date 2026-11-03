@@ -4394,6 +4394,9 @@ desktop:
       save: Desar el nom
     search:
       label: Cercar una casella
+    settlement:
+      advisory: Orientatiu
+      title: Com es liquida
     side:
       label: Al costat del formulari
       outline: Esquema

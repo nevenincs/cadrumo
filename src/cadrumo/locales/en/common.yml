@@ -4324,6 +4324,9 @@ desktop:
       save: Save name
     search:
       label: Find a box
+    settlement:
+      advisory: Advisory
+      title: How it is settled
     side:
       label: Beside the form
       outline: Outline

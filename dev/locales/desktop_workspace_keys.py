@@ -182,6 +182,8 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.rename.name",
         "desktop.modelo.rename.save",
         "desktop.modelo.search.label",
+        "desktop.modelo.settlement.advisory",
+        "desktop.modelo.settlement.title",
         "desktop.modelo.side.label",
         "desktop.modelo.side.outline",
         "desktop.modelo.view.credits",

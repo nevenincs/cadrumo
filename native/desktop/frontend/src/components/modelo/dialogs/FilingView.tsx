@@ -17,7 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 import type {
   FilePicks,
@@ -46,6 +45,7 @@ import { AEAT_SEDE } from "../../../shell/links";
 import { useStrings } from "../../../shell/strings";
 import type { FormSession } from "../form/session";
 import { CalculationNotes } from "../workspace/CalculationNotes";
+import { Settlement } from "../workspace/Settlement";
 import { useModeloOperation } from "../WriteScope";
 
 // Export and record: the official file written to a place the filer picks,
@@ -216,11 +216,6 @@ export function FilingView({
         : [];
     }),
   ) as Partial<Pick<ModeloExportRequest, ModeloExportRequestField>>;
-  // An election the result makes meaningless is not asked; one that applies
-  // but cannot be answered now says why.
-  const shown = elections.filter(
-    (question) => question.state !== "not_applicable",
-  );
   // The file this view last saved, while it is still shown here.
   const [saved, setSaved] = useState<{ token: FileToken; write: Write } | null>(
     null,
@@ -583,54 +578,15 @@ export function FilingView({
             {file.words}
           </Alert>
         )}
-        {shown.length > 0 && !recorded && (
-          <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
-            {shown.map((question) => {
-              const id = `election-${question.election}`;
-              return (
-                <div key={question.election} className="flex flex-col gap-1">
-                  <label htmlFor={id} className="text-sm text-muted-foreground">
-                    {question.words}
-                  </label>
-                  {question.state === "available" ? (
-                    <NativeSelect
-                      id={id}
-                      controlSize="sm"
-                      disabled={quiet}
-                      value={
-                        answers[question.election] ?? question.default ?? ""
-                      }
-                      onChange={(event) =>
-                        setAnswers((now) => ({
-                          ...now,
-                          [question.election]: event.target.value,
-                        }))
-                      }
-                    >
-                      {question.default === null &&
-                        answers[question.election] === undefined && (
-                          <option value="" disabled />
-                        )}
-                      {question.choices.map((choice) => (
-                        <option key={choice.value} value={choice.value}>
-                          {choice.words}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  ) : (
-                    <p id={id} className="text-sm">
-                      {question.state_words}
-                    </p>
-                  )}
-                  {question.state === "available" && question.help && (
-                    <p className="text-xs text-muted-foreground">
-                      {question.help}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+        {!recorded && (
+          <Settlement
+            questions={elections}
+            answers={answers}
+            disabled={quiet}
+            onAnswer={(election, value) =>
+              setAnswers((now) => ({ ...now, [election]: value }))
+            }
+          />
         )}
         <div className="flex flex-wrap items-center gap-2">
           {recorded ? (

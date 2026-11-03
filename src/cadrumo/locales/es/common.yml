@@ -4396,6 +4396,9 @@ desktop:
       save: Guardar el nombre
     search:
       label: Buscar una casilla
+    settlement:
+      advisory: Orientativo
+      title: Cómo se liquida
     side:
       label: Junto al formulario
       outline: Esquema

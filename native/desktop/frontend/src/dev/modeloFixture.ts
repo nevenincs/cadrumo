@@ -103,7 +103,9 @@ import { hex64 } from "./fixtures/ledger";
  * certificate in the register, so the employment credit and the totals that
  * read it stay unresolved in it, the second with one. The estimate of every
  * other filer is refused as the application refused it, for want of a
- * quarterly declaration. */
+ * quarterly declaration. `renta-instalment` is the salaried filer with a
+ * result to pay, read within the filing period, so the settlement offers the
+ * result in two instalments and states both amounts. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
@@ -136,6 +138,7 @@ export const MODELO_SHAPES = [
   "renta-activity",
   "renta-projected",
   "renta-credited",
+  "renta-instalment",
   "refused",
   "unknown",
   "unavailable",

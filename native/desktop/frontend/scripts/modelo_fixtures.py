@@ -29,7 +29,7 @@ import sys
 import tempfile
 import textwrap
 from collections.abc import AsyncGenerator, Generator, Iterable, Iterator, Mapping
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, nullcontext
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -159,6 +159,8 @@ RENTA_PAYER_TAX_ID = "B12345674"
 #: tax residence, which the projection takes when it is not named.
 RENTA_QUARTER = "1T"
 RENTA_CCAA = "madrid"
+#: A day within the 2025 return's filing period, which closes on 30 June 2026.
+RENTA_FILING_PERIOD_DAY = datetime(2026, 5, 20, 9, 0, tzinfo=UTC)
 
 
 # -- wire types ---------------------------------------------------------------
@@ -935,6 +937,9 @@ class RentaFiler:
     #: Whether the profile also holds the year's calculated first-quarter Modelo 130, which the projection of the
     #: annual return from the quarters reads; the projection is read for the filer only then.
     quarter_130: bool = False
+    #: The day the filer's profile is read on, where it matters: the filing period of the 2025 return runs to the end
+    #: of June 2026, and a result to pay is offered in two instalments only within it. ``None`` reads on today's date.
+    read_on: datetime | None = None
 
 
 RENTA_FILERS: tuple[RentaFiler, ...] = (
@@ -964,6 +969,15 @@ RENTA_FILERS: tuple[RentaFiler, ...] = (
         certified=Decimal("2000.00"),
         ledger_income=Decimal("40000.00"),
         quarter_130=True,
+    ),
+    # The salaried filer with a certificate that leaves a result to pay, read within the filing period: the
+    # result may be paid at once or in two instalments, and the split states both amounts as advisory.
+    RentaFiler(
+        "instalment",
+        "trabajo",
+        salary=("30000", "1900"),
+        certified=Decimal("2000.00"),
+        read_on=RENTA_FILING_PERIOD_DAY,
     ),
 )
 
@@ -1092,10 +1106,10 @@ def _write_projection(directory: Path, work: Any, name: str) -> None:
 
 
 def _write_projection_refusal(directory: Path, work: Any, name: str) -> None:
-    """Record why the application refuses to project a profile that holds no quarterly declaration, in each language.
+    """Record why the application refuses to project the profile as it stands, in each language.
 
     The refusal is the one the projection's executor raises when it is run for the profile, recorded as a stopped
-    executor's detail is recorded.
+    executor's detail is recorded, with the next step it serves for putting it right.
     """
     from cadrumo.application.modelo.projection_operation import ModeloProjectOperationRequest
     from cadrumo.application.operations.error_detail import build_operation_error_detail
@@ -1109,10 +1123,96 @@ def _write_projection_refusal(directory: Path, work: Any, name: str) -> None:
             except Exception as refusal:
                 detail = build_operation_error_detail(refusal)
             else:
-                raise SystemExit("a profile with no quarterly declaration was projected")
+                raise SystemExit(f"the profile for {name} was projected, not refused")
         if detail is None:
             raise SystemExit("the projection's refusal records no error detail")
         _write(directory, f"refusal-{name}-{language}.json", detail)
+
+
+def _write_projection_steps(directory: Path) -> None:
+    """Record the stops from a profile with no quarterly declaration to an estimate, as served.
+
+    The profile is the projected filer's, with its income booked and no quarter yet. Its first quarter is created
+    through the registered creation, which the first refusal's step names, and the refusal that follows names the
+    declaration just created as the one to calculate. That is calculated through the registered calculation, and
+    the estimate is then refused for want of a result the quarter does not yet hold. Each refusal is recorded as a
+    stopped executor's detail is, in every language; the two results are recorded once.
+    """
+    from dataclasses import replace
+
+    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
+    from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
+    from cadrumo.application.modelo.work_create_operation import ModeloWorkCreateProjection, ModeloWorkCreateRequest
+    from cadrumo.application.operations.public_period import PublicPeriod
+    from cadrumo.core.time.clock import frozen_clock
+    from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT
+
+    projected = next(filer for filer in RENTA_FILERS if filer.envelope == "projected")
+    filer = replace(projected, quarter_130=False)
+    if filer.ledger_income is None:
+        raise SystemExit("the filer of the estimate's steps books no income")
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        frozen_clock(SEEDED_AT),
+        _renta_seeded(Path(tmp), filer) as work,
+    ):
+        seed_m130_income_transaction(amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta")
+        created = _operate(
+            work,
+            "modelo.work.create",
+            ModeloWorkCreateRequest(
+                profile_id=UUID(work.work_unit.bucket_id),
+                modelo="130",
+                period=PublicPeriod(filing_year=RENTA_YEAR, code=RENTA_QUARTER),
+                actor=ACTOR,
+            ),
+            subject_ref=_profile_subject(work),
+        )
+        if not isinstance(created, ModeloWorkCreateProjection) or created.outcome.kind != "success":
+            raise SystemExit("the first quarter's declaration was not created")
+        _write(directory, "create-130.json", created)
+        _write_projection_refusal(directory, work, "project-no-calculation")
+        quarter = created.outcome.unit.work_unit_id
+        _write(
+            directory,
+            "calculate-130.json",
+            _operate(
+                work,
+                "modelo.work.calculate",
+                ModeloWorkCalculateRequest(work_unit_id=quarter, actor=ACTOR),
+                subject_ref=quarter,
+            ),
+        )
+        _write_projection_refusal(directory, work, "project-quarter-incomplete")
+
+
+def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> None:
+    """Read one filer's 2025 Modelo 100 in every language, with the projection and settlement states it has.
+
+    The first filer is also the one whose declarations list, help cards and refused projection are read.
+    """
+    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
+    from cadrumo.core.time.clock import frozen_clock
+
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        frozen_clock(filer.read_on) if filer.read_on is not None else nullcontext(),
+        _renta_seeded(Path(tmp), filer) as work,
+    ):
+        _record_certificate(work, filer)
+        if filer.ledger_income is not None:
+            seed_m130_income_transaction(amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta")
+        if filer.quarter_130:
+            _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
+        _calculate_renta(work, filer)
+        suffix = f"-{filer.envelope}" if filer.envelope else ""
+        _write_form(directory, work, f"modelo-100-{RENTA_PERIOD}{suffix}", with_help=first)
+        if filer.quarter_130:
+            _write_projection(directory, work, f"project-100-{RENTA_PERIOD}{suffix}")
+        if first:
+            _write_list(directory, work, "declarations-renta")
+            _write_projection_refusal(directory, work, "project-no-quarters")
+            _write_settlement_states(directory, work)
 
 
 def _write_renta(directory: Path) -> None:
@@ -1120,25 +1220,68 @@ def _write_renta(directory: Path) -> None:
 
     A filer with a calculated first quarter is also read for its projection of the annual return.
     """
-    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
-
     for number, filer in enumerate(RENTA_FILERS):
-        with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp, _renta_seeded(Path(tmp), filer) as work:
-            _record_certificate(work, filer)
-            if filer.ledger_income is not None:
-                seed_m130_income_transaction(
-                    amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta"
-                )
-            if filer.quarter_130:
-                _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
-            _calculate_renta(work, filer)
-            suffix = f"-{filer.envelope}" if filer.envelope else ""
-            _write_form(directory, work, f"modelo-100-{RENTA_PERIOD}{suffix}", with_help=number == 0)
-            if filer.quarter_130:
-                _write_projection(directory, work, f"project-100-{RENTA_PERIOD}{suffix}")
-            if number == 0:
-                _write_list(directory, work, "declarations-renta")
-                _write_projection_refusal(directory, work, "project-no-quarters")
+        _write_renta_filer(directory, filer, first=number == 0)
+    _write_projection_steps(directory)
+
+
+#: The settlement states a result can be in that the filers above do not reach, by name: the result's amount and
+#: what the box the declaration settles holds, the days left in the filing period, and whether it corrects an
+#: earlier filing. Each is built by the real form builder and offered by the real export offer.
+SETTLEMENT_STATES: tuple[tuple[str, str, str | None, int, bool], ...] = (
+    # Within the period, an amount that splits: the second instalment is a cent more than nothing.
+    ("least", "0.02", None, 30, False),
+    # Within the period, an amount whose second instalment would be nothing.
+    ("nothing", "0.01", None, 30, False),
+    # Within the period, a result to pay of which the whole is suspended, so nothing remains to settle.
+    ("unsupported", "500.00", "0", 30, False),
+    # The period has ended.
+    ("overdue", "1000.00", None, -5, False),
+    # A corrective return.
+    ("amendment", "1000.00", None, 30, True),
+)
+#: The day the settlement states are read on.
+SETTLEMENT_DAY = RENTA_FILING_PERIOD_DAY.date()
+
+
+def _write_settlement_states(directory: Path, work: Any) -> None:
+    """Write the export offer of each settlement state in every language, as the real offer states it."""
+    from cadrumo.application.modelo.settlement_casilla import declaration_settlement_casilla_id
+    from cadrumo.application.modelo.tests.work_form_fixture import built_form, form_snapshot
+    from cadrumo.application.modelo.work_form_declaration_facts import ModeloFormDeadline
+    from cadrumo.application.modelo.work_form_export_offer import form_export_offer
+    from cadrumo.core.external_constants import OutputLanguage
+    from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
+
+    operation = work.operation
+    snapshot = form_snapshot(operation, "100", RENTA_YEAR, RENTA_PERIOD)
+    blank = built_form(operation, "100", RENTA_YEAR, RENTA_PERIOD, entered=frozenset())
+    if blank.result is None:
+        raise SystemExit("the 2025 Modelo 100 names no result box")
+    settling = declaration_settlement_casilla_id("100", snapshot.revision)
+    for name, result, settled, days, amended in SETTLEMENT_STATES:
+        held: dict[str, Decimal | str] = {str(blank.result.casilla_id): Decimal(result)}
+        if settling is not None and settling != blank.result.casilla_id:
+            held[str(settling)] = Decimal(result if settled is None else settled)
+        closes = SETTLEMENT_DAY + timedelta(days=days)
+        form = built_form(operation, "100", RENTA_YEAR, RENTA_PERIOD, held=held, entered=frozenset()).model_copy(
+            update={
+                "calculation_revision_id": "c" * 64,
+                "deadline": ModeloFormDeadline(
+                    closes_on=closes,
+                    nominal_closes_on=closes,
+                    holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+                    reference_on=SETTLEMENT_DAY,
+                    days_remaining=days if days >= 0 else None,
+                    days_overdue=-days if days < 0 else None,
+                ),
+            }
+        )
+        for language in LANGUAGES:
+            offer = form_export_offer(
+                "100", snapshot, OutputLanguage(language), form=form, verified=False, filed=False, amended=amended
+            )
+            _write(directory, f"settlement-100-{RENTA_PERIOD}-{name}-{language}.json", offer)
 
 
 # -- writes ---------------------------------------------------------------------
@@ -2024,6 +2167,7 @@ def pack_envelopes(directory: Path) -> None:
 
 def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
     from cadrumo.application.modelo.declarations_list_operation import ModeloDeclarationsListProjectionV1
+    from cadrumo.application.modelo.work_form_export_offer import ModeloFormExportOffer
     from cadrumo.application.modelo.workbench_operations import (
         ModeloCasillaHelpProjectionV1,
         ModeloEditPreflightProjectionV1,
@@ -2040,12 +2184,15 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
         ("preflight-*.json", ModeloEditPreflightProjectionV1),
         ("renew-*.json", ModeloEditRenewalProjectionV1),
         ("project-*.json", _result_model("modelo.project")),
+        ("settlement-*.json", ModeloFormExportOffer),
         *((pattern, _result_model(definition_id)) for pattern, definition_id in _WRITE_ENVELOPES),
     ]
 
 
 #: The write envelopes by file pattern, with the definition whose public result each one is.
 _WRITE_ENVELOPES: tuple[tuple[str, str], ...] = (
+    ("create-[0-9]*.json", "modelo.work.create"),
+    ("calculate-[0-9]*.json", "modelo.work.calculate"),
     ("apply-[0-9]*.json", "modelo.edit.apply"),
     ("apply-prerequisite-*.json", "modelo.edit.apply_prerequisite"),
     ("export-*.json", "modelo.export"),
