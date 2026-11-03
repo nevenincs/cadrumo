@@ -2389,16 +2389,16 @@ application:
       required_maximum_unresolved: Box [%{box}] cannot be checked yet, because the
         largest amount the law requires it to apply this year is not known. Some of
         the figures that amount depends on are missing.
-      scheme_period_contradicted: The value {entered} in {binding_id} contradicts
-        this work's period, which is {expected}. Correct it or open the work for the
-        right period.
+      scheme_period_contradicted: The period value you entered, %{entered}, contradicts
+        this work's period, which is %{expected}. Correct it or open the work for
+        the right period.
       selected_option_requires_nonzero: The selected option requires a nonzero value
         in this field.
       selected_option_requires_zero: The selected option requires an explicit zero
         in this field.
-      shared_casilla_cells_unadjudicated: 'Box %{casilla_id} holds a value the export
-        would also write into cells that have not been confirmed to mean the same
-        thing: %{target_cells}.'
+      shared_casilla_cells_unadjudicated: Box %{casilla_id} holds a value the export
+        would also write into other cells that have not been confirmed to mean the
+        same thing.
       suffered_retencion_capital_mobiliario_uncredited: This declaration includes
         savings income from movable capital (rendimientos del capital mobiliario del
         ahorro), but no withholding (retención) is credited against it. Enter the

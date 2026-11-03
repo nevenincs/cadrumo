@@ -2532,16 +2532,16 @@ application:
       required_maximum_unresolved: La casella [%{box}] encara no es pot comprovar,
         perquè no se sap la quantia màxima que la llei exigeix aplicar en aquest exercici.
         Hi falten algunes de les xifres de què depèn aquesta quantia.
-      scheme_period_contradicted: El valor {entered} de {binding_id} contradiu el
-        període d'aquest treball, que és {expected}. Corregeix-lo o obre el treball
-        del període correcte.
+      scheme_period_contradicted: El valor %{entered} del període contradiu el període
+        d'aquest treball, que és %{expected}. Corregeix-lo o obre el treball del període
+        correcte.
       selected_option_requires_nonzero: L’opció seleccionada exigeix un valor diferent
         de zero en aquest camp.
       selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit
         en aquest camp.
-      shared_casilla_cells_unadjudicated: 'La casella %{casilla_id} té un valor que
-        l''exportació escriuria també en cel·les que encara no s''ha confirmat que
-        signifiquin el mateix: %{target_cells}.'
+      shared_casilla_cells_unadjudicated: La casella %{casilla_id} té un valor que
+        l'exportació escriuria també en altres cel·les que encara no s'ha confirmat
+        que signifiquin el mateix.
       suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració recull
         rendiments del capital mobiliari de l'estalvi, però no hi consta cap retenció
         suportada. Introdueix l'import del certificat de retencions i ingressos a

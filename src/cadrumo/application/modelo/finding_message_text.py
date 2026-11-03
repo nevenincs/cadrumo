@@ -94,6 +94,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "filing_year": FindingFactKind.YEAR,
         "source_filing_year": FindingFactKind.YEAR,
         "target_filing_year": FindingFactKind.YEAR,
+        "authored_filing_year": FindingFactKind.YEAR,
         # Amounts of euros.
         "casilla_value": FindingFactKind.MONEY,
         "computed_value": FindingFactKind.MONEY,
@@ -147,6 +148,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "country_code": FindingFactKind.OFFICIAL_CODE,
         "transaction_currency": FindingFactKind.OFFICIAL_CODE,
         "tipo_renta_code": FindingFactKind.OFFICIAL_CODE,
+        "entered": FindingFactKind.OFFICIAL_CODE,
+        "expected": FindingFactKind.OFFICIAL_CODE,
         # Identifiers, for technical details only.
         "anchored": FindingFactKind.TECHNICAL,
         "membership_available": FindingFactKind.TECHNICAL,
@@ -176,6 +179,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "source_modelos": FindingFactKind.TECHNICAL,
         "source_ref": FindingFactKind.TECHNICAL,
         "source_ref_ids": FindingFactKind.TECHNICAL,
+        "target_cells": FindingFactKind.TECHNICAL,
         "transaction_id": FindingFactKind.TECHNICAL,
         "transaction_ids": FindingFactKind.TECHNICAL,
         "transaction_count": FindingFactKind.TECHNICAL,

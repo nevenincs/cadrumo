@@ -2484,16 +2484,16 @@ application:
       required_maximum_unresolved: A(z) [%{box}] rovat még nem ellenőrizhető, mert
         nem ismert, mekkora az a legnagyobb összeg, amelyet a törvény szerint ebben
         az évben alkalmazni kell. Hiányzik néhány adat, amelytől ez az összeg függ.
-      scheme_period_contradicted: A(z) {binding_id} mező {entered} értéke ellentmond
-        e munka időszakának, amely {expected}. Javítsd, vagy nyisd meg a megfelelő
+      scheme_period_contradicted: Az időszakhoz megadott %{entered} érték ellentmond
+        e munka időszakának, amely %{expected}. Javítsd, vagy nyisd meg a megfelelő
         időszak munkáját.
       selected_option_requires_nonzero: A kiválasztott lehetőséghez ebben a mezőben
         nullától eltérő érték szükséges.
       selected_option_requires_zero: A kiválasztott lehetőséghez ebben a mezőben kifejezetten
         nullát kell megadni.
-      shared_casilla_cells_unadjudicated: 'A(z) %{casilla_id} mező olyan értéket tartalmaz,
-        amelyet az exportálás olyan cellákba is beírna, amelyekről még nincs megerősítve,
-        hogy ugyanazt jelentik: %{target_cells}.'
+      shared_casilla_cells_unadjudicated: A(z) %{casilla_id} mező olyan értéket tartalmaz,
+        amelyet az exportálás más olyan cellákba is beírna, amelyekről még nincs megerősítve,
+        hogy ugyanazt jelentik.
       suffered_retencion_capital_mobiliario_uncredited: Ez a bevallás megtakarításból
         származó tőkejövedelmet (rendimientos del capital mobiliario del ahorro) tartalmaz,
         de nem szerepel benne levont forrásadó (retención). Add meg az összeget a
