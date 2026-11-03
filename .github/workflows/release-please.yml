@@ -3,7 +3,7 @@ name: Cadrumo Release Please
 on:
   push:
     branches:
-      - main
+      - feature/tui
   # Dispatchable as well as push-driven. release-please keeps its state in the
   # release PR's labels, and a release published by hand leaves that state
   # stale: the run then reports SUCCESS while aborting with "there are
@@ -24,8 +24,8 @@ permissions:
   actions: write
 
 concurrency:
-  group: release-please-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: release-please-${{ github.ref }}${{ github.ref == 'refs/heads/feature/tui' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/feature/tui' }}
 
 jobs:
   release-please:

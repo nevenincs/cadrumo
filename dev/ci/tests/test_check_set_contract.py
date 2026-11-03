@@ -21,7 +21,7 @@ from ..workflow_run_text import executed_lines
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOWS: Final = REPO_ROOT / ".github" / "workflows"
-_MAIN_GROUP_SUFFIX = "${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}"
+_MAIN_GROUP_SUFFIX = "${{ github.ref == 'refs/heads/feature/tui' && format('-{0}', github.sha) || '' }}"
 _CHECK_GROUPS = frozenset({"check", "test", "build"})
 #: ``${{ <admission> && '<admitted name>' || '<withheld name>' }}``.
 _ADMISSION_NAME = re.compile(r"\$\{\{ .+ && '(?P<admitted>[^']+)' \|\| '(?P<withheld>[^']+)' \}\}")
@@ -152,7 +152,7 @@ def test_every_default_branch_push_reaches_a_verdict() -> None:
         cancel = str(concurrency.get("cancel-in-progress", ""))
         if _MAIN_GROUP_SUFFIX not in group:
             violations.append(f"{path.name}: main concurrency group has no SHA suffix")
-        if cancel != "${{ github.ref != 'refs/heads/main' }}":
+        if cancel != "${{ github.ref != 'refs/heads/feature/tui' }}":
             violations.append(f"{path.name}: main runs can be cancelled: {cancel!r}")
         for key, job in (document.get("jobs") or {}).items():
             job_concurrency = job.get("concurrency")
@@ -160,7 +160,7 @@ def test_every_default_branch_push_reaches_a_verdict() -> None:
                 continue
             job_group = str(job_concurrency.get("group", ""))
             job_cancel = str(job_concurrency.get("cancel-in-progress", ""))
-            if _MAIN_GROUP_SUFFIX not in job_group or job_cancel != "${{ github.ref != 'refs/heads/main' }}":
+            if _MAIN_GROUP_SUFFIX not in job_group or job_cancel != "${{ github.ref != 'refs/heads/feature/tui' }}":
                 violations.append(f"{path.name}:{key}: job concurrency can destroy a main verdict")
     assert violations == [], "default-branch verdict violations:\n" + "\n".join(violations)
 

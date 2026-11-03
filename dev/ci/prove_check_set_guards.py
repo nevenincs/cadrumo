@@ -76,7 +76,7 @@ def _proofs() -> tuple[Proof, ...]:
         Proof(
             "test_every_default_branch_push_reaches_a_verdict",
             push_workflow,
-            "${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}",
+            "${{ github.ref == 'refs/heads/feature/tui' && format('-{0}', github.sha) || '' }}",
             "",
             "main concurrency group has no SHA suffix",
         ),

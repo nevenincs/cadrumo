@@ -26,7 +26,7 @@ reads a measurement rather than re-deriving one.
   (`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, `SCOOP_BUCKET_REPOSITORY`),
   then the documentation site.
 - **Release-please** (`release-please.yml`) is the only workflow that runs on
-  a push to main (plus manual dispatch for recovery). It cuts tags and
+  a push to `feature/tui` (plus manual dispatch for recovery). It cuts tags and
   releases with the default token, opens or updates the release pull request
   with the `nevenincs-release` App's token, so that pull request's own events
   run the merge gate, and dispatches `release.yml`'s prove and publish phases.

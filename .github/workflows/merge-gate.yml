@@ -2,7 +2,7 @@ name: Cadrumo Merge Gate
 
 on:
   pull_request:
-    branches: [main]
+    branches: [feature/tui]
     types: [opened, reopened, synchronize]
   # A calling run that already published the registry authority names its
   # artifact here, so the scoped gate restores it instead of compiling another.
