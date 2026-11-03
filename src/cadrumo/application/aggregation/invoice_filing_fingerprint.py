@@ -118,7 +118,7 @@ CURRENT_INVOICE_FIELD_SET_VERSION: Final = 2
 
 #: The first version whose scope holds the invoices renta income reads with no row.
 #: An older snapshot keeps its narrower scope, or its every draft would read as drifted.
-_ACCRUED_INCOME_SCOPE_VERSION: Final = 2
+_ACCRUED_INVOICE_SCOPE_VERSION: Final = 2
 
 _LINKED_INVOICE_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
     {
@@ -174,7 +174,7 @@ def fingerprint_scope_is_narrower(
 ) -> bool:
     """Whether this stored fingerprint leaves out invoices the draft's accrued income may rest on."""
     return (
-        snapshot.field_set_version < _ACCRUED_INCOME_SCOPE_VERSION
+        snapshot.field_set_version < _ACCRUED_INVOICE_SCOPE_VERSION
         and _read_selection(revision, work_unit=work_unit).accrued_income
         and criteria.usable(work_unit.filing_year) is ActivityImputationCriterion.DEVENGO
     )
@@ -389,7 +389,7 @@ def _current_rows(
         linked_invoice_ids=_linked_invoice_ids(ports, contributors) if selection.linked else frozenset(),
         contributors=contributors,
         accrued_scope_criteria=(
-            criteria if selection.accrued_income and field_set_version >= _ACCRUED_INCOME_SCOPE_VERSION else None
+            criteria if selection.accrued_income and field_set_version >= _ACCRUED_INVOICE_SCOPE_VERSION else None
         ),
     )
     return {
