@@ -706,7 +706,12 @@ def _credit_resolution_request(ctx: PayloadContext, **fields: object) -> Payload
     assert revision is not None
     return ctx.request(
         revision.work_unit_id,
-        {"profile_id": ctx.profile_id, "calculation_revision_id": revision_id, **fields},
+        {
+            "profile_id": ctx.profile_id,
+            "calculation_revision_id": revision_id,
+            "output_language": OutputLanguage.ES,
+            **fields,
+        },
     )
 
 
