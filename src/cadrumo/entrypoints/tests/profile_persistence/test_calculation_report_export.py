@@ -412,12 +412,13 @@ def test_report_rows_follow_the_registry_order_of_the_pinned_snapshot(repos: Rep
 
 
 _HOME_DEDUCTION_CASILLA = validated_casilla_id("16")
-# Hand-derived: with nothing else in the quarter, a typed box 16 of 40,00 leaves
-# box 17 = 0 - 0 - 40,00 and box 19 = box 17 - 0.
+# Hand-derived: the baseline's zero prior-year income earns the box 13 minoración of 100,00, leaving
+# box 14 at -100,00, so a typed box 16
+# of 40,00 leaves box 17 = -100,00 - 0 - 40,00 and box 19 = box 17 - 0.
 _TYPED_MEASURED = {
     _HOME_DEDUCTION_CASILLA: Decimal("40.00"),
-    validated_casilla_id("17"): Decimal("-40.00"),
-    validated_casilla_id("19"): Decimal("-40.00"),
+    validated_casilla_id("17"): Decimal("-140.00"),
+    validated_casilla_id("19"): Decimal("-140.00"),
 }
 
 
@@ -428,7 +429,8 @@ def test_measured_zero_absent_and_not_applicable_stay_three_states(repos: Repos)
 
     measured = {row.casilla_id: row for row in report.rows if row.casilla_id in _TYPED_MEASURED}
     assert {row.value_state for row in measured.values()} == {CalculationReportValueState.VALUE}
-    assert {casilla_id: Decimal(str(row.value)) for casilla_id, row in measured.items()} == _TYPED_MEASURED
+    values = {casilla_id: Decimal(str(row.value)) for casilla_id, row in measured.items()}
+    assert values == _TYPED_MEASURED, values
 
     income = next(row for row in report.rows if row.casilla_id == M130_INCOME_CASILLA)
     assert income.value_state is CalculationReportValueState.VALUE
