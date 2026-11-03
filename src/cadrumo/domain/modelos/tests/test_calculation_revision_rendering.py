@@ -82,7 +82,7 @@ def test_saved_rendering_keeps_complete_json_bytes_after_class_serializers_are_r
     modelo_id: str, period: str
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot(modelo_id, filing_year=2026, period=period)
+        snapshot = operation.reading_snapshot(modelo_id, filing_year=2026, period=period)
         ordinary = snapshot.model_dump(mode="json")
         assert "localization_key" not in ordinary["revision"]
         original = CalculationRenderingSnapshot.capture(
