@@ -10,7 +10,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:1ef9b7f3e897176bb2a4acd0127e794b0f3bbe104341209d0f8cd6b6fbb71159'
+body_hash: 'sha256:a1556d6e28213e26b878cfe8e87403a5fab2dbb0058d04fc7f1967f5917b0df4'
 ---
 
 # `backend-served-surface` plan
@@ -35,9 +35,9 @@ Phase order: P01 shell period arithmetic and the classify plan; P02 ledger facts
 
 The backend serves ledger period arithmetic and the classify plan, and the window deletes its period grammar and classify rules.
 
-- [ ] `P01.S01` - Serve the period of a date, the next and previous period and a period's span on the ledger reads from the canonical period owner; then delete periodOf, stepPeriod, parsePeriodCode and periodSpan from the window; `src/cadrumo/core/period.py, src/cadrumo/application/ledger/readiness_query.py, native/desktop/frontend/src/shell/ledgerGrammar.ts`.
+- [x] `P01.S01` - Serve the period of a date, the next and previous period and a period's span on the ledger reads from the canonical period owner; then delete periodOf, stepPeriod, parsePeriodCode and periodSpan from the window; `src/cadrumo/core/period.py, src/cadrumo/application/ledger/readiness_query.py, native/desktop/frontend/src/shell/ledgerGrammar.ts`.
 - [x] `P01.S02` - Serve the ledger's default period and quarter bucketing on the ledger and import reads; then delete the window's current-quarter default and quarter bucketing; `src/cadrumo/application/ledger/import_operation.py, native/desktop/frontend/src/shell/ledgerPlan.ts, native/desktop/frontend/src/shell/ledgerImports.ts, native/desktop/frontend/src/components/ledger/useLedgerPage.ts, native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`.
-- [ ] `P01.S03` - Finish the in-flight ledger classification flags (which classification asks for a category, which needs a mixed-use share) on the entry options read; then delete the window's flag table and the ClassifyDialog rules; `src/cadrumo/application/ledger/entry_options_operation.py, native/desktop/frontend/src/shell/ledgerContract.ts, native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`.
+- [x] `P01.S03` - Finish the in-flight ledger classification flags (which classification asks for a category, which needs a mixed-use share) on the entry options read; then delete the window's flag table and the ClassifyDialog rules; `src/cadrumo/application/ledger/entry_options_operation.py, native/desktop/frontend/src/shell/ledgerContract.ts, native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`.
 - [ ] `P01.S04` - Serve the classify plan (share, category and usage ratio each classification needs) from the classification preflight; then delete the window's classify command builder and its duplicated CLASSIFICATION_OF constant; `src/cadrumo/application/ledger/preflight_operation.py, native/desktop/frontend/src/shell/ledgerCommands.ts, native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx`.
 
 ### Phase `P02` - ledger facts and rules
@@ -90,7 +90,7 @@ The profile and authentication reads serve sync requirements, access facts per p
 
 The ledger operations serve the words of their own records, and the window deletes its ledger token-to-words maps.
 
-- [ ] `P06.S31` - Finish the in-flight staged-check blocker words; then delete the window's blocker words; `src/cadrumo/application/ledger/staged_check.py, src/cadrumo/application/ledger/staged_check_contracts.py, native/desktop/frontend/src/components/ledger/editing/ReviewBlockers.tsx`.
+- [x] `P06.S31` - Finish the in-flight staged-check blocker words; then delete the window's blocker words; `src/cadrumo/application/ledger/staged_check.py, src/cadrumo/application/ledger/staged_check_contracts.py, native/desktop/frontend/src/components/ledger/editing/ReviewBlockers.tsx`.
 - [ ] `P06.S32` - Finish the in-flight activity-asset hand-off, left-out and finding words; then delete the window's hand-off and finding words; `src/cadrumo/application/actividad_asset/activity_asset_results.py, native/desktop/frontend/src/components/ledger/assets/handoffWords.ts, native/desktop/frontend/src/components/ledger/assets/FilingHandoffPanel.tsx`.
 - [ ] `P06.S33` - Serve transaction labels on each row: direction, lifecycle, classification, status, classified-by kind and review status; then delete movementWords.ts maps and the toolbar's review-status words; `src/cadrumo/application/ledger/lifecycle_projections.py, src/cadrumo/application/ledger/review_projection.py, native/desktop/frontend/src/components/ledger/movements/movementWords.ts, native/desktop/frontend/src/components/ledger/movements/MovementsToolbar.tsx, native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`.
 - [ ] `P06.S34` - Serve readiness reason words with their detail; then delete the window's reason words; `src/cadrumo/application/ledger/readiness_routes.py, native/desktop/frontend/src/components/ledger/movements/movementWords.ts`.
