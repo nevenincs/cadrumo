@@ -11,11 +11,8 @@ typed refusal reason has no sentence in the backend's catalogue.
 
 from __future__ import annotations
 
-from typing import get_args
-
 import pytest
 
-from cadrumo.application.inventory.registered_requests import InventoryRefusalReason
 from cadrumo.domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidenceRole,
@@ -39,7 +36,6 @@ from ..desktop_assets_keys import (
     INVENTORY_FAMILIES,
     INVENTORY_KEYS,
     INVENTORY_LABEL_NAMESPACE,
-    INVENTORY_REASON_FAMILY,
 )
 from ..desktop_chrome import DESKTOP_CHROME_KEYS, DESKTOP_LOCALES, desktop_chrome_strings
 
@@ -66,12 +62,11 @@ def test_the_declared_families_are_exactly_the_enums_and_reasons_the_backend_ser
     declared = {
         prefix.removeprefix(INVENTORY_LABEL_NAMESPACE).rstrip("."): members
         for prefix, members in INVENTORY_FAMILIES.items()
-        if prefix not in (INVENTORY_REASON_FAMILY, INVENTORY_ADVISORY_FAMILY)
+        if prefix != INVENTORY_ADVISORY_FAMILY
     }
 
     assert declared == {family: tuple(sorted(member.value for member in enum)) for family, enum in _SERVED.items()}
     assert set(INVENTORY_ENUM_FAMILIES.values()) == set(_SERVED.values())
-    assert INVENTORY_FAMILIES[INVENTORY_REASON_FAMILY]
     assert INVENTORY_FAMILIES[INVENTORY_ADVISORY_FAMILY]
     assert INVENTORY_KEYS <= DESKTOP_CHROME_KEYS
 
@@ -88,29 +83,6 @@ def test_every_token_the_backend_serves_has_a_word_in_every_locale(locale: str) 
     )
 
     assert missing == []
-
-
-def test_every_reason_an_inventory_change_is_refused_for_has_a_sentence_in_the_catalogue() -> None:
-    sentences = {member for member in INVENTORY_FAMILIES[INVENTORY_REASON_FAMILY]}
-
-    missing = sorted(set(get_args(InventoryRefusalReason)) - sentences)
-
-    assert missing == []
-
-
-@pytest.mark.parametrize("locale", DESKTOP_LOCALES)
-def test_every_sentence_the_catalogue_has_for_a_refusal_reaches_the_shell_in_every_locale(locale: str) -> None:
-    words = desktop_chrome_strings(LOCALES_DIR, keys=INVENTORY_KEYS, locales=(locale,))[locale]
-
-    unworded = sorted(
-        f"{INVENTORY_REASON_FAMILY}{member}"
-        for member in INVENTORY_FAMILIES[INVENTORY_REASON_FAMILY]
-        if not words.get(f"{INVENTORY_REASON_FAMILY}{member}", "").strip()
-    )
-
-    assert unworded == []
-    # The shell substitutes plain ``{name}`` placeholders, never the backend's own form.
-    assert not [key for key, text in words.items() if "%{" in text]
 
 
 @pytest.mark.parametrize("locale", DESKTOP_LOCALES)

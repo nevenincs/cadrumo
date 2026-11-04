@@ -81,6 +81,18 @@ const catalogue = JSON.parse(
   ),
 ) as Record<string, Record<string, string>>;
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
+/** The sentences the inventory operations serve with their refusals, by
+ * reason and language, as the generated fixture records them. */
+const SERVED_WORDS = (
+  JSON.parse(
+    readFileSync(
+      fileURLToPath(
+        new URL("../src/dev/fixtures/ledgerServedWords.json", import.meta.url),
+      ),
+      "utf8",
+    ),
+  ) as { inventory: Record<string, Record<string, string>> }
+).inventory;
 
 /** A reference minted in order, so a request can be compared whole. */
 function minter() {
@@ -1382,13 +1394,16 @@ test("a file the book did not keep makes no proof, and one it kept makes one und
   expect(proofFromKept(refused, "nota.docx")).toBeNull();
   // A result that claims to be kept but names nothing is not one.
   expect(proofFromKept({ ...stored, reference: null }, "x.pdf")).toBeNull();
-  // The sentence for a refused file reaches the shell in every language.
-  for (const language of LANGUAGES)
+  // The inventory operation serves the sentence for a refused file in every
+  // language; the shell holds none of its own.
+  for (const language of LANGUAGES) {
+    expect(SERVED_WORDS.evidence_file_not_admitted?.[language]).toBeTruthy();
     expect(
       catalogue[language]?.[
         "application.inventory.service.errors.evidence_file_not_admitted"
       ],
-    ).toBeTruthy();
+    ).toBeUndefined();
+  }
 });
 
 test("a purchase's files come back named where the book knows the name, and as an opaque reference either way", () => {

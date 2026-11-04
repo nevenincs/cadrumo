@@ -50,18 +50,25 @@ const fileRefusedAnswer = (locale: string) => ({
       year: null,
       movement_id: null,
       valuation_method: null,
-      reason_key:
-        "application.inventory.service.errors.evidence_file_not_admitted",
       reason_facts: [],
       ...servedFileRefusal(locale),
     },
   },
 });
 
+/** The served sentence in `locale`, or in English where none is recorded. */
+function servedWordsIn(words: Record<string, string>, locale: string) {
+  return words[locale] ?? words.en!;
+}
+
 function servedFileRefusal(locale: string) {
-  const words = servedWords.inventory.evidence_file_not_admitted;
-  const language = locale in words ? (locale as keyof typeof words) : "en";
-  return { refusal_words: words[language], refusal_words_language: language };
+  const words: Record<string, string> =
+    servedWords.inventory.evidence_file_not_admitted;
+  const language = words[locale] ? locale : "en";
+  return {
+    refusal_words: servedWordsIn(words, locale),
+    refusal_words_language: language,
+  };
 }
 
 type Args = {
@@ -652,10 +659,12 @@ export const ClosingRefusedNeedsPriorDocument: Story = {
       ),
     );
     await press(context, t("desktop.ledger.stock.submit.closing"));
-    // The sentence the backend's catalogue has for this refusal, not the plain one.
+    // The sentence the inventory operation serves for this refusal, not the
+    // plain one.
     await waitFor(() => {
-      const said = t(
-        "application.inventory.service.errors.prior_closing_document_needed",
+      const said = servedWordsIn(
+        servedWords.inventory.prior_closing_document_needed,
+        String(context.globals.locale ?? "en"),
       );
       if (!within(context.canvasElement).queryByText(said))
         throw new Error("the refusal's own sentence is not drawn");
