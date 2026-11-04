@@ -17,6 +17,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final
 
+from ...core.decimal.grammar import CENT_FRACTION_DIGITS
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, tr
@@ -89,7 +90,7 @@ def _amount_text(value: str | Decimal, language: OutputLanguage) -> str:
     """Write an amount to the cent with the language's marks and no currency sign: a sentence names its currency."""
     number = Decimal(value)
     exponent = number.as_tuple().exponent
-    places = max(2, -exponent) if isinstance(exponent, int) else 2
+    places = max(CENT_FRACTION_DIGITS, -exponent) if isinstance(exponent, int) else CENT_FRACTION_DIGITS
     grouped = group_decimal_text(f"{number:.{places}f}", language)
     return grouped if grouped is not None else str(value)
 
