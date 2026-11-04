@@ -5,7 +5,7 @@ tags:
 date: '2026-11-03'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5a99f0e78639d354d86fd3c2d741ec0b898e7cec5c955bc7d6ef51d53be2618'
+body_hash: 'sha256:0b33a0a8696119760385fa42910d8bc0432cda8b0080d099bc44aa56a0f67ba3'
 related:
   - "[[2026-11-03-backend-served-surface-plan]]"
 ---
@@ -228,6 +228,19 @@ related:
 - `S01` `verify:` `tsc --noEmit` -> `pass`
 - `S01` `verify:` `eslint/prettier --check` -> `pass`
 - `S01` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S03` `M` `native/desktop/frontend/src/components/ledger/editing/MovementEditing.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/ledger/inspector/SplitDialog.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S03` `M` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/ledgerClassifications.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S03` `verify:` `tsc --noEmit` -> `pass`
+- `S03` `verify:` `eslint/prettier --check` -> `pass`
+- `S03` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S03` `by:` `vaultspec-standard-executor`
+- `S01` `M` `native/desktop/frontend/src/shell/ledgerMovementReads.ts`
+- `S01` `M` `native/desktop/frontend/src/shell/ledgerPeriods.ts`
 
 ## Notes
 
@@ -243,3 +256,5 @@ related:
 - `S01` Window half in 15552776ca. Kept parsePeriodCode, isPeriodCode and `LEDGER_PERIOD_SPANS` until the modelo IVA wallet and credits callers migrate. Unserved periods read as unknown. 8 ledger scenario failures (combobox/popover/pointer interception) are unclassified; evidence is with CHECKS. desktop-frontend-chrome was not rebuilt during the CHECKS hold.
 - `S02` Window half in 15552776ca. Kept parsePeriodCode, isPeriodCode and `LEDGER_PERIOD_SPANS` until the modelo IVA wallet and credits callers migrate. Unserved periods read as unknown. 8 ledger scenario failures (combobox/popover/pointer interception) are unclassified; evidence is with CHECKS. desktop-frontend-chrome was not rebuilt during the CHECKS hold.
 - `S01` fa183e95b1 moves the modelo wallet callers to the served periods store. Playwright and Storybook were not run (CHECKS source-only release). parsePeriodCode, isPeriodCode and `LEDGER_PERIOD_SPANS` remain until ledger-grammar.spec, ledgerPeriods.ts and ledgerMovementReads.ts stop using them and the contract regen is released.
+- `S03` 18bebf5982 (round 2): the window reads served `carries_business_figures,` `keeps_category` and `takes_usage_ratio,` with unknown kept as null. `BUSINESS_BEARING_CLASSIFICATIONS` and isBusinessBearing in the generated ledgerContract.ts await the held regen. When unserved, the business-expenses view does not narrow (a superset). Playwright was not run (CHECKS source-only release).
+- `S01` 71ba964575 deletes parsePeriodCode and isPeriodCode. `LEDGER_PERIOD_SPANS,` LedgerPeriodCode and the `_periods()` block in `scripts/ledger_contract.py,` plus the producerless `period_unknown` refusal key, await the held regen and locale release.
