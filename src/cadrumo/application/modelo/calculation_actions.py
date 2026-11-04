@@ -584,7 +584,6 @@ def evaluate_modelo_revision_with_trusted_mesh_sources(
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
         ledger_preflight_transaction_repository=ports.transaction_repository,
-        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
         operation=ports.operation,
         iva_compensation_decision=iva_compensation_decision,
         observation_repository=ports.observation_repository,

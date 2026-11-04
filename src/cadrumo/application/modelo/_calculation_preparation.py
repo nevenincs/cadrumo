@@ -148,7 +148,6 @@ def prepare_calculation(
     casilla_inputs: Mapping[CasillaId, Decimal],
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
     ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol,
-    usage_ratio_profile_loader: UsageRatioProfileLoader,
     operation: PinnedAuthorityOperation,
     iva_compensation_decision: object | None,
     observation_repository: CalculationObservationRepositoryProtocol,
@@ -169,7 +168,8 @@ def prepare_calculation(
 
     The resolved registry :class:`ModeloRevision` supplies binding and casilla
     requirements. ``ledger_preflight_transaction_repository`` may provide a
-    :class:`TransactionCatalogueRepositoryProtocol` for the ledger-tax readiness check.
+    :class:`TransactionCatalogueRepositoryProtocol` for the Modelo 200 accounting-result check;
+    the ledger-tax readiness check runs before the source mesh is resolved.
     ``iva_compensation_decision_repository`` may provide the matching
     :class:`~application.calculations.observations_repository.IvaWalletDecisionRepositoryProtocol` for the
     Modelo 303 wallet authority, while
@@ -212,14 +212,6 @@ def prepare_calculation(
     )
     casilla_inputs, backend_casilla_inputs = _validate_calculation_inputs(
         snapshot.revision, casilla_inputs, backend_casilla_inputs
-    )
-    _raise_if_ledger_preflight_blocks_calculation(
-        work_unit=work_unit,
-        revision=snapshot.revision,
-        transaction_repository=ledger_preflight_transaction_repository,
-        usage_ratio_profile_loader=usage_ratio_profile_loader,
-        operation=operation,
-        profile_values=profile_values,
     )
     _raise_if_m200_ledger_requires_accounting_result_input(
         work_unit=work_unit,
@@ -368,7 +360,7 @@ _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
 )
 
 
-def _raise_if_ledger_preflight_blocks_calculation(
+def raise_if_ledger_preflight_blocks_calculation(
     *,
     work_unit: WorkUnit,
     revision: ModeloRevision,
@@ -377,7 +369,12 @@ def _raise_if_ledger_preflight_blocks_calculation(
     operation: PinnedAuthorityOperation,
     profile_values: Mapping[str, str],
 ) -> None:
-    """Refuse ledger-backed calculations whose period ledger readiness blocks."""
+    """Refuse ledger-backed calculations whose period ledger readiness blocks.
+
+    The bucket calculation runs it before resolving the source mesh, so a row the
+    readiness check refuses is named as the row rather than as the aggregate that
+    could not be built from it.
+    """
     ledger_preflight_sources = frozenset(
         str(binding.source) for binding in revision.bindings if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES
     )

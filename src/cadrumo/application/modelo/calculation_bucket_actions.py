@@ -41,7 +41,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ..user_profile.projections import profile_fact_index
+from ..user_profile.projections import profile_fact_index, record_to_path_values
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
 from ._calculation_modelo_adjustments import (
     calculated_decimal as _calculated_decimal,
@@ -52,6 +52,7 @@ from ._calculation_modelo_adjustments import (
 from ._calculation_modelo_adjustments import (
     union_detail_rows_by_identity as _union_detail_rows_by_identity,
 )
+from ._calculation_preparation import raise_if_ledger_preflight_blocks_calculation
 from ._calculation_source_staging import settled_binding_ids
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
@@ -959,6 +960,14 @@ def _resolve_bucket_aggregation_run(
     )
     # Share contributor reads between the source mesh and the ledger snapshot anchor.
     memoized_transaction_repository = MemoizedTransactionCatalogueRepository(ports.transaction_repository)
+    raise_if_ledger_preflight_blocks_calculation(
+        work_unit=preparation.work_unit,
+        revision=preparation.snapshot.revision,
+        transaction_repository=memoized_transaction_repository,
+        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+        operation=ports.operation,
+        profile_values=record_to_path_values(preparation.profile.record),
+    )
     source_resolution = _resolve_bucket_aggregation_source_resolution(
         preparation=preparation,
         ports=ports,

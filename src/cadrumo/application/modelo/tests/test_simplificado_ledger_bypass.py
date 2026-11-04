@@ -4,7 +4,7 @@ Simplificado operators supply casillas 47-58 as manual inputs and have no
 transaction ledger to satisfy the IVA aggregation preflight check. This test
 pins that bypass so it cannot regress silently.
 
-The test calls ``_raise_if_ledger_preflight_blocks_calculation`` directly with:
+The test calls ``raise_if_ledger_preflight_blocks_calculation`` directly with:
 - a real M303 revision (from the registry, so ledger_iva_aggregation bindings exist)
 - an unclassified ACTIVE transaction held by an inward in-memory repository
   capability in the 2026-Q1 window (which blocks a GENERAL-regime calculation)
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
+from cadrumo.application.modelo._calculation_preparation import raise_if_ledger_preflight_blocks_calculation
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -132,7 +132,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
     snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     # Must not raise for SIMPLIFICADO even with a blocking transaction.
-    _raise_if_ledger_preflight_blocks_calculation(
+    raise_if_ledger_preflight_blocks_calculation(
         work_unit=work_unit,
         revision=snapshot.revision,
         transaction_repository=tx_repo,
@@ -156,7 +156,7 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        _raise_if_ledger_preflight_blocks_calculation(
+        raise_if_ledger_preflight_blocks_calculation(
             work_unit=work_unit,
             revision=snapshot.revision,
             transaction_repository=tx_repo,
