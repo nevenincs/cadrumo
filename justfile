@@ -1377,6 +1377,11 @@ test-runtime-auth:
 desktop-agent-live *ARGS:
     uv run --no-sync python -m dev.desktop_agent_live {{ARGS}}
 
+[doc('List the planned AEAT read flows, or capture them live under an explicit flag (phone in hand).')]
+[group('test')]
+aeat-request-capture *ARGS:
+    uv run --no-sync python -m dev.acceptance.aeat_request_capture {{ARGS}}
+
 [doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]
 test-resident-service:
