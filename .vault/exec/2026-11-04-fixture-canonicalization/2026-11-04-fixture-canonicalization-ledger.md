@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:59ddb835d88ae4a394b6e27ad7ca7a0f1bca6b5ecbe7c0e2470b4bfbe17492e7'
+body_hash: 'sha256:6c750b85981b151d3fbd9cf55a6e17e77231c64e90809456079f030dceb841e9'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -734,6 +734,13 @@ related:
 - `S10` `verify:` `dev.docs.sequences seeds --check` -> `pass`
 - `S10` `verify:` `lint-imports` -> `pass`
 - `S10` `by:` `vaultspec-standard-executor`
+- `S25` `M` `src/cadrumo/application/calculations/relation_prefill.py`
+- `S25` `A` `src/cadrumo/adapters/persistence/profile/tests/test_relation_prefill_pre_activity_source.py`
+- `S25` `verify:` `pytest relation prefill (45)` -> `pass`
+- `S25` `verify:` `new test fails on a377d3dd26^ source` -> `pass`
+- `S25` `verify:` `dev.quality.types --full` -> `pass`
+- `S25` `verify:` `lint-imports` -> `pass`
+- `S25` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -749,3 +756,4 @@ related:
 - `S04` Review rework: catalogue-bound identities moved off generic uses onto unbound counters; intracom.titular rebound to X0000001R; recording questions moved to dev/fixtures/ledger-recording-questions; duplicate recording support builds real Invoice values. 8 TestSearchOptionSelection failures are environmental (no Chromium build). Docs sequence values handed to S10
 - `S06` test-frontend and test-native added as single entry points seeding first; init seeds after authority and frontend setup; setup itself unchanged because lint jobs run it without authority or Node; desktop PR job unverified on the runner (Node, Cargo, Playwright browsers); determinism proof stays in fixtures-check-determinism
 - `S10` Seed ledger, invoice, evidence and work-unit frames stay authored, and seeds override the persona activity start; carried to S24
+- `S25` Not-applicable zeros are labelled `SheetRelationProvenance.OPERATOR_MANUAL` because no system-derived kind exists; pre-existing, raise at phase review
