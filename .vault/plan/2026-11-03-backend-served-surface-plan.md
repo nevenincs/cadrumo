@@ -8,9 +8,9 @@ related:
   - '[[2026-11-03-backend-served-surface-adr]]'
   - '[[2026-11-02-operation-refusal-words-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
-modified: '2026-11-03'
+modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:7acdcb3c83afaddfc4685c60b2a5613fd0f80e1a691fbb2f4bbcbc5928abaa20'
+body_hash: 'sha256:1ef9b7f3e897176bb2a4acd0127e794b0f3bbe104341209d0f8cd6b6fbb71159'
 ---
 
 # `backend-served-surface` plan
@@ -36,7 +36,7 @@ Phase order: P01 shell period arithmetic and the classify plan; P02 ledger facts
 The backend serves ledger period arithmetic and the classify plan, and the window deletes its period grammar and classify rules.
 
 - [ ] `P01.S01` - Serve the period of a date, the next and previous period and a period's span on the ledger reads from the canonical period owner; then delete periodOf, stepPeriod, parsePeriodCode and periodSpan from the window; `src/cadrumo/core/period.py, src/cadrumo/application/ledger/readiness_query.py, native/desktop/frontend/src/shell/ledgerGrammar.ts`.
-- [ ] `P01.S02` - Serve the ledger's default period and quarter bucketing on the ledger and import reads; then delete the window's current-quarter default and quarter bucketing; `src/cadrumo/application/ledger/import_operation.py, native/desktop/frontend/src/shell/ledgerPlan.ts, native/desktop/frontend/src/shell/ledgerImports.ts, native/desktop/frontend/src/components/ledger/useLedgerPage.ts, native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`.
+- [x] `P01.S02` - Serve the ledger's default period and quarter bucketing on the ledger and import reads; then delete the window's current-quarter default and quarter bucketing; `src/cadrumo/application/ledger/import_operation.py, native/desktop/frontend/src/shell/ledgerPlan.ts, native/desktop/frontend/src/shell/ledgerImports.ts, native/desktop/frontend/src/components/ledger/useLedgerPage.ts, native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`.
 - [ ] `P01.S03` - Finish the in-flight ledger classification flags (which classification asks for a category, which needs a mixed-use share) on the entry options read; then delete the window's flag table and the ClassifyDialog rules; `src/cadrumo/application/ledger/entry_options_operation.py, native/desktop/frontend/src/shell/ledgerContract.ts, native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`.
 - [ ] `P01.S04` - Serve the classify plan (share, category and usage ratio each classification needs) from the classification preflight; then delete the window's classify command builder and its duplicated CLASSIFICATION_OF constant; `src/cadrumo/application/ledger/preflight_operation.py, native/desktop/frontend/src/shell/ledgerCommands.ts, native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx`.
 
