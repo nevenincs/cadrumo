@@ -1,0 +1,902 @@
+{
+  "bare_2026": {
+    "issued_at": "2026-10-23"
+  },
+  "two_lines": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "retention_15": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "retention_rate": {
+      "decimal": "0.15"
+    },
+    "retention_amount": {
+      "decimal": "165"
+    }
+  },
+  "retention_rate_alone": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "retention_rate": {
+      "decimal": "0.15"
+    }
+  },
+  "retention_above_base": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "retention_rate": {
+      "decimal": "0.15"
+    },
+    "retention_amount": {
+      "decimal": "1200"
+    }
+  },
+  "retention_differs": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "retention_rate": {
+      "decimal": "0.15"
+    },
+    "retention_amount": {
+      "decimal": "160"
+    }
+  },
+  "printed_differs": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "printed_total": {
+      "decimal": "1330.99"
+    }
+  },
+  "printed_matches": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "printed_total": {
+      "decimal": "1331"
+    }
+  },
+  "recargo_above_iva": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "recargo_amount": {
+      "decimal": "231.01"
+    }
+  },
+  "stated_iva_within": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21",
+        "iva_amount": {
+          "decimal": "115.51"
+        }
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "stated_iva_refused": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21",
+        "iva_amount": {
+          "decimal": "115.60"
+        }
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "stated_subtotal_within": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21",
+        "subtotal": {
+          "decimal": "550.01"
+        }
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "stated_subtotal_refused": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21",
+        "subtotal": {
+          "decimal": "550.50"
+        }
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "rate_not_in_force": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_5"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "rate_in_force_2023": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2023-03-01",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_5"
+      }
+    ]
+  },
+  "before_registry": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2020-12-31",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "no_tax_id": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": null,
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "rectificativa_incomplete": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": null,
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "RECTIFICATIVA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "story_brand_design": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Brand design",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "correction_rate_7": {
+    "kind": "issued",
+    "invoice_class": "ORDINARIA",
+    "series": "F",
+    "rectifies_invoice_number": null,
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "issued_at": "2026-03-02",
+    "operation_date": null,
+    "base_total": {
+      "decimal": "1000"
+    },
+    "retention_rate": {
+      "decimal": "0.07"
+    },
+    "retention_amount": {
+      "decimal": "70"
+    },
+    "stored": {
+      "invoice_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "grand_total": {
+        "decimal": "1210.00"
+      },
+      "operation_date_role": null
+    }
+  },
+  "correction_rate_differs": {
+    "kind": "issued",
+    "invoice_class": "ORDINARIA",
+    "series": "F",
+    "rectifies_invoice_number": null,
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "issued_at": "2026-03-02",
+    "operation_date": null,
+    "base_total": {
+      "decimal": "1000"
+    },
+    "retention_rate": {
+      "decimal": "0.07"
+    },
+    "retention_amount": {
+      "decimal": "60"
+    },
+    "stored": {
+      "invoice_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "grand_total": {
+        "decimal": "1210.00"
+      },
+      "operation_date_role": null
+    }
+  },
+  "tax_id_required_by_category": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": null,
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "SIMPLIFICADA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "iva_category": "domestic_reverse_charge"
+  },
+  "tax_id_bad_checksum": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818502",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ]
+  },
+  "lease_reference_too_long": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "business_premises_lease": {
+      "situacion_inmueble": "1",
+      "referencia_catastral": "AAAAAAAAAAAAAAAAAAAAAAAAAA"
+    }
+  },
+  "lease_reference_abroad": {
+    "kind": "issued",
+    "counterparty_name": "Norte Digital S. Coop.",
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "series": "F",
+    "invoice_number": "F-2026-021",
+    "issued_at": "2026-10-23",
+    "currency": "EUR",
+    "invoice_class": "ORDINARIA",
+    "lines": [
+      {
+        "description": "Diseño de marca",
+        "quantity": {
+          "decimal": "1"
+        },
+        "unit_price": {
+          "decimal": "550"
+        },
+        "iva_rate": "RATE_21"
+      },
+      {
+        "description": "Piezas gráficas",
+        "quantity": {
+          "decimal": "2"
+        },
+        "unit_price": {
+          "decimal": "275"
+        },
+        "iva_rate": "RATE_21"
+      }
+    ],
+    "business_premises_lease": {
+      "situacion_inmueble": "4",
+      "referencia_catastral": "REF"
+    }
+  },
+  "correction_no_retention": {
+    "kind": "issued",
+    "invoice_class": "ORDINARIA",
+    "series": "F",
+    "rectifies_invoice_number": null,
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "issued_at": "2026-03-02",
+    "operation_date": null,
+    "base_total": {
+      "decimal": "1000"
+    },
+    "retention_rate": null,
+    "retention_amount": null,
+    "stored": {
+      "invoice_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "grand_total": {
+        "decimal": "1210.00"
+      },
+      "operation_date_role": null
+    }
+  },
+  "correction_rectificativa_incomplete": {
+    "kind": "issued",
+    "invoice_class": "RECTIFICATIVA",
+    "series": null,
+    "rectifies_invoice_number": null,
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "issued_at": "2026-03-02",
+    "operation_date": null,
+    "base_total": {
+      "decimal": "1000"
+    },
+    "retention_rate": null,
+    "retention_amount": null,
+    "stored": {
+      "invoice_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "grand_total": {
+        "decimal": "1210.00"
+      },
+      "operation_date_role": null
+    }
+  },
+  "correction_date_taken_away": {
+    "kind": "issued",
+    "invoice_class": "ORDINARIA",
+    "series": "F",
+    "rectifies_invoice_number": null,
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "issued_at": "2026-03-02",
+    "operation_date": null,
+    "base_total": {
+      "decimal": "1000"
+    },
+    "retention_rate": null,
+    "retention_amount": null,
+    "stored": {
+      "invoice_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "grand_total": {
+        "decimal": "1210.00"
+      },
+      "operation_date_role": "OPERATION_PERFORMED"
+    }
+  },
+  "correction_date_added": {
+    "kind": "issued",
+    "invoice_class": "ORDINARIA",
+    "series": "F",
+    "rectifies_invoice_number": null,
+    "counterparty_tax_id": "A58818501",
+    "counterparty_country": "ES",
+    "issued_at": "2026-03-02",
+    "operation_date": "2026-03-01",
+    "base_total": {
+      "decimal": "1000"
+    },
+    "retention_rate": null,
+    "retention_amount": null,
+    "stored": {
+      "invoice_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "grand_total": {
+        "decimal": "1210.00"
+      },
+      "operation_date_role": null
+    }
+  }
+}

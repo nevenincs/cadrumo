@@ -461,12 +461,12 @@ test("a date that strands a rate is a finding on that line", () => {
   expect(slot("rate_in_force_2023", "RATE_5")).toBe(true);
 });
 
-test("before the registry's rates, the served finding stands and no rate is invented", () => {
+test("before the registry's rates, the nearest rates are served and the projection is a warning", () => {
   const check = checked(filled({ issuedAt: "2020-12-31" }), "before_registry");
-  expect(answer("before_registry").rate_slots).toEqual([]);
-  expect(check.request).toBeNull();
+  expect(answer("before_registry").rate_slots.length).toBeGreaterThan(0);
+  expect(check.request).not.toBeNull();
   expect(check.findings.general.map(({ code }) => code)).toEqual([
-    "rate_date_unresolved",
+    "rate_date_projected",
   ]);
 });
 

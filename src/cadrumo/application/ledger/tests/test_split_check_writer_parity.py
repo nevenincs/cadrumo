@@ -3,70 +3,34 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Final
-from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
 
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.enums import TransactionLifecycleState
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .. import actions_split_merge as writer
 from ..models import SplitChildCommand
 from ..split_check_operation import LedgerSplitCheckPart, LedgerSplitCheckResult, check_split
 from ..split_operation import LEDGER_SPLIT_CHILDREN_MAX, LEDGER_SPLIT_PART_DESCRIPTION_MAX, LedgerSplitChildRequest
+from .split_check_support import SPLIT_CHECK_PROFILE, recorded_split_answer, split_parent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_PROFILE: Final = UUID("33333333-3333-4333-8333-333333333333")
 _RECORDING: Final = (
     Path(__file__).resolve().parents[5] / "native/desktop/frontend/src/dev/fixtures/ledgerSplitCheck.json"
 )
 
 
-def _parent(amount: str = "10.00", state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE) -> Transaction:
-    moment = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
-    raw = RawTransaction(
-        provider_transaction_id="parent",
-        booked_date=date(2024, 4, 10),
-        value_date=date(2024, 4, 10),
-        amount=Decimal(amount),
-        currency="EUR",
-        counterparty="Supplier SL",
-        description="Subscription",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="0" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=moment,
-            provider_name="synthetic",
-        ),
-        raw_fields={},
-    )
-    stored = Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.NOT_YET_PROCESSED,
-            "source_jurisdiction": "ES",
-            "group_label": None,
-            "created_at": moment,
-            "modified_at": moment,
-        }
-    )
-    return stored.model_copy(update={"lifecycle_state": state})
-
-
 def _writer_shape_takes(parent: Transaction, children: tuple[SplitChildCommand, ...]) -> bool:
     """Run the writer's own shape checks and child building, everything but its storage."""
     try:
-        writer.require_splittable_child_count(bucket_id=str(_PROFILE), transaction_id="p", children=children)
+        writer.require_splittable_child_count(bucket_id=str(SPLIT_CHECK_PROFILE), transaction_id="p", children=children)
         writer._validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
         built = writer._build_initial_split_children(
             parent=parent,
@@ -83,7 +47,7 @@ def _writer_shape_takes(parent: Transaction, children: tuple[SplitChildCommand, 
 
 def _ask(parent: Transaction, *parts: tuple[str | None, str]) -> LedgerSplitCheckResult:
     return check_split(
-        _PROFILE,
+        SPLIT_CHECK_PROFILE,
         parent,
         tuple(LedgerSplitCheckPart(amount=amount, description=description) for amount, description in parts),
     )
@@ -119,7 +83,7 @@ def _ask(parent: Transaction, *parts: tuple[str | None, str]) -> LedgerSplitChec
 def test_the_answer_refuses_what_the_writer_refuses_and_takes_what_it_takes(
     parts: tuple[tuple[str, str], ...], kind: str | None, index: int | None
 ) -> None:
-    parent = _parent()
+    parent = split_parent()
     answer = _ask(parent, *parts)
 
     assert (answer.problem.kind if answer.problem else None) == kind
@@ -134,7 +98,7 @@ def test_the_answer_refuses_what_the_writer_refuses_and_takes_what_it_takes(
 
 
 def test_an_answer_the_writer_takes_is_handed_over_as_its_request_spells_it() -> None:
-    answer = _ask(_parent("59.99"), ("20.00", " Licencia "), (None, "Soporte"))
+    answer = _ask(split_parent("59.99"), ("20.00", " Licencia "), (None, "Soporte"))
 
     assert answer.problem is None
     assert answer.remainder == "39.99"
@@ -143,11 +107,11 @@ def test_an_answer_the_writer_takes_is_handed_over_as_its_request_spells_it() ->
         ("39.99", "Soporte"),
     ]
     commands = tuple(SplitChildCommand(amount=Decimal(c.amount), description=c.description) for c in answer.children)
-    assert _writer_shape_takes(_parent("59.99"), commands)
+    assert _writer_shape_takes(split_parent("59.99"), commands)
 
 
 def test_two_parts_alike_are_taken_because_the_writer_tells_them_apart_by_their_place() -> None:
-    parent = _parent()
+    parent = split_parent()
     answer = _ask(parent, ("5", "same"), ("5", "same"))
 
     assert answer.problem is None
@@ -168,7 +132,7 @@ def test_two_parts_alike_are_taken_because_the_writer_tells_them_apart_by_their_
 def test_the_last_part_takes_what_the_others_leave(
     typed: str, remainder: str | None, kind: str | None, over: bool | None, difference: str | None
 ) -> None:
-    answer = _ask(_parent(), (typed, "a"), (None, "b"))
+    answer = _ask(split_parent(), (typed, "a"), (None, "b"))
 
     assert answer.remainder == remainder
     assert (answer.problem.kind if answer.problem else None) == kind
@@ -177,7 +141,7 @@ def test_the_last_part_takes_what_the_others_leave(
 
 
 def test_the_remainder_keeps_a_parent_amount_finer_than_a_cent() -> None:
-    answer = _ask(_parent("10.1255"), ("4", "a"), (None, "b"))
+    answer = _ask(split_parent("10.1255"), ("4", "a"), (None, "b"))
 
     assert answer.problem is None
     assert answer.remainder == "6.1255"
@@ -185,7 +149,7 @@ def test_the_remainder_keeps_a_parent_amount_finer_than_a_cent() -> None:
 
 
 def test_a_remainder_the_request_could_not_spell_is_refused_at_its_part() -> None:
-    answer = _ask(_parent("10.125"), ("4", "a"), (None, "b"))
+    answer = _ask(split_parent("10.125"), ("4", "a"), (None, "b"))
 
     assert answer.problem is not None
     assert (answer.problem.kind, answer.problem.index) == ("amount", 1)
@@ -199,7 +163,7 @@ def test_a_remainder_the_request_could_not_spell_is_refused_at_its_part() -> Non
 )
 def test_the_part_count_boundaries(count: int, taken: bool) -> None:
     amount = Decimal(count)
-    answer = _ask(_parent(str(amount)), *((str(Decimal(1)), f"part {at}") for at in range(count)))
+    answer = _ask(split_parent(str(amount)), *((str(Decimal(1)), f"part {at}") for at in range(count)))
 
     assert (answer.problem is None) is taken
     if not taken:
@@ -210,8 +174,8 @@ def test_the_part_count_boundaries(count: int, taken: bool) -> None:
 
 def test_the_description_boundary_is_the_writers() -> None:
     at_the_limit = "x" * LEDGER_SPLIT_PART_DESCRIPTION_MAX
-    assert _ask(_parent(), ("6", at_the_limit), ("4", "b")).problem is None
-    over = _ask(_parent(), ("6", "a"), ("4", at_the_limit + "x")).problem
+    assert _ask(split_parent(), ("6", at_the_limit), ("4", "b")).problem is None
+    over = _ask(split_parent(), ("6", "a"), ("4", at_the_limit + "x")).problem
     assert over is not None
     assert (over.kind, over.index, over.max) == ("description_long", 1, LEDGER_SPLIT_PART_DESCRIPTION_MAX)
     with pytest.raises(ValidationError):
@@ -221,18 +185,18 @@ def test_the_description_boundary_is_the_writers() -> None:
 
 
 def test_a_movement_gone_or_not_active_is_not_split() -> None:
-    gone = check_split(_PROFILE, None, ()).problem
+    gone = check_split(SPLIT_CHECK_PROFILE, None, ()).problem
     assert gone is not None
     assert gone.kind == "gone"
 
-    archived = _parent(state=TransactionLifecycleState.ARCHIVED)
+    archived = split_parent(state=TransactionLifecycleState.ARCHIVED)
     answer = _ask(archived, ("6", "a"), ("4", "b")).problem
     assert answer is not None
     assert answer.kind == "not_active"
     with pytest.raises(TransactionValidationError, match="only active"):
         writer._resolve_active_split_parent(
             TransactionCatalogue.model_validate({"transactions": {archived.transaction_id: archived}}),
-            bucket_id=str(_PROFILE),
+            bucket_id=str(SPLIT_CHECK_PROFILE),
             transaction_id=archived.transaction_id,
         )
 
@@ -241,8 +205,5 @@ def test_every_recorded_answer_is_the_live_one() -> None:
     recording = json.loads(_RECORDING.read_text(encoding="utf-8"))
     assert recording["answers"]
     for entry in recording["answers"]:
-        parts = tuple(
-            LedgerSplitCheckPart(amount=part["amount"], description=part["description"]) for part in entry["parts"]
-        )
-        live = check_split(_PROFILE, _parent(entry["parent_amount"]), parts)
-        assert live.model_dump(mode="json", exclude={"profile_id"}) == entry["answer"], entry["parts"]
+        live = recorded_split_answer(entry["parent_amount"], entry["parts"])
+        assert live == entry["answer"], entry["parts"]

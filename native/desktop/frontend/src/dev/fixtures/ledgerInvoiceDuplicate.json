@@ -35,7 +35,10 @@
         "invoice_date": "2026-02-01",
         "grand_total": "121"
       },
-      "answer": { "invoice_id": "b-same-number", "basis": "number" }
+      "answer": {
+        "invoice_id": "b-same-number",
+        "basis": "number"
+      }
     },
     {
       "name": "the party, day and total where no number matches",
@@ -46,7 +49,10 @@
         "invoice_date": "2026-02-01",
         "grand_total": "121.00"
       },
-      "answer": { "invoice_id": "a-same-day", "basis": "party_day_total" }
+      "answer": {
+        "invoice_id": "a-same-day",
+        "basis": "party_day_total"
+      }
     },
     {
       "name": "a number under a disagreeing tax id is not one",
@@ -57,7 +63,10 @@
         "invoice_date": null,
         "grand_total": null
       },
-      "answer": { "invoice_id": null, "basis": null }
+      "answer": {
+        "invoice_id": null,
+        "basis": null
+      }
     },
     {
       "name": "a number with no stated tax id is one",
@@ -68,7 +77,10 @@
         "invoice_date": null,
         "grand_total": null
       },
-      "answer": { "invoice_id": "b-same-number", "basis": "number" }
+      "answer": {
+        "invoice_id": "b-same-number",
+        "basis": "number"
+      }
     },
     {
       "name": "the other direction is not one",
@@ -79,7 +91,10 @@
         "invoice_date": null,
         "grand_total": null
       },
-      "answer": { "invoice_id": null, "basis": null }
+      "answer": {
+        "invoice_id": null,
+        "basis": null
+      }
     },
     {
       "name": "another day is not one",
@@ -90,7 +105,10 @@
         "invoice_date": "2026-02-02",
         "grand_total": "121"
       },
-      "answer": { "invoice_id": null, "basis": null }
+      "answer": {
+        "invoice_id": null,
+        "basis": null
+      }
     },
     {
       "name": "no stated total is not one",
@@ -101,7 +119,10 @@
         "invoice_date": "2026-02-01",
         "grand_total": null
       },
-      "answer": { "invoice_id": null, "basis": null }
+      "answer": {
+        "invoice_id": null,
+        "basis": null
+      }
     },
     {
       "name": "nothing stated is not one",
@@ -112,7 +133,10 @@
         "invoice_date": null,
         "grand_total": null
       },
-      "answer": { "invoice_id": null, "basis": null }
+      "answer": {
+        "invoice_id": null,
+        "basis": null
+      }
     }
   ]
 }

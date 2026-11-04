@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from datetime import date
+from typing import Any
 from uuid import UUID
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.iva.schema import InvoiceKind
 from ...operations.public_scalar import PublicDecimal
 from ..catalogue_creation_ports import CatalogueInvoiceRateError
 from ..figures_preview_contracts import InvoiceFiguresPreviewLine, InvoiceFiguresPreviewRequest
+from ..figures_preview_operation import preview_invoice_figures
 
 PROFILE = UUID("5aa00000-0000-4000-8000-0000000000bb")
 APRIL = date(2026, 4, 15)
+RECORDING_PROFILE = UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
 
 
 class NoRate:
@@ -70,3 +76,17 @@ def preview_draft(*lines: InvoiceFiguresPreviewLine, **overrides: object) -> Inv
     }
     values.update(overrides)
     return InvoiceFiguresPreviewRequest.model_validate(values)
+
+
+def recorded_preview_result(request: Mapping[str, Any], operation: PinnedAuthorityOperation) -> dict[str, Any]:
+    """What the preview answers for the draft ``request`` states, as the desktop recording holds it.
+
+    A recorded draft names no line key, so the lines are keyed by their place the way the command
+    that asks the preview keys them.
+    """
+    lines = [{"key": f"line-{place}", **line} for place, line in enumerate(request.get("lines", ()), start=1)]
+    draft = InvoiceFiguresPreviewRequest.model_validate_json(
+        json.dumps({**request, "profile_id": str(RECORDING_PROFILE), "lines": lines})
+    )
+    answer = preview_invoice_figures(draft, operation=operation, rate_provider=NoRate())
+    return answer.model_dump(mode="json", exclude={"profile_id"})

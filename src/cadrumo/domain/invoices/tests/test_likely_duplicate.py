@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -13,7 +12,7 @@ import pytest
 
 from ...iva.schema import InvoiceKind
 from ..duplicates import LikelyDuplicate, likely_duplicate_invoice
-from ..models import Invoice
+from .duplicate_recording_support import recorded_duplicate_answer, stored_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -22,56 +21,18 @@ _RECORDING: Final = (
 )
 
 
-@dataclass(frozen=True)
-class _Stored:
-    """The facts the rule reads, so its cases need no full invoice around them."""
-
-    invoice_id: str
-    kind: InvoiceKind
-    invoice_number: str
-    counterparty_tax_id: str | None
-    issued_at: date
-    grand_total: Decimal
-
-
-def _stored(entry: dict[str, str]) -> Invoice:
-    return cast(
-        Invoice,
-        _Stored(
-            invoice_id=entry["invoice_id"],
-            kind=InvoiceKind(entry["kind"]),
-            invoice_number=entry["invoice_number"],
-            counterparty_tax_id=entry["counterparty_tax_id"] or None,
-            issued_at=date.fromisoformat(entry["issued_at"]),
-            grand_total=Decimal(entry["grand_total"]),
-        ),
-    )
-
-
 _RECORDED: Final = json.loads(_RECORDING.read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize("entry", _RECORDED["answers"], ids=lambda entry: entry["name"])
 def test_every_recorded_answer_is_the_rules(entry: dict[str, object]) -> None:
     question = cast(dict[str, str | None], entry["question"])
-    answer = cast(dict[str, str | None], entry["answer"])
-    found = likely_duplicate_invoice(
-        (_stored(stored) for stored in _RECORDED["invoices"]),
-        kind=InvoiceKind(question["kind"]),
-        invoice_number=question["invoice_number"],
-        counterparty_tax_id=question["counterparty_tax_id"],
-        invoice_date=date.fromisoformat(question["invoice_date"]) if question["invoice_date"] is not None else None,
-        grand_total=Decimal(question["grand_total"]) if question["grand_total"] is not None else None,
-    )
 
-    assert (found.invoice_id if found else None, found.basis if found else None) == (
-        answer["invoice_id"],
-        answer["basis"],
-    )
+    assert recorded_duplicate_answer(_RECORDED["invoices"], question) == entry["answer"]
 
 
 def test_the_same_total_written_differently_is_the_same_total() -> None:
-    stored = _stored(
+    stored = stored_invoice(
         {
             "invoice_id": "a",
             "kind": "received",
