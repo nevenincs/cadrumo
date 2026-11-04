@@ -25,16 +25,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import AfterValidator, NonNegativeInt, field_validator
+from pydantic import AfterValidator, Field, NonNegativeInt, field_validator
 
 from ...application.ledger.invoice_draft_payloads import (
     EvidenceDraftDiscrepancyPayload,
     EvidenceFieldAmbiguityCandidatePayload,
     EvidenceFieldProvenancePayload,
 )
+from ...application.operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -608,6 +610,11 @@ class EvidenceReviewRowPayload(OutputSchema):
     drafted_at: str
     blocking_count: int = 0
     reasons: list[str] = []
+    reason_words: Annotated[
+        list[Annotated[str, Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)]],
+        Field(max_length=64),
+    ] = []
+    reason_words_language: Annotated[str, enum_value_validator(OutputLanguage)] | None = None
     # The queue's non-blocking half. A row carrying no blocker and two advisories
     # is a document nothing stops and something is wrong with, which the blocking
     # columns alone render identical to a clean one. Primary queue data rather
