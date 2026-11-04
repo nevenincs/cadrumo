@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:780de639cdf1e65646aeaf1fe57782e0cae89515ab5169f4315c0dcf2beaaa27'
+body_hash: 'sha256:e8b7a9f6748496bb8be69b84f11f4979cd84c9905161743b658f9f397e495ed9'
 ---
 
 # `fixture-canonicalization` plan
@@ -56,7 +56,7 @@ Define every canonical taxpayer and flow once and seed it through production ope
 - [x] `P03.S23` - Resolve the annual IVA simplified-regime summary only when the revision declares a binding of that source kind, so a taxpayer with no IVA composition calculates a Modelo 100; `src/cadrumo/application/modelo/calculation_source_mesh_actions.py and its tests`.
 - [ ] `P03.S24` - Seed the docs ledger, invoice, evidence and work-unit frames from a persona whose activity genuinely starts in the horizon year, so docs stop overriding persona facts and show the same flows the tests and window exercise; `dev/fixtures/personas, dev/docs/sequences, docs/_sequences`.
 - [x] `P03.S25` - Resolve a Modelo relation whose source periods all precede the activity start as a not-applicable source rather than an unresolved requirement, so a Renta filer without earlier activity exports; `src/cadrumo/application/calculations/relation_prefill.py`.
-- [ ] `P03.S26` - Keep received operations outside IVA scope out of Modelo 303 routing and verification, so a business row such as a RETA contribution passes the 303 calculation and verification; `src/cadrumo/application/aggregation, src/cadrumo/application/modelo`.
+- [x] `P03.S26` - Keep received operations outside IVA scope out of Modelo 303 routing and verification, so a business row such as a RETA contribution passes the 303 calculation and verification; `src/cadrumo/application/aggregation, src/cadrumo/application/modelo`.
 - [ ] `P03.S27` - Replay each window filer's activity and withholding from its persona ledger and documents instead of seeding synthetic income amounts in the envelope producer, so window figures equal the persona's tested figures; `native/desktop/frontend/scripts/modelo_fixtures.py, dev/fixtures/personas`.
 
 ### Phase `P04` - Projections out of git

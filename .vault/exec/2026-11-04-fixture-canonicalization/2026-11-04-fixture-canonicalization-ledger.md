@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb26e7e7039953b4e9f37a720a19ec48799cbe93a03ca96ab03b3d1c091722bd'
+body_hash: 'sha256:181004dd496ddad9240697593ea2c981e4a33cce5f5537bf10655064581d5ef2'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -785,6 +785,20 @@ related:
 - `S09` `verify:` `lint-imports` -> `pass`
 - `S09` `verify:` `TS specs and prettier` -> `fail`
 - `S09` `by:` `vaultspec-high-executor`
+- `S26` `M` `dev/fixtures/personas/autonomo-fontanero/ledger.csv`
+- `S26` `M` `dev/fixtures/personas/README.md`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml`
+- `S26` `M` `src/cadrumo/domain/iva/components.py`
+- `S26` `M` `src/cadrumo/domain/iva/_component_fact_projection.py`
+- `S26` `M` `src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`
+- `S26` `M` `src/cadrumo/application/aggregation/modelo_bindings_iva.py`
+- `S26` `A` `src/cadrumo_runtime/host/tests/frontend/cli/test_m303_outside_iva_scope_cli.py`
+- `S26` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_m303_zero_cuota_and_investment_inputs_cli.py`
+- `S26` `verify:` `new CLI test (3)` -> `pass`
+- `S26` `verify:` `303 screens and journeys (17), preflight (24), personas (10)` -> `pass`
+- `S26` `verify:` `check-registry-gate` -> `pass`
+- `S26` `verify:` `lint-imports` -> `pass`
+- `S26` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -802,3 +816,4 @@ related:
 - `S10` Seed ledger, invoice, evidence and work-unit frames stay authored, and seeds override the persona activity start; carried to S24
 - `S25` Not-applicable zeros are labelled `SheetRelationProvenance.OPERATOR_MANUAL` because no system-derived kind exists; pre-existing, raise at phase review
 - `S09` TS specs and prettier not run, `node_modules` absent. Envelopes replay personas at ReplayScope.PROFILE and seed activity income synthetically; carried to S27
+- `S26` Proven at horizon-1 only; per-year registry population runs at S19. Received `domestic_exempt` rows still raise the `unrouted_declarable_quantity` advisory
