@@ -90,6 +90,9 @@ _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     "dev/registry/form_layout/official_headings.toml": (
         "authored official heading rulings grounded in captured form evidence; its diff is reviewed"
     ),
+    "dev/registry/form_layout/outline_groups.toml": (
+        "authored outlines grouping a revision's layout sections by subject; read, never written"
+    ),
     "dev/registry/form_layout/stability_acknowledgements.toml": (
         "authored acknowledgements of intentional form presentation changes; its diff is reviewed"
     ),
