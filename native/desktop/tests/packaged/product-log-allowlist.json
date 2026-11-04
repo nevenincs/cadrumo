@@ -1,0 +1,44 @@
+[
+  {
+    "id": "kdf-refused-wrong-password",
+    "source": "python",
+    "level": "WARNING",
+    "logger": "cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision",
+    "message": "^kdf_worker_lifecycle$",
+    "context_fields": {
+      "outcome": "refused",
+      "kdf_operation": "password-unwrap-v1"
+    },
+    "context_patterns": {
+      "diagnostic_id": "^<n>$"
+    },
+    "fault_test": {
+      "check": "canonical-sign-in",
+      "source": "packaged/sign-in.mjs",
+      "phase": "ui-wrong-password"
+    },
+    "runs": ["setup", "window"],
+    "max_count": 1,
+    "justification": "The sign-in fixture submits one deliberately wrong password and the profile key worker refuses it; no other password unwrap may be refused."
+  },
+  {
+    "id": "setup-browser-blocked-by-proxy",
+    "source": "native",
+    "level": "ERROR",
+    "logger": "desktop.failure",
+    "native": {
+      "kind": "failure",
+      "code": "setup_failed",
+      "reason": "setup_browser_failed",
+      "cause_reason": "blocked_by_network"
+    },
+    "fault_test": {
+      "check": "provisioning-9-failure",
+      "source": "packaged/setup.mjs",
+      "require_verdict": "PASS"
+    },
+    "runs": ["setup"],
+    "max_count": 1,
+    "justification": "The provisioning-9-failure check makes its counting proxy answer CONNECT with 407 and requires exactly one such setup failure record; it is excused only when that check passed."
+  }
+]

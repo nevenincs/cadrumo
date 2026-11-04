@@ -1,0 +1,22 @@
+[
+  {
+    "id": "provisioning-9-failure",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "preflight",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "sign-in-fixture",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "override-refused",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  }
+]

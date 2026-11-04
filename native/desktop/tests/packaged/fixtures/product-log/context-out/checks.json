@@ -1,0 +1,14 @@
+[
+  {
+    "id": "canonical-sign-in",
+    "startedAt": "2026-11-04T18:40:30.000Z",
+    "elapsedMs": 60000,
+    "phases": [
+      {
+        "phase": "ui-wrong-password",
+        "startedAt": "2026-11-04T18:20:00.000Z",
+        "elapsedMs": 751
+      }
+    ]
+  }
+]

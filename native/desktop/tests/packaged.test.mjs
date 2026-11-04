@@ -16,9 +16,10 @@ import {
   statSync,
   statfsSync,
 } from "node:fs";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { test } from "node:test";
 import "./packaged/setup.test.mjs";
+import "./packaged/product-log.test.mjs";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "../scripts/build-paths.mjs";
@@ -32,6 +33,12 @@ import {
 } from "./packaged/probes.mjs";
 import { installedHost, packagedHostPaths } from "./packaged/host.mjs";
 import { SignInFixture } from "./packaged/sign-in.mjs";
+import {
+  loadAllowlist,
+  phaseWindowsOf,
+  productLogVerdict,
+  recordedChecks,
+} from "./packaged/product-log.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
 import {
   observeProvisioning,
@@ -263,6 +270,31 @@ function projection(config, env) {
       env[defaults.output_language_variable] || defaults.output_language,
     consoleWorkspace: resolve(storage, defaults.console_workspace),
   };
+}
+
+const PRODUCT_LOG_ALLOWLIST = fileURLToPath(
+  new URL("./packaged/product-log-allowlist.json", import.meta.url),
+);
+
+/**
+ * The product-log gate over the storage root the run used: the check verdict,
+ * with the full grouped findings kept as evidence beside it.
+ */
+function productLogGate({ results, storage, run, signIn }) {
+  const contract = JSON.parse(
+    readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"),
+  );
+  const verdict = productLogVerdict({
+    storage,
+    defaults: contract.desktop_defaults,
+    checks: recordedChecks(results.checks, {
+      "canonical-sign-in": phaseWindowsOf(signIn?.timingStats()),
+    }),
+    allowlist: loadAllowlist(PRODUCT_LOG_ALLOWLIST),
+    run,
+  });
+  results.evidence("product-log-findings.json", verdict);
+  return { verdict: verdict.verdict, detail: verdict.detail };
 }
 
 function sha256(text) {
@@ -2074,6 +2106,17 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       } catch {
         // Keep cleanup and the original failing check authoritative.
       }
+      await check(
+        "product-log",
+        "the product wrote no ERROR, CRITICAL or gated WARNING that a fault test does not explain",
+        async () =>
+          productLogGate({
+            results,
+            storage: projected.storage,
+            run: "window",
+            signIn,
+          }),
+      );
     }
     input.close();
     if (clipboardCleanup)
@@ -2858,6 +2901,22 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
             data,
           };
         },
+      );
+      const defaults = contract.desktop_defaults;
+      results.logEvidence(
+        "setup-storage-cadrumo.log",
+        resolve(layout.storage, defaults.logs, basename(defaults.log_file)),
+      );
+      await check(
+        "setup-product-log",
+        "the product wrote no ERROR, CRITICAL or gated WARNING that a fault test does not explain",
+        async () =>
+          productLogGate({
+            results,
+            storage: layout.storage,
+            run: "setup",
+            signIn,
+          }),
       );
       await check(
         "setup-scratch-removed",

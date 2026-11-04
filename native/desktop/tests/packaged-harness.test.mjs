@@ -10,6 +10,7 @@ import { performance } from "node:perf_hooks";
 import { after, describe, test } from "node:test";
 import "./packaged/clipboard.test.mjs";
 import "./packaged/context-menu-verdict.test.mjs";
+import "./packaged/product-log.test.mjs";
 
 import { docsProbe, instrument, pasteInto } from "./packaged/browser.mjs";
 import {
