@@ -57,10 +57,13 @@ _M100_PROFILE_FACTS = (
     UserProfileFact(path="identity.name", value="Ana"),
     UserProfileFact(path="identity.surnames", value="Retenciones"),
     UserProfileFact(path="activities.description", value="economic activity"),
-    # Salary only: the certificate below credits 0596, and the declared categories prove
-    # the capital mobiliario and ganancia patrimonial credits zero.
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
     *GENERAL_REGIME_NATURAL_PERSON_FACTS,
+    # Activity and salary: the certificate below credits 0596, and the declared categories prove
+    # the capital mobiliario and ganancia patrimonial credits zero. The activity's IAE epigraph is
+    # not an urban-rental group, so the rental-activity credit in 0598 is a proven zero too; a
+    # later fact replaces the general-regime default categories.
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica,trabajo"),
+    UserProfileFact(path="activities.iae_epigraph", value="844"),
     UserProfileFact(path="censo.activity_start_date", value=date(_REVIEWED_EDITION - 5, 1, 1)),
     UserProfileFact(path="renta_taxpayer.birth_date", value=date(_REVIEWED_EDITION - 45, 3, 15)),
     UserProfileFact(path="renta_taxpayer.sex", value="H"),
