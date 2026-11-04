@@ -574,9 +574,19 @@ test("the check draws each asset note as its own line to read, asking for nothin
     await expect(item.getByRole("button")).toHaveCount(0);
   }
   await expect(level.getByRole("listitem")).toHaveCount(ASSET_NOTES.length);
-  // The verdict and the counts are the read model's, as without the notes.
+  // The verdict is the read model's, as without the notes: the check was
+  // refused on the blocking note the calculation left at a box, so nothing
+  // was checked.
   await expect(target.getByText(read.verdict.words)).toBeVisible();
-  expect(read.verdict.status).toBe("blocked");
+  expect(read.verdict.status).toBeNull();
+  expect(
+    read.issue_lines.some(
+      (line) =>
+        line.level === "blocks" &&
+        line.from_calculation &&
+        line.address?.kind === "casilla",
+    ),
+  ).toBe(true);
 });
 
 test("a check line whose source is the suffered withholding opens that register in the Ledger", async ({

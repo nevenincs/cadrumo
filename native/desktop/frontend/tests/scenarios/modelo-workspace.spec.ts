@@ -187,9 +187,6 @@ test("what the calculation noted about a box is said beside it, at its level", a
       line.address?.kind === "casilla" &&
       !line.in_records,
   )!;
-  const elsewhere = read.issue_lines.find(
-    (line) => line.from_calculation && line.address === null,
-  )!;
   const casilla =
     noted.address?.kind === "casilla" ? noted.address.casilla_id : "";
   await openDeclaration(target, "130", "income");
@@ -201,13 +198,14 @@ test("what the calculation noted about a box is said beside it, at its level", a
   await expect(notes).toContainText(
     label(`workspace.modelo.level.${noted.level}`),
   );
-  // A note that names no box is not drawn beside one: the check lists it.
-  await expect(
-    workspace(target).getByText(elsewhere.message, { exact: true }),
-  ).toHaveCount(0);
+  // The check lists the same note at its level.
   await tab(target, "workspace.modelo.step.review").click();
   await expect(
-    workspace(target).getByText(elsewhere.message, { exact: true }),
+    workspace(target)
+      .getByRole("region", {
+        name: label(`workspace.modelo.level.${noted.level}`),
+      })
+      .getByText(noted.message, { exact: true }),
   ).toBeVisible();
 });
 

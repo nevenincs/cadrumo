@@ -644,6 +644,24 @@ def _verify(work: Any) -> Any:
     return _run_executor(work, MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID, executor, request)
 
 
+def _check_refused_on_unrecorded_prior_renta(work: Any) -> None:
+    """Check a quarter whose earlier Renta is not on record; the check refuses on box 13.
+
+    The activity began before the quarter's year, so box 13 reads the earlier year's net activity income
+    from that Renta. Nothing records it here, so the box is left open and the check is withheld; the form
+    read afterwards names the box and the filing that would answer it.
+    """
+    from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+
+    try:
+        _verify(work)
+    except ModeloCalculationBlockedError as refused:
+        if (refused.context or {}).get("box") != "13":
+            raise
+        return
+    raise SystemExit("the check of a quarter whose earlier Renta is not on record was not refused")
+
+
 def _check_refused_on_divergence(work: Any) -> None:
     """Check a declaration whose typed box replaced a different figure its source resolved; the check refuses.
 
@@ -840,6 +858,17 @@ def _income_categories_fact() -> Any:
     with bundled_indexed_authority().operation() as operation:
         token = irpf_income_category_actividad_economica_token(authority=operation).value
     return UserProfileFact(path="taxpayer_type.irpf_income_categories", value=token)
+
+
+def _estimation_regime_fact() -> Any:
+    """The profile's IRPF estimation regime: estimación directa normal, the profile schema's own token.
+
+    Box 02 of the Modelo 130 reads the modality from it, so a filer whose declaration is checked or filed
+    records one; without it the box is unresolved and the check refuses.
+    """
+    from cadrumo.domain.user_profile.values import UserProfileFact
+
+    return UserProfileFact(path="irpf.estimation_regime", value="directa_normal")
 
 
 def _observe_at_aeat(work: Any) -> None:
@@ -2699,7 +2728,10 @@ def write_envelopes(directory: Path) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     write_refusals(directory)
     _write_iva_wallet(directory)
-    income = (_income_categories_fact(),)
+    # The activity a filer declares and the regime it is assessed under; the calculated-only filer below records
+    # no regime, so its form shows what that leaves the declaration waiting on.
+    unregimed = (_income_categories_fact(),)
+    income = (*unregimed, _estimation_regime_fact())
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _seeded(Path(tmp), facts=income) as first,
@@ -2716,7 +2748,7 @@ def write_envelopes(directory: Path) -> None:
         _write_list(directory, first, "declarations")
         _write_main_edits(directory, first)
         # Checked after everything above was read, so those envelopes stay unchecked.
-        _verify(first)
+        _check_refused_on_unrecorded_prior_renta(first)
         _write_form(directory, first, "modelo-130-1T-checked")
         _write_prerequisite(directory, first)
         _write_303_edits(directory, works["303"])
@@ -2739,7 +2771,7 @@ def write_envelopes(directory: Path) -> None:
     # Its own profile: the quarter's income is booked and the declaration is calculated, never checked or filed.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        _seeded(Path(tmp), facts=income) as booked,
+        _seeded(Path(tmp), facts=unregimed) as booked,
     ):
         _seed_income(booked)
         booked.recalculate()

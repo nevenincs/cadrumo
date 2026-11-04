@@ -404,7 +404,8 @@ export type CalculationNoteSentence =
   | "credit_resolution_stale"
   | "credit_resolution_applied"
   | "household_rows_incomplete"
-  | "profile_fact_unrecorded";
+  | "profile_fact_unrecorded"
+  | "prior_filing_unrecorded";
 
 /**
  * Closed set of serialisations of one modelo calculation report.
