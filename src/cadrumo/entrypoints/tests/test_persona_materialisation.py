@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -11,6 +12,11 @@ import pytest
 from ...application.retencion_soportada_certificado.contracts import RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID
 from ...application.retencion_soportada_certificado.requests import RetencionSoportadaListRequest
 from ...application.retencion_soportada_certificado.results import RetencionSoportadaListProjection
+from ...application.user_profile.profile_operation_contracts import (
+    PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
+    ProfileRepeatableRowMutationOperationRequest,
+    ProfileRepeatableRowValue,
+)
 from ...application.user_profile.projections import record_to_path_values
 from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
@@ -18,11 +24,15 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.personas import persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
 from .persona_materialisation import (
+    MaterialisedPersona,
+    PersonaWorld,
+    ReplayScope,
     household_leaves,
     load_profile_record,
     materialised_persona,
     patch_answers,
     run_operation,
+    settle_operation,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -129,3 +139,104 @@ def test_a_persona_replays_through_production_operations(
     }
     assert set(materialised.evidence) == {document.id for document in persona.documents}
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
+
+
+def _profile_values(world: PersonaWorld) -> dict[str, str]:
+    return record_to_path_values(load_profile_record(world))
+
+
+def test_a_profile_scope_replay_records_the_profile_and_no_household_or_ledger(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    paths = {
+        question.id: question.profile_key
+        for section in build_setup_flow(operation).sections
+        for question in section.questions
+    }
+    with materialised_persona("asalariada-familia", tmp_path, ReplayScope.PROFILE) as materialised:
+        persona, world = materialised.persona, materialised.world
+        values = _profile_values(world)
+        stored = compose_ledger_action_ports(
+            bucket_id=str(world.profile_id), operation=world.operation
+        ).transaction_repository.load()
+        withholding = run_operation(
+            world,
+            RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID,
+            RetencionSoportadaListRequest(
+                profile_id=world.profile_id,
+                ejercicio=persona.withholding_certificates[0].ejercicio.resolve(world.envelope),
+            ),
+            RetencionSoportadaListProjection,
+        ).rows
+    answers = {
+        question: answer
+        for question, answer in patch_answers(persona, world.envelope)
+        if question != YEAR_QUESTION_ID and question not in {election.question for election in persona.elections}
+    }
+
+    assert persona.descendants
+    assert persona.ledger
+    assert persona.withholding_certificates
+    assert {question: values.get(paths[question] or "") for question in answers} == answers
+    assert {
+        f"renta_family.descendiente.{index}.{key}": values.get(f"renta_family.descendiente.{index}.{key}")
+        for index, member in enumerate(persona.descendants)
+        for key, _ in household_leaves(persona, member, world.envelope)
+    } == {
+        f"renta_family.descendiente.{index}.{key}": None
+        for index, member in enumerate(persona.descendants)
+        for key, _ in household_leaves(persona, member, world.envelope)
+    }
+    assert len(stored.transactions) == 0
+    assert not withholding
+    assert (materialised.scope, materialised.transactions, materialised.invoices, materialised.evidence) == (
+        ReplayScope.PROFILE,
+        {},
+        {},
+        {},
+    )
+
+
+def test_a_reused_replay_gives_each_consumer_an_isolated_profile(tmp_path: Path) -> None:
+    marker = "Marker written to one consumer's copy only"
+
+    def open_and_read(directory: Path, *, write: bool) -> tuple[dict[str, str], MaterialisedPersona, float]:
+        started = time.perf_counter()
+        with materialised_persona("autonomo-fontanero", directory, ReplayScope.FULL, reuse=True) as materialised:
+            opened = time.perf_counter() - started
+            world = materialised.world
+            if write:
+                record = load_profile_record(world)
+                settle_operation(
+                    world,
+                    PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
+                    ProfileRepeatableRowMutationOperationRequest(
+                        profile_id=world.profile_id,
+                        expected_revision=record.record_revision,
+                        expected_content_digest=record.content_digest,
+                        section_key="activities",
+                        values=(ProfileRepeatableRowValue(field_key="description", value=marker),),
+                    ),
+                )
+            stored = compose_ledger_action_ports(
+                bucket_id=str(world.profile_id), operation=world.operation
+            ).transaction_repository.load()
+            assert set(stored.transactions) >= set(materialised.transactions.values())
+            return _profile_values(world), materialised, opened
+
+    first_values, first, miss = open_and_read(tmp_path / "first", write=True)
+    second_values, second, hit = open_and_read(tmp_path / "second", write=False)
+    print(f"reused replay: miss {miss:.1f}s, hit {hit:.1f}s")
+
+    persona = first.persona
+    assert marker in first_values.values()
+    assert marker not in second_values.values()
+    assert {path: value for path, value in first_values.items() if marker != value} == second_values
+    assert (second.scope, second.transactions, second.invoices, second.evidence) == (
+        ReplayScope.FULL,
+        first.transactions,
+        first.invoices,
+        first.evidence,
+    )
+    assert set(second.transactions) == {row.ref for row in persona.ledger}
+    assert set(second.invoices) == {row.ref for row in persona.ledger if row.invoice_kind is not None}

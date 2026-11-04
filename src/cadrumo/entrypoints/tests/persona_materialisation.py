@@ -17,13 +17,16 @@ registration of the profile it runs against.
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, time, timedelta
 from decimal import Decimal
+from enum import StrEnum
 from functools import cache
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import cast
 from uuid import UUID
 
@@ -38,6 +41,7 @@ from ...adapters.persistence.operations.typed_financial_operand_custody import (
 from ...adapters.persistence.profile.tests.sealed_profile_world import (
     SealedProfileWorld,
     copied_profile_world,
+    derived_profile_world,
     sealed_profile_world,
 )
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -108,11 +112,12 @@ from ...application.user_profile.profile_record_repository import ProfileRecordR
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.auth_provider import AuthProviderKind
-from ...core.config import override_settings
+from ...core.config import load_settings, override_settings
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.time.clock import frozen_clock, now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.iva.schema import InvoiceKind
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from ...domain.user_profile.values import UserProfileRecord
@@ -125,6 +130,7 @@ from ...tests.personas import (
     ProfileValue,
     WithholdingCertificate,
     YearEnvelope,
+    persona_inputs_digest,
     read_persona,
 )
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -142,6 +148,22 @@ _STATEMENT_HEADER = "Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda;
 
 class PersonaMaterialisationError(RuntimeError):
     """A production operation refused a persona fact; the catalogue or the operation must change."""
+
+
+class ReplayScope(StrEnum):
+    """How much of a persona a replay records; each scope holds everything the narrower ones do."""
+
+    PROFILE = "profile"
+    """The wizard patch, its elections, the field mutations and the activity rows."""
+    HOUSEHOLD = "household"
+    """The profile scope and the descendant and ascendant replacements."""
+    FULL = "full"
+    """The household scope, the declared withholding, the statement import, invoices and evidence."""
+
+    def includes(self, other: ReplayScope) -> bool:
+        """Whether replaying ``self`` records everything ``other`` does."""
+        order = tuple(ReplayScope)
+        return order.index(self) >= order.index(other)
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,6 +194,7 @@ class MaterialisedPersona:
 
     persona: Persona
     world: PersonaWorld
+    scope: ReplayScope
     transactions: Mapping[str, str]
     """Ledger ``ref`` to the imported transaction id."""
     invoices: Mapping[str, str]
@@ -212,58 +235,73 @@ def _registered_world(as_of: datetime) -> SealedProfileWorld:
 
 
 @contextmanager
-def persona_world(tmp_path: Path, *, as_of: datetime) -> Generator[PersonaWorld]:
-    """Open a registered empty profile and a production supervisor over it, frozen at ``as_of``."""
-    _create_context, decode_context = profile_authority_contexts()
+def _scenario(as_of: datetime) -> Generator[None]:
+    """The clock and the sign-in provider every persona operation runs under."""
     with (
         frozen_clock(as_of),
         override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE, cadrumo_certificate_path=None),
     ):
-        world = _registered_world(as_of)
-        with (
-            copied_profile_world(world, tmp_path / "runtime", profile_decode_context=decode_context) as (
-                root,
-                profile_id,
+        yield
+
+
+@contextmanager
+def _operations_over(root: Path, profile_id: UUID, *, workdir: Path, as_of: datetime) -> Generator[PersonaWorld]:
+    """Compose a production supervisor over the profile already resumed in the isolated ``root``."""
+    with (
+        profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects,
+        bundled_indexed_authority().operation() as operation,
+    ):
+        registry = _registry()
+        journal = OperationJournalRepository(storage_root=root / "operations")
+        operands = operation_secure_reference_repository(objects=cast(SecureObjectRepository, objects))
+        services = compose_operation_services(
+            registry=registry,
+            authority_operation=operation,
+            journal=journal,
+            reader=journal,
+            event_stream=journal,
+            leases=OperationLeaseFilesystemRepository(storage_root=root / "operations"),
+            operands=operands,
+            owner_id="1" * 64,
+            lease_token_factory=lambda: "2" * 64,
+            clock=now,
+            lease_duration=timedelta(minutes=10),
+            execution_timeout=timedelta(hours=1),
+            cleanup_timeout=timedelta(minutes=2),
+            typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
+                root=root / "operations" / "typed_financial_operand_custody",
             ),
-            profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects,
-            bundled_indexed_authority().operation() as operation,
-        ):
-            registry = _registry()
-            journal = OperationJournalRepository(storage_root=root / "operations")
-            operands = operation_secure_reference_repository(objects=cast(SecureObjectRepository, objects))
-            services = compose_operation_services(
+        )
+        workdir.mkdir(parents=True, exist_ok=True)
+        try:
+            yield PersonaWorld(
+                profile_id=profile_id,
+                storage_root=root,
+                workdir=workdir,
+                as_of=as_of,
+                envelope=year_envelope(operation),
+                services=services,
                 registry=registry,
-                authority_operation=operation,
-                journal=journal,
-                reader=journal,
-                event_stream=journal,
-                leases=OperationLeaseFilesystemRepository(storage_root=root / "operations"),
-                operands=operands,
-                owner_id="1" * 64,
-                lease_token_factory=lambda: "2" * 64,
-                clock=now,
-                lease_duration=timedelta(minutes=10),
-                execution_timeout=timedelta(hours=1),
-                cleanup_timeout=timedelta(minutes=2),
-                typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
-                    root=root / "operations" / "typed_financial_operand_custody",
-                ),
+                operation=operation,
             )
-            workdir = tmp_path / "inputs"
-            workdir.mkdir(parents=True, exist_ok=True)
+        finally:
+            asyncio.run(services.shutdown())
+
+
+@contextmanager
+def persona_world(tmp_path: Path, *, as_of: datetime) -> Generator[PersonaWorld]:
+    """Open a registered empty profile and a production supervisor over it, frozen at ``as_of``."""
+    with bundled_indexed_authority().operation(), _scenario(as_of):
+        _create_context, decode_context = profile_authority_contexts()
+        world = _registered_world(as_of)
+        with copied_profile_world(world, tmp_path / "runtime", profile_decode_context=decode_context) as (
+            root,
+            profile_id,
+        ):
             try:
-                yield PersonaWorld(
-                    profile_id=profile_id,
-                    storage_root=root,
-                    workdir=workdir,
-                    as_of=as_of,
-                    envelope=year_envelope(operation),
-                    services=services,
-                    registry=registry,
-                    operation=operation,
-                )
+                with _operations_over(root, profile_id, workdir=tmp_path / "inputs", as_of=as_of) as opened:
+                    yield opened
             finally:
-                asyncio.run(services.shutdown())
                 reset_test_profile_session()
 
 
@@ -527,6 +565,10 @@ def _replay_profile(persona: Persona, world: PersonaWorld) -> None:
                 values=tuple(ProfileRepeatableRowValue(field_key=key, value=value) for key, value in activity.values),
             ),
         )
+
+
+def _replay_household(persona: Persona, world: PersonaWorld) -> None:
+    envelope = world.envelope
     if persona.descendants:
         record = load_profile_record(world)
         settle_operation(
@@ -696,12 +738,18 @@ def _replay_documents(persona: Persona, world: PersonaWorld, transactions: Mappi
     return evidence
 
 
-def _not_loaded(persona: Persona) -> tuple[NotLoaded, ...]:
-    """The persona facts no production operation recorded, and why."""
+def _not_loaded(persona: Persona, scope: ReplayScope) -> tuple[NotLoaded, ...]:
+    """The persona facts no production operation recorded within ``scope``, and why.
+
+    A block outside the scope was never attempted, so it is absent from the
+    scope's result rather than reported as one no operation can record.
+    """
     found = [
         NotLoaded(block=block, reason="no production operation records this block")
         for block in persona.declared_blocks()
     ]
+    if not scope.includes(ReplayScope.FULL):
+        return tuple(found)
     if any(item.origin == "payer_certificate" for item in persona.withholding_certificates):
         found.append(
             NotLoaded(
@@ -737,32 +785,114 @@ def _not_loaded(persona: Persona) -> tuple[NotLoaded, ...]:
     return tuple(found)
 
 
-def materialise_persona(persona: Persona, world: PersonaWorld) -> MaterialisedPersona:
-    """Replay ``persona`` into ``world``'s profile through production operations."""
+def materialise_persona(
+    persona: Persona, world: PersonaWorld, scope: ReplayScope = ReplayScope.FULL
+) -> MaterialisedPersona:
+    """Replay ``persona`` into ``world``'s profile through production operations, as far as ``scope`` reaches."""
+    transactions: dict[str, str] = {}
+    invoices: dict[str, str] = {}
+    evidence: dict[str, str] = {}
     with frozen_clock(world.as_of):
         _replay_profile(persona, world)
-        _replay_withholding(persona, world)
-        transactions = _imported_transactions(persona, world)
-        invoices = _replay_ledger(persona, world, transactions)
-        evidence = _replay_documents(persona, world, transactions)
+        if scope.includes(ReplayScope.HOUSEHOLD):
+            _replay_household(persona, world)
+        if scope.includes(ReplayScope.FULL):
+            _replay_withholding(persona, world)
+            transactions = _imported_transactions(persona, world)
+            invoices = _replay_ledger(persona, world, transactions)
+            evidence = _replay_documents(persona, world, transactions)
     return MaterialisedPersona(
         persona=persona,
         world=world,
+        scope=scope,
         transactions=transactions,
         invoices=invoices,
         evidence=evidence,
-        not_loaded=_not_loaded(persona),
+        not_loaded=_not_loaded(persona, scope),
     )
 
 
+_REPLAYED_IDS = "persona-materialisation.json"
+"""Beside the storage root of a sealed replay: the ids the replay minted, which a copy reads back."""
+
+
+def _sealed_replay(
+    persona: Persona,
+    scope: ReplayScope,
+    as_of: datetime,
+    base: SealedProfileWorld,
+    decode_context: ProfileDecodeContext,
+) -> SealedProfileWorld:
+    """This run's world holding ``persona`` replayed to ``scope`` into ``base``, replayed on first use anywhere in the run."""
+
+    def replay(profile_id: UUID) -> None:
+        root = load_settings().cadrumo_storage_root
+        if root is None:
+            raise PersonaMaterialisationError("a sealed replay runs inside an isolated storage root")
+        with (
+            TemporaryDirectory(prefix="persona-inputs-") as inputs,
+            _operations_over(root, profile_id, workdir=Path(inputs), as_of=as_of) as world,
+        ):
+            replayed = materialise_persona(persona, world, scope)
+        ids = {"transactions": replayed.transactions, "invoices": replayed.invoices, "evidence": replayed.evidence}
+        (root.parent / _REPLAYED_IDS).write_text(json.dumps(ids, sort_keys=True), encoding="utf-8")
+
+    key = ("persona replay", persona.id, scope.value, persona_inputs_digest(persona), as_of.isoformat())
+    return derived_profile_world(base, key, replay, profile_decode_context=decode_context)
+
+
 @contextmanager
-def materialised_persona(persona_id: str, tmp_path: Path) -> Generator[MaterialisedPersona]:
-    """Read one persona, open its world at its scenario instant and replay it there."""
+def _reused_persona_world(
+    persona: Persona, scope: ReplayScope, tmp_path: Path, *, as_of: datetime
+) -> Generator[MaterialisedPersona]:
+    """Open this consumer's own copy of the run's replay of ``persona``, replaying it only when the run has none."""
+    with bundled_indexed_authority().operation(), _scenario(as_of):
+        _create_context, decode_context = profile_authority_contexts()
+        sealed = _sealed_replay(persona, scope, as_of, _registered_world(as_of), decode_context)
+        with copied_profile_world(sealed, tmp_path / "runtime", profile_decode_context=decode_context) as (
+            root,
+            profile_id,
+        ):
+            ids = json.loads((root.parent / _REPLAYED_IDS).read_text(encoding="utf-8"))
+            try:
+                with _operations_over(root, profile_id, workdir=tmp_path / "inputs", as_of=as_of) as world:
+                    yield MaterialisedPersona(
+                        persona=persona,
+                        world=world,
+                        scope=scope,
+                        transactions=ids["transactions"],
+                        invoices=ids["invoices"],
+                        evidence=ids["evidence"],
+                        not_loaded=_not_loaded(persona, scope),
+                    )
+            finally:
+                reset_test_profile_session()
+
+
+@contextmanager
+def materialised_persona(
+    persona_id: str, tmp_path: Path, scope: ReplayScope = ReplayScope.FULL, *, reuse: bool = False
+) -> Generator[MaterialisedPersona]:
+    """Read one persona, open its world at its scenario instant and replay it there as far as ``scope`` reaches.
+
+    A replay of the full ledger takes tens of seconds. With ``reuse`` the run
+    replays a persona at a scope once into a sealed world keyed by the
+    persona's input files, the scope, the scenario instant and the authority
+    generation, and every consumer receives its own filesystem copy of it: a
+    write to one copy reaches no other and never the sealed world. A consumer
+    that mutates the profile may reuse; one that needs the replay to run
+    afresh does not.
+    """
     with bundled_indexed_authority().operation() as operation:
         envelope = year_envelope(operation)
     persona = read_persona(persona_id, envelope=envelope)
-    with persona_world(tmp_path, as_of=scenario_instant(persona, envelope)) as world:
-        yield materialise_persona(persona, world)
+    as_of = scenario_instant(persona, envelope)
+    if reuse:
+        with _reused_persona_world(persona, scope, tmp_path, as_of=as_of) as reused:
+            yield reused
+        return
+    with persona_world(tmp_path, as_of=as_of) as world:
+        yield materialise_persona(persona, world, scope)
 
 
 __all__ = [
@@ -772,6 +902,7 @@ __all__ = [
     "NotLoaded",
     "PersonaMaterialisationError",
     "PersonaWorld",
+    "ReplayScope",
     "household_leaves",
     "load_profile_record",
     "materialise_persona",

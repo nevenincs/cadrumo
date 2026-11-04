@@ -26,6 +26,7 @@ from typing import Literal, cast
 
 from ..core.decimal.grammar import try_parse_canonical_decimal
 from .inventory import REPO_ROOT
+from .run_artifact import file_inputs_digest
 
 PERSONAS_ROOT: Path = REPO_ROOT / "dev" / "fixtures" / "personas"
 """The persona catalogue: ``identities.toml`` plus one directory per persona."""
@@ -1075,6 +1076,14 @@ def read_persona(persona_id: str, *, envelope: YearEnvelope) -> Persona:
     )
 
 
+def persona_inputs_digest(persona: Persona) -> str:
+    """Digest every file a persona's values come from: its directory, the identity catalogue and its documents."""
+    paths = {path for path in (PERSONAS_ROOT / persona.id).rglob("*") if path.is_file()}
+    paths.add(PERSONAS_ROOT / "identities.toml")
+    paths.update(document.path for document in persona.documents)
+    return file_inputs_digest("persona-inputs", REPO_ROOT, sorted(paths))
+
+
 __all__ = [
     "BIOGRAPHICAL_DATE_KEYS",
     "CATALOGUE_FORMAT",
@@ -1109,5 +1118,6 @@ __all__ = [
     "parse_identity_catalogue",
     "parse_persona",
     "persona_ids",
+    "persona_inputs_digest",
     "read_persona",
 ]
