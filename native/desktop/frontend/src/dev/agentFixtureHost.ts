@@ -1124,12 +1124,17 @@ export function fixtureAgent({
       say("agentStatusResolved");
       return answer;
     },
-    observeStatus(listener) {
+    async observeStatus(listener) {
       say("agentObserveStatus");
+      // Like every host call it takes the host's time. The host then takes
+      // over as the one listener and sends the current status before the
+      // subscription resolves.
+      await wait();
       statusListener = listener;
-      return Promise.resolve(() => {
+      listener(status());
+      return () => {
         if (statusListener === listener) statusListener = null;
-      });
+      };
     },
     async providerCatalog() {
       say("agentProviderCatalog");

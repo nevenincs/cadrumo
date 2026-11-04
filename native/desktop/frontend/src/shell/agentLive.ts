@@ -885,7 +885,7 @@ type StatusWatch = {
 };
 const statusWatches = new WeakMap<AgentSession, StatusWatch>();
 
-function watchStatus(
+export function watchStatus(
   session: AgentSession,
   listener: (status: AgentServiceStatus) => void,
 ): Promise<() => void> {
