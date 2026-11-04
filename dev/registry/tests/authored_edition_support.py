@@ -13,7 +13,8 @@ import re
 from collections.abc import Callable
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ..compiler.authority import compiled_bundled_authority
@@ -24,6 +25,18 @@ def authored_revisions(modelo_id: str) -> tuple[ModeloRevision, ...]:
     """Return every authored revision of one modelo, oldest first."""
     modelo = compiled_bundled_authority().modelo(modelo_id)
     return tuple(sorted(modelo.revisions.values(), key=lambda revision: revision.valid_from))
+
+
+def reachable_grade_snapshot(modelo_id: str, filing_year: int, period: str = "0A") -> RegistrySnapshot:
+    """Return the snapshot of one filing year at the grade that year reaches.
+
+    A year no edition authors is carried across from the nearest edition and
+    reaches calculation grade at most, so the grade is asked of the authority
+    instead of being requested as filing grade.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        grade = operation.reachable_authority_grade(modelo_id, filing_year=filing_year, period=period)
+    return compiled_bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period, grade=grade)
 
 
 def newest_authored_editions(modelo_id: str, count: int) -> tuple[int, ...]:

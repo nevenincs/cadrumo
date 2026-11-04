@@ -11,6 +11,7 @@ import pytest
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 
@@ -33,7 +34,9 @@ _FAMILY_FIELD_FIRST_DICTIONARY_EXERCISE = next(
 @pytest.mark.parametrize("filing_year", _SUPPORT.years)
 def test_m100_uses_the_official_xml_dictionary_and_requires_its_authority(filing_year: int) -> None:
     authority = compiled_bundled_authority()
-    revision = authority.snapshot("100", filing_year=filing_year, period="0A").revision
+    with bundled_indexed_authority().operation() as operation:
+        grade = operation.reachable_authority_grade("100", filing_year=filing_year, period="0A")
+    revision = authority.snapshot("100", filing_year=filing_year, period="0A", grade=grade).revision
 
     with pytest.raises(RegistryValidationError, match="requires published sources and source payloads"):
         clasificar_casillas_oficiales(revision)
