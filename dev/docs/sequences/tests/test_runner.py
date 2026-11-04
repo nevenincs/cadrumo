@@ -352,7 +352,7 @@ def test_sandbox_template_respects_temporary_root_lifetime(
         temporary_root[0].mkdir(parents=True, exist_ok=True)
         return temporary_root[0]
 
-    monkeypatch.setattr(sequence_sandbox_module, "prepare_temp_root", prepare_temp_root)
+    monkeypatch.setattr(sequence_sandbox_module, "scratch_base", prepare_temp_root)
     with override_settings(cadrumo_authority_root=authority_root):
         first = sequence_sandbox_module._sandbox_template()
         assert first.is_relative_to(first_root.resolve())
@@ -1135,3 +1135,12 @@ class TestAmbientEnvNeutralisation:
                 os.environ[env_var_name] = prior_value
             else:
                 os.environ.pop(env_var_name, None)
+
+
+def test_sequence_scratch_respects_declared_base(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    requested = tmp_path / "declared-sequence-scratch"
+    monkeypatch.setenv("CADRUMO_SCRATCH_BASE", str(requested))
+    with sequence_sandbox_module.owned_scratch_directory("seq-boundary-") as allocated:
+        assert allocated.parent == requested
+        assert allocated.is_dir()
+    assert not allocated.exists()
