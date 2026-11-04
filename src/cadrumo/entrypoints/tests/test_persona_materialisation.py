@@ -31,6 +31,7 @@ from .persona_materialisation import (
     load_profile_record,
     materialised_persona,
     patch_answers,
+    persona_profile_id,
     run_operation,
     settle_operation,
 )
@@ -139,6 +140,8 @@ def test_a_persona_replays_through_production_operations(
     }
     assert set(materialised.evidence) == {document.id for document in persona.documents}
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
+    # Every run registers the persona at the same identity, so what is read of it names the same profile.
+    assert world.profile_id == persona_profile_id(persona_id)
 
 
 def _profile_values(world: PersonaWorld) -> dict[str, str]:
@@ -188,6 +191,8 @@ def test_a_profile_scope_replay_records_the_profile_and_no_household_or_ledger(
         for key, _ in household_leaves(persona, member, world.envelope)
     }
     assert len(stored.transactions) == 0
+    assert world.profile_id == persona_profile_id(persona.id)
+    assert len({persona_profile_id(each) for each in persona_ids()}) == len(persona_ids())
     assert not withholding
     assert (materialised.scope, materialised.transactions, materialised.invoices, materialised.evidence) == (
         ReplayScope.PROFILE,
@@ -239,4 +244,5 @@ def test_a_reused_replay_gives_each_consumer_an_isolated_profile(tmp_path: Path)
         first.evidence,
     )
     assert set(second.transactions) == {row.ref for row in persona.ledger}
+    assert first.world.profile_id == second.world.profile_id == persona_profile_id(persona.id)
     assert set(second.invoices) == {row.ref for row in persona.ledger if row.invoice_kind is not None}

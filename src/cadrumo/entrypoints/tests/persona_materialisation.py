@@ -17,6 +17,7 @@ registration of the profile it runs against.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
@@ -109,7 +110,7 @@ from ...application.user_profile.profile_operation_contracts import (
     ProfileRepeatableRowValue,
 )
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-from ...application.user_profile.registration import register_profile_with_credentials
+from ...application.user_profile.registration import create_registered_profile
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
@@ -220,18 +221,29 @@ def _registry() -> OperationRegistry:
     return build_production_operation_registry()
 
 
-def _registered_world(as_of: datetime) -> SealedProfileWorld:
+def persona_profile_id(persona_id: str) -> UUID:
+    """The profile identity every materialisation of the persona ``persona_id`` registers, on every run.
+
+    A profile identity is a UUIDv4, so it is the version 4 UUID spelled by the digest of the persona id.
+    """
+    return UUID(bytes=hashlib.sha256(f"persona profile:{persona_id}".encode()).digest()[:16], version=4)
+
+
+def _registered_world(persona: Persona, as_of: datetime) -> SealedProfileWorld:
     create_context, decode_context = profile_authority_contexts()
+    profile_id = persona_profile_id(persona.id)
 
     def register() -> str:
-        return register_profile_with_credentials(
+        return create_registered_profile(
+            profile_id=profile_id,
             label="persona",
             passphrase=_PROFILE_CREDENTIAL,
             profile_create_context=create_context,
             profile_decode_context=decode_context,
         ).profile_id
 
-    return sealed_profile_world(("persona world", str(create_context.generation), as_of.isoformat()), register)
+    key = ("persona world", str(profile_id), str(create_context.generation), as_of.isoformat())
+    return sealed_profile_world(key, register)
 
 
 @contextmanager
@@ -289,11 +301,11 @@ def _operations_over(root: Path, profile_id: UUID, *, workdir: Path, as_of: date
 
 
 @contextmanager
-def persona_world(tmp_path: Path, *, as_of: datetime) -> Generator[PersonaWorld]:
-    """Open a registered empty profile and a production supervisor over it, frozen at ``as_of``."""
+def persona_world(tmp_path: Path, persona: Persona, *, as_of: datetime) -> Generator[PersonaWorld]:
+    """Open ``persona``'s registered empty profile and a production supervisor over it, frozen at ``as_of``."""
     with bundled_indexed_authority().operation(), _scenario(as_of):
         _create_context, decode_context = profile_authority_contexts()
-        world = _registered_world(as_of)
+        world = _registered_world(persona, as_of)
         with copied_profile_world(world, tmp_path / "runtime", profile_decode_context=decode_context) as (
             root,
             profile_id,
@@ -848,7 +860,7 @@ def _reused_persona_world(
     """Open this consumer's own copy of the run's replay of ``persona``, replaying it only when the run has none."""
     with bundled_indexed_authority().operation(), _scenario(as_of):
         _create_context, decode_context = profile_authority_contexts()
-        sealed = _sealed_replay(persona, scope, as_of, _registered_world(as_of), decode_context)
+        sealed = _sealed_replay(persona, scope, as_of, _registered_world(persona, as_of), decode_context)
         with copied_profile_world(sealed, tmp_path / "runtime", profile_decode_context=decode_context) as (
             root,
             profile_id,
@@ -891,7 +903,7 @@ def materialised_persona(
         with _reused_persona_world(persona, scope, tmp_path, as_of=as_of) as reused:
             yield reused
         return
-    with persona_world(tmp_path, as_of=as_of) as world:
+    with persona_world(tmp_path, persona, as_of=as_of) as world:
         yield materialise_persona(persona, world, scope)
 
 
@@ -908,6 +920,7 @@ __all__ = [
     "materialise_persona",
     "materialised_persona",
     "patch_answers",
+    "persona_profile_id",
     "persona_world",
     "run_operation",
     "scenario_instant",

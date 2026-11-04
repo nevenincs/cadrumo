@@ -145,15 +145,9 @@ def _refuse_a_label_already_taken(label: str) -> None:
         )
 
 
-def _create_profile_capsule(
-    *,
-    label: str,
-    passphrase: str,
-    facts: tuple[UserProfileFact, ...],
-    profile_create_context: ProfileCreateContext,
-    profile_decode_context: ProfileDecodeContext,
-) -> tuple[UUID, str, bytes]:
-    """Commit a new capsule and its first record; return its identity, label and unlocked key."""
+def _require_one_generation(
+    profile_create_context: ProfileCreateContext, profile_decode_context: ProfileDecodeContext
+) -> None:
     if (
         profile_create_context.schema != profile_decode_context.schema
         or profile_create_context.generation != profile_decode_context.generation
@@ -161,6 +155,17 @@ def _create_profile_capsule(
         raise ProfileRegistrationError(
             "profile registration requires create and decode contexts from one authority generation",
         )
+
+
+def _admitted_label(
+    *,
+    label: str,
+    passphrase: str,
+    profile_create_context: ProfileCreateContext,
+    profile_decode_context: ProfileDecodeContext,
+) -> str:
+    """Refuse a request no creation could honour before any key is derived; return the label it names."""
+    _require_one_generation(profile_create_context, profile_decode_context)
     resolved_label = label.strip()
     if not resolved_label:
         raise ProfileRegistrationError(
@@ -178,9 +183,20 @@ def _create_profile_capsule(
             password_refusal=password_refusal,
         )
     _refuse_a_label_already_taken(resolved_label)
+    return resolved_label
 
-    identity = UUID(new_profile_id())
 
+def _commit_profile_capsule(
+    *,
+    identity: UUID,
+    label: str,
+    passphrase: str,
+    facts: tuple[UserProfileFact, ...],
+    profile_create_context: ProfileCreateContext,
+    profile_decode_context: ProfileDecodeContext,
+) -> bytes:
+    """Commit a new capsule at ``identity`` and its first record; return its unlocked key."""
+    _require_one_generation(profile_create_context, profile_decode_context)
     dek = token_bytes(32)
     dek_epoch = b64encode(token_bytes(16)).decode("ascii")
     custody_material = create_profile_custody_registration_material(
@@ -210,7 +226,7 @@ def _create_profile_capsule(
     try:
         try:
             ProfileCapsuleLifecycle().create(
-                label=resolved_label,
+                label=label,
                 profile_id=identity,
                 password_envelope=envelope,
                 sentinel=sentinel,
@@ -237,7 +253,7 @@ def _create_profile_capsule(
         except ProfileCustodyDuplicateLabelError as exc:
             raise ProfileRegistrationError(
                 translated_message="application.user_profile.errors.profile_already_exists",
-                context={"profile": resolved_label},
+                context={"profile": label},
             ) from exc
         except ProfileCustodyTransactionConflictError as exc:
             # Caught AFTER its duplicate-label subclass: this is the
@@ -250,7 +266,7 @@ def _create_profile_capsule(
             ) from exc
     finally:
         session.close()
-    return identity, resolved_label, dek
+    return dek
 
 
 def _record_creation_snapshots(identity: UUID) -> None:
@@ -340,7 +356,43 @@ def register_profile_with_credentials(
             Missing filing fields are not refused: the profile is born
             incomplete on purpose.
     """
-    identity, resolved_label, dek = _create_profile_capsule(
+    return create_registered_profile(
+        profile_id=UUID(new_profile_id()),
+        label=_admitted_label(
+            label=label,
+            passphrase=passphrase,
+            profile_create_context=profile_create_context,
+            profile_decode_context=profile_decode_context,
+        ),
+        passphrase=passphrase,
+        facts=facts,
+        profile_create_context=profile_create_context,
+        profile_decode_context=profile_decode_context,
+    )
+
+
+def create_registered_profile(
+    *,
+    profile_id: UUID,
+    label: str,
+    passphrase: str,
+    facts: tuple[UserProfileFact, ...] = (),
+    profile_create_context: ProfileCreateContext,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileRegistrationOutcome:
+    """Create the profile ``profile_id`` from a label and a passphrase, and unlock it, as registration does.
+
+    The caller names the identity and has already admitted ``label`` and
+    ``passphrase``: :func:`register_profile_with_credentials` refuses a blank
+    or taken label and a password the profile-password contract refuses
+    before it mints the identity, and the custody transaction still refuses
+    a label claimed in between. The profile is born
+    :attr:`ProfileSetupState.INCOMPLETE`, its session is published as a
+    login publishes it, and its first filing and legal-hold snapshots are
+    recorded.
+    """
+    dek = _commit_profile_capsule(
+        identity=profile_id,
         label=label,
         passphrase=passphrase,
         facts=facts,
@@ -353,16 +405,16 @@ def register_profile_with_credentials(
     # has just been proven, and leaving the profile locked until they retype
     # it is the defect this closes.
     publish_created_profile_session(
-        bucket_id=str(identity),
+        bucket_id=str(profile_id),
         dek=dek,
         profile_decode_context=profile_decode_context,
     )
 
-    _record_creation_snapshots(identity)
+    _record_creation_snapshots(profile_id)
     return ProfileRegistrationOutcome(
-        profile_id=str(identity),
-        bucket_id=str(identity),
-        label=resolved_label,
+        profile_id=str(profile_id),
+        bucket_id=str(profile_id),
+        label=label,
         setup_state=ProfileSetupState.INCOMPLETE,
     )
 
@@ -382,8 +434,16 @@ def create_profile_signed_out(
     frontend's behalf: it binds no session in the creating process, so the
     person signs in to the new profile as to any other.
     """
-    identity, resolved_label, _dek = _create_profile_capsule(
+    resolved_label = _admitted_label(
         label=label,
+        passphrase=passphrase,
+        profile_create_context=profile_create_context,
+        profile_decode_context=profile_decode_context,
+    )
+    identity = UUID(new_profile_id())
+    _commit_profile_capsule(
+        identity=identity,
+        label=resolved_label,
         passphrase=passphrase,
         facts=facts,
         profile_create_context=profile_create_context,
@@ -402,5 +462,6 @@ __all__ = [
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
     "create_profile_signed_out",
+    "create_registered_profile",
     "register_profile_with_credentials",
 ]
