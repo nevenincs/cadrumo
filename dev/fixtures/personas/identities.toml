@@ -81,7 +81,7 @@ name = "Elena"
 surnames = "Robles Quintana"
 
 [[identities]]
-role = "traductora.corrector"
+role = "traductora.asesor-fiscal"
 persona = "traductora-profesional"
 kind = "nif"
 value = "00000006Y"
@@ -119,6 +119,73 @@ kind = "nif"
 value = "00000010X"
 name = "Tomás"
 surnames = "Lozano Prieto"
+
+# Consumers who receive a complete invoice (RD 1619/2012 art. 6) for a
+# domestic service, so the invoice carries their name and NIF.
+
+[[identities]]
+role = "fontanero.particular-1"
+persona = "autonomo-fontanero"
+kind = "nif"
+value = "00000011B"
+name = "Beatriz"
+surnames = "Sanz Calvo"
+
+[[identities]]
+role = "fontanero.particular-2"
+persona = "autonomo-fontanero"
+kind = "nif"
+value = "00000012N"
+name = "Óscar"
+surnames = "Herrero Luque"
+
+[[identities]]
+role = "fontanero.particular-3"
+persona = "autonomo-fontanero"
+kind = "nif"
+value = "00000013J"
+name = "Nuria"
+surnames = "Pastor Gallardo"
+
+[[identities]]
+role = "fontanero.particular-4"
+persona = "autonomo-fontanero"
+kind = "nif"
+value = "00000014Z"
+name = "Raúl"
+surnames = "Cabrera Soto"
+
+[[identities]]
+role = "fontanero.particular-5"
+persona = "autonomo-fontanero"
+kind = "nif"
+value = "00000015S"
+name = "Inés"
+surnames = "Valero Campos"
+
+[[identities]]
+role = "fontanero.particular-6"
+persona = "autonomo-fontanero"
+kind = "nif"
+value = "00000016Q"
+name = "Héctor"
+surnames = "Rubio Esteban"
+
+[[identities]]
+role = "traductora.particular-1"
+persona = "traductora-profesional"
+kind = "nif"
+value = "00000017V"
+name = "Marta"
+surnames = "Llorens Ferrer"
+
+[[identities]]
+role = "traductora.particular-2"
+persona = "traductora-profesional"
+kind = "nif"
+value = "00000018H"
+name = "Jorge"
+surnames = "Peiró Mira"
 
 # Natural persons (NIE), counter zero of each prefix.
 

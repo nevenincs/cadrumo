@@ -22,7 +22,7 @@ dev/fixtures/personas/
 | id | taxpayer | scenario | modelos |
 | --- | --- | --- | --- |
 | `autonomo-fontanero` | `fontanero.titular` (primary identity) | Plumber, estimación directa simplificada, IVA 21 % and 10 % (dwelling repairs), rents a workshop with 19 % retención | 303, 390, 130, 115, 180, 347, 100 |
-| `traductora-profesional` | `traductora.titular` | Translator whose income is over 70 % withheld (no 130), pays a proofreader with 15 % retención | 303, 390, 111, 190, 100 |
+| `traductora-profesional` | `traductora.titular` | Translator whose income is over 70 % withheld (no 130), pays a natural-person tax adviser with 15 % retención | 303, 390, 111, 190, 100 |
 | `intracomunitario-desarrollador` | `intracom.titular` (NIE) | Software professional with EU B2B clients, an Irish cloud supplier (reverse charge), ROI enrolled | 303, 349, 390, 130, 100 |
 | `minorista-recargo` | `minorista.titular` | Clothing retailer in recargo de equivalencia (no 303/390) | 130, 347, 100 |
 | `asalariada-familia` | `asalariada.titular` | Employee, married, individual return, two children (one under three in an escuela infantil), mother at home | 100 |
@@ -175,9 +175,9 @@ default (`custodia_compartida = false`, ordinary `relacion`).
 | `payer` | identity role of the payer |
 | `ejercicio` | year token |
 | `income_class` | the suffered-withholding income class token (`trabajo`, `actividad_economica`, `capital_mobiliario`, ...) of the retención-soportada record operation; pensions are `trabajo` |
-| `origin` | `payer_certificate` or `operator_declaration` |
+| `origin` | `payer_certificate` (the certificate's bytes back the record, so the persona must reference a certificate document) or `operator_declaration` (the taxpayer transcribes the figures; what the catalogue uses) |
 | `importe_integro`, `retencion` | amounts |
-| `cotizaciones_seguridad_social` | optional; employee contributions shown on the certificate |
+| `cotizaciones_seguridad_social` | optional; employee contributions shown on the certificate. No operation records them, so the materialiser reports them as not materialised |
 
 ### Declarative blocks without an operation
 
@@ -192,6 +192,8 @@ UTF-8, comma-separated, header row, one row per bank movement. The columns are
 a superset of what the bank-statement import accepts; the materialiser imports
 the statement columns, then classifies, records invoices and links through the
 ledger operations.
+Classification takes no recargo, so a row with a `recargo_amount` is classified
+without its cuota and recargo and reported as not materialised.
 
 | column | meaning |
 | --- | --- |
@@ -200,7 +202,7 @@ ledger operations.
 | `description` | statement concept |
 | `amount` | signed bank amount in EUR: positive incoming, negative outgoing |
 | `currency` | `EUR` |
-| `counterparty` | identity role, or empty for an anonymous consumer or a public charge |
+| `counterparty` | identity role, or empty for a movement no invoice backs (a public charge, a card-terminal settlement of retail sales); every invoice row names one, consumers included |
 | `classification` | `BUSINESS` or `PERSONAL` |
 | `category_id` | expense category id for business expenses |
 | `irpf_category` | IRPF category where it differs from the default |
@@ -209,7 +211,7 @@ ledger operations.
 | `iva_rate` | fraction |
 | `iva_amount` | IVA charged or self-assessed |
 | `recargo_amount` | recargo de equivalencia charged |
-| `deduction_kind` | `domestic_current` for deductible current IVA |
+| `deduction_kind` | deduction family of deductible IVA: `domestic_current` for domestic current purchases, `intra_eu_current` for a self-assessed intra-community acquisition |
 | `invoice_kind` | `issued` or `received` when an invoice backs the row |
 | `invoice_number` | invoice number |
 | `retencion_rate`, `retencion_amount` | IRPF retención on the invoice |

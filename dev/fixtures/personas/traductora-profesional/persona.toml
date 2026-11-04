@@ -7,8 +7,8 @@ summary = """
 Elena Robles traduce desde Valencia para una editorial y una agencia, que le
 retienen el 15 %, y hace traducciones juradas para particulares. Más del 70 %
 de sus ingresos profesionales soporta retención, de modo que no presenta pagos
-fraccionados. Subcontrata la corrección de estilo a un profesional al que
-retiene el 15 %, lo que la obliga a los Modelos 111 y 190.
+fraccionados. Encarga su asesoría fiscal a un profesional persona física al
+que retiene el 15 %, lo que la obliga a los Modelos 111 y 190.
 """
 taxpayer = "traductora.titular"
 fiscal_year = "horizon-1"

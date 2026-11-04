@@ -53,7 +53,7 @@ modelo = "347"
 periods = ["0A"]
 year = "horizon-1"
 applicable = true
-reason = "Operaciones con tres terceros superan 3.005,06 euros anuales (IVA incluido) y no figuran en otra declaración informativa."
+reason = "Operaciones con cinco terceros superan 3.005,06 euros anuales (IVA incluido) y no figuran en otra declaración informativa: el proveedor, el restaurante, la comunidad y los dos particulares cuya factura supera el límite de la factura simplificada y debe identificarlos."
 legal_ref = ["rd-1065-2007:art-31", "rd-1065-2007:art-33"]
 grounding = "verified"
 
@@ -425,6 +425,36 @@ year = "horizon-1"
 counterparty = "fontanero.comunidad"
 concepts = { clave = "B", importe_anual = "6765.00" }
 derivation = "Sales FON-VTA-03, 08, 12 including IVA: 2860.00 + 2035.00 + 1870.00 = 6765.00."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "fontanero.particular-4"
+concepts = { clave = "B", importe_anual = "4290.00" }
+derivation = "Sale FON-VTA-07 including IVA: 3900.00 + 390.00 = 4290.00 > 3005.06. A service at the consumer's home may be invoiced simplified only up to 3000.00 IVA included (RD 1619/2012 art. 4.2.c), so a complete invoice naming the consumer and his NIF was due (art. 6.1.d) and RGAT art. 33.2.a does not exclude the operation."
+legal_ref = ["rd-1065-2007:art-33", "rd-1619-2012:art-6.1.d"]
+grounding = "verified"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "fontanero.particular-6"
+concepts = { clave = "B", importe_anual = "3685.00" }
+derivation = "Sale FON-VTA-11 including IVA: 3350.00 + 335.00 = 3685.00 > 3005.06; above the 3000.00 simplified-invoice limit for services at the consumer's home (RD 1619/2012 art. 4.2.c), so a complete invoice identifying him was due and RGAT art. 33.2.a does not exclude the operation."
+legal_ref = ["rd-1065-2007:art-33", "rd-1619-2012:art-6.1.d"]
+grounding = "verified"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "fontanero.particular-1"
+concepts = { declared = "false", importe_anual = "1298.00" }
+derivation = "FON-VTA-01 1298.00 is below the 3005.06 threshold; the same holds for particular-2 (FON-VTA-04 836.00), particular-3 (FON-VTA-05 704.00) and particular-5 (FON-VTA-09 1562.00), each a single invoice to a different consumer."
 legal_ref = ["rd-1065-2007:art-33"]
 grounding = "verified"
 

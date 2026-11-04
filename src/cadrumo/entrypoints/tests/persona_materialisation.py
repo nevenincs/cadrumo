@@ -3,8 +3,9 @@
 A persona (``dev/fixtures/personas``, read by :mod:`cadrumo.tests.personas`)
 reaches its profile the way an operator's input does: the registered wizard
 patch, field and repeatable-row mutations, the household replacements, the
-statement import, single classification, and evidence intake and attachment,
-each submitted to the production registry's supervisor and settled. Nothing is
+suffered-withholding record, the statement import, single classification,
+invoice recording and linking, and evidence intake and attachment, each
+submitted to the production registry's supervisor and settled. Nothing is
 written to storage by any other route. A persona block that no operation can
 record is returned in :attr:`MaterialisedPersona.not_loaded` with its reason,
 never written another way.
@@ -81,6 +82,11 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.models import OperationRequest
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.operations.registry import OperationRegistry
+from ...application.retencion_soportada_certificado.contracts import (
+    RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
+)
+from ...application.retencion_soportada_certificado.requests import RetencionSoportadaRecordRequest
+from ...application.retencion_soportada_certificado.results import RetencionSoportadaMutationProjection
 from ...application.user_profile.ascendant_rows import ProfileAscendantFact, ProfileAscendantRow
 from ...application.user_profile.custody_ports import profile_custody_secure_object_repository
 from ...application.user_profile.descendant_rows import ProfileDescendantFact, ProfileDescendantRow
@@ -104,10 +110,11 @@ from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import override_settings
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.time.clock import frozen_clock, now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.iva.schema import InvoiceKind
-from ...domain.transactions.irpf_categories import is_net_paid_related_category
+from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from ...domain.user_profile.values import UserProfileRecord
 from ...tests.personas import (
     HouseholdMember,
@@ -116,6 +123,7 @@ from ...tests.personas import (
     Persona,
     PersonaDate,
     ProfileValue,
+    WithholdingCertificate,
     YearEnvelope,
     read_persona,
 )
@@ -377,11 +385,23 @@ def _decimal_text(value: Decimal) -> str:
     return format(value, "f")
 
 
-def _statement(persona: Persona, envelope: YearEnvelope) -> str:
-    """The persona's bank movements in the statement columns ``app ledger import --file`` reads."""
+def _carries_iva_amount(row: LedgerRow) -> bool:
+    """Whether single classification can carry the row's IVA cuota.
+
+    Classification takes no recargo de equivalencia amount and checks base,
+    cuota and recargo against the cash movement, so a purchase bearing recargo
+    is refused with its cuota and is classified without it. The manual ledger
+    entry, which does take recargo, refuses a recargo retailer's profile: it
+    resolves the Modelo 303 regime composition, which such a retailer has none of.
+    """
+    return row.recargo_amount is None
+
+
+def _statement(rows: list[LedgerRow], envelope: YearEnvelope) -> str:
+    """Bank movements in the statement columns ``app ledger import --file`` reads."""
     lines = [_STATEMENT_HEADER]
     balance = Decimal("0.00")
-    for row in sorted(persona.ledger, key=lambda item: item.operation_date(envelope)):
+    for row in sorted(rows, key=lambda item: item.operation_date(envelope)):
         balance += row.amount
         day = row.operation_date(envelope).strftime("%d/%m/%Y")
         lines.append(
@@ -398,25 +418,6 @@ def _statement(persona: Persona, envelope: YearEnvelope) -> str:
             )
         )
     return "\n".join(lines) + "\n"
-
-
-def _carries_iva_amount(row: LedgerRow) -> bool:
-    """Whether single classification can carry the row's IVA cuota.
-
-    Classification checks base, cuota and recargo against the cash movement.
-    It takes no recargo, reconstitutes no self-assessed intra-community service
-    cuota, and accepts a payment net of retención only under the expense
-    categories the registry relates to withheld activity income, so any such
-    row is refused with its cuota and is classified without it.
-    """
-    reverse_charge = row.iva_category is not None and row.iva_category.endswith("_reverse_charge")
-    withheld_payment = row.retencion_amount is not None and row.amount < 0
-    return (
-        row.iva_amount is not None
-        and row.recargo_amount is None
-        and not reverse_charge
-        and (not withheld_payment or is_net_paid_related_category(row.category_id))
-    )
 
 
 def _classify_patch(
@@ -450,12 +451,19 @@ def _public_percentage(fraction: Decimal | None) -> PublicDecimal | None:
     return None if fraction is None else PublicDecimal(decimal=str(fraction * 100))
 
 
+def _party_name(persona: Persona, role: str) -> str:
+    counterparty = persona.identities.role(role)
+    return counterparty.legal_name or f"{counterparty.field('name')} {counterparty.field('surnames')}"
+
+
 def _invoice_request(persona: Persona, row: LedgerRow, world: PersonaWorld) -> InvoiceAddRequest | None:
-    """The invoice behind a row as ``ledger invoice add`` records it; ``None`` for no invoice or no named party."""
-    if row.invoice_kind is None or row.invoice_number is None or row.counterparty is None:
+    """The invoice behind a row as ``ledger invoice add`` records it; ``None`` for a row no invoice backs."""
+    if row.invoice_kind is None or row.invoice_number is None:
         return None
+    if row.counterparty is None:
+        raise PersonaMaterialisationError(f"{persona.id} {row.ref}: an invoice names its counterparty")
     counterparty = persona.identities.role(row.counterparty)
-    name = counterparty.legal_name or f"{counterparty.field('name')} {counterparty.field('surnames')}"
+    name = _party_name(persona, row.counterparty)
     return InvoiceAddRequest(
         profile_id=world.profile_id,
         kind=InvoiceKind(row.invoice_kind),
@@ -561,24 +569,56 @@ def _replay_profile(persona: Persona, world: PersonaWorld) -> None:
         )
 
 
+def _declared_withholding(persona: Persona) -> list[WithholdingCertificate]:
+    """The certificates the record operation takes: those the taxpayer declares, which need no certificate bytes."""
+    return [item for item in persona.withholding_certificates if item.origin == "operator_declaration"]
+
+
+def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
+    zero = PublicDecimal(decimal="0.00")
+    for certificate in _declared_withholding(persona):
+        payer = persona.identities.role(certificate.payer)
+        recorded = run_operation(
+            world,
+            RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
+            RetencionSoportadaRecordRequest(
+                profile_id=world.profile_id,
+                ejercicio=certificate.ejercicio.resolve(world.envelope),
+                income_class=RetencionSoportadaClase(certificate.income_class),
+                payer_tax_id=payer.value,
+                payer_legal_name=_party_name(persona, certificate.payer),
+                importe_integro_dinerario=PublicDecimal(decimal=str(certificate.importe_integro)),
+                valoracion_especie=zero,
+                retencion=PublicDecimal(decimal=str(certificate.retencion)),
+                ingreso_a_cuenta=zero,
+                ingreso_a_cuenta_repercutido=zero,
+                origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
+            ),
+            RetencionSoportadaMutationProjection,
+        )
+        if recorded.outcome != "recorded":
+            raise PersonaMaterialisationError(f"{persona.id} {certificate.payer}: {recorded.refusal}")
+
+
 def _imported_transactions(persona: Persona, world: PersonaWorld) -> dict[str, str]:
     """Import the statement and map each ledger ref to the transaction it became."""
+    rows = persona.ledger
     statement = world.workdir / f"{persona.id}-statement.csv"
-    statement.write_text(_statement(persona, world.envelope), encoding="utf-8", newline="\n")
+    statement.write_text(_statement(rows, world.envelope), encoding="utf-8", newline="\n")
     result = run_operation(
         world,
         LEDGER_IMPORT_OPERATION_DEFINITION_ID,
         LedgerImportRequest(profile_id=world.profile_id, files=(statement,), provider=LedgerProviderID.CSV),
         LedgerImportResultProjection,
     )
-    if result.imported != len(persona.ledger) or result.refused_files:
+    if result.imported != len(rows) or result.refused_files:
         raise PersonaMaterialisationError(
-            f"{persona.id}: imported {result.imported} of {len(persona.ledger)} rows, refused {result.refused_files}"
+            f"{persona.id}: imported {result.imported} of {len(rows)} rows, refused {result.refused_files}"
         )
     stored = compose_ledger_action_ports(
         bucket_id=str(world.profile_id), operation=world.operation
     ).transaction_repository.load()
-    refs = {row.ref for row in persona.ledger}
+    refs = {row.ref for row in rows}
     by_ref = {
         transaction.raw.provider_transaction_id: transaction_id
         for transaction_id, transaction in stored.transactions.items()
@@ -656,48 +696,41 @@ def _replay_documents(persona: Persona, world: PersonaWorld, transactions: Mappi
     return evidence
 
 
-def _refs(rows: list[LedgerRow]) -> str:
-    return ", ".join(row.ref for row in rows)
-
-
 def _not_loaded(persona: Persona) -> tuple[NotLoaded, ...]:
     """The persona facts no production operation recorded, and why."""
     found = [
         NotLoaded(block=block, reason="no production operation records this block")
         for block in persona.declared_blocks()
     ]
-    if persona.withholding_certificates:
+    if any(item.origin == "payer_certificate" for item in persona.withholding_certificates):
         found.append(
             NotLoaded(
                 block="withholding_certificates",
                 reason=(
                     "the retención-soportada record operation takes a payer certificate's bytes for origin "
-                    "payer_certificate and has no field for cotizaciones_seguridad_social; the persona "
-                    "references no certificate document"
+                    "payer_certificate and the persona references no certificate document"
                 ),
             )
         )
-    uncarried = [row for row in persona.ledger if row.iva_amount is not None and not _carries_iva_amount(row)]
-    if uncarried:
+    if any(item.cotizaciones_seguridad_social is not None for item in persona.withholding_certificates):
         found.append(
             NotLoaded(
-                block="ledger.iva_amount",
+                block="withholding_certificates.cotizaciones_seguridad_social",
                 reason=(
-                    "single classification takes no recargo amount, does not reconstitute a self-assessed "
-                    "intra-community service cuota and accepts a payment net of retención only under an expense "
-                    "category the registry relates to withheld activity income, so these rows are classified "
-                    f"without their cuota: {_refs(uncarried)}"
+                    "no operation records an employee's Seguridad Social contributions and no Modelo 100 binding "
+                    "sources the work-income deductible expense they enter"
                 ),
             )
         )
-    anonymous = [row for row in persona.ledger if row.invoice_kind is not None and row.counterparty is None]
-    if anonymous:
+    recargo = [row.ref for row in persona.ledger if not _carries_iva_amount(row)]
+    if recargo:
         found.append(
             NotLoaded(
-                block="ledger.invoice",
+                block="ledger.recargo_amount",
                 reason=(
-                    "the invoice operation requires a counterparty name and the persona names none for these "
-                    f"invoices to anonymous consumers: {_refs(anonymous)}"
+                    "single classification takes no recargo de equivalencia and refuses the cuota without it, and "
+                    "the manual ledger entry that takes recargo refuses a profile with no Modelo 303 regime "
+                    f"composition, so these rows are classified without cuota or recargo: {', '.join(recargo)}"
                 ),
             )
         )
@@ -708,6 +741,7 @@ def materialise_persona(persona: Persona, world: PersonaWorld) -> MaterialisedPe
     """Replay ``persona`` into ``world``'s profile through production operations."""
     with frozen_clock(world.as_of):
         _replay_profile(persona, world)
+        _replay_withholding(persona, world)
         transactions = _imported_transactions(persona, world)
         invoices = _replay_ledger(persona, world, transactions)
         evidence = _replay_documents(persona, world, transactions)

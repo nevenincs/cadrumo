@@ -34,11 +34,13 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "taxpayer-birth-date" = { year = "horizon-71", month = 9, day = 2 }
 "third-party-transactions-above-347-threshold" = false
 
+# The taxpayer transcribes the payer's certificate: the catalogue holds no
+# certificate document, so the figures are recorded as his own declaration.
 [[withholding_certificates]]
 payer = "arrendador.pagador-pension"
 ejercicio = "horizon-1"
 income_class = "trabajo"
-origin = "payer_certificate"
+origin = "operator_declaration"
 importe_integro = "21840.00"
 retencion = "2180.00"
 

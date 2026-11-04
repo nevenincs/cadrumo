@@ -35,7 +35,7 @@ year = "horizon-1"
 casillas = { "0003" = "36000.00", "0013" = "2332.80", "0596" = "5412.00" }
 concepts = { rendimiento_neto_previo_trabajo = "33667.20", otros_gastos_trabajo = "2000.00", reduccion_rendimientos_trabajo = "0.00", rendimiento_neto_reducido_trabajo = "31667.20" }
 derivation = """
-From the employer certificate (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
+From the employer's certificate, as the taxpayer declares it (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
 The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
 Rendimiento neto previo = 36000.00 - 2332.80 = 33667.20; otros gastos art. 19.2.f 2000.00; neto = 31667.20.
 The art. 20 reduction is zero because the net exceeds the top of its band.

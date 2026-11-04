@@ -3,33 +3,42 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ...application.retencion_soportada_certificado.contracts import RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID
+from ...application.retencion_soportada_certificado.requests import RetencionSoportadaListRequest
+from ...application.retencion_soportada_certificado.results import RetencionSoportadaListProjection
 from ...application.user_profile.projections import record_to_path_values
 from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.personas import persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
-from .persona_materialisation import household_leaves, load_profile_record, materialised_persona, patch_answers
+from .persona_materialisation import (
+    household_leaves,
+    load_profile_record,
+    materialised_persona,
+    patch_answers,
+    run_operation,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: What no production operation can record of each persona, read off its files: the declarative blocks,
-#: certificates the persona backs with no certificate document, rows whose IVA cuota single classification
-#: refuses (recargo de equivalencia, intra-community service reverse charge, and a payment net of retención
-#: under an expense category the registry does not relate to withheld activity income), and invoices to
-#: anonymous consumers, which the invoice operation cannot name.
+#: the employee's Seguridad Social contributions on a withholding certificate, and the cuota and recargo of
+#: a purchase bearing recargo de equivalencia, which classification cannot carry and the manual entry refuses
+#: for a retailer with no Modelo 303 regime composition.
 _NOT_LOADED: dict[str, set[str]] = {
-    "arrendador-jubilado": {"rental_properties", "withholding_certificates"},
-    "asalariada-familia": {"withholding_certificates"},
-    "autonomo-fontanero": {"ledger.invoice"},
-    "intracomunitario-desarrollador": {"ledger.iva_amount"},
-    "minorista-recargo": {"ledger.iva_amount"},
+    "arrendador-jubilado": {"rental_properties"},
+    "asalariada-familia": {"withholding_certificates.cotizaciones_seguridad_social"},
+    "autonomo-fontanero": set(),
+    "intracomunitario-desarrollador": set(),
+    "minorista-recargo": {"ledger.recargo_amount"},
     "sociedad-limitada": {"officers"},
-    "traductora-profesional": {"ledger.iva_amount", "ledger.invoice"},
+    "traductora-profesional": set(),
 }
 
 
@@ -48,6 +57,16 @@ def test_a_persona_replays_through_production_operations(
         stored = compose_ledger_action_ports(
             bucket_id=str(world.profile_id), operation=world.operation
         ).transaction_repository.load()
+        withholding = [
+            row
+            for ejercicio in {item.ejercicio.resolve(world.envelope) for item in persona.withholding_certificates}
+            for row in run_operation(
+                world,
+                RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID,
+                RetencionSoportadaListRequest(profile_id=world.profile_id, ejercicio=ejercicio),
+                RetencionSoportadaListProjection,
+            ).rows
+        ]
     values = record_to_path_values(record)
     answers = dict(patch_answers(persona, world.envelope))
     election_years = {election.year.resolve(world.envelope) for election in persona.elections}
@@ -83,8 +102,30 @@ def test_a_persona_replays_through_production_operations(
         assert {path: values.get(path) for path in expected} == expected
     assert len(stored.transactions) == len(persona.ledger)
     assert set(materialised.transactions) == {row.ref for row in persona.ledger}
-    assert set(materialised.invoices) == {
-        row.ref for row in persona.ledger if row.invoice_kind is not None and row.counterparty is not None
+    assert {
+        row.ref: (
+            stored.transactions[materialised.transactions[row.ref]].iva_amount,
+            stored.transactions[materialised.transactions[row.ref]].recargo_amount,
+        )
+        for row in persona.ledger
+    } == {row.ref: (row.iva_amount, None) if row.recargo_amount is None else (None, None) for row in persona.ledger}
+    assert set(materialised.invoices) == {row.ref for row in persona.ledger if row.invoice_kind is not None}
+    assert {
+        (
+            row.payer_legal_name,
+            row.ejercicio,
+            Decimal(row.importe_integro_dinerario.decimal),
+            Decimal(row.retencion.decimal),
+        )
+        for row in withholding
+    } == {
+        (
+            persona.identities.role(certificate.payer).legal_name,
+            certificate.ejercicio.resolve(world.envelope),
+            certificate.importe_integro,
+            certificate.retencion,
+        )
+        for certificate in persona.withholding_certificates
     }
     assert set(materialised.evidence) == {document.id for document in persona.documents}
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
