@@ -1,0 +1,62 @@
+format = 1
+
+[persona]
+id = "minorista-recargo"
+title = "Comerciante minorista en recargo de equivalencia"
+summary = """
+Rosa Gil vende ropa al por menor en una tienda de Zaragoza. Como comerciante
+minorista persona física está en el régimen especial del recargo de
+equivalencia: su mayorista le repercute IVA y recargo, ella no liquida IVA ni
+presenta los Modelos 303 y 390, y el IVA soportado es coste. Tributa en
+estimación directa simplificada y presenta pagos fraccionados.
+"""
+taxpayer = "minorista.titular"
+fiscal_year = "horizon-1"
+modelos = ["130", "347", "100"]
+
+[clock]
+as_of = { year = "horizon", month = 2, day = 16 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "natural_person"
+"tax-id" = { identity = "minorista.titular" }
+"name" = { identity = "minorista.titular", field = "name" }
+"surnames" = { identity = "minorista.titular", field = "surnames" }
+"fiscal-residency" = "resident_irpf"
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "aragon"
+"address-postcode" = "50004"
+"irpf-income-categories" = ["actividad_economica"]
+"activity-start-date" = { year = "horizon-12", month = 4, day = 1 }
+"iva-regime" = "RECARGO_EQUIVALENCIA"
+"iva-roi-enrolled" = false
+"iva-oss-enrolled" = false
+"iva-sii-enrolled" = false
+"iva-redeme-enrolled" = false
+"iva-cash-accounting-regime-enrolled" = false
+"iva-voluntary-sii-enrolled" = false
+"iva-hydrocarbon-deposit-advance-payment-deduction-entitled" = false
+"taxation-type" = "1"
+"taxpayer-sex" = "M"
+"taxpayer-marital-status" = "1"
+"situacion-familiar" = "soltero"
+"taxpayer-birth-date" = { year = "horizon-47", month = 2, day = 9 }
+"has-employees" = false
+"pays-professionals-with-retencion" = false
+"pays-rent-with-retencion" = false
+"pays-capital-income-with-retencion" = false
+"art109-activity-income-withholding-ge-70pct" = false
+"irpf-estimation-regime" = "directa_simplificada"
+"irpf-codigo-comercio-accounting" = false
+"does-intracomunitario" = false
+"third-party-transactions-above-347-threshold" = true
+
+[[activities]]
+description = "Comercio al por menor de prendas de vestir"
+iae_epigraph = "651.2"
+
+[[elections]]
+question = "irpf-activity-income-imputation-criterion"
+value = "devengo"
+year = "horizon-1"

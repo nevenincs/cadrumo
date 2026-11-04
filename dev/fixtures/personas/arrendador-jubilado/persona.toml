@@ -1,0 +1,58 @@
+format = 1
+
+[persona]
+id = "arrendador-jubilado"
+title = "Jubilado viudo que alquila una vivienda"
+summary = """
+Manuel Esteve, viudo de 70 años residente en Sevilla, cobra una pensión pública
+de jubilación y alquila como vivienda habitual de su inquilina un piso que
+heredó. El alquiler de vivienda está exento de IVA y no le obliga a ninguna
+autoliquidación periódica; declara los rendimientos del capital inmobiliario,
+con la reducción del 50 % del art. 23.2 LIRPF, en el Modelo 100.
+"""
+taxpayer = "arrendador.titular"
+fiscal_year = "horizon-1"
+modelos = ["100"]
+
+[clock]
+as_of = { year = "horizon", month = 2, day = 16 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "natural_person"
+"tax-id" = { identity = "arrendador.titular" }
+"name" = { identity = "arrendador.titular", field = "name" }
+"surnames" = { identity = "arrendador.titular", field = "surnames" }
+"fiscal-residency" = "resident_irpf"
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "andalucia"
+"address-postcode" = "41010"
+"irpf-income-categories" = ["capital_inmobiliario", "pension"]
+"taxation-type" = "1"
+"taxpayer-sex" = "H"
+"taxpayer-marital-status" = "3"
+"taxpayer-birth-date" = { year = "horizon-71", month = 9, day = 2 }
+"third-party-transactions-above-347-threshold" = false
+
+[[withholding_certificates]]
+payer = "arrendador.pagador-pension"
+ejercicio = "horizon-1"
+income_class = "trabajo"
+origin = "payer_certificate"
+importe_integro = "21840.00"
+retencion = "2180.00"
+
+# Declarative scenario facts for the let dwelling. No production operation that
+# records them was located; the reader keeps this block as expectation input
+# and reports it as not materialised.
+[[rental_properties]]
+id = "piso-arrendado"
+use = "vivienda_habitual_arrendatario"
+tenant = "arrendador.inquilina"
+contract_start = { year = "horizon-2", month = 6, day = 1 }
+monthly_rent = "950.00"
+days_let = "full_year"
+amortization_base = "108000.00"
+amortization_rate = "0.03"
+amortization_base_note = "Construction share of the acquisition value by inheritance, which exceeds the construction share of the valor catastral."
+reduccion_art_23_2 = "tier-50"

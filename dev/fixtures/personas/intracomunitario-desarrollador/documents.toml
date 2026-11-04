@@ -1,0 +1,10 @@
+format = 1
+persona = "intracomunitario-desarrollador"
+
+[[documents]]
+id = "factura-inversion-sujeto-pasivo"
+path = "src/cadrumo/application/ledger/tests/_evidence_corpus/en16931_ubl_reverse_charge_invoice.xml"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-01"]
+relation = "specimen"
+note = "A synthetic EN 16931 UBL invoice with a reverse-charge VAT category, exercising the structured e-invoice evidence path for an intra-community service acquisition. Its parties and amounts are not DEV-NUBE-01's facts."

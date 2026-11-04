@@ -1,0 +1,10 @@
+format = 1
+persona = "autonomo-fontanero"
+
+[[documents]]
+id = "factura-material"
+path = "docs/_sequences/fixtures/factura-material-oficina.pdf"
+media_type = "application/pdf"
+attach_to = ["FON-MAT-1"]
+relation = "specimen"
+note = "A synthetic received-invoice PDF that exercises evidence attachment on a received purchase. Its printed supplier, lines and amounts are not the ledger row's facts; a test must not confirm the printed facts into FON-MAT-1."

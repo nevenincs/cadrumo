@@ -1,0 +1,10 @@
+format = 1
+persona = "minorista-recargo"
+
+[[documents]]
+id = "factura-recargo"
+path = "src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_recargo_invoice.xml"
+media_type = "application/xml"
+attach_to = ["MIN-COM-1"]
+relation = "specimen"
+note = "A synthetic Facturae 3.2 invoice charging IVA 21 % plus recargo de equivalencia 5.2 %, the same rate pair as MIN-COM-1. Its parties and amounts are not MIN-COM-1's facts."

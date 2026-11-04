@@ -1,0 +1,10 @@
+format = 1
+persona = "traductora-profesional"
+
+[[documents]]
+id = "factura-retencion"
+path = "src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_retencion_suplidos_invoice.xml"
+media_type = "application/xml"
+attach_to = ["TRA-ING-01"]
+relation = "specimen"
+note = "A synthetic Facturae 3.2 invoice carrying an IRPF retención, exercising the structured e-invoice evidence path for withheld professional income. Its parties and amounts are not TRA-ING-01's facts."

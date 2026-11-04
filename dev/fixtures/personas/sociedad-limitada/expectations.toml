@@ -1,0 +1,172 @@
+format = 1
+persona = "sociedad-limitada"
+
+[[obligations]]
+modelo = "303"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = true
+reason = "Sociedad en régimen general del IVA, volumen de operaciones inferior a 6010121.04 euros: autoliquidación trimestral."
+legal_ref = ["ley-37-1992:art-164", "rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "390"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Resumen anual de quien presenta el Modelo 303 trimestral."
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "347"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Operaciones con el cliente y con el proveedor superan 3005.06 euros anuales."
+legal_ref = ["rd-1065-2007:art-31", "rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "200"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Contribuyente del Impuesto sobre Sociedades; declaración anual del ejercicio que coincide con el año natural."
+legal_ref = ["ley-27-2014:art-124"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "202"
+periods = ["1P", "2P", "3P"]
+year = "horizon"
+applicable = "unknown"
+reason = "Under the cuota method, pagos fraccionados are due only when the last declared return shows a positive cuota after deductions; the Modelo 200 for horizon-1 is not yet filed at the clock and the prior return is not part of the scenario."
+legal_ref = ["ley-27-2014:art-40"]
+grounding = "unverified"
+
+[[obligations]]
+modelo = "130"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = false
+reason = "Legal entity: IRPF pagos fraccionados do not apply."
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "cited"
+
+[[deadlines]]
+modelo = "303"
+period = "1T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 4, day = 20 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "303"
+period = "4T"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 1, day = 30 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 2, day = "last" }
+legal_ref = ["rd-1065-2007:art-35"]
+grounding = "cited"
+
+[[deadlines]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 7, day = 25 }
+legal_ref = ["ley-27-2014:art-124"]
+grounding = "cited"
+note = "Twenty-five days after the six months following the end of a calendar-year tax period."
+
+[[values]]
+modelo = "303"
+period = "1T"
+year = "horizon-1"
+casillas = { "07" = "7000.00", "09" = "1470.00", "27" = "1470.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1186.50", "66" = "1186.50", "71" = "1186.50" }
+concepts = { resultado_regimen_general = "1186.50" }
+derivation = "07 = SOC-VTA-1 5200.00 + SOC-VTA-2 1800.00; 09 = 21 %. 28/29 = SOC-ALQ-1 1350.00 / 283.50. Resultado = 1470.00 - 283.50."
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "cited"
+
+[[values]]
+modelo = "303"
+period = "2T"
+year = "horizon-1"
+casillas = { "07" = "8200.00", "09" = "1722.00", "27" = "1722.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1438.50", "66" = "1438.50", "71" = "1438.50" }
+concepts = { resultado_regimen_general = "1438.50" }
+derivation = "07 = SOC-VTA-3 6400.00 + SOC-VTA-4 1800.00; 28/29 = SOC-ALQ-2. Resultado = 1722.00 - 283.50."
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "cited"
+
+[[values]]
+modelo = "303"
+period = "3T"
+year = "horizon-1"
+casillas = { "07" = "6500.00", "09" = "1365.00", "27" = "1365.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1081.50", "66" = "1081.50", "71" = "1081.50" }
+concepts = { resultado_regimen_general = "1081.50" }
+derivation = "07 = SOC-VTA-5 4700.00 + SOC-VTA-6 1800.00; 28/29 = SOC-ALQ-3. Resultado = 1365.00 - 283.50."
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "cited"
+
+[[values]]
+modelo = "303"
+period = "4T"
+year = "horizon-1"
+casillas = { "07" = "9100.00", "09" = "1911.00", "27" = "1911.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1627.50", "66" = "1627.50", "71" = "1627.50" }
+concepts = { resultado_regimen_general = "1627.50" }
+derivation = "07 = SOC-VTA-7 7300.00 + SOC-VTA-8 1800.00; 28/29 = SOC-ALQ-4. Resultado = 1911.00 - 283.50."
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "cited"
+
+[[values]]
+modelo = "390"
+period = "0A"
+year = "horizon-1"
+concepts = { base_21 = "30800.00", cuota_21 = "6468.00", total_cuota_devengada = "6468.00", base_soportado_interior = "5400.00", total_cuota_deducible = "1134.00", resultado_regimen_general = "5334.00", suma_resultados_303 = "5334.00" }
+derivation = "Annual sums; 1186.50 + 1438.50 + 1081.50 + 1627.50 = 5334.00."
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "cited"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "sociedad.cliente"
+concepts = { clave = "B", importe_anual = "37268.00" }
+derivation = "SOC-VTA-1..8 including IVA: 30800.00 x 1.21 = 37268.00."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "sociedad.proveedor"
+concepts = { clave = "A", importe_anual = "6534.00" }
+derivation = "SOC-ALQ-1..4 4 x 1633.50 = 6534.00."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+concepts = { ingresos_explotacion_ledger = "30800.00", gastos_explotacion_ledger = "5400.00" }
+derivation = """
+The bank ledger gives revenue 30800.00 and the equipment and licence rental 5400.00 (net of deductible IVA).
+The Modelo 200 starts from the accounting result (casilla 00501), which needs closing entries (amortisation, accruals,
+officer costs) the ledger does not hold, so no Modelo 200 casilla is asserted.
+"""
+legal_ref = ["ley-27-2014:art-124"]
+grounding = "unverified"
+reason = "The accounting result is outside the bank ledger; asserting a Modelo 200 casilla would record an unproven figure."

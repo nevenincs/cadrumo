@@ -1,0 +1,72 @@
+format = 1
+
+[persona]
+id = "asalariada-familia"
+title = "Asalariada casada con dos hijos y su madre a cargo"
+summary = """
+Lucía Navarro trabaja por cuenta ajena en Madrid todo el año. Está casada y
+declara individualmente; su marido declara por su cuenta. Conviven con sus dos
+hijos, el menor de ellos de menos de tres años y matriculado en una escuela
+infantil, y con la madre de Lucía, pensionista de 78 años con rentas inferiores a
+8000 euros. Solo presenta el Modelo 100.
+"""
+taxpayer = "asalariada.titular"
+fiscal_year = "horizon-1"
+modelos = ["100"]
+
+[clock]
+as_of = { year = "horizon", month = 2, day = 16 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "natural_person"
+"tax-id" = { identity = "asalariada.titular" }
+"name" = { identity = "asalariada.titular", field = "name" }
+"surnames" = { identity = "asalariada.titular", field = "surnames" }
+"fiscal-residency" = "resident_irpf"
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "madrid"
+"address-postcode" = "28039"
+"irpf-income-categories" = ["trabajo"]
+"taxation-type" = "1"
+"taxpayer-sex" = "M"
+"taxpayer-marital-status" = "2"
+"situacion-familiar" = "casado"
+"taxpayer-marriage-date" = { year = "horizon-12", month = 9, day = 15 }
+"taxpayer-birth-date" = { year = "horizon-39", month = 6, day = 14 }
+"spouse-tax-id" = { identity = "asalariada.conyuge" }
+"spouse-name" = { identity = "asalariada.conyuge", field = "name" }
+"spouse-surnames" = { identity = "asalariada.conyuge", field = "surnames" }
+"spouse-birth-date" = { year = "horizon-41", month = 1, day = 30 }
+"spouse-sex" = "H"
+"spouse-non-resident-irpf" = false
+"family-minor-children-in-unit" = true
+"family-convive-con-otro-progenitor" = true
+
+[[household.descendants]]
+identity = "asalariada.hijo"
+birth_date = { year = "horizon-9", month = 5, day = 11 }
+convivencia = "true"
+prorrata_minimo = "true"
+
+[[household.descendants]]
+identity = "asalariada.hija"
+birth_date = { year = "horizon-2", month = 3, day = 21 }
+convivencia = "true"
+prorrata_minimo = "true"
+meses_madre_trabajo = "01;02;03;04;05;06;07;08;09;10;11;12"
+gastos_guarderia_mensuales = "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220"
+
+[[household.ascendants]]
+identity = "asalariada.madre"
+birth_date = { year = "horizon-79", month = 1, day = 8 }
+convivientes = "1"
+
+[[withholding_certificates]]
+payer = "asalariada.empleador"
+ejercicio = "horizon-1"
+income_class = "trabajo"
+origin = "payer_certificate"
+importe_integro = "36000.00"
+retencion = "5412.00"
+cotizaciones_seguridad_social = "2332.80"

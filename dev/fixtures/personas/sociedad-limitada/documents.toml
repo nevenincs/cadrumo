@@ -1,0 +1,10 @@
+format = 1
+persona = "sociedad-limitada"
+
+[[documents]]
+id = "factura-emitida-serie"
+path = "src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_series_and_parties_invoice.xml"
+media_type = "application/xml"
+attach_to = ["SOC-VTA-1"]
+relation = "specimen"
+note = "A synthetic Facturae 3.2 invoice with an invoice series and full party blocks, exercising issued-invoice evidence for a company. Its parties and amounts are not SOC-VTA-1's facts."
