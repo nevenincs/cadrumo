@@ -6,10 +6,10 @@ import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
 import { translator, useStrings } from "../../../shell/strings";
 import { AssetsSection } from "./AssetsSection";
-import { formatDay } from "../../../shared/dateFormats";
-import { formatAmount } from "../../../shared/numbers";
-import { listOf } from "../../../shared/lists";
 import { ASSET_KEYS } from "./assetsWords";
+import { said } from "@/dev/assetsServedWords";
+import { SEED_ELEMENTS } from "@/dev/assetsSeed";
+import { ledgerLanguage } from "../../../shell/ledgerLanguage";
 
 // The Assets tab over the scenario's ledger: its list, the detail of one
 // element with its plan and timeline, the forms, the filing handoff, and the
@@ -166,6 +166,37 @@ const SPAN = {
   covered_through: "2026-12-31",
 };
 
+// The sentences a handoff leaves out are the ones the register said, as
+// recorded; where the recording holds one for a story's case it is drawn and
+// checked, and where it holds none the window draws nothing for it.
+const nameOf = (id: string) =>
+  SEED_ELEMENTS.find((seed) => seed.id === id)?.list.name ?? null;
+const gapWords = (
+  id: string,
+  kind: string,
+  accrued: string | null,
+): string | null =>
+  said(
+    {
+      kind: "gap",
+      gap_kind: kind,
+      name: nameOf(id),
+      covered_from: SPAN.covered_from,
+      covered_through: SPAN.covered_through,
+      accrued,
+    },
+    ledgerLanguage() ?? "en",
+  ) ?? null;
+const leftOutWords = (reason: string, ids: readonly string[]): string | null =>
+  ids.length === 0
+    ? null
+    : (said(
+        { kind: "left_out", reason, names: ids.map(nameOf) },
+        ledgerLanguage() ?? "en",
+      ) ?? null);
+const partialWords = (count: number): string | null =>
+  said({ kind: "partial", count }, ledgerLanguage() ?? "en") ?? null;
+
 /** The scenario's port, with what the filing handoff leaves out stated as the
  * story asks, whatever the seeded register leaves out of its own. */
 function withLeftOut(port: LedgerPort, leftOut: LeftOut): LedgerPort {
@@ -182,12 +213,14 @@ function withLeftOut(port: LedgerPort, leftOut: LeftOut): LedgerPort {
         const result = structuredClone(answer.result) as {
           filing_handoff: {
             m100_gaps: object[];
-            material_m130: Record<string, string[]> | null;
-            intangible_m130: Record<string, string[]> | null;
+            material_m130: Record<string, unknown> | null;
+            intangible_m130: Record<string, unknown> | null;
+            left_out: object[];
           } | null;
         };
         const handoff = result.filing_handoff;
         if (handoff === null) return answer;
+        const language = ledgerLanguage() ?? "en";
         const gap = (
           asset_id: string,
           kind: string,
@@ -197,6 +230,8 @@ function withLeftOut(port: LedgerPort, leftOut: LeftOut): LedgerPort {
           kind,
           ...SPAN,
           accrued: accrued === null ? null : { decimal: accrued },
+          words: gapWords(asset_id, kind, accrued),
+          words_language: language,
         });
         const quarter = (
           free: string[],
@@ -209,7 +244,29 @@ function withLeftOut(port: LedgerPort, leftOut: LeftOut): LedgerPort {
               found.agrarian_excluded_asset_ids = agrarian;
               if (unavailable !== undefined)
                 found.unavailable_asset_ids = unavailable;
+              const count = (found.unavailable_asset_ids as string[]).length;
+              found.partial_words = count === 0 ? null : partialWords(count);
+              found.words_language = count === 0 ? null : language;
             }
+          handoff.left_out = (
+            [
+              ["free_gap", free],
+              ["agrarian_excluded", agrarian],
+              ["unavailable", unavailable ?? []],
+            ] as const
+          ).flatMap(([reason, ids]) => {
+            const words = leftOutWords(reason, ids);
+            return words === null
+              ? []
+              : [
+                  {
+                    reason,
+                    asset_ids: [...ids],
+                    words,
+                    words_language: language,
+                  },
+                ];
+          });
         };
         if (leftOut === "named") {
           handoff.m100_gaps = [
@@ -510,30 +567,21 @@ async function openQuarter(context: PlayContext) {
   await FilingHandoff.play?.(context);
 }
 
+/** Checks each sentence the recording holds for the case is drawn. */
+const saysAll = async (context: PlayContext, sentences: (string | null)[]) => {
+  for (const sentence of sentences)
+    if (sentence !== null) await saysLeftOut(context, sentence);
+};
+
 export const FilingHandoffLeftOutNamed: Story = {
   name: "Filing handoff, left-out intervals and elements named",
   args: { leftOut: "named" },
   play: async (context) => {
-    const t = wordsOf(context);
     await openQuarter(context);
-    const span = {
-      start: formatDay(t.locale ?? "en", SPAN.covered_from),
-      end: formatDay(t.locale ?? "en", SPAN.covered_through),
-    };
-    await saysLeftOut(
-      context,
-      t("desktop.ledger.assets.handoff_gap_accrued", {
-        name: "Furgoneta de reparto",
-        ...span,
-        amount: formatAmount(t.locale ?? "en", "1451.84"),
-      }),
-    );
-    await saysLeftOut(
-      context,
-      t("desktop.ledger.assets.handoff_free_named", {
-        names: "Impresora 3D",
-      }),
-    );
+    await saysAll(context, [
+      gapWords("furgoneta", "accrued", "1451.84"),
+      leftOutWords("free_gap", ["impresora"]),
+    ]);
   },
 };
 
@@ -541,16 +589,11 @@ export const FilingHandoffLeftOutUnnamed: Story = {
   name: "Filing handoff, left out elements the list holds no name for: a count",
   args: { leftOut: "unnamed" },
   play: async (context) => {
-    const t = wordsOf(context);
     await openQuarter(context);
-    await saysLeftOut(
-      context,
-      t("desktop.ledger.assets.handoff_gap_unnamed", { count: 2 }),
-    );
-    await saysLeftOut(
-      context,
-      t("desktop.ledger.assets.handoff_free_count", { count: 2 }),
-    );
+    await saysAll(context, [
+      gapWords("no-list-name-a", "free_method", null),
+      leftOutWords("free_gap", ["no-list-name-a", "impresora"]),
+    ]);
   },
 };
 
@@ -558,17 +601,10 @@ export const FilingHandoffLeftOutCouldNotBeWorkedOutNamed: Story = {
   name: "Filing handoff, elements that could not be worked out are named",
   args: { leftOut: "unavailable_named" },
   play: async (context) => {
-    const t = wordsOf(context);
     await openQuarter(context);
-    await saysLeftOut(
-      context,
-      t("desktop.ledger.assets.handoff_unavailable_named", {
-        names: listOf(t.locale ?? "en", [
-          "Furgoneta de reparto",
-          "Impresora 3D",
-        ]),
-      }),
-    );
+    await saysAll(context, [
+      leftOutWords("unavailable", ["furgoneta", "impresora"]),
+    ]);
   },
 };
 
@@ -576,12 +612,10 @@ export const FilingHandoffLeftOutCouldNotBeWorkedOutCount: Story = {
   name: "Filing handoff, elements that could not be worked out and have no name: a count",
   args: { leftOut: "unavailable_unnamed" },
   play: async (context) => {
-    const t = wordsOf(context);
     await openQuarter(context);
-    await saysLeftOut(
-      context,
-      t("desktop.ledger.assets.handoff_unavailable_count", { count: 2 }),
-    );
+    await saysAll(context, [
+      leftOutWords("unavailable", ["no-list-name-a", "no-list-name-b"]),
+    ]);
   },
 };
 
@@ -589,18 +623,18 @@ export const FilingHandoffSingularCounts: Story = {
   name: "Filing handoff, one element of each kind is said in the singular",
   args: { leftOut: "singular" },
   play: async (context) => {
-    const t = wordsOf(context);
     await openQuarter(context);
-    for (const key of [
-      "desktop.ledger.assets.handoff_gap_unnamed_one",
-      "desktop.ledger.assets.handoff_free_count_one",
-      "desktop.ledger.assets.handoff_agrarian_count_one",
-      "desktop.ledger.assets.handoff_unavailable_count_one",
-    ])
-      await saysLeftOut(context, t(key));
-    await within(context.canvasElement).findAllByRole("img", {
-      name: t("desktop.ledger.assets.handoff_partial_one"),
-    });
+    await saysAll(context, [
+      gapWords("no-list-name-a", "free_method", null),
+      leftOutWords("free_gap", ["no-list-name-a"]),
+      leftOutWords("agrarian_excluded", ["no-list-name-b"]),
+      leftOutWords("unavailable", ["no-list-name-c"]),
+    ]);
+    const marked = partialWords(1);
+    if (marked !== null)
+      await within(context.canvasElement).findAllByRole("img", {
+        name: marked,
+      });
   },
 };
 
@@ -608,27 +642,11 @@ export const FilingHandoffAccrualUnknown: Story = {
   name: "Filing handoff, an accrual not worked out: never drawn as zero",
   args: { leftOut: "unknown" },
   play: async (context) => {
-    const t = wordsOf(context);
     await openQuarter(context);
-    const locale = t.locale ?? "en";
-    await saysLeftOut(
-      context,
-      t("desktop.ledger.assets.handoff_gap_unavailable", {
-        name: "Furgoneta de reparto",
-        start: formatDay(locale, SPAN.covered_from),
-        end: formatDay(locale, SPAN.covered_through),
-      }),
-    );
-    if (
-      context.canvasElement.textContent?.includes(
-        t("desktop.ledger.assets.handoff_gap_accrued", {
-          name: "Furgoneta de reparto",
-          start: formatDay(locale, SPAN.covered_from),
-          end: formatDay(locale, SPAN.covered_through),
-          amount: formatAmount(locale, "0"),
-        }),
-      )
-    )
+    await saysAll(context, [gapWords("furgoneta", "accrued", null)]);
+    // An accrual that is not stated is never drawn as an amount.
+    const zero = gapWords("furgoneta", "accrued", "0");
+    if (zero !== null && context.canvasElement.textContent?.includes(zero))
       throw new Error("an accrual not worked out was drawn as zero");
   },
 };

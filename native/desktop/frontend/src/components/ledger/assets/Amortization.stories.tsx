@@ -2,7 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { userEvent, waitFor, within } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
+import { said } from "@/dev/assetsServedWords";
 import { NO_TABLE_MINIMUM_KEY, REMEDY_FIELD_KEYS } from "@/dev/assetsSeed";
+import { ledgerLanguage } from "../../../shell/ledgerLanguage";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
   ActivityAssetForecast,
@@ -61,14 +63,20 @@ type PlanShape = {
     | {
         absence: string | null;
         absence_reason_key: string | null;
+        absence_reason_words?: string | null;
         absence_remedy_field_key: string | null;
+        absence_remedy_words?: string | null;
         claim_state: string;
         claimable_intervals: unknown[];
         claimable_refusal_key: string | null;
         claimable_refusal_facts: ReasonFact[];
+        claimable_refusal_words?: string | null;
         claimable_refusal_remedy_field_key: string | null;
+        claimable_refusal_remedy_words?: string | null;
         minimum_through: unknown;
         minimum_reason_key: string | null;
+        minimum_reason_words?: string | null;
+        minimum_has_no_table: boolean;
         minimum_complete: boolean;
       }[]
     | null;
@@ -77,8 +85,18 @@ type PlanShape = {
     maximum_period_last_day: string | null;
     unavailable_reason_key: string | null;
     unavailable_reason_facts: ReasonFact[];
+    unavailable_reason_words?: string | null;
   } | null;
 };
+
+/** The sentence the register said for a reason, as recorded, in the
+ * language the story shows; none where the recording holds none, which the
+ * window draws as its generic word. */
+const reasonWords = (key: string, facts: ReasonFact[]): string | null =>
+  said({ kind: "reason", key, facts }, ledgerLanguage() ?? "en") ?? null;
+const remedyWords = (fieldKey: string): string | null =>
+  said({ kind: "remedy", field_key: fieldKey }, ledgerLanguage() ?? "en") ??
+  null;
 
 const ELAPSED = "ledger.actividad_asset.errors.amortization_period_elapsed";
 const OPENING_MISSING = "ledger.actividad_asset.errors.opening_history_missing";
@@ -120,17 +138,22 @@ function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
           // The remedy is the entry the register serves for the reason.
           for (const row of plan.rows ?? [])
             if (row.absence === "incomplete") {
+              const remedy = REMEDY_FIELD_KEYS[OPENING_MISSING]!;
               row.absence_reason_key = OPENING_MISSING;
-              row.absence_remedy_field_key =
-                REMEDY_FIELD_KEYS[OPENING_MISSING]!;
+              row.absence_reason_words = reasonWords(OPENING_MISSING, []);
+              row.absence_remedy_field_key = remedy;
+              row.absence_remedy_words = remedyWords(remedy);
               row.claimable_refusal_key = OPENING_MISSING;
-              row.claimable_refusal_remedy_field_key =
-                REMEDY_FIELD_KEYS[OPENING_MISSING]!;
+              row.claimable_refusal_words = reasonWords(OPENING_MISSING, []);
+              row.claimable_refusal_remedy_field_key = remedy;
+              row.claimable_refusal_remedy_words = remedyWords(remedy);
             }
         } else if (tweak === "no_table_minimum") {
           for (const row of plan.rows ?? []) {
             row.minimum_through = null;
             row.minimum_reason_key = NO_TABLE_MINIMUM_KEY;
+            row.minimum_reason_words = reasonWords(NO_TABLE_MINIMUM_KEY, []);
+            row.minimum_has_no_table = true;
             row.minimum_complete = false;
           }
         } else if (tweak === "refusal_facts") {
@@ -145,10 +168,12 @@ function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
             last.claimable_intervals = [];
             last.claimable_refusal_key = ELAPSED;
             last.claimable_refusal_facts = facts;
+            last.claimable_refusal_words = reasonWords(ELAPSED, facts);
           }
           if (plan.limits) {
             plan.limits.unavailable_reason_key = ELAPSED;
             plan.limits.unavailable_reason_facts = facts;
+            plan.limits.unavailable_reason_words = reasonWords(ELAPSED, facts);
           }
         } else if (tweak === "nothing_left") {
           const first = plan.rows?.[0];
@@ -156,6 +181,7 @@ function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
             first.claim_state = "missing";
             first.claimable_intervals = [];
             first.claimable_refusal_key = null;
+            first.claimable_refusal_words = null;
           }
         } else if (plan.limits) plan.limits.legal_citations_complete = false;
         return { ...answer, result: plan };

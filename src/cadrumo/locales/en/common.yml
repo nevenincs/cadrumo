@@ -1727,42 +1727,7 @@ desktop:
       free_hint: Only for a free-amortisation method
       from: From
       handoff: Depreciation charges in your tax returns
-      handoff_agrarian_count: 'Left out of Modelo 130, because they belong to an agricultural
-        activity, which pays a share of income: {count} elements.'
-      handoff_agrarian_count_one: 'Left out of Modelo 130, because it belongs to an
-        agricultural activity, which pays a share of income: 1 element.'
-      handoff_agrarian_named: 'Left out of Modelo 130, because they belong to an agricultural
-        activity, which pays a share of income: {names}.'
-      handoff_free_count: 'Not counted in Modelo 130, because their method leaves
-        the depreciation charge to you: {count} elements.'
-      handoff_free_count_one: 'Not counted in Modelo 130, because its method leaves
-        the depreciation charge to you: 1 element.'
-      handoff_free_named: 'Not counted in Modelo 130, because their method leaves
-        the depreciation charge to you: {names}.'
-      handoff_gap_accrued: 'Modelo 100: {name} has no depreciation charge recorded
-        from {start} to {end}. The {amount} it accrued in that time is not in the
-        amounts above.'
-      handoff_gap_box_unbound: 'Modelo 100: this edition has no box for the depreciation
-        of {name}, so nothing is declared for it from {start} to {end}.'
-      handoff_gap_free: 'Modelo 100: {name} has no depreciation charge recorded from
-        {start} to {end}. Its method leaves the amount to you, so none can be worked
-        out.'
-      handoff_gap_unavailable: 'Modelo 100: {name} has no depreciation charge recorded
-        from {start} to {end}, and it could not be worked out.'
-      handoff_gap_unnamed: 'Also left out: {count} periods of elements that this list
-        does not name.'
-      handoff_gap_unnamed_one: 'Also left out: 1 period of elements that this list
-        does not name.'
       handoff_left_out: Left out of these amounts
-      handoff_partial: 'Partial: {count} elements can''t be worked out and are left
-        out of this amount.'
-      handoff_partial_one: 'Partial: 1 element can''t be worked out and is left out
-        of this amount.'
-      handoff_unavailable_count: '{count} elements couldn''t be worked out, so they
-        are left out.'
-      handoff_unavailable_count_one: 1 element couldn't be worked out, so it is left
-        out.
-      handoff_unavailable_named: 'Couldn''t be worked out, so left out: {names}.'
       handoff_year: Year for the filing figures
       list:
         column:
@@ -1785,7 +1750,6 @@ desktop:
         not_applicable: Doesn't apply
         nothing_recorded: Nothing recorded
       not_known: Not known
-      opening_unknown: Fill in “{field}” to work this out.
       plan:
         baja: 'Disposal on {date}: {reason}'
         claimable: A depreciation charge can still be recorded {from} – {until}

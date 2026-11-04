@@ -5,6 +5,7 @@ import servedEntryOptions from "../src/dev/fixtures/ledgerEntryOptions.json" wit
 import "../src/dev/index.css";
 import { holdLedgerClassifications } from "../src/shell/ledgerClassifications";
 import { holdRecordedPeriods } from "../src/dev/periodRecording";
+import { holdLedgerLanguage } from "../src/shell/ledgerLanguage";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import type {
   LedgerEntryClassification,
@@ -25,6 +26,8 @@ const holdPeriods = (locale: string) => {
   if (periodsFor === locale) return;
   periodsFor = locale;
   holdRecordedPeriods(locale as Parameters<typeof holdRecordedPeriods>[0]);
+  // The register's sentences are asked for, and recorded, in this language.
+  holdLedgerLanguage(locale as Parameters<typeof holdLedgerLanguage>[0]);
 };
 
 // Every story is drawn on a real shell surface, in the scheme and language

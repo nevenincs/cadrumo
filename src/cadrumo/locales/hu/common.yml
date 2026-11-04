@@ -1752,40 +1752,7 @@ desktop:
       free_hint: Csak szabad értékcsökkenési módszernél
       from: Ettől
       handoff: Értékcsökkenési leírások a bevallásaidban
-      handoff_agrarian_count: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
-        tartoznak, amely a bevétel egy részét fizeti: {count} elem.'
-      handoff_agrarian_count_one: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
-        tartozik, amely a bevétel egy részét fizeti: 1 elem.'
-      handoff_agrarian_named: 'Kimarad a 130-asból, mert mezőgazdasági tevékenységhez
-        tartoznak, amely a bevétel egy részét fizeti: {names}.'
-      handoff_free_count: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
-        leírás összegét rád hagyja: {count} elem.'
-      handoff_free_count_one: 'Nem számít bele a 130-asba, mert a módszere az értékcsökkenési
-        leírás összegét rád hagyja: 1 elem.'
-      handoff_free_named: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
-        leírás összegét rád hagyja: {names}.'
-      handoff_gap_accrued: '100-as: {name} esetében nincs rögzített értékcsökkenési
-        leírás {start} és {end} között. Az ez alatt felmerült {amount} nincs benne
-        a fenti összegekben.'
-      handoff_gap_box_unbound: '100-as: ebben a kiadásban nincs rovat {name} értékcsökkenési
-        leírásához, ezért {start} és {end} között nem szerepel róla semmi.'
-      handoff_gap_free: '100-as: {name} esetében nincs rögzített értékcsökkenési leírás
-        {start} és {end} között. A módszere az összeget rád hagyja, ezért egyik sem
-        számítható ki.'
-      handoff_gap_unavailable: '100-as: {name} esetében nincs rögzített értékcsökkenési
-        leírás {start} és {end} között, és nem számítható ki.'
-      handoff_gap_unnamed: Emellett kimarad {count} időszak olyan elemekből, amelyeket
-        ez a lista nem nevez meg.
-      handoff_gap_unnamed_one: Emellett kimarad 1 időszak olyan elemekből, amelyeket
-        ez a lista nem nevez meg.
       handoff_left_out: Kimarad ezekből az összegekből
-      handoff_partial: 'Részleges: {count} elem nem számítható ki, ezért kimarad ebből
-        az összegből.'
-      handoff_partial_one: 'Részleges: 1 elem nem számítható ki, ezért kimarad ebből
-        az összegből.'
-      handoff_unavailable_count: '{count} elemet nem sikerült kiszámolni, ezért kimaradnak.'
-      handoff_unavailable_count_one: 1 elemet nem sikerült kiszámolni, ezért kimarad.
-      handoff_unavailable_named: 'Nem sikerült kiszámolni, ezért kimarad: {names}.'
       handoff_year: A bevalláshoz tartozó számok éve
       list:
         column:
@@ -1808,7 +1775,6 @@ desktop:
         not_applicable: Nem alkalmazandó
         nothing_recorded: Nincs rögzítve
       not_known: Nem ismert
-      opening_unknown: 'A kiszámításhoz add meg ezt: „{field}”.'
       plan:
         baja: 'Kivezetés: {date}, {reason}'
         claimable: 'Értékcsökkenési leírás még rögzíthető: {from} – {until}'

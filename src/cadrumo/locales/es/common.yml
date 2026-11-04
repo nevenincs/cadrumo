@@ -1783,44 +1783,7 @@ desktop:
       free_hint: Solo para un método de amortización libre
       from: Desde
       handoff: Dotaciones en tus declaraciones
-      handoff_agrarian_count: 'Quedan fuera del Modelo 130, porque pertenecen a una
-        actividad agrícola, que paga un porcentaje de los ingresos: {count} elementos.'
-      handoff_agrarian_count_one: 'Queda fuera del Modelo 130, porque pertenece a
-        una actividad agrícola, que paga un porcentaje de los ingresos: 1 elemento.'
-      handoff_agrarian_named: 'Quedan fuera del Modelo 130, porque pertenecen a una
-        actividad agrícola, que paga un porcentaje de los ingresos: {names}.'
-      handoff_free_count: 'No cuentan en el Modelo 130, porque su método te deja la
-        dotación a ti: {count} elementos.'
-      handoff_free_count_one: 'No cuenta en el Modelo 130, porque su método te deja
-        la dotación a ti: 1 elemento.'
-      handoff_free_named: 'No cuentan en el Modelo 130, porque su método te deja la
-        dotación a ti: {names}.'
-      handoff_gap_accrued: 'Modelo 100: {name} no tiene dotación registrada del {start}
-        al {end}. Los {amount} que se devengaron en ese tiempo no están en los importes
-        de arriba.'
-      handoff_gap_box_unbound: 'Modelo 100: esta edición no tiene casilla para la
-        dotación de {name}, así que no se declara nada por ese elemento del {start}
-        al {end}.'
-      handoff_gap_free: 'Modelo 100: {name} no tiene dotación registrada del {start}
-        al {end}. Su método deja el importe en tus manos, así que no se puede calcular
-        ninguno.'
-      handoff_gap_unavailable: 'Modelo 100: {name} no tiene dotación registrada del
-        {start} al {end}, y no se pudo calcular.'
-      handoff_gap_unnamed: También quedan fuera {count} periodos de elementos que
-        esta lista no nombra.
-      handoff_gap_unnamed_one: También queda fuera 1 periodo de elementos que esta
-        lista no nombra.
       handoff_left_out: Fuera de estos importes
-      handoff_partial: 'Parcial: {count} elementos no se pueden calcular y quedan
-        fuera de este importe.'
-      handoff_partial_one: 'Parcial: 1 elemento no se puede calcular y queda fuera
-        de este importe.'
-      handoff_unavailable_count: '{count} elementos no se han podido calcular, así
-        que quedan fuera.'
-      handoff_unavailable_count_one: 1 elemento no se ha podido calcular, así que
-        queda fuera.
-      handoff_unavailable_named: 'No se han podido calcular, así que quedan fuera:
-        {names}.'
       handoff_year: Año de las cifras para la declaración
       list:
         column:
@@ -1843,7 +1806,6 @@ desktop:
         not_applicable: No procede
         nothing_recorded: Nada registrado
       not_known: Se desconoce
-      opening_unknown: Rellena «{field}» para poder calcularlo.
       plan:
         baja: 'Baja el {date}: {reason}'
         claimable: Se puede registrar la dotación del {from} al {until}

@@ -48,12 +48,10 @@ import {
 } from "../src/shell/ledgerSetup";
 import {
   ASSET_FAMILY,
-  ASSET_REASON_FAMILY,
   changeFieldWord,
   COUNT_ICON,
   COUNT_KINDS,
   keyedText,
-  reasonText,
   refusalText,
   tokenWord,
 } from "../src/components/ledger/assets/assetsWords";
@@ -1247,84 +1245,6 @@ test("the limits cite the provisions behind the election, each with its official
   expect("legal_references" in long).toBe(false);
 });
 
-test("a date among the facts of a reason is worded for the language of the interface", () => {
-  const strings: Record<string, string> = {
-    [`${ASSET_REASON_FAMILY}amortization_period_elapsed`]:
-      "Ended on {ended_on}.",
-  };
-  const translate = (locale: string) =>
-    Object.assign(
-      (key: string, values?: Record<string, string | number>) =>
-        (strings[key] ?? key).replace(/\{(\w+)\}/g, (_, name: string) =>
-          String(values?.[name] ?? `{${name}}`),
-        ),
-      { locale },
-    ) as unknown as Translate;
-  const facts = [
-    { key: "ended_on", value: "2025-12-31", kind: "date" as const },
-  ];
-  const english = reasonText(
-    translate("en"),
-    `${ASSET_REASON_FAMILY}amortization_period_elapsed`,
-    facts,
-  );
-  const spanish = reasonText(
-    translate("es"),
-    `${ASSET_REASON_FAMILY}amortization_period_elapsed`,
-    facts,
-  );
-  expect(english).not.toContain("2025-12-31");
-  expect(spanish).not.toContain("2025-12-31");
-  expect(english).toContain("2025");
-  expect(english).not.toBe(spanish);
-});
-
-test("a fact of a reason is drawn by its kind: a year as a count is never grouped, an amount to the cent, a percent as a percentage", () => {
-  const key = `${ASSET_REASON_FAMILY}claim_year_beyond_registry`;
-  const strings: Record<string, string> = {
-    [key]: "{tax_year} {amount} {rate} {method}",
-  };
-  const translate = (locale: string) =>
-    Object.assign(
-      (name: string, values?: Record<string, string | number>) =>
-        (strings[name] ?? name).replace(/\{(\w+)\}/g, (_, found: string) =>
-          String(values?.[found] ?? `{${found}}`),
-        ),
-      { locale },
-    ) as unknown as Translate;
-  const facts = [
-    { key: "tax_year", value: "2026", kind: "count" as const },
-    { key: "amount", value: "12345.5", kind: "amount" as const },
-    { key: "rate", value: "0.125", kind: "percent" as const },
-    { key: "method", value: "linear", kind: "text" as const },
-  ];
-  for (const locale of ["en", "es", "ca", "hu"] as const) {
-    const said = reasonText(translate(locale), key, facts)!;
-    // Digits of a count are never grouped in any language.
-    expect(said.startsWith("2026 "), locale).toBe(true);
-    expect(said.endsWith(" linear"), locale).toBe(true);
-    // The amount is drawn for the language, not as it was stated.
-    expect(said, locale).not.toContain("12345.5");
-    expect(said, locale).toContain(
-      {
-        en: "12.5%",
-        es: "12,5 %",
-        ca: "12,5 %",
-        hu: "12,5%",
-      }[locale],
-    );
-  }
-  // A text stands as it is, even one that looks like a date or a number.
-  expect(
-    reasonText(translate("en"), key, [
-      { key: "tax_year", value: "2026-01-01", kind: "text" },
-      { key: "amount", value: "1", kind: "text" },
-      { key: "rate", value: "2", kind: "text" },
-      { key: "method", value: "m", kind: "text" },
-    ]),
-  ).toBe("2026-01-01 1 2 m");
-});
-
 const sale = {
   disposal_date: "2025-06-30",
   reason: "sale",
@@ -2227,12 +2147,10 @@ test("a refusal is read by its reason key and facts, and what is still to fill i
   );
   expect(labels).toContain("<desktop.ledger.assets.field.name>");
   expect(labels).toContain("<desktop.ledger.assets.field.method>");
-  expect(
-    refusalWord(((key: string) => key) as Translate, {
-      reasonKey: null,
-      reasonFacts: [],
-    }),
-  ).toBeNull();
+  expect(refusalWord({ words: null })).toBeNull();
+  expect(refusalWord({ words: "A served sentence." })).toBe(
+    "A served sentence.",
+  );
 });
 
 test("a held write is read against the register: found, not found, or not told", async () => {
@@ -2279,48 +2197,20 @@ const words =
       : template;
   };
 
-test("a reason is said by its catalogue key with its facts, and anything else reads as the generic word", () => {
+test("a refusal reads as the sentence the backend served, and anything else as the generic word", () => {
   const t = words({
-    [`${ASSET_REASON_FAMILY}amortization_period_elapsed`]:
-      "Ended on {ended_on}.",
-    [`${ASSET_REASON_FAMILY}elected_coefficient_out_of_range`]:
-      "{elected} is outside [{minimum}, {maximum}].",
     "desktop.ledger.assets.refused": "Not accepted.",
     "desktop.ledger.assets.unrecognised": "Not recognised",
     [`${ASSET_FAMILY.method}linear`]: "Linear",
   });
-  const elapsed = `${ASSET_REASON_FAMILY}amortization_period_elapsed`;
-  expect(
-    reasonText(t, elapsed, [
-      { key: "ended_on", value: "2025-12-31", kind: "date" },
-    ]),
-  ).toBe("Ended on Dec 31, 2025.");
-  // A fact the sentence needs and was not given: never a raw placeholder.
-  expect(reasonText(t, elapsed, [])).toBeNull();
-  expect(
-    reasonText(t, `${ASSET_REASON_FAMILY}elected_coefficient_out_of_range`, [
-      { key: "elected", value: "0.5", kind: "percent" },
-      { key: "minimum", value: "0.1", kind: "percent" },
-      { key: "maximum", value: "0.2", kind: "percent" },
-    ]),
-  ).toBe("50% is outside [10%, 20%].");
-  // A key the generated strings lack, one outside the family, and none.
-  expect(reasonText(t, `${ASSET_REASON_FAMILY}not_generated`)).toBeNull();
-  expect(reasonText(t, "tui.ledger.activity_asset.plan")).toBeNull();
-  expect(reasonText(t, null)).toBeNull();
-  expect(
-    refusalText(t, {
-      reason_key: `${ASSET_REASON_FAMILY}not_generated`,
-      reason_facts: [],
-    }),
-  ).toBe("Not accepted.");
+  // The sentence arrives said; the window adds nothing to it.
+  expect(refusalText(t, { refusal_words: "A served sentence." })).toBe(
+    "A served sentence.",
+  );
+  // None served, or no refusal at all: the generic refused word.
+  expect(refusalText(t, { refusal_words: null })).toBe("Not accepted.");
+  expect(refusalText(t, {})).toBe("Not accepted.");
   expect(refusalText(t, null)).toBe("Not accepted.");
-  expect(
-    refusalText(t, {
-      reason_key: elapsed,
-      reason_facts: [{ key: "ended_on", value: "x", kind: "text" }],
-    }),
-  ).toBe("Ended on x.");
   expect(tokenWord(t, "method", "linear")).toBe("Linear");
   expect(tokenWord(t, "method", "invented")).toBe("Not recognised");
   expect(tokenWord(t, "method", null)).toBe("Not recognised");
@@ -2747,11 +2637,9 @@ test("the one dotación a refusal names as in the way is offered for correction;
     claimInTheWay([{ key: "conflicting_claim_ids", value: "", kind: "text" }]),
   ).toBeNull();
   expect(claimInTheWay([])).toBeNull();
-  // The names are for acting on, never for saying.
-  const t = wordsOf({ [CLAIMS_OVERLAP]: "That period is already recorded." });
-  expect(reasonText(t, CLAIMS_OVERLAP, named)).toBe(
-    "That period is already recorded.",
-  );
+  // The names are for acting on, never for saying: the sentence arrives said
+  // and does not carry the claim ids.
+  expect(refusalOf(refusal.detail).words ?? "").not.toContain(first.claim_id);
   for (const interval of furgoneta.claimable_intervals)
     expect(interval.covered_through < interval.covered_until).toBe(true);
 });
@@ -2983,43 +2871,6 @@ test("a changed fact on the timeline is worded by the key the backend served for
   expect(fields).not.toContain("revision_number");
 });
 
-const HANDOFF_WORDS = words({
-  "desktop.ledger.assets.handoff_gap_accrued":
-    "{name}: nothing from {start} to {end}, {amount} accrued.",
-  "desktop.ledger.assets.handoff_gap_free":
-    "{name}: nothing from {start} to {end}, left to you.",
-  "desktop.ledger.assets.handoff_gap_unavailable":
-    "{name}: nothing from {start} to {end}, not worked out.",
-  "desktop.ledger.assets.handoff_gap_unnamed": "{count} more periods.",
-  "desktop.ledger.assets.handoff_gap_unnamed_one": "1 more period.",
-  "desktop.ledger.assets.handoff_free_named": "Free: {names}.",
-  "desktop.ledger.assets.handoff_free_count": "Free: {count} elements.",
-  "desktop.ledger.assets.handoff_agrarian_named": "Agricultural: {names}.",
-  "desktop.ledger.assets.handoff_agrarian_count":
-    "Agricultural: {count} elements.",
-  "desktop.ledger.assets.handoff_agrarian_count_one":
-    "Agricultural: 1 element.",
-});
-
-const projection = (
-  casilla: string,
-  assetKind: string,
-  facts: {
-    free?: string[];
-    agrarian?: string[];
-  } = {},
-) => ({
-  asset_kind: assetKind,
-  target_casilla_id: casilla,
-  box_name: `Expenses - ${assetKind}`,
-  tax_year: 2025,
-  amount: { decimal: "0.00" },
-  contributions: [],
-  unavailable_asset_ids: [],
-  free_gap_asset_ids: facts.free ?? [],
-  agrarian_excluded_asset_ids: facts.agrarian ?? [],
-});
-
 const claims = (casilla: string) => ({
   target_casilla_id: casilla,
   box_name: `Box ${casilla}`,
@@ -3028,80 +2879,46 @@ const claims = (casilla: string) => ({
   amount: { decimal: "0.00" },
 });
 
-test("a handoff says what it leaves out by the elements' names, and by their number where a name is missing, never by an id", () => {
-  const names = new Map([
-    ["asset-aaa", "Laptop"],
-    ["asset-bbb", "Printer"],
-  ]);
-  const handoff: Handoff = {
-    material_m100: claims("0208"),
-    intangible_m100: claims("0227"),
-    m100_gaps: [
-      {
-        asset_id: "asset-aaa",
-        kind: "accrued",
-        covered_from: "2025-01-01",
-        covered_until: "2025-04-01",
-        covered_through: "2025-03-31",
-        accrued: { decimal: "412.50" },
-      },
-      {
-        asset_id: "asset-bbb",
-        kind: "free_method",
-        covered_from: "2025-02-01",
-        covered_until: "2025-04-01",
-        covered_through: "2025-03-31",
-        accrued: null,
-      },
-      {
-        // An accrual that is not stated is never drawn as an amount.
-        asset_id: "asset-aaa",
-        kind: "accrued",
-        covered_from: "2025-04-01",
-        covered_until: "2025-05-01",
-        covered_through: "2025-04-30",
-        accrued: null,
-      },
-      {
-        asset_id: "asset-zzz",
-        kind: "unavailable",
-        covered_from: "2025-01-01",
-        covered_until: "2026-01-01",
-        covered_through: "2025-12-31",
-        accrued: null,
-      },
-    ],
-    material_m130: projection("02", "material", {
-      free: ["asset-aaa", "asset-bbb"],
-      agrarian: ["asset-zzz"],
-    }),
-    intangible_m130: projection("02", "intangible", { free: ["asset-bbb"] }),
-  };
-  const said = leftOutNotes(HANDOFF_WORDS, "en", handoff, names);
+test("a handoff says what it leaves out as the backend served it, by the elements' names and never by an id", async () => {
+  const port = portOf();
+  const handoff = (
+    await settled<LedgerResult<typeof HANDOFF>>(
+      port.submit(HANDOFF, {
+        tax_year: 2025,
+        output_language: "en",
+        m130_period: "4T",
+      }),
+    )
+  ).filing_handoff!;
+  const said = leftOutNotes(handoff);
+  // The intervals Modelo 100 leaves out come first, then each reason a
+  // Modelo 130 amount leaves elements out, as the backend states them.
   expect(said).toEqual([
-    "Laptop: nothing from Jan 1, 2025 to Mar 31, 2025, 412.50\u00a0€ accrued.",
-    "Printer: nothing from Feb 1, 2025 to Mar 31, 2025, left to you.",
-    "Laptop: nothing from Apr 1, 2025 to Apr 30, 2025, not worked out.",
-    "1 more period.",
-    // Both kinds name the element once; one element has no name here.
-    "Free: Laptop and Printer.",
-    "Agricultural: 1 element.",
+    ...handoff.m100_gaps.flatMap((gap) => gap.words ?? []),
+    ...handoff.left_out.map((entry) => entry.words),
   ]);
-  expect(said.join(" ")).not.toMatch(/asset-/);
+  expect(said.length).toBeGreaterThan(0);
+  for (const sentence of said)
+    for (const id of SEED_ELEMENTS.map((seed) => seed.id))
+      expect(sentence).not.toContain(id);
   // A handoff that leaves nothing out says nothing.
   expect(
-    leftOutNotes(
-      HANDOFF_WORDS,
-      "en",
-      {
-        material_m100: claims("0208"),
-        intangible_m100: claims("0227"),
-        m100_gaps: [],
-        material_m130: null,
-        intangible_m130: null,
-      },
-      names,
-    ),
+    leftOutNotes({
+      material_m100: claims("0208"),
+      intangible_m100: claims("0227"),
+      m100_gaps: [],
+      material_m130: null,
+      intangible_m130: null,
+      left_out: [],
+    }),
+  ).toEqual([]);
+  // An interval the backend could not say whole is not drawn.
+  expect(
+    leftOutNotes({
+      ...handoff,
+      m100_gaps: handoff.m100_gaps.map((gap) => ({ ...gap, words: null })),
+      left_out: [],
+    }),
   ).toEqual([]);
 });
 
@@ -3479,50 +3296,40 @@ test("a year draws nothing recorded where it applies and does not apply where th
   expect(recordedMark({ applies: true })).toBe("nothing_recorded");
 });
 
-test("a year with nothing open says the plan's own reason, the absence's when the refusal gives none, and never blank, each with the entry to fill in where one is served", () => {
-  const refusalKey = `${ASSET_REASON_FAMILY}amortization_period_elapsed`;
-  const absenceKey = `${ASSET_REASON_FAMILY}opening_history_missing`;
+test("a year with nothing open says the plan's own reason, the absence's when the refusal gives none, and never blank, each with the sentence for the entry to fill in where one is served", () => {
   const t = wordsOf({
-    [refusalKey]: "Ended on {ended_on}.",
-    [absenceKey]: "The opening amount is not entered.",
     "desktop.ledger.assets.plan.claimable_none": "Nothing left to record",
   });
   const none = {
     claimable_intervals: [],
-    claimable_refusal_key: null,
-    claimable_refusal_facts: [],
-    claimable_refusal_remedy_field_key: null,
-    absence_reason_key: null,
-    absence_reason_facts: [],
-    absence_remedy_field_key: null,
+    claimable_refusal_words: null,
+    claimable_refusal_remedy_words: null,
+    absence_reason_words: null,
+    absence_remedy_words: null,
   };
-  const field =
-    "ledger.actividad_asset.field.opening_history.accumulated_amount";
+  // The sentences arrive said; the window picks between them and adds none.
   const refusal = nothingOpen(t, {
     ...none,
-    claimable_refusal_key: refusalKey,
-    claimable_refusal_facts: [
-      { key: "ended_on", value: "2025-12-31", kind: "date" },
-    ],
-    claimable_refusal_remedy_field_key: field,
-    absence_reason_key: absenceKey,
+    claimable_refusal_words: "The refusal, said.",
+    claimable_refusal_remedy_words: "Where to fill the refusal in.",
+    absence_reason_words: "The absence, said.",
   })!;
-  expect(refusal.why).toContain("2025");
+  expect(refusal.why).toBe("The refusal, said.");
   // The remedy is the one served with the sentence that is said.
-  expect(refusal.remedyFieldKey).toBe(field);
+  expect(refusal.remedyWords).toBe("Where to fill the refusal in.");
   expect(
     nothingOpen(t, {
       ...none,
-      absence_reason_key: absenceKey,
-      absence_remedy_field_key: field,
+      absence_reason_words: "The absence, said.",
+      absence_remedy_words: "Where to fill the absence in.",
     }),
   ).toEqual({
-    why: "The opening amount is not entered.",
-    remedyFieldKey: field,
+    why: "The absence, said.",
+    remedyWords: "Where to fill the absence in.",
   });
   expect(nothingOpen(t, none)).toEqual({
     why: "Nothing left to record",
-    remedyFieldKey: null,
+    remedyWords: null,
   });
   expect(
     nothingOpen(t, {
@@ -3538,7 +3345,7 @@ test("a year with nothing open says the plan's own reason, the absence's when th
   ).toBeNull();
 });
 
-test("the handoff says what could not be worked out, by name or by count, in the singular for one", async () => {
+test("the handoff marks an amount that leaves elements out with the sentence the backend served for it", async () => {
   const port = portOf();
   const handoff = (
     await settled<LedgerResult<typeof HANDOFF>>(
@@ -3549,40 +3356,21 @@ test("the handoff says what could not be worked out, by name or by count, in the
       }),
     )
   ).filing_handoff!;
-  const strings = {
-    "desktop.ledger.assets.handoff_unavailable_named":
-      "Couldn't be worked out, so left out: {names}.",
-    "desktop.ledger.assets.handoff_unavailable_count":
-      "{count} elements couldn't be worked out, so they are left out.",
-    "desktop.ledger.assets.handoff_unavailable_count_one":
-      "1 element couldn't be worked out, so it is left out.",
-  };
-  const t = wordsOf(strings);
-  const only = (ids: string[]): Handoff => ({
-    ...handoff,
-    m100_gaps: [],
-    material_m130: {
-      ...handoff.material_m130!,
-      unavailable_asset_ids: ids,
-      free_gap_asset_ids: [],
-      agrarian_excluded_asset_ids: [],
-    },
-    intangible_m130: null,
-  });
-  const names = new Map([
-    ["a", "Van"],
-    ["b", "Printer"],
-  ]);
-  expect(leftOutNotes(t, "en", only(["a", "b"]), names)).toEqual([
-    "Couldn't be worked out, so left out: Van and Printer.",
-  ]);
-  expect(leftOutNotes(t, "en", only(["a", "x", "y"]), names)).toEqual([
-    "3 elements couldn't be worked out, so they are left out.",
-  ]);
-  expect(leftOutNotes(t, "en", only(["x"]), names)).toEqual([
-    "1 element couldn't be worked out, so it is left out.",
-  ]);
-  expect(leftOutNotes(t, "en", only([]), names)).toEqual([]);
+  for (const projection of [handoff.material_m130, handoff.intangible_m130]) {
+    if (projection === null) continue;
+    // A sentence is served exactly where some element could not be worked out.
+    expect(typeof projection.partial_words === "string").toBe(
+      projection.unavailable_asset_ids.length > 0,
+    );
+  }
+  // Each reason an amount leaves elements out is one entry, naming the
+  // elements it concerns by id for acting on and saying them in words.
+  const reasons = handoff.left_out.map((entry) => entry.reason);
+  expect(new Set(reasons).size).toBe(reasons.length);
+  for (const entry of handoff.left_out) {
+    expect(entry.asset_ids.length).toBeGreaterThan(0);
+    expect(entry.words.length).toBeGreaterThan(0);
+  }
 });
 
 // ---- What the backend serves in place of the screens' own rules ----------------
@@ -3758,11 +3546,8 @@ test("a typed text of any length is the backend's to refuse, not the form's", ()
   expect(parseField(description, "a\nb").kind).toBe("refused");
 });
 
-test("a kind the edition has no box for draws no box, and says which element goes undeclared", () => {
-  const t = words({
-    "desktop.ledger.assets.handoff_gap_box_unbound":
-      "{name}: no box, nothing from {start} to {end}.",
-  });
+test("a kind the edition has no box for draws no box, and says which element goes undeclared as the backend served it", () => {
+  const served = "The interval, said by the backend.";
   const handoff: Handoff = {
     material_m100: null,
     intangible_m100: null,
@@ -3774,13 +3559,14 @@ test("a kind the edition has no box for draws no box, and says which element goe
         covered_through: "2025-12-31",
         covered_until: "2026-01-01",
         accrued: null,
+        words: served,
+        words_language: "en",
       },
     ],
     material_m130: null,
     intangible_m130: null,
+    left_out: [],
   };
 
-  expect(
-    leftOutNotes(t, "en", handoff, new Map([["asset-aaa", "Laptop"]])),
-  ).toEqual(["Laptop: no box, nothing from Jan 1, 2025 to Dec 31, 2025."]);
+  expect(leftOutNotes(handoff)).toEqual([served]);
 });
