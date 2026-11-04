@@ -1,9 +1,10 @@
 """Profile review states reached through real local profile and UI doors.
 
-Each capture provisions its own encrypted, synthetic profile. Required answers
-are validated and saved through the application doors the profile worker runs;
-completion uses the repository's guarded door. These fixtures never hand-build
-a profile projection.
+Each capture provisions its own encrypted, synthetic profile. A state that needs
+a populated profile replays a canonical persona into it through the production
+operations the profile worker runs; a state that starts before any answer is
+given opens a freshly registered profile. Completion uses the repository's
+guarded door. These fixtures never hand-build a profile projection.
 """
 
 from __future__ import annotations
@@ -14,12 +15,16 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import override
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Final, override
 from uuid import uuid4
 
 from textual.events import Mount
 from textual.widgets import Input, OptionList
 
+from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.application.user_profile.fact_write import apply_manager_profile_field_mutation
 from cadrumo.application.user_profile.overview import ProfileOverview, build_profile_overview
 from cadrumo.application.user_profile.plantilla_media_rows import (
@@ -29,6 +34,7 @@ from cadrumo.application.user_profile.plantilla_media_rows import (
     set_plantilla_media_year,
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.profile_summary import summary_inventory
 from cadrumo.application.user_profile.section_rows import (
     add_profile_repeatable_section_row,
     remove_profile_repeatable_section_row,
@@ -39,11 +45,14 @@ from cadrumo.core.bucket_pointer import require_active_bucket_id
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 from cadrumo.domain.user_profile.values import UserProfileRecord
+from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona, year_envelope
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll, DisclosureGroup
 from cadrumo.entrypoints.tui.profile.edit_screens import FieldEditScreen
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
-from cadrumo.entrypoints.tui.tests.fixture import PROFILE_LABEL, ensure_session, harness_storage
+from cadrumo.entrypoints.tui.tests.fixture import ensure_session, harness_storage
+from cadrumo.tests.personas import read_persona
 
 
 class ProfileFixtureState(StrEnum):
@@ -63,11 +72,46 @@ class ProfileFixtureState(StrEnum):
     SAVED_EDIT = "saved-edit"
 
 
+PROFILE_PERSONA_ID: Final = "autonomo-fontanero"
+"""The catalogue persona every populated profile state replays."""
+
+_POPULATED_STATES: Final = frozenset(
+    {
+        ProfileFixtureState.REVIEW,
+        ProfileFixtureState.READY,
+        ProfileFixtureState.EDIT,
+        ProfileFixtureState.OPTIONAL_EDIT,
+        ProfileFixtureState.SAVED_EDIT,
+    }
+)
+
+
 @contextmanager
-def profile_fixture_storage() -> Generator[str]:
-    """Create fresh state so a prior capture cannot answer a later one's questions."""
+def profile_fixture_storage(state: ProfileFixtureState) -> Generator[str]:
+    """Provision the profile one capture reads, so a prior capture cannot answer a later one's questions.
+
+    A populated state opens the persona's profile after the production
+    operations replayed it; every other state opens a freshly registered
+    profile that holds no answer yet.
+    """
+    if state in _POPULATED_STATES:
+        with (
+            profile_adapter_composition(),
+            bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
+            bundled_indexed_authority().operation(),
+            TemporaryDirectory(prefix="tui-harness-persona-") as scratch,
+            materialised_persona(PROFILE_PERSONA_ID, Path(scratch)) as persona,
+        ):
+            yield str(persona.world.profile_id)
+        return
     with harness_storage(namespace=f"profile-review-{uuid4().hex}"), bundled_indexed_authority().operation():
         yield ensure_session()
+
+
+def _persona_tax_id(operation: PinnedAuthorityOperation) -> str:
+    """The tax identifier the profile persona's taxpayer role carries in the identity catalogue."""
+    persona = read_persona(PROFILE_PERSONA_ID, envelope=year_envelope(operation))
+    return persona.identity(persona.taxpayer)
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,25 +254,9 @@ class ProfileReviewDoors:
 
 def profile_review_doors(operation: PinnedAuthorityOperation) -> ProfileReviewDoors:
     """Bind the active synthetic profile's doors under one pinned authority."""
-    return ProfileReviewDoors(profile_id=require_active_bucket_id(), label=PROFILE_LABEL, operation=operation)
-
-
-def _populate_required(inputs: ProfileReviewDoors, overview: ProfileOverview) -> ProfileOverview:
-    """Supply synthetic answers, letting the application discover conditional requirements."""
-    for _ in range(overview.total_count):
-        if not overview.missing_required:
-            return overview
-        field = next(iter(overview.missing_required_fields), None)
-        if field is None:
-            raise ValueError("profile fixture has a required path with no editor")
-        if field.choices:
-            value = field.choices[0].value
-        elif field.path == "identity.tax_id":
-            value = "12345678Z"
-        else:
-            raise ValueError(f"profile fixture needs a synthetic answer for {field.path}")
-        overview = inputs.persist_profile_field(field.path, value, overview.record_revision, overview.content_digest)
-    raise ValueError("profile fixture could not complete required answers")
+    profile_id = require_active_bucket_id()
+    label = next(item.label for item in summary_inventory().summaries if item.profile_id == profile_id)
+    return ProfileReviewDoors(profile_id=profile_id, label=label, operation=operation)
 
 
 class ProfileCaptureHost(ScreenHostApp[None]):
@@ -336,17 +364,9 @@ def build_profile_fixture(state: ProfileFixtureState) -> ProfileCaptureHost:
     with bundled_indexed_authority().operation() as operation:
         inputs = profile_review_doors(operation)
         overview = inputs.overview()
-        if state in {
-            ProfileFixtureState.REVIEW,
-            ProfileFixtureState.READY,
-            ProfileFixtureState.EDIT,
-            ProfileFixtureState.OPTIONAL_EDIT,
-            ProfileFixtureState.SAVED_EDIT,
-        }:
-            overview = _populate_required(inputs, overview)
-        elif state is ProfileFixtureState.CHOICE_QUESTION:
+        if state is ProfileFixtureState.CHOICE_QUESTION:
             overview = inputs.persist_profile_field(
-                "identity.tax_id", "12345678Z", overview.record_revision, overview.content_digest
+                "identity.tax_id", _persona_tax_id(operation), overview.record_revision, overview.content_digest
             )
         if state in {ProfileFixtureState.EDIT, ProfileFixtureState.OPTIONAL_EDIT, ProfileFixtureState.SAVED_EDIT}:
             overview = inputs.complete_setup()
