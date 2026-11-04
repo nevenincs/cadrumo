@@ -56,6 +56,7 @@ default:
 [group('dev')]
 dev: (_native-selection "Debug")
     uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
+    just fixtures-seed
     cmake --build --preset {{native_build_preset_prefix}}debug --target desktop-frontend-dev
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
@@ -64,14 +65,18 @@ dev: (_native-selection "Debug")
 # sync and default Vaultspec enrollment. Browser provisioning reuses installed
 # channels or installs missing resources. RAG then provisions its managed models,
 # Qdrant binary, and MCP integration. Authority publication runs so the
-# installed application consumes a generation compiled from the final tree.
-[doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, and runtime authority.')]
+# installed application consumes a generation compiled from the final tree. The
+# generated fixture projections follow it: they are produced through that
+# authority and need the frontend packages one of their producers runs from.
+[doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, runtime authority, frontend packages and fixture projections.')]
 [group('setup')]
 init:
     just setup
     just setup-browser
     uv run --no-sync vaultspec-rag install --upgrade --yes
     uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
+    just setup-desktop-frontend
+    just fixtures-seed
 
 # Minimal checkout setup, shared by init and CI. It creates
 # the pinned Python environment, installs repository tooling, and materializes
@@ -759,8 +764,24 @@ check-rust CONFIGURATION="Debug": (_native-configure CONFIGURATION)
 
 [doc('Run the desktop frontend type, lint, design-system and formatting checks through CMake.')]
 [group('check')]
-check-frontend CONFIGURATION="Debug": (_native-configure CONFIGURATION)
+check-frontend CONFIGURATION="Debug": fixtures-seed (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-check
+
+# The window's specs and type checks read the generated fixture projections, so
+# seeding comes first; it does nothing when every stamp is fresh.
+[doc('Seed the fixture projections, then run the desktop frontend checks and Playwright specs through CMake.')]
+[group('test')]
+test-frontend CONFIGURATION="Debug": fixtures-seed (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-check
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-test
+
+# The host's Rust unit tests are the CTest cases named `*.rust`; the bundle,
+# staged-package and external-tool cases stay with test-native-bundle.
+[doc('Seed the fixture projections, then run the native Rust unit tests (CTest cases ending in .rust) without building the bundle.')]
+[group('test')]
+test-native CONFIGURATION="Debug": fixtures-seed (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target native_contract native_metadata rust_application
+    ctest --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} -R '[.]rust$' --no-tests=error
 
 [doc('Run the existing frontend and Rust quality gates; requires the configured native toolchain and advisory network access.')]
 [group('check')]
@@ -1147,7 +1168,7 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, documentation-build, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/mcp_eval/tests dev/audit/tests dev/corpus/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests {{harness_exclusions}} --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/mcp_eval/tests dev/audit/tests dev/corpus/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/fixture_projections/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests {{harness_exclusions}} --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
     @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/mcp_eval/tests dev/runtime_lifecycle/tests/test_installed_linux_refusal_stdio.py
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
@@ -1878,6 +1899,7 @@ release-runtime-matrix PHASE:
 gate-local:
     @just check-code
     @just check-registry
+    @just fixtures-check
     @just check-repository
     @just check-dependency-vulnerabilities
     @just docs-build

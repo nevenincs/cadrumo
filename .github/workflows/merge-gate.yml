@@ -149,6 +149,20 @@ jobs:
         shell: bash
         run: just check-registry-gate
 
+      # One fixture producer runs from the frontend's installed packages, so
+      # they come before the check; the check reads the sources and writes no
+      # fixture.
+      - name: Frontend packages
+        id: frontend-packages
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        shell: bash
+        run: just setup-desktop-frontend
+
+      - name: Fixture projections
+        if: ${{ !cancelled() && steps.frontend-packages.outcome == 'success' }}
+        shell: bash
+        run: just fixtures-check
+
       - name: Import boundaries
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
@@ -179,9 +193,47 @@ jobs:
             just test-sequence-goldens-gate
           fi
 
+  desktop:
+    name: "Check: Frontend and Rust (Linux)"
+    needs: lint
+    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && needs.lint.result == 'success' }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 150
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      # The recipes below seed the fixture projections themselves, and the
+      # producers read the registry authority, so this job restores it.
+      - name: Set up toolchain
+        id: setup
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: ${{ inputs.authority-artifact }}
+          browser: "true"
+
+      - name: Frontend packages
+        id: frontend-packages
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        shell: bash
+        run: just setup-desktop-frontend
+
+      - name: Frontend checks and specs
+        if: ${{ !cancelled() && steps.frontend-packages.outcome == 'success' }}
+        shell: bash
+        run: just test-frontend
+
+      - name: Native Rust tests
+        if: ${{ !cancelled() && steps.frontend-packages.outcome == 'success' }}
+        shell: bash
+        run: just test-native
+
   verdict:
     name: "${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && 'Check: Merge gate (Linux)' || 'Check: Merge gate withheld (Linux)' }}"
-    needs: [lint, gate]
+    needs: [lint, gate, desktop]
     if: ${{ !cancelled() && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 66
