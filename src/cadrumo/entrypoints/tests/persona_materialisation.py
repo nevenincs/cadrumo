@@ -959,8 +959,13 @@ def materialised_persona(
     *,
     reuse: bool = False,
     complete_setup: bool = True,
+    read_on: datetime | None = None,
 ) -> Generator[MaterialisedPersona]:
     """Read one persona, open its world at its scenario instant and replay it there as far as ``scope`` reaches.
+
+    With ``read_on`` the world is opened, and the persona signs in, on that
+    later day instead, for a scenario read when the persona's own instant has
+    passed: a session opened at that instant would have ended by then.
 
     A replay of the full ledger takes tens of seconds. With ``reuse`` the run
     replays a persona at a scope once into a sealed world keyed by the
@@ -973,7 +978,7 @@ def materialised_persona(
     with bundled_indexed_authority().operation() as operation:
         envelope = year_envelope(operation)
     persona = read_persona(persona_id, envelope=envelope)
-    as_of = scenario_instant(persona, envelope)
+    as_of = scenario_instant(persona, envelope) if read_on is None else read_on
     if reuse:
         with _reused_persona_world(persona, scope, tmp_path, as_of=as_of, complete_setup=complete_setup) as reused:
             yield reused
