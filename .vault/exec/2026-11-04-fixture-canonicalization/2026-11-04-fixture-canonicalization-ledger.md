@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c750b85981b151d3fbd9cf55a6e17e77231c64e90809456079f030dceb841e9'
+body_hash: 'sha256:cb26e7e7039953b4e9f37a720a19ec48799cbe93a03ca96ab03b3d1c091722bd'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -741,6 +741,50 @@ related:
 - `S25` `verify:` `dev.quality.types --full` -> `pass`
 - `S25` `verify:` `lint-imports` -> `pass`
 - `S25` `by:` `vaultspec-standard-executor`
+- `S09` `A` `dev/prettier_json.py`
+- `S09` `A` `native/desktop/frontend/tests/support/profileFixture.ts`
+- `S09` `M` `dev/desktop_household_fixture.py`
+- `S09` `M` `dev/desktop_imputation_election_fixture.py`
+- `S09` `M` `dev/desktop_profile_fixture.py`
+- `S09` `M` `dev/desktop_withholding_refusal_words_fixture.py`
+- `S09` `M` `dev/tui/harness/profile_fixtures.py`
+- `S09` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S09` `M` `native/desktop/frontend/src/components/modelo/workspace/ImputationElection.stories.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/profile/Household.stories.tsx`
+- `S09` `M` `native/desktop/frontend/src/dev/censoFixture.ts`
+- `S09` `M` `native/desktop/frontend/src/dev/fixtures/household.json`
+- `S09` `M` `native/desktop/frontend/src/dev/fixtures/imputationElection.json`
+- `S09` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S09` `M` `native/desktop/frontend/src/dev/fixtures/userProfile.json`
+- `S09` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/censo-modelo.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/censo-palette.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/imputation-election.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/modelo-wallet.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/navigation-guards.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/profile-household.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/view-preferences.spec.ts`
+- `S09` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S09` `M` `src/cadrumo/adapters/inbound/borrador/tests/test_borrador_profile_years.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/cross_period_seeding.py`
+- `S09` `M` `src/cadrumo/application/user_profile/registration.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_borrador_100_comparison.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S09` `M` `src/cadrumo/tests/fixtures/borrador/generate.py`
+- `S09` `M` `src/cadrumo/tests/fixtures/borrador/test_generate.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_app_live_borrador_import.py`
+- `S09` `verify:` `modelo_fixtures double build 0 differing envelopes` -> `pass`
+- `S09` `verify:` `desktop_* --check (4), ledger_contract, ledger_served_words` -> `pass`
+- `S09` `verify:` `persona materialisation tests (10)` -> `pass`
+- `S09` `verify:` `lint-imports` -> `pass`
+- `S09` `verify:` `TS specs and prettier` -> `fail`
+- `S09` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -757,3 +801,4 @@ related:
 - `S06` test-frontend and test-native added as single entry points seeding first; init seeds after authority and frontend setup; setup itself unchanged because lint jobs run it without authority or Node; desktop PR job unverified on the runner (Node, Cargo, Playwright browsers); determinism proof stays in fixtures-check-determinism
 - `S10` Seed ledger, invoice, evidence and work-unit frames stay authored, and seeds override the persona activity start; carried to S24
 - `S25` Not-applicable zeros are labelled `SheetRelationProvenance.OPERATOR_MANUAL` because no system-derived kind exists; pre-existing, raise at phase review
+- `S09` TS specs and prettier not run, `node_modules` absent. Envelopes replay personas at ReplayScope.PROFILE and seed activity income synthetically; carried to S27
