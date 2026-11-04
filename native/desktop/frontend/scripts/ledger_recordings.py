@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 SCRIPTS = Path(__file__).resolve().parent
 FIXTURES = SCRIPTS.parent / "src" / "dev" / "fixtures"
-QUESTIONS = FIXTURES / "ledger-recording-questions"
+QUESTIONS = SCRIPTS.parents[3] / "dev" / "fixtures" / "ledger-recording-questions"
 
 _WIDTH = 80
 _INDENT = "  "
