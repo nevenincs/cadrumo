@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:dca3446bee7e15bb7b3938d6a3b7062a3f4919ae2a7adb89a634e1a1a77e3f34'
+body_hash: 'sha256:59ddb835d88ae4a394b6e27ad7ca7a0f1bca6b5ecbe7c0e2470b4bfbe17492e7'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -622,6 +622,118 @@ related:
 - `S23` `verify:` `pytest annual-summary and 390 fold-in modules (45)` -> `pass`
 - `S23` `verify:` `lint-imports` -> `pass`
 - `S23` `by:` `vaultspec-standard-executor`
+- `S10` `M` `dev/docs/sequences/_seeds.py`
+- `S10` `M` `dev/docs/sequences/checks.py`
+- `S10` `M` `dev/docs/sequences/cli.py`
+- `S10` `A` `dev/docs/sequences/persona_profile.py`
+- `S10` `M` `dev/docs/sequences/sandbox.py`
+- `S10` `A` `dev/docs/sequences/seed_generator.py`
+- `S10` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S10` `M` `dev/quality/metadata/import_load_targets.json`
+- `S10` `M` `docs/_sequences/contracts/how-to/modelo-100/modelo-100-export-file.seq`
+- `S10` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-rows.seq`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-bindings.json`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-requires.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-check-profile.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-record-facts.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-validate.json`
+- `S10` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S10` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-remove-transaction.json`
+- `S10` `M` `docs/_sequences/how-to/file-at-aeat/file-at-aeat-chain.json`
+- `S10` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-agenda.json`
+- `S10` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-backlog.json`
+- `S10` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-calendar.json`
+- `S10` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-explain.json`
+- `S10` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-report.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-address-by-id.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-discard.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-file.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-history.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-rename.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-revision-by-id.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-runs.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-select.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-visible-target.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-work-list.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-expenses-exceed-income.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-export-file.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/import-bank-statements/import-confirm-profile.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-agenda.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-position.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S10` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-applicability.json`
+- `S10` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1.json`
+- `S10` `M` `docs/_sequences/how-to/ledger-evidence/ledger-evidence-remove.json`
+- `S10` `M` `docs/_sequences/how-to/manage-invoices/invoices-catalogue-and-349.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-dependencies.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-export-file.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-export-file.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-inspect-boxes.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-manual-casilla.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-inspect-boxes.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-ledger-period.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-revision.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-applicability.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-export.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-file.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-390/modelo-390-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-390/modelo-390-supply-binding.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-flag-help.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-worked-example.json`
+- `S10` `M` `docs/_sequences/how-to/protect-data-access/protect-data-access-logout.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-agenda.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-export.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-file.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-profile.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-revision.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-version.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-bindings.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-manual-casilla.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S10` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-folder.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-active-profile.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-missing-values.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-period-grammar.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-toolbox.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-wrong-profile.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-blocked.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-export-check.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete-report.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-modelo-303.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-work-history.json`
+- `S10` `M` `docs/_sequences/seeds/autonomo-irpf-2026.seq`
+- `S10` `M` `docs/_sequences/seeds/choose-modelo-autonomo.seq`
+- `S10` `M` `docs/_sequences/seeds/filing-calendar-obligated-profile.seq`
+- `S10` `M` `docs/_sequences/seeds/filing-spine-303-ledger.seq`
+- `S10` `M` `docs/_sequences/seeds/intracomunitario-2026.seq`
+- `S10` `M` `docs/_sequences/seeds/iva-evidence-2026.seq`
+- `S10` `M` `docs/_sequences/seeds/iva-year-2025.seq`
+- `S10` `M` `docs/_sequences/seeds/quickstart-ledger.seq`
+- `S10` `M` `docs/_sequences/seeds/renta-2025.seq`
+- `S10` `verify:` `dev.docs.sequences check` -> `pass`
+- `S10` `verify:` `dev.docs.sequences seeds --check` -> `pass`
+- `S10` `verify:` `lint-imports` -> `pass`
+- `S10` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -636,3 +748,4 @@ related:
 - `S05` Open: ruff S603 on the producer subprocess call awaits operator ruling (pyproject per-file exemption convention vs no-suppression rule); docs-sequences check process exited without a status line during concurrent docs refresh, to be re-verified after S10; modelo determinism build failed on a fresh output directory while S09 is changing the generator; modelo check unavailable without `node_modules;` stamps for committed families live in var/storage/development/cache/fixture-projections
 - `S04` Review rework: catalogue-bound identities moved off generic uses onto unbound counters; intracom.titular rebound to X0000001R; recording questions moved to dev/fixtures/ledger-recording-questions; duplicate recording support builds real Invoice values. 8 TestSearchOptionSelection failures are environmental (no Chromium build). Docs sequence values handed to S10
 - `S06` test-frontend and test-native added as single entry points seeding first; init seeds after authority and frontend setup; setup itself unchanged because lint jobs run it without authority or Node; desktop PR job unverified on the runner (Node, Cargo, Playwright browsers); determinism proof stays in fixtures-check-determinism
+- `S10` Seed ledger, invoice, evidence and work-unit frames stay authored, and seeds override the persona activity start; carried to S24

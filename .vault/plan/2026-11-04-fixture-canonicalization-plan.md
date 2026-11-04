@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:270d48e09bd38d0e5ee80af0e2d64254cffb50b8f540654794bcfb715db4e84c'
+body_hash: 'sha256:25630da9f924818cee57fb3ff895c11bdb9e3fe0062dbd28dbf37fe5470f2215'
 ---
 
 # `fixture-canonicalization` plan
@@ -49,11 +49,12 @@ Define every canonical taxpayer and flow once and seed it through production ope
 - [x] `P03.S07` - Author the identity catalogue and the canonical personas with ledger rows, document references and expected obligations; `dev/fixtures/personas`.
 - [x] `P03.S08` - Add the persona reader and the materialiser that replays a persona through the profile patch, ledger import and evidence operations; `src/cadrumo/tests and src/cadrumo/entrypoints/tests`.
 - [ ] `P03.S09` - Generate the window envelopes and desktop fixtures from personas; `native/desktop/frontend/scripts and dev desktop fixture producers`.
-- [ ] `P03.S10` - Generate docs seed recipes and sandbox facts from personas and refresh the goldens; `dev/docs/sequences and docs/_sequences`.
+- [x] `P03.S10` - Generate docs seed recipes and sandbox facts from personas and refresh the goldens; `dev/docs/sequences and docs/_sequences`.
 - [x] `P03.S11` - Seed the TUI harness from personas; `dev/tui/harness`.
 - [x] `P03.S21` - Close the persona expressiveness gaps: fix the reverse-charge category missing from the self-assessed projection, express recargo and withholding certificates through their operations, and adjust catalogue rows that use categories or counterparties the operations refuse; `registry category projection, ledger classification and invoice operations, dev/fixtures/personas`.
 - [x] `P03.S22` - Add a profile-only replay mode and a digest-keyed materialised-persona cache so consumers that need only profile facts or repeat a persona do not replay the full ledger; `src/cadrumo/entrypoints/tests persona materialisation`.
 - [x] `P03.S23` - Resolve the annual IVA simplified-regime summary only when the revision declares a binding of that source kind, so a taxpayer with no IVA composition calculates a Modelo 100; `src/cadrumo/application/modelo/calculation_source_mesh_actions.py and its tests`.
+- [ ] `P03.S24` - Seed the docs ledger, invoice, evidence and work-unit frames from a persona whose activity genuinely starts in the horizon year, so docs stop overriding persona facts and show the same flows the tests and window exercise; `dev/fixtures/personas, dev/docs/sequences, docs/_sequences`.
 
 ### Phase `P04` - Projections out of git
 
