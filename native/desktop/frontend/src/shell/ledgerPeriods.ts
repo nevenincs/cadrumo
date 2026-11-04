@@ -13,7 +13,7 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { LedgerPort, PublicPeriod } from "./ledger";
-import { isPeriodCode, parseIsoDate, type LedgerPeriod } from "./ledgerGrammar";
+import { parseIsoDate, type LedgerPeriod } from "./ledgerGrammar";
 import type {
   LedgerEntryOptionsRequest,
   LedgerServedDay,
@@ -243,12 +243,11 @@ export const periodsLanguage = (): string | null => held.language;
 /** The code that names the whole year, or null while it is not served. */
 export const annualCode = (): string | null => held.annualCode;
 
-/** A served period as the window holds one, or null where the code is not
- * one the window can hold. */
+/** A served period as the window holds one; null for none. */
 export function ledgerPeriod(period: PublicPeriod | null): LedgerPeriod | null {
-  return period !== null && isPeriodCode(period.code)
-    ? { year: period.filing_year, code: period.code }
-    : null;
+  return period === null
+    ? null
+    : { year: period.filing_year, code: period.code };
 }
 
 /** The periods of `year`, in the order served, or null while not served. */
@@ -266,7 +265,7 @@ export const servedPeriod = (period: LedgerPeriod): LedgerServedPeriod | null =>
  * served. */
 export function annualPeriod(year: number): LedgerPeriod | null {
   const code = held.annualCode;
-  return code !== null && isPeriodCode(code) ? { year, code } : null;
+  return code === null ? null : { year, code };
 }
 
 /** The first and last day of a period, or null while it is not served. */

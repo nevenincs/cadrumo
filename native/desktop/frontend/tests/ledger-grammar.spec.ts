@@ -26,7 +26,6 @@ import {
   parseIsoDate,
   parseLine,
   parsePercent,
-  parsePeriodCode,
   parseYear,
   periodFilters,
   QUANTITY_RULE,
@@ -269,20 +268,6 @@ test("a year is four digits, whichever it is, and period tokens are the product'
   ];
   for (const [raw, expected] of years)
     expect(verdict(parseYear(raw)), raw).toBe(expected);
-  const codes: [string, Expected][] = [
-    ["0A", "0A"],
-    ["0a", "0A"],
-    ["3T", "3T"],
-    ["01", "01"],
-    ["1", "01"],
-    ["12", "12"],
-    ["5T", "period_unknown"],
-    ["13", "period_unknown"],
-    ["Q1", "period_unknown"],
-    ["2026-1T", "period_unknown"],
-  ];
-  for (const [raw, expected] of codes)
-    expect(verdict(parsePeriodCode(raw)), raw).toBe(expected);
 });
 
 test("the periods held are the ones served, with their neighbours across year ends", () => {

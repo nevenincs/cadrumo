@@ -7,7 +7,6 @@
 // with none served a typed value is refused as not yet checkable.
 
 import type { PublicPeriod } from "./ledger";
-import { LEDGER_PERIOD_SPANS, type LedgerPeriodCode } from "./ledgerContract";
 import { ledgerLimits } from "./ledgerLimits";
 import type { LedgerEntryLimits } from "./ledgerSetup";
 
@@ -383,14 +382,11 @@ export function parseLine(raw: string, max?: number | null): Parsed<string> {
 
 // ---- Periods ---------------------------------------------------------------
 
-export type { LedgerPeriodCode };
 /** A filing period: the whole year, a quarter or a month of it. Which ones
  * exist, their days and their neighbours are served by the backend
  * (`./ledgerPeriods`); the window works none of them out. */
-export type LedgerPeriod = { year: number; code: LedgerPeriodCode };
+export type LedgerPeriod = { year: number; code: string };
 
-export const isPeriodCode = (code: string): code is LedgerPeriodCode =>
-  Object.hasOwn(LEDGER_PERIOD_SPANS, code);
 /** Whether a number is written as a year is: four digits. Which years exist is
  * the registry's, and no limit on them is held here. */
 export const yearAdmitted = (year: number) =>
@@ -404,15 +400,6 @@ export function parseYear(raw: string): Parsed<number> {
   return /^\d{4}$/.test(text) && yearAdmitted(year)
     ? value(year)
     : refuse("year_not_a_number", raw);
-}
-
-/** A typed period token: `0A`, `1T` to `4T` or `01` to `12`. */
-export function parsePeriodCode(raw: string): Parsed<LedgerPeriodCode> {
-  const text = raw.trim().toUpperCase();
-  if (text === "") return { kind: "empty" };
-  const month = /^\d$/.test(text) ? `0${text}` : text;
-  if (isPeriodCode(month)) return value(month);
-  return refuse("period_unknown", raw);
 }
 
 /** A year field's stepper: by one or by ten, staying put where the step would

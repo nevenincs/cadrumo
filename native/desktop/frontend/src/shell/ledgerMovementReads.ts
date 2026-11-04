@@ -6,11 +6,7 @@
 
 import { useEffect, useState } from "react";
 import type { JsonObject, LedgerPort } from "./ledger";
-import {
-  isPeriodCode,
-  periodFilters,
-  type LedgerPeriod,
-} from "./ledgerGrammar";
+import { periodFilters, type LedgerPeriod } from "./ledgerGrammar";
 import {
   readAnswer,
   readWindow,
@@ -35,7 +31,7 @@ type Asked = [
   read: number,
 ];
 const periodOfAsked = (year: number | null, code: string | null) =>
-  year !== null && code !== null && isPeriodCode(code) ? { year, code } : null;
+  year !== null && code !== null ? { year, code } : null;
 
 /**
  * Reads, for `period`, the movements each of `scopes` keeps, and joins
