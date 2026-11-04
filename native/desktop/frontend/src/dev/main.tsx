@@ -150,6 +150,12 @@ declare global {
         agent: typeof import("./agentFixtureHost");
         providers: typeof import("./providerSettingsFixture");
       }>;
+      sedeViewHook(): Promise<{
+        react: typeof import("react");
+        dom: typeof import("react-dom");
+        client: typeof import("react-dom/client");
+        hook: typeof import("../components/browser/useSedeView");
+      }>;
       providerReads(): Promise<{
         settings: typeof import("../shell/providerSettings");
         views: typeof import("../shell/agentViews");
@@ -171,6 +177,12 @@ window.__scenarioModules = {
   agentReaders: async () => ({
     models: await import("../shell/readingModel"),
     live: await import("../shell/agentLive"),
+  }),
+  sedeViewHook: async () => ({
+    react: await import("react"),
+    dom: await import("react-dom"),
+    client: await import("react-dom/client"),
+    hook: await import("../components/browser/useSedeView"),
   }),
   providerReads: async () => ({
     settings: await import("../shell/providerSettings"),
