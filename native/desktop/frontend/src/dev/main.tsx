@@ -156,6 +156,7 @@ declare global {
         client: typeof import("react-dom/client");
         hook: typeof import("../components/browser/useSedeView");
       }>;
+      catalogReadPolicy(): Promise<typeof import("../shell/catalogReadPolicy")>;
       providerReads(): Promise<{
         settings: typeof import("../shell/providerSettings");
         views: typeof import("../shell/agentViews");
@@ -184,6 +185,7 @@ window.__scenarioModules = {
     client: await import("react-dom/client"),
     hook: await import("../components/browser/useSedeView"),
   }),
+  catalogReadPolicy: () => import("../shell/catalogReadPolicy"),
   providerReads: async () => ({
     settings: await import("../shell/providerSettings"),
     views: await import("../shell/agentViews"),

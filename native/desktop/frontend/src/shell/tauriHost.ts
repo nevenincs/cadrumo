@@ -596,7 +596,7 @@ function tauriAgent(call: HostCall): {
           );
         };
       },
-      providerCatalog: () => call("agent_provider_catalog", {}),
+      providerCatalog: (retry) => call("agent_provider_catalog", {}, retry),
       localModels: () => call("agent_local_models", {}),
       addLocalModel: (lane, model, expectedRevision) =>
         call("agent_local_model_add", { lane, model, expectedRevision }),

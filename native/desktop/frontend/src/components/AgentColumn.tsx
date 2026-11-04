@@ -20,6 +20,7 @@ import {
   CATALOG_BUSY_RETRIES,
   CATALOG_BUSY_PAUSE_MS,
   catalogReadBusy,
+  catalogReadRetry,
 } from "../shell/catalogReadPolicy";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
 import {
@@ -546,7 +547,12 @@ export function AgentColumn({
   const readCatalog = useMemo(() => {
     const { reader, ready, starting, session } = catalogRequest;
     return reader !== null && (ready || starting) && session
-      ? () => session.providerCatalog()
+      ? () =>
+          session.providerCatalog(
+            catalogReadRetry(
+              () => busyCatalogReads.current < CATALOG_BUSY_RETRIES,
+            ),
+          )
       : null;
   }, [catalogRequest]);
   // Setup and provider settings invalidate the catalog independently.

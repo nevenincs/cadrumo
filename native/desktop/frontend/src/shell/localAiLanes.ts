@@ -13,6 +13,7 @@ import {
   CATALOG_BUSY_RETRIES,
   CATALOG_BUSY_PAUSE_MS,
   catalogReadBusy,
+  catalogReadRetry,
 } from "./catalogReadPolicy";
 import { useAgentStatus } from "./agentLive";
 import { catalogLanes, type CatalogLane } from "./localModelLanes";
@@ -163,7 +164,9 @@ export function useLocalAiLanes(
       const atRead = published.current;
       let catalog;
       try {
-        catalog = await session.providerCatalog();
+        catalog = await session.providerCatalog(
+          catalogReadRetry(() => current() && attempts < CATALOG_BUSY_RETRIES),
+        );
       } catch (error) {
         const code = failureCode(error);
         retryBusy(code, catalogReadBusy(code), atRead, collect);

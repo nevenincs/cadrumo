@@ -94,11 +94,22 @@ export function reportReactError(): void {
   notifyInternalFailure();
 }
 
+/** What a caller knows of a refusal it will answer by asking again. The
+ * level of the record follows the refusal's retry class and whether the ask
+ * is actually coming, never the command or the wording of the refusal. */
+export type RetryPlan = {
+  /** Whether a refusal with this code is one that passes by waiting. */
+  retryable(code: string): boolean;
+  /** Whether the caller will ask again after this refusal. */
+  scheduled(): boolean;
+};
+
 export async function observedInvoke<T>(
   token: ShellToken | null,
   command: string,
   args?: InvokeArgs,
   options?: InvokeOptions,
+  retry?: RetryPlan,
 ): Promise<T> {
   try {
     return await invoke<T>(command, args, options);
@@ -114,7 +125,10 @@ export async function observedInvoke<T>(
     if (code !== "queue_full" && code !== "installation_cancelled") {
       reportDiagnostic(token, {
         event: "command_rejected",
-        level: "ERROR",
+        level:
+          code !== null && retry?.retryable(code) && retry.scheduled()
+            ? "WARNING"
+            : "ERROR",
         command,
         code,
       });
@@ -139,6 +153,7 @@ export async function observedInvoke<T>(
 export type HostCall = <C extends HostCommand>(
   command: C,
   args: Omit<HostCommands[C]["args"], "token">,
+  retry?: RetryPlan,
 ) => Promise<HostResult<C>>;
 
 /** Every JSON command goes through this call, which adds the launch token.
@@ -146,9 +161,9 @@ export type HostCall = <C extends HostCommand>(
  * error instead of a refusal at run time. */
 export function hostCall(token: ShellToken | null): HostCall {
   installDiagnostics(token);
-  return (command, args) =>
+  return (command, args, retry) =>
     token
-      ? observedInvoke(token, command, { ...args, token })
+      ? observedInvoke(token, command, { ...args, token }, undefined, retry)
       : Promise.reject(
           new Error("The desktop host did not provide a launch token."),
         );
