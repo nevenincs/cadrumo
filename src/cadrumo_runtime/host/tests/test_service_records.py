@@ -376,29 +376,53 @@ def test_service_records_refuse_wrong_profile_capability_and_retired_person(tmp_
         assert retired.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
 
 
-def test_service_records_recheck_peer_before_access_or_accepting_secret_input(tmp_path: Path) -> None:
+@pytest.mark.parametrize("action", ["read", "generation", "delete", "write"])
+def test_service_records_recheck_peer_before_access_or_accepting_secret_input(tmp_path: Path, action: str) -> None:
     with service_record_runtime(tmp_path) as runtime:
         service = runtime.connect_service()
         assert isinstance(runtime.admit(service), ServiceConnected)
         assert service.claim() is not None
         assert service.connected is not None
         runtime.verifier.connections.remove(service.connected.connection_id)
-
-        read, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
-        assert read.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
-        assert material == bytearray()
-        generation = service.observe_generation(RECORD_CAPABILITY)
-        assert generation.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
-        deleted = service.record_delete(
-            RECORD_CAPABILITY, "synthetic-record", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        if action == "read":
+            with pytest.raises(RefusalError) as refused:
+                service.record_read(RECORD_CAPABILITY, "synthetic-record")
+            assert refused.value.reason is RefusalCode.CONNECTION_CLOSED
+            return
+        if action == "generation":
+            with pytest.raises(RefusalError) as refused:
+                service.observe_generation(RECORD_CAPABILITY)
+            assert refused.value.reason is RefusalCode.CONNECTION_CLOSED
+            return
+        lease = service.lease
+        assert lease is not None
+        request = ExtensionRecordRequest(
+            action="extension_record_read",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=lease.session_id,
+            lease_id=lease.lease_id,
+            capability=RECORD_CAPABILITY,
+            object_key="synthetic-record",
         )
-        assert deleted.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
-        payload = bytearray(b"synthetic secret never admitted")
-        written = service.record_write(
-            RECORD_CAPABILITY, "synthetic-record", payload, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
-        )
-        assert written.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
-        assert payload == bytearray(len(payload))
+        direct, material = service.connection.extension_record(request, deadline=time.monotonic() + 10)
+        assert isinstance(direct, ExtensionRecordReply)
+        assert direct.refusal is ExtensionRecordRefusal.LEASE_INACTIVE and material == bytearray()
+        payload = bytearray(b"synthetic secret never admitted") if action == "write" else None
+        if action == "delete":
+            result = service.record_delete(
+                RECORD_CAPABILITY, "synthetic-record", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            )
+        else:
+            assert payload is not None
+            result = service.record_write(
+                RECORD_CAPABILITY,
+                "synthetic-record",
+                payload,
+                expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+            )
+            assert payload == bytearray(len(payload))
+        assert result.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
 
 
 @contextmanager
