@@ -46,6 +46,8 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ..provenance import FIXTURE_PROVENANCE_SYNTHETIC, SYNTHETIC_FIXTURE_PRODUCER
 
 _FIXTURES_DIR = Path(__file__).parent
+_CORPUS_TAX_ID = "12345678Z"
+"""The synthetic taxpayer the committed corpus drafts are issued to."""
 _BASE_LIQUIDABLE_GENERAL_CASILLA = validated_casilla_id(
     "0505",
     surface="borrador_fixture.base_liquidable_general",
@@ -142,8 +144,8 @@ def _format_spanish_decimal(value: Decimal) -> str:
     return f"{'.'.join(reversed(groups))},{fractional}"
 
 
-def render_borrador_pdf(year: int, casilla_values: Mapping[CasillaId, Decimal]) -> bytes:
-    """Render a minimal borrador-format PDF for the given year and casilla values.
+def render_borrador_pdf(year: int, casilla_values: Mapping[CasillaId, Decimal], *, tax_id: str) -> bytes:
+    """Render a minimal borrador-format PDF for the given year and casilla values, issued to ``tax_id``.
 
     Layout follows the AEAT Renta Web Open borrador text stream:
       - Header: ``AGENCIA TRIBUTARIA``, modelo, ejercicio, NIF, ``BORRADOR`` marker.
@@ -179,7 +181,7 @@ def render_borrador_pdf(year: int, casilla_values: Mapping[CasillaId, Decimal]) 
     c.drawRightString(210 * mm - margin, y, f"Ejercicio: {year}")
     y -= 5 * mm
 
-    c.drawString(margin, y, "NIF: 12345678Z")
+    c.drawString(margin, y, f"NIF: {tax_id}")
     y -= 5 * mm
 
     c.setFont("Helvetica-Bold", 11)
@@ -238,7 +240,7 @@ def generate_corpus() -> None:
     """Render and write the three M100 borrador corpus PDFs to fixtures/borrador/."""
     _FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
     for year, casilla_values in _CORPUS_VALUES.items():
-        pdf_bytes = render_borrador_pdf(year, casilla_values)
+        pdf_bytes = render_borrador_pdf(year, casilla_values, tax_id=_CORPUS_TAX_ID)
         out_path = _FIXTURES_DIR / f"modelo_100_{year}.pdf"
         out_path.write_bytes(pdf_bytes)
         sidecar = write_provenance_sidecar(out_path)

@@ -164,6 +164,7 @@ def _assert_replacement_supersedes(profile: NativeCliProfileFixture, snapshot_id
         render_borrador_pdf(
             year=_FIXTURE_YEAR,
             casilla_values={casilla: amount + Decimal("1.00") for casilla, amount in printed.items()},
+            tax_id=_PROFILE_NIF,
         )
     )
     replacement = _import(profile, changed_pdf)
@@ -301,7 +302,11 @@ def test_import_refuses_a_pdf_below_the_profile_coverage_minimum(tmp_path: Path)
     kept = tuple(validated_casilla_id(casilla, surface="test.below_minimum") for casilla in ("0505", "0545"))
     partial_pdf = tmp_path / "below-minimum.pdf"
     partial_pdf.write_bytes(
-        render_borrador_pdf(year=_FIXTURE_YEAR, casilla_values={casilla: printed[casilla] for casilla in kept})
+        render_borrador_pdf(
+            year=_FIXTURE_YEAR,
+            casilla_values={casilla: printed[casilla] for casilla in kept},
+            tax_id=_PROFILE_NIF,
+        )
     )
 
     with native_cli_profile_scope(tmp_path) as profile:

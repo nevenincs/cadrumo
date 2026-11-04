@@ -155,7 +155,7 @@ class _Profile:
         draft could print them, so a box the calculation does settle is compared.
         """
         source = tmp_path / "borrador.pdf"
-        source.write_bytes(render_borrador_pdf(_YEAR, printed))
+        source.write_bytes(render_borrador_pdf(_YEAR, printed, tax_id=_TAX_ID))
         ports = build_borrador_100_operation_ports(profile_id=_PROFILE_ID, operation=self.operation)
         prepared = prepare_borrador_100_import(
             source,
