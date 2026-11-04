@@ -14,6 +14,26 @@ Ground filing-affecting formulas, rates, classifications and relationships in sp
 
 Each binding family has one typed declaration, enrolled validator and owning resolver. Reject unknown families, ambiguous selectors, incompatible applicability and missing required provenance after hydration. Preserve capability grades and authority precedence in resolved results; imported values must not silently override governed bindings.
 
-Authoring inspection exposes candidate data and findings; validation does not install source or publish authority. Runtime must not fall back to mutable TOML or compile development source. Use canonical hydration and temporal selection, never a second loader or lexical newest-year fallback. The registry owns the support envelope.
+Authoring inspection exposes candidate data and findings; validation does not install source or publish authority. Runtime must not fall back to mutable TOML or compile development source. Use canonical hydration and temporal selection (`revision_temporal_resolution`), never a second loader or lexical newest-year fallback. The registry owns the support envelope; the next section states how years and projection work.
 
 Store baselines plus genuine deltas: omission inherits, explicit removal deletes, and false/zero/empty/order remain meaningful. Storage ancestry grants no legal continuity or new review claim. Prove representation changes with typed equivalence, independent minimality, complete assessment, idempotence and stable receipts; intentional semantic changes require separate evidence. Separate unchanged publication defects from source-rewrite regressions. Publish only fully validated final inputs, verify the generation actually consumed, and report source installation, publication and runtime adoption separately.
+
+## Supported years, projection and registry deltas
+
+### Rule
+
+The supported filing years are declared only in [`supported-filing-years.toml`](../../../../src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml), the single file of its kind in `_data`. It declares a horizon and `filing_grade_years_before_horizon`, which [the catalogue](../../../../src/cadrumo/domain/calculations/registry/snapshot_globals.py#L27) resolves to a floor and horizon envelope. Each modelo adds only its authored editions (`period_selector` in `revision.toml`) and its declared inception. No consumer, frontend, test or modelo redeclares years: no year lists, year constants, per-modelo year tables, or comparisons such as revision id against filing year. Surfaces render fields the registry resolver serves (projection direction, reachable authority grade, edition words) and compute none of them.
+
+Inside the envelope, a year with no authored edition of its own is calculated from the nearest authored edition, forward from the newest and backward from the oldest, through [`revision_temporal_resolution`](../../../../src/cadrumo/domain/calculations/registry/temporal.py#L428). Ties go to the earlier edition. A projected year reaches calculation grade at most ([`reachable_authority_grade`](../../../../src/cadrumo/domain/calculations/registry/schema_references.py#L353)); filing grade needs that year's own edition, so projection never promotes grade, and verification reports `registry_filing_year_projected`. A year below the floor, or above a declared hard ceiling, is refused at every grade. A modelo is refused for any year before its declared inception. A rate always resolves to the nearest published rate, with the projection visible in its provenance and no grade promotion.
+
+Key an edition override only where that year's official AEAT design genuinely differs. Fix a wrong value at the earliest edition where it is wrong. The registry stays compact.
+
+### Why
+
+`2026-08-14-registry-temporal-coverage-adr` places the envelope refusal and revision selection in one resolver. The operator confirmed on 2026-11-04 that years below the floor stay refused and that the registry is projected from the nearest ceiling and floor, and ruled that frontends receive these facts rather than hold or redefine them. The operator ruled on 2026-11-03 that only official differences are keyed.
+
+### How
+
+- Change a supported-year bound only in the one TOML. Never add a second declaration to make a consumer or test pass.
+- Prove registry work with the justfile recipes: `just check-registry` (all lifecycle lanes, through `dev.registry.analysis.registry_status --check`), `just check-registry-gate` (validity, runtime load and integrity), `just check-bindings` (strict), and `just report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR`, which stages an edition migration and reports minimality without applying it. After a registry edit, `just registry-publish-authority-if-authority-stale` publishes the authority only when it is stale.
+- Prove each change per supported year: enumerate the years from the registry envelope, never a list, and show that existing capabilities do not regress at any of them. `just test-registry` runs the registry calculation and conformance populations.

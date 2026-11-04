@@ -54,6 +54,12 @@ The [architecture rule](references/00-architecture.md) uses:
 
 Use the repository's configured check scopes. The current commands and checker configuration live in [justfile](../../../justfile) and [pyproject.toml](../../../pyproject.toml).
 
+The [tax calculation domain rule](references/14-tax-calculation-domain.md) governs supported years, projection and registry work:
+
+- Supported years: declared only in `src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml` plus each modelo's authored editions and declared inception. No consumer, frontend, test or modelo redeclares years; surfaces render the fields the registry resolver serves.
+- Projection: inside the envelope, a year without its own edition is calculated from the nearest authored edition through `revision_temporal_resolution`, at calculation grade at most. Filing grade needs that year's own edition. Years below the floor, above a declared hard ceiling, or before a modelo's inception are refused. Rates resolve to the nearest published rate.
+- Registry deltas and proof: key an edition override only where the official AEAT design differs. Prove registry work with `just check-registry`, `just check-registry-gate`, `just check-bindings`, `just report-registry-edition-migration` and `just registry-publish-authority-if-authority-stale`, plus a per-year proof (`just test-registry`) that existing capabilities do not regress at any supported year.
+
 ## Build systems
 
 The Python application above is delivered two ways: as wheels and sdists, and as a native package that bundles CPython, the wheel cohort, the separately built cadrumo-agent wheel, the published registry authority, user documentation, a per-user runtime manager and a Tauri desktop shell. CMake orchestrates the native package and delegates to Python build actions, Cargo and Node. [native/CONTRACT.md](../../../native/CONTRACT.md) is the authored contract for the native build and installed layout.
@@ -127,6 +133,6 @@ The numbered references mirror the project rules in [the canonical rules folder]
 | Modelo addressing, verification, workbench and workspace currentness | [11-modelo-work-and-revision-lifecycle-part-2](references/11-modelo-work-and-revision-lifecycle-part-2.md) |
 | Operation supervisor, profiles, read projections and workflows | [12-operations-profiles-and-workflows](references/12-operations-profiles-and-workflows.md) |
 | Shared contracts, configuration, provenance and errors | [13-core-authority-and-shared-controls](references/13-core-authority-and-shared-controls.md) |
-| Tax registry snapshots, facts, bindings, formulas and layouts | [14-tax-calculation-domain](references/14-tax-calculation-domain.md) |
+| Tax registry snapshots, facts, bindings, formulas and layouts; supported years, projection and registry tooling | [14-tax-calculation-domain](references/14-tax-calculation-domain.md) |
 | Taxpayer, family, business and financial domain records | [15-business-and-taxpayer-domain](references/15-business-and-taxpayer-domain.md) |
-| Bundled knowledge, registry data and localization | [16-bundled-knowledge-and-localization](references/16-bundled-knowledge-and-localization.md) |
+| Bundled knowledge, registry data, year policy and localization | [16-bundled-knowledge-and-localization](references/16-bundled-knowledge-and-localization.md) |
