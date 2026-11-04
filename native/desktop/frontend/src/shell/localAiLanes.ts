@@ -53,7 +53,11 @@ export function useLocalAiLanes(
   const providerSettings = source?.providerSettings ?? null;
   const reader = source?.reader ?? null;
   const status = useAgentStatus(session ?? undefined, reader, active);
-  const available = status?.state === "ready" || status?.state === "starting";
+  // The service answers reads only once it runs; while it starts the host has
+  // no connection to it and refuses them, so nothing is asked and the lanes
+  // stay loading.
+  const available = status?.state === "ready";
+  const starting = status?.state === "starting";
   const [retries, setRetries] = useState(0);
   const request = useMemo(
     () => ({
@@ -185,7 +189,9 @@ export function useLocalAiLanes(
       ? state.read
       : {
           kind:
-            active && available && reader !== null ? "loading" : "unavailable",
+            active && (available || starting) && reader !== null
+              ? "loading"
+              : "unavailable",
         };
   const retry = useCallback(() => setRetries((count) => count + 1), []);
   const host = useMemo((): LocalModelHost | null => {

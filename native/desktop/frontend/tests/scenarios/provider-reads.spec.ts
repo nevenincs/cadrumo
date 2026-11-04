@@ -294,6 +294,20 @@ for (const serviceState of ["stopped", "refused"])
     });
   });
 
+test("Local AI asks nothing while the agent starts and reads once it runs", async ({
+  page,
+}) => {
+  await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+  await page.waitForFunction(() => Boolean(window.__scenarioModules));
+  expect(await localAiProbe(page, { starting: true })).toEqual({
+    whileStarting: { status: "loading", catalog: 0, settings: 0, host: true },
+    status: "ready",
+    catalog: 1,
+    lanes: ["local_api"],
+    host: true,
+  });
+});
+
 for (const refusal of ["agent_service_busy", "agent_service_failed"])
   test(`Local AI catalog bounds ${refusal} recovery and permits explicit Retry`, async ({
     page,
@@ -370,6 +384,7 @@ async function localAiProbe(
     transition?: string;
     stage?: string;
     serviceState?: string;
+    starting?: boolean;
     settingsMode?: string;
     settingsRefusal?: string;
   },
@@ -459,7 +474,9 @@ async function localAiProbe(
             ? { state: "stopped" }
             : options.serviceState === "refused"
               ? { state: "refused", code: "agent_service_failed" }
-              : { state: "starting" },
+              : options.starting
+                ? { state: "starting" }
+                : { state: "ready", agent_version: "fixture" },
         observeStatus: async (listener) => {
           listeners.add(listener);
           return () => {
@@ -583,6 +600,25 @@ async function localAiProbe(
     try {
       render(source);
       await settle();
+      if (options.starting) {
+        // The service has no connection yet: nothing is asked, and the lanes
+        // are loading rather than failed.
+        const whileStarting = {
+          status: view.status,
+          catalog: catalogs,
+          settings,
+          host: view.host === null,
+        };
+        publish();
+        await settle();
+        return {
+          whileStarting,
+          status: view.status,
+          catalog: catalogs,
+          lanes: view.lanes.map((lane) => lane.id),
+          host: view.host !== null,
+        };
+      }
       if (options.serviceState)
         return { status: view.status, catalog: catalogs, settings };
       if (options.transition) {
