@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import fixtures from "@/dev/fixtures/imputationElection.json";
 import { modeloFixture } from "@/dev/modeloFixture";
 import {
   imputationElectionFixture,
@@ -21,7 +22,8 @@ import { WorkspaceScreen } from "./WorkspaceScreen";
 
 const noop = () => undefined;
 const PROFILE = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
-const YEAR = 2025;
+/** The ejercicio the application read the elections for. */
+const YEAR = fixtures.reads.devengo.en.tax_year;
 
 const language = (globals: Record<string, unknown>) =>
   String(globals.locale ?? "en") as OutputLanguage;

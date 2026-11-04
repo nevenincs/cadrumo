@@ -3,7 +3,7 @@
     "undeclared": {
       "en": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 3,
+        "record_revision": 4,
         "content_digest": "dc7d6a024b208d2cfc281a21cbcd282a9135c1b3b34d3419351ef05d0e3144cd",
         "tax_year": 2025,
         "criterion": {
@@ -68,7 +68,7 @@
       },
       "es": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 3,
+        "record_revision": 4,
         "content_digest": "dc7d6a024b208d2cfc281a21cbcd282a9135c1b3b34d3419351ef05d0e3144cd",
         "tax_year": 2025,
         "criterion": {
@@ -133,7 +133,7 @@
       },
       "ca": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 3,
+        "record_revision": 4,
         "content_digest": "dc7d6a024b208d2cfc281a21cbcd282a9135c1b3b34d3419351ef05d0e3144cd",
         "tax_year": 2025,
         "criterion": {
@@ -198,7 +198,7 @@
       },
       "hu": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 3,
+        "record_revision": 4,
         "content_digest": "dc7d6a024b208d2cfc281a21cbcd282a9135c1b3b34d3419351ef05d0e3144cd",
         "tax_year": 2025,
         "criterion": {
@@ -273,8 +273,8 @@
           "value": "devengo"
         },
         "codigo_comercio_accounting": {
-          "state": "undeclared",
-          "value": null
+          "state": "declared",
+          "value": "false"
         },
         "criterion_statements": [
           {
@@ -342,8 +342,8 @@
           "value": "devengo"
         },
         "codigo_comercio_accounting": {
-          "state": "undeclared",
-          "value": null
+          "state": "declared",
+          "value": "false"
         },
         "criterion_statements": [
           {
@@ -411,8 +411,8 @@
           "value": "devengo"
         },
         "codigo_comercio_accounting": {
-          "state": "undeclared",
-          "value": null
+          "state": "declared",
+          "value": "false"
         },
         "criterion_statements": [
           {
@@ -480,8 +480,8 @@
           "value": "devengo"
         },
         "codigo_comercio_accounting": {
-          "state": "undeclared",
-          "value": null
+          "state": "declared",
+          "value": "false"
         },
         "criterion_statements": [
           {
@@ -543,7 +543,7 @@
     "cobros_y_pagos": {
       "en": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 5,
+        "record_revision": 4,
         "content_digest": "b69e625ecc20e00d954532872dbc610861998bef873abf83d2cd568124d3a20b",
         "tax_year": 2025,
         "criterion": {
@@ -616,7 +616,7 @@
       },
       "es": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 5,
+        "record_revision": 4,
         "content_digest": "b69e625ecc20e00d954532872dbc610861998bef873abf83d2cd568124d3a20b",
         "tax_year": 2025,
         "criterion": {
@@ -689,7 +689,7 @@
       },
       "ca": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 5,
+        "record_revision": 4,
         "content_digest": "b69e625ecc20e00d954532872dbc610861998bef873abf83d2cd568124d3a20b",
         "tax_year": 2025,
         "criterion": {
@@ -762,7 +762,7 @@
       },
       "hu": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 5,
+        "record_revision": 4,
         "content_digest": "b69e625ecc20e00d954532872dbc610861998bef873abf83d2cd568124d3a20b",
         "tax_year": 2025,
         "criterion": {
@@ -837,7 +837,7 @@
     "contradictory": {
       "en": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 6,
+        "record_revision": 4,
         "content_digest": "f6e477b22274d18e7b4c1207eaeab8d8471d839b88a85696dd5e9bc2c12e212e",
         "tax_year": 2025,
         "criterion": {
@@ -845,8 +845,8 @@
           "value": null
         },
         "codigo_comercio_accounting": {
-          "state": "undeclared",
-          "value": null
+          "state": "declared",
+          "value": "false"
         },
         "criterion_statements": [
           {
@@ -906,7 +906,7 @@
       },
       "es": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 6,
+        "record_revision": 4,
         "content_digest": "f6e477b22274d18e7b4c1207eaeab8d8471d839b88a85696dd5e9bc2c12e212e",
         "tax_year": 2025,
         "criterion": {
@@ -914,8 +914,8 @@
           "value": null
         },
         "codigo_comercio_accounting": {
-          "state": "undeclared",
-          "value": null
+          "state": "declared",
+          "value": "false"
         },
         "criterion_statements": [
           {
@@ -975,7 +975,7 @@
       },
       "ca": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 6,
+        "record_revision": 4,
         "content_digest": "f6e477b22274d18e7b4c1207eaeab8d8471d839b88a85696dd5e9bc2c12e212e",
         "tax_year": 2025,
         "criterion": {
@@ -983,8 +983,8 @@
           "value": null
         },
         "codigo_comercio_accounting": {
-          "state": "undeclared",
-          "value": null
+          "state": "declared",
+          "value": "false"
         },
         "criterion_statements": [
           {
@@ -1044,7 +1044,7 @@
       },
       "hu": {
         "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        "record_revision": 6,
+        "record_revision": 4,
         "content_digest": "f6e477b22274d18e7b4c1207eaeab8d8471d839b88a85696dd5e9bc2c12e212e",
         "tax_year": 2025,
         "criterion": {
@@ -1052,8 +1052,8 @@
           "value": null
         },
         "codigo_comercio_accounting": {
-          "state": "undeclared",
-          "value": null
+          "state": "declared",
+          "value": "false"
         },
         "criterion_statements": [
           {
@@ -1241,7 +1241,7 @@
         "context": [
           {
             "key": "current_revision",
-            "value": "7"
+            "value": "4"
           },
           {
             "key": "digest_matches",
@@ -1249,7 +1249,7 @@
           },
           {
             "key": "expected_revision",
-            "value": "8"
+            "value": "5"
           },
           {
             "key": "field_paths",
@@ -1270,7 +1270,7 @@
         "context": [
           {
             "key": "current_revision",
-            "value": "7"
+            "value": "4"
           },
           {
             "key": "digest_matches",
@@ -1278,7 +1278,7 @@
           },
           {
             "key": "expected_revision",
-            "value": "8"
+            "value": "5"
           },
           {
             "key": "field_paths",
@@ -1299,7 +1299,7 @@
         "context": [
           {
             "key": "current_revision",
-            "value": "7"
+            "value": "4"
           },
           {
             "key": "digest_matches",
@@ -1307,7 +1307,7 @@
           },
           {
             "key": "expected_revision",
-            "value": "8"
+            "value": "5"
           },
           {
             "key": "field_paths",
@@ -1328,7 +1328,7 @@
         "context": [
           {
             "key": "current_revision",
-            "value": "7"
+            "value": "4"
           },
           {
             "key": "digest_matches",
@@ -1336,7 +1336,7 @@
           },
           {
             "key": "expected_revision",
-            "value": "8"
+            "value": "5"
           },
           {
             "key": "field_paths",

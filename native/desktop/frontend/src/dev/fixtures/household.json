@@ -2,7 +2,7 @@
   "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
   "reads": {
     "unknown": {
-      "record_revision": 3,
+      "record_revision": 5,
       "content_digest": "201ee341217fe6ac5bb7a58eb7a9ee67af0ef2219a1dc5406d1ffb01229e75c3",
       "items": {
         "en": [
@@ -1116,7 +1116,7 @@
       }
     },
     "none_declared": {
-      "record_revision": 6,
+      "record_revision": 7,
       "content_digest": "6d5e7e2eb16072994e212622138a4b429ba8a560ec343795e18a4412dff9017c",
       "items": {
         "en": [
@@ -2230,7 +2230,7 @@
       }
     },
     "rows": {
-      "record_revision": 9,
+      "record_revision": 7,
       "content_digest": "1ed471c38d5bece0f9176c9b3615ac226a4e09b7912374665640259d9a6c8bed",
       "items": {
         "en": [
@@ -2473,7 +2473,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -2483,9 +2483,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -2498,13 +2504,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": false
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": false
               }
             ]
@@ -2561,19 +2591,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -2584,21 +2614,15 @@
             "row_index": "1",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.1.nif",
-                "value": "X1234567L",
-                "masked": false
-              },
-              {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.1.birth_date",
-                "value": "1951-11-30",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "fallecimiento",
-                "path": "renta_family.ascendiente.1.fallecimiento",
-                "value": "2025-02-01",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.1.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -2844,7 +2868,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -2854,9 +2878,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -2869,13 +2899,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": false
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": false
               }
             ]
@@ -2932,19 +2986,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -2955,21 +3009,15 @@
             "row_index": "1",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.1.nif",
-                "value": "X1234567L",
-                "masked": false
-              },
-              {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.1.birth_date",
-                "value": "1951-11-30",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "fallecimiento",
-                "path": "renta_family.ascendiente.1.fallecimiento",
-                "value": "2025-02-01",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.1.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -3215,7 +3263,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -3225,9 +3273,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -3240,13 +3294,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": false
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": false
               }
             ]
@@ -3303,19 +3381,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -3326,21 +3404,15 @@
             "row_index": "1",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.1.nif",
-                "value": "X1234567L",
-                "masked": false
-              },
-              {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.1.birth_date",
-                "value": "1951-11-30",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "fallecimiento",
-                "path": "renta_family.ascendiente.1.fallecimiento",
-                "value": "2025-02-01",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.1.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -3586,7 +3658,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -3596,9 +3668,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -3611,13 +3689,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": false
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": false
               }
             ]
@@ -3674,19 +3776,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -3697,21 +3799,15 @@
             "row_index": "1",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.1.nif",
-                "value": "X1234567L",
-                "masked": false
-              },
-              {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.1.birth_date",
-                "value": "1951-11-30",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "fallecimiento",
-                "path": "renta_family.ascendiente.1.fallecimiento",
-                "value": "2025-02-01",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.1.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -3720,7 +3816,7 @@
       }
     },
     "incomplete": {
-      "record_revision": 13,
+      "record_revision": 8,
       "content_digest": "ec54ccafc9f279a198652397410b733c35378c35803e504e8feaa8c70349e2ee",
       "items": {
         "en": [
@@ -3963,7 +4059,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -3973,9 +4069,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -4032,19 +4134,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -4290,7 +4392,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -4300,9 +4402,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -4359,19 +4467,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -4617,7 +4725,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -4627,9 +4735,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -4686,19 +4800,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -4944,7 +5058,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -4954,9 +5068,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -5013,19 +5133,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -5034,7 +5154,7 @@
       }
     },
     "at_cap": {
-      "record_revision": 16,
+      "record_revision": 7,
       "content_digest": "31f8bfbb523a6aaa3e3acef8502d6a839bc9ff3b8d832193215ed91ff51cf8ea",
       "items": {
         "en": [
@@ -5277,7 +5397,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -5287,9 +5407,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -5302,13 +5428,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": false
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": false
               }
             ]
@@ -5321,12 +5471,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.2.birth_date",
-                "value": "2014-03-03",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.2.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.2.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -5340,13 +5496,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.3.birth_date",
-                "value": "2015-04-04",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.3.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.3.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.3.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.3.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -5359,12 +5533,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.4.birth_date",
-                "value": "2016-05-05",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.4.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.4.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -5378,13 +5558,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.5.birth_date",
-                "value": "2017-06-06",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.5.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.5.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.5.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.5.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -5397,12 +5595,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.6.birth_date",
-                "value": "2018-07-07",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.6.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.6.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -5416,13 +5620,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.7.birth_date",
-                "value": "2019-08-08",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.7.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.7.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.7.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.7.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -5435,12 +5657,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.8.birth_date",
-                "value": "2020-09-09",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.8.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.8.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -5454,13 +5682,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.9.birth_date",
-                "value": "2021-10-10",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.9.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.9.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.9.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.9.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -5473,12 +5719,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.10.birth_date",
-                "value": "2022-11-11",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.10.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.10.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -5492,13 +5744,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.11.birth_date",
-                "value": "2023-12-12",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.11.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.11.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.11.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.11.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -5511,12 +5781,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.12.birth_date",
-                "value": "2012-01-13",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.12.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.12.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -5530,13 +5806,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.13.birth_date",
-                "value": "2013-02-14",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.13.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.13.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.13.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.13.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -5549,12 +5843,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.14.birth_date",
-                "value": "2014-03-15",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.14.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.14.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -5612,19 +5912,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -5635,21 +5935,15 @@
             "row_index": "1",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.1.nif",
-                "value": "X1234567L",
-                "masked": false
-              },
-              {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.1.birth_date",
-                "value": "1951-11-30",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "fallecimiento",
-                "path": "renta_family.ascendiente.1.fallecimiento",
-                "value": "2025-02-01",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.1.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -5662,7 +5956,13 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.2.birth_date",
-                "value": "1940-01-01",
+                "value": "1947-01-08",
+                "masked": false
+              },
+              {
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.2.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -5673,15 +5973,15 @@
             "row_index": "3",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.3.nif",
-                "value": "87654321X",
+                "leaf": "birth_date",
+                "path": "renta_family.ascendiente.3.birth_date",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "birth_date",
-                "path": "renta_family.ascendiente.3.birth_date",
-                "value": "1945-06-15",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.3.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -5927,7 +6227,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -5937,9 +6237,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -5952,13 +6258,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": false
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": false
               }
             ]
@@ -5971,12 +6301,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.2.birth_date",
-                "value": "2014-03-03",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.2.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.2.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -5990,13 +6326,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.3.birth_date",
-                "value": "2015-04-04",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.3.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.3.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.3.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.3.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6009,12 +6363,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.4.birth_date",
-                "value": "2016-05-05",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.4.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.4.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6028,13 +6388,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.5.birth_date",
-                "value": "2017-06-06",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.5.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.5.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.5.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.5.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6047,12 +6425,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.6.birth_date",
-                "value": "2018-07-07",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.6.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.6.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6066,13 +6450,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.7.birth_date",
-                "value": "2019-08-08",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.7.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.7.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.7.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.7.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6085,12 +6487,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.8.birth_date",
-                "value": "2020-09-09",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.8.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.8.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6104,13 +6512,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.9.birth_date",
-                "value": "2021-10-10",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.9.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.9.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.9.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.9.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6123,12 +6549,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.10.birth_date",
-                "value": "2022-11-11",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.10.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.10.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6142,13 +6574,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.11.birth_date",
-                "value": "2023-12-12",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.11.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.11.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.11.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.11.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6161,12 +6611,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.12.birth_date",
-                "value": "2012-01-13",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.12.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.12.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6180,13 +6636,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.13.birth_date",
-                "value": "2013-02-14",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.13.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.13.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.13.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.13.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6199,12 +6673,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.14.birth_date",
-                "value": "2014-03-15",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.14.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.14.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6262,19 +6742,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -6285,21 +6765,15 @@
             "row_index": "1",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.1.nif",
-                "value": "X1234567L",
-                "masked": false
-              },
-              {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.1.birth_date",
-                "value": "1951-11-30",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "fallecimiento",
-                "path": "renta_family.ascendiente.1.fallecimiento",
-                "value": "2025-02-01",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.1.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -6312,7 +6786,13 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.2.birth_date",
-                "value": "1940-01-01",
+                "value": "1947-01-08",
+                "masked": false
+              },
+              {
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.2.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -6323,15 +6803,15 @@
             "row_index": "3",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.3.nif",
-                "value": "87654321X",
+                "leaf": "birth_date",
+                "path": "renta_family.ascendiente.3.birth_date",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "birth_date",
-                "path": "renta_family.ascendiente.3.birth_date",
-                "value": "1945-06-15",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.3.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -6577,7 +7057,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -6587,9 +7067,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -6602,13 +7088,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": false
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": false
               }
             ]
@@ -6621,12 +7131,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.2.birth_date",
-                "value": "2014-03-03",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.2.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.2.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6640,13 +7156,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.3.birth_date",
-                "value": "2015-04-04",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.3.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.3.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.3.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.3.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6659,12 +7193,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.4.birth_date",
-                "value": "2016-05-05",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.4.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.4.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6678,13 +7218,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.5.birth_date",
-                "value": "2017-06-06",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.5.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.5.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.5.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.5.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6697,12 +7255,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.6.birth_date",
-                "value": "2018-07-07",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.6.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.6.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6716,13 +7280,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.7.birth_date",
-                "value": "2019-08-08",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.7.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.7.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.7.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.7.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6735,12 +7317,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.8.birth_date",
-                "value": "2020-09-09",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.8.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.8.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6754,13 +7342,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.9.birth_date",
-                "value": "2021-10-10",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.9.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.9.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.9.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.9.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6773,12 +7379,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.10.birth_date",
-                "value": "2022-11-11",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.10.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.10.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6792,13 +7404,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.11.birth_date",
-                "value": "2023-12-12",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.11.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.11.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.11.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.11.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6811,12 +7441,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.12.birth_date",
-                "value": "2012-01-13",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.12.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.12.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6830,13 +7466,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.13.birth_date",
-                "value": "2013-02-14",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.13.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.13.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.13.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.13.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -6849,12 +7503,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.14.birth_date",
-                "value": "2014-03-15",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.14.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.14.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -6912,19 +7572,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -6935,21 +7595,15 @@
             "row_index": "1",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.1.nif",
-                "value": "X1234567L",
-                "masked": false
-              },
-              {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.1.birth_date",
-                "value": "1951-11-30",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "fallecimiento",
-                "path": "renta_family.ascendiente.1.fallecimiento",
-                "value": "2025-02-01",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.1.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -6962,7 +7616,13 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.2.birth_date",
-                "value": "1940-01-01",
+                "value": "1947-01-08",
+                "masked": false
+              },
+              {
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.2.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -6973,15 +7633,15 @@
             "row_index": "3",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.3.nif",
-                "value": "87654321X",
+                "leaf": "birth_date",
+                "path": "renta_family.ascendiente.3.birth_date",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "birth_date",
-                "path": "renta_family.ascendiente.3.birth_date",
-                "value": "1945-06-15",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.3.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -7227,7 +7887,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
@@ -7237,9 +7897,15 @@
                 "masked": false
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": false
               }
             ]
@@ -7252,13 +7918,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": false
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": false
               }
             ]
@@ -7271,12 +7961,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.2.birth_date",
-                "value": "2014-03-03",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.2.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.2.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -7290,13 +7986,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.3.birth_date",
-                "value": "2015-04-04",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.3.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.3.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.3.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.3.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -7309,12 +8023,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.4.birth_date",
-                "value": "2016-05-05",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.4.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.4.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -7328,13 +8048,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.5.birth_date",
-                "value": "2017-06-06",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.5.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.5.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.5.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.5.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -7347,12 +8085,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.6.birth_date",
-                "value": "2018-07-07",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.6.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.6.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -7366,13 +8110,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.7.birth_date",
-                "value": "2019-08-08",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.7.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.7.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.7.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.7.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -7385,12 +8147,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.8.birth_date",
-                "value": "2020-09-09",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.8.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.8.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -7404,13 +8172,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.9.birth_date",
-                "value": "2021-10-10",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.9.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.9.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.9.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.9.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -7423,12 +8209,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.10.birth_date",
-                "value": "2022-11-11",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.10.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.10.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -7442,13 +8234,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.11.birth_date",
-                "value": "2023-12-12",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.11.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.11.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.11.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.11.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -7461,12 +8271,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.12.birth_date",
-                "value": "2012-01-13",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.12.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.12.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -7480,13 +8296,31 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.13.birth_date",
-                "value": "2013-02-14",
+                "value": "2024-03-21",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.13.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.13.prorrata_minimo",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.13.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": false
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.13.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
                 "masked": false
               }
             ]
@@ -7499,12 +8333,18 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.14.birth_date",
-                "value": "2014-03-15",
+                "value": "2017-05-11",
                 "masked": false
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.14.convivencia",
+                "value": "true",
+                "masked": false
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.14.prorrata_minimo",
                 "value": "true",
                 "masked": false
               }
@@ -7562,19 +8402,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -7585,21 +8425,15 @@
             "row_index": "1",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.1.nif",
-                "value": "X1234567L",
-                "masked": false
-              },
-              {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.1.birth_date",
-                "value": "1951-11-30",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "fallecimiento",
-                "path": "renta_family.ascendiente.1.fallecimiento",
-                "value": "2025-02-01",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.1.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -7612,7 +8446,13 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.2.birth_date",
-                "value": "1940-01-01",
+                "value": "1947-01-08",
+                "masked": false
+              },
+              {
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.2.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -7623,15 +8463,15 @@
             "row_index": "3",
             "facts": [
               {
-                "leaf": "nif",
-                "path": "renta_family.ascendiente.3.nif",
-                "value": "87654321X",
+                "leaf": "birth_date",
+                "path": "renta_family.ascendiente.3.birth_date",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
-                "leaf": "birth_date",
-                "path": "renta_family.ascendiente.3.birth_date",
-                "value": "1945-06-15",
+                "leaf": "convivientes",
+                "path": "renta_family.ascendiente.3.convivientes",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -7640,7 +8480,7 @@
       }
     },
     "masked": {
-      "record_revision": 19,
+      "record_revision": 7,
       "content_digest": "0dc27b9a0dab5bf26037f0d4194b2b546a00a29b04e44a1505fb20718e7cf44b",
       "items": {
         "en": [
@@ -7883,7 +8723,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": true
               },
               {
@@ -7893,9 +8733,15 @@
                 "masked": true
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": true
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": true
               }
             ]
@@ -7908,13 +8754,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": true
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": true
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": true
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": true
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": true
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": true
               }
             ]
@@ -7971,19 +8841,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -8229,7 +9099,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": true
               },
               {
@@ -8239,9 +9109,15 @@
                 "masked": true
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": true
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": true
               }
             ]
@@ -8254,13 +9130,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": true
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": true
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": true
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": true
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": true
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": true
               }
             ]
@@ -8317,19 +9217,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -8575,7 +9475,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": true
               },
               {
@@ -8585,9 +9485,15 @@
                 "masked": true
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": true
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": true
               }
             ]
@@ -8600,13 +9506,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": true
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": true
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": true
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": true
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": true
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": true
               }
             ]
@@ -8663,19 +9593,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -8921,7 +9851,7 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.0.birth_date",
-                "value": "2012-01-01",
+                "value": "2017-05-11",
                 "masked": true
               },
               {
@@ -8931,9 +9861,15 @@
                 "masked": true
               },
               {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.0.prorrata_minimo",
+                "value": "true",
+                "masked": true
+              },
+              {
                 "leaf": "nif",
                 "path": "renta_family.descendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000002W",
                 "masked": true
               }
             ]
@@ -8946,13 +9882,37 @@
               {
                 "leaf": "birth_date",
                 "path": "renta_family.descendiente.1.birth_date",
-                "value": "2013-02-02",
+                "value": "2024-03-21",
                 "masked": true
               },
               {
                 "leaf": "convivencia",
                 "path": "renta_family.descendiente.1.convivencia",
-                "value": "false",
+                "value": "true",
+                "masked": true
+              },
+              {
+                "leaf": "prorrata_minimo",
+                "path": "renta_family.descendiente.1.prorrata_minimo",
+                "value": "true",
+                "masked": true
+              },
+              {
+                "leaf": "meses_madre_trabajo",
+                "path": "renta_family.descendiente.1.meses_madre_trabajo",
+                "value": "01;02;03;04;05;06;07;08;09;10;11;12",
+                "masked": true
+              },
+              {
+                "leaf": "gastos_guarderia_mensuales",
+                "path": "renta_family.descendiente.1.gastos_guarderia_mensuales",
+                "value": "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220",
+                "masked": true
+              },
+              {
+                "leaf": "nif",
+                "path": "renta_family.descendiente.1.nif",
+                "value": "00000003A",
                 "masked": true
               }
             ]
@@ -9009,19 +9969,19 @@
               {
                 "leaf": "nif",
                 "path": "renta_family.ascendiente.0.nif",
-                "value": "12345678Z",
+                "value": "00000004G",
                 "masked": false
               },
               {
                 "leaf": "birth_date",
                 "path": "renta_family.ascendiente.0.birth_date",
-                "value": "1948-03-04",
+                "value": "1947-01-08",
                 "masked": false
               },
               {
                 "leaf": "convivientes",
                 "path": "renta_family.ascendiente.0.convivientes",
-                "value": "2",
+                "value": "1",
                 "masked": false
               }
             ]
@@ -9030,7 +9990,7 @@
       }
     },
     "married": {
-      "record_revision": 21,
+      "record_revision": 5,
       "content_digest": "2d1d5aff38f515d4ab8363670ef6df01f961c95eeacff9fbbdca9896d438130a",
       "items": {
         "en": [
@@ -10144,7 +11104,7 @@
       }
     },
     "single_parent_unstated": {
-      "record_revision": 23,
+      "record_revision": 6,
       "content_digest": "a613ef08bd013944b28fce3a6227017126286b501956a93b352d32f1eb1507fa",
       "items": {
         "en": [
@@ -11330,7 +12290,7 @@
       }
     },
     "single_parent_lives_with": {
-      "record_revision": 25,
+      "record_revision": 6,
       "content_digest": "a032f4ec9e39e2e09d6c5e61751db0356c02a2683edaf4c0cbf34d5fd653f6dc",
       "items": {
         "en": [
@@ -12516,7 +13476,7 @@
       }
     },
     "single_parent_apart": {
-      "record_revision": 27,
+      "record_revision": 6,
       "content_digest": "092cfbc47925bd9bd34c31fc904505baacc0afad3a43ae87f76245e9f5be36fb",
       "items": {
         "en": [

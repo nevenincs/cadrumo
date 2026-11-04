@@ -22,7 +22,8 @@ const served = JSON.parse(
 
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 type Language = (typeof LANGUAGES)[number];
-const YEAR = 2025;
+/** The ejercicio the application read the elections for. */
+const YEAR = served.reads.devengo!.en!.tax_year;
 
 const workspace = (target: Page) => target.locator(".declarations-workspace");
 
@@ -111,7 +112,7 @@ test("an unstated year reads undeclared and none of the choices is selected", as
     label("workspace.modelo.election.other_years"),
   );
   await expect(element).toContainText(
-    `2024: ${read.criterion_question.choices[0]!.label}`,
+    `${read.criterion_statements[0]!.ejercicio}: ${read.criterion_question.choices[0]!.label}`,
   );
 });
 

@@ -1,5 +1,15 @@
 import type { CensoPort, CensoSnapshot } from "../shell/profileCenso";
 import type { ProfileFixture } from "./userProfileFixture";
+import profileFixtures from "./fixtures/userProfile.json";
+
+/** What the generated profile states at `path`: the review's current side is
+ * the profile the scenario host serves, never a value of its own. */
+function profileStated(path: string): string | null {
+  for (const section of profileFixtures.en.sections)
+    for (const field of section.fields)
+      if (field.path === path) return (field.value as string | null) ?? null;
+  return null;
+}
 
 declare global {
   interface Window {
@@ -131,13 +141,13 @@ export function censoFixture(
     fields: [
       {
         path: "contact.fiscal_address",
-        current: "Calle Larios 12, 2 A, Málaga",
+        current: profileStated("contact.fiscal_address"),
         incoming: "Calle Nueva 1, Málaga",
         preserve: true,
       },
       {
         path: "contact.postcode",
-        current: "29005",
+        current: profileStated("contact.postcode"),
         incoming: "29001",
         preserve: true,
       },

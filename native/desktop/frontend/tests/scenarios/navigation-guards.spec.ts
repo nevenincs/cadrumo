@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { agentTurns, ask, settled } from "../support/agent";
 import { label } from "../support/strings";
+import { PROFILE_SURNAMES } from "../support/profileFixture";
 import { windowToast } from "../support/toast";
 
 // The pages' own guards and focus targets under the window's navigator: a
@@ -35,7 +36,7 @@ async function openProfile(page: Page, scenario = "user-profile") {
     .locator(".rail")
     .getByRole("button", { name: label("desktop.profile.title"), exact: true })
     .click();
-  await expect(profilePage(page)).toContainText("Soler Vidal");
+  await expect(profilePage(page)).toContainText(PROFILE_SURNAMES);
 }
 
 async function draftGivenName(page: Page, value: string) {

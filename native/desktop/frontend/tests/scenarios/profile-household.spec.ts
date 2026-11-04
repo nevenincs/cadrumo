@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { label } from "../support/strings";
+import { PROFILE_SURNAMES } from "../support/profileFixture";
 
 // The household element in the profile page. The groups, states, leaves,
 // limits and refusal sentences below are what the application served through
@@ -38,6 +39,14 @@ const ASCENDANTS = "renta_family.ascendiente";
 
 const PATH = "renta_family.convive_con_otro_progenitor";
 
+/** The values of one group's first served row in the masked read, by leaf. */
+const maskedFirstRow = (group: string) =>
+  Object.fromEntries(
+    served.reads.masked!.items.en!.find(
+      (item) => item.kind === "family_row" && item.group_key === group,
+    )!.facts!.map((fact) => [fact.leaf, fact.value]),
+  );
+
 /** The question the product served for a scenario, in a language. */
 const questionOf = (scenario: string, language: Language) =>
   served.reads[scenario]!.items[language]!.find(
@@ -65,7 +74,7 @@ async function open(
     })
     .click();
   const profile = page.locator(".user-profile-page");
-  await expect(profile).toContainText("Soler Vidal");
+  await expect(profile).toContainText(PROFILE_SURNAMES);
   return profile.locator("[data-household]");
 }
 
@@ -150,8 +159,10 @@ test.describe("the household in the profile page", () => {
     await expect(hidden.first()).toContainText("••••");
     const text = (await household.textContent()) ?? "";
     // The child's NIF and birth date are hidden; the ascendant's are not.
-    expect(text).not.toContain("2012-01-01");
-    expect(text.split("12345678Z")).toHaveLength(2);
+    const child = maskedFirstRow(DESCENDANTS);
+    expect(text).not.toContain(child.birth_date!);
+    expect(text).not.toContain(child.nif!);
+    expect(text.split(maskedFirstRow(ASCENDANTS).nif!)).toHaveLength(2);
     await expect(
       group(household, DESCENDANTS).getByRole("button", {
         name: label("desktop.profile.household.edit_person", { number: 1 }),

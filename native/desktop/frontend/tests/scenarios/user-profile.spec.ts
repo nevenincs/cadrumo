@@ -1,20 +1,7 @@
-import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
+import { PROFILE_NAME, PROFILE_SECTION_TITLES, PROFILE_SURNAMES, profileStated } from "../support/profileFixture";
 import { SCENARIO_PASSWORD } from "../../src/dev/fixtures/password";
-import type { UserProfile } from "../../src/shell/userProfile";
-
-/** The titles of the sections the profile schema declares, in order, as the
- * application projected them into the generated fixture. */
-const declaredSectionTitles = () =>
-  (
-    JSON.parse(
-      readFileSync(
-        new URL("../../src/dev/fixtures/userProfile.json", import.meta.url),
-        "utf8",
-      ),
-    ) as { en: UserProfile }
-  ).en.sections.map((section) => section.title);
 
 async function open(page: Page, scenario = "user-profile", language = "en") {
   await page.goto(
@@ -27,7 +14,7 @@ async function open(page: Page, scenario = "user-profile", language = "en") {
       exact: true,
     })
     .click();
-  await expect(page.locator(".user-profile-page")).toContainText("Soler Vidal");
+  await expect(page.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
   return page.locator(".user-profile-page");
 }
 
@@ -115,11 +102,11 @@ test("the summary names the taxpayer and filters to what is required and missing
 }) => {
   const profile = await open(page);
   const header = profile.locator("header");
-  await expect(header.getByRole("heading", { level: 3 })).toHaveText(
-    "Ana Soler Vidal",
+  await expect(header.getByRole("heading", { level: 3 })).toHaveText(PROFILE_NAME);
+  await expect(header).toContainText(profileStated("identity.email"));
+  await expect(header).toContainText(
+    `${profileStated("contact.fiscal_address")} · ${profileStated("contact.postcode")}`,
   );
-  await expect(header).toContainText("ana.soler@example.test");
-  await expect(header).toContainText("Calle Larios 12, 2 A, Málaga · 29005");
   await expect(header).toContainText(label("desktop.profile.missing"));
   await header
     .getByRole("button", {
@@ -145,7 +132,7 @@ test("search, show, group and sort arrange the saved details", async ({
   page,
 }) => {
   const profile = await open(page);
-  await profile.getByRole("searchbox").fill("malaga");
+  await profile.getByRole("searchbox").fill(profileStated("contact.fiscal_address").split(/[ ,]+/).pop()!);
   await expect(row(profile, "contact.fiscal_address")).toBeVisible();
   await expect(profile.getByRole("region", { name: /^Identity/ })).toHaveCount(
     0,
@@ -339,7 +326,7 @@ test("a detail's context menu offers its own actions, by pointer and by key", as
   ).toBeVisible();
   // The value itself, through the host's clipboard.
   expect(await page.evaluate(() => window.__scenarioHostCalls ?? [])).toContain(
-    `writeClipboard ${"ana.soler@example.test".length} characters`,
+    `writeClipboard ${profileStated("identity.email").length} characters`,
   );
   // The key the menu shows copies it again.
   const copies = () =>
@@ -627,7 +614,7 @@ test("full schema, collapsible sections, section index and browser autofill", as
     })
     .click();
   await expect(page.getByRole("menuitem")).toContainText(
-    declaredSectionTitles(),
+    PROFILE_SECTION_TITLES,
   );
   await page.keyboard.press("Escape");
   await profile
@@ -668,7 +655,7 @@ test("full schema, collapsible sections, section index and browser autofill", as
     .getByRole("button", { name: "Contact and fiscal address" })
     .click();
   await expect(row(profile, "contact.contact_person_phone")).toBeInViewport();
-  await expect(profile).toContainText("952000000");
+  await expect(profile).toContainText(profileStated("contact.contact_person_phone"));
 });
 
 test("Censo checks saved prerequisites and edits the missing identity", async ({
@@ -1205,14 +1192,14 @@ test("a failed pending profile read leaves loading and allows a retry", async ({
     label("desktop.profile.unavailable"),
   );
   await expect(profile).not.toContainText(label("desktop.profile.loading"));
-  await expect(profile).toContainText("Soler Vidal");
+  await expect(profile).toContainText(PROFILE_SURNAMES);
   const refresh = profile.getByRole("button", {
     name: label("desktop.profile.refresh"),
     exact: true,
   });
   await expect(refresh).toBeEnabled();
   await refresh.click();
-  await expect(profile).toContainText("Soler Vidal");
+  await expect(profile).toContainText(PROFILE_SURNAMES);
   await expect(profile.getByRole("alert")).toHaveCount(0);
   await expect(profile).not.toContainText(label("desktop.profile.loading"));
 });

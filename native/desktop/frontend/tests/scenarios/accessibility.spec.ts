@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { label } from "../support/strings";
+import { PROFILE_SURNAMES } from "../support/profileFixture";
 
 // An automated accessibility audit of each major surface, in both schemes.
 // It finds what a rule engine can find: names, roles, relationships and
@@ -128,9 +129,7 @@ const SURFACES: {
           exact: true,
         })
         .click();
-      await expect(target.locator(".user-profile-page")).toContainText(
-        "Soler Vidal",
-      );
+      await expect(target.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
       if (editing)
         await target
           .locator(".user-profile-page")
@@ -152,9 +151,7 @@ const SURFACES: {
           exact: true,
         })
         .click();
-      await expect(target.locator(".user-profile-page")).toContainText(
-        "Soler Vidal",
-      );
+      await expect(target.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
       await target
         .locator(".user-profile-page")
         .getByRole("button", {
