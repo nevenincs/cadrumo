@@ -11,7 +11,7 @@ type Report = { level: string; command: string | null; code: string | null };
 
 async function run(
   page: import("@playwright/test").Page,
-  scenario: "refused" | "ended-first",
+  scenario: "refused" | "ended-first" | "ended-in-flight",
 ) {
   await page.goto("/scenarios.html?scenario=signed-out&bar=off");
   await page.waitForFunction(() => Boolean(window.__scenarioModules));
@@ -34,6 +34,10 @@ async function run(
     const calls: string[] = [];
     let admit!: () => void;
     const admitted = new Promise<void>((resolve) => (admit = resolve));
+    let answerStatus!: () => void;
+    const statusAnswer = new Promise<void>(
+      (resolve) => (answerStatus = resolve),
+    );
     Object.assign(window, {
       __CADRUMO_SHELL__: { token: "e".repeat(64) },
       __TAURI_INTERNALS__: {
@@ -47,8 +51,10 @@ async function run(
             if (scenario === "ended-first") await admitted;
             return answer;
           }
-          if (command === "provider_settings_status")
+          if (command === "provider_settings_status") {
+            if (scenario === "ended-in-flight") await statusAnswer;
             throw { code: "not_signed_in" };
+          }
           return null;
         },
       },
@@ -102,6 +108,20 @@ async function run(
         );
         admit();
       }
+      if (scenario === "ended-in-flight") {
+        for (
+          let at = 0;
+          at < 100 && !calls.includes("provider_settings_status");
+          at++
+        )
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        // The status read is already with the host when the window learns the
+        // session ended; the host then refuses it for that reason.
+        dom.flushSync(() =>
+          root.render(react.createElement(Probe, { reader: null })),
+        );
+        answerStatus();
+      }
       await settle();
       return {
         status: view.status,
@@ -142,6 +162,15 @@ test("no provider-status read follows once the session has ended", async ({
 }) => {
   const result = await run(page, "ended-first");
   expect(result.settingsReads).toBe(0);
+  expect(result.reports).toEqual([]);
+  expect(result.errors).toBe(0);
+});
+
+test("a provider-status read already asked when the session ends is dropped without a record", async ({
+  page,
+}) => {
+  const result = await run(page, "ended-in-flight");
+  expect(result.settingsReads).toBe(1);
   expect(result.reports).toEqual([]);
   expect(result.errors).toBe(0);
 });

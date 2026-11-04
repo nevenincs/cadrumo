@@ -1,4 +1,4 @@
-import type { RetryPlan } from "./hostCall";
+import type { CallPlan } from "./hostCall";
 
 /** Bounded fallback for collecting service-owned catalog work after admission is busy. */
 export const CATALOG_BUSY_RETRIES = 3;
@@ -10,7 +10,7 @@ export const catalogReadBusy = (code: string): boolean =>
 
 /** A catalog read whose busy refusals the caller answers by reading again
  * while `scheduled` says another read is coming. */
-export const catalogReadRetry = (scheduled: () => boolean): RetryPlan => ({
+export const catalogReadRetry = (scheduled: () => boolean): CallPlan => ({
   retryable: catalogReadBusy,
   scheduled,
 });

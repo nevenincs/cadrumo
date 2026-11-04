@@ -73,6 +73,12 @@ export function useLocalAiLanes(
     [session, providerSettings, reader, active, available, again, retries],
   );
   const generation = useRef(0);
+  // The work of the commit now reading, so the window's learning that the
+  // session ended can be told to the reads it has in flight.
+  const work = useRef<{ ended: boolean } | null>(null);
+  useLayoutEffect(() => {
+    if (reader === null && work.current) work.current.ended = true;
+  }, [reader]);
   const wake = useRef<(() => void) | null>(null);
   const published = useRef(status);
   useLayoutEffect(() => {
@@ -102,6 +108,8 @@ export function useLocalAiLanes(
     )
       return;
     const mine = generation.current;
+    const mineWork = { ended: false };
+    work.current = mineWork;
     let alive = true;
     let attempts = 0;
     let timer: number | undefined;
@@ -138,7 +146,9 @@ export function useLocalAiLanes(
       window.clearTimeout(timer);
       const atRead = published.current;
       try {
-        const settings = await providerSettings.status();
+        const settings = await providerSettings.status({
+          sessionEnded: () => mineWork.ended,
+        });
         const keyless = new Set(
           settings.providers
             .filter((lane) => lane.auth_kind === "none")
@@ -179,6 +189,7 @@ export function useLocalAiLanes(
     put({ kind: "loading" });
     void collect();
     return () => {
+      if (work.current === mineWork) work.current = null;
       alive = false;
       window.clearTimeout(timer);
       wake.current = null;
