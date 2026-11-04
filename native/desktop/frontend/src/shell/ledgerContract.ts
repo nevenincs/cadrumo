@@ -137,11 +137,6 @@ export const DECIDED_CLASSIFICATIONS = [
 export const isDecidedClassification = (id: string): boolean =>
   (DECIDED_CLASSIFICATIONS as readonly string[]).includes(id);
 
-/** The classifications under which a movement carries business figures. */
-export const BUSINESS_BEARING_CLASSIFICATIONS = ["BUSINESS", "MIXED"] as const;
-export const isBusinessBearing = (id: string): boolean =>
-  (BUSINESS_BEARING_CLASSIFICATIONS as readonly string[]).includes(id);
-
 /** The classifications a person may have a rule decide. */
 export const RULE_CLASSIFICATIONS = [
   "BUSINESS",
@@ -349,28 +344,6 @@ export const DRAFT_REQUIRED_FIELDS = [
   "direction",
   "description",
 ] as const;
-
-/** The periods a ledger can be filtered by: those with a calendar span, and the months it runs. */
-export const LEDGER_PERIOD_SPANS = {
-  "1T": { granularity: "quarter", first: 1, last: 3 },
-  "2T": { granularity: "quarter", first: 4, last: 6 },
-  "3T": { granularity: "quarter", first: 7, last: 9 },
-  "4T": { granularity: "quarter", first: 10, last: 12 },
-  "0A": { granularity: "year", first: 1, last: 12 },
-  "01": { granularity: "month", first: 1, last: 1 },
-  "02": { granularity: "month", first: 2, last: 2 },
-  "03": { granularity: "month", first: 3, last: 3 },
-  "04": { granularity: "month", first: 4, last: 4 },
-  "05": { granularity: "month", first: 5, last: 5 },
-  "06": { granularity: "month", first: 6, last: 6 },
-  "07": { granularity: "month", first: 7, last: 7 },
-  "08": { granularity: "month", first: 8, last: 8 },
-  "09": { granularity: "month", first: 9, last: 9 },
-  "10": { granularity: "month", first: 10, last: 10 },
-  "11": { granularity: "month", first: 11, last: 11 },
-  "12": { granularity: "month", first: 12, last: 12 },
-} as const;
-export type LedgerPeriodCode = keyof typeof LEDGER_PERIOD_SPANS;
 
 /** The fields a movement may be corrected in. */
 export const LEDGER_UPDATE_FIELDS = [

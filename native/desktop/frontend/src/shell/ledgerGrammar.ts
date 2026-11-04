@@ -33,7 +33,6 @@ export type GrammarRefusalKey =
   | "date_not_in_calendar"
   | "not_a_date"
   | "year_not_a_number"
-  | "period_unknown"
   | "line_break"
   | "not_an_iban"
   | "not_a_bic"

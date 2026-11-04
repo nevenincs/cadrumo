@@ -2549,7 +2549,6 @@ desktop:
         percent_above_100: «{raw}» supera el 100 %.
         percent_as_fraction: '«{raw}» parece una fracción: escribe {suggestion} para
           el {suggestion} %.'
-        period_unknown: «{raw}» no es un periodo.
         required: 'Obligatorio: no se puede vaciar'
         signed: '«{raw}» lleva signo: escribe el importe sin él e indica el sentido.'
         too_long: '«{raw}» es demasiado largo: como mucho {limit} caracteres.'

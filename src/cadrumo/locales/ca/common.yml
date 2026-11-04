@@ -2550,7 +2550,6 @@ desktop:
         percent_above_100: «{raw}» supera el 100 %.
         percent_as_fraction: '«{raw}» sembla una fracció: escriu {suggestion} per
           al {suggestion} %.'
-        period_unknown: «{raw}» no és un període.
         required: 'Obligatori: no es pot buidar'
         signed: '«{raw}» porta signe: escriu l''import sense i indica el sentit.'
         too_long: '«{raw}» és massa llarg: com a màxim {limit} caràcters.'

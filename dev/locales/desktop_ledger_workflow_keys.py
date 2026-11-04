@@ -369,7 +369,6 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.edit.refusal.percent_above_100",
         "desktop.ledger.edit.refusal.percent_as_fraction",
         "desktop.ledger.edit.refusal.limits_unavailable",
-        "desktop.ledger.edit.refusal.period_unknown",
         "desktop.ledger.edit.refusal.required",
         "desktop.ledger.edit.refusal.signed",
         "desktop.ledger.edit.refusal.too_long",

@@ -2522,7 +2522,6 @@ desktop:
         not_an_iban: Ez nem IBAN.
         percent_above_100: „{raw}” több mint 100%.
         percent_as_fraction: '„{raw}” törtnek tűnik: írj {suggestion}-t a {suggestion}%-hoz.'
-        period_unknown: „{raw}” nem időszak.
         required: 'Kötelező: nem törölhető'
         signed: '„{raw}” előjeles: írd előjel nélkül, és add meg az irányt.'
         too_long: '„{raw}” túl hosszú: legfeljebb {limit} karakter.'

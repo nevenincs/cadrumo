@@ -36,7 +36,6 @@ from cadrumo.application.ledger.staged_identity import TRANSACTION_IDENTITY_FIEL
 from cadrumo.application.ledger.update_contracts import LEDGER_UPDATE_REQUIRED_FIELD_NAMES, LedgerUpdatePatch
 from cadrumo.application.transactions.diagnostics import LedgerImportDiagnosticKind
 from cadrumo.core.aggregation import IntracomOperationType
-from cadrumo.core.period import Period, PeriodKind, StandardPeriodCode
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.invoices.enums import PaymentStatus
 from cadrumo.domain.invoices.service import INVOICE_MATCH_TOLERANCE, invoice_settling_direction
@@ -53,7 +52,6 @@ from cadrumo.domain.transactions.classification_effects import (
     takes_m210_income,
 )
 from cadrumo.domain.transactions.enums import (
-    BUSINESS_BEARING_STATES,
     CLASSIFIED_STATES,
     RULE_DECIDED_STATES,
     UNDECIDED_STATES,
@@ -130,12 +128,6 @@ _CLASSIFICATION_SETS: tuple[tuple[str, str, str, frozenset[BusinessClassificatio
         "isDecidedClassification",
         "The classifications that decide a movement; the others are dispositions.",
         CLASSIFIED_STATES,
-    ),
-    (
-        "BUSINESS_BEARING_CLASSIFICATIONS",
-        "isBusinessBearing",
-        "The classifications under which a movement carries business figures.",
-        BUSINESS_BEARING_STATES,
     ),
     (
         "RULE_CLASSIFICATIONS",
@@ -390,30 +382,6 @@ def _rules() -> list[str]:
     ]
 
 
-def _periods() -> list[str]:
-    """The periods with a calendar span, each worked out from the period that owns it."""
-    granularity = {PeriodKind.ANNUAL: "year", PeriodKind.QUARTERLY: "quarter", PeriodKind.MONTHLY: "month"}
-    spans = [
-        period
-        for period in (Period(filing_year=2000, code=code) for code in StandardPeriodCode)
-        if period.has_date_span()
-    ]
-    rows = "".join(
-        f'  "{period.code}": {{ granularity: "{granularity[period.kind]}", '
-        f"first: {period.start_date.month}, last: {period.end_date.month} }},\n"
-        for period in spans
-    )
-    return [
-        "\n".join(
-            [
-                "/** The periods a ledger can be filtered by: those with a calendar span, and the months it runs. */",
-                f"export const LEDGER_PERIOD_SPANS = {{\n{rows}}} as const;",
-                "export type LedgerPeriodCode = keyof typeof LEDGER_PERIOD_SPANS;",
-            ]
-        ),
-    ]
-
-
 def _literal_set(constant: str, doc: str, values: Sequence[str]) -> str:
     return "\n".join([f"/** {doc} */", f"export const {constant} = {_literal(values)}"])
 
@@ -426,7 +394,6 @@ def render() -> str:
     ]
     blocks += [_subset(*entry) for entry in _CLASSIFICATION_SETS]
     blocks += _rules()
-    blocks += _periods()
     blocks += [
         _names(constant, type_name, doc, list(model.model_fields), None) for constant, type_name, doc, model in _MASKS
     ]

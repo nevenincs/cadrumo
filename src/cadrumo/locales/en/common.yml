@@ -2496,7 +2496,6 @@ desktop:
         percent_above_100: “{raw}” is above 100%.
         percent_as_fraction: '“{raw}” looks like a fraction: write {suggestion} for
           {suggestion}%.'
-        period_unknown: “{raw}” is not a period.
         required: 'Required: it can''t be cleared'
         signed: '“{raw}” has a sign: write the amount without it, and set the direction.'
         too_long: '“{raw}” is too long: at most {limit} characters.'
