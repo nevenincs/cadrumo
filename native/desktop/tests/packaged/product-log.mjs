@@ -167,6 +167,28 @@ function agentRecord(source, line) {
   };
 }
 
+export const AGENT_STRUCTURED_LOGS = ["gateway.log", "worker.log"];
+export const AGENT_STDERR_LOG =
+  /^(conversation-worker-.+|worker-autospawn-.+)\.stderr\.log$/;
+
+/**
+ * The agent logs under `<storage>/agent/<hash>/home/runtime/`, grouped by
+ * agent root. The gate and the evidence capture share this one discovery.
+ */
+export function agentLogGroups(storage) {
+  return listFiles(resolve(storage, "agent"), () => true).map((root) => {
+    const runtime = resolve(root, "home", "runtime");
+    return {
+      root,
+      runtime,
+      structured: listFiles(runtime, (name) =>
+        AGENT_STRUCTURED_LOGS.includes(name),
+      ),
+      stderr: listFiles(runtime, (name) => AGENT_STDERR_LOG.test(name)),
+    };
+  });
+}
+
 const RAW_STDERR_ERROR = /^(ERROR|CRITICAL) cadrumo_agent[\w.]*:/;
 const RAW_TRACEBACK = /^Traceback \(most recent call last\)/;
 
@@ -225,15 +247,7 @@ export function readProductLogs({ storage, defaults }) {
       });
   }
 
-  const agentRoots = listFiles(resolve(storage, "agent"), () => true);
-  for (const root of agentRoots) {
-    const runtime = resolve(root, "home", "runtime");
-    const structured = listFiles(runtime, (name) =>
-      ["gateway.log", "worker.log"].includes(name),
-    );
-    const stderr = listFiles(runtime, (name) =>
-      /^(conversation-worker-.+|worker-autospawn-.+)\.stderr\.log$/.test(name),
-    );
+  for (const { structured, stderr } of agentLogGroups(storage)) {
     for (const file of [...structured, ...stderr]) {
       sources.push(`agent/${basename(file)}`);
       const strict = structured.includes(file);

@@ -20,6 +20,7 @@ import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { test } from "node:test";
 import "./packaged/setup.test.mjs";
 import "./packaged/product-log.test.mjs";
+import "./packaged/agent-log-evidence.test.mjs";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "../scripts/build-paths.mjs";
@@ -40,6 +41,7 @@ import {
   recordedChecks,
 } from "./packaged/product-log.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
+import { captureAgentLogs } from "./packaged/agent-log-evidence.mjs";
 import {
   observeProvisioning,
   startupObservation,
@@ -2100,6 +2102,11 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
           "storage-cadrumo-native.jsonl",
           resolve(projected.logs, "cadrumo-native.jsonl"),
         ),
+        ...captureAgentLogs({
+          results,
+          storage: projected.storage,
+          prefix: "window",
+        }),
       ];
       try {
         evidence("final-log-capture.json", captures);
@@ -2903,10 +2910,22 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
         },
       );
       const defaults = contract.desktop_defaults;
-      results.logEvidence(
-        "setup-storage-cadrumo.log",
-        resolve(layout.storage, defaults.logs, basename(defaults.log_file)),
-      );
+      const logCaptures = [
+        results.logEvidence(
+          "setup-storage-cadrumo.log",
+          resolve(layout.storage, defaults.logs, basename(defaults.log_file)),
+        ),
+        ...captureAgentLogs({
+          results,
+          storage: layout.storage,
+          prefix: "setup",
+        }),
+      ];
+      try {
+        evidence("setup-final-log-capture.json", logCaptures);
+      } catch {
+        // Keep cleanup and the original failing check authoritative.
+      }
       await check(
         "setup-product-log",
         "the product wrote no ERROR, CRITICAL or gated WARNING that a fault test does not explain",
