@@ -15,11 +15,8 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 import { formatAmount } from "../../../shared/numbers";
-import {
-  parsePeriodCode,
-  publicPeriod,
-  type LedgerPeriod,
-} from "../../../shell/ledgerGrammar";
+import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
+import { ledgerPeriod, usePeriods } from "../../../shell/ledgerPeriods";
 import type {
   ModeloIvaWalletSeedProjection,
   ModeloIvaWalletCorrectionProjection,
@@ -73,7 +70,10 @@ export function IvaWalletDialog({
   const draft = drafts[mode];
   const [notice, setNotice] = useState<string | null>(null);
   const [written, setWritten] = useState<WalletResult | null>(null);
-  const writtenCode = written ? parsePeriodCode(written.period.code) : null;
+  // The period recorded, as the periods store holds one, worded once its
+  // year is served.
+  const writtenPeriod = written ? ledgerPeriod(written.period) : null;
+  usePeriods({ years: writtenPeriod ? [writtenPeriod.year] : [] });
   const receiptWords = (value: string) => {
     switch (value) {
       case "operator_seed":
@@ -270,11 +270,8 @@ export function IvaWalletDialog({
               <dl className="grid grid-cols-2 gap-2 break-words [overflow-wrap:anywhere]">
                 <dt>{t("workspace.declarations.list.column.period")}</dt>
                 <dd>
-                  {writtenCode?.kind === "value"
-                    ? periodText(t, locale, {
-                        year: written.period.filing_year,
-                        code: writtenCode.value,
-                      })
+                  {writtenPeriod
+                    ? periodText(t, locale, writtenPeriod)
                     : `${written.period.filing_year} · ${written.period.code}`}
                 </dd>
                 <dt>{t("workspace.modelo.iva_wallet.amount")}</dt>

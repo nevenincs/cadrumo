@@ -19,7 +19,7 @@ import {
 import type { FormSession } from "../form/session";
 import { hasIvaWallet } from "./ivaWalletRead";
 import { IvaWallet } from "./IvaWallet";
-import { parsePeriodCode } from "../../../shell/ledgerGrammar";
+import { ledgerPeriod } from "../../../shell/ledgerPeriods";
 
 /**
  * The credits view of one declaration: the boxes a register supplies and the
@@ -56,7 +56,9 @@ export function CreditsPanel({
 }) {
   const t = useStrings();
   const form = envelope.form.form;
-  const periodCode = parsePeriodCode(form.period.code);
+  // The period the form serves, as the periods store holds one; a code it
+  // cannot hold leaves the wallet unshown rather than guessed.
+  const walletPeriod = ledgerPeriod(form.period);
   const served = form.withholding_credits;
   const { credits, dependents } = useMemo(
     () => creditBoxes(session.placed, served),
@@ -98,11 +100,8 @@ export function CreditsPanel({
           }
         />
       )}
-      {hasIvaWallet(envelope) && periodCode.kind === "value" && (
-        <IvaWallet
-          period={{ year: form.period.filing_year, code: periodCode.value }}
-          locale={locale}
-        />
+      {hasIvaWallet(envelope) && walletPeriod !== null && (
+        <IvaWallet period={walletPeriod} locale={locale} />
       )}
     </div>
   );
