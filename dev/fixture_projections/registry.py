@@ -163,7 +163,7 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         summary="What the Ledger's pure reads answer for each recorded question.",
         inputs=(
             *_common(f"{FRONTEND}/scripts/ledger_recordings.py"),
-            InputGroup("questions", (f"{FIXTURE_ROOT}/ledger-recording-questions",)),
+            InputGroup("questions", ("dev/fixtures/ledger-recording-questions",)),
         ),
         producer=Command(_python_script(f"{FRONTEND}/scripts/ledger_recordings.py")),
         check=(Command(_python_script(f"{FRONTEND}/scripts/ledger_recordings.py", "--check")),),
