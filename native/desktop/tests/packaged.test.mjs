@@ -21,10 +21,12 @@ import { test } from "node:test";
 import "./packaged/setup.test.mjs";
 import "./packaged/product-log.test.mjs";
 import "./packaged/agent-log-evidence.test.mjs";
+import "./packaged/failure-capture.test.mjs";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "../scripts/build-paths.mjs";
 import { docsOrigin as docsOriginOf } from "../scripts/configuration.mjs";
+import { captureProvisioningFailure } from "./packaged/failure-capture.mjs";
 import { docsProbe, pagefindSearch, pasteInto } from "./packaged/browser.mjs";
 import {
   hostRefusals,
@@ -318,49 +320,6 @@ function launch(executable, args, { env, cwd, out, err }) {
 
 async function exited(exit, ms) {
   return Promise.race([exit, sleep(ms).then(() => null)]);
-}
-
-async function captureProvisioningFailure(session, results, id) {
-  if (!session) return;
-  results.evidence(
-    `${id}-ui.json`,
-    await session.shell(() => ({
-      language: document.documentElement.lang,
-      surfaces: [
-        ...document.querySelectorAll(
-          '.setup-dialog, .pane-tui, [data-slot="local-models"], [data-slot="local-models-signed-out"], .profile-status',
-        ),
-      ].map((node) => ({
-        slot: node.getAttribute("data-slot"),
-        className: node.className,
-        text: node.textContent.trim().slice(0, 12000),
-      })),
-      setup: window.__s10.setupLatest,
-      documentation: window.__s14DocsFailure ?? null,
-      commands: window.__s10.ipc
-        .slice(-80)
-        .map(({ cmd, ok, code }) => ({ cmd, ok, code })),
-    })),
-  );
-  results.evidence(
-    `${id}-diagnostics.json`,
-    await session.call("diagnostics_snapshot", { after: 0 }),
-  );
-  if (/^(palette|localized|settings-docs)/.test(id))
-    results.evidence(
-      `${id}-docs.json`,
-      await session.docs(() => ({
-        href: location.href,
-        language: document.documentElement.lang,
-        messages: window.__s10.messages.slice(-30),
-        keys: window.__s10.keys.slice(-10),
-      })),
-    );
-  if (id.startsWith("provisioning-3"))
-    results.evidence(
-      `${id}-models.json`,
-      await session.call("agent_local_models"),
-    );
 }
 
 /** Records one check or experiment as a result line and as a subtest. */
