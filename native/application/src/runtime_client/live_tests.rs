@@ -35,6 +35,19 @@ fn live() -> Option<Live> {
     })
 }
 
+/// The form read the desktop frontend's generated Modelo 303 envelope holds.
+/// This is the only place the envelope's location is named.
+const MODELO_303_ENVELOPE: &str =
+    include_str!("../../../desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json");
+
+/// The edit baseline that envelope's form read admitted, taken whole.
+fn admitted_baseline() -> Value {
+    let envelope: Value = serde_json::from_str(MODELO_303_ENVELOPE).unwrap();
+    let baseline = envelope["admitted_baseline"].clone();
+    assert!(baseline.is_object(), "the envelope admitted a baseline");
+    baseline
+}
+
 fn soon() -> Instant {
     Instant::now() + Duration::from_secs(30)
 }
@@ -201,10 +214,7 @@ fn a_window_signs_in_reads_its_session_and_signs_out_natively() {
     // one the form read admitted in the desktop frontend's committed
     // `modelo-303-1T-en.json` envelope, extracted whole, here naming this
     // profile and the work unit the harness created for it.
-    let mut baseline: Value = serde_json::from_str(include_str!(
-        "../../tests/data/modelo-303-admitted-baseline.json"
-    ))
-    .unwrap();
+    let mut baseline = admitted_baseline();
     baseline["bucket_id"] = json!(live.profile_id);
     baseline["work_unit_id"] = json!(live.work_unit);
     let unit = live.work_unit.clone();
