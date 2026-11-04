@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e5176532fc8d0bf5607a12f1e39e00cef0c4f1a8bab781fef3d6353542ee10b'
+body_hash: 'sha256:5abd8b0f6c9449a802caa19a0a57a540c590a6fb688c2b7a7e21491e1393ca29'
 related:
   - "[[2026-08-10-casilla-schema-research]]"
   - "[[2026-06-14-bindings-interface-hardening-adr]]"

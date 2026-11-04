@@ -1915,11 +1915,6 @@ desktop:
       movement_cut: The {count} largest of that year
       movement_hint: The ledger movement that paid for it
       prorrata: Initial prorrata
-      refusal:
-        disposal_incomplete: 'Not accepted: a disposal needs both its year and its
-          regime.'
-        duplicate_identifier: 'Not accepted: that reference is already declared.'
-        validation: 'Not accepted: those facts don''t fit the register.'
       title: Bienes de inversión
       year: Acquisition year
     category:
@@ -3636,7 +3631,6 @@ desktop:
       years_with_movements: Years with movements
     position: Row {row} of {count}
     prorrata:
-      accepted: 'Accepted: {provenances}.'
       action:
         declare_gross: Declare a gross cuota
         declare_sector: Declare a sector
@@ -3711,27 +3705,6 @@ desktop:
       provenance_label: Where it comes from
       reference: Reference
       reference_hint: The authorisation or proposal it stands on
-      refusal:
-        gross_declaration_absent: 'The register refused the removal: this period has
-          no gross declaration.'
-        gross_declaration_duplicate: 'The register refused the declaration: this period
-          already has a gross declaration.'
-        gross_declaration_sector_unknown: 'The register refused the declaration: that
-          sector is not a declared differentiated sector.'
-        provenance_not_electable: 'Not accepted: that source is calculated, not chosen.'
-        provenance_required: 'Not accepted: say where the percentage comes from.'
-        reference_not_permitted: 'Not accepted: that source has no document to reference.'
-        reference_required: 'Not accepted: that source needs its document''s reference.'
-        regulated_override_standing: 'Not accepted: an authorised percentage stands.'
-        sector_prior_definitive_absent: 'Not accepted: the sector has no definitive
-          percentage from the prior year.'
-        sector_settlement_entry_absent: 'Not accepted: the sector has no entry to
-          settle.'
-        seed_existing_blocked: 'Not accepted: this year already has an entry.'
-        seed_source_absent: 'Not accepted: there is no definitive percentage in the
-          prior year.'
-        seed_source_blocked: 'Not accepted: the prior year''s source is blocked.'
-        validation: 'Not accepted: that doesn''t fit the register.'
       regime:
         especial: Especial
         general: General

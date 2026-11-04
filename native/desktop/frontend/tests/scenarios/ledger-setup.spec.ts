@@ -25,6 +25,18 @@ declare global {
 // readiness reason that opens the movements it names, and a reset whose
 // dry run the sealed declarations block.
 
+/** The sentences the prorrata register serves with its refusals, in English,
+ * as the generated fixture holds them. */
+const PRORRATA_WORDS = (
+  JSON.parse(
+    readFileSync(
+      new URL("../../src/dev/fixtures/ledgerServedWords.json", import.meta.url),
+      "utf8",
+    ),
+  ) as { prorrata: Record<string, Record<string, string>> }
+).prorrata;
+const prorrataRefused = (reason: string) => PRORRATA_WORDS[reason]!.en!;
+
 /** The sentences the backend serves with every refusal of the withholding
  * record and absence operations, by reason and language, as the generated
  * fixture holds them. */
@@ -942,7 +954,7 @@ test("a prorrata election is refused until it names its document", async ({
     })
     .click();
   await expect(target.locator(".setup-call-line")).toContainText(
-    label("desktop.ledger.prorrata.refusal.reference_required"),
+    prorrataRefused("reference_required"),
   );
   await field(form, "desktop.ledger.prorrata.reference").fill("AEAT-2026-0117");
   await form
@@ -966,7 +978,7 @@ test("a prorrata election is refused until it names its document", async ({
     })
     .click();
   await expect(target.locator(".setup-call-line")).toContainText(
-    label("desktop.ledger.prorrata.refusal.seed_existing_blocked"),
+    prorrataRefused("seed_existing_blocked"),
   );
 });
 
@@ -1052,7 +1064,7 @@ test("a gross cuota is declared, refused while one stands and replaced when aske
   // The register keeps the cuota it holds until the person asks to replace it.
   await declare("2T", "600");
   await expect(target.locator(".setup-call-line")).toContainText(
-    label("desktop.ledger.prorrata.refusal.gross_declaration_duplicate"),
+    prorrataRefused("gross_declaration_duplicate"),
   );
   await expect(row).toContainText("500.00");
   await declare("2T", "600", true);

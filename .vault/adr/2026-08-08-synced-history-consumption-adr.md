@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#synced-history-consumption'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:e056a70fe52e3d6a512f3c849738439af4b5a5c1597d766ee2462d4ed76fd5a0'
+body_hash: 'sha256:2fd70df445e965673c2e92f4fb68efc6714df7bf48a85ae1b7380768e2451623'
 related:
   - "[[2026-08-08-synced-history-consumption-research]]"
 ---

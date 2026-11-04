@@ -1940,10 +1940,6 @@ desktop:
       movement_cut: Az adott év {count} legnagyobb tétele
       movement_hint: A napló tétele, amellyel kifizetted
       prorrata: Kezdeti prorrata
-      refusal:
-        disposal_incomplete: 'Nem elfogadva: az értékesítéshez év és rendszer is kell.'
-        duplicate_identifier: 'Nem elfogadva: ez a hivatkozás már be van jelentve.'
-        validation: 'Nem elfogadva: ezek az adatok nem illenek a nyilvántartásba.'
       title: Beruházási javak
       year: Beszerzés éve
     category:
@@ -3667,7 +3663,6 @@ desktop:
       years_with_movements: Évek tételekkel
     position: '{row}. sor / {count}'
     prorrata:
-      accepted: 'Elfogadott: {provenances}.'
       action:
         declare_gross: Bruttó levonható adó bejelentése
         declare_sector: Ágazat bejelentése
@@ -3744,29 +3739,6 @@ desktop:
       provenance_label: Honnan származik
       reference: Hivatkozás
       reference_hint: Az engedély vagy javaslat, amelyen alapul
-      refusal:
-        gross_declaration_absent: 'A nyilvántartás elutasította a törlést: erre az
-          időszakra nincs bruttó bejelentés.'
-        gross_declaration_duplicate: 'A nyilvántartás elutasította a bejelentést:
-          erre az időszakra már van bruttó bejelentés.'
-        gross_declaration_sector_unknown: 'A nyilvántartás elutasította a bejelentést:
-          ez az ágazat nem bejelentett megkülönböztetett ágazat.'
-        provenance_not_electable: 'Nem elfogadva: ez a forrás számított, nem választható.'
-        provenance_required: 'Nem elfogadva: add meg, honnan származik a százalék.'
-        reference_not_permitted: 'Nem elfogadva: ennek a forrásnak nincs hivatkozható
-          dokumentuma.'
-        reference_required: 'Nem elfogadva: ehhez a forráshoz meg kell adni a dokumentum
-          hivatkozását.'
-        regulated_override_standing: 'Nem elfogadva: érvényes engedélyezett százalék
-          van.'
-        sector_prior_definitive_absent: 'Nem elfogadva: az ágazatnak nincs előző évi
-          végleges százaléka.'
-        sector_settlement_entry_absent: 'Nem elfogadva: az ágazatnak nincs elszámolható
-          bejegyzése.'
-        seed_existing_blocked: 'Nem elfogadva: ennek az évnek már van bejegyzése.'
-        seed_source_absent: 'Nem elfogadva: az előző évnek nincs végleges százaléka.'
-        seed_source_blocked: 'Nem elfogadva: az előző évi forrás zárolt.'
-        validation: 'Nem elfogadva: ez nem illik a nyilvántartásba.'
       regime:
         especial: Különleges
         general: Általános

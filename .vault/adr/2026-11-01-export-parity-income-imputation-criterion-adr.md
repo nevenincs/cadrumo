@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-02'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e463e8342643497dc55e8136eafedd9754ba1af9a083cc282e6458336cb9a9b2'
+body_hash: 'sha256:f98487dc67305fa46a6e1ea32a0cd3d9c024993d3fb7c6976fa34283b1a0cca6'
 related:
   - "[[2026-11-01-export-parity-income-imputation-criterion-research]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"

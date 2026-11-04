@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#rate-box-evidence-assertion'
 date: '2026-08-08'
-modified: '2026-10-07'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f8c6d01b0b3f287046f77017e5dff6ea961b0daf355209818e772c2e90129dfc'
+body_hash: 'sha256:768f9e8275fd229ad5eff39f824bed217b5f25940ec676932e06089feeb6ed75'
 related:
   - "[[2026-08-07-rate-box-evidence-assertion-adr]]"
   - '[[2026-08-07-rate-box-evidence-assertion-research]]'

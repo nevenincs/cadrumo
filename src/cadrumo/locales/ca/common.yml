@@ -1968,10 +1968,6 @@ desktop:
       movement_cut: Els {count} més grans d'aquell any
       movement_hint: El moviment del llibre amb què es va pagar
       prorrata: Prorrata inicial
-      refusal:
-        disposal_incomplete: 'No acceptat: una transmissió necessita any i règim.'
-        duplicate_identifier: 'No acceptat: aquesta referència ja està declarada.'
-        validation: 'No acceptat: aquestes dades no encaixen en el registre.'
       title: Béns d'inversió
       year: Any d'adquisició
     category:
@@ -3698,7 +3694,6 @@ desktop:
       years_with_movements: Anys amb moviments
     position: Fila {row} de {count}
     prorrata:
-      accepted: 'S''accepta: {provenances}.'
       action:
         declare_gross: Declara una quota bruta
         declare_sector: Declara un sector
@@ -3773,29 +3768,6 @@ desktop:
       provenance_label: D'on surt
       reference: Referència
       reference_hint: L'autorització o proposta en què es basa
-      refusal:
-        gross_declaration_absent: 'El registre ha rebutjat la baixa: aquest període
-          no té cap declaració bruta.'
-        gross_declaration_duplicate: 'El registre ha rebutjat la declaració: aquest
-          període ja té una declaració bruta.'
-        gross_declaration_sector_unknown: 'El registre ha rebutjat la declaració:
-          aquest sector no és un sector diferenciat declarat.'
-        provenance_not_electable: 'No acceptat: aquest origen es calcula, no es tria.'
-        provenance_required: 'No acceptat: indica d''on surt el percentatge.'
-        reference_not_permitted: 'No acceptat: aquest origen no té cap document a
-          què referir-se.'
-        reference_required: 'No acceptat: aquest origen necessita la referència del
-          seu document.'
-        regulated_override_standing: 'No acceptat: hi ha un percentatge autoritzat
-          vigent.'
-        sector_prior_definitive_absent: 'No acceptat: el sector no té cap percentatge
-          definitiu de l''any anterior.'
-        sector_settlement_entry_absent: 'No acceptat: el sector no té cap entrada
-          per liquidar.'
-        seed_existing_blocked: 'No acceptat: aquest exercici ja té una entrada.'
-        seed_source_absent: 'No acceptat: l''any anterior no té percentatge definitiu.'
-        seed_source_blocked: 'No acceptat: l''origen de l''any anterior està bloquejat.'
-        validation: 'No acceptat: no encaixa en el registre.'
       regime:
         especial: Especial
         general: General

@@ -1,1 +1,161 @@
-{"note":"x","entries":{}}
+{
+  "note": "What the activity-asset register said for each reason with its facts, remedy, handoff interval and left-out reason the scenario fixtures ask about, in each language, keyed by exactly what was asked. Written and held equal to the register's own words by test_served_words_recording.py.",
+  "entries": {
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Compresor de taller\",\"covered_from\":\"2027-01-01\",\"covered_through\":\"2027-12-31\",\"accrued\":\"360.00\"}": {
+      "es": "Modelo 100: Compresor de taller no tiene dotación registrada del 1 ene 2027 al 31 dic 2027. Los 360,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Compresor de taller has no depreciation charge recorded from Jan 1, 2027 to Dec 31, 2027. The 360.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Compresor de taller no té dotació registrada del 1 de gen. 2027 al 31 de des. 2027. Els 360,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Compresor de taller esetében nincs rögzített értékcsökkenési leírás 2027. jan. 1. és 2027. dec. 31. között. Az ez alatt felmerült 360,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Cristalería de la sala de catas\",\"covered_from\":\"2024-01-01\",\"covered_through\":\"2024-12-31\",\"accrued\":\"200.00\"}": {
+      "es": "Modelo 100: Cristalería de la sala de catas no tiene dotación registrada del 1 ene 2024 al 31 dic 2024. Los 200,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Cristalería de la sala de catas has no depreciation charge recorded from Jan 1, 2024 to Dec 31, 2024. The 200.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Cristalería de la sala de catas no té dotació registrada del 1 de gen. 2024 al 31 de des. 2024. Els 200,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Cristalería de la sala de catas esetében nincs rögzített értékcsökkenési leírás 2024. jan. 1. és 2024. dec. 31. között. Az ez alatt felmerült 200,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Cristalería de la sala de catas\",\"covered_from\":\"2025-01-01\",\"covered_through\":\"2025-12-31\",\"accrued\":\"200.00\"}": {
+      "es": "Modelo 100: Cristalería de la sala de catas no tiene dotación registrada del 1 ene 2025 al 31 dic 2025. Los 200,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Cristalería de la sala de catas has no depreciation charge recorded from Jan 1, 2025 to Dec 31, 2025. The 200.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Cristalería de la sala de catas no té dotació registrada del 1 de gen. 2025 al 31 de des. 2025. Els 200,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Cristalería de la sala de catas esetében nincs rögzített értékcsökkenési leírás 2025. jan. 1. és 2025. dec. 31. között. Az ez alatt felmerült 200,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Cámara de revelado\",\"covered_from\":\"2025-07-01\",\"covered_through\":\"2025-12-31\",\"accrued\":\"362.96\"}": {
+      "es": "Modelo 100: Cámara de revelado no tiene dotación registrada del 1 jul 2025 al 31 dic 2025. Los 362,96 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Cámara de revelado has no depreciation charge recorded from Jul 1, 2025 to Dec 31, 2025. The 362.96 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Cámara de revelado no té dotació registrada del 1 de jul. 2025 al 31 de des. 2025. Els 362,96 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Cámara de revelado esetében nincs rögzített értékcsökkenési leírás 2025. júl. 1. és 2025. dec. 31. között. Az ez alatt felmerült 362,96 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Furgoneta de reparto\",\"covered_from\":\"2026-07-01\",\"covered_through\":\"2026-12-31\",\"accrued\":\"1451.84\"}": {
+      "es": "Modelo 100: Furgoneta de reparto no tiene dotación registrada del 1 jul 2026 al 31 dic 2026. Los 1.451,84 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Furgoneta de reparto has no depreciation charge recorded from Jul 1, 2026 to Dec 31, 2026. The 1,451.84 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Furgoneta de reparto no té dotació registrada del 1 de jul. 2026 al 31 de des. 2026. Els 1.451,84 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Furgoneta de reparto esetében nincs rögzített értékcsökkenési leírás 2026. júl. 1. és 2026. dec. 31. között. Az ez alatt felmerült 1 451,84 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Furgoneta de reparto\",\"covered_from\":\"2027-01-01\",\"covered_through\":\"2027-12-31\",\"accrued\":\"2880.00\"}": {
+      "es": "Modelo 100: Furgoneta de reparto no tiene dotación registrada del 1 ene 2027 al 31 dic 2027. Los 2.880,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Furgoneta de reparto has no depreciation charge recorded from Jan 1, 2027 to Dec 31, 2027. The 2,880.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Furgoneta de reparto no té dotació registrada del 1 de gen. 2027 al 31 de des. 2027. Els 2.880,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Furgoneta de reparto esetében nincs rögzített értékcsökkenési leírás 2027. jan. 1. és 2027. dec. 31. között. Az ez alatt felmerült 2 880,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Licencia de facturación\",\"covered_from\":\"2026-01-01\",\"covered_through\":\"2026-12-31\",\"accrued\":\"360.00\"}": {
+      "es": "Modelo 100: Licencia de facturación no tiene dotación registrada del 1 ene 2026 al 31 dic 2026. Los 360,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Licencia de facturación has no depreciation charge recorded from Jan 1, 2026 to Dec 31, 2026. The 360.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Licencia de facturación no té dotació registrada del 1 de gen. 2026 al 31 de des. 2026. Els 360,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Licencia de facturación esetében nincs rögzített értékcsökkenési leírás 2026. jan. 1. és 2026. dec. 31. között. Az ez alatt felmerült 360,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Licencia de facturación\",\"covered_from\":\"2027-01-01\",\"covered_through\":\"2027-12-31\",\"accrued\":\"360.00\"}": {
+      "es": "Modelo 100: Licencia de facturación no tiene dotación registrada del 1 ene 2027 al 31 dic 2027. Los 360,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Licencia de facturación has no depreciation charge recorded from Jan 1, 2027 to Dec 31, 2027. The 360.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Licencia de facturación no té dotació registrada del 1 de gen. 2027 al 31 de des. 2027. Els 360,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Licencia de facturación esetében nincs rögzített értékcsökkenési leírás 2027. jan. 1. és 2027. dec. 31. között. Az ez alatt felmerült 360,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Servidor de archivos\",\"covered_from\":\"2026-01-01\",\"covered_through\":\"2026-12-31\",\"accrued\":\"950.00\"}": {
+      "es": "Modelo 100: Servidor de archivos no tiene dotación registrada del 1 ene 2026 al 31 dic 2026. Los 950,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Servidor de archivos has no depreciation charge recorded from Jan 1, 2026 to Dec 31, 2026. The 950.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Servidor de archivos no té dotació registrada del 1 de gen. 2026 al 31 de des. 2026. Els 950,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Servidor de archivos esetében nincs rögzített értékcsökkenési leírás 2026. jan. 1. és 2026. dec. 31. között. Az ez alatt felmerült 950,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Servidor de archivos\",\"covered_from\":\"2027-01-01\",\"covered_through\":\"2027-12-31\",\"accrued\":\"950.00\"}": {
+      "es": "Modelo 100: Servidor de archivos no tiene dotación registrada del 1 ene 2027 al 31 dic 2027. Los 950,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: Servidor de archivos has no depreciation charge recorded from Jan 1, 2027 to Dec 31, 2027. The 950.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: Servidor de archivos no té dotació registrada del 1 de gen. 2027 al 31 de des. 2027. Els 950,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: Servidor de archivos esetében nincs rögzített értékcsökkenési leírás 2027. jan. 1. és 2027. dec. 31. között. Az ez alatt felmerült 950,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":null,\"covered_from\":\"2027-01-01\",\"covered_through\":\"2027-12-31\",\"accrued\":\"250.00\"}": {
+      "es": "Modelo 100: un elemento sin nombre no tiene dotación registrada del 1 ene 2027 al 31 dic 2027. Los 250,00 € que se devengaron en ese tiempo no están en los importes de arriba.",
+      "en": "Modelo 100: an element with no name has no depreciation charge recorded from Jan 1, 2027 to Dec 31, 2027. The 250.00 € it accrued in that time is not in the amounts above.",
+      "ca": "Model 100: un element sense nom no té dotació registrada del 1 de gen. 2027 al 31 de des. 2027. Els 250,00 € que es van meritar en aquest temps no són als imports de dalt.",
+      "hu": "100-as: egy név nélküli elem esetében nincs rögzített értékcsökkenési leírás 2027. jan. 1. és 2027. dec. 31. között. Az ez alatt felmerült 250,00 € nincs benne a fenti összegekben."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"free_method\",\"name\":\"Impresora 3D\",\"covered_from\":\"2026-09-01\",\"covered_through\":\"2026-12-31\",\"accrued\":null}": {
+      "es": "Modelo 100: Impresora 3D no tiene dotación registrada del 1 sept 2026 al 31 dic 2026. Su método deja el importe en tus manos, así que no se puede calcular ninguno.",
+      "en": "Modelo 100: Impresora 3D has no depreciation charge recorded from Sep 1, 2026 to Dec 31, 2026. Its method leaves the amount to you, so none can be worked out.",
+      "ca": "Model 100: Impresora 3D no té dotació registrada del 1 de set. 2026 al 31 de des. 2026. El seu mètode deixa l'import a les teves mans, així que no se'n pot calcular cap.",
+      "hu": "100-as: Impresora 3D esetében nincs rögzített értékcsökkenési leírás 2026. szept. 1. és 2026. dec. 31. között. A módszere az összeget rád hagyja, ezért egyik sem számítható ki."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"unavailable\",\"name\":\"Estanterías de almacén\",\"covered_from\":\"2023-01-01\",\"covered_through\":\"2023-12-31\",\"accrued\":null}": {
+      "es": "Modelo 100: Estanterías de almacén no tiene dotación registrada del 1 ene 2023 al 31 dic 2023, y no se pudo calcular.",
+      "en": "Modelo 100: Estanterías de almacén has no depreciation charge recorded from Jan 1, 2023 to Dec 31, 2023, and it could not be worked out.",
+      "ca": "Model 100: Estanterías de almacén no té dotació registrada del 1 de gen. 2023 al 31 de des. 2023, i no s'ha pogut calcular.",
+      "hu": "100-as: Estanterías de almacén esetében nincs rögzített értékcsökkenési leírás 2023. jan. 1. és 2023. dec. 31. között, és nem számítható ki."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"unavailable\",\"name\":\"Estanterías de almacén\",\"covered_from\":\"2024-01-01\",\"covered_through\":\"2024-12-31\",\"accrued\":null}": {
+      "es": "Modelo 100: Estanterías de almacén no tiene dotación registrada del 1 ene 2024 al 31 dic 2024, y no se pudo calcular.",
+      "en": "Modelo 100: Estanterías de almacén has no depreciation charge recorded from Jan 1, 2024 to Dec 31, 2024, and it could not be worked out.",
+      "ca": "Model 100: Estanterías de almacén no té dotació registrada del 1 de gen. 2024 al 31 de des. 2024, i no s'ha pogut calcular.",
+      "hu": "100-as: Estanterías de almacén esetében nincs rögzített értékcsökkenési leírás 2024. jan. 1. és 2024. dec. 31. között, és nem számítható ki."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"unavailable\",\"name\":\"Estanterías de almacén\",\"covered_from\":\"2025-01-01\",\"covered_through\":\"2025-12-31\",\"accrued\":null}": {
+      "es": "Modelo 100: Estanterías de almacén no tiene dotación registrada del 1 ene 2025 al 31 dic 2025, y no se pudo calcular.",
+      "en": "Modelo 100: Estanterías de almacén has no depreciation charge recorded from Jan 1, 2025 to Dec 31, 2025, and it could not be worked out.",
+      "ca": "Model 100: Estanterías de almacén no té dotació registrada del 1 de gen. 2025 al 31 de des. 2025, i no s'ha pogut calcular.",
+      "hu": "100-as: Estanterías de almacén esetében nincs rögzített értékcsökkenési leírás 2025. jan. 1. és 2025. dec. 31. között, és nem számítható ki."
+    },
+    "{\"kind\":\"gap\",\"gap_kind\":\"unavailable\",\"name\":\"Estanterías de almacén\",\"covered_from\":\"2026-01-01\",\"covered_through\":\"2026-12-31\",\"accrued\":null}": {
+      "es": "Modelo 100: Estanterías de almacén no tiene dotación registrada del 1 ene 2026 al 31 dic 2026, y no se pudo calcular.",
+      "en": "Modelo 100: Estanterías de almacén has no depreciation charge recorded from Jan 1, 2026 to Dec 31, 2026, and it could not be worked out.",
+      "ca": "Model 100: Estanterías de almacén no té dotació registrada del 1 de gen. 2026 al 31 de des. 2026, i no s'ha pogut calcular.",
+      "hu": "100-as: Estanterías de almacén esetében nincs rögzített értékcsökkenési leírás 2026. jan. 1. és 2026. dec. 31. között, és nem számítható ki."
+    },
+    "{\"kind\":\"left_out\",\"reason\":\"free_gap\",\"names\":[\"Impresora 3D\",\"Taladro percutor\"]}": {
+      "es": "No cuentan en el Modelo 130, porque su método te deja la dotación a ti: Impresora 3D, Taladro percutor.",
+      "en": "Not counted in Modelo 130, because their method leaves the depreciation charge to you: Impresora 3D, Taladro percutor.",
+      "ca": "No compten al Model 130, perquè el seu mètode et deixa la dotació a tu: Impresora 3D, Taladro percutor.",
+      "hu": "Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési leírás összegét rád hagyja: Impresora 3D, Taladro percutor."
+    },
+    "{\"kind\":\"left_out\",\"reason\":\"free_gap\",\"names\":[\"Impresora 3D\"]}": {
+      "es": "No cuentan en el Modelo 130, porque su método te deja la dotación a ti: Impresora 3D.",
+      "en": "Not counted in Modelo 130, because their method leaves the depreciation charge to you: Impresora 3D.",
+      "ca": "No compten al Model 130, perquè el seu mètode et deixa la dotació a tu: Impresora 3D.",
+      "hu": "Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési leírás összegét rád hagyja: Impresora 3D."
+    },
+    "{\"kind\":\"left_out\",\"reason\":\"free_gap\",\"names\":[\"Taladro percutor\"]}": {
+      "es": "No cuentan en el Modelo 130, porque su método te deja la dotación a ti: Taladro percutor.",
+      "en": "Not counted in Modelo 130, because their method leaves the depreciation charge to you: Taladro percutor.",
+      "ca": "No compten al Model 130, perquè el seu mètode et deixa la dotació a tu: Taladro percutor.",
+      "hu": "Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési leírás összegét rád hagyja: Taladro percutor."
+    },
+    "{\"kind\":\"left_out\",\"reason\":\"unavailable\",\"names\":[\"Estanterías de almacén\"]}": {
+      "es": "No se han podido calcular, así que quedan fuera: Estanterías de almacén.",
+      "en": "Couldn't be worked out, so left out: Estanterías de almacén.",
+      "ca": "No s'han pogut calcular, així que queden fora: Estanterías de almacén.",
+      "hu": "Nem sikerült kiszámolni, ezért kimarad: Estanterías de almacén."
+    },
+    "{\"kind\":\"partial\",\"count\":1}": {
+      "es": "Parcial: 1 elemento no se puede calcular y queda fuera de este importe.",
+      "en": "Partial: 1 element can't be worked out and is left out of this amount.",
+      "ca": "Parcial: 1 element no es pot calcular i queda fora d'aquest import.",
+      "hu": "Részleges: 1 elem nem számítható ki, ezért kimarad ebből az összegből."
+    },
+    "{\"kind\":\"reason\",\"key\":\"ledger.actividad_asset.disposal_finding.minimum_unresolved\",\"facts\":[]}": {
+      "es": "Amortización mínima no disponible para este año: ninguna edición lo cubre, así que la reducción del coste puede quedar por debajo de la real",
+      "en": "Minimum amortisation not available for this year: no edition covers it, so the reduction of cost may be understated",
+      "ca": "Amortització mínima no disponible per a aquest any: cap edició no el cobreix, de manera que la reducció del cost pot quedar per sota de la real",
+      "hu": "Erre az évre nem érhető el a minimális értékcsökkenés: egyetlen kiadás sem fedi le, ezért a bekerülési érték csökkentése alacsonyabb lehet a valósnál"
+    },
+    "{\"kind\":\"reason\",\"key\":\"ledger.actividad_asset.errors.amortization_period_elapsed\",\"facts\":[{\"key\":\"ended_on\",\"value\":\"2025-12-31\",\"kind\":\"date\"}]}": {
+      "es": "El periodo máximo de amortización del elemento terminó el 31 dic 2025, así que cuenta como totalmente amortizado.",
+      "en": "The element's maximum amortisation period ended on Dec 31, 2025, so it counts as fully amortised.",
+      "ca": "El període màxim d'amortització de l'element va acabar el 31 de des. 2025, així que compta com a totalment amortitzat.",
+      "hu": "Az elem maximális értékcsökkenési időszaka 2025. dec. 31. napon lejárt, ezért teljesen leírtnak számít."
+    },
+    "{\"kind\":\"reason\",\"key\":\"ledger.actividad_asset.errors.disposal_not_recorded\",\"facts\":[]}": {
+      "es": "Este elemento no tiene baja. Indica una para ver sus cifras.",
+      "en": "This element has no disposal. State one to preview its figures.",
+      "ca": "Aquest element no té baixa. Indica'n una per veure'n les xifres.",
+      "hu": "Ennek az eszköznek nincs kivezetése. Adj meg egyet a számadatok megtekintéséhez."
+    },
+    "{\"kind\":\"reason\",\"key\":\"ledger.actividad_asset.errors.opening_history_missing\",\"facts\":[]}": {
+      "es": "Falta el historial inicial de amortización del elemento.",
+      "en": "The element's opening amortisation history is missing.",
+      "ca": "Falta l'historial inicial d'amortització de l'element.",
+      "hu": "Hiányzik az elem nyitó értékcsökkenési előzménye."
+    },
+    "{\"kind\":\"remedy\",\"field_key\":\"ledger.actividad_asset.field.opening_history.accumulated_amount\"}": {
+      "es": "Rellena «Amortización ya deducida» para poder calcularlo.",
+      "en": "Fill in “Amortisation already deducted” to work this out.",
+      "ca": "Omple «Amortització ja deduïda» per poder-ho calcular.",
+      "hu": "A kiszámításhoz add meg ezt: „Már elszámolt értékcsökkenés”."
+    }
+  }
+}

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#calculation-aggregation-taxonomy'
 date: '2026-11-01'
-modified: '2026-11-01'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:57dd93b03b748c35ab0c9f1f7ff35e52c6da9b8743a9239756a272c933665c5e'
+body_hash: 'sha256:9ce8c7939e38f42091cc1999c8bd28b9f1a4bcd88c58292a8bbf2d44372459dc'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"

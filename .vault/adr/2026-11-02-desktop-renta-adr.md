@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-renta'
 date: '2026-11-02'
-modified: '2026-11-02'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e4539cf4ac09b53a5c1f82de6ced4b5944d7bbbd6fe5cff5390c031b94d2a534'
+body_hash: 'sha256:808f28c3b4e9bcdf3dc0b15c5a767e512605a3acababef5441ceccf9695ac3af'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-09-30-modelo-editor-workbench-adr]]"

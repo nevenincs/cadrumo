@@ -1974,10 +1974,6 @@ desktop:
       movement_cut: Los {count} mayores de ese año
       movement_hint: El movimiento del libro con el que se pagó
       prorrata: Prorrata inicial
-      refusal:
-        disposal_incomplete: 'No aceptado: una transmisión necesita año y régimen.'
-        duplicate_identifier: 'No aceptado: esa referencia ya está declarada.'
-        validation: 'No aceptado: esos datos no encajan en el registro.'
       title: Bienes de inversión
       year: Año de adquisición
     category:
@@ -3701,7 +3697,6 @@ desktop:
       years_with_movements: Años con movimientos
     position: Fila {row} de {count}
     prorrata:
-      accepted: 'Se acepta: {provenances}.'
       action:
         declare_gross: Declarar una cuota bruta
         declare_sector: Declarar un sector
@@ -3776,28 +3771,6 @@ desktop:
       provenance_label: De dónde sale
       reference: Referencia
       reference_hint: La autorización o propuesta en la que se basa
-      refusal:
-        gross_declaration_absent: 'El registro ha rechazado la baja: este periodo
-          no tiene ninguna declaración bruta.'
-        gross_declaration_duplicate: 'El registro ha rechazado la declaración: este
-          periodo ya tiene una declaración bruta.'
-        gross_declaration_sector_unknown: 'El registro ha rechazado la declaración:
-          ese sector no es un sector diferenciado declarado.'
-        provenance_not_electable: 'No aceptado: ese origen se calcula, no se elige.'
-        provenance_required: 'No aceptado: indica de dónde sale el porcentaje.'
-        reference_not_permitted: 'No aceptado: ese origen no tiene documento al que
-          referirse.'
-        reference_required: 'No aceptado: ese origen necesita la referencia de su
-          documento.'
-        regulated_override_standing: 'No aceptado: hay un porcentaje autorizado vigente.'
-        sector_prior_definitive_absent: 'No aceptado: el sector no tiene un porcentaje
-          definitivo del año anterior.'
-        sector_settlement_entry_absent: 'No aceptado: el sector no tiene entrada que
-          liquidar.'
-        seed_existing_blocked: 'No aceptado: este ejercicio ya tiene una entrada.'
-        seed_source_absent: 'No aceptado: el año anterior no tiene porcentaje definitivo.'
-        seed_source_blocked: 'No aceptado: el origen del año anterior está bloqueado.'
-        validation: 'No aceptado: no encaja en el registro.'
       regime:
         especial: Especial
         general: General

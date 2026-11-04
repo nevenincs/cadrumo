@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-03'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3e7de7f23d8af7c08e6d7f65ee5686004f4d4dbe0ab8ae0083ae35e3a6444edb'
+body_hash: 'sha256:efd4586bcaaa65ec62c19865a70b798f34d92f766d4fedfcf412afd5eccaa9e9'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-research]]"

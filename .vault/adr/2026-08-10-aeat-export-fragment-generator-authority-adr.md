@@ -14,9 +14,9 @@ related:
   - '[[2026-08-08-m200-export-envelope-tag-adr]]'
 supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
-modified: '2026-08-16'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:e995bc2c7d780056fdb4404a7b38373c7241ad47fa9f24578255a4dd98a74747'
+body_hash: 'sha256:62c09b09e3434e894316400632b994f2a6fc240881fb71e51467cf47346fd67c'
 ---
 # `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 
