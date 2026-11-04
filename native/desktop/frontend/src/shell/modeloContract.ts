@@ -6638,15 +6638,23 @@ export type ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 = {
 
 /**
  * Writer-returned calculation facts and advisories under the same authority.
+ *
+ * A box in `unresolved_casillas` or bound by a binding in
+ * `unresolved_bindings` has no value in `calculation`. Both lists, and the
+ * words in them, are the Modelo 100 projection's, in `words_language`; they
+ * describe this run and are not stored with the revision.
  */
-export type ModeloWorkCalculatePublicResultV2 = {
-  result_version: 2;
+export type ModeloWorkCalculatePublicResultV3 = {
+  result_version: 3;
   work_unit_id: string;
   calculation_revision_id: string;
   calculation: ModeloCalculationSnapshot;
   advisories: ModeloCalculationAdvisories;
   unit: ModeloWorkMetadataSnapshot;
   revision_published: boolean;
+  unresolved_bindings: ProjectUnresolvedBindingProjection[];
+  unresolved_casillas: ProjectUnresolvedCasillaProjection[];
+  words_language: OutputLanguage;
   replaced_head: ModeloWorkCalculateReplacedHead | null;
 };
 
@@ -7231,7 +7239,7 @@ export type ModeloWorkVerifyRequest = {
  */
 export type ModeloWorkWizardAttemptCalculated = {
   kind: "calculated";
-  result: ModeloWorkCalculatePublicResultV2;
+  result: ModeloWorkCalculatePublicResultV3;
 };
 
 /**
@@ -9075,7 +9083,7 @@ export type ModeloContracts = {
   };
   "modelo.work.calculate": {
     request: ModeloWorkCalculateRequest;
-    result: ModeloWorkCalculatePublicResultV2;
+    result: ModeloWorkCalculatePublicResultV3;
   };
   "modelo.work.casilla_help": {
     request: ModeloCasillaHelpRequest;
