@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-renta'
 date: '2026-11-02'
-modified: '2026-11-02'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f427c3ed98c0b22408a9f7a9276a9c6b8057b5b897b2d80ad993807ac7b0e5d'
+body_hash: 'sha256:25c9c74619fbdc14fb2ae94d82b70c30d879674c8d6c1bc375624d1c3a2013af'
 related:
   - "[[2026-11-02-desktop-renta-adr]]"
   - "[[2026-07-23-profile-setup-flow-adr]]"
