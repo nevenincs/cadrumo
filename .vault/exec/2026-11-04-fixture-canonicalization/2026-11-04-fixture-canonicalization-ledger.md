@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:70fea8c52c6c460ec67043e85badba381cca328ea09205c3989bd02f3a615bfe'
+body_hash: 'sha256:d05a0e2caa4a33414e7f57c4959cf05be9f9003f6cd679e5a457e273ec1895bb'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -546,6 +546,77 @@ related:
 - `S21` `verify:` `lint-imports` -> `pass`
 - `S21` `by:` `opus`
 - `S21` `verify:` `just check-registry-gate` -> `pass`
+- `S22` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S22` `M` `src/cadrumo/tests/personas.py`
+- `S22` `verify:` `materialisation scope and reuse tests` -> `pass`
+- `S22` `verify:` `lint-imports` -> `pass`
+- `S22` `by:` `sonnet`
+- `S05` `M` `.importlinter`
+- `S05` `A` `dev/fixture_projections/__init__.py`
+- `S05` `A` `dev/fixture_projections/__main__.py`
+- `S05` `A` `dev/fixture_projections/cli.py`
+- `S05` `A` `dev/fixture_projections/personas.py`
+- `S05` `A` `dev/fixture_projections/registry.py`
+- `S05` `A` `dev/fixture_projections/stamps.py`
+- `S05` `A` `dev/fixture_projections/tests/__init__.py`
+- `S05` `A` `dev/fixture_projections/tests/test_stamps.py`
+- `S05` `M` `justfile`
+- `S05` `verify:` `dev/fixture_projections stamp tests` -> `pass`
+- `S05` `verify:` `lint-imports` -> `pass`
+- `S05` `verify:` `fixtures-check without docs-sequences` -> `pass`
+- `S05` `verify:` `ruff check dev/fixture_projections` -> `fail`
+- `S05` `by:` `opus`
+- `S04` `M` `dev/acceptance/income_tax/personas.py`
+- `S04` `M` `dev/acceptance/retenciones/scenario.py`
+- `S04` `M` `dev/ci/tests/test_live_iva_remote_state_row_projection.py`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoiceDuplicate.json` -> `dev/fixtures/ledger-recording-questions/ledgerInvoiceDuplicate.json`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoiceMatch.json` -> `dev/fixtures/ledger-recording-questions/ledgerInvoiceMatch.json`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoicePreview.json` -> `dev/fixtures/ledger-recording-questions/ledgerInvoicePreview.json`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerRuleTrial.json` -> `dev/fixtures/ledger-recording-questions/ledgerRuleTrial.json`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerSplitCheck.json` -> `dev/fixtures/ledger-recording-questions/ledgerSplitCheck.json`
+- `S04` `M` `dev/fixtures/personas/README.md`
+- `S04` `M` `dev/fixtures/personas/identities.toml`
+- `S04` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_source_digest_identity.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_observations.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_identity_profile_persistence.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_operator.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_operator_probe_credential_resolution.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_config_reset.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_config_reset_concurrency.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/tests/reconciliation_fixtures.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/tests/test_workspace_reader.py`
+- `S04` `M` `src/cadrumo/application/aggregation/tests/test_per_modelo_service.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_clave_credential_resolution.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_identity_dni_divergence_is_auth_time_only.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_session_identity_comparison.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_sync_readiness.py`
+- `S04` `M` `src/cadrumo/application/live/tests/borrador_100_operation_support.py`
+- `S04` `M` `src/cadrumo/application/modelo/tests/_calculation_report_fixture.py`
+- `S04` `M` `src/cadrumo/application/modelo/tests/test_value_presentation.py`
+- `S04` `M` `src/cadrumo/application/tests/test_workbench_generation_phases.py`
+- `S04` `M` `src/cadrumo/core/identity/tests/test_documents.py`
+- `S04` `M` `src/cadrumo/core/identity/tests/test_tax_id.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/duplicate_recording_support.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/payment_matching_support.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/test_likely_duplicate.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_delete_preflight_parity.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_label_ambiguity_refusal.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/renta_persona_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_suffered_withholding_credits.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_personas_end_to_end.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_withholding_count_reconciliation.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace_screens.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_profile_delete_verb.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_lifecycle_verbs.py`
+- `S06` `M` `.github/workflows/merge-gate.yml`
+- `S06` `M` `justfile`
+- `S06` `verify:` `just check-workflows` -> `pass`
+- `S06` `verify:` `just check-workflow-security` -> `pass`
+- `S06` `verify:` `dev/ci workflow and lane census tests` -> `pass`
+- `S06` `by:` `sonnet`
 
 ## Notes
 
@@ -556,3 +627,7 @@ related:
 - `S01` Opaque revision ids from random AES-GCM nonces and the export-path-derived bucket event id are renamed to first-seen sha256 tokens in the generator output; full run 13.5 min; modelo-fixtures.mjs --check not run (no `node_modules);` remaining year literals left for S09
 - `S21` Registry fix: reverse-charge service acquisition added to self-assessed projection (LIVA 84.Uno.2a). Open product gaps: pure recargo retailer refused by deadlines profile (no 303 regime composition); subcontratacion not accepted net of retencion (narrower than RIRPF art. 95, unchanged); no operation or Modelo 100 binding for employee social security contributions; no `rental_properties` or officers operation
 - `S11` Pre-answer profile states stay freshly registered by design; populated states take about 20 s each because the materialiser replays the full ledger; sequences.py follows S10
+- `S22` Cache hit 0.2 s vs miss 17.5 s; key excludes replay code so reuse is valid within one run only; authority lease now held around profile-context resolution
+- `S05` Open: ruff S603 on the producer subprocess call awaits operator ruling (pyproject per-file exemption convention vs no-suppression rule); docs-sequences check process exited without a status line during concurrent docs refresh, to be re-verified after S10; modelo determinism build failed on a fresh output directory while S09 is changing the generator; modelo check unavailable without `node_modules;` stamps for committed families live in var/storage/development/cache/fixture-projections
+- `S04` Review rework: catalogue-bound identities moved off generic uses onto unbound counters; intracom.titular rebound to X0000001R; recording questions moved to dev/fixtures/ledger-recording-questions; duplicate recording support builds real Invoice values. 8 TestSearchOptionSelection failures are environmental (no Chromium build). Docs sequence values handed to S10
+- `S06` test-frontend and test-native added as single entry points seeding first; init seeds after authority and frontend setup; setup itself unchanged because lint jobs run it without authority or Node; desktop PR job unverified on the runner (Node, Cargo, Playwright browsers); determinism proof stays in fixtures-check-determinism
