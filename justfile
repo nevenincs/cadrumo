@@ -368,6 +368,43 @@ generate-operation-contract-manifest:
 check-operation-contract-manifest:
     @uv run --no-sync python -m dev.operation_contract_manifest.generate --check
 
+# ── Generated fixture projections ───────────────────────────────────────────
+# Every family is declared once in dev/fixture_projections/registry.py. A digest
+# stamp records the content each family's outputs were produced from, so
+# freshness never reads a modification time. Test processes never seed.
+
+[doc('Produce the fixture projections whose inputs changed or whose outputs are missing; FAMILY narrows to one.')]
+[group('generate')]
+fixtures-seed FAMILY="":
+    @uv run --no-sync python -m dev.fixture_projections seed {{FAMILY}}
+
+[doc('Produce every fixture projection, or FAMILY, whatever its stamp says.')]
+[group('generate')]
+fixtures-seed-force FAMILY="":
+    @uv run --no-sync python -m dev.fixture_projections seed --force {{FAMILY}}
+
+[doc('Report each fixture projection as fresh, stale with the changed inputs, or missing; read-only.')]
+[group('check')]
+fixtures-status FAMILY="":
+    @uv run --no-sync python -m dev.fixture_projections status {{FAMILY}}
+
+[doc('Validate the personas and run every fixture producer check; writes no fixture.')]
+[group('check')]
+fixtures-check FAMILY="":
+    @uv run --no-sync python -m dev.fixture_projections check {{FAMILY}}
+
+# A full Modelo envelope build takes many minutes, so the two-build proof runs
+# on a schedule or by hand rather than in every fixtures-check.
+[doc('Run fixtures-check and also build each family that takes an output directory twice in .tmp/, comparing the bytes.')]
+[group('check')]
+fixtures-check-determinism FAMILY="":
+    @uv run --no-sync python -m dev.fixture_projections check --determinism {{FAMILY}}
+
+[doc('Remove generated fixture projections; refuses families whose outputs are committed.')]
+[group('maintenance')]
+fixtures-clean FAMILY="":
+    @uv run --no-sync python -m dev.fixture_projections clean {{FAMILY}}
+
 # ── Canonical code checks ────────────────────────────────────────────────────
 
 [doc('Regenerate the finite metadata authority used by the import loadability census.')]
