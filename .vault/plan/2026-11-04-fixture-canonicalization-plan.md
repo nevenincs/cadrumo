@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:e2c497420229ad0eb7a36ffd2d38f2208eb5f4e9618387767daef94eee7b85c2'
+body_hash: 'sha256:000537359a494055b2f020ae483151b8cd654618b3088e4b16b85a405339a03c'
 ---
 
 # `fixture-canonicalization` plan
@@ -50,8 +50,9 @@ Define every canonical taxpayer and flow once and seed it through production ope
 - [x] `P03.S08` - Add the persona reader and the materialiser that replays a persona through the profile patch, ledger import and evidence operations; `src/cadrumo/tests and src/cadrumo/entrypoints/tests`.
 - [ ] `P03.S09` - Generate the window envelopes and desktop fixtures from personas; `native/desktop/frontend/scripts and dev desktop fixture producers`.
 - [ ] `P03.S10` - Generate docs seed recipes and sandbox facts from personas and refresh the goldens; `dev/docs/sequences and docs/_sequences`.
-- [ ] `P03.S11` - Seed the TUI harness from personas; `dev/tui/harness`.
-- [ ] `P03.S21` - Close the persona expressiveness gaps: fix the reverse-charge category missing from the self-assessed projection, express recargo and withholding certificates through their operations, and adjust catalogue rows that use categories or counterparties the operations refuse; `registry category projection, ledger classification and invoice operations, dev/fixtures/personas`.
+- [x] `P03.S11` - Seed the TUI harness from personas; `dev/tui/harness`.
+- [x] `P03.S21` - Close the persona expressiveness gaps: fix the reverse-charge category missing from the self-assessed projection, express recargo and withholding certificates through their operations, and adjust catalogue rows that use categories or counterparties the operations refuse; `registry category projection, ledger classification and invoice operations, dev/fixtures/personas`.
+- [ ] `P03.S22` - Add a profile-only replay mode and a digest-keyed materialised-persona cache so consumers that need only profile facts or repeat a persona do not replay the full ledger; `src/cadrumo/entrypoints/tests persona materialisation`.
 
 ### Phase `P04` - Projections out of git
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ddaa287b728ada683e2452c468c2eb2ec042aa3172f6c94a083a963daa2eb6c'
+body_hash: 'sha256:70fea8c52c6c460ec67043e85badba381cca328ea09205c3989bd02f3a615bfe'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -519,6 +519,33 @@ related:
 - `S01` `verify:` `modelo_fixtures.py validate` -> `pass`
 - `S01` `verify:` `ruff` -> `pass`
 - `S01` `by:` `opus`
+- `S11` `M` `dev/tui/harness/ledger_categorisation_fixtures.py`
+- `S11` `M` `dev/tui/harness/ledger_invoices_fixtures.py`
+- `S11` `M` `dev/tui/harness/profile_fixtures.py`
+- `S11` `M` `dev/tui/harness/surfaces.py`
+- `S11` `M` `dev/tui/harness/tests/test_profile_fixtures.py`
+- `S11` `M` `dev/tui/harness/tests/test_workbench_fixtures.py`
+- `S11` `verify:` `focused pytest modules` -> `pass`
+- `S11` `verify:` `lint-imports` -> `pass`
+- `S11` `by:` `sonnet`
+- `S21` `M` `dev/fixtures/personas/README.md`
+- `S21` `M` `dev/fixtures/personas/arrendador-jubilado/persona.toml`
+- `S21` `M` `dev/fixtures/personas/asalariada-familia/expectations.toml`
+- `S21` `M` `dev/fixtures/personas/asalariada-familia/persona.toml`
+- `S21` `M` `dev/fixtures/personas/autonomo-fontanero/expectations.toml`
+- `S21` `M` `dev/fixtures/personas/autonomo-fontanero/ledger.csv`
+- `S21` `M` `dev/fixtures/personas/identities.toml`
+- `S21` `M` `dev/fixtures/personas/intracomunitario-desarrollador/ledger.csv`
+- `S21` `M` `dev/fixtures/personas/traductora-profesional/expectations.toml`
+- `S21` `M` `dev/fixtures/personas/traductora-profesional/ledger.csv`
+- `S21` `M` `dev/fixtures/personas/traductora-profesional/persona.toml`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml`
+- `S21` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S21` `M` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S21` `verify:` `focused pytest modules` -> `pass`
+- `S21` `verify:` `lint-imports` -> `pass`
+- `S21` `by:` `opus`
+- `S21` `verify:` `just check-registry-gate` -> `pass`
 
 ## Notes
 
@@ -527,3 +554,5 @@ related:
 - `S08` `not_loaded:` `withholding_certificates,` `ledger.iva_amount` (reverse charge, recargo, net-of-retencion subcontratacion), ledger.invoice to unnamed consumers, `rental_properties,` officers
 - `S04` Real and random-looking identifiers and the session SID replaced; out-of-catalogue counter values to be absorbed by S20; `modelo_fixtures.py` `RENTA_SPOUSE_TAX_ID` left for S09; frontend specs and cargo tests not run
 - `S01` Opaque revision ids from random AES-GCM nonces and the export-path-derived bucket event id are renamed to first-seen sha256 tokens in the generator output; full run 13.5 min; modelo-fixtures.mjs --check not run (no `node_modules);` remaining year literals left for S09
+- `S21` Registry fix: reverse-charge service acquisition added to self-assessed projection (LIVA 84.Uno.2a). Open product gaps: pure recargo retailer refused by deadlines profile (no 303 regime composition); subcontratacion not accepted net of retencion (narrower than RIRPF art. 95, unchanged); no operation or Modelo 100 binding for employee social security contributions; no `rental_properties` or officers operation
+- `S11` Pre-answer profile states stay freshly registered by design; populated states take about 20 s each because the materialiser replays the full ledger; sequences.py follows S10
