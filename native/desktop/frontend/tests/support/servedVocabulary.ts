@@ -1,5 +1,6 @@
 import recorded from "../../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
 import { servedVocabulary } from "../../src/shell/ledgerServedVocabulary";
+import { answerPeriods } from "../../src/dev/periodRecording";
 import type { LedgerEntryLimits } from "../../src/shell/ledgerSetup";
 
 /** The registry's lists as `ledger.entry-options` served them in the
@@ -10,6 +11,7 @@ export const SERVED = servedVocabulary(
     families: recorded.families,
     classifications: recorded.classifications,
     limits: recorded.limits as LedgerEntryLimits,
+    periods: answerPeriods("en", {})!,
   },
   "ready",
 );

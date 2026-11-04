@@ -4,11 +4,8 @@
 import type { IconName } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
 import type { LedgerSection } from "../../shell/layout";
-import {
-  periodGranularity,
-  type LedgerPeriod,
-} from "../../shell/ledgerGrammar";
-import { monthNames } from "../../shared/dateFormats";
+import type { LedgerPeriod } from "../../shell/ledgerGrammar";
+import { annualCode, periodWords } from "../../shell/ledgerPeriods";
 import type { Translate } from "../../shell/strings";
 
 /** The sections shown as tabs, and those under the setup menu. */
@@ -41,8 +38,10 @@ export const sectionTabId = (panel: string, section: LedgerSection) =>
 export const sectionName = (t: Translate, section: LedgerSection) =>
   t(`desktop.ledger.section.${section}`);
 
-/** A period as the chrome writes it: `2026`, `2026 · 3T` or `2026 · Oct`.
- * Quarter codes are the tax period's own tokens and are never translated. */
+/** A period as the chrome writes it: `2026`, `2026 · 3T` or `2026 · October`,
+ * in the words the backend served for it. A period not served, or served in
+ * another language than the window shows, is written with its year and its
+ * token as it stands: no name is made up for it. */
 export function periodText(
   t: Translate,
   locale: string,
@@ -51,11 +50,8 @@ export function periodText(
 ): string {
   if (period === null) return t("desktop.ledger.period.all");
   if (mode === "year") return String(period.year);
-  const granularity = periodGranularity(period.code);
-  if (granularity === "year") return String(period.year);
-  if (granularity === "quarter") return facts(t, [period.year, period.code]);
-  return facts(t, [
-    period.year,
-    monthNames(locale)[Number(period.code) - 1] ?? period.code,
-  ]);
+  const words = periodWords(period, locale);
+  if (words) return words.label;
+  if (period.code === annualCode()) return String(period.year);
+  return facts(t, [period.year, period.code]);
 }

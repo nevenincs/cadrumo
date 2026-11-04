@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { fixtureLedger } from "../../src/dev/fixtures/ledger";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { servedPeriodName, servedYearName } from "../support/servedPeriods";
 
 // The Ledger page as the shell holds it: reached from the rail, its sections
 // and setup menu, the period selector, the states a read can end in, and what
@@ -59,7 +60,7 @@ async function choosePeriod(target: Page, year: number, code: string) {
       name: label("desktop.ledger.period.of_year", { year }),
     })
     .getByRole("button", {
-      name: code === "0A" ? label("desktop.ledger.period.year") : code,
+      name: servedPeriodName(year, code),
       exact: true,
     })
     .click();
@@ -225,7 +226,7 @@ test("the period steps across a year's end and its dropdown moves between years"
   await expect(periods.getByRole("textbox")).toHaveCount(0);
   await expect(
     periods.getByRole("button", {
-      name: label("desktop.ledger.period.year"),
+      name: servedYearName(2025),
       exact: true,
     }),
   ).toBeFocused();
@@ -271,7 +272,7 @@ test("the years with movements come from the ledger and jump the dropdown", asyn
   await expect(menu(target)).toBeVisible();
   await periods
     .getByRole("button", {
-      name: label("desktop.ledger.period.year"),
+      name: servedYearName(2025),
       exact: true,
     })
     .click();

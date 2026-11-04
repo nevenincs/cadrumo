@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { label } from "../support/strings";
+import { servedPeriodName } from "../support/servedPeriods";
 
 // The panel beside the Movements grid over the scenario's ledger: the
 // inspector of one movement, with its jump index, sections and actions,
@@ -81,7 +82,10 @@ async function choosePeriod(target: Page, year: number, code: string) {
     .getByRole("group", {
       name: label("desktop.ledger.period.of_year", { year }),
     })
-    .getByRole("button", { name: code, exact: true })
+    .getByRole("button", {
+      name: servedPeriodName(year, code),
+      exact: true,
+    })
     .click();
   await expect(periods).toBeHidden();
   await expect(dataRows(target).first()).toBeVisible();

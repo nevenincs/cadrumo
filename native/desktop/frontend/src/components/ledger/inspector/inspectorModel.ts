@@ -16,12 +16,9 @@ import {
   takesChanges,
 } from "../../../shell/ledgerContract";
 import { takesBusinessShare } from "../../../shell/ledgerClassifications";
+import { periodsHolding } from "../../../shell/ledgerPeriods";
 import type { StagedCheck } from "../../../shell/ledgerStagedCheck";
-import {
-  periodOf,
-  samePeriod,
-  type LedgerPeriod,
-} from "../../../shell/ledgerGrammar";
+import { samePeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
   effectiveFacts,
   storedFieldValue,
@@ -333,14 +330,20 @@ export const needsShare = (suggestion: LedgerLlmSuggestion["suggestion"]) =>
 
 // ---- Dates ---------------------------------------------------------------------
 
+/** The day a movement's staged dates make its effective one: its value date,
+ * else its booking date; empty where neither is held. */
+export const effectiveDay = (facts: ReturnType<typeof effectiveFacts>) =>
+  facts.value_date ?? facts.booked_date ?? "";
+
 /** The quarter a movement leaves and the one it moves to when its staged
  * dates change its effective date across a quarter, or null. */
 export function quarterMove(
   transaction: LedgerTransaction,
   facts: ReturnType<typeof effectiveFacts>,
 ): { from: LedgerPeriod; to: LedgerPeriod } | null {
-  const from = periodOf(transaction.date, "quarter");
-  const to = periodOf(facts.value_date ?? facts.booked_date ?? "", "quarter");
+  const from = periodsHolding(transaction.date)?.quarterly;
+  const to = periodsHolding(effectiveDay(facts))?.quarterly;
+  // A quarter not served is not known to differ, so no move is reported.
   if (!from || !to || samePeriod(from, to)) return null;
   return { from, to };
 }

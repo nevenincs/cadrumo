@@ -3638,7 +3638,6 @@ desktop:
       next: Next period
       of_year: Periods of {year}
       previous: Previous period
-      year: Year
       year_next: Next year
       year_previous: Previous year
       years_with_movements: Years with movements

@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LedgerPort } from "./ledger";
 import { periodFilters, yearAdmitted } from "./ledgerGrammar";
+import { annualPeriod } from "./ledgerPeriods";
 import { readPage } from "./ledgerWindow";
 
 /** The years with movements, in order, or null where they could not be
@@ -34,8 +35,11 @@ export async function readLedgerYears(
     // The next year must come after the last: a ledger that changed under
     // the walk, or a count that does not join the order, ends it unread.
     if (!yearAdmitted(year) || year <= (years.at(-1) ?? -Infinity)) return null;
+    // The whole year is the period the backend names with its annual code.
+    const whole = annualPeriod(year);
+    if (whole === null) return null;
     const count = await readPage(port, {
-      filters: periodFilters({ year, code: "0A" }),
+      filters: periodFilters(whole),
       offset: 0,
       limit: 1,
     });

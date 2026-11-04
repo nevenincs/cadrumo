@@ -7,12 +7,7 @@
 // with none served a typed value is refused as not yet checkable.
 
 import type { PublicPeriod } from "./ledger";
-import {
-  LEDGER_PERIOD_SPANS,
-  MONTH_CODES,
-  QUARTER_CODES,
-  type LedgerPeriodCode,
-} from "./ledgerContract";
+import { LEDGER_PERIOD_SPANS, type LedgerPeriodCode } from "./ledgerContract";
 import { ledgerLimits } from "./ledgerLimits";
 import type { LedgerEntryLimits } from "./ledgerSetup";
 
@@ -388,10 +383,11 @@ export function parseLine(raw: string, max?: number | null): Parsed<string> {
 
 // ---- Periods ---------------------------------------------------------------
 
-export { MONTH_CODES, QUARTER_CODES, type LedgerPeriodCode };
-/** A filing period: the whole year, a quarter or a month of it. */
+export type { LedgerPeriodCode };
+/** A filing period: the whole year, a quarter or a month of it. Which ones
+ * exist, their days and their neighbours are served by the backend
+ * (`./ledgerPeriods`); the window works none of them out. */
 export type LedgerPeriod = { year: number; code: LedgerPeriodCode };
-export type PeriodGranularity = "year" | "quarter" | "month";
 
 export const isPeriodCode = (code: string): code is LedgerPeriodCode =>
   Object.hasOwn(LEDGER_PERIOD_SPANS, code);
@@ -419,33 +415,6 @@ export function parsePeriodCode(raw: string): Parsed<LedgerPeriodCode> {
   return refuse("period_unknown", raw);
 }
 
-export const periodGranularity = (code: LedgerPeriodCode): PeriodGranularity =>
-  LEDGER_PERIOD_SPANS[code].granularity;
-
-/** The period `by` steps of its own size away, across year ends: the
- * quarter before 1T 2026 is 4T 2025. Null where no year can be written. */
-export function stepPeriod(
-  period: LedgerPeriod,
-  by: number,
-): LedgerPeriod | null {
-  const granularity = periodGranularity(period.code);
-  let year: number;
-  let code: LedgerPeriodCode;
-  if (granularity === "year") {
-    year = period.year + by;
-    code = "0A";
-  } else if (granularity === "quarter") {
-    const index = period.year * 4 + Number(period.code[0]) - 1 + by;
-    year = Math.floor(index / 4);
-    code = QUARTER_CODES[index - year * 4]!;
-  } else {
-    const index = period.year * 12 + Number(period.code) - 1 + by;
-    year = Math.floor(index / 12);
-    code = MONTH_CODES[index - year * 12]!;
-  }
-  return yearAdmitted(year) ? { year, code } : null;
-}
-
 /** A year field's stepper: by one or by ten, staying put where the step would
  * leave a year that can be written. */
 export function stepYear(year: number, by: number): number {
@@ -456,33 +425,6 @@ export function stepYear(year: number, by: number): number {
 export function decadeYears(year: number): number[] {
   const first = Math.floor(year / 10) * 10;
   return Array.from({ length: 10 }, (_, at) => first + at).filter(yearAdmitted);
-}
-
-/** The first and last day of a period. */
-export function periodSpan(period: LedgerPeriod): { from: string; to: string } {
-  const { first, last } = LEDGER_PERIOD_SPANS[period.code];
-  const lastDay = new Date(Date.UTC(2000, last, 0));
-  lastDay.setUTCFullYear(period.year, last, 0);
-  return {
-    from: `${pad(period.year, 4)}-${pad(first)}-01`,
-    to: `${pad(period.year, 4)}-${pad(last)}-${pad(lastDay.getUTCDate())}`,
-  };
-}
-
-/** The period of `granularity` that an ISO day falls in. */
-export function periodOf(
-  day: string,
-  granularity: PeriodGranularity,
-): LedgerPeriod | null {
-  const found = /^(\d{4})-(\d{2})-\d{2}$/.exec(day);
-  if (!found) return null;
-  const year = Number(found[1]);
-  const month = Number(found[2]);
-  if (!yearAdmitted(year) || month < 1 || month > 12) return null;
-  if (granularity === "year") return { year, code: "0A" };
-  if (granularity === "quarter")
-    return { year, code: QUARTER_CODES[Math.floor((month - 1) / 3)]! };
-  return { year, code: MONTH_CODES[month - 1]! };
 }
 
 export const samePeriod = (

@@ -13,6 +13,7 @@ import { EditorHarness } from "./EditorHarness";
 import { LayersHarness } from "./LayersHarness";
 import { LedgerExportHarness } from "./LedgerExportHarness";
 import recordedEntryOptions from "../fixtures/ledgerEntryOptions.json";
+import { holdRecordedPeriods } from "../periodRecording";
 import { holdLedgerLimits } from "../../shell/ledgerLimits";
 import type { LedgerEntryLimits } from "../../shell/ledgerSetup";
 
@@ -26,6 +27,9 @@ const harness = params.get("harness");
 // This standalone editor has no ledger host; use its recorded served limits.
 if (harness === "editor")
   holdLedgerLimits(recordedEntryOptions.limits as LedgerEntryLimits);
+// The export dialog's period dropdown shows the periods the backend served,
+// as recorded, since this harness has no ledger host to read them from.
+if (harness === "ledger-export") holdRecordedPeriods("en");
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>

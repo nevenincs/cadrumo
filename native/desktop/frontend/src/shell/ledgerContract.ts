@@ -372,25 +372,6 @@ export const LEDGER_PERIOD_SPANS = {
 } as const;
 export type LedgerPeriodCode = keyof typeof LEDGER_PERIOD_SPANS;
 
-/** The quarters, in calendar order. */
-export const QUARTER_CODES = ["1T", "2T", "3T", "4T"] as const;
-
-/** The months, in calendar order. */
-export const MONTH_CODES = [
-  "01",
-  "02",
-  "03",
-  "04",
-  "05",
-  "06",
-  "07",
-  "08",
-  "09",
-  "10",
-  "11",
-  "12",
-] as const;
-
 /** The fields a movement may be corrected in. */
 export const LEDGER_UPDATE_FIELDS = [
   "booked_date",

@@ -1,5 +1,17 @@
 import { servedLimits } from "./support/servedLimits";
 import { holdLedgerLimits, textLimit } from "../src/shell/ledgerLimits";
+import recorded from "../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
+import { answerPeriods, holdRecordedPeriods } from "../src/dev/periodRecording";
+import {
+  holdLedgerPeriods,
+  ledgerPeriod,
+  neighbourPeriod,
+  periodBounds,
+  periodHoldingSpan,
+  periodsHolding,
+  periodWords,
+  servedYear,
+} from "../src/shell/ledgerPeriods";
 import { expect, test } from "@playwright/test";
 import {
   AMOUNT_RULE,
@@ -17,16 +29,12 @@ import {
   parsePeriodCode,
   parseYear,
   periodFilters,
-  periodOf,
-  periodSpan,
   QUANTITY_RULE,
   sameDecimal,
-  stepPeriod,
   stepYear,
   TAX_AMOUNT_RULE,
   UNIT_PRICE_RULE,
   type GrammarRefusalKey,
-  type LedgerPeriod,
   type Parsed,
 } from "../src/shell/ledgerGrammar";
 import { label } from "./support/strings";
@@ -277,27 +285,96 @@ test("a year is four digits, whichever it is, and period tokens are the product'
     expect(verdict(parsePeriodCode(raw)), raw).toBe(expected);
 });
 
-test("stepping a period crosses year ends by its own size", () => {
-  const at = (year: number, code: LedgerPeriod["code"]): LedgerPeriod => ({
-    year,
-    code,
-  });
-  expect(stepPeriod(at(2026, "1T"), -1)).toEqual(at(2025, "4T"));
-  expect(stepPeriod(at(2025, "4T"), 1)).toEqual(at(2026, "1T"));
-  expect(stepPeriod(at(2026, "01"), -1)).toEqual(at(2025, "12"));
-  expect(stepPeriod(at(2025, "12"), 1)).toEqual(at(2026, "01"));
-  expect(stepPeriod(at(2026, "0A"), -1)).toEqual(at(2025, "0A"));
-  // Across a decade and more than one year at once.
-  expect(stepPeriod(at(2020, "1T"), -1)).toEqual(at(2019, "4T"));
-  expect(stepPeriod(at(2019, "3T"), 6)).toEqual(at(2021, "1T"));
-  expect(stepPeriod(at(2003, "02"), -14)).toEqual(at(2001, "12"));
-  // Nothing before 1980 or after 2200.
-  expect(stepPeriod(at(1000, "1T"), -1)).toBeNull();
-  expect(stepPeriod(at(1000, "01"), -1)).toBeNull();
-  expect(stepPeriod(at(9999, "4T"), 1)).toBeNull();
-  expect(stepPeriod(at(9999, "0A"), 1)).toBeNull();
-  expect(stepPeriod(at(1980, "1T"), -1)).toEqual(at(1979, "4T"));
-  expect(stepPeriod(at(2200, "4T"), 1)).toEqual(at(2201, "1T"));
+test("the periods held are the ones served, with their neighbours across year ends", () => {
+  holdRecordedPeriods("en");
+  try {
+    let checked = 0;
+    for (const [year, rows] of Object.entries(recorded.periods.years.en)) {
+      for (const row of rows) {
+        const period = ledgerPeriod(row.period)!;
+        expect(period.year, year).toBe(Number(year));
+        expect(neighbourPeriod(period, -1)).toEqual(ledgerPeriod(row.previous));
+        expect(neighbourPeriod(period, 1)).toEqual(ledgerPeriod(row.next));
+        expect(periodBounds(period)).toEqual({
+          from: row.first_day,
+          to: row.last_day,
+        });
+        expect(periodWords(period, "en")).toEqual({
+          name: row.name_words,
+          label: row.label_words,
+        });
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
+    // A quarter's neighbour in the next year is the one the backend names.
+    expect(neighbourPeriod({ year: 2026, code: "4T" }, 1)).toEqual({
+      year: 2027,
+      code: "1T",
+    });
+    expect(neighbourPeriod({ year: 2026, code: "01" }, -1)).toEqual({
+      year: 2025,
+      code: "12",
+    });
+  } finally {
+    holdLedgerPeriods(null, null);
+  }
+});
+
+test("a period that was not served is unknown, never made up", () => {
+  holdRecordedPeriods("en");
+  try {
+    expect(servedYear(1975)).toBeNull();
+    expect(periodBounds({ year: 1975, code: "3T" })).toBeNull();
+    expect(neighbourPeriod({ year: 1975, code: "3T" }, 1)).toBeNull();
+    expect(periodWords({ year: 1975, code: "3T" }, "en")).toBeNull();
+    expect(periodsHolding("1975-07-01")).toBeNull();
+    expect(
+      periodHoldingSpan({ from: "1975-07-01", to: "1975-07-31" }),
+    ).toBeNull();
+    // Words served in one language are not shown in another.
+    expect(periodWords({ year: 2026, code: "3T" }, "es")).toBeNull();
+    expect(periodWords({ year: 2026, code: "3T" }, "en")).not.toBeNull();
+  } finally {
+    holdLedgerPeriods(null, null);
+  }
+});
+
+test("the periods that hold a day and a span are the ones the backend answered", () => {
+  holdRecordedPeriods("en");
+  try {
+    const days = recorded.periods.probes.days;
+    expect(days.length).toBeGreaterThan(5);
+    for (const probe of days) {
+      const served = answerPeriods("en", { days: [probe.day] });
+      expect(served, probe.day).not.toBeNull();
+      holdLedgerPeriods("en", served!);
+      expect(periodsHolding(probe.day), probe.day).toEqual({
+        annual: ledgerPeriod(probe.annual),
+        quarterly: ledgerPeriod(probe.quarterly),
+        monthly: ledgerPeriod(probe.monthly),
+      });
+    }
+    const spans = recorded.periods.probes.covering;
+    expect(spans.length).toBeGreaterThan(3);
+    for (const probe of spans) {
+      const served = answerPeriods("en", {
+        covering: { first_day: probe.first_day, last_day: probe.last_day },
+      });
+      expect(served, probe.first_day).not.toBeNull();
+      holdLedgerPeriods("en", served!);
+      expect(
+        periodHoldingSpan({ from: probe.first_day, to: probe.last_day }),
+        `${probe.first_day}/${probe.last_day}`,
+      ).toEqual({ period: ledgerPeriod(probe.period) });
+    }
+    // A span that crosses a year end has no period: served as none.
+    expect(periodHoldingSpan({ from: "2025-12-30", to: "2026-01-02" })).toEqual(
+      { period: null },
+    );
+  } finally {
+    holdLedgerPeriods(null, null);
+  }
 });
 
 test("the year field steps by one and by ten and stays on years that can be written", () => {
@@ -319,31 +396,7 @@ test("the year field steps by one and by ten and stays on years that can be writ
   ]);
 });
 
-test("a period's span, the period a day falls in, and its list clauses", () => {
-  expect(periodSpan({ year: 2026, code: "1T" })).toEqual({
-    from: "2026-01-01",
-    to: "2026-03-31",
-  });
-  expect(periodSpan({ year: 2024, code: "02" })).toEqual({
-    from: "2024-02-01",
-    to: "2024-02-29",
-  });
-  expect(periodSpan({ year: 2025, code: "02" })).toEqual({
-    from: "2025-02-01",
-    to: "2025-02-28",
-  });
-  expect(periodSpan({ year: 2026, code: "4T" })).toEqual({
-    from: "2026-10-01",
-    to: "2026-12-31",
-  });
-  expect(periodSpan({ year: 2003, code: "0A" })).toEqual({
-    from: "2003-01-01",
-    to: "2003-12-31",
-  });
-  expect(periodOf("2026-07-01", "quarter")).toEqual({ year: 2026, code: "3T" });
-  expect(periodOf("2026-07-01", "month")).toEqual({ year: 2026, code: "07" });
-  expect(periodOf("1975-07-01", "year")).toEqual({ year: 1975, code: "0A" });
-  expect(periodOf("0999-07-01", "year")).toBeNull();
+test("a period's list clauses are its token and its year", () => {
   expect(periodFilters({ year: 2026, code: "3T" })).toEqual([
     "period=3T",
     "year=2026",

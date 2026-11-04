@@ -20,17 +20,24 @@ const field = (target: Page, key: string) =>
     .and(editor(target).locator("input, select, textarea"));
 
 /** The ledger fails its next `count` reads of the entry vocabularies, before
- * the page that reads them is opened. */
+ * the page that reads them is opened. The page's reads of one year's periods
+ * of the same operation are not among them: they ask for a year. */
 const failVocabulary = (target: Page, count: number) =>
   target.evaluate(
     ([definition, times]) =>
       (
         window as unknown as {
           __scenarioLedger: {
-            nextReads(definition: string, count: number): void;
+            nextReads(
+              definition: string,
+              count: number,
+              where?: Record<string, unknown>,
+            ): void;
           };
         }
-      ).__scenarioLedger.nextReads(definition as string, times as number),
+      ).__scenarioLedger.nextReads(definition as string, times as number, {
+        periods: {},
+      }),
     ["ledger.entry-options", count] as const,
   );
 

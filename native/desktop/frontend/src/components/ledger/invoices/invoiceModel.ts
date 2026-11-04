@@ -34,12 +34,12 @@ import {
   parseIsoDate,
   parseLine,
   parsePercent,
-  periodSpan,
   type DecimalRule,
   type GrammarRefusal,
   type LedgerPeriod,
 } from "../../../shell/ledgerGrammar";
 import { textLimit } from "../../../shell/ledgerLimits";
+import { periodBounds } from "../../../shell/ledgerPeriods";
 import { heldDecimal } from "../../../shared/numbers";
 import { ledgerLimits } from "../../../shell/ledgerLimits";
 
@@ -987,7 +987,10 @@ export function filterCatalogue(
   invoices: readonly CatalogueInvoice[],
   filter: CatalogueFilter,
 ): CatalogueInvoice[] {
-  const span = filter.period ? periodSpan(filter.period) : null;
+  const span = filter.period ? periodBounds(filter.period) : null;
+  // A period whose days are not served keeps nothing: it is not known to hold
+  // any invoice, and no span is made up for it.
+  if (filter.period && span === null) return [];
   const words = fold(filter.search).split(/\s+/).filter(Boolean);
   return invoices.filter((invoice) => {
     if (filter.kind !== "all" && invoice.kind !== filter.kind) return false;

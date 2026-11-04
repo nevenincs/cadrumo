@@ -73,6 +73,7 @@ export function LedgerPage(props: LedgerPageProps) {
   const {
     panel,
     period,
+    periodResolved,
     setPeriod,
     section,
     setSection,
@@ -107,6 +108,7 @@ export function LedgerPage(props: LedgerPageProps) {
         rows={drawnRows?.rows ?? null}
         stage={stage.content}
         applied={stage.applied}
+        locale={locale}
       >
         {/* The page's own keys reach every part of it, the header included;
           the wrapper draws nothing of its own. */}
@@ -123,6 +125,7 @@ export function LedgerPage(props: LedgerPageProps) {
               periodShown && (
                 <PeriodSelector
                   value={period}
+                  pending={!periodResolved}
                   onChange={setPeriod}
                   label={t("desktop.ledger.period.label")}
                   years={years}

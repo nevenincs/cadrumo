@@ -554,14 +554,13 @@ export function WithholdingPane({
       title={t("desktop.ledger.withholding.title")}
       actions={
         <PeriodSelector
-          value={{ year: ejercicio, code: "0A" }}
-          onChange={(next) => next && setEjercicio(next.year)}
+          mode="year"
+          year={ejercicio}
+          onYear={setEjercicio}
           label={t("desktop.ledger.withholding.ejercicio")}
           years={years}
           locale={locale}
           fallbackYear={fallbackYear}
-          mode="year"
-          allowAll={false}
         />
       }
     >

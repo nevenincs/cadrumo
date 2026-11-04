@@ -2,13 +2,14 @@ import { Icon } from "@/components/ui/icon";
 import type { Suggestion } from "@/components/ui/suggestions";
 import { facts } from "@/shell/compose";
 import type { LedgerTrackResult } from "../../../shell/ledger";
+import { usePeriods } from "../../../shell/ledgerPeriods";
 import { effectiveFacts, type StageField } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { rowCells } from "../editing/editingModel";
 import { periodText } from "../ledgerWords";
 import { emptyFills } from "../suggestions/ledgerSuggestions";
 import { InspectorField } from "./InspectorField";
-import { quarterMove } from "./inspectorModel";
+import { effectiveDay, quarterMove } from "./inspectorModel";
 import { declarationName } from "./inspectorWords";
 import { fieldLock, stagedField, type FieldScope } from "./movementFields";
 import type { InspectorRead } from "./useInspectorReads";
@@ -57,6 +58,10 @@ export function DetailsSection({
       onStage({ type: "stage", label: "set", cells });
       say?.(t("desktop.ledger.suggestions.filled"));
     };
+  // The quarters of the movement's day and of the day its dates give it are
+  // served; only a day that differs can move it.
+  const effectiveOn = effectiveDay(effective);
+  usePeriods({ days: effectiveOn === tx.date ? [] : [tx.date, effectiveOn] });
   const moved = quarterMove(tx, effective);
   const tracked = track?.kind === "ready" ? track.result : null;
   const uses = tracked?.participated_in ?? [];

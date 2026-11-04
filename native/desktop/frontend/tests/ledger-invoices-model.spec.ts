@@ -1,5 +1,7 @@
 import { servedLimits } from "./support/servedLimits";
+import { holdRecordedPeriods } from "../src/dev/periodRecording";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
+import { holdLedgerPeriods } from "../src/shell/ledgerPeriods";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -948,14 +950,20 @@ test("the catalogue filters by kind, class, payment, links, period and words", (
   expect(
     ids(filterCatalogue(catalogue, { ...NO_FILTER, payment: "CANCELLED" })),
   ).toEqual(["A-1093"]);
+  // A period filters by the days the backend served for it, and keeps nothing
+  // while they are not served.
+  const third = { year: 2026, code: "3T" } as const;
   expect(
-    ids(
-      filterCatalogue(catalogue, {
-        ...NO_FILTER,
-        period: { year: 2026, code: "3T" },
-      }),
-    ),
-  ).toEqual(["F-2026-002"]);
+    ids(filterCatalogue(catalogue, { ...NO_FILTER, period: third })),
+  ).toEqual([]);
+  holdRecordedPeriods("en");
+  try {
+    expect(
+      ids(filterCatalogue(catalogue, { ...NO_FILTER, period: third })),
+    ).toEqual(["F-2026-002"]);
+  } finally {
+    holdLedgerPeriods(null, null);
+  }
   expect(
     ids(
       filterCatalogue(catalogue, { ...NO_FILTER, search: "papeleria 93,17" }),

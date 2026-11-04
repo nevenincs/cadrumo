@@ -8,15 +8,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { yearAdmitted, type LedgerPeriod } from "../../shell/ledgerGrammar";
 import {
-  MONTH_CODES,
-  QUARTER_CODES,
-  stepPeriod,
-  yearAdmitted,
-  type LedgerPeriod,
-  type LedgerPeriodCode,
-} from "../../shell/ledgerGrammar";
-import { monthNames } from "../../shared/dateFormats";
+  ledgerPeriod,
+  neighbourPeriod,
+  servedYear,
+  usePeriods,
+} from "../../shell/ledgerPeriods";
+import type { LedgerServedPeriod } from "../../shell/ledgerSetup";
 import { useStrings } from "../../shell/strings";
 import { periodText } from "./ledgerWords";
 
@@ -65,29 +64,7 @@ function moveInGrid(event: KeyboardEvent<HTMLElement>) {
     ?.element.focus();
 }
 
-/**
- * One dropdown for a period, any year the period grammar admits, with the
- * previous and next period beside it. Inside, the year is moved by its own
- * buttons, then a whole year, a quarter, a month or every period is chosen,
- * and the years that have movements jump the dropdown to themselves. In the
- * year mode only a year is chosen.
- */
-export function PeriodSelector({
-  value,
-  onChange,
-  label,
-  years,
-  locale,
-  fallbackYear,
-  mode = "period",
-  allowAll = true,
-  open: openProp,
-  onOpenChange,
-  className,
-}: {
-  /** The period shown; null is every period. */
-  value: LedgerPeriod | null;
-  onChange(next: LedgerPeriod | null): void;
+type SelectorProps = {
   /** What the period is of, named for the group and its dropdown. */
   label: string;
   /** The years that have movements, as read from the ledger, or null while
@@ -96,43 +73,98 @@ export function PeriodSelector({
   locale: string;
   /** The year the dropdown opens on while every period is shown. */
   fallbackYear: number;
-  mode?: "period" | "year";
-  allowAll?: boolean;
   open?: boolean;
   onOpenChange?(open: boolean): void;
   className?: string;
-}) {
+};
+
+/**
+ * One dropdown for a period, any year the period grammar admits, with the
+ * previous and next period beside it. Inside, the year is moved by its own
+ * buttons, then a whole year, a quarter, a month or every period is chosen,
+ * and the years that have movements jump the dropdown to themselves. The
+ * periods, their names and their neighbours are the backend's, served for
+ * the year shown. In the year mode only a year is chosen.
+ */
+export function PeriodSelector(
+  props: SelectorProps &
+    (
+      | {
+          mode?: "period";
+          /** The period shown; null is every period. */
+          value: LedgerPeriod | null;
+          onChange(next: LedgerPeriod | null): void;
+          /** The period is not yet known: it is said to be being read, and
+           * is not stepped from. */
+          pending?: boolean;
+          allowAll?: boolean;
+        }
+      | { mode: "year"; year: number; onYear(year: number): void }
+    ),
+) {
+  const { label, years, locale, fallbackYear, onOpenChange, className } = props;
   const t = useStrings();
   const [ownOpen, setOwnOpen] = useState(false);
-  const open = openProp ?? ownOpen;
+  const open = props.open ?? ownOpen;
   const setOpen = (next: boolean) => {
     setOwnOpen(next);
     onOpenChange?.(next);
   };
-  const yearMode = mode === "year";
-  const [shownYear, setShownYear] = useState(value?.year ?? fallbackYear);
+  const yearMode = props.mode === "year";
+  const value = props.mode === "year" ? null : props.value;
+  const chosenYear = props.mode === "year" ? props.year : (value?.year ?? null);
+  const allowAll = props.mode === "year" ? false : (props.allowAll ?? true);
+  const [shownYear, setShownYear] = useState(chosenYear ?? fallbackYear);
   const content = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const shown = periodText(t, locale, value, mode);
-
-  const step = (by: number) => {
-    if (value === null) return;
-    const next = yearMode
-      ? yearAdmitted(value.year + by)
-        ? { ...value, year: value.year + by }
-        : null
-      : stepPeriod(value, by);
-    if (next) onChange(next);
+  // The periods are the backend's: the year shown, and the one chosen.
+  usePeriods({
+    years: chosenYear === null ? [shownYear] : [shownYear, chosenYear],
+  });
+  const pending = props.mode !== "year" && props.pending === true;
+  const shown =
+    props.mode === "year"
+      ? String(props.year)
+      : pending
+        ? t("desktop.ledger.form.reading")
+        : periodText(t, locale, props.value);
+  const table = servedYear(shownYear);
+  const rowsOf = (kind: LedgerServedPeriod["kind"]) =>
+    table?.filter((row) => row.kind === kind) ?? [];
+  // The step either way: a year, or the neighbour the period serves.
+  const steppedYear = (by: -1 | 1): number | null =>
+    chosenYear !== null && yearAdmitted(chosenYear + by)
+      ? chosenYear + by
+      : null;
+  const steppedPeriod = (by: -1 | 1): LedgerPeriod | null =>
+    value === null || pending ? null : neighbourPeriod(value, by);
+  const canStep = (by: -1 | 1) =>
+    (yearMode ? steppedYear(by) : steppedPeriod(by)) !== null;
+  const step = (by: -1 | 1) => {
+    if (props.mode === "year") {
+      const next = steppedYear(by);
+      if (next !== null) props.onYear(next);
+      return;
+    }
+    const next = steppedPeriod(by);
+    if (next) props.onChange(next);
   };
   const apply = (next: LedgerPeriod | null) => {
-    onChange(next);
+    if (props.mode !== "year") props.onChange(next);
     setOpen(false);
   };
-  const choose = (code: LedgerPeriodCode) =>
-    apply({ year: shownYear, code: yearMode ? (value?.code ?? "0A") : code });
-  const chosen = (code: LedgerPeriodCode) =>
-    !yearMode && value?.code === code && value.year === shownYear;
-  const months = monthNames(locale);
+  const chooseYear = (year: number) => {
+    if (props.mode === "year") props.onYear(year);
+    setOpen(false);
+  };
+  const choose = (row: LedgerServedPeriod) => {
+    const next = ledgerPeriod(row.period);
+    if (next) apply(next);
+  };
+  const chosen = (row: LedgerServedPeriod) =>
+    !pending &&
+    value?.code === row.period.code &&
+    value.year === row.period.filing_year;
   const item = "tabular-nums";
 
   return (
@@ -147,7 +179,7 @@ export function PeriodSelector({
             ? "desktop.ledger.period.year_previous"
             : "desktop.ledger.period.previous",
         )}
-        disabled={value === null || (yearMode && !yearAdmitted(value.year - 1))}
+        disabled={!canStep(-1)}
         onClick={() => step(-1)}
       >
         <Icon name="back" />
@@ -155,7 +187,7 @@ export function PeriodSelector({
       <Popover
         open={open}
         onOpenChange={(next) => {
-          if (next) setShownYear(value?.year ?? fallbackYear);
+          if (next) setShownYear(chosenYear ?? fallbackYear);
           setOpen(next);
         }}
       >
@@ -214,8 +246,8 @@ export function PeriodSelector({
                 size="xs"
                 data-period-item=""
                 className="flex-1 font-semibold tabular-nums"
-                aria-pressed={value?.year === shownYear}
-                onClick={() => choose("0A")}
+                aria-pressed={chosenYear === shownYear}
+                onClick={() => chooseYear(shownYear)}
               >
                 {shownYear}
               </Button>
@@ -235,62 +267,72 @@ export function PeriodSelector({
               <Icon name="forward" />
             </IconButton>
           </div>
-          {!yearMode && (
-            <div
-              role="group"
-              aria-label={t("desktop.ledger.period.of_year", {
-                year: shownYear,
-              })}
-              className="grid gap-2"
-              onKeyDown={moveInGrid}
-            >
-              <div className="grid grid-cols-5 gap-1">
-                <Button
-                  variant="outline"
-                  size="xs"
-                  data-period-item=""
-                  className="px-1"
-                  aria-pressed={chosen("0A")}
-                  onClick={() => choose("0A")}
-                >
-                  {t("desktop.ledger.period.year")}
-                </Button>
-                {QUARTER_CODES.map((code) => (
-                  <Button
-                    key={code}
-                    variant="outline"
-                    size="xs"
-                    data-period-item=""
-                    className={item}
-                    aria-pressed={chosen(code)}
-                    onClick={() => choose(code)}
-                  >
-                    {code}
-                  </Button>
-                ))}
+          {!yearMode &&
+            (table === null ? (
+              // The row keeps its height while the year is read.
+              <div
+                className="ledger-period-reading h-control-xs"
+                aria-hidden="true"
+              />
+            ) : (
+              <div
+                role="group"
+                aria-label={t("desktop.ledger.period.of_year", {
+                  year: shownYear,
+                })}
+                className="grid gap-2"
+                onKeyDown={moveInGrid}
+              >
+                <div className="grid grid-cols-5 gap-1">
+                  {rowsOf("annual").map((row) => (
+                    <Button
+                      key={row.period.code}
+                      variant="outline"
+                      size="xs"
+                      data-period-item=""
+                      className="px-1"
+                      aria-pressed={chosen(row)}
+                      onClick={() => choose(row)}
+                    >
+                      {row.name_words}
+                    </Button>
+                  ))}
+                  {rowsOf("quarterly").map((row) => (
+                    <Button
+                      key={row.period.code}
+                      variant="outline"
+                      size="xs"
+                      data-period-item=""
+                      className={item}
+                      aria-pressed={chosen(row)}
+                      onClick={() => choose(row)}
+                    >
+                      {row.name_words}
+                    </Button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  {rowsOf("monthly").map((row) => (
+                    <Button
+                      key={row.period.code}
+                      variant="ghost"
+                      size="xs"
+                      data-period-item=""
+                      aria-pressed={chosen(row)}
+                      onClick={() => choose(row)}
+                    >
+                      {row.name_words}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-4 gap-1">
-                {MONTH_CODES.map((code, at) => (
-                  <Button
-                    key={code}
-                    variant="ghost"
-                    size="xs"
-                    data-period-item=""
-                    aria-pressed={chosen(code)}
-                    onClick={() => choose(code)}
-                  >
-                    {months[at]}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
+            ))}
           {allowAll && !yearMode && (
             <Button
               variant="ghost"
               size="xs"
               className="ledger-period-all"
-              aria-pressed={value === null}
+              aria-pressed={!pending && value === null}
               onClick={() => apply(null)}
             >
               {t("desktop.ledger.period.all")}
@@ -330,9 +372,7 @@ export function PeriodSelector({
                       className={item}
                       aria-pressed={year === shownYear}
                       onClick={() =>
-                        yearMode
-                          ? apply({ year, code: value?.code ?? "0A" })
-                          : setShownYear(year)
+                        yearMode ? chooseYear(year) : setShownYear(year)
                       }
                     >
                       {year}
@@ -350,7 +390,7 @@ export function PeriodSelector({
             ? "desktop.ledger.period.year_next"
             : "desktop.ledger.period.next",
         )}
-        disabled={value === null || (yearMode && !yearAdmitted(value.year + 1))}
+        disabled={!canStep(1)}
         onClick={() => step(1)}
       >
         <Icon name="forward" />

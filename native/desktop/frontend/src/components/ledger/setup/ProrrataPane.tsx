@@ -11,17 +11,15 @@ import { facts, listed } from "@/shell/compose";
 import { servedRefusalWords } from "../../../shell/ledger";
 import {
   compareDecimal,
-  MONTH_CODES,
   parseDecimal,
-  QUARTER_CODES,
   TAX_AMOUNT_RULE,
 } from "../../../shell/ledgerGrammar";
+import { servedYear, usePeriods } from "../../../shell/ledgerPeriods";
 import type {
   ProrrataEntry,
   ProrrataGrossDeclaration,
   ProrrataMutationResult,
 } from "../../../shell/ledgerSetup";
-import { periodText } from "../ledgerWords";
 import { vocabularyEmpty } from "../movements/movementWords";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { useStrings } from "../../../shell/strings";
@@ -77,6 +75,8 @@ export function ProrrataPane({
   const t = useStrings();
   const vocabulary = useVocabulary();
   const [ejercicio, setEjercicio] = useState(fallbackYear);
+  // The periods a gross declaration is made for are served for its year.
+  usePeriods({ years: [ejercicio] });
   const { read, reload } = useSetupRead(
     port,
     reader,
@@ -641,14 +641,13 @@ export function ProrrataPane({
       title={t("desktop.ledger.prorrata.title")}
       actions={
         <PeriodSelector
-          value={{ year: ejercicio, code: "0A" }}
-          onChange={(next) => next && setEjercicio(next.year)}
+          mode="year"
+          year={ejercicio}
+          onYear={setEjercicio}
           label={t("desktop.ledger.prorrata.ejercicio")}
           years={years}
           locale={locale}
           fallbackYear={fallbackYear}
-          mode="year"
-          allowAll={false}
         />
       }
     >
@@ -847,10 +846,12 @@ export function ProrrataPane({
                   onValue={setGrossPeriod}
                   placeholder={t("desktop.ledger.form.choose")}
                   required
-                  options={[...QUARTER_CODES, ...MONTH_CODES].map((code) => ({
-                    value: code,
-                    label: periodText(t, locale, { year: ejercicio, code }),
-                  }))}
+                  options={(servedYear(ejercicio) ?? [])
+                    .filter((row) => row.kind !== "annual")
+                    .map((row) => ({
+                      value: row.period.code,
+                      label: row.label_words,
+                    }))}
                 />
                 {sectorChoices.length > 0 && (
                   <ChoiceField

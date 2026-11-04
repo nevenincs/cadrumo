@@ -13,11 +13,14 @@ import { localDay } from "../../shared/dates";
 import type { Action } from "../../shell/actions";
 import { LEDGER_SECTIONS, type LedgerSection } from "../../shell/layout";
 import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
+import type { LedgerPeriod } from "../../shell/ledgerGrammar";
 import {
-  periodOf,
-  stepPeriod,
-  type LedgerPeriod,
-} from "../../shell/ledgerGrammar";
+  annualCode,
+  neighbourPeriod,
+  periodsHoldingToday,
+  periodsHoldingTodayFailed,
+  usePeriods,
+} from "../../shell/ledgerPeriods";
 import type { ImportedBatches } from "../../shell/ledgerImports";
 import { useLedgerLimits } from "../../shell/ledgerLimits";
 import { useLedgerReadiness } from "../../shell/ledgerReadiness";
@@ -80,15 +83,24 @@ export function useLedgerPage({
   // What was typed before the limits arrived is read again when they do.
   useLedgerLimits();
   const panel = useId();
-  const today = localDay();
-  const [period, setPeriodNow] = useState<LedgerPeriod | null>(() =>
-    memory.current.period !== undefined
-      ? memory.current.period
-      : periodOf(today, "quarter"),
+  // The period the page opens on is the quarter that holds today, as served;
+  // until it is served, and until one is chosen, the period is unresolved and
+  // nothing is read for it. Where the backend could not say which it is, every
+  // period is shown rather than one made up.
+  usePeriods();
+  const todaysPeriods = periodsHoldingToday();
+  const [chosen, setChosen] = useState<LedgerPeriod | null | undefined>(
+    () => memory.current.period,
   );
+  const periodResolved =
+    chosen !== undefined ||
+    todaysPeriods !== null ||
+    periodsHoldingTodayFailed();
+  const period: LedgerPeriod | null =
+    chosen !== undefined ? chosen : (todaysPeriods?.quarterly ?? null);
   const setPeriod = (next: LedgerPeriod | null) => {
     memory.current.period = next;
-    setPeriodNow(next);
+    setChosen(next);
   };
   const section = view.section;
   // The Rules section's area to open on, where another section asked for
@@ -127,7 +139,7 @@ export function useLedgerPage({
     port,
     reader,
     period,
-    movementsShown,
+    movementsShown && periodResolved,
     windowScope(period === null, movements),
   );
   // What is staged lives here, with the page, so it stays while a section
@@ -192,12 +204,16 @@ export function useLedgerPage({
   // What an import brought in, as the person asked to see it.
   const [shownImport, setShownImport] = useState<ImportedBatches | null>(null);
   // Read with the page, so the period list never grows under the pointer.
+  // The walk counts each year under the code the backend names the year by.
   const { years, refresh: refreshYears } = useLedgerYears(
     port,
     reader,
-    readable,
+    readable && annualCode() !== null,
   );
-  const fallbackYear = Number(today.slice(0, 4));
+  // Where the period dropdown opens while every period is shown: the year
+  // that holds today as served, else the calendar year the window is in.
+  const fallbackYear =
+    todaysPeriods?.annual.year ?? Number(localDay().slice(0, 4));
   const shownPeriod = periodText(t, locale, period);
 
   // Nothing the header offers runs yet where the page has no way to do it:
@@ -357,20 +373,30 @@ export function useLedgerPage({
               t("desktop.ledger.period.previous"),
               "back",
               () => {
-                const next = period && stepPeriod(period, -1);
+                const next = period && neighbourPeriod(period, -1);
                 if (next) setPeriod(next);
               },
-              { enabled: () => periodShown && period !== null },
+              {
+                enabled: () =>
+                  periodShown &&
+                  period !== null &&
+                  neighbourPeriod(period, -1) !== null,
+              },
             ),
             action(
               "next",
               t("desktop.ledger.period.next"),
               "forward",
               () => {
-                const next = period && stepPeriod(period, 1);
+                const next = period && neighbourPeriod(period, 1);
                 if (next) setPeriod(next);
               },
-              { enabled: () => periodShown && period !== null },
+              {
+                enabled: () =>
+                  periodShown &&
+                  period !== null &&
+                  neighbourPeriod(period, 1) !== null,
+              },
             ),
             action(
               "import",
@@ -484,6 +510,7 @@ export function useLedgerPage({
   return {
     panel,
     period,
+    periodResolved,
     setPeriod,
     section,
     setSection,

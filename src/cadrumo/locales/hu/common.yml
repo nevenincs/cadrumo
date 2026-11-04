@@ -3669,7 +3669,6 @@ desktop:
       next: Következő időszak
       of_year: '{year} időszakai'
       previous: Előző időszak
-      year: Év
       year_next: Következő év
       year_previous: Előző év
       years_with_movements: Évek tételekkel

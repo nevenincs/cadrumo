@@ -12,6 +12,7 @@ import type {
   JsonObject,
   OutputLanguage,
   PublicDecimal,
+  PublicPeriod,
 } from "./ledger";
 import type {
   WithholdingIncomeClass,
@@ -931,6 +932,59 @@ export type InventoryOptionsResult = {
     options: { value: string; label_key: string; role?: string | null }[];
   }[];
 };
+/** What the entry options read is asked for besides the vocabularies: the
+ * periods of one year (the year of the reference day when none is named), the
+ * period that holds a span, and the periods that hold each of some days. */
+export type LedgerEntryOptionsRequest = {
+  /** The language the period names are said in. */
+  output_language?: OutputLanguage;
+  periods?: {
+    year?: number;
+    covering?: { first_day: string; last_day: string };
+    days?: string[];
+  };
+};
+/** The cadence of a served period. */
+export type LedgerServedPeriodKind = "annual" | "quarterly" | "monthly";
+/** One selectable period of a year as the backend serves it: its days, the
+ * periods either side of it across year ends (null where there is none), and
+ * its name and its label with the year, said in `name_words_language`. */
+export type LedgerServedPeriod = {
+  period: PublicPeriod;
+  kind: LedgerServedPeriodKind;
+  first_day: string;
+  last_day: string;
+  previous: PublicPeriod | null;
+  next: PublicPeriod | null;
+  name_words: string;
+  name_words_language: OutputLanguage;
+  label_words: string;
+  label_words_language: OutputLanguage;
+};
+/** The year, the quarter and the month that hold one day. */
+export type LedgerServedDay = {
+  day: string;
+  annual: PublicPeriod;
+  quarterly: PublicPeriod;
+  monthly: PublicPeriod;
+};
+/** The periods of one year, the periods of the reference day (today in Spain
+ * when none was given) and what else was asked. */
+export type LedgerServedPeriods = {
+  year: number;
+  /** The code that names the whole year. */
+  annual_code: string;
+  periods: LedgerServedPeriod[];
+  containing: LedgerServedDay;
+  /** The shortest period that holds the span asked, or null where none does,
+   * as when it crosses a year end. */
+  covering?: {
+    first_day: string;
+    last_day: string;
+    period: PublicPeriod | null;
+  } | null;
+  days?: LedgerServedDay[];
+};
 /** What a ledger entry form offers. A code with no key is named by the window
  * with `Intl`; a code's list says what is known, not what is allowed. A
  * `group` is the family a value is filed under, as the spending categories
@@ -949,6 +1003,7 @@ export type LedgerEntryOptionsResult = {
    * backend's order. */
   classifications: LedgerEntryClassification[];
   limits: LedgerEntryLimits;
+  periods: LedgerServedPeriods;
 };
 /** What one classification takes, each flag the verdict of the predicate the
  * backend's writers enforce it with, except the advisory one. */

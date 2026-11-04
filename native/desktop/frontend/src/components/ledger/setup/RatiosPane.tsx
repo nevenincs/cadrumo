@@ -311,14 +311,13 @@ export function RatiosPane({
       actions={
         <>
           <PeriodSelector
-            value={{ year, code: "0A" }}
-            onChange={(next) => next && setYear(next.year)}
+            mode="year"
+            year={year}
+            onYear={setYear}
             label={t("desktop.ledger.ratios.year")}
             years={years}
             locale={locale}
             fallbackYear={fallbackYear}
-            mode="year"
-            allowAll={false}
           />
           <Button
             size="xs"

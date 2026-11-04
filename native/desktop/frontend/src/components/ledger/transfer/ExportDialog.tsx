@@ -33,11 +33,8 @@ import {
   type LedgerStatusResult,
   type PickedFile,
 } from "../../../shell/ledger";
-import {
-  periodSpan,
-  publicPeriod,
-  type LedgerPeriod,
-} from "../../../shell/ledgerGrammar";
+import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
+import { periodBounds, usePeriods } from "../../../shell/ledgerPeriods";
 import {
   checkReadiness,
   readAnswer,
@@ -160,6 +157,7 @@ export function ExportDialog({
   const count = (value: number) => formatCount(locale, value);
   const [format, setFormatNow] = useState<LedgerExportFormat>(lastFormat);
   const [period, setPeriodNow] = useState<LedgerPeriod | null>(pagePeriod);
+  usePeriods({ years: period ? [period.year] : [] });
   const [inactive, setInactive] = useState(false);
   const [target, setTarget] = useState<PickedFile | null>(null);
   const [saveRefused, setSaveRefused] = useState(false);
@@ -378,7 +376,10 @@ export function ExportDialog({
     try {
       const read = readAnswer(await port.submit("ledger.invoice.list", {}));
       if (read.kind !== "answer") throw new Error("unread");
-      const span = period ? periodSpan(period) : null;
+      const span = period ? periodBounds(period) : null;
+      // A period whose days are not served cannot be told from every
+      // period: nothing is copied for it.
+      if (period && span === null) throw new Error("period not served");
       const invoices = read.result.invoices.filter(
         (invoice) =>
           !span ||

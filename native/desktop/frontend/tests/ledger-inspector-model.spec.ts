@@ -20,6 +20,10 @@ import {
 } from "../src/components/ledger/inspector/inspectorModel";
 import { sameInspectorContext } from "../src/components/ledger/inspector/inspectorContext";
 import { effectiveFacts } from "../src/shell/ledgerStage";
+import recorded from "../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
+import { answerPeriods } from "../src/dev/periodRecording";
+import { holdLedgerPeriods, ledgerPeriod } from "../src/shell/ledgerPeriods";
+import "./support/servedClassifications";
 import { hexId, movement } from "./support/ledger";
 import { planRecorded, recordedCheck } from "./support/stagedCheck";
 
@@ -389,21 +393,41 @@ test("a Mixed proposal with no share is held", () => {
 });
 
 test("a date that crosses a quarter is named, one within it is not", () => {
+  // The quarters are the ones the backend served for the days, as recorded.
+  const probe = (day: string) =>
+    recorded.periods.probes.days.find((found) => found.day === day)!;
+  const served = answerPeriods("en", {
+    days: ["2026-03-31", "2026-04-01", "2026-10-15", "2026-12-31"],
+  })!;
   const row = movement(hexId("a"), {
-    date: "2026-09-30",
-    booked_date: "2026-09-30",
+    date: "2026-03-31",
+    booked_date: "2026-03-31",
   });
-  const facts = effectiveFacts(row, {
-    booked_date: { kind: "set", value: "2026-10-01" },
+  const crossing = effectiveFacts(row, {
+    booked_date: { kind: "set", value: "2026-04-01" },
   });
-  expect(quarterMove(row.transaction, facts)).toEqual({
-    from: { year: 2026, code: "3T" },
-    to: { year: 2026, code: "4T" },
-  });
-  const same = effectiveFacts(row, {
-    booked_date: { kind: "set", value: "2026-09-01" },
-  });
-  expect(quarterMove(row.transaction, same)).toBeNull();
+  const within = effectiveFacts(
+    movement(hexId("b"), { date: "2026-10-15", booked_date: "2026-10-15" }),
+    { booked_date: { kind: "set", value: "2026-12-31" } },
+  );
+  // Nothing is named for a day whose quarter is not served.
+  expect(quarterMove(row.transaction, crossing)).toBeNull();
+  holdLedgerPeriods("en", served);
+  try {
+    expect(quarterMove(row.transaction, crossing)).toEqual({
+      from: ledgerPeriod(probe("2026-03-31").quarterly),
+      to: ledgerPeriod(probe("2026-04-01").quarterly),
+    });
+    expect(
+      quarterMove(
+        movement(hexId("b"), { date: "2026-10-15", booked_date: "2026-10-15" })
+          .transaction,
+        within,
+      ),
+    ).toBeNull();
+  } finally {
+    holdLedgerPeriods(null, null);
+  }
 });
 
 test("the inspector hears of a section only when what it shows changed", () => {

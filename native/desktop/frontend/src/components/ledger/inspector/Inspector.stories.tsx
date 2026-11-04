@@ -80,6 +80,7 @@ function Inspector({
       rows={read.rows}
       stage={stage.content}
       applied={stage.applied}
+      locale={locale}
     >
       <div className="flex h-full min-h-0 justify-end">
         {read.rows && read.window && (

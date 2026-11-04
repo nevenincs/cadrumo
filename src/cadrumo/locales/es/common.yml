@@ -3703,7 +3703,6 @@ desktop:
       next: Periodo siguiente
       of_year: Periodos de {year}
       previous: Periodo anterior
-      year: Año
       year_next: Año siguiente
       year_previous: Año anterior
       years_with_movements: Años con movimientos

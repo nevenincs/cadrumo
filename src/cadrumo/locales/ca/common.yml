@@ -3700,7 +3700,6 @@ desktop:
       next: Període següent
       of_year: Períodes de {year}
       previous: Període anterior
-      year: Any
       year_next: Any següent
       year_previous: Any anterior
       years_with_movements: Anys amb moviments

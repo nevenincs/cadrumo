@@ -19,12 +19,7 @@ import {
 import { LEDGER_UPDATE_FIELDS, type LedgerUpdateField } from "./ledgerContract";
 import { takesBusinessShare } from "./ledgerClassifications";
 import { RELAY_PAYLOAD_LIMIT } from "./relayBounds";
-import {
-  canonicalDecimal,
-  periodOf,
-  samePeriod,
-  type LedgerPeriod,
-} from "./ledgerGrammar";
+import { canonicalDecimal } from "./ledgerGrammar";
 import type { StagedCheck } from "./ledgerStagedCheck";
 import {
   actionRows,
@@ -93,8 +88,7 @@ export type PlanBlocker =
 export type PlanNote =
   | { kind: "sends_current_classification"; classification: string }
   | { kind: "sends_current_share"; share: string }
-  | { kind: "new_identity"; fields: StageField[] }
-  | { kind: "moves_period"; from: LedgerPeriod; to: LedgerPeriod };
+  | { kind: "new_identity"; fields: StageField[] };
 
 /** One movement's staged work. */
 export type PlanEntry = {
@@ -478,7 +472,6 @@ function checkRow(
     entry.blockers.push({ kind: "gone" });
     return entry;
   }
-  const facts = effectiveFacts(row, changes);
   const m210 = actions.find((action) => action.kind === "m210");
   const edits = fields.length > 0 || m210 !== undefined;
   const classifyingEdits = answer.classifying_fields.length > 0;
@@ -581,14 +574,6 @@ function checkRow(
       kind: "actions_conflict",
       actions: [...new Set(clashing.map((action) => action.id))],
     });
-
-  const before = periodOf(row.transaction.date, "quarter");
-  const after = periodOf(
-    facts.value_date ?? facts.booked_date ?? "",
-    "quarter",
-  );
-  if (before && after && !samePeriod(before, after))
-    entry.notes.push({ kind: "moves_period", from: before, to: after });
   return entry;
 }
 

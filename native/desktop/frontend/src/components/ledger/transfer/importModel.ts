@@ -25,12 +25,9 @@ import {
   type PickedFile,
   type PublicPeriod,
 } from "../../../shell/ledger";
-import {
-  sameDecimal,
-  periodFilters,
-  periodOf,
-} from "../../../shell/ledgerGrammar";
+import { sameDecimal, periodFilters } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
+import { readPeriodsHolding } from "../../../shell/ledgerPeriods";
 import { readPage } from "../../../shell/ledgerWindow";
 import {
   pauseActionOf,
@@ -562,7 +559,7 @@ export async function readExisting(
   port: LedgerPort,
   imported: LedgerTransaction,
 ): Promise<LedgerTransaction[] | null> {
-  const month = periodOf(imported.date, "month");
+  const month = (await readPeriodsHolding(imported.date))?.monthly;
   if (!month) return null;
   const found: LedgerTransaction[] = [];
   for (let offset = 0; ;) {

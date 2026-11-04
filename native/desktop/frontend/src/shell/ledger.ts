@@ -49,6 +49,7 @@ import type {
   InventoryEvidenceAddRequest,
   InventoryEvidenceAddResult,
   InventoryOptionsResult,
+  LedgerEntryOptionsRequest,
   LedgerEntryOptionsResult,
   InventoryCorrectRequest,
   InventoryCreateRequest,
@@ -2399,7 +2400,7 @@ export interface LedgerRequests {
   "ledger.inventory.closing-value.record": InventoryClosingValueRequest;
   "ledger.inventory.evidence.add": InventoryEvidenceAddRequest;
   "ledger.inventory.options": Record<string, never>;
-  "ledger.entry-options": Record<string, never>;
+  "ledger.entry-options": LedgerEntryOptionsRequest;
   "ledger.inventory.inspect": InventoryBookRequest;
   "ledger.inventory.describe": InventoryDescribeRequest;
   "ledger.inventory.correct": InventoryCorrectRequest;

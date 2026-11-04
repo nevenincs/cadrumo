@@ -12,6 +12,7 @@ import { answerInvoiceDuplicate } from "./ledgerDuplicateFixture";
 import { answerRuleTrial } from "./ledgerRuleTrialFixture";
 import { answerInvoiceMatch } from "./ledgerInvoiceMatchFixture";
 import { answerSplitCheck } from "./ledgerSplitCheckFixture";
+import { recordedSpan } from "./periodRecording";
 import { isClassification, isDirection } from "../shell/ledgerContract";
 import {
   isLedgerDefinition,
@@ -389,25 +390,11 @@ const row = (movement: FixtureMovement): LedgerRow => ({
   own_account_id: movement.own_account_id,
 });
 
+/** The days of a period, from the recording of what the backend serves; null
+ * for a year or a code it holds none of. */
 function periodSpan(year: number, code: string): [string, string] | null {
-  const quarter = /^([1-4])[TP]$/.exec(code);
-  const month = /^(0[1-9]|1[0-2])$/.exec(code);
-  const pad = (value: number) => String(value).padStart(2, "0");
-  if (quarter) {
-    const first = (Number(quarter[1]) - 1) * 3 + 1;
-    const last = new Date(Date.UTC(year, first + 2, 0)).getUTCDate();
-    return [
-      `${year}-${pad(first)}-01`,
-      `${year}-${pad(first + 2)}-${pad(last)}`,
-    ];
-  }
-  if (month) {
-    const at = Number(month[1]);
-    const last = new Date(Date.UTC(year, at, 0)).getUTCDate();
-    return [`${year}-${pad(at)}-01`, `${year}-${pad(at)}-${pad(last)}`];
-  }
-  if (code === "0A") return [`${year}-01-01`, `${year}-12-31`];
-  return null;
+  const span = recordedSpan(year, code);
+  return span ? [span.from, span.to] : null;
 }
 
 /** The list's filter clauses, refused as the product refuses them. */

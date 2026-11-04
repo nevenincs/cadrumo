@@ -43,6 +43,7 @@ function Documents({ shape, locale }: Args) {
         rows={read.rows}
         stage={stage.content}
         applied={stage.applied}
+        locale={locale}
       >
         <div className="flex h-full min-h-0 flex-col">
           <DocumentsSection

@@ -1,5 +1,5 @@
 import { Toast } from "@/components/ui/toast";
-import { periodCovering } from "../../shell/ledgerImports";
+import { readPeriodHoldingSpan } from "../../shell/ledgerPeriods";
 import { useStrings } from "../../shell/strings";
 import type { LedgerPageProps } from "./LedgerPage";
 import { ReadinessStrip } from "./movements/ReadinessStrip";
@@ -118,8 +118,13 @@ export function LedgerPageDialogs({
           }}
           onShowImported={(shown) => {
             setShownImport(shown);
-            setPeriod(periodCovering(shown.span));
             setSection("movements");
+            // The period that holds the imported days is the backend's to
+            // name; where it names none, or cannot be read, every period is
+            // shown rather than one made up.
+            void readPeriodHoldingSpan(shown.span).then((held) =>
+              setPeriod(held ? held.period : null),
+            );
           }}
           onShowDocuments={() => setSection("documents")}
           onCloseAutoFocus={returnTransferFocus}

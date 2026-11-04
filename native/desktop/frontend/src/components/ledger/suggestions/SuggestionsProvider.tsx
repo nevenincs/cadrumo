@@ -26,6 +26,7 @@ import type {
   LedgerPort,
   LedgerRow,
 } from "../../../shell/ledger";
+import type { OutputLanguage } from "../../../shell/ledger";
 import type {
   CapitalGood,
   LedgerEntryOptionsResult,
@@ -39,6 +40,10 @@ import {
 } from "../../../shell/ledgerServedVocabulary";
 import { holdLedgerClassifications } from "../../../shell/ledgerClassifications";
 import { holdLedgerLimits } from "../../../shell/ledgerLimits";
+import {
+  holdLedgerPeriods,
+  holdLedgerPeriodsUnread,
+} from "../../../shell/ledgerPeriods";
 import type { StagedContent } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { useLedgerRead } from "../documents/useLedgerRead";
@@ -212,6 +217,7 @@ export function LedgerSuggestions({
   rows,
   stage,
   applied,
+  locale,
   children,
 }: {
   port: LedgerPort;
@@ -221,6 +227,9 @@ export function LedgerSuggestions({
   stage: StagedContent;
   /** Whether the stage has been through an apply. */
   applied: boolean;
+  /** The language the window shows, which the options' period names are
+   * said in. */
+  locale: string;
   children: ReactNode;
 }) {
   const [wanted, setWanted] = useState<ReadonlySet<WantedRead>>(
@@ -277,9 +286,22 @@ export function LedgerSuggestions({
     reader,
     true,
     "ledger.entry-options",
-    {},
+    { output_language: locale as OutputLanguage, periods: {} },
+    locale,
   );
   const entryOptions = entryRead.value;
+  // The read also serves the periods of the year and those that hold today,
+  // which is where the page opens; the window keeps them as served.
+  const servedPeriods = entryOptions?.periods ?? null;
+  useEffect(() => {
+    if (servedPeriods)
+      holdLedgerPeriods(locale as OutputLanguage, servedPeriods);
+  }, [servedPeriods, locale]);
+  const unread = entryRead.phase === "failed";
+  useEffect(() => {
+    holdLedgerPeriodsUnread(unread);
+    return () => holdLedgerPeriodsUnread(false);
+  }, [unread]);
   const limits = entryOptions?.limits ?? null;
   useEffect(() => {
     holdLedgerLimits(limits);

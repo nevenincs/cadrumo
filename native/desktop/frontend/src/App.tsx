@@ -98,6 +98,7 @@ import { UserProfilePage } from "./components/profile/UserProfilePage";
 import { AeatSyncPage } from "./components/aeatSync/AeatSyncPage";
 import { LedgerPage, type LedgerMemory } from "./components/ledger/LedgerPage";
 import type { LeaveGuard } from "./components/ledger/editing/LedgerEditing";
+import { useLedgerPeriodsReader } from "./shell/ledgerPeriods";
 import { DeclarationsPane } from "./components/modelo/declarations/DeclarationsPane";
 import type { DeclarationsMemory } from "./components/modelo/declarations/DeclarationsPage";
 import type { OutputLanguage } from "./shell/modeloContract";
@@ -1052,6 +1053,8 @@ export function App({ host }: { host: Host }) {
     () => host.ledger && routeProvisioningRefusals(host.ledger, raiseSetup),
     [host.ledger, raiseSetup],
   );
+  // The filing periods any part of the window shows are read through it.
+  useLedgerPeriodsReader(routedLedger, reader, locale);
   // So does a Censo pull that stopped for want of a component.
   const profileHost = useMemo(
     () =>

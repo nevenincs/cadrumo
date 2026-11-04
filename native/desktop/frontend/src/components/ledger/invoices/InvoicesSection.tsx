@@ -26,6 +26,7 @@ import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { PAYMENT_STATUSES } from "../../../shell/ledgerContract";
+import { periodBounds, usePeriods } from "../../../shell/ledgerPeriods";
 import { ServedOptions } from "../suggestions/ServedOptions";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { INVOICE_TSV_COLUMNS, invoicesTsv } from "../transfer/tsv";
@@ -269,12 +270,16 @@ export function InvoicesSection({
   }, [toast]);
 
   const invoices = read.invoices;
+  // The period's days are the backend's; until they are served the period
+  // keeps no invoice, and the grid is not drawn as if it held none.
+  usePeriods({ years: period ? [period.year] : [] });
+  const periodUnknown = period !== null && periodBounds(period) === null;
   const rows = useMemo(
     () =>
-      invoices === null
+      invoices === null || periodUnknown
         ? []
         : sortCatalogue(filterCatalogue(invoices, { ...filter, period }), sort),
-    [invoices, filter, period, sort],
+    [invoices, periodUnknown, filter, period, sort],
   );
   const columns = useMemo<GridColumn<CatalogueInvoice>[]>(
     () =>
@@ -325,7 +330,7 @@ export function InvoicesSection({
     },
     // A catalogue that could not be read draws no grid: the invoice is not
     // here either way.
-    settled: invoices !== null || read.phase === "failed",
+    settled: (invoices !== null && !periodUnknown) || read.phase === "failed",
     reveal: (id, focus) => {
       if (focus) grid.current?.focusCell(id);
       else grid.current?.scrollToKey(id, "center");
@@ -359,7 +364,7 @@ export function InvoicesSection({
         </Button>
       </EmptyState>
     );
-  else if (invoices === null)
+  else if (invoices === null || periodUnknown)
     body = (
       <EmptyState
         className="ledger-invoices-loading"

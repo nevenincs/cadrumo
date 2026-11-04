@@ -31,17 +31,31 @@ function Selector({
   );
   return (
     <div className="flex justify-end p-3">
-      <PeriodSelector
-        value={value}
-        onChange={setValue}
-        label={t("desktop.ledger.period.label")}
-        years={years}
-        locale={locale}
-        fallbackYear={STORY_PERIOD.year}
-        mode={mode}
-        allowAll={allowAll}
-        open={open}
-      />
+      {mode === "year" ? (
+        <PeriodSelector
+          mode="year"
+          year={value?.year ?? STORY_PERIOD.year}
+          onYear={(year) =>
+            setValue((held) => (held ? { ...held, year } : held))
+          }
+          label={t("desktop.ledger.period.label")}
+          years={years}
+          locale={locale}
+          fallbackYear={STORY_PERIOD.year}
+          open={open}
+        />
+      ) : (
+        <PeriodSelector
+          value={value}
+          onChange={setValue}
+          label={t("desktop.ledger.period.label")}
+          years={years}
+          locale={locale}
+          fallbackYear={STORY_PERIOD.year}
+          allowAll={allowAll}
+          open={open}
+        />
+      )}
     </div>
   );
 }

@@ -44,14 +44,10 @@ import type {
   LedgerTransaction,
   PickedFile,
 } from "../../../shell/ledger";
-import {
-  periodOf,
-  publicPeriod,
-  type LedgerPeriod,
-} from "../../../shell/ledgerGrammar";
+import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
+import { periodsHoldingToday, usePeriods } from "../../../shell/ledgerPeriods";
 import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatCount, formatSize } from "../../../shared/numbers";
 import { listOf } from "../../../shared/lists";
@@ -1060,6 +1056,8 @@ function WhatStep({
   onDirection(direction: InvoiceKind): void;
 }) {
   const ids = useId();
+  // The quarter that holds today is served; the switch offers it once it is.
+  usePeriods();
   const countries = useFieldSuggestions("country");
   const directionChoice = (
     value: InvoiceKind | null,
@@ -1204,7 +1202,9 @@ function WhatStep({
                 checked={onlyPeriod !== null}
                 onCheckedChange={(on) =>
                   onOnlyPeriod(
-                    on ? (pagePeriod ?? periodOf(localDay(), "quarter")) : null,
+                    on
+                      ? (pagePeriod ?? periodsHoldingToday()?.quarterly ?? null)
+                      : null,
                   )
                 }
               />

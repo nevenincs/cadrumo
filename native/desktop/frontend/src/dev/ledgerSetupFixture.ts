@@ -48,6 +48,7 @@ const ENTRY_OPTION_FAMILIES = {
   ],
 };
 import { assetOperations } from "./assetsFixture";
+import { RECORDED_DEFAULT_LANGUAGE, answerPeriods } from "./periodRecording";
 import { withholdingOperations } from "./ledgerWithholdingFixture";
 import { RATIO_ELIGIBLE_FIXTURE, ratioWording } from "./fixtures/ledgerRatios";
 import type {
@@ -2428,7 +2429,15 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       };
     },
     "ledger.entry-options": (request) => {
-      fromKeys(request, []);
+      fromKeys(request, ["output_language", "periods"]);
+      const language = request.output_language ?? RECORDED_DEFAULT_LANGUAGE;
+      const periods = answerPeriods(
+        language as Parameters<typeof answerPeriods>[0],
+        (request.periods ?? {}) as Parameters<typeof answerPeriods>[1],
+      );
+      // A year or day the recording of the read holds no answer for is
+      // refused: nothing here works a period out.
+      if (periods === null) throw new SetupStopped("ERROR_PERIOD_NOT_RECORDED");
       return {
         profile_id: profileId,
         families: Object.entries(ENTRY_OPTION_FAMILIES).map(
@@ -2436,6 +2445,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         ),
         classifications: servedEntryOptions.classifications,
         limits: servedEntryOptions.limits,
+        periods,
       };
     },
     "ledger.inventory.options": (request) => {

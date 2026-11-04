@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { LEDGER_PAGE_SIZE } from "../../src/shell/ledgerWindow";
 import { label } from "../support/strings";
+import { servedPeriodName } from "../support/servedPeriods";
 
 // The Movements section over the scenario's ledger: the period read in
 // pages, the readiness strip whose every pill and chip filters exactly what
@@ -51,7 +52,7 @@ async function choosePeriod(target: Page, year: number, code: string) {
       name: label("desktop.ledger.period.of_year", { year }),
     })
     .getByRole("button", {
-      name: code === "0A" ? label("desktop.ledger.period.year") : code,
+      name: servedPeriodName(year, code),
       exact: true,
     })
     .click();

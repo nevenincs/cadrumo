@@ -66,7 +66,6 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.period.next",
         "desktop.ledger.period.of_year",
         "desktop.ledger.period.previous",
-        "desktop.ledger.period.year",
         "desktop.ledger.period.year_next",
         "desktop.ledger.period.year_previous",
         "desktop.ledger.period.years_with_movements",

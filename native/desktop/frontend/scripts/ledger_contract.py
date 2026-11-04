@@ -403,10 +403,6 @@ def _periods() -> list[str]:
         f"first: {period.start_date.month}, last: {period.end_date.month} }},\n"
         for period in spans
     )
-    codes = {
-        kind: [period.code for period in spans if period.kind is kind]
-        for kind in (PeriodKind.QUARTERLY, PeriodKind.MONTHLY)
-    }
     return [
         "\n".join(
             [
@@ -415,8 +411,6 @@ def _periods() -> list[str]:
                 "export type LedgerPeriodCode = keyof typeof LEDGER_PERIOD_SPANS;",
             ]
         ),
-        _literal_set("QUARTER_CODES", "The quarters, in calendar order.", codes[PeriodKind.QUARTERLY]),
-        _literal_set("MONTH_CODES", "The months, in calendar order.", codes[PeriodKind.MONTHLY]),
     ]
 
 
