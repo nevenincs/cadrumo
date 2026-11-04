@@ -1,4 +1,7 @@
-"""Derive Modelo profile facts from taxpayer and family records."""
+"""Derive Modelo profile facts from taxpayer and family records.
+
+This module uses :class:`UserProfileRecord`, the stored taxpayer profile record.
+"""
 
 from __future__ import annotations
 
@@ -241,6 +244,8 @@ def snapshot_authored_year(snapshot: RegistrySnapshot) -> int:
     Formatting the optional field directly would key an unprojected snapshot
     as ``..._None``, which no declared selector matches, and the injector
     would skip the fact without a word.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     return snapshot.authored_filing_year or snapshot.filing_year
 

@@ -1,4 +1,7 @@
-"""Refuse an export that would write one casilla's value into unrelated cells."""
+"""Refuse an export that would write one casilla's value into unrelated cells.
+
+This module uses :class:`RegistrySnapshot`, the pinned registry snapshot.
+"""
 
 from __future__ import annotations
 
@@ -17,7 +20,10 @@ def refuse_written_shared_owners(
     registry_snapshot: RegistrySnapshot,
     casilla_values: dict[CasillaId, object],
 ) -> None:
-    """Refuse before any byte exists when a value would reach cells of unconfirmed meaning."""
+    """Refuse before any byte exists when a value would reach cells of unconfirmed meaning.
+
+    ``registry_snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     owners = written_unadjudicated_shared_owners(layout, registry_snapshot.revision.casillas, casilla_values)
     if not owners:
         return

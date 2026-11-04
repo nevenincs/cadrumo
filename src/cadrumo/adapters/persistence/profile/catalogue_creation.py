@@ -3,7 +3,8 @@
 The application bundle exposes only domain catalogue values and application
 errors.  These wrappers bind the existing encrypted repositories and ECB
 provider to that contract, translating storage/upstream failures before they
-reach an application caller.
+reach an application caller;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations

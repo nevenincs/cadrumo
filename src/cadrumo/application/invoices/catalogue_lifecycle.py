@@ -25,7 +25,8 @@ figures are frozen and verify, export and filing do not compare them again, so a
 write that would move what a sealed revision read is refused at the write. Those
 revisions stay exactly as filed. An edit that moves no fact the revision read
 passes, as does recording a later collection on an invoice whose devengo does not
-depend on it: LIVA art. 75.Uno does not date the cuota by the collection.
+depend on it: LIVA art. 75.Uno does not date the cuota by the collection;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations

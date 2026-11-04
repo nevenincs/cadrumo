@@ -17,7 +17,8 @@ records no trace and the group stays unknown, like an unanswered one.
 A stated count larger than the stored rows (three stated, one recorded) is an
 incomplete group, never a complete one. The stored rows are still served, and the
 resolver raises one ``household_rows_incomplete`` diagnostic per object whose
-fact states the two numbers, so the group is not read as proven complete.
+fact states the two numbers, so the group is not read as proven complete;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations
@@ -55,7 +56,10 @@ class ProfileRowResolution:
 
 
 def profile_row_bindings(snapshot: RegistrySnapshot) -> tuple[BindingDefinition, ...]:
-    """Return the revision's bindings that read a leaf of a stored row object."""
+    """Return the revision's bindings that read a leaf of a stored row object.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     return tuple(
         binding
         for binding in snapshot.revision.bindings
@@ -180,6 +184,8 @@ def resolve_profile_row_values(
         The row values keyed by binding and row index, one source trace per
         binding whose rows are stored or whose object states a count of zero, and
         one diagnostic per object whose stated count exceeds its stored rows.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     values: dict[RowBindingKey, RowBindingValue] = {}
     provenance: list[CalculationSourceProvenance] = []

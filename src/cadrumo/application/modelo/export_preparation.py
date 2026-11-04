@@ -342,6 +342,8 @@ def build_revision_export_draft(
     """Build the draft a :class:`~CalculationRevision` exports, before any approval.
 
     Export approves this draft and verification judges it, so both read one declaration.
+
+    ``workflow_profile`` is the :class:`TaxpayerProfile`, the taxpayer profile.
     """
     inputs: ModeloInputs = revision_filing_replay_inputs(
         revision=revision,

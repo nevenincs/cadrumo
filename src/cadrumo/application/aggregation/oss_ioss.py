@@ -388,7 +388,10 @@ def row_level_binding_values(
     revision: ModeloRevision,
     observations: Iterable[OssIossLedgerObservation],
 ) -> dict[BindingId, Decimal]:
-    """Resolve the ledger OSS aggregation bindings of ``revision`` from row-level observations."""
+    """Resolve the ledger OSS aggregation bindings of ``revision`` from row-level observations.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)
 
 
@@ -460,6 +463,8 @@ def detail_binding_values(
     transaction kind, and the table's slots come from the revision's own wire
     geometry, so every regime goes through this one path. One row is one
     destination and applied rate; repeated lines at that rate are summed.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
@@ -672,7 +677,10 @@ def observations_without_detail_row(
     *,
     operation: PinnedAuthorityOperation,
 ) -> tuple[OssIossLedgerObservation, ...]:
-    """Return declarable observations no table of this revision can take."""
+    """Return declarable observations no table of this revision can take.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return tuple(
         observation
         for observation in observations

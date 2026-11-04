@@ -395,6 +395,8 @@ def calculation_note_findings(
     related ids, which the workbook lists among the review findings only. A
     source disagreement that ``resolutions`` covers withholds nothing, so it is
     listed as accepted instead.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     accepted = [
         ReviewFinding(

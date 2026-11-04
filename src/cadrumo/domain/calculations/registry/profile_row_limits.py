@@ -5,7 +5,8 @@ an object through repeating profile bindings, and a form layout opens one repeat
 group over them, bounded by the repeat limit the design declares. The registry names the
 one form and group that own that limit for each object, so a reader asks that layout
 instead of scanning every form, and the registry build checks that the named group reads
-the object and declares the limit.
+the object and declares the limit;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -51,7 +52,10 @@ def row_limit_owners(*, authority: GovernedFactSource | None = None) -> Mapping[
 
 
 def row_reading_binding_ids(revision: ModeloRevision, object_path: str) -> frozenset[BindingId]:
-    """Return the bindings of ``revision`` that read the rows stored under ``object_path``."""
+    """Return the bindings of ``revision`` that read the rows stored under ``object_path``.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return frozenset(
         binding.id
         for binding in revision.bindings

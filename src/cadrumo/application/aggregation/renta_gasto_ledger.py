@@ -44,7 +44,8 @@ This module does NOT reuse the annual pipeline's invoice-evidence
 reconciliation or its annual window, which are constraint-shape-divergent from
 the quarterly cumulative gasto sum. It shares that module's category-rule
 construction, its provisional IVA-deduction-ratio resolver
-(:func:`~.renta_ledger.resolve_iva_deduction_ratio`) and its residence lookup.
+(:func:`~.renta_ledger.resolve_iva_deduction_ratio`) and its residence lookup;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue.
 """
 
 from __future__ import annotations
@@ -269,6 +270,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
     a lease is admitted here only for standalone callers.
 
     Returns a :class:`RentaGastoLedgerAggregation`.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
@@ -417,6 +420,8 @@ def aggregate_renta_gasto_ledger(
     fiscal window. ``period`` must be quarterly; the cumulative window extends
     from Jan 1 of the period's year through the last day of the declared quarter
     (RD 439/2007 art. 110.2).
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:

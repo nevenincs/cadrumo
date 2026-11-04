@@ -2,7 +2,8 @@
 
 Bindings are generated from AEAT's positional workbook and their names are truncated
 differently per page, so a row slot is located by offset and data-type shape, then
-checked against the export layout's own field positions.
+checked against the export layout's own field positions;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -61,6 +62,8 @@ def record_row_slots(revision: ModeloRevision, record_id: str) -> tuple[tuple[Bi
     truncated differently per page, so a slot is located by offset and shape.
     Anything short of one unbroken run of rows is refused: a hole would otherwise
     pass for a row that does not exist.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     fields = _record_fields(revision, record_id)
     if len({field[0] for field in fields}) != len(fields):
@@ -130,7 +133,10 @@ def _export_fields_by_binding(revision: ModeloRevision, record_id: str) -> dict[
 
 
 def require_wire_geometry(revision: ModeloRevision, record_id: str, slots: tuple[tuple[BindingId, ...], ...]) -> None:
-    """Require each slot to be the export field of the pinned record at the same position."""
+    """Require each slot to be the export field of the pinned record at the same position.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     fields = _export_fields_by_binding(revision, record_id)
     bindings = {binding.id: binding for binding in revision.bindings}
     if len(bindings) != len(revision.bindings):

@@ -242,6 +242,8 @@ def undeclared_prorrata_volume_casilla_ids(
     The registry engine gives an unsupplied volume its formula default, which
     is not a declared fact: the definitive percentage it yields must not
     settle a regularisation.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     volume_ids = tuple(
         casilla_id
@@ -272,6 +274,8 @@ def stage_prorrata_definitive_percentage(
     revision declares no prorrata regularisation, a volume casilla was never
     supplied, or the percentage did not resolve -- a default percentage must
     not deduct the settlement liquidation.
+
+    ``registry_snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     revision = registry_snapshot.revision
     definitive_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)

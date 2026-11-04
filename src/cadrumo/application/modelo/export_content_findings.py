@@ -4,7 +4,10 @@ Which boxes a return lacks is decided only by rendering it and asking the export
 own required-content check, because the answer depends on the finished document:
 zero-only branches are pruned by then and a choice in the schema has been taken. The
 refusal is read rather than recomputed, so verification cannot grant what the export
-refuses, and a layout of another format reaches no finding here.
+refuses, and a layout of another format reaches no finding here;
+:class:`RegistrySnapshot`, the pinned registry snapshot;
+:class:`CalculationRevision`, the saved calculation revision;
+:class:`TaxpayerProfile`, the taxpayer profile.
 """
 
 from __future__ import annotations
@@ -114,7 +117,14 @@ def append_export_content_findings(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Block one finding per box the export of an XML return would refuse."""
+    """Block one finding per box the export of an XML return would refuse.
+
+    ``target`` is the :class:`CalculationRevision`, the saved calculation revision.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+
+    ``profile`` is the :class:`TaxpayerProfile`, the taxpayer profile.
+    """
     layout = canonical_export_layout(snapshot.revision.export_layouts)
     if layout is None or layout.format is not ExportLayoutFormat.XML_DICTIONARY:
         return

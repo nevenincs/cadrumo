@@ -25,7 +25,8 @@ See Also:
         definitive percentage.
     :mod:`~domain.prorrata_register`
         Cross-period carry home for provisional and definitive prorrata
-        percentages.
+        percentages;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations

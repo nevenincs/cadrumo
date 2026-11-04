@@ -1,4 +1,7 @@
-"""Registered read that answers staged ledger work; it writes nothing."""
+"""Registered read that answers staged ledger work; it writes nothing.
+
+This module uses :class:`TransactionCatalogue`, the profile's transaction catalogue.
+"""
 
 from __future__ import annotations
 

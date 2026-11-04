@@ -1,4 +1,7 @@
-"""Classification of one ledger transaction into a Renta income observation or the issue that keeps it out."""
+"""Classification of one ledger transaction into a Renta income observation or the issue that keeps it out.
+
+This module uses :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+"""
 
 from __future__ import annotations
 
@@ -57,6 +60,8 @@ def classify_income_transaction(
     companion ``ledger_renta_gastos_pago_fraccionado_aggregation`` pipeline
     (:mod:`~.renta_gasto_ledger`), so the income pass skips them silently
     rather than emitting a misleading "expense dropped" advisory.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     if _income_transaction_is_out_of_scope(transaction):
         return None

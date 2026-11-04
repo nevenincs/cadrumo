@@ -66,6 +66,8 @@ def calculation_required_inputs(
     ``known_truths`` are the yes-or-no facts already known for the filer, by
     boolean binding, which decide the guards formulas branch on; without them
     only reads that no guard can skip are named.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     bindings = revision_bindings_by_id(revision)
     casilla_ids = set(_earlier_year_carries(revision, bindings, registry_period))

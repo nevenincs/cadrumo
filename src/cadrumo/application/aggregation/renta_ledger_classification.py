@@ -1,4 +1,7 @@
-"""Classification of one ledger transaction into a Renta expense observation or the issue that keeps it out."""
+"""Classification of one ledger transaction into a Renta expense observation or the issue that keeps it out.
+
+This module uses :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+"""
 
 from __future__ import annotations
 
@@ -145,6 +148,8 @@ def classify_renta_transaction(
     twelve original early-return branches each project to a typed
     issue with their dedicated reason code; the eligible path returns
     the constructed observation.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     direction = renta_direction_for(transaction.direction, transaction.purchase_invoice_evidence_id)
     if direction is None:

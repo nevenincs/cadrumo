@@ -20,7 +20,8 @@ an attestation and an attestation scan never sees a payer record.
 Core types:
 :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`,
 :class:`~cadrumo.domain.renta.retencion_soportada.RetencionSoportadaRecord`,
-:class:`~cadrumo.domain.renta.retencion_soportada_absence.RetencionSoportadaAbsence`.
+:class:`~cadrumo.domain.renta.retencion_soportada_absence.RetencionSoportadaAbsence`;
+:class:`SensitivityClass`, the sensitivity classification of stored objects.
 """
 
 from __future__ import annotations

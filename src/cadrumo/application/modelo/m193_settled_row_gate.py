@@ -28,7 +28,8 @@ devengo year before the filing year is a settled prior-accrual row whatever
 produced it. The revision persists that field per row, so the same gate reads
 it there. The contributor trace and the row values describe the same rows, and
 a revision persisted before one of them existed has only the other, so the
-larger of the two counts is the number of settled rows.
+larger of the two counts is the number of settled rows;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations

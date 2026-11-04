@@ -1,4 +1,7 @@
-"""Cross-revision and storage-delta invariants the Modelo schema models enforce."""
+"""Cross-revision and storage-delta invariants the Modelo schema models enforce.
+
+This module uses :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+"""
 
 from __future__ import annotations
 
@@ -24,6 +27,8 @@ def validate_selected_view_references(
     Invariants that compare payloads of several revisions (predecessor date
     agreement and cycles, structural-succession lineage ownership) belong to
     complete-modelo validation, which the directory's source modelo passed.
+
+    ``revisions`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     foreign = sorted(set(revisions) - revision_ids)
     if foreign:
@@ -47,7 +52,10 @@ def validate_selected_view_references(
 
 
 def require_revision_family_storage_delta(revision: ModeloRevision) -> None:
-    """Refuse a revision whose keyed-family storage delta is incoherent."""
+    """Refuse a revision whose keyed-family storage delta is incoherent.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     from .keyed_families import KEYED_FAMILY_SPECS
 
     keyed = {spec.section for spec in KEYED_FAMILY_SPECS}
@@ -119,7 +127,10 @@ def require_revision_keys_and_review_references(
     revisions: Mapping[RevisionId, ModeloRevision],
     revision_ids: frozenset[str],
 ) -> None:
-    """Refuse a revision filed under the wrong key or citing an unknown review reference."""
+    """Refuse a revision filed under the wrong key or citing an unknown review reference.
+
+    ``revisions`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     for key, revision in revisions.items():
         _require_revision_key(key, revision)
         _require_review_reference(revision, revision_ids)

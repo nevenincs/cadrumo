@@ -1,4 +1,7 @@
-"""Invoice source source advisories responsibilities."""
+"""Invoice source source advisories responsibilities.
+
+This module uses :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+"""
 
 from __future__ import annotations
 
@@ -349,6 +352,8 @@ def m347_declaration_advisories(
     records cannot fill are disclosed by :func:`_m347_record_field_advisories`
     over the same declarable set, and the inmueble record fields the leases
     leave open by :func:`_m347_inmueble_record_advisories`.
+
+    ``catalogue`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     if context.modelo != form_for_role("third_party.annual_operations"):
         return ()

@@ -4,7 +4,8 @@ A repeating group of the form layout opens its lines from a row-set binding,
 from the bindings of its columns and grid cells, and from the fields of the
 export record it prints. Those bindings stand for a column of repeated lines,
 never for one scalar answer, so neither the edit surface nor the form's
-answers offer a single override for them. Both read this one derivation.
+answers offer a single override for them. Both read this one derivation;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -50,7 +51,10 @@ def _export_binding_ids(revision: ModeloRevision, records: set[str]) -> set[str]
 
 
 def row_filled_binding_ids(revision: ModeloRevision, layout: FormLayoutDefinition | None) -> frozenset[str]:
-    """The bindings a repeating group of ``layout`` fills row by row; none when the layout is not this revision's."""
+    """The bindings a repeating group of ``layout`` fills row by row; none when the layout is not this revision's.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     if layout is None or layout.revision_id != revision.id:
         return frozenset[str]()
     groups = _repeating_groups(layout)

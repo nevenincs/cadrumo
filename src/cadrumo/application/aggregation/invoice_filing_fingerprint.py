@@ -33,7 +33,9 @@ decomposition contract that grounds income evidence. What is left out, and why:
 - Line ``spending_category_id``: no production consumer.
 
 Withholding modelos read captured observations rather than the invoice, so their
-baseline-guarded capture stays their own concern.
+baseline-guarded capture stays their own concern;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue.
 """
 
 from __future__ import annotations
@@ -192,7 +194,10 @@ def _read_selection(revision: ModeloRevision, *, work_unit: WorkUnit) -> _Invoic
 
 
 def revision_reads_invoices(revision: ModeloRevision, *, work_unit: WorkUnit) -> bool:
-    """Whether any calculation reader of this registry revision consults the catalogue."""
+    """Whether any calculation reader of this registry revision consults the catalogue.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return _read_selection(revision, work_unit=work_unit).reads_invoices
 
 
@@ -206,6 +211,8 @@ def fingerprint_scope_is_narrower(
     """Whether this stored fingerprint leaves out invoices or facts the draft's figures may rest on.
 
     OSS nets corrections under any criterion; renta reads them, and invoices with no row, only under accrual.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     selection = _read_selection(revision, work_unit=work_unit)
     if snapshot.field_set_version >= _CORRECTION_FACTS_VERSION:
@@ -453,7 +460,10 @@ def capture_invoice_fingerprint(
     captured_at: datetime,
     criteria: ImputationCriteria,
 ) -> InvoiceFingerprintSnapshot | None:
-    """Fingerprint the in-scope invoices, or return ``None`` when the modelo reads none."""
+    """Fingerprint the in-scope invoices, or return ``None`` when the modelo reads none.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     if not revision_reads_invoices(revision, work_unit=work_unit):
         return None
     current = _current_rows(
@@ -484,7 +494,10 @@ def evaluate_invoice_fingerprint(
     ports: InvoiceCatalogueReadPorts,
     criteria: ImputationCriteria,
 ) -> InvoiceFingerprintVerdict:
-    """Compare a stored fingerprint with the catalogue, under the stored version's fields and scope."""
+    """Compare a stored fingerprint with the catalogue, under the stored version's fields and scope.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return diff_invoice_fingerprints(
         snapshot,
         _current_rows(

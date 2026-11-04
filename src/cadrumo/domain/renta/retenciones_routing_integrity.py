@@ -8,7 +8,8 @@ resolved value to it.
 The registry must not import the Renta domain directly. This module registers
 the abstract snapshot check when the registry's snapshot builder imports the
 declared module, preserving the dependency direction while keeping the check
-at the domain boundary.
+at the domain boundary;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -135,6 +136,8 @@ def m130_retenciones_output_redirect(
     Empty unless the revision declares both the routed binding and its output
     casilla: a revision without the binding has nothing redirected, and one
     without the casilla is refused by the snapshot check above.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     route = _registry_m130_retenciones_route(effective_date=effective_date, authority=authority)
     if route.binding_id not in {binding.id for binding in revision.bindings}:

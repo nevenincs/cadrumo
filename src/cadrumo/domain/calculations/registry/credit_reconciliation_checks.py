@@ -16,7 +16,8 @@ casilla numbers or modelos:
   agent's own payer-side figure;
 * a filed-observation cross-check must name a casilla that records withholding
   suffered (:func:`filed_observation_source_failures`, run over the whole tree);
-* an operand must be an operand of the value source's formula.
+* an operand must be an operand of the value source's formula;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -61,7 +62,10 @@ _LEDGER_CROSS_CHECK_REFUSED_ORIGINS: frozenset[TerminalOriginClass] = frozenset(
 
 
 def credit_reconciliation_digest(revision: ModeloRevision) -> str:
-    """Return the content digest of the revision's credit reconciliation declarations, in declaration order."""
+    """Return the content digest of the revision's credit reconciliation declarations, in declaration order.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return content_hash_hex([entry.model_dump(mode="json") for entry in revision.credit_reconciliation])
 
 
@@ -197,6 +201,8 @@ def filed_observation_source_failures(
     cross-check's period. The casilla must be declared by at least one of them,
     and every one that declares it must mark it ``suffered``: an undeclared or
     practised side is a withholding agent's figure and never a credit.
+
+    ``source_revisions`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     declaring = [
         casilla for revision in source_revisions for casilla in revision.casillas if casilla.id == cross_check.casilla
@@ -215,7 +221,10 @@ def filed_observation_source_failures(
 
 
 def credit_reconciliation_revision_failures(revision: ModeloRevision) -> tuple[str, ...]:
-    """Return every refusal the revision's credit reconciliation earns; empty when it declares none."""
+    """Return every refusal the revision's credit reconciliation earns; empty when it declares none.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     entries = revision.credit_reconciliation
     if not entries:
         return ()

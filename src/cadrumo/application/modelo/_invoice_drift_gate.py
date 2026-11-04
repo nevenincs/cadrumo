@@ -5,7 +5,9 @@ This never recomputes, because a verify that quietly recalculated would mint
 values the operator never saw.
 
 A sealed revision is not compared, matching the ledger gate. Verify is the only
-gate: export and file refuse a revision that verify did not seal.
+gate: export and file refuse a revision that verify did not seal;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations
@@ -80,6 +82,10 @@ def invoice_drift_findings(
     invoices are neither known to match nor known to differ. A draft fingerprinted
     under an older, narrower scope has a fingerprint that cannot prove it current, so
     it is sent to be calculated again; its stored fingerprint stays as it was.
+
+    ``target`` is the :class:`CalculationRevision`, the saved calculation revision.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     if target.state is not CalculationRevisionState.BORRADOR:
         return []

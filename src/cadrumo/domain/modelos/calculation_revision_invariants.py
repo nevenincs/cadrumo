@@ -2,7 +2,8 @@
 
 Each check reads the whole revision and raises :class:`ModeloValidationError`
 at the first inconsistency, so the revision model's validator can run them in a
-fixed order and refuse the first one that fails.
+fixed order and refuse the first one that fails;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations
@@ -26,7 +27,10 @@ if TYPE_CHECKING:
 
 
 def validate_revision_identity(revision: CalculationRevision, derived: CalculationRevisionId) -> None:
-    """Refuse a revision whose stored id differs from the id derived from its inputs."""
+    """Refuse a revision whose stored id differs from the id derived from its inputs.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     if derived != revision.calculation_revision_id:
         raise ModeloValidationError(
             f"calculation_revision_id {revision.calculation_revision_id!r} does not match "
@@ -35,7 +39,10 @@ def validate_revision_identity(revision: CalculationRevision, derived: Calculati
 
 
 def validate_annual_summary_handoff_target(revision: CalculationRevision) -> None:
-    """Refuse an annual-summary handoff aimed at another revision or disagreeing with its outputs."""
+    """Refuse an annual-summary handoff aimed at another revision or disagreeing with its outputs.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     handoff = revision.m303_regimen_simplificado_annual_summary_handoff
     if handoff is None:
         return
@@ -74,7 +81,10 @@ def _validate_replay_channel_overlap(
 
 
 def validate_replay_channels(revision: CalculationRevision) -> None:
-    """Refuse a replay id that appears in more than one of the override and row-value channels."""
+    """Refuse a replay id that appears in more than one of the override and row-value channels.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     _validate_replay_channel_overlap(
         "binding_overrides",
         revision.binding_overrides,
@@ -96,7 +106,10 @@ def validate_replay_channels(revision: CalculationRevision) -> None:
 
 
 def validate_operator_layer(revision: CalculationRevision) -> None:
-    """Keep an operator value and an explicit clear of the same casilla mutually exclusive."""
+    """Keep an operator value and an explicit clear of the same casilla mutually exclusive.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     layer = revision.operator_layer
     if layer is None:
         return
@@ -108,7 +121,10 @@ def validate_operator_layer(revision: CalculationRevision) -> None:
 
 
 def validate_observation_projection(revision: CalculationRevision) -> None:
-    """Refuse casilla values that lack observations or disagree with the observations' projection."""
+    """Refuse casilla values that lack observations or disagree with the observations' projection.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     if revision.casilla_values and not revision.observations:
         raise ModeloValidationError(
             "calculation revision with casilla_values must carry typed observations; "
@@ -128,7 +144,10 @@ def validate_observation_projection(revision: CalculationRevision) -> None:
 
 
 def validate_amendment_metadata(revision: CalculationRevision) -> None:
-    """Refuse an amendment identity without a reason, or a reason without an identity."""
+    """Refuse an amendment identity without a reason, or a reason without an identity.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     if (revision.amendment_identity is None) != (revision.amendment_reason is None):
         raise ModeloValidationError(
             "amendment_identity and amendment_reason must be set together or both be None",
@@ -139,7 +158,10 @@ def validate_secure_revision_context(
     revision: CalculationRevision,
     validation_context: Mapping[str, object] | None,
 ) -> None:
-    """Refuse a secure-storage revision that omits a required row materialization field."""
+    """Refuse a secure-storage revision that omits a required row materialization field.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     if (
         validation_context is not None
         and validation_context.get("secure_calculation_revision") is True
@@ -186,7 +208,10 @@ def _validate_row_casilla_coordinate(
 
 
 def validate_row_materialization(revision: CalculationRevision) -> None:
-    """Refuse closed record rows, row identities or row casillas that disagree with their source rows."""
+    """Refuse closed record rows, row identities or row casillas that disagree with their source rows.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     try:
         validate_closed_record_row_sets(
             revision.closed_record_row_sets,
@@ -212,7 +237,10 @@ def validate_row_materialization(revision: CalculationRevision) -> None:
 
 
 def validate_lifecycle_order(revision: CalculationRevision) -> None:
-    """Refuse a revision updated before it was created."""
+    """Refuse a revision updated before it was created.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     if revision.updated_at < revision.created_at:
         raise ModeloValidationError(
             f"updated_at {revision.updated_at.isoformat()} precedes created_at {revision.created_at.isoformat()}",
@@ -234,7 +262,10 @@ def validate_rectificativa_aggregate_context(
     revision: CalculationRevision,
     validation_context: Mapping[str, object] | None,
 ) -> None:
-    """Refuse a rectificativa revision that is not validated against its aggregate context."""
+    """Refuse a rectificativa revision that is not validated against its aggregate context.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     if (
         revision.amendment_identity is None
         or revision.amendment_identity.kind is not FilingDeclarationKind.RECTIFICATIVA

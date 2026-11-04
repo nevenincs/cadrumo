@@ -13,7 +13,8 @@ A printed casilla no admitted binding owns is kept as a comparison-only
 observation when the revision declares the box, under the registry's
 continuity identity for it, and is never stored as a binding value. Only a
 printed casilla the revision does not declare at all is reported to the
-operator as kept nowhere.
+operator as kept nowhere;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -84,7 +85,10 @@ class BorradorCasillaProjection:
 
 
 def borrador_admitted_bindings(revision: ModeloRevision) -> dict[BindingId, BindingDefinition]:
-    """Return the bindings a borrador snapshot of ``revision`` may hold, by id."""
+    """Return the bindings a borrador snapshot of ``revision`` may hold, by id.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return {binding.id: binding for binding in revision.bindings if binding.aeat_prefilled is True}
 
 
@@ -158,6 +162,8 @@ def project_printed_casillas(
     Raises:
         LiveApplicationInputError: When a printed casilla has more than one
             admitted owner, or one admitted binding owns several printed casillas.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     admitted = borrador_admitted_bindings(revision)
     owned_by, unowned, ambiguous = _sort_printed_by_owner(revision, admitted, printed)
@@ -182,6 +188,8 @@ def printed_box_casilla(
     ``revision`` carrying it. A box without one resolves by number only in the
     revision it was captured under, because a number alone is no identity
     across revisions. ``None`` means the revision does not identify the box.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     if box.continuidad_id is not None:
         matches = [casilla for casilla in revision.casillas if casilla.continuidad_id == box.continuidad_id]
@@ -194,7 +202,10 @@ def printed_box_casilla(
 def unresolved_printed_observations(
     revision: ModeloRevision, boxes: Iterable[BorradorPrintedBox], *, captured_revision_id: str
 ) -> tuple[CasillaId, ...]:
-    """Return, sorted, the kept printed boxes ``revision`` does not identify."""
+    """Return, sorted, the kept printed boxes ``revision`` does not identify.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return tuple(
         sorted(
             box.casilla_id
@@ -218,6 +229,8 @@ def require_printed_observations_resolve(
         InternalInvariantError: When ``refuse_owned_casillas`` is set and a
             printed observation names a box an admitted binding owns, which
             would give one printed value two roles.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     boxes = tuple(boxes)
     unresolved = unresolved_printed_observations(revision, boxes, captured_revision_id=captured_revision_id)
@@ -236,7 +249,10 @@ def require_printed_observations_resolve(
 
 
 def borrador_keys_not_admitted(keys: Iterable[BindingId], revision: ModeloRevision) -> tuple[BindingId, ...]:
-    """Return, sorted, the keys the pinned revision does not admit to a borrador snapshot."""
+    """Return, sorted, the keys the pinned revision does not admit to a borrador snapshot.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     admitted = borrador_admitted_bindings(revision)
     return tuple(sorted(key for key in keys if key not in admitted))
 
@@ -247,6 +263,8 @@ def require_borrador_keys_admitted(keys: Iterable[BindingId], revision: ModeloRe
     This refuses a free casilla key and a binding id the revision no longer
     declares alike. No stored key is rewritten: such a snapshot is unusable and
     the document has to be imported again.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     refused = borrador_keys_not_admitted(keys, revision)
     if refused:

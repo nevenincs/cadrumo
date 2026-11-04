@@ -10,7 +10,8 @@ the resolver's stated outcome. Every such value persists with the revision and
 its stated outcome. A proven zero withholds nothing, and the reopened form still
 says the zero was proven; every other value, including one whose resolver
 stated no outcome, withholds verify, export and local filing through the
-calculation-note gate.
+calculation-note gate;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations
@@ -112,6 +113,8 @@ def collect_advisory_binding_value_diagnostics(
 
     A stated outcome is carried only beside a decimal value, the one channel a
     resolver states it for; any other channel's capped value withholds.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     reach_map = capped_binding_reach(
         snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
@@ -146,7 +149,10 @@ def add_advisory_binding_value_diagnostics(
     *,
     operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
-    """Return ``resolution`` with every capped binding value reported; unchanged when there is none."""
+    """Return ``resolution`` with every capped binding value reported; unchanged when there is none.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     diagnostics = collect_advisory_binding_value_diagnostics(snapshot, resolution, operation=operation)
     if not diagnostics:
         return resolution

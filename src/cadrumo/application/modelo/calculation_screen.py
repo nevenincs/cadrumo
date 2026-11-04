@@ -13,7 +13,9 @@ One stamp covers every stale case at once: a revision stored before stamps
 existed has none, and a revision calculated before a declaration was added or
 removed has a different digest. The reason is never persisted, and it names no
 modelo. A screen added later enrols its declarations in :func:`_screen_payload`
-and raises :data:`CALCULATION_SCREEN_CONTRACT_VERSION`.
+and raises :data:`CALCULATION_SCREEN_CONTRACT_VERSION`;
+:class:`RegistrySnapshot`, the pinned registry snapshot;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations
@@ -60,6 +62,8 @@ def calculation_screen_stamp(
     The digest covers only the selected registry revision's screen
     declarations, never the authority generation, so a publication that
     changes nothing a screen reads leaves a stamped revision current.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     return CalculationScreenStamp(
         contract_version=CALCULATION_SCREEN_CONTRACT_VERSION,
@@ -68,7 +72,10 @@ def calculation_screen_stamp(
 
 
 def calculation_screen_is_current(revision: CalculationRevision, expected: CalculationScreenStamp) -> bool:
-    """Whether ``revision`` was screened against exactly the ``expected`` declarations under this contract."""
+    """Whether ``revision`` was screened against exactly the ``expected`` declarations under this contract.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     stamp = revision.screen_stamp
     return stamp is not None and stamp == expected
 

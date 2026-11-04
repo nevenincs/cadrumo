@@ -673,7 +673,10 @@ def _carries_withholding(observation: RentaIncomeObservationProtocol) -> bool:
 
 
 def declared_withholding_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
-    """Return the ``ledger_renta_income_aggregation`` bindings on ``revision`` that sum declared retención."""
+    """Return the ``ledger_renta_income_aggregation`` bindings on ``revision`` that sum declared retención.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return frozenset(
         binding.id
         for binding in revision.bindings
@@ -693,6 +696,8 @@ def ledger_renta_withholding_value_outcomes(
     which period a retención belongs to. Any row with a declared, reconstructed
     or undeterminable retención makes the value rest on bearing rows, even when
     the declared-only sum is zero because those figures were left out.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     observed = tuple(observations)
     outcomes: dict[BindingId, BindingValueOutcome] = {}

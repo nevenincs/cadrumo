@@ -33,7 +33,10 @@ class _PurchaseInvoiceEvidencePayload(BaseModel):
 
 
 def refund_left_to_correction_netting(transaction: Transaction, invoices: InvoiceCatalogue) -> bool:
-    """Return whether the row is a supplier's refund on a correction, which the correction netting answers for."""
+    """Return whether the row is a supplier's refund on a correction, which the correction netting answers for.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+    """
     if not is_supplier_refund(transaction) or transaction.purchase_invoice_evidence_id is None:
         return False
     invoice = invoices.get(transaction.purchase_invoice_evidence_id)

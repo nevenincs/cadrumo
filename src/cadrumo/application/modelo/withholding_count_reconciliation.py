@@ -24,7 +24,9 @@ activity income sits in two boxes.
 
 A quarter with no observation stays unknown and is reported as not cross-checked,
 never as a count of zero. Monthly filers never reach this comparison: calculating
-their summary is already refused, and their monthly coordinates are not quarters.
+their summary is already refused, and their monthly coordinates are not quarters;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations
@@ -119,6 +121,8 @@ def resolve_withholding_count_reconciliation(
 
     ``None`` when the modelo's composition folds no periodic percepciones, so the
     registry routing decides which summaries this reaches.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     modelo = str(work_unit.modelo)
     source_modelo = annual_withholding_composition(modelo).periodic_percepciones
@@ -201,7 +205,10 @@ def append_withholding_count_reconciliation_findings(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Append one blocking finding per excess box and one note for unchecked quarters."""
+    """Append one blocking finding per excess box and one note for unchecked quarters.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     reconciliation = resolve_withholding_count_reconciliation(
         work_unit=work_unit,
         snapshot=snapshot,

@@ -19,7 +19,10 @@ calculation input.
 A missing capture, a refused capture and a missing calculation each have their
 own state, and so does a comparison whose sides no longer describe each other.
 None of them is served as agreement: every compared box carries its own
-classification and reason, and nothing summarises the boxes as all agreeing.
+classification and reason, and nothing summarises the boxes as all agreeing;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`CalculationRevision`, the saved calculation revision;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations

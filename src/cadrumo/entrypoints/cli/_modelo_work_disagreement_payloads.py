@@ -1,4 +1,7 @@
-"""Typed JSON payloads for the commands that accept, revoke and list disputed Modelo figures."""
+"""Typed JSON payloads for the commands that accept, revoke and list disputed Modelo figures.
+
+This module uses :class:`OutputSchema`, the declared output contract.
+"""
 
 from __future__ import annotations
 

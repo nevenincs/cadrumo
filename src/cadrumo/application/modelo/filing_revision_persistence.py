@@ -353,7 +353,10 @@ def filed_calculation_revision(
     actor: str,
     now: datetime,
 ) -> CalculationRevision:
-    """Move a verified revision to the local ``PRESENTADO`` state; AEAT status stays pending."""
+    """Move a verified revision to the local ``PRESENTADO`` state; AEAT status stays pending.
+
+    ``target`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     return target.model_copy(
         update={
             "state": CalculationRevisionState.PRESENTADO,

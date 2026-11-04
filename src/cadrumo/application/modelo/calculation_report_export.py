@@ -342,6 +342,8 @@ def applied_report_resolutions(
 
     Raises:
         CreditResolutionPersistenceError: The resolutions could not be read.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     lookup = load_credit_resolutions(
         export_ports.credit_resolution,

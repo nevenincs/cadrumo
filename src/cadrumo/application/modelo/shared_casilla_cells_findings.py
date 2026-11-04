@@ -2,7 +2,9 @@
 
 The export refuses these values itself. Verification reports them too, because a
 granted verification tells the operator the declaration is ready: it must not
-pass a revision whose every export is already known to refuse.
+pass a revision whose every export is already known to refuse;
+:class:`RegistrySnapshot`, the pinned registry snapshot;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations
@@ -31,7 +33,12 @@ def append_shared_casilla_cells_findings(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Block one finding per casilla whose held value the export would refuse to write."""
+    """Block one finding per casilla whose held value the export would refuse to write.
+
+    ``target`` is the :class:`CalculationRevision`, the saved calculation revision.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     layout = canonical_export_layout(snapshot.revision.export_layouts)
     if layout is None:
         return

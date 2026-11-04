@@ -36,7 +36,10 @@ See Also:
     :mod:`~cadrumo.application.modelo.caller_context`:
         The caller context a calculation head was computed from.
     :mod:`~cadrumo.application.modelo.semantic_role_resolution`:
-        The semantic-role-to-casilla resolver and its ambiguity refusal.
+        The semantic-role-to-casilla resolver and its ambiguity refusal;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`RegistrySnapshot`, the pinned registry snapshot;
+:class:`UserProfileRecord`, the stored taxpayer profile record.
 """
 
 from __future__ import annotations
@@ -249,6 +252,8 @@ def taxation_comparison_basis(snapshot: RegistrySnapshot) -> TaxationComparisonB
     and is bound to a profile-sourced binding, and one box each carries the
     cuota resultante and the cuota diferencial roles. An ambiguous role is
     not a basis: the comparison never picks among duplicated boxes.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     declaration_casilla = _unique_role(snapshot, _DECLARATION_TYPE_ROLE)
     cuota_casilla = _unique_role(snapshot, _CUOTA_RESULTANTE_ROLE)
@@ -272,7 +277,10 @@ def taxation_comparison_basis(snapshot: RegistrySnapshot) -> TaxationComparisonB
 
 
 def revision_compares_taxation(snapshot: RegistrySnapshot) -> bool:
-    """Whether ``snapshot`` declares what a joint-versus-individual comparison reads."""
+    """Whether ``snapshot`` declares what a joint-versus-individual comparison reads.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     return taxation_comparison_basis(snapshot) is not None
 
 
@@ -288,6 +296,8 @@ def compare_taxation_results(
     Both runs must hold both compared boxes; a missing one is refused rather
     than read as zero. The recommendation applies the one-euro materiality
     threshold to ``individual - conjunta``.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     missing = tuple(
         casilla_id for casilla_id in basis.result_casillas if casilla_id not in conjunta or casilla_id not in individual
@@ -345,6 +355,8 @@ def unresolved_result_boxes(
     itself, so it is named; an unresolved binding a formula reads names the
     boxes it fills. A result that holds a value is never descended into, so a
     gap the compared results do not read is never blamed.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
     named: set[CasillaId] = set()

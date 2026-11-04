@@ -1,4 +1,7 @@
-"""Source mesh resolver for Modelo 369 OSS and IOSS ledger candidates and their projection from issued invoices."""
+"""Source mesh resolver for Modelo 369 OSS and IOSS ledger candidates and their projection from issued invoices.
+
+This module uses :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+"""
 
 from __future__ import annotations
 

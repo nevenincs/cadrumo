@@ -376,6 +376,8 @@ def require_instalment_election_admissible(
     source states a smallest amount to split, but an amount whose second
     instalment would be nothing is paid at once. A second instalment
     direct-debited also needs a Spanish charge account.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     election = command.instalment_election
     if not election.splits:

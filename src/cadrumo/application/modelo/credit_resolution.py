@@ -15,7 +15,8 @@ changed declaration is another key, so the stored resolution no longer applies
 and the calculation says so with ``credit_resolution_stale``.
 
 A store that cannot be read is neither empty nor permissive. The lookup says it
-is unreadable, no resolution is honoured, and the figure stays withheld.
+is unreadable, no resolution is honoured, and the figure stays withheld;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations
@@ -146,6 +147,8 @@ def find_finding(revision: CalculationRevision, finding_id: str) -> CalculationS
     Raises:
         CreditResolutionRefusedError: The id is not a finding id, names no
             disagreement of this revision, or names more than one.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     token = finding_id.strip().lower()
     if len(token) != SOURCE_DISAGREEMENT_FINDING_ID_LENGTH or not set(token) <= _HEX_DIGITS:
@@ -206,7 +209,10 @@ def credit_resolution_for_finding(
 def applied_credit_resolutions(
     revision: CalculationRevision, lookup: CreditResolutionLookup
 ) -> tuple[CreditResolutionRecord, ...]:
-    """The active resolutions that cover a disagreement ``revision`` persisted, in the order of its issues."""
+    """The active resolutions that cover a disagreement ``revision`` persisted, in the order of its issues.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
+    """
     keys = {record.finding_key: record for record in lookup.active}
     applied: dict[str, CreditResolutionRecord] = {}
     for issue in revision.source_issues:
@@ -269,6 +275,8 @@ def applied_resolution_notes(
     restates the calculation's notes says what the operator answered. The notes
     are derived from the stored resolutions and are never persisted with the
     calculation.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     notes: list[RecordedCalculationNote] = []
     for record in applied_credit_resolutions(revision, lookup):

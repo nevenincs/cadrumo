@@ -207,6 +207,8 @@ def permitted_binding_entry(
     :func:`~.row_filled_bindings.row_filled_binding_ids`) stands for a column
     of lines, and one the calculation does not read for ``period`` changes
     nothing the declaration shows.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     source = binding.source
     if source in BUCKET_AGGREGATION_LOCK_SOURCES:

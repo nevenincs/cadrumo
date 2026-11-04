@@ -588,6 +588,8 @@ def instalment_basis_observations(
     activity credit counts any payment date and leaves the rental's to the
     rental credit. Each row is restated by its own payment date and tipo de
     actividad, so a difference the two credits owe to that itemisation is visible.
+
+    ``transactions`` is the :class:`TransactionCatalogue`, the profile's transaction catalogue.
     """
     restated: list[RentaIncomeObservation] = []
     for observation in observations:
