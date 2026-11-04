@@ -14,8 +14,8 @@ output; ``bounds`` writes the unformatted relay bounds module; ``envelopes``
 writes the envelopes, stored compactly and the Modelo 100 forms as patches;
 ``pack`` stores the envelopes already on disk that way; ``validate`` fails when the host's admitted list differs
 from the registered family or a stored envelope no longer validates against
-its model. The envelopes carry the day they were
-read, so they are validated rather than compared byte for byte.
+its model. Every profile the envelopes read runs on one scenario clock, so
+a regeneration writes the same bytes.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import ast
 import asyncio
+import hashlib
 import json
 import re
 import sys
@@ -169,6 +170,20 @@ RENTA_QUARTER = "1T"
 RENTA_CCAA = "madrid"
 #: A day within the Renta's filing period, which closes on 30 June of the year after.
 RENTA_FILING_PERIOD_DAY = datetime(RENTA_YEAR + 1, 5, 20, 9, 0, tzinfo=UTC)
+#: The month, day, hour and minute in UTC of the scenario's as-of instant, in the registry's horizon year: the one
+#: clock every profile the envelopes read runs on, so a regeneration reads what the last one read.
+SCENARIO_AS_OF: tuple[int, int, int, int] = (11, 2, 9, 0)
+
+
+@cache
+def scenario_as_of() -> datetime:
+    """The instant the scenarios are read as of: ``SCENARIO_AS_OF`` in the horizon year the registry declares."""
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        horizon = operation.supported_filing_years().horizon
+    month, day, hour, minute = SCENARIO_AS_OF
+    return datetime(horizon, month, day, hour, minute, tzinfo=UTC)
 
 
 # -- wire types ---------------------------------------------------------------
@@ -520,9 +535,41 @@ def _read_ports(bucket_id: str, operation: Any) -> Any:
 def _write(directory: Path, name: str, model: BaseModel) -> None:
     """Write an envelope as the host hands it to the window, with every file's place reduced to its name."""
     shown = _host_view(json.loads(model.model_dump_json()), _result_path_keys(), _FILE_FOLDERS)
-    text = json.dumps(shown, ensure_ascii=False, separators=(",", ":"))
+    text = json.dumps(_stable_minted_ids(shown), ensure_ascii=False, separators=(",", ":"))
     (directory / name).write_text(text, "utf-8", newline="\n")
     sys.stdout.write(f"{name}\n")
+
+
+#: Each id a run mints afresh, and the id the envelopes name it by.
+_MINTED_IDS: dict[str, str] = {}
+
+
+def _minted(kind: str, value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    return _MINTED_IDS.setdefault(value, hashlib.sha256(f"{kind}-{len(_MINTED_IDS)}".encode()).hexdigest())
+
+
+def _stable_minted_ids(value: Any) -> Any:
+    """``value`` with each id a run mints afresh named the same on every run.
+
+    A stored disagreement answer's revision is derived from the row's ciphertext, whose nonce is drawn afresh on
+    every write, and an export's event id from the file's place, which is a throwaway folder; so both differ between
+    runs although nothing the envelope states does. The envelopes name each by the order the scenarios first meet
+    it in, the same name wherever the same id recurs; the window only hands such an id back as the one it read.
+    """
+    from cadrumo.application.modelo.credit_resolution_contracts import CreditResolutionRowProjection
+
+    if isinstance(value, list):
+        return [_stable_minted_ids(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    named = {key: _stable_minted_ids(item) for key, item in value.items()}
+    if "bucket_event_id" in named:
+        named["bucket_event_id"] = _minted("bucket-event", named["bucket_event_id"])
+    if set(CreditResolutionRowProjection.model_fields) <= set(named):
+        named["revision_id"] = _minted("stored-resolution-revision", named["revision_id"])
+    return named
 
 
 @dataclass(slots=True)
@@ -878,8 +925,6 @@ def _observe_at_aeat(work: Any) -> None:
     register row and its observation, through the profile's filed-declaration
     store. Nothing is read from or sent to the AEAT.
     """
-    import hashlib
-
     from pydantic import AnyHttpUrl
 
     from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
@@ -977,7 +1022,7 @@ class RentaFiler:
     quarter_130: bool = False
     #: The day the filer's profile is read on, where it matters: the filing period of the return runs to the end
     #: of June of the year after, and a result to pay is offered in two instalments only within it. ``None`` reads
-    #: on today's date.
+    #: as of the scenario's instant.
     read_on: datetime | None = None
     #: What the profile states of the household, by name (see ``_household_facts``).
     household: str = "single"
@@ -2720,7 +2765,15 @@ def _write_iva_wallet(directory: Path) -> None:
 
 
 def write_envelopes(directory: Path) -> None:
-    """Read every envelope the scenario host answers through the application's read path."""
+    """Read every envelope the scenario host answers through the application's read path, as of one instant."""
+    from cadrumo.core.time.clock import frozen_clock
+
+    with frozen_clock(scenario_as_of()):
+        _write_scenarios(directory)
+    pack_envelopes(directory)
+
+
+def _write_scenarios(directory: Path) -> None:
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
     from cadrumo.core.time.clock import frozen_clock, now
     from cadrumo.domain.user_profile.values import UserProfileFact
@@ -2800,7 +2853,6 @@ def write_envelopes(directory: Path) -> None:
         _write_form(directory, stale, "modelo-130-1T-stale")
         _write_rebase(directory, stale)
     _write_renta(directory)
-    pack_envelopes(directory)
 
 
 # -- stored envelopes -----------------------------------------------------------
