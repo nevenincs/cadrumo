@@ -25,6 +25,8 @@ import type { ProviderSettings } from "./providerSettings";
 // cadrumo-agent's catalog lists for each, and the person's lists to change.
 // Read only while a surface shows them.
 
+const sessionEnded = (code: string): boolean => code === "not_signed_in";
+
 /** What the window offers for reading the local lanes. */
 export type LocalAiSource = {
   session: AgentSession;
@@ -138,7 +140,13 @@ export function useLocalAiLanes(
       window.clearTimeout(timer);
       const atRead = published.current;
       try {
-        const settings = await providerSettings.status();
+        // The catalog was just admitted under this signed-in session, so a
+        // refusal that the session is gone is its end, not a fault.
+        const settings = await providerSettings.status({
+          retryable: () => false,
+          scheduled: () => false,
+          lapsed: sessionEnded,
+        });
         const keyless = new Set(
           settings.providers
             .filter((lane) => lane.auth_kind === "none")

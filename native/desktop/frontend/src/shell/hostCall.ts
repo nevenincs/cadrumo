@@ -102,6 +102,10 @@ export type RetryPlan = {
   retryable(code: string): boolean;
   /** Whether the caller will ask again after this refusal. */
   scheduled(): boolean;
+  /** Whether a refusal with this code only says that the signed-in session the
+   * read was made under ended meanwhile. The caller discards the answer and
+   * the window withdraws the surface when it learns of the end. */
+  lapsed?(code: string): boolean;
 };
 
 export async function observedInvoke<T>(
@@ -126,7 +130,9 @@ export async function observedInvoke<T>(
       reportDiagnostic(token, {
         event: "command_rejected",
         level:
-          code !== null && retry?.retryable(code) && retry.scheduled()
+          code !== null &&
+          ((retry?.retryable(code) && retry.scheduled()) ||
+            retry?.lapsed?.(code))
             ? "WARNING"
             : "ERROR",
         command,
