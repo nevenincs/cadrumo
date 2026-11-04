@@ -254,6 +254,14 @@ class LedgerEvidenceConsentListProjection(BaseModel):
         return self
 
 
+#: The most blocker reasons one review-queue row carries; its served sentences follow one per reason.
+_MAX_ROW_REASONS = 64
+
+ServedReasonSentence = Annotated[str, Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)]
+#: Wire form of a review-queue row's served reason sentences, capped like the reasons they describe.
+EvidenceReviewReasonWordsWire = Annotated[list[ServedReasonSentence], Field(max_length=_MAX_ROW_REASONS)]
+
+
 class EvidenceReviewQueueRowProjection(BaseModel):
     """One pending draft with its complete blocker/advisory summary."""
 
@@ -262,12 +270,9 @@ class EvidenceReviewQueueRowProjection(BaseModel):
     extractor: EvidenceFollowupText
     drafted_at: datetime
     blocking_count: NonNegativeInt
-    reasons: Annotated[tuple[ConfirmationBlockReason, ...], Field(max_length=64)] = ()
+    reasons: Annotated[tuple[ConfirmationBlockReason, ...], Field(max_length=_MAX_ROW_REASONS)] = ()
     #: The sentence served for each reason, in the order of ``reasons``, and the language they are in.
-    reason_words: Annotated[
-        tuple[Annotated[str, Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)], ...],
-        Field(max_length=64),
-    ] = ()
+    reason_words: Annotated[tuple[ServedReasonSentence, ...], Field(max_length=_MAX_ROW_REASONS)] = ()
     reason_words_language: OutputLanguage | None = None
     advisory_count: NonNegativeInt
     advisories: Annotated[tuple[ReviewAdvisoryKind, ...], Field(max_length=16)] = ()
@@ -440,6 +445,7 @@ __all__ = [
     "ConsentedDispatchProjection",
     "EvidenceConsentEntriesFactory",
     "EvidenceReviewQueueRowProjection",
+    "EvidenceReviewReasonWordsWire",
     "LedgerEvidenceAttachmentQueueExecutionResult",
     "LedgerEvidenceAttachmentQueueProjection",
     "LedgerEvidenceAttachmentQueueRequest",
