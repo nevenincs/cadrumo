@@ -554,6 +554,42 @@ def _relation_period_scoped_out(
     )
 
 
+def _pre_activity_requirements_by_relation(
+    snapshot: RegistrySnapshot,
+    activity_start_date: date | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[RelationId, RegistryFoldRequirement]:
+    """Index relations whose economic-activity-conditional source periods all precede the activity start.
+
+    Such a source modelo had no obligation in any of its periods, so the relation
+    is positively not applicable rather than unresolved. Only the revision's
+    economic-activity-conditional sources qualify: a source a payer files
+    (suffered retenciones) is not made absent by the activity start. Without a
+    declared activity start nothing is indexed, so unknown applicability stays
+    unresolved.
+    """
+    if activity_start_date is None:
+        return {}
+    conditional = _economic_activity_conditional_source_modelos(snapshot)
+    candidates = tuple(
+        requirement
+        for requirement in relation_source_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        if requirement.source_modelo in conditional
+        and not _kept_relation_periods(
+            requirement,
+            activity_start_date=activity_start_date,
+            m111_no_retenciones_periods=frozenset[tuple[int, str]](),
+            operation=operation,
+        )
+    )
+    return dict(relation_requirement_index(candidates))
+
+
 def _default_activity_start_date(activity_start_date: date | None) -> date | None:
     """Return the caller-supplied activity date without consulting global state."""
     return activity_start_date
@@ -588,7 +624,22 @@ def _unresolved_relation_value(
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
+    pre_activity_requirement: RegistryFoldRequirement | None,
 ) -> RelationValue:
+    if requirement is None and pre_activity_requirement is not None:
+        return RelationValue(
+            relation=binding.id,
+            value=Decimal("0"),
+            provenance=SheetRelationProvenance.OPERATOR_MANUAL,
+            source_filing_year=target_year,
+            source_periods=source_periods,
+            **grounding,
+            resolved_at=resolved_at,
+            note=(
+                f"source modelo {pre_activity_requirement.source_modelo} is not applicable: every source "
+                "period precedes the activity start; relation resolved to 0 without a synthetic filing"
+            ),
+        )
     if modelo_202_first_year_cuota and requirement is not None and requirement.source_modelo == str(Modelo("202")):
         return RelationValue(
             relation=binding.id,
@@ -629,12 +680,15 @@ def _relation_value_for_relation(
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
+    pre_activity_requirements: Mapping[RelationId, RegistryFoldRequirement],
     filing_year: int,
 ) -> RelationValue:
     requirement = requirements_by_relation.get(binding.id)
-    target_year = requirement.filing_year if requirement is not None else filing_year
-    source_periods = requirement.periods if requirement is not None else provider.required_source_periods
-    grounding = _relation_value_grounding(binding, provider, requirement)
+    pre_activity_requirement = pre_activity_requirements.get(binding.id) if requirement is None else None
+    described = requirement if requirement is not None else pre_activity_requirement
+    target_year = described.filing_year if described is not None else filing_year
+    source_periods = described.periods if described is not None else provider.required_source_periods
+    grounding = _relation_value_grounding(binding, provider, described)
     resolved = resolved_map.get(binding.id)
     if resolved is None:
         return _unresolved_relation_value(
@@ -646,6 +700,7 @@ def _relation_value_for_relation(
             resolved_at=resolved_at,
             modelo_202_first_year_cuota=modelo_202_first_year_cuota,
             not_applicable_source_modelos=not_applicable_source_modelos,
+            pre_activity_requirement=pre_activity_requirement,
         )
     return RelationValue(
         relation=binding.id,
@@ -682,6 +737,7 @@ def _relation_values_for_snapshot(
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
+    pre_activity_requirements: Mapping[RelationId, RegistryFoldRequirement],
 ) -> tuple[RelationValue, ...]:
     return tuple(
         _relation_value_for_relation(
@@ -692,6 +748,7 @@ def _relation_values_for_snapshot(
             resolved_at=resolved_at,
             modelo_202_first_year_cuota=modelo_202_first_year_cuota,
             not_applicable_source_modelos=not_applicable_source_modelos,
+            pre_activity_requirements=pre_activity_requirements,
             filing_year=snapshot.filing_year,
         )
         for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
@@ -785,6 +842,11 @@ def resolve_relations_from_local_store(
         resolved_at=when,
         modelo_202_first_year_cuota=modelo_202_first_year_cuota,
         not_applicable_source_modelos=not_applicable_source_modelos,
+        pre_activity_requirements=_pre_activity_requirements_by_relation(
+            snapshot,
+            activity_start_date,
+            operation=operation,
+        ),
     )
     return RelationValues(values=values)
 
