@@ -676,6 +676,7 @@ def _bucket_aggregation_source_diagnostics(
     preparation: _BucketAggregationPreparation,
     channels: _BucketAggregationChannels,
     precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...],
+    profile_diagnostics: tuple[CalculationSourceDiagnostic, ...],
     revision: CalculationRevision,
     ports: CalculationActionPorts,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
@@ -703,6 +704,7 @@ def _bucket_aggregation_source_diagnostics(
     source_diagnostics = (
         channels.reconciliation.source_diagnostics
         + precedence_diagnostics
+        + profile_diagnostics
         + channels.override_diagnostics
         + advisory_diagnostics
         + profile_text_diagnostics
@@ -817,6 +819,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         preparation=preparation,
         channels=channels,
         precedence_diagnostics=calculation.precedence_diagnostics,
+        profile_diagnostics=calculation.profile_diagnostics,
         revision=revision,
         ports=ports,
         transaction_repository=memoized_transaction_repository,

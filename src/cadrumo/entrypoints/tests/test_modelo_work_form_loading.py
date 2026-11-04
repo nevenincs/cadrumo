@@ -30,6 +30,7 @@ from cadrumo.entrypoints.tests.modelo_operator_work_storage import SeededOperato
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from ...application.modelo.calculation_notes import CALCULATION_NOTES
 from ...application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAdmissionResultV1,
@@ -48,8 +49,10 @@ from ...application.modelo.operation_shared import (
 from ...application.modelo.source_policy import SourceFamily
 from ...application.modelo.work_form import build_modelo_work_form
 from ...application.modelo.work_form_declaration_facts import ModeloFormEditClosure, ModeloFormResultDirection
+from ...application.modelo.work_form_issue_lines import form_issue_lines
 from ...application.modelo.work_form_models import (
     ModeloFormBindingAddressV1,
+    ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormLayoutProvenance,
@@ -68,6 +71,7 @@ from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from ...domain.modelos.verification_report import ModeloVerificationFindingKind
 from ..adapter_composition_work_ports import build_verification_repository_bundle
 from .executor_context_stand_ins import RecordedEvents, RecordedOperands, UninterruptedCancellation
@@ -75,6 +79,7 @@ from .executor_context_stand_ins import RecordedEvents, RecordedOperands, Uninte
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _C06 = validated_casilla_id("06")
+_C02 = validated_casilla_id("02")
 _REFERENCE_DAY = date(2026, 4, 2)
 _FILED_AT = datetime(2026, 4, 15, 10, 0, tzinfo=UTC)
 _IMPORTED_AT = datetime(2026, 4, 2, 8, 30, tzinfo=UTC)
@@ -421,3 +426,37 @@ def test_an_unrecorded_modality_leaves_box_02_open_and_says_so(tmp_path: Path) -
     assert _field(form, "provisiones-gastos-dificil-justificacion").origin is ModeloFormOrigin.CALCULATION_FAILED
     assert _field(form, "19").origin is ModeloFormOrigin.CALCULATION_FAILED
     assert any(note.reason == "unresolved_binding" for note in form.blocking_calculation_notes), form.calculation_notes
+
+
+def test_an_unrecorded_modality_note_names_box_02_and_the_profile_fact_in_served_words(tmp_path: Path) -> None:
+    """The note and its check line say which box waits and which profile fact answers it, in the filer's words.
+
+    The calculation raises it on the profile's own unanswered binding, so it must reach the form
+    through the held diagnostics and, once the process forgets them, through the revision itself.
+    """
+    with seeded_operator_work(tmp_path, estimation_regime=None) as work:
+        head = work.recalculate()
+        held = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
+        CALCULATION_NOTES.record(head.work_unit_id, "forgotten", ())
+        reopened = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
+
+    for form in (held, reopened):
+        (note,) = (
+            item
+            for item in form.blocking_calculation_notes
+            if item.fact is not None and item.fact.sentence is CalculationNoteSentence.PROFILE_FACT_UNRECORDED
+        )
+        assert note.reason == "unresolved_binding"
+        assert note.casilla_id == "02"
+        assert note.box == "02"
+        assert note.fact is not None
+        assert dict(note.fact.values) == {"box": "02", "field": "irpf.estimation_regime"}
+        (line,) = (
+            item
+            for item in form_issue_lines(form, OutputLanguage.ES)
+            if item.address == ModeloFormCasillaAddressV1(casilla_id=_C02) and item.from_calculation
+        )
+        assert line.message == "Para calcular la casilla 02, registra en tu perfil: Régimen de estimación."
+        assert line.box == "02"
+        assert line.address == ModeloFormCasillaAddressV1(casilla_id=_C02)
+        assert "unresolved_binding" in line.technical

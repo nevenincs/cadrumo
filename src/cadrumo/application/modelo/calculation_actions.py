@@ -48,6 +48,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -108,6 +109,7 @@ from ._calculation_preparation import prepare_calculation as _prepare_calculatio
 from .action_errors import (
     ModeloClearedCasillaSourceFedError,
 )
+from .bucket_unrouted_source_issues import unrouted_source_issues
 from .calculation_action_ports import (
     CalculationActionPorts,
 )
@@ -127,6 +129,7 @@ from .imputation_filings import imputation_filings_from_repositories
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
+from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import resolve_profile_text_casilla_inputs
 from .revision_persistence import persist_calculation_revision
 from .work_missing_input import ModeloWorkMissingInputError
@@ -310,6 +313,25 @@ class TrustedMeshCalculation:
 
     publication: CalculationRevisionPublication
     precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...]
+    profile_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """The profile's unanswered bindings; the ones that name a printed box are among the revision's source issues."""
+
+
+def _profile_diagnostics_for_open_boxes(
+    diagnostics: tuple[CalculationSourceDiagnostic, ...], *, settled: AbstractSet[CasillaId]
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Keep the profile's unanswered bindings whose box the run left without a value.
+
+    A comparison the formula never reached leaves its box settled: the joint-filing reduction of
+    box 0461 is zero on an individual return whatever the family situation, so naming that fact
+    there would ask the filer for something the calculation did not need. A note that names no
+    box cannot be judged this way and is kept.
+    """
+    return tuple(
+        diagnostic
+        for diagnostic in diagnostics
+        if diagnostic.casilla_id is None or diagnostic.casilla_id not in settled
+    )
 
 
 def _trusted_calculation_clock(clock: datetime | None) -> datetime:
@@ -404,8 +426,15 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     channels = prepared.channels
     replay_payloads = evaluation.replay_payloads
     casilla_values = evaluation.casilla_values
+    profile_diagnostics = _profile_diagnostics_for_open_boxes(
+        channels.profile_diagnostics, settled=casilla_values.keys() | evaluation.resolved_text_inputs.keys()
+    )
     revision_source_issues, resolution_lookup = _with_credit_source_issues(
-        (*source_issues, *_precedence_issues(channels.precedence_diagnostics)),
+        (
+            *source_issues,
+            *_precedence_issues(channels.precedence_diagnostics),
+            *unrouted_source_issues(profile_diagnostics, snapshot_printed_boxes(ports.operation, snapshot)),
+        ),
         snapshot,
         work_unit,
         casilla_values=casilla_values,
@@ -471,6 +500,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
             *channels.precedence_diagnostics,
             *credit_resolution_degradation_diagnostics(resolution_lookup),
         ),
+        profile_diagnostics=profile_diagnostics,
     )
 
 

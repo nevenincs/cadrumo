@@ -105,6 +105,8 @@ class ResolvedCalculationChannels:
     bindings_sourced_from_borrador: tuple[BindingId, ...]
     precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """Every value a higher tier replaced that a lower tier held differently, as the screen reports it."""
+    profile_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """The profile's unanswered bindings that no higher tier answered, each naming the box and the fact to record."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -267,6 +269,12 @@ def resolve_calculation_binding_channels(
         ),
     )
     borrador_provenance = merged.borrador_provenance
+    answered_binding_ids = (
+        resolved_bindings.keys()
+        | resolved_enum_bindings.keys()
+        | resolved_date_bindings.keys()
+        | resolved_boolean_bindings.keys()
+    )
     return ResolvedCalculationChannels(
         bindings=resolved_bindings,
         enum_bindings=resolved_enum_bindings,
@@ -285,6 +293,11 @@ def resolve_calculation_binding_channels(
         precedence_diagnostics=precedence_divergence_diagnostics(
             (*overlay.divergences, *casilla_divergences),
             screen=screen,
+        ),
+        profile_diagnostics=tuple(
+            diagnostic
+            for diagnostic in profile_resolution.diagnostics
+            if diagnostic.reason == "unresolved_binding" and diagnostic.binding_id not in answered_binding_ids
         ),
     )
 
