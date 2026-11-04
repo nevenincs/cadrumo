@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:1a1fb9df331b46515292ba58c8c93e73cc2428f288bc6a881f907a13c99c3221'
+body_hash: 'sha256:270d48e09bd38d0e5ee80af0e2d64254cffb50b8f540654794bcfb715db4e84c'
 ---
 
 # `fixture-canonicalization` plan
@@ -53,6 +53,7 @@ Define every canonical taxpayer and flow once and seed it through production ope
 - [x] `P03.S11` - Seed the TUI harness from personas; `dev/tui/harness`.
 - [x] `P03.S21` - Close the persona expressiveness gaps: fix the reverse-charge category missing from the self-assessed projection, express recargo and withholding certificates through their operations, and adjust catalogue rows that use categories or counterparties the operations refuse; `registry category projection, ledger classification and invoice operations, dev/fixtures/personas`.
 - [x] `P03.S22` - Add a profile-only replay mode and a digest-keyed materialised-persona cache so consumers that need only profile facts or repeat a persona do not replay the full ledger; `src/cadrumo/entrypoints/tests persona materialisation`.
+- [x] `P03.S23` - Resolve the annual IVA simplified-regime summary only when the revision declares a binding of that source kind, so a taxpayer with no IVA composition calculates a Modelo 100; `src/cadrumo/application/modelo/calculation_source_mesh_actions.py and its tests`.
 
 ### Phase `P04` - Projections out of git
 

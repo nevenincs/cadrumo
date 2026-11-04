@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:d05a0e2caa4a33414e7f57c4959cf05be9f9003f6cd679e5a457e273ec1895bb'
+body_hash: 'sha256:dca3446bee7e15bb7b3938d6a3b7062a3f4919ae2a7adb89a634e1a1a77e3f34'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -617,6 +617,11 @@ related:
 - `S06` `verify:` `just check-workflow-security` -> `pass`
 - `S06` `verify:` `dev/ci workflow and lane census tests` -> `pass`
 - `S06` `by:` `sonnet`
+- `S23` `M` `src/cadrumo/application/modelo/calculation_source_mesh_actions.py`
+- `S23` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_annual_summary_resolves_only_where_declared_live.py`
+- `S23` `verify:` `pytest annual-summary and 390 fold-in modules (45)` -> `pass`
+- `S23` `verify:` `lint-imports` -> `pass`
+- `S23` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
