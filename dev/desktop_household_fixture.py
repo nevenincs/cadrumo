@@ -330,7 +330,9 @@ def _persona(root: Path, name: str) -> Generator[MaterialisedPersona]:
     """A copy of the persona replayed without its household, for one state to write into."""
     from cadrumo.entrypoints.tests.persona_materialisation import ReplayScope, materialised_persona
 
-    with materialised_persona(PERSONA_ID, root / name, ReplayScope.PROFILE, reuse=True) as persona:
+    with materialised_persona(
+        PERSONA_ID, root / name, ReplayScope.PROFILE, reuse=True, complete_setup=False
+    ) as persona:
         yield persona
 
 

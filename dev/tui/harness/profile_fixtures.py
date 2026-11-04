@@ -91,8 +91,9 @@ def profile_fixture_storage(state: ProfileFixtureState) -> Generator[str]:
     """Provision the profile one capture reads, so a prior capture cannot answer a later one's questions.
 
     A populated state opens the persona's profile after the production
-    operations replayed it; every other state opens a freshly registered
-    profile that holds no answer yet.
+    operations replayed it, its setup still open for the onboarding review;
+    every other state opens a freshly registered profile that holds no answer
+    yet.
     """
     if state in _POPULATED_STATES:
         with (
@@ -100,7 +101,7 @@ def profile_fixture_storage(state: ProfileFixtureState) -> Generator[str]:
             bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
             bundled_indexed_authority().operation(),
             TemporaryDirectory(prefix="tui-harness-persona-") as scratch,
-            materialised_persona(PROFILE_PERSONA_ID, Path(scratch)) as persona,
+            materialised_persona(PROFILE_PERSONA_ID, Path(scratch), complete_setup=False) as persona,
         ):
             yield str(persona.world.profile_id)
         return

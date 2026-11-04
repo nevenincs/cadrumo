@@ -21,6 +21,7 @@ from ...application.user_profile.projections import record_to_path_values
 from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.user_profile.values import ProfileSetupState
 from ...tests.personas import persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
 from .persona_materialisation import (
@@ -47,7 +48,7 @@ _NOT_LOADED: dict[str, set[str]] = {
     "asalariada-familia": {"withholding_certificates.cotizaciones_seguridad_social"},
     "autonomo-fontanero": set(),
     "intracomunitario-desarrollador": set(),
-    "minorista-recargo": {"ledger.recargo_amount"},
+    "minorista-recargo": {"ledger.recargo_amount", "setup"},
     "sociedad-limitada": {"officers"},
     "traductora-profesional": set(),
 }
@@ -159,6 +160,7 @@ def test_a_profile_scope_replay_records_the_profile_and_no_household_or_ledger(
     with materialised_persona("asalariada-familia", tmp_path, ReplayScope.PROFILE) as materialised:
         persona, world = materialised.persona, materialised.world
         values = _profile_values(world)
+        setup_state = load_profile_record(world).setup_state
         stored = compose_ledger_action_ports(
             bucket_id=str(world.profile_id), operation=world.operation
         ).transaction_repository.load()
@@ -192,6 +194,7 @@ def test_a_profile_scope_replay_records_the_profile_and_no_household_or_ledger(
     }
     assert len(stored.transactions) == 0
     assert world.profile_id == persona_profile_id(persona.id)
+    assert setup_state is ProfileSetupState.COMPLETE
     assert len({persona_profile_id(each) for each in persona_ids()}) == len(persona_ids())
     assert not withholding
     assert (materialised.scope, materialised.transactions, materialised.invoices, materialised.evidence) == (

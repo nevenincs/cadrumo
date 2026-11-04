@@ -97,11 +97,13 @@ from ...application.user_profile.custody_ports import profile_custody_secure_obj
 from ...application.user_profile.descendant_rows import ProfileDescendantFact, ProfileDescendantRow
 from ...application.user_profile.profile_operation_contracts import (
     PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
+    PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
     PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     PROFILE_PATCH_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
     ProfileAscendantsOperationRequest,
+    ProfileCompleteSetupOperationRequest,
     ProfileDescendantsOperationRequest,
     ProfileFieldMutationOperationRequest,
     ProfilePatchOperationRequest,
@@ -111,6 +113,7 @@ from ...application.user_profile.profile_operation_contracts import (
 )
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import create_registered_profile
+from ...application.user_profile.validation import reject_invalid_profile_facts
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
@@ -121,7 +124,8 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.iva.schema import InvoiceKind
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
-from ...domain.user_profile.values import UserProfileRecord
+from ...domain.user_profile.errors import ProfileSchemaValidationError
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ...tests.personas import (
     HouseholdMember,
     IdentityRef,
@@ -203,6 +207,7 @@ class MaterialisedPersona:
     evidence: Mapping[str, str]
     """Document id to the stored evidence id."""
     not_loaded: tuple[NotLoaded, ...]
+    """What no operation recorded, and ``setup`` when completing the setup was asked and the persona's answers refuse it."""
 
 
 def year_envelope(operation: PinnedAuthorityOperation) -> YearEnvelope:
@@ -750,7 +755,38 @@ def _replay_documents(persona: Persona, world: PersonaWorld, transactions: Mappi
     return evidence
 
 
-def _not_loaded(persona: Persona, scope: ReplayScope) -> tuple[NotLoaded, ...]:
+def _complete_setup(world: PersonaWorld) -> bool:
+    """Declare the replayed profile's setup complete through the production operation; whether it now is.
+
+    The setup flow ends with that declaration, which modelo work waits on. The
+    operation refuses a profile its complete-profile judgement rejects, so that
+    same judgement decides first whether to ask it.
+    """
+    record = load_profile_record(world)
+    if record.setup_state is ProfileSetupState.COMPLETE:
+        return True
+    try:
+        reject_invalid_profile_facts(
+            str(world.profile_id),
+            record.facts,
+            require_complete=True,
+            schema=world.operation.profile_decode_context().schema,
+        )
+    except ProfileSchemaValidationError:
+        return False
+    settle_operation(
+        world,
+        PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
+        ProfileCompleteSetupOperationRequest(
+            profile_id=world.profile_id,
+            expected_revision=record.record_revision,
+            expected_content_digest=record.content_digest,
+        ),
+    )
+    return load_profile_record(world).setup_state is ProfileSetupState.COMPLETE
+
+
+def _not_loaded(persona: Persona, scope: ReplayScope, *, setup_complete: bool | None) -> tuple[NotLoaded, ...]:
     """The persona facts no production operation recorded within ``scope``, and why.
 
     A block outside the scope was never attempted, so it is absent from the
@@ -760,6 +796,13 @@ def _not_loaded(persona: Persona, scope: ReplayScope) -> tuple[NotLoaded, ...]:
         NotLoaded(block=block, reason="no production operation records this block")
         for block in persona.declared_blocks()
     ]
+    if setup_complete is False:
+        found.append(
+            NotLoaded(
+                block="setup",
+                reason="the persona leaves a profile answer a complete profile requires missing, so its setup cannot be completed",
+            )
+        )
     if not scope.includes(ReplayScope.FULL):
         return tuple(found)
     if any(item.origin == "payer_certificate" for item in persona.withholding_certificates):
@@ -798,9 +841,14 @@ def _not_loaded(persona: Persona, scope: ReplayScope) -> tuple[NotLoaded, ...]:
 
 
 def materialise_persona(
-    persona: Persona, world: PersonaWorld, scope: ReplayScope = ReplayScope.FULL
+    persona: Persona, world: PersonaWorld, scope: ReplayScope = ReplayScope.FULL, *, complete_setup: bool = True
 ) -> MaterialisedPersona:
-    """Replay ``persona`` into ``world``'s profile through production operations, as far as ``scope`` reaches."""
+    """Replay ``persona`` into ``world``'s profile through production operations, as far as ``scope`` reaches.
+
+    With ``complete_setup`` the replay ends as the setup flow does, declaring
+    the setup complete; without it the profile stays in setup, the state the
+    onboarding review opens.
+    """
     transactions: dict[str, str] = {}
     invoices: dict[str, str] = {}
     evidence: dict[str, str] = {}
@@ -813,6 +861,7 @@ def materialise_persona(
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)
             evidence = _replay_documents(persona, world, transactions)
+        setup_complete = _complete_setup(world) if complete_setup else None
     return MaterialisedPersona(
         persona=persona,
         world=world,
@@ -820,7 +869,7 @@ def materialise_persona(
         transactions=transactions,
         invoices=invoices,
         evidence=evidence,
-        not_loaded=_not_loaded(persona, scope),
+        not_loaded=_not_loaded(persona, scope, setup_complete=setup_complete),
     )
 
 
@@ -834,6 +883,8 @@ def _sealed_replay(
     as_of: datetime,
     base: SealedProfileWorld,
     decode_context: ProfileDecodeContext,
+    *,
+    complete_setup: bool,
 ) -> SealedProfileWorld:
     """This run's world holding ``persona`` replayed to ``scope`` into ``base``, replayed on first use anywhere in the run."""
 
@@ -845,22 +896,41 @@ def _sealed_replay(
             TemporaryDirectory(prefix="persona-inputs-") as inputs,
             _operations_over(root, profile_id, workdir=Path(inputs), as_of=as_of) as world,
         ):
-            replayed = materialise_persona(persona, world, scope)
-        ids = {"transactions": replayed.transactions, "invoices": replayed.invoices, "evidence": replayed.evidence}
+            replayed = materialise_persona(persona, world, scope, complete_setup=complete_setup)
+        ids = {
+            "transactions": replayed.transactions,
+            "invoices": replayed.invoices,
+            "evidence": replayed.evidence,
+            "setup_complete": (all(item.block != "setup" for item in replayed.not_loaded) if complete_setup else None),
+        }
         (root.parent / _REPLAYED_IDS).write_text(json.dumps(ids, sort_keys=True), encoding="utf-8")
 
-    key = ("persona replay", persona.id, scope.value, persona_inputs_digest(persona), as_of.isoformat())
+    key = (
+        "persona replay",
+        persona.id,
+        scope.value,
+        persona_inputs_digest(persona),
+        as_of.isoformat(),
+        "setup completed" if complete_setup else "setup open",
+    )
     return derived_profile_world(base, key, replay, profile_decode_context=decode_context)
 
 
 @contextmanager
 def _reused_persona_world(
-    persona: Persona, scope: ReplayScope, tmp_path: Path, *, as_of: datetime
+    persona: Persona, scope: ReplayScope, tmp_path: Path, *, as_of: datetime, complete_setup: bool
 ) -> Generator[MaterialisedPersona]:
     """Open this consumer's own copy of the run's replay of ``persona``, replaying it only when the run has none."""
     with bundled_indexed_authority().operation(), _scenario(as_of):
         _create_context, decode_context = profile_authority_contexts()
-        sealed = _sealed_replay(persona, scope, as_of, _registered_world(persona, as_of), decode_context)
+        sealed = _sealed_replay(
+            persona,
+            scope,
+            as_of,
+            _registered_world(persona, as_of),
+            decode_context,
+            complete_setup=complete_setup,
+        )
         with copied_profile_world(sealed, tmp_path / "runtime", profile_decode_context=decode_context) as (
             root,
             profile_id,
@@ -875,7 +945,7 @@ def _reused_persona_world(
                         transactions=ids["transactions"],
                         invoices=ids["invoices"],
                         evidence=ids["evidence"],
-                        not_loaded=_not_loaded(persona, scope),
+                        not_loaded=_not_loaded(persona, scope, setup_complete=ids["setup_complete"]),
                     )
             finally:
                 reset_test_profile_session()
@@ -883,7 +953,12 @@ def _reused_persona_world(
 
 @contextmanager
 def materialised_persona(
-    persona_id: str, tmp_path: Path, scope: ReplayScope = ReplayScope.FULL, *, reuse: bool = False
+    persona_id: str,
+    tmp_path: Path,
+    scope: ReplayScope = ReplayScope.FULL,
+    *,
+    reuse: bool = False,
+    complete_setup: bool = True,
 ) -> Generator[MaterialisedPersona]:
     """Read one persona, open its world at its scenario instant and replay it there as far as ``scope`` reaches.
 
@@ -893,18 +968,18 @@ def materialised_persona(
     generation, and every consumer receives its own filesystem copy of it: a
     write to one copy reaches no other and never the sealed world. A consumer
     that mutates the profile may reuse; one that needs the replay to run
-    afresh does not.
+    afresh does not. ``complete_setup`` is as :func:`materialise_persona` takes it.
     """
     with bundled_indexed_authority().operation() as operation:
         envelope = year_envelope(operation)
     persona = read_persona(persona_id, envelope=envelope)
     as_of = scenario_instant(persona, envelope)
     if reuse:
-        with _reused_persona_world(persona, scope, tmp_path, as_of=as_of) as reused:
+        with _reused_persona_world(persona, scope, tmp_path, as_of=as_of, complete_setup=complete_setup) as reused:
             yield reused
         return
     with persona_world(tmp_path, persona, as_of=as_of) as world:
-        yield materialise_persona(persona, world, scope)
+        yield materialise_persona(persona, world, scope, complete_setup=complete_setup)
 
 
 __all__ = [

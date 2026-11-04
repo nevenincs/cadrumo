@@ -43,7 +43,7 @@ def render_fixture(root: Path) -> str:
     with (
         profile_adapter_composition(),
         bundled_indexed_authority().operation(),
-        materialised_persona(PERSONA_ID, root, ReplayScope.HOUSEHOLD) as persona,
+        materialised_persona(PERSONA_ID, root, ReplayScope.HOUSEHOLD, complete_setup=False) as persona,
     ):
         operation = persona.world.operation
         # The demo is a setup in progress: the answers a new profile has not given yet are taken back through the
