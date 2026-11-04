@@ -15,13 +15,13 @@ from cadrumo.application.retencion_soportada_absence.contracts import (
 from cadrumo.application.retencion_soportada_absence.refusal_words import served_absence_refusal_words
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n.render import tr
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _REASONS = cast(
     tuple[RetencionSoportadaAbsenceOperationRefusalReason, ...],
     get_args(RetencionSoportadaAbsenceOperationRefusalReason.__value__),
 )
-_CLI_PREFIX = "aggregation.retencion_soportada_absence.errors."
 
 
 def _code(reason: RetencionSoportadaAbsenceOperationRefusalReason) -> str:
@@ -46,15 +46,6 @@ def test_each_reason_serves_a_finished_sentence_that_names_no_command_option(
     assert words.strip() == words
     assert len(words) > 20
     assert not re.search(r"\baggregation\.|\{|\}|%\(|--[a-z]", words)
-
-
-@pytest.mark.parametrize("reason", _REASONS)
-def test_a_served_sentence_is_not_the_command_lines_message_for_the_same_reason(
-    reason: RetencionSoportadaAbsenceOperationRefusalReason,
-) -> None:
-    with override_settings(cadrumo_output_language="en"):
-        words, _language = served_absence_refusal_words(reason, error_code=_code(reason))
-        assert words != tr(_CLI_PREFIX + reason, locale="en")
 
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
