@@ -415,6 +415,6 @@ def test_the_facturae_reader_carries_both_parties_tax_ids_not_only_the_supplier(
     """
     parsed = parse_einvoice_document(_read("facturae_32_series_and_parties_invoice.xml"))
 
-    assert parsed.supplier_tax_id == "00000015S"
+    assert parsed.supplier_tax_id == "00000023T"
     assert parsed.customer_tax_id == "A00000018"
     assert parsed.supplier_tax_id != parsed.customer_tax_id

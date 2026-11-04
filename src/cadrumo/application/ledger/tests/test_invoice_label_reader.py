@@ -141,7 +141,7 @@ Total (IVA incluido) 72,60 €"""
 
 _RECTIFICATIVA = """FACTURA RECTIFICATIVA
 Emisor: Lucia Fernandez Ortega
-NIF: 00000011B
+NIF: 00000019L
 Cliente: Grupo Consultor Meridiano SL
 NIF: B00000232
 Numero de factura: R-2026/003
@@ -276,7 +276,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
     ),
     "rectificativa": (
         _RECTIFICATIVA,
-        "00000011B",
+        "00000019L",
         {
             "taxable_base": Decimal("-400.00"),
             "iva_amount": Decimal("-84.00"),
@@ -347,7 +347,7 @@ def test_an_unattributable_two_column_party_block_reads_no_identity(operation: P
         "EMISOR DESTINATARIO / CLIENTE\n"
         "Suministros Iberia SA Lucia Fernandez Ortega\n"
         "NIF: A00000042 Espana\n"
-        "NIF: 00000011B\n"
+        "NIF: 00000019L\n"
         "Base imponible: 100,00 EUR\n"
         "IVA (21%): 21,00 EUR\n"
         "TOTAL FACTURA: 121,00 EUR"
@@ -361,12 +361,12 @@ def test_an_unattributable_two_column_party_block_reads_no_identity(operation: P
 
 
 def test_a_qualified_identifier_label_names_its_party(operation: PinnedAuthorityOperation) -> None:
-    text = "INVOICE\nEMISOR DESTINATARIO\nVAT ID: IE6388047V Espana\nCustomer VAT ID: 00000011B\nTotal due: 10.00 EUR"
+    text = "INVOICE\nEMISOR DESTINATARIO\nVAT ID: IE6388047V Espana\nCustomer VAT ID: 00000019L\nTotal due: 10.00 EUR"
 
     reading = _read(text, operation)
     envelopes = {envelope.field: envelope for envelope in reading.draft.provenance}
 
-    assert reading.draft.customer_tax_id == "00000011B"
+    assert reading.draft.customer_tax_id == "00000019L"
     assert reading.draft.supplier_tax_id is None
     assert envelopes["customer_tax_id"].role_evidence == "Customer VAT ID"
 

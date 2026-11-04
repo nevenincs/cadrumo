@@ -170,7 +170,7 @@ def test_the_structured_draft_carries_both_parties_rather_than_discarding_the_cu
 
     draft = _extract(evidence)
 
-    assert draft.supplier_tax_id == "00000015S"
+    assert draft.supplier_tax_id == "00000023T"
     assert draft.customer_tax_id == "A00000018"
     assert draft.supplier_name == "Marta Iglesias Ferrer"
     assert draft.customer_name == "Talleres Berrocal, S.A."

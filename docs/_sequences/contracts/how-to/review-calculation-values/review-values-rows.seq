@@ -4,7 +4,7 @@
 aeat --format json app modelo work create --modelo 184 --year 2024 --period 0A
 @capture work_unit_id result.work_unit_id
 @step Calculate, supplying each record as a repeatable --row input.
-@result aeat --format json app modelo work calculate {work_unit_id} --row 'miembro nif=00000011B clave=C porcentaje=60 importe=10000' --row 'miembro nif=00000001R clave=C porcentaje=40 importe=5000'
+@result aeat --format json app modelo work calculate {work_unit_id} --row 'miembro nif=00000019L clave=C porcentaje=60 importe=10000' --row 'miembro nif=00000001R clave=C porcentaje=40 importe=5000'
 @expect result.detail_rows[0].fields.porcentaje == "60"
 @expect result.detail_rows[1].fields.importe == "5000"
 @expect result.casilla_values["decl.ejercicio"] == "2024"

@@ -77,7 +77,7 @@ _SELLER_CANARIAS_CODE = "35001"  # Las Palmas de Gran Canaria
 
 # The specimen's own parties. The seller is the counterparty on a RECEIVED
 # document, which is the direction every case here confirms under.
-_SELLER_TAX_ID = "00000015S"
+_SELLER_TAX_ID = "00000023T"
 _SELLER_NAME = "Marta"
 
 
