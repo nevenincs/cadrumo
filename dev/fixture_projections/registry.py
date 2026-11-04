@@ -75,7 +75,7 @@ _LOCK: Final = InputGroup("lockfile", ("uv.lock",))
 _FRONTEND_LOCK: Final = InputGroup("frontend-lockfile", (f"{FRONTEND}/package-lock.json",))
 _FRONTEND_PACKAGES: Final = Prerequisite(f"{FRONTEND}/node_modules", "just setup-desktop-frontend")
 #: The development modules every producer imports for its paths and scratch directories.
-_TOOLING: Final = ("dev/_paths.py", "dev/temporary_output.py")
+_TOOLING: Final = ("dev/_paths.py", "dev/prettier_json.py", "dev/temporary_output.py")
 
 
 def _python_script(path: str, *arguments: str) -> tuple[str, ...]:
