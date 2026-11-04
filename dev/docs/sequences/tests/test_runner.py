@@ -4,11 +4,12 @@ Runtime journeys drive the REAL Cadrumo CLI in-process against a fresh
 real-crypto sandbox (genuine ``bucket-dek-v1`` bucket, encrypted SQLite,
 frozen clock, injected deterministic profile id). The worked chain is the Modelo 130 lifecycle: ``work
 create`` → ``work calculate`` (with real registry bindings) → ``work verify``,
-whose verify gate genuinely refuses without clean cross-period evidence, so the
+preceded by a profile edit declaring the normal direct-estimation modality. Its
+verify gate genuinely refuses without clean cross-period evidence, so the
 terminal ``@result`` frame exercises a real declared non-zero exit.
 
-Determinism observation: two executions of the chain in fresh sandboxes
-produced ZERO pre-mask differing JSON paths and byte-identical raw outputs —
+Determinism contract: two executions of the chain in fresh sandboxes must
+produce ZERO pre-mask differing JSON paths and byte-identical raw outputs —
 with the clock frozen and the profile id injected, the work-unit and
 calculation-revision ids are content-addressed and every timestamp is pinned,
 so the residual non-deterministic surface of this chain is empty (trivially
@@ -62,11 +63,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _FAKE_SESSION_ENV_NAME = "AEAT_FAKE_SESSION_TOKEN"
 
-#: A real create → calculate → verify chain over Modelo 130 2025 1T. The verify
+#: A profile edit declares the modality for this Modelo 130 2025 1T chain. The verify
 #: gate refuses (cross-period evidence is absent in a fresh sandbox), so the
 #: result frame declares the non-zero exit and asserts the refusal semantically.
 _CHAIN_BODY = "\n".join(
     [
+        "@setup aeat --format json config profile edit docs-sequence-sandbox"
+        " --quiet --irpf-estimation-regime directa_normal",
+        '@expect result.status == "updated"',
+        "@expect exit_code == 0",
         "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T",
         "@capture work_unit_id result.work_unit_id",
         "aeat --format json app modelo work calculate {work_unit_id}"
@@ -588,10 +593,27 @@ def chain_transcript(tmp_path_factory: pytest.TempPathFactory) -> SequenceTransc
 class TestHermeticChainExecution:
     def test_chain_executes_all_frames_in_order(self, chain_transcript: SequenceTranscript) -> None:
         kinds = [frame.kind for frame in chain_transcript.frames]
-        assert kinds == [FrameKind.COMMAND, FrameKind.COMMAND, FrameKind.RESULT]
+        assert kinds == [FrameKind.SETUP, FrameKind.COMMAND, FrameKind.COMMAND, FrameKind.RESULT]
         assert chain_transcript.profile_id == SANDBOX_PROFILE_ID
+        assert chain_transcript.frames[0].argv == (
+            "aeat",
+            "--format",
+            "json",
+            "config",
+            "profile",
+            "edit",
+            "docs-sequence-sandbox",
+            "--quiet",
+            "--irpf-estimation-regime",
+            "directa_normal",
+        )
         assert chain_transcript.frames[0].exit_code == 0
+        assert _envelope_result(chain_transcript.frames[0].envelope) == {
+            "profile_name": "docs-sequence-sandbox",
+            "status": "updated",
+        }
         assert chain_transcript.frames[1].exit_code == 0
+        assert chain_transcript.frames[2].exit_code == 0
 
     def test_every_json_frame_records_its_envelope(self, chain_transcript: SequenceTranscript) -> None:
         for frame in chain_transcript.frames:
@@ -600,7 +622,8 @@ class TestHermeticChainExecution:
             assert {"command", "status", "schema_version", "result", "notices"} <= set(frame.envelope)
 
     def test_captures_thread_real_ids_into_later_frames(self, chain_transcript: SequenceTranscript) -> None:
-        create, calculate, verify = chain_transcript.frames
+        setup, create, calculate, verify = chain_transcript.frames
+        assert setup.kind is FrameKind.SETUP
 
         work_unit_id = chain_transcript.captures["work_unit_id"]
         revision_id = chain_transcript.captures["calculation_revision_id"]
@@ -629,9 +652,9 @@ class TestHermeticChainExecution:
         assert result["granted_verificado_completo"] is False
 
 
-#: The chain sequence executes three frames per run; both transcripts are
+#: The chain sequence executes four frames per run; both transcripts are
 #: zipped and every determinism claim lives inside that zip.
-_MINIMUM_CHAIN_FRAMES = 3
+_MINIMUM_CHAIN_FRAMES = 4
 
 
 class TestSandboxIsolationAndDeterminism:
@@ -659,7 +682,7 @@ class TestSandboxIsolationAndDeterminism:
         # Pinning ``residual_paths == frozenset()`` is the strong claim the
         # comment below describes, but frozenset() is exactly what an empty
         # transcript yields, and ``set() <= GOLDEN_MASK_FIELDS`` is always true.
-        # Live: the chain executes three frames per run.
+        # The chain executes four frames per run, including its profile setup.
         assert len(chain_transcript.frames) >= _MINIMUM_CHAIN_FRAMES, (
             f"the first chain run produced {len(chain_transcript.frames)} frame(s); "
             "every determinism claim below is over the zipped pair and holds at zero"
