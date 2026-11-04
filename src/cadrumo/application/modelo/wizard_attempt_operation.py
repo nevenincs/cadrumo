@@ -44,7 +44,7 @@ from .calculation_operation import (
     replaced_calculation_head,
 )
 from .metadata_projection import ModeloWorkMetadataSnapshot
-from .work_calculation_contracts import ModeloWorkCalculatePublicResultV2, ModeloWorkCalculateRequest
+from .work_calculation_contracts import ModeloWorkCalculatePublicResultV3, ModeloWorkCalculateRequest
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .work_missing_input import ModeloWorkMissingInputError
@@ -77,7 +77,7 @@ class ModeloWorkWizardAttemptCalculated(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["calculated"] = "calculated"
-    result: ModeloWorkCalculatePublicResultV2
+    result: ModeloWorkCalculatePublicResultV3
 
 
 class ModeloWorkWizardAttemptNeedsInput(BaseModel):

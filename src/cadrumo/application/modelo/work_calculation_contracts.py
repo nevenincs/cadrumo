@@ -7,6 +7,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .calculation_advisory_projection import ModeloCalculationAdvisories
@@ -14,6 +15,11 @@ from .calculation_projection import ModeloCalculationSnapshot
 from .calculation_request_fields import ModeloCalculationInputFieldsV1
 from .edit_apply_row_contracts import ModeloDetailRowWireV1
 from .metadata_projection import ModeloWorkMetadataSnapshot
+from .projection_operation import (
+    ProjectUnresolvedBindingProjection,
+    ProjectUnresolvedCasillaProjection,
+    require_unresolved_boxes_carry_no_value,
+)
 from .work_change_contracts import ModeloWorkUnitSubjectId
 
 
@@ -107,18 +113,27 @@ class ModeloWorkCalculateReplacedHead(BaseModel):
     operator_entries: ModeloOperatorEntriesCarry
 
 
-class ModeloWorkCalculatePublicResultV2(BaseModel):
-    """Writer-returned calculation facts and advisories under the same authority."""
+class ModeloWorkCalculatePublicResultV3(BaseModel):
+    """Writer-returned calculation facts and advisories under the same authority.
+
+    A box in ``unresolved_casillas`` or bound by a binding in
+    ``unresolved_bindings`` has no value in ``calculation``. Both lists, and the
+    words in them, are the Modelo 100 projection's, in ``words_language``; they
+    describe this run and are not stored with the revision.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    result_version: Literal[2] = 2
+    result_version: Literal[3] = 3
     work_unit_id: ModeloWorkUnitSubjectId
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
     calculation: ModeloCalculationSnapshot
     advisories: ModeloCalculationAdvisories
     unit: ModeloWorkMetadataSnapshot
     revision_published: bool
+    unresolved_bindings: tuple[ProjectUnresolvedBindingProjection, ...]
+    unresolved_casillas: tuple[ProjectUnresolvedCasillaProjection, ...]
+    words_language: OutputLanguage
     #: ``None`` when the work unit had no calculation before this one, or when
     #: this one left the same revision current.
     replaced_head: ModeloWorkCalculateReplacedHead | None = None
@@ -131,6 +146,11 @@ class ModeloWorkCalculatePublicResultV2(BaseModel):
         ):
             raise ValueError("a calculation does not replace the revision it returns")
         self._require_parent_coordinates()
+        require_unresolved_boxes_carry_no_value(
+            {row.key for row in self.calculation.casilla_values},
+            self.unresolved_bindings,
+            self.unresolved_casillas,
+        )
         return self
 
     def _require_parent_coordinates(self) -> None:

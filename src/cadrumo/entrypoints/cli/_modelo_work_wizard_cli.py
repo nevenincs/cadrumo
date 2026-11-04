@@ -21,7 +21,7 @@ from ...application.modelo.wizard_attempt_operation import (
 )
 from ...application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateCallerContext,
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from ...application.modelo.work_wizard import (
@@ -39,6 +39,7 @@ from ._modelo_cli_support import resolve_actor_option
 from ._modelo_rendering import source_diagnostic_notice, source_diagnostic_notice_text
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 from .common import attach_cli_policy_verdict, emit_envelope
+from .modelo_query_results import unresolved_findings_payload
 from .operation_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
 from .operation_modelo_metadata import read_modelo_work_unit
 from .operation_modelo_work_wizard import read_modelo_work_wizard_context, run_modelo_work_wizard_attempt
@@ -135,7 +136,7 @@ def _drive_wizard_calculation(
 
 def _emit_wizard_result(
     ctx: typer.Context,
-    calculation_result: ModeloWorkCalculatePublicResultV2,
+    calculation_result: ModeloWorkCalculatePublicResultV3,
     prompted: tuple[tuple[ModeloWorkWizardStep, str], ...],
     *,
     language: OutputLanguage,
@@ -165,6 +166,11 @@ def _emit_wizard_result(
             "saved": True,
             "saved_confirmation": saved_confirmation,
             **calculation_snapshot_payload(snapshot, language=language).model_dump(mode="python"),
+            **unresolved_findings_payload(
+                calculation_result.unresolved_bindings,
+                calculation_result.unresolved_casillas,
+                words_language=calculation_result.words_language,
+            ),
             "prompted_casillas": prompted_payload,
         }
     )

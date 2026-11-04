@@ -75,6 +75,12 @@ from .calculation_publication import CalculationRevisionPublication
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_casilla_gap_diagnostics
+from .projection import (
+    ModeloProjectionUnresolvedBinding,
+    ModeloProjectionUnresolvedCasilla,
+    unresolved_binding_rows,
+    unresolved_casilla_rows,
+)
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -129,6 +135,13 @@ class BucketAggregationCalculationResult:
     profile: ModeloWorkProfile
     publication: CalculationRevisionPublication
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    unresolved_bindings: tuple[ModeloProjectionUnresolvedBinding, ...] = ()
+    unresolved_casillas: tuple[ModeloProjectionUnresolvedCasilla, ...] = ()
+    """The source-owned bindings and computed boxes this run left without a value, as the projection names them.
+
+    Computed for this run only: the revision does not store them, so a reader of
+    the revision alone sees the boxes absent and not why.
+    """
 
 
 @dataclass(frozen=True, slots=True)
@@ -833,6 +846,18 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         profile=preparation.profile,
         publication=publication,
         source_diagnostics=source_diagnostics,
+        unresolved_bindings=unresolved_binding_rows(
+            # The engine reads a settled binding (inapplicable to the filer, or answered on the row channel)
+            # as a source that answered, so it is not a gap.
+            tuple(
+                binding_id
+                for binding_id in channels.reconciliation.unresolved_binding_ids
+                if binding_id not in settled_binding_ids(channels.source_resolution)
+            ),
+            channels.reconciliation.source_diagnostics,
+            preparation.snapshot.revision,
+        ),
+        unresolved_casillas=unresolved_casilla_rows(calculation.engine_result, preparation.snapshot.revision),
     )
 
 

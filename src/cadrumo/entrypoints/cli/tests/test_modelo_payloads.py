@@ -20,6 +20,7 @@ from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
@@ -53,6 +54,10 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo_year=2024,
     period="1T",
 )
+
+
+def _no_unresolved_fields() -> dict[str, Any]:
+    return {"unresolved_bindings": [], "unresolved_casillas": [], "words_language": OutputLanguage.ES}
 
 
 def _base_revision_fields() -> dict[str, Any]:
@@ -305,6 +310,7 @@ def test_calculation_revision_payload_json_channel_rejects_non_canonical_casilla
 def test_work_calculate_result_input_values_by_casilla_id_roundtrips() -> None:
     """WorkCalculateResult.input_values_by_casilla_id dict[CasillaId, str] roundtrips through JSON."""
     payload = WorkCalculateResult(
+        **_no_unresolved_fields(),
         saved=True,
         saved_confirmation="Saved revision a" * 2,
         **_base_revision_fields(),
@@ -323,6 +329,7 @@ def test_work_calculate_result_input_values_by_casilla_id_rejects_non_string_val
 
     with pytest.raises(ValidationError):
         WorkCalculateResult(
+            **_no_unresolved_fields(),
             saved=True,
             saved_confirmation="Saved",
             **fields,
@@ -335,6 +342,7 @@ def test_work_calculate_result_input_values_by_casilla_id_rejects_non_canonical_
 
     with pytest.raises(ValidationError, match="String should match pattern"):
         WorkCalculateResult(
+            **_no_unresolved_fields(),
             saved=True,
             saved_confirmation="Saved",
             **fields,
@@ -436,6 +444,7 @@ def test_work_wizard_result_input_values_by_casilla_id_roundtrips() -> None:
     ``WorkCalculateResult`` / ``WorkRevisionResult`` siblings.
     """
     payload = WorkWizardResult(
+        **_no_unresolved_fields(),
         saved=True,
         saved_confirmation="Saved revision via wizard",
         **_base_revision_fields(),
@@ -453,4 +462,4 @@ def test_work_wizard_result_input_values_by_casilla_id_rejects_non_string_values
     fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: 2024}
 
     with pytest.raises(ValidationError):
-        WorkWizardResult(saved=True, saved_confirmation="Saved", **fields)
+        WorkWizardResult(saved=True, saved_confirmation="Saved", **_no_unresolved_fields(), **fields)

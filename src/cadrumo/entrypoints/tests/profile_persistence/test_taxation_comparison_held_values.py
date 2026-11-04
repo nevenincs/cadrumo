@@ -55,7 +55,7 @@ from ....application.modelo.taxation_comparison_operation import (
 )
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_calculation_contracts import (
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -267,7 +267,7 @@ class _Profile:
 
     def calculate_through_operation(
         self, work_unit_id: str, *, monkeypatch: pytest.MonkeyPatch
-    ) -> ModeloWorkCalculatePublicResultV2:
+    ) -> ModeloWorkCalculatePublicResultV3:
         """Run the registered calculate executor over the production ports, replaying the head, as the worker does."""
         monkeypatch.setattr("cadrumo.core.bucket_pointer.require_active_bucket_id", lambda: _BUCKET_ID)
         stored: list[BaseModel] = []
@@ -301,7 +301,7 @@ class _Profile:
             with override_settings(cadrumo_active_profile=_BUCKET_ID, cadrumo_output_language="en"):
                 asyncio.run(definition.executor_factory.create().execute(request, context))
         (result,) = stored
-        return ModeloWorkCalculatePublicResultV2.model_validate(result)
+        return ModeloWorkCalculatePublicResultV3.model_validate(result)
 
     def compare(self, work_unit_id: str) -> ModeloTaxationComparisonProjection:
         """Run the registered executor over the production calculation ports, as the worker does."""

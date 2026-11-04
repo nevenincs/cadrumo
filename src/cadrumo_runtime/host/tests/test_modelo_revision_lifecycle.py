@@ -25,7 +25,7 @@ from cadrumo.application.modelo.revision_selection_operation import (
     ModeloWorkRevisionRequest,
 )
 from cadrumo.application.modelo.work_calculation_contracts import (
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from cadrumo.application.modelo.work_filing_contracts import (
@@ -153,7 +153,7 @@ def _run[T: BaseModel](
         ModeloWorkRevisionProjection
         | ModeloWorkVerifyPublicResultV2
         | ModeloWorkFilePublicResultV2
-        | ModeloWorkCalculatePublicResultV2
+        | ModeloWorkCalculatePublicResultV3
     ].model_validate_json(canonical_json_bytes(result.document))
     assert projected.definition_contract_digest == contract.contract.definition_contract_digest
     assert projected.result_schema == schema
@@ -259,7 +259,7 @@ def _calculate_twice(client: VerifiedConnection, profile_id: UUID, session_id: U
         definition_id="modelo.work.calculate",
         subject_ref=unit.work_unit_id,
         payload=calculate,
-        result_type=ModeloWorkCalculatePublicResultV2,
+        result_type=ModeloWorkCalculatePublicResultV3,
     )
     assert calculate_effect is OperationEffect.UPDATED
     assert calculated.revision_published
@@ -276,7 +276,7 @@ def _calculate_twice(client: VerifiedConnection, profile_id: UUID, session_id: U
         definition_id="modelo.work.calculate",
         subject_ref=unit.work_unit_id,
         payload=calculate,
-        result_type=ModeloWorkCalculatePublicResultV2,
+        result_type=ModeloWorkCalculatePublicResultV3,
     )
     assert repeated.calculation_revision_id == revision_id
     assert not repeated.revision_published
