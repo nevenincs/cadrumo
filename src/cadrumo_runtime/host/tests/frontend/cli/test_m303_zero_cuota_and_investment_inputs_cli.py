@@ -437,12 +437,14 @@ def test_the_quarter_files_with_every_purchase_kind_in_it(
     # neither base may appear anywhere in the return.
     assert str(_RETA_QUOTA) not in values.values()
     assert str(_PREMIUM) not in values.values()
-    # And their absence is reported rather than silent: a base that reached no box
-    # is an advisory the operator sees on the calculation that omitted it.
+    # The exempt premium's absence is reported rather than silent: a base that
+    # reached no box is an advisory the operator sees on the calculation that
+    # omitted it. The RETA quota is no IVA operation at all, so it has no base
+    # to declare and nothing to report.
     advisories = "\n".join(str(notice) for notice in unwrap_envelope_notices(calculated.output))
     assert "unrouted_declarable_quantity" in advisories, advisories
     assert "domestic_exempt" in advisories
-    assert "operacion_no_sujeta" in advisories
+    assert "operacion_no_sujeta" not in advisories
 
 
 def test_an_investment_asset_id_without_its_register_record_is_refused(
