@@ -28,7 +28,8 @@ blocks, so no payer's withholding is dropped without a word.
 
 The resolver reads only its own store; no withholding-agent store or source kind
 reaches it. Each contributing record is one primary provenance node named by
-its keyed ``payer_ref``, never by the payer's tax identifier.
+its keyed ``payer_ref``, never by the payer's tax identifier;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -70,11 +71,14 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .source_resolution_operations import storage_degradation_resolution
+from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 
 if TYPE_CHECKING:
+    from datetime import date
+
     from ...core.casilla_id import CasillaId
     from ...core.period import Period
+    from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
     from ...domain.calculations.registry.ids import BindingId
     from ...domain.calculations.registry.schema import ModeloRevision
 
@@ -181,6 +185,9 @@ def _class_state(
     attestation: RetencionSoportadaAbsence | None,
     declared: frozenset[str] | None,
     activity_epigraphs: tuple[str | None, ...] | None,
+    *,
+    effective_date: date,
+    authority: GovernedFactSource,
 ) -> RetencionSoportadaClassState:
     if class_records:
         if attestation is not None:
@@ -188,7 +195,9 @@ def _class_state(
         return RetencionSoportadaClassState.RECORDED
     if attestation is not None:
         return RetencionSoportadaClassState.ATTESTED_ABSENT
-    applicability = retencion_soportada_applicability(income_class, declared, activity_epigraphs)
+    applicability = retencion_soportada_applicability(
+        income_class, declared, activity_epigraphs, effective_date=effective_date, authority=authority
+    )
     if applicability is RetencionSoportadaApplicability.DECLARED_ABSENT:
         return RetencionSoportadaClassState.DECLARED_ABSENT
     return RetencionSoportadaClassState.MISSING
@@ -251,6 +260,8 @@ class RetencionSoportadaSourceResolver:
         ``None`` means the revision declares no member of the family, so the
         calculation reads nothing from this store; an empty tuple means it read
         the store and found no record.
+
+        ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
         """
         if not revision_declares_retencion_soportada(revision):
             return None
@@ -262,7 +273,10 @@ class RetencionSoportadaSourceResolver:
         period: Period,
         revision: ModeloRevision,
     ) -> tuple[RetencionSoportadaAbsence, ...]:
-        """Return the active absence attestations of the period's ejercicio; none when the family is absent."""
+        """Return the active absence attestations of the period's ejercicio; none when the family is absent.
+
+        ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+        """
         absences = self._ports.absences
         if absences is None or not revision_declares_retencion_soportada(revision):
             return ()
@@ -291,25 +305,34 @@ class RetencionSoportadaSourceResolver:
         diagnostics: list[CalculationSourceDiagnostic] = []
         zero_provenance: dict[RetencionSoportadaClase, CalculationSourceProvenance] = {}
         consumed: set[RetencionSoportadaClase] = set()
-        for binding, provider in retencion_soportada_bindings(context.revision):
-            income_class = provider.income_class
-            consumed.add(income_class)
-            class_records = by_class.get(income_class, [])
-            attestation = attested.get(income_class)
-            state = _class_state(income_class, class_records, attestation, declared, activity_epigraphs)
-            if state is RetencionSoportadaClassState.RECORDED:
-                binding_values[binding.id] = sum(
-                    (record.quantity(provider.quantity) for record in class_records),
-                    Decimal("0"),
+        with source_context_operation(context) as operation:
+            for binding, provider in retencion_soportada_bindings(context.revision):
+                income_class = provider.income_class
+                consumed.add(income_class)
+                class_records = by_class.get(income_class, [])
+                attestation = attested.get(income_class)
+                state = _class_state(
+                    income_class,
+                    class_records,
+                    attestation,
+                    declared,
+                    activity_epigraphs,
+                    effective_date=context.period.end_date,
+                    authority=operation,
                 )
-            elif state in _PROVEN_ZERO_STATES:
-                binding_values[binding.id] = Decimal("0.00")
-                zero_provenance.setdefault(income_class, self._zero_provenance(context, income_class, attestation))
-            else:
-                # Named unresolved here as well as in the note, so a formula reading the binding as an
-                # operand leaves its own box unresolved instead of failing on a missing value.
-                unresolved.append(binding.id)
-                diagnostics.append(self._unresolved_diagnostic(context.revision, binding.id, income_class, state))
+                if state is RetencionSoportadaClassState.RECORDED:
+                    binding_values[binding.id] = sum(
+                        (record.quantity(provider.quantity) for record in class_records),
+                        Decimal("0"),
+                    )
+                elif state in _PROVEN_ZERO_STATES:
+                    binding_values[binding.id] = Decimal("0.00")
+                    zero_provenance.setdefault(income_class, self._zero_provenance(context, income_class, attestation))
+                else:
+                    # Named unresolved here as well as in the note, so a formula reading the binding as an
+                    # operand leaves its own box unresolved instead of failing on a missing value.
+                    unresolved.append(binding.id)
+                    diagnostics.append(self._unresolved_diagnostic(context.revision, binding.id, income_class, state))
         # A class a credit casilla is cross-checked against is read by that comparison, so its
         # records are not unrouted even where no binding credits them.
         compared = consumed | _cross_checked_classes(context.revision)

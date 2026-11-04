@@ -1,0 +1,26 @@
+# The IAE groups that classify an urban property rental carried on as an activity:
+# RD 439/2007 art. 75.3.g).3.º names group 861 of the Sección Primera of the IAE
+# tariffs (RDLeg 1175/1990, agrupación 86, epígrafes 861.1 and 861.2). Entities are
+# three-digit groups; an activity's epigraph digit is read past, never matched.
+[fact]
+fact_id = "rd-439-2007-art-75:iae-grupos-arrendamiento-inmuebles-urbanos"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "rd-439-2007-art-75:iae-grupos-arrendamiento-inmuebles-urbanos:2007-04-01"
+date_axis = "filing_period"
+valid_from = 2007-04-01
+legal_refs = ["rd-439-2007:art-75", "rdleg-1175-1990:art-unico"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = [
+  "esté clasificada en alguno de los epígrafes del grupo 861 de la Sección Primera de las Tarifas del Impuesto sobre Actividades Económicas",
+]
+
+[fact.variants.payload]
+kind = "entity_set"
+entities = ["861"]
