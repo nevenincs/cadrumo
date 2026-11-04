@@ -9621,6 +9621,8 @@ workspace:
       operator_entries_unknown: Ezt a bevallást legutóbb ezen a képernyőn kívül számították
         ki, ezért a Cadrumo nem tudja, mely értékeket írtad be. Az újraszámítás csak
         az itt megadott értékeket tartja meg.
+      unresolved:
+        inputs: Érték nélküli adatok
     correction:
       confirm: A helyesbítés előkészítése
       kind: Hogy kiegészítő vagy helyesbítő bevallásként nyújtod-e be, az a modelótól

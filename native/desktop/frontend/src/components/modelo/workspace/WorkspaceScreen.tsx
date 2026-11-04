@@ -32,6 +32,8 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   ModeloWorkMetadataSnapshot,
   OutputLanguage,
+  ProjectUnresolvedBindingProjection,
+  ProjectUnresolvedCasillaProjection,
 } from "../../../shell/modeloContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
@@ -84,6 +86,8 @@ import {
   type ProfileCompanionKit,
 } from "./ProfileCompanions";
 import { SourcesView } from "./SourcesView";
+import { BoxName } from "./BoxName";
+import { languageName, UnresolvedFindings } from "./UnresolvedFindings";
 import { ModeloWorkspace, type WorkspaceView } from "./Workspace";
 
 type Read =
@@ -112,6 +116,13 @@ function runNotice(t: Translate, run: OperationRun<unknown>): HistoryNotice {
       return null;
   }
 }
+
+type CalculationUnresolved = {
+  revision: string;
+  bindings: ProjectUnresolvedBindingProjection[];
+  casillas: ProjectUnresolvedCasillaProjection[];
+  language: OutputLanguage;
+};
 
 function Ready({
   envelope,
@@ -175,6 +186,11 @@ function Ready({
   const held = operation.hold !== undefined;
   const busy = operation.hold?.phase === "running";
   const [notice, setNotice] = useState<HistoryNotice>(null);
+  // What the last calculation could give no value for, as the application
+  // said it. It belongs to the calculation it came with.
+  const [unresolved, setUnresolved] = useState<CalculationUnresolved | null>(
+    null,
+  );
   const [unit, setUnit] = useState<ModeloWorkMetadataSnapshot | null>(null);
   const [entries, setEntries] = useState<ModeloWorkHistoryEntryV1[] | null>(
     null,
@@ -508,6 +524,7 @@ function Ready({
       sameCalculation(shown) &&
       operation.holds.admissionVersion(operation.target) === writeVersion;
     setNotice(null);
+    setUnresolved(null);
     try {
       const outcome = await calculateWithEvidence({
         envelope: shown,
@@ -536,6 +553,13 @@ function Ready({
         return;
       }
       setNotice(runNotice(t, outcome));
+      if (outcome.kind === "settled")
+        setUnresolved({
+          revision: outcome.result.calculation_revision_id,
+          bindings: outcome.result.unresolved_bindings,
+          casillas: outcome.result.unresolved_casillas,
+          language: outcome.result.words_language,
+        });
       if (
         outcome.kind !== "unknown" &&
         outcome.kind !== "saved_unread" &&
@@ -609,12 +633,54 @@ function Ready({
     return true;
   };
 
-  const notified = notice && (
-    <div className="px-6 pt-3">
-      <Alert tone={notice.tone} icon={<Icon name="alert" />}>
-        <span>{notice.words}</span>
-      </Alert>
-    </div>
+  const left =
+    unresolved &&
+    unresolved.revision === envelope.calculation_revision_id &&
+    (unresolved.bindings.length > 0 || unresolved.casillas.length > 0)
+      ? unresolved
+      : null;
+  const notified = (notice || left) && (
+    <>
+      {notice && (
+        <div className="px-6 pt-3">
+          <Alert tone={notice.tone} icon={<Icon name="alert" />}>
+            <span>{notice.words}</span>
+          </Alert>
+        </div>
+      )}
+      {left && (
+        <div
+          data-calculation-unresolved=""
+          className="flex flex-col gap-3 px-6 pt-3"
+        >
+          <UnresolvedFindings
+            bindings={left.bindings}
+            casillas={left.casillas}
+            bindingsTitle={t("workspace.modelo.calculate.unresolved.inputs")}
+            casillasTitle={t(
+              "desktop.modelo.credits.estimate.unresolved_boxes",
+            )}
+            boxName={(box) => (
+              <BoxName
+                box={box}
+                field={
+                  box
+                    ? session.fieldAt({ kind: "casilla", casilla_id: box })
+                    : null
+                }
+              />
+            )}
+          />
+          {left.language !== locale && (
+            <p className="text-xs text-faint">
+              {t("desktop.modelo.credits.estimate.words_language", {
+                language: languageName(locale, left.language),
+              })}
+            </p>
+          )}
+        </div>
+      )}
+    </>
   );
 
   return (

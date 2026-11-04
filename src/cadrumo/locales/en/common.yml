@@ -9480,6 +9480,8 @@ workspace:
       operator_entries_unknown: This declaration was last calculated outside this
         screen, so Cadrumo cannot tell which values you typed. Calculating again keeps
         only the values entered here.
+      unresolved:
+        inputs: Inputs without a value
     correction:
       confirm: Prepare the correction
       kind: Whether it is filed as a supplementary return or a rectification depends

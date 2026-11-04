@@ -9684,6 +9684,8 @@ workspace:
       operator_entries_unknown: Esta declaración se calculó por última vez fuera de
         esta pantalla, así que Cadrumo no puede saber qué valores escribiste. Al volver
         a calcular solo se conservan los valores introducidos aquí.
+      unresolved:
+        inputs: Datos sin valor
     correction:
       confirm: Preparar la corrección
       kind: Que se presente como complementaria o como rectificativa depende del modelo
