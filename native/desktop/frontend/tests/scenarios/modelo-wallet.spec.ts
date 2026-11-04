@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { label } from "../support/strings";
 import { seedLayout } from "../support/layout";
 
@@ -16,6 +17,27 @@ declare global {
     };
   }
 }
+/** A wallet write the scenario answers, as the backend wrote it: the window
+ * must send what it carries for the scenario to answer it. */
+type Written = {
+  period: { filing_year: number; code: string };
+  amount: string;
+  reason?: string;
+  evidence_locator?: string;
+};
+const served = <T>(name: string): T =>
+  JSON.parse(
+    readFileSync(
+      new URL(`../../src/dev/fixtures/modelo/${name}.json`, import.meta.url),
+      "utf8",
+    ),
+  ) as T;
+const SEEDED = served<Written>("iva-wallet-seed");
+const CORRECTED = served<Written>("iva-wallet-correct");
+const OVERRIDDEN = served<Written>("iva-wallet-override");
+/** The year the scenario's balance was read at. */
+const AS_OF_YEAR = served<{ as_of_year: number }>("iva-wallet-balance-empty")
+  .as_of_year;
 const words = (key: string, language: Language = "en") =>
   label(`workspace.modelo.iva_wallet.${key}`, {}, language);
 const wallet = (page: Page, language: Language = "en") =>
@@ -141,7 +163,7 @@ async function manage(page: Page) {
   return page.getByRole("dialog", { name: words("title") });
 }
 async function sourcePeriod(dialog: Locator) {
-  // 2026/1T -> 2024/4T; use the existing period editor's actual controls.
+  // The declaration's 1T -> 4T two years before; use the existing period editor's actual controls.
   for (let i = 0; i < 5; i++)
     await dialog
       .getByRole("button", {
@@ -153,7 +175,7 @@ async function sourcePeriod(dialog: Locator) {
 async function seed(page: Page) {
   const dialog = await manage(page);
   await sourcePeriod(dialog);
-  await dialog.getByLabel(words("amount"), { exact: true }).fill("1200.50");
+  await dialog.getByLabel(words("amount"), { exact: true }).fill(SEEDED.amount);
   await dialog
     .getByRole("button", { name: words("mode.seed"), exact: true })
     .click();
@@ -247,13 +269,13 @@ test("wallet records exact amounts, preserves separate drafts, and does not reca
     "",
   );
   await sourcePeriod(dialog);
-  await dialog.getByLabel(words("amount"), { exact: true }).fill("900.25");
+  await dialog.getByLabel(words("amount"), { exact: true }).fill(CORRECTED.amount);
   await expect(
     dialog.getByRole("button", { name: words("mode.correct"), exact: true }),
   ).toBeDisabled();
   await dialog
     .getByLabel(words("reason"), { exact: true })
-    .fill("Correct the recorded opening balance.");
+    .fill(CORRECTED.reason!);
   await dialog
     .getByRole("button", { name: words("mode.correct"), exact: true })
     .click();
@@ -266,16 +288,16 @@ test("wallet records exact amounts, preserves separate drafts, and does not reca
   await dialog
     .getByLabel(words("action"), { exact: true })
     .selectOption("override");
-  await dialog.getByLabel(words("amount"), { exact: true }).fill("850.00");
+  await dialog.getByLabel(words("amount"), { exact: true }).fill(OVERRIDDEN.amount);
   await dialog
     .getByLabel(words("reason"), { exact: true })
-    .fill("Use the taxpayer's reviewed carry balance.");
+    .fill(OVERRIDDEN.reason!);
   await expect(
     dialog.getByRole("button", { name: words("mode.override"), exact: true }),
   ).toBeDisabled();
   await dialog
     .getByLabel(words("evidence_locator"), { exact: true })
-    .fill("fixture:reviewed-iva-balance-2026-1T");
+    .fill(OVERRIDDEN.evidence_locator!);
   await dialog
     .getByRole("button", { name: words("mode.override"), exact: true })
     .click();
@@ -293,13 +315,13 @@ test("wallet records exact amounts, preserves separate drafts, and does not reca
     })
     .click();
   await expect(fact(wallet(page), "lot_count")).toHaveText("1");
-  await expect(fact(wallet(page), "active_balance")).toContainText("900.25");
+  await expect(fact(wallet(page), "active_balance")).toContainText(CORRECTED.amount);
   const sent = await page.evaluate(() => window.__walletTest!.sent);
   expect(
     sent
       .filter((call) => call.definition === "modelo.iva-wallet.seed")
       .map((call) => call.payload),
-  ).toEqual([{ period: { filing_year: 2024, code: "4T" }, amount: "1200.50" }]);
+  ).toEqual([{ period: SEEDED.period, amount: SEEDED.amount }]);
   expect(
     sent.filter((call) => call.definition === "modelo.iva-wallet.override"),
   ).toHaveLength(1);
@@ -518,14 +540,14 @@ test("changing the reference year cannot retain figures from the previous read",
     .poll(() => page.evaluate(() => !!window.__walletTest!.release))
     .toBe(true);
   const year = wallet(page).getByLabel(words("as_of_year"), { exact: true });
-  await year.fill("2025");
+  await year.fill(String(AS_OF_YEAR - 1));
   await year.blur();
   await expect(wallet(page).getByRole("alert")).toBeVisible();
   await page.evaluate(() => {
     window.__walletTest!.release!();
   });
   await expect(wallet(page).locator("dd")).toHaveCount(0);
-  await year.fill("2026");
+  await year.fill(String(AS_OF_YEAR));
   await year.blur();
   await expect(fact(wallet(page), "lot_count")).toHaveText("0");
 });

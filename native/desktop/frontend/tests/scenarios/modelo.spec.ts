@@ -52,6 +52,13 @@ const form = (name: string, language: Language = "en") =>
 const list = (language: Language = "en") =>
   envelope<ModeloDeclarationsListProjectionV1>(`declarations-${language}`);
 
+/** The name the exported 130's filing file is saved under, as the window
+ * names it from the declaration's period. */
+const FILING_FILE = (() => {
+  const read = form("130-1T-exported").form.form;
+  return `modelo-${read.modelo}-${read.period.filing_year}-${read.period.code}.boe`;
+})();
+
 /** Every box of a form, in the order its pages hold them. */
 function fields(page: unknown): PublicModeloFormField[] {
   const found: PublicModeloFormField[] = [];
@@ -1212,7 +1219,7 @@ test("an export writes the file the filer saved, through its save token", async 
   await expect(
     target.getByText(
       label("workspace.modelo.filing.saved", {
-        name: "modelo-130-2026-1T.boe",
+        name: FILING_FILE,
       }),
     ),
   ).toBeVisible();
@@ -1318,7 +1325,7 @@ test("an export whose result says its direct-debit cutoff was checked states no 
     })
     .click();
   const saved = target.getByText(
-    label("workspace.modelo.filing.saved", { name: "modelo-130-2026-1T.boe" }),
+    label("workspace.modelo.filing.saved", { name: FILING_FILE }),
   );
   await expect(saved).toBeVisible();
   await expect(target.getByText(label(CUTOFF_UNVERIFIED))).toHaveCount(0);
@@ -1335,7 +1342,7 @@ test("an export whose result says no direct-debit cutoff was checked says so bes
     .click();
   const notice = target.getByRole("status").filter({
     hasText: label("workspace.modelo.filing.saved", {
-      name: "modelo-130-2026-1T.boe",
+      name: FILING_FILE,
     }),
   });
   await expect(notice).toBeVisible();

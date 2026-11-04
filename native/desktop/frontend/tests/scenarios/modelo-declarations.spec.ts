@@ -42,6 +42,11 @@ const listed = (shape = "") =>
     ),
   ) as ModeloDeclarationsListProjectionV1;
 
+/** The year of the declarations the scenario holds: its first row's. */
+const YEAR = listed().rows[0]!.filing_year;
+/** The radio naming a quarter of that year, by its ordinal words. */
+const quarter = (ordinal: string) => new RegExp(`${ordinal} quarter ${YEAR}`);
+
 async function openDeclarations(target: Page, extra = "") {
   await open(target, extra);
   await target.locator("[data-rail=declarations]").click();
@@ -147,9 +152,9 @@ test("a period that already has a declaration opens it", async ({
   page: target,
 }) => {
   await openDeclarations(target);
-  await chooseModelo(target, "130", 2026);
+  await chooseModelo(target, "130", YEAR);
   await dialog(target)
-    .getByRole("radio", { name: /1st quarter 2026/ })
+    .getByRole("radio", { name: quarter("1st") })
     .click();
   const submit = dialog(target).locator(".new-declaration-submit");
   await expect(submit).toHaveText(
@@ -164,9 +169,9 @@ test("a refused creation is said without exposing its code", async ({
   page: target,
 }) => {
   await openDeclarations(target, "&modelo=refused");
-  await chooseModelo(target, "130", 2026);
+  await chooseModelo(target, "130", YEAR);
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   await dialog(target).locator(".new-declaration-submit").click();
   const alert = dialog(target).getByRole("alert");
@@ -180,9 +185,9 @@ test("a creation whose settlement was not seen is unknown and holds", async ({
   page: target,
 }) => {
   await openDeclarations(target, "&modelo=unknown");
-  await chooseModelo(target, "130", 2026);
+  await chooseModelo(target, "130", YEAR);
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   const submit = dialog(target).locator(".new-declaration-submit");
   await submit.click();
@@ -192,11 +197,11 @@ test("a creation whose settlement was not seen is unknown and holds", async ({
   // A fresh list alone cannot establish settlement.
   await expect(submit).toBeDisabled();
   await dialog(target)
-    .getByRole("radio", { name: /3rd quarter 2026/ })
+    .getByRole("radio", { name: quarter("3rd") })
     .click();
   await expect(submit).toBeEnabled();
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   await expect(submit).toBeDisabled();
   await dialog(target)
@@ -207,9 +212,9 @@ test("a creation whose settlement was not seen is unknown and holds", async ({
     .click();
   await target.locator("[data-rail=ledger]").click();
   await target.locator("[data-rail=declarations]").click();
-  await chooseModelo(target, "130", 2026);
+  await chooseModelo(target, "130", YEAR);
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   await expect(submit).toBeDisabled();
   const calls = await target.evaluate(() => window.__scenarioHostCalls ?? []);
@@ -260,9 +265,9 @@ test("a known creation operation stays held through running status and a failed 
       return declarations(language);
     };
   });
-  await chooseModelo(target, "130", 2026);
+  await chooseModelo(target, "130", YEAR);
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   const submit = dialog(target).locator(".new-declaration-submit");
   await submit.click();
@@ -307,10 +312,10 @@ test("a known creation operation stays held through running status and a failed 
     .getByRole("radiogroup", {
       name: label("workspace.declarations.list.new.year"),
     })
-    .getByText("2026", { exact: true })
+    .getByText(String(YEAR), { exact: true })
     .click();
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   await expect(submit).toBeEnabled();
   expect(await target.evaluate(() => window.__modeloRecovery!.submitted)).toBe(
@@ -332,9 +337,9 @@ test("closing the chooser while creation waits does not allow a second submissio
       return submit(...args);
     };
   });
-  await chooseModelo(target, "130", 2026);
+  await chooseModelo(target, "130", YEAR);
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   await dialog(target).locator(".new-declaration-submit").click();
   await expect
@@ -346,9 +351,9 @@ test("closing the chooser while creation waits does not allow a second submissio
       exact: true,
     })
     .click();
-  await chooseModelo(target, "130", 2026);
+  await chooseModelo(target, "130", YEAR);
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   await expect(
     dialog(target).locator(".new-declaration-submit"),
@@ -377,9 +382,9 @@ test("a creation with no operation identifier stays unresolved without a fiction
       return submit(...args);
     };
   });
-  await chooseModelo(target, "130", 2026);
+  await chooseModelo(target, "130", YEAR);
   await dialog(target)
-    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .getByRole("radio", { name: quarter("2nd") })
     .click();
   await dialog(target).locator(".new-declaration-submit").click();
   await expect(dialog(target).getByRole("alert")).toContainText(

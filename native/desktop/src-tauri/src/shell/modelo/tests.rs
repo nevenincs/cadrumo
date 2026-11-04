@@ -451,8 +451,15 @@ fn placed(value: &mut Value, folder: &str, named: &mut usize) {
     }
 }
 
+/// The committed write envelopes equal what the host hands the window, up to
+/// the opaque ids the generator names stably because a run mints them afresh,
+/// such as calculation revisions, the baselines and events derived from them,
+/// and stored answers' revisions: each is named by what its own row states,
+/// and the same name wherever the id recurs. The window treats every such id
+/// as opaque. This compares the host's reduction of file places only, which
+/// none of them takes part in.
 #[test]
-fn the_committed_write_envelopes_are_what_the_host_hands_the_window() {
+fn the_committed_write_envelopes_are_what_the_host_hands_the_window_up_to_normalised_opaque_ids() {
     let folder = r"C:\Users\alba\Modelos 2026";
     for envelope in [
         include_str!("../../../../frontend/src/dev/fixtures/modelo/export-130.json"),
