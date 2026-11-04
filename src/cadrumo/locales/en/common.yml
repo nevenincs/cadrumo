@@ -2325,14 +2325,6 @@ desktop:
       readings: Readings
       reads_as: 'The document reads as: {kind}'
       ready_to_confirm: Ready to confirm
-      reason:
-        ambiguous_identity: Two possible identities
-        closure_discrepancy: The totals do not add up
-        contradicted_invoice_class: The invoice class disagrees
-        contradicted_regime: The regime disagrees
-        undetermined_establishment: Establishment not known
-        unmodelled_invoice_class: Invoice class not supported
-        unresolved_direction: Received or issued is unclear
       record:
         invoice_date: Invoice date
         invoice_number: Invoice number

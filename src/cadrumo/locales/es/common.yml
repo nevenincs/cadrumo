@@ -2374,14 +2374,6 @@ desktop:
       readings: Lecturas
       reads_as: 'El documento parece: {kind}'
       ready_to_confirm: Lista para confirmar
-      reason:
-        ambiguous_identity: Dos identidades posibles
-        closure_discrepancy: Los totales no cuadran
-        contradicted_invoice_class: La clase de factura no coincide
-        contradicted_regime: El régimen no coincide
-        undetermined_establishment: Establecimiento desconocido
-        unmodelled_invoice_class: Clase de factura no admitida
-        unresolved_direction: No está claro si es recibida o emitida
       record:
         invoice_date: Fecha de factura
         invoice_number: Número de factura
