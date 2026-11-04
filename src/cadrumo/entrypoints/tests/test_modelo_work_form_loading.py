@@ -80,6 +80,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _C06 = validated_casilla_id("06")
 _C02 = validated_casilla_id("02")
+_C13 = validated_casilla_id("13")
 _REFERENCE_DAY = date(2026, 4, 2)
 _FILED_AT = datetime(2026, 4, 15, 10, 0, tzinfo=UTC)
 _IMPORTED_AT = datetime(2026, 4, 2, 8, 30, tzinfo=UTC)
@@ -459,4 +460,43 @@ def test_an_unrecorded_modality_note_names_box_02_and_the_profile_fact_in_served
         assert line.message == "Para calcular la casilla 02, registra en tu perfil: Régimen de estimación."
         assert line.box == "02"
         assert line.address == ModeloFormCasillaAddressV1(casilla_id=_C02)
+        assert "unresolved_binding" in line.technical
+
+
+def test_an_unrecorded_prior_year_modelo_100_note_names_box_13_and_the_filing_in_served_words(tmp_path: Path) -> None:
+    """Box 13 waits on the previous year's net activity income, so the note says which filing to record.
+
+    The activity began years before the quarter and the store holds no Modelo 100, so nothing can
+    stand for the prior year's income. The note must carry its box and the filing, not a bare reason,
+    both from the held diagnostics and, once the process forgets them, from the revision itself.
+    """
+    with seeded_operator_work(tmp_path) as work:
+        head = work.recalculate()
+        held = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
+        CALCULATION_NOTES.record(head.work_unit_id, "forgotten", ())
+        reopened = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
+
+    for form in (held, reopened):
+        (note,) = (
+            item
+            for item in form.blocking_calculation_notes
+            if item.fact is not None and item.fact.sentence is CalculationNoteSentence.PRIOR_FILING_UNRECORDED
+        )
+        assert note.reason == "unresolved_binding"
+        assert note.casilla_id == "13"
+        assert note.box == "13"
+        assert note.fact is not None
+        assert dict(note.fact.values) == {"box": "13", "modelo": "100", "year": str(_REFERENCE_DAY.year - 1)}
+        assert not [
+            item
+            for item in form.blocking_calculation_notes
+            if item.reason == "unresolved_binding" and item.casilla_id is None and item.fact is None
+        ]
+        (line,) = (
+            item
+            for item in form_issue_lines(form, OutputLanguage.ES)
+            if item.address == ModeloFormCasillaAddressV1(casilla_id=_C13) and item.from_calculation
+        )
+        assert line.message == "Para calcular la casilla 13, registra tu Modelo 100 de 2025."
+        assert line.box == "13"
         assert "unresolved_binding" in line.technical

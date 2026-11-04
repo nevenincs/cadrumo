@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
 from cadrumo.adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -50,9 +51,13 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -81,6 +86,7 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_verification_repository_bundle,
 )
 from cadrumo.entrypoints.tests.profile_persistence.ledger_drift_support import TAX_ID
+from cadrumo.entrypoints.tests.profile_persistence.observation_seeding_support import save_stamped_observation
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -103,6 +109,51 @@ _ACCRUED = date(_YEAR, 2, 10)
 _CUSTOMER = "B12345674"
 _WORK = (("130", "1T"),)
 _TICK = count(1)
+_PRIOR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
+_PRIOR_NET_INCOME_CASILLAS = ("0224", "1479", "1553", "1577")
+
+
+def _minoracion_ceiling() -> Decimal:
+    """The highest prior-year net activity income box 13's minoracion still reduces, read from the pinned formula."""
+    with bundled_indexed_authority().operation() as operation:
+        formulas = operation.snapshot("130", filing_year=_YEAR, period="1T").revision.formulas
+    (formula,) = (item for item in formulas if item.target_casilla_id == "13")
+    ceilings: list[Decimal] = []
+
+    def collect(expression: FormulaExpression) -> None:
+        if expression.op == "less_equal" and any(arg.binding == _PRIOR_NET_INCOME_BINDING for arg in expression.args):
+            ceilings.extend(arg.literal for arg in expression.args if arg.literal is not None)
+        for arg in expression.args:
+            collect(arg)
+
+    collect(formula.expression)
+    return max(ceilings)
+
+
+def _record_prior_year_renta(objects: SecureObjectRepository) -> None:
+    """Record last year's Modelo 100 with net activity income above the minoracion ceiling.
+
+    The activity began years before this quarter, so box 13 reads last year's return; above
+    the ceiling the minoracion is zero and the quarter rests only on the invoices.
+    """
+    net_income = _minoracion_ceiling() + Decimal("1000.00")
+    casilla_values = dict.fromkeys(
+        (validated_casilla_id(box) for box in _PRIOR_NET_INCOME_CASILLAS[1:]), Decimal("0.00")
+    )
+    casilla_values[validated_casilla_id(_PRIOR_NET_INCOME_CASILLAS[0])] = net_income
+    save_stamped_observation(
+        CalculationObservationRepository(objects=objects),
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_YEAR - 1,
+            period="0A",
+            observations=registry_grounded_observations(
+                modelo="100", filing_year=_YEAR - 1, period="0A", casilla_values=casilla_values
+            ),
+        ),
+        source_kind="app_filing",
+        captured_at=datetime(_YEAR, 6, 1, 12, 0, tzinfo=UTC),
+    )
 
 
 def _facts(criterion: str, regime: str) -> tuple[UserProfileFact, ...]:
@@ -243,6 +294,7 @@ def _open_draft(tmp_path: Path, *, modelo: str, period: str, criterion: str, reg
             ),
         )
         objects = profile.repository
+        _record_prior_year_renta(objects)
         invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=objects)
         invoice = _unpaid()
         invoices.save(build_invoice_catalogue((invoice,)))

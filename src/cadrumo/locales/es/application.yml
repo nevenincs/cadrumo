@@ -1816,6 +1816,8 @@ application:
         {box}.'
       possibly_durable_expense: El movimiento del {row_date} por {row_amount} se deduce
         como gasto corriente y su descripción parece la de un elemento duradero.
+      prior_filing_unrecorded: Para calcular la casilla {box}, registra tu Modelo
+        {modelo} de {year}.
       profile_fact_unrecorded: 'Para calcular la casilla {box}, registra en tu perfil:
         {field}.'
       register_cost_exceeds_paid: '{elements}: estos elementos indican un coste de

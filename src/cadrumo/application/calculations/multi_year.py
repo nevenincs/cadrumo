@@ -14,6 +14,7 @@ from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -21,6 +22,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..modelo.printed_boxes import first_printed_dependent, printed_boxes
 from ..persistence_errors import PersistenceDegradationError
 from ..user_profile.profile_read_ports import ProfileReadPorts
 from .iva_compensation_history_ports import (
@@ -30,7 +32,7 @@ from .iva_compensation_history_ports import (
 from .observations_repository import CalculationObservationRepositoryProtocol
 
 if TYPE_CHECKING:
-    from .binding_prefill import PrefilledBinding
+    from .binding_prefill import PrefilledBinding, UnsatisfiedBinding
 
 
 def _prefill_source_ref(item: PrefilledBinding, unknown: str) -> str:
@@ -45,6 +47,48 @@ def _prefill_source_ref(item: PrefilledBinding, unknown: str) -> str:
         f"{item.source_modelo or unknown}:"
         f"{item.source_filing_year if item.source_filing_year is not None else unknown}:"
         f"{periods or unknown}:{item.binding_id}"
+    )
+
+
+def _unsatisfied_diagnostic(
+    snapshot: RegistrySnapshot,
+    item: UnsatisfiedBinding,
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    """Name the box an unsupplied prior-filing carry leaves open and the filing that would supply it.
+
+    A carry usually feeds a formula rather than populating a box, so the box is the first one the
+    form prints that waits on it. A carry that reaches no printed box states no fact.
+    """
+    casilla_id = sole_bound_casilla(snapshot.revision, item.binding_id)
+    if casilla_id is None:
+        casilla_id = first_printed_dependent(snapshot, item.binding_id)
+    box = printed_boxes(snapshot.revision, None).number(casilla_id)
+    return CalculationSourceDiagnostic(
+        reason="unresolved_binding",
+        source_kind="previous_filing",
+        resolver_id=resolver_id,
+        binding_id=item.binding_id,
+        casilla_id=casilla_id,
+        message=(
+            f"Modelo {context.modelo} declares previous-filing binding {item.binding_id!r}, "
+            f"but no observation for modelo {item.source_modelo} {item.source_filing_year} "
+            f"{'+'.join(item.source_periods) if item.source_periods else '(any period)'} "
+            "is in the local store, so the carry contributes nothing. File or capture the "
+            "prior filing, or enter the value by hand, before filing."
+        ),
+        fact=(
+            None
+            if box is None
+            else CalculationNoteFact.of(
+                CalculationNoteSentence.PRIOR_FILING_UNRECORDED,
+                box=box,
+                modelo=item.source_modelo,
+                year=item.source_filing_year,
+            )
+        ),
     )
 
 
@@ -110,20 +154,7 @@ class PreviousFilingSourceResolver:
             binding_values=report.binding_values,
             unresolved_binding_ids=tuple(item.binding_id for item in report.unsatisfied),
             diagnostics=tuple(
-                CalculationSourceDiagnostic(
-                    reason="unresolved_binding",
-                    source_kind="previous_filing",
-                    resolver_id=self.resolver_id,
-                    binding_id=item.binding_id,
-                    casilla_id=sole_bound_casilla(snapshot.revision, item.binding_id),
-                    message=(
-                        f"Modelo {context.modelo} declares previous-filing binding {item.binding_id!r}, "
-                        f"but no observation for modelo {item.source_modelo} {item.source_filing_year} "
-                        f"{'+'.join(item.source_periods) if item.source_periods else '(any period)'} "
-                        "is in the local store, so the carry contributes nothing. File or capture the "
-                        "prior filing, or enter the value by hand, before filing."
-                    ),
-                )
+                _unsatisfied_diagnostic(snapshot, item, context=context, resolver_id=self.resolver_id)
                 for item in report.unsatisfied
             ),
             provenance=tuple(

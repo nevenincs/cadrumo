@@ -183,6 +183,8 @@ class CalculationNoteSentence(StrEnum):
     """A household group states more people than the profile records."""
     PROFILE_FACT_UNRECORDED = "profile_fact_unrecorded"
     """A profile fact a calculation compares is unrecorded, so the box built on it stays open."""
+    PRIOR_FILING_UNRECORDED = "prior_filing_unrecorded"
+    """A box is built on a figure of an earlier filing, and that filing is not recorded, so the box stays open."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

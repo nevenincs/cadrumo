@@ -49,7 +49,6 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core.aggregation import BindingSourceKind, BindingTypedEnumKind, CalculationSourceLineageRole
-from ...core.casilla_id import CasillaId
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import prefixed_digest
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
@@ -61,7 +60,6 @@ from ...domain.calculations.registry.rental_reduction import require_rental_redu
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
-    expression_casilla_refs,
     expression_date_binding_refs,
 )
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
@@ -78,7 +76,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..user_profile.projections import profile_fact_index
-from .printed_boxes import printed_boxes
+from .printed_boxes import first_printed_dependent, printed_boxes
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
@@ -710,37 +708,13 @@ def _unanswered_text_comparison_bindings(
     )
 
 
-def _first_printed_dependent(snapshot: RegistrySnapshot, binding_id: BindingId) -> CasillaId | None:
-    """The nearest box the form prints whose calculation reads ``binding_id``, directly or through working figures."""
-    printed = printed_boxes(snapshot.revision, None)
-    formulas = snapshot.revision.formulas
-    frontier = sorted(
-        {formula.target_casilla_id for formula in formulas if binding_id in expression_binding_refs(formula.expression)}
-    )
-    seen: set[CasillaId] = set()
-    while frontier:
-        reached = [casilla_id for casilla_id in frontier if printed.prints(casilla_id)]
-        if reached:
-            return reached[0]
-        seen.update(frontier)
-        frontier = sorted(
-            {
-                formula.target_casilla_id
-                for formula in formulas
-                if formula.target_casilla_id not in seen
-                and any(casilla_id in seen for casilla_id in expression_casilla_refs(formula.expression))
-            }
-        )
-    return None
-
-
 def _unanswered_text_binding_diagnostics(
     snapshot: RegistrySnapshot, bindings: tuple[BindingDefinition, ...], *, bucket_id: str
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in bindings:
         selectors = profile_binding_selectors(binding.provider)
-        box = _first_printed_dependent(snapshot, binding.id)
+        box = first_printed_dependent(snapshot, binding.id)
         diagnostics.append(
             CalculationSourceDiagnostic(
                 reason="unresolved_binding",
