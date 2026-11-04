@@ -39,6 +39,7 @@ import {
   type VocabularyState,
 } from "../../../shell/ledgerServedVocabulary";
 import { holdLedgerClassifications } from "../../../shell/ledgerClassifications";
+import { holdLedgerLanguage } from "../../../shell/ledgerLanguage";
 import { holdLedgerLimits } from "../../../shell/ledgerLimits";
 import {
   holdLedgerPeriods,
@@ -307,6 +308,10 @@ export function LedgerSuggestions({
     holdLedgerLimits(limits);
     return () => holdLedgerLimits(null);
   }, [limits]);
+  useEffect(() => {
+    holdLedgerLanguage(locale as OutputLanguage);
+    return () => holdLedgerLanguage(null);
+  }, [locale]);
   const classifications = entryOptions?.classifications ?? null;
   useEffect(() => {
     holdLedgerClassifications(classifications);

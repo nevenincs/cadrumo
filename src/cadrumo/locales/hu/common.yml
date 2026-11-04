@@ -1442,22 +1442,16 @@ desktop:
       blocker:
         action_and_edits: 'Művelet és szerkesztés együtt: {count}'
         actions_conflict: 'Össze nem illő műveletek: {count}'
-        cannot_clear: 'Nem törölhető értékek: {count}'
-        draft_incomplete: 'Új tétel hiányzó adattal: {count}'
         exclude_and_classification: 'Egyszerre kizárva és besorolva: {count}'
         gone: 'Beolvasás óta törölve vagy áthelyezve: {count}'
-        mixed_needs_share: 'Vegyes üzleti arány nélkül: {count}'
-        needs_classification: 'Besorolás hiányzik: {count}'
         not_active: 'Nem aktív, csak aktív tétel módosítható: {count}'
         sealed: 'Véglegesített bevallás miatt zárolva: {count}'
         sealed_unread: 'Nem tudni, zárolt-e: {count}'
-        share_needs_mixed: 'Arány, de nem Vegyes: {count}'
         suggestion_and_edits: 'Modell-jóváhagyás és szerkesztés együtt: {count}'
         suggestion_and_rules: 'Modell-jóváhagyás és rájuk is kiterjedő szabályalkalmazás:
           {count}'
         suggestion_needs_share: 'Vegyes jóváhagyás, add meg az arányt: {count}'
         too_large: 'Túl nagy a küldéshez: {count}'
-        transfer_with_tax: 'Átvezetés adóadattal: {count}'
       blocker_fields: 'Mezők: {fields}'
       checking_locks: Annak ellenőrzése, mely tételek zároltak · {done} / {total}
       close: Kész

@@ -25,7 +25,11 @@ import {
   type StagedRowChanges,
 } from "../src/shell/ledgerStage";
 import { hexId, movement } from "./support/ledger";
-import { planRecorded, recordedCheck } from "./support/stagedCheck";
+import {
+  planRecorded,
+  recordedCheck,
+  servedBlocker,
+} from "./support/stagedCheck";
 
 // How staged changes become operations. No page is opened.
 
@@ -405,10 +409,12 @@ test("a transfer takes no tax field and no business classification", () => {
     ),
   );
   expect(blockersOf(plan, A)).toEqual(["transfer_with_tax"]);
-  expect(plan.entries[0]!.blockers[0]).toEqual({
-    kind: "transfer_with_tax",
-    fields: ["business_classification", "category_id"],
-  });
+  expect(plan.entries[0]!.blockers[0]).toEqual(
+    servedBlocker("transfer_with_tax", [
+      "business_classification",
+      "category_id",
+    ]),
+  );
   expect(blockersOf(plan, T)).toEqual(["transfer_with_tax"]);
   // Personal is what a transfer may be.
   expect(blockersOf(plan, P)).toEqual([]);
@@ -501,13 +507,13 @@ test("what cannot be cleared or needs a classification first is held, never drop
     ),
   );
   expect(plan.entries[0]!.blockers).toEqual([
-    { kind: "cannot_clear", fields: ["usage_ratio_id", "notes"] },
+    servedBlocker("cannot_clear", ["usage_ratio_id", "notes"]),
   ]);
   expect(plan.entries[1]!.blockers).toEqual([
-    {
-      kind: "needs_classification",
-      fields: ["category_id", "counterparty_country"],
-    },
+    servedBlocker("needs_classification", [
+      "category_id",
+      "counterparty_country",
+    ]),
   ]);
   expect(blockersOf(plan, M)).toEqual(["mixed_needs_share"]);
   expect(blockersOf(plan, P)).toEqual(["share_needs_mixed"]);
@@ -757,13 +763,15 @@ test("new movements need their five facts and keep their key", () => {
   expect(plan.drafts.map((entry) => entry.blockers)).toEqual([
     [],
     [
-      {
-        kind: "draft_incomplete",
-        fields: ["booked_date", "currency", "direction", "description"],
-      },
+      servedBlocker("draft_incomplete", [
+        "booked_date",
+        "currency",
+        "direction",
+        "description",
+      ]),
     ],
-    [{ kind: "mixed_needs_share" }],
-    [{ kind: "transfer_with_tax", fields: ["iva_amount"] }],
+    [servedBlocker("mixed_needs_share")],
+    [servedBlocker("transfer_with_tax", ["iva_amount"])],
   ]);
   expect(plan.steps).toEqual([
     {

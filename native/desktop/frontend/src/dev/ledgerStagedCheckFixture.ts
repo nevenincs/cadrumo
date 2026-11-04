@@ -11,7 +11,9 @@ import type {
   LedgerStagedCheckResult,
   LedgerStagedDraft,
   LedgerStagedRow,
+  LedgerStagedBlocker,
   LedgerStagedRowAnswer,
+  OutputLanguage,
 } from "../shell/ledger";
 import { STAGE_FIELDS, storedFieldValue } from "../shell/ledgerStage";
 import entryOptions from "./fixtures/ledgerEntryOptions.json" with { type: "json" };
@@ -25,6 +27,28 @@ type RecordedDrafts = Record<
   string,
   Omit<LedgerStagedCheckResult["drafts"][number], "key">
 >;
+
+type RecordedWords = {
+  blockers: Record<
+    string,
+    Record<string, { words: string; fix_words: string }>
+  >;
+  share_refusal: Record<string, string>;
+};
+/** The language a read without one is answered in, as the backend's. */
+const DEFAULT_LANGUAGE: OutputLanguage = "es";
+
+/** A recorded blocker with the sentences recorded for its kind in the
+ * language asked: the sentences depend on the kind and the language alone. */
+function inLanguage(
+  blocker: LedgerStagedBlocker,
+  language: OutputLanguage,
+): LedgerStagedBlocker {
+  const said = (recorded.words as RecordedWords).blockers[blocker.kind]?.[
+    language
+  ];
+  return said ? { ...blocker, ...said, words_language: language } : blocker;
+}
 
 /** Told of each question the recording does not hold, so it can be recorded. */
 type Unrecorded = (kind: "row" | "draft", question: string) => void;
@@ -64,6 +88,7 @@ export function answerStagedCheck(
   rows: (id: string) => LedgerRow | undefined,
   profileId: string,
 ): LedgerStagedCheckResult | null {
+  const language = request.output_language ?? DEFAULT_LANGUAGE;
   const answers: LedgerStagedRowAnswer[] = [];
   let whole = true;
   for (const asked of request.rows) {
@@ -78,7 +103,13 @@ export function answerStagedCheck(
     const question = rowQuestion(row, asked);
     const answer = (recorded.rows as unknown as RecordedRows)[question];
     if (answer)
-      answers.push({ ...answer, transaction_id: asked.transaction_id });
+      answers.push({
+        ...answer,
+        blockers: answer.blockers.map((blocker) =>
+          inLanguage(blocker, language),
+        ),
+        transaction_id: asked.transaction_id,
+      });
     else {
       whole = false;
       unrecordedHook()?.("row", question);
@@ -88,7 +119,14 @@ export function answerStagedCheck(
   for (const draft of request.drafts) {
     const question = draftQuestion(draft);
     const answer = (recorded.drafts as unknown as RecordedDrafts)[question];
-    if (answer) drafts.push({ key: draft.key, ...answer });
+    if (answer)
+      drafts.push({
+        key: draft.key,
+        ...answer,
+        blockers: answer.blockers.map((blocker) =>
+          inLanguage(blocker, language),
+        ),
+      });
     else {
       whole = false;
       unrecordedHook()?.("draft", question);
@@ -107,5 +145,9 @@ export function answerStagedCheck(
       business: known.includes(category),
       mixed: known.includes(category) && shared.includes(category),
     })),
+    share_refusal_words: (recorded.words as RecordedWords).share_refusal[
+      language
+    ]!,
+    share_refusal_words_language: language,
   };
 }

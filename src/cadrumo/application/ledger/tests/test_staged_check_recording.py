@@ -13,17 +13,19 @@ import os
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, get_args
 from uuid import uuid4
 
 import pytest
 
+from ....core.external_constants import OutputLanguage
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ..actions_manual import transaction_from_command
 from ..models import ManualLedgerTransactionCommand
 from ..staged_check import check_draft, check_stored_row
-from ..staged_check_contracts import LedgerStagedDraft, LedgerStagedRow, LedgerStagedRowAnswer
+from ..staged_check_contracts import LedgerStagedDraft, LedgerStagedRow, LedgerStagedRowAnswer, StagedBlockerKind
+from ..staged_check_words import blocker_words, share_refusal_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -125,6 +127,20 @@ def _absent() -> dict[str, Any]:
     return answer
 
 
+def _served_words() -> dict[str, Any]:
+    """The sentences the answer carries by kind and language, which depend on nothing else."""
+    return {
+        "blockers": {
+            kind: {
+                language.value: dict(zip(("words", "fix_words"), blocker_words(kind, language), strict=True))
+                for language in OutputLanguage
+            }
+            for kind in get_args(StagedBlockerKind)
+        },
+        "share_refusal": {language.value: share_refusal_words(language) for language in OutputLanguage},
+    }
+
+
 def _recording() -> dict[str, Any]:
     return json.loads(_RECORDING.read_text(encoding="utf-8"))
 
@@ -135,6 +151,10 @@ def test_every_recorded_answer_is_what_the_backend_answers() -> None:
     assert recording["rows"], "the recording is empty"
     for question, answer in recording["rows"].items():
         assert _row_answer(question) == answer, question
+
+
+def test_the_recorded_sentences_are_what_the_backend_says_in_every_language() -> None:
+    assert _recording()["words"] == _served_words()
 
 
 def test_every_recorded_draft_is_what_the_backend_answers() -> None:
@@ -165,7 +185,8 @@ if os.environ.get("CADRUMO_STAGED_CHECK_UNRECORDED", "") != "":
         written = {
             "note": _NOTE,
             "absent": _absent(),
+            "words": _served_words(),
             "rows": dict(sorted(recording["rows"].items())),
             "drafts": dict(sorted(recording["drafts"].items())),
         }
-        _RECORDING.write_text(json.dumps(written, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        _RECORDING.write_text(json.dumps(written, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")

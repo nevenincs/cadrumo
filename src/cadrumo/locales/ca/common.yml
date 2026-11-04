@@ -1469,23 +1469,17 @@ desktop:
       blocker:
         action_and_edits: 'Una acció i edicions alhora: {count}'
         actions_conflict: 'Accions incompatibles: {count}'
-        cannot_clear: 'Valors que no es poden buidar: {count}'
-        draft_incomplete: 'Moviments nous amb dades pendents: {count}'
         exclude_and_classification: 'Exclosos i classificats alhora: {count}'
         gone: 'Eliminats o moguts des que els vas llegir: {count}'
-        mixed_needs_share: 'Mixt sense part professional: {count}'
-        needs_classification: 'Sense classificació: {count}'
         not_active: 'No actius, i només canvien els actius: {count}'
         sealed: 'Bloquejats per una declaració finalitzada: {count}'
         sealed_unread: 'Sense saber si estan bloquejats: {count}'
-        share_needs_mixed: 'Amb part però no Mixt: {count}'
         suggestion_and_edits: 'Aprovació del model i edicions alhora: {count}'
         suggestion_and_rules: 'Aprovació del model i una aplicació de regles que els
           inclou: {count}'
         suggestion_needs_share: 'Aprovacions Mixtes, indica una part per aprovar:
           {count}'
         too_large: 'Massa grans per enviar: {count}'
-        transfer_with_tax: 'Traspassos amb dades fiscals: {count}'
       blocker_fields: 'Camps: {fields}'
       checking_locks: Comprovant quins moviments estan bloquejats · {done} de {total}
       close: Fet

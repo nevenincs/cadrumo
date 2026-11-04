@@ -1423,22 +1423,16 @@ desktop:
       blocker:
         action_and_edits: 'An action and edits together: {count}'
         actions_conflict: 'Actions that cannot go together: {count}'
-        cannot_clear: 'Values that can''t be cleared: {count}'
-        draft_incomplete: 'New movements still missing facts: {count}'
         exclude_and_classification: 'Excluded and classified together: {count}'
         gone: 'Removed or moved since you read them: {count}'
-        mixed_needs_share: 'Mixed without a business share: {count}'
-        needs_classification: 'Classification missing: {count}'
         not_active: 'Not active, and only active movements change: {count}'
         sealed: 'Locked by a finalised declaration: {count}'
         sealed_unread: 'Not known whether locked: {count}'
-        share_needs_mixed: 'A share but not Mixed: {count}'
         suggestion_and_edits: 'A model approval and edits together: {count}'
         suggestion_and_rules: 'A model approval and a rules apply that names them:
           {count}'
         suggestion_needs_share: 'Mixed approvals, enter a share to approve: {count}'
         too_large: 'Too large to send: {count}'
-        transfer_with_tax: 'Transfers with tax fields: {count}'
       blocker_fields: 'Fields: {fields}'
       checking_locks: Checking which movements are locked · {done} of {total}
       close: Done

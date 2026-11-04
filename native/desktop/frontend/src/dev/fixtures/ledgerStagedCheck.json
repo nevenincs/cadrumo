@@ -20,6 +20,124 @@
     "blockers": [],
     "notes": []
   },
+  "words": {
+    "blockers": {
+      "cannot_clear": {
+        "es": {
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado."
+        },
+        "en": {
+          "words": "This value can't be cleared: the field has to hold a value.",
+          "fix_words": "Keep the stored value."
+        },
+        "ca": {
+          "words": "Aquest valor no es pot buidar: el camp ha de tenir un valor.",
+          "fix_words": "Conserva el valor desat."
+        },
+        "hu": {
+          "words": "Ez az érték nem törölhető: a mezőnek értéket kell tartalmaznia.",
+          "fix_words": "Tartsd meg a tárolt értéket."
+        }
+      },
+      "needs_classification": {
+        "es": {
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal."
+        },
+        "en": {
+          "words": "This change needs the movement to be classified first.",
+          "fix_words": "Classify the movement as Business or Personal."
+        },
+        "ca": {
+          "words": "Aquest canvi necessita que el moviment estigui classificat abans.",
+          "fix_words": "Classifica el moviment com a Professional o Personal."
+        },
+        "hu": {
+          "words": "Ehhez a változtatáshoz előbb be kell sorolni a tételt.",
+          "fix_words": "Sorold be a tételt Üzletinek vagy Magánnak."
+        }
+      },
+      "mixed_needs_share": {
+        "es": {
+          "words": "Un movimiento Mixto necesita una parte profesional.",
+          "fix_words": "Indica la parte profesional como porcentaje, por ejemplo 50 para el 50 %."
+        },
+        "en": {
+          "words": "A Mixed movement needs a business share.",
+          "fix_words": "Enter the business share as a percentage, such as 50 for 50%."
+        },
+        "ca": {
+          "words": "Un moviment Mixt necessita una part professional.",
+          "fix_words": "Indica la part professional com a percentatge, per exemple 50 per al 50 %."
+        },
+        "hu": {
+          "words": "A Vegyes tételnek üzleti arány kell.",
+          "fix_words": "Add meg az üzleti arányt százalékként, például 50-et az 50%-hoz."
+        }
+      },
+      "share_needs_mixed": {
+        "es": {
+          "words": "La parte profesional solo se aplica a un movimiento Mixto.",
+          "fix_words": "Quita la parte o clasifica el movimiento como Mixto."
+        },
+        "en": {
+          "words": "A business share only applies to a Mixed movement.",
+          "fix_words": "Drop the share, or classify the movement as Mixed."
+        },
+        "ca": {
+          "words": "La part professional només s'aplica a un moviment Mixt.",
+          "fix_words": "Treu la part o classifica el moviment com a Mixt."
+        },
+        "hu": {
+          "words": "Üzleti arány csak Vegyes tételnél van.",
+          "fix_words": "Vesd el az arányt, vagy sorold a tételt Vegyesnek."
+        }
+      },
+      "transfer_with_tax": {
+        "es": {
+          "words": "Un traspaso entre tus propias cuentas no lleva datos fiscales.",
+          "fix_words": "Quita los datos fiscales del traspaso o cambia su sentido."
+        },
+        "en": {
+          "words": "A transfer between your own accounts carries no tax fields.",
+          "fix_words": "Take the tax fields off the transfer, or change its direction."
+        },
+        "ca": {
+          "words": "Un traspàs entre els teus propis comptes no porta dades fiscals.",
+          "fix_words": "Treu les dades fiscals del traspàs o canvia'n el sentit."
+        },
+        "hu": {
+          "words": "A saját számlák közötti átvezetés nem hordoz adóadatot.",
+          "fix_words": "Vedd le az adóadatokat az átvezetésről, vagy változtasd meg az irányát."
+        }
+      },
+      "draft_incomplete": {
+        "es": {
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo."
+        },
+        "en": {
+          "words": "A new movement needs a booked date, an amount, a currency, a direction and a description before it can be saved.",
+          "fix_words": "Fill in what the new movement is missing."
+        },
+        "ca": {
+          "words": "Un moviment nou necessita data comptable, import, moneda, sentit i descripció abans de poder-se desar.",
+          "fix_words": "Completa el que li falta al moviment nou."
+        },
+        "hu": {
+          "words": "Az új tételhez mentés előtt kell könyvelési dátum, összeg, pénznem, irány és leírás.",
+          "fix_words": "Egészítsd ki, ami az új tételből hiányzik."
+        }
+      }
+    },
+    "share_refusal": {
+      "es": "Eso no es una parte: escribe un porcentaje, como 50 para el 50 %.",
+      "en": "That is not a share: write a percentage, such as 50 for 50%.",
+      "ca": "Això no és una part: escriu un percentatge, com 50 per al 50 %.",
+      "hu": "Ez nem arány: írj százalékot, például 50-et az 50%-hoz."
+    }
+  },
   "rows": {
     "{\"stored\":{\"booked_date\":\"2026-01-01\",\"value_date\":\"2026-01-01\",\"operation_date\":null,\"accrual_date\":null,\"amount\":\"32.55\",\"direction\":\"OUTGOING\",\"currency\":\"EUR\",\"counterparty\":\"Bazar El Faro\",\"description\":\"BAZAR EL FARO COMPRA\",\"group_label\":null,\"own_account_id\":\"acc-02\",\"business_classification\":\"PERSONAL\",\"business_pct\":null,\"category_id\":null,\"usage_ratio_id\":null,\"taxable_base\":null,\"iva_rate\":null,\"iva_amount\":null,\"iva_category\":null,\"irpf_category\":null,\"notes\":null,\"deduction_fact_kind\":null,\"investment_asset_id\":null,\"counterparty_country\":\"ES\",\"counterparty_identification_state\":null},\"lifecycle\":\"ACTIVE\",\"evidence\":false,\"cells\":[],\"evidence_staged\":false,\"m210_staged\":false}": {
       "found": true,
@@ -2726,7 +2844,10 @@
       "blockers": [
         {
           "kind": "needs_classification",
-          "fields": ["iva_category"]
+          "fields": ["iva_category"],
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -4803,7 +4924,10 @@
       "blockers": [
         {
           "kind": "transfer_with_tax",
-          "fields": ["accrual_date"]
+          "fields": ["accrual_date"],
+          "words": "Un traspaso entre tus propias cuentas no lleva datos fiscales.",
+          "fix_words": "Quita los datos fiscales del traspaso o cambia su sentido.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -4886,7 +5010,10 @@
       "blockers": [
         {
           "kind": "transfer_with_tax",
-          "fields": ["operation_date"]
+          "fields": ["operation_date"],
+          "words": "Un traspaso entre tus propias cuentas no lleva datos fiscales.",
+          "fix_words": "Quita los datos fiscales del traspaso o cambia su sentido.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -4930,7 +5057,10 @@
       "blockers": [
         {
           "kind": "transfer_with_tax",
-          "fields": ["taxable_base"]
+          "fields": ["taxable_base"],
+          "words": "Un traspaso entre tus propias cuentas no lleva datos fiscales.",
+          "fix_words": "Quita los datos fiscales del traspaso o cambia su sentido.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -5276,7 +5406,10 @@
       "blockers": [
         {
           "kind": "cannot_clear",
-          "fields": ["usage_ratio_id", "notes"]
+          "fields": ["usage_ratio_id", "notes"],
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -5473,7 +5606,10 @@
       "blockers": [
         {
           "kind": "cannot_clear",
-          "fields": ["amount"]
+          "fields": ["amount"],
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado.",
+          "words_language": "es"
         }
       ],
       "notes": [
@@ -5510,7 +5646,10 @@
       "blockers": [
         {
           "kind": "cannot_clear",
-          "fields": ["booked_date"]
+          "fields": ["booked_date"],
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado.",
+          "words_language": "es"
         }
       ],
       "notes": [
@@ -5573,7 +5712,10 @@
       "blockers": [
         {
           "kind": "needs_classification",
-          "fields": ["business_classification"]
+          "fields": ["business_classification"],
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -5604,7 +5746,10 @@
       "blockers": [
         {
           "kind": "cannot_clear",
-          "fields": ["business_classification"]
+          "fields": ["business_classification"],
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -5635,7 +5780,10 @@
       "blockers": [
         {
           "kind": "share_needs_mixed",
-          "fields": []
+          "fields": [],
+          "words": "La parte profesional solo se aplica a un movimiento Mixto.",
+          "fix_words": "Quita la parte o clasifica el movimiento como Mixto.",
+          "words_language": "es"
         }
       ],
       "notes": [
@@ -5672,7 +5820,10 @@
       "blockers": [
         {
           "kind": "share_needs_mixed",
-          "fields": []
+          "fields": [],
+          "words": "La parte profesional solo se aplica a un movimiento Mixto.",
+          "fix_words": "Quita la parte o clasifica el movimiento como Mixto.",
+          "words_language": "es"
         }
       ],
       "notes": [
@@ -6245,7 +6396,10 @@
       "blockers": [
         {
           "kind": "cannot_clear",
-          "fields": ["description"]
+          "fields": ["description"],
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado.",
+          "words_language": "es"
         }
       ],
       "notes": [
@@ -6295,7 +6449,10 @@
       "blockers": [
         {
           "kind": "transfer_with_tax",
-          "fields": ["business_classification", "category_id"]
+          "fields": ["business_classification", "category_id"],
+          "words": "Un traspaso entre tus propias cuentas no lleva datos fiscales.",
+          "fix_words": "Quita los datos fiscales del traspaso o cambia su sentido.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -6744,7 +6901,10 @@
       "blockers": [
         {
           "kind": "cannot_clear",
-          "fields": ["notes"]
+          "fields": ["notes"],
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -6943,7 +7103,10 @@
       "blockers": [
         {
           "kind": "cannot_clear",
-          "fields": ["usage_ratio_id"]
+          "fields": ["usage_ratio_id"],
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -7266,7 +7429,10 @@
       "blockers": [
         {
           "kind": "mixed_needs_share",
-          "fields": []
+          "fields": [],
+          "words": "Un movimiento Mixto necesita una parte profesional.",
+          "fix_words": "Indica la parte profesional como porcentaje, por ejemplo 50 para el 50 %.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -7396,7 +7562,10 @@
       "blockers": [
         {
           "kind": "cannot_clear",
-          "fields": ["business_classification"]
+          "fields": ["business_classification"],
+          "words": "Este valor no se puede vaciar: el campo tiene que tener un valor.",
+          "fix_words": "Conserva el valor guardado.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -7688,7 +7857,10 @@
       "blockers": [
         {
           "kind": "needs_classification",
-          "fields": ["category_id", "counterparty_country"]
+          "fields": ["category_id", "counterparty_country"],
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -7719,7 +7891,10 @@
       "blockers": [
         {
           "kind": "needs_classification",
-          "fields": ["category_id"]
+          "fields": ["category_id"],
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -7750,7 +7925,10 @@
       "blockers": [
         {
           "kind": "needs_classification",
-          "fields": ["category_id"]
+          "fields": ["category_id"],
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -7781,7 +7959,10 @@
       "blockers": [
         {
           "kind": "needs_classification",
-          "fields": ["category_id"]
+          "fields": ["category_id"],
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -7812,7 +7993,10 @@
       "blockers": [
         {
           "kind": "needs_classification",
-          "fields": ["counterparty_identification_state"]
+          "fields": ["counterparty_identification_state"],
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -8135,7 +8319,10 @@
       "blockers": [
         {
           "kind": "needs_classification",
-          "fields": ["usage_ratio_id"]
+          "fields": ["usage_ratio_id"],
+          "words": "Este cambio necesita que el movimiento esté clasificado antes.",
+          "fix_words": "Clasifica el movimiento como Profesional o Personal.",
+          "words_language": "es"
         }
       ],
       "notes": []
@@ -21474,7 +21661,10 @@
             "currency",
             "direction",
             "description"
-          ]
+          ],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21499,7 +21689,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["currency"]
+          "fields": ["currency"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21508,7 +21701,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["currency", "direction"]
+          "fields": ["currency", "direction"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21521,7 +21717,10 @@
       "blockers": [
         {
           "kind": "mixed_needs_share",
-          "fields": []
+          "fields": [],
+          "words": "Un movimiento Mixto necesita una parte profesional.",
+          "fix_words": "Indica la parte profesional como porcentaje, por ejemplo 50 para el 50 %.",
+          "words_language": "es"
         }
       ]
     },
@@ -21530,7 +21729,10 @@
       "blockers": [
         {
           "kind": "transfer_with_tax",
-          "fields": ["iva_amount"]
+          "fields": ["iva_amount"],
+          "words": "Un traspaso entre tus propias cuentas no lleva datos fiscales.",
+          "fix_words": "Quita los datos fiscales del traspaso o cambia su sentido.",
+          "words_language": "es"
         }
       ]
     },
@@ -21539,7 +21741,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["booked_date", "currency", "direction", "description"]
+          "fields": ["booked_date", "currency", "direction", "description"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21548,7 +21753,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["amount", "currency", "direction"]
+          "fields": ["amount", "currency", "direction"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21557,7 +21765,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["amount", "currency", "direction", "description"]
+          "fields": ["amount", "currency", "direction", "description"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21566,7 +21777,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["booked_date", "amount", "currency", "description"]
+          "fields": ["booked_date", "amount", "currency", "description"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21575,7 +21789,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["booked_date", "amount", "currency", "description"]
+          "fields": ["booked_date", "amount", "currency", "description"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21584,7 +21801,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["booked_date", "amount", "currency", "description"]
+          "fields": ["booked_date", "amount", "currency", "description"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     },
@@ -21593,7 +21813,10 @@
       "blockers": [
         {
           "kind": "draft_incomplete",
-          "fields": ["booked_date", "amount", "currency", "description"]
+          "fields": ["booked_date", "amount", "currency", "description"],
+          "words": "Un movimiento nuevo necesita fecha contable, importe, moneda, sentido y descripción antes de poder guardarse.",
+          "fix_words": "Completa lo que le falta al movimiento nuevo.",
+          "words_language": "es"
         }
       ]
     }

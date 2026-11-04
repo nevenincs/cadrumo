@@ -17,6 +17,7 @@ import type {
   LedgerStagedRow,
   LedgerStagedRowAnswer,
 } from "./ledger";
+import { ledgerLanguage } from "./ledgerLanguage";
 import { readAnswer } from "./ledgerWindow";
 import {
   actionRows,
@@ -31,6 +32,9 @@ export type StagedCheck = {
   rows: ReadonlyMap<string, LedgerStagedRowAnswer>;
   drafts: ReadonlyMap<string, LedgerStagedCheckResult["drafts"][number]>;
   categories: ReadonlyMap<string, { business: boolean; mixed: boolean }>;
+  /** The sentence for a business share no percentage reads, as served and in
+   * the language it was served in; null where nothing was asked. */
+  shareRefusal: { words: string; language: string } | null;
 };
 
 export function indexCheck(result: LedgerStagedCheckResult): StagedCheck {
@@ -43,6 +47,10 @@ export function indexCheck(result: LedgerStagedCheckResult): StagedCheck {
         { business, mixed },
       ]),
     ),
+    shareRefusal: {
+      words: result.share_refusal_words,
+      language: result.share_refusal_words_language,
+    },
   };
 }
 
@@ -113,8 +121,13 @@ export async function askStagedCheck(
   request: LedgerStagedCheckRequest,
 ): Promise<CheckReply> {
   try {
+    // Asked in the language the page shows, so its sentences come in it.
+    const language = ledgerLanguage();
     const answer = readAnswer(
-      await port.submit("ledger.staged.check", request),
+      await port.submit(
+        "ledger.staged.check",
+        language === null ? request : { ...request, output_language: language },
+      ),
     );
     return answer.kind === "answer"
       ? { kind: "answer", result: answer.result }
@@ -159,6 +172,7 @@ export const NOTHING_CHECKED: StagedCheck = {
   rows: new Map(),
   drafts: new Map(),
   categories: new Map(),
+  shareRefusal: null,
 };
 
 export class StagedCheckSession extends ReadSessionScheduler<

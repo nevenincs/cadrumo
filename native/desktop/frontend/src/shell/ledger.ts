@@ -1065,6 +1065,8 @@ export type LedgerStagedCheckRequest = {
   rows: LedgerStagedRow[];
   drafts: LedgerStagedDraft[];
   categories: string[];
+  /** The language the answer's sentences are said in. */
+  output_language?: OutputLanguage;
 };
 export type LedgerStagedRoute = {
   field: string;
@@ -1080,6 +1082,11 @@ export type LedgerStagedBlocker = {
     | "transfer_with_tax"
     | "draft_incomplete";
   fields: string[];
+  /** The sentence saying why the staged work cannot be sent. */
+  words: string;
+  /** The sentence saying what puts it right. */
+  fix_words: string;
+  words_language: OutputLanguage;
 };
 export type LedgerStagedNote = {
   kind: "sends_current_classification" | "sends_current_share" | "new_identity";
@@ -1117,6 +1124,9 @@ export type LedgerStagedCheckResult = {
     blockers: LedgerStagedBlocker[];
   }[];
   categories: { category: string; business: boolean; mixed: boolean }[];
+  /** The sentence shown beside a business share no percentage reads. */
+  share_refusal_words: string;
+  share_refusal_words_language: OutputLanguage;
 };
 
 export type InvoicePreviewRequest = {

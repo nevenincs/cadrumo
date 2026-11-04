@@ -1,6 +1,7 @@
 import { appendFileSync } from "node:fs";
 import type { LedgerRow } from "../../src/shell/ledger";
 import { answerStagedCheck } from "../../src/dev/ledgerStagedCheckFixture";
+import recorded from "../../src/dev/fixtures/ledgerStagedCheck.json" with { type: "json" };
 import {
   indexCheck,
   stagedCheckRequest,
@@ -36,6 +37,24 @@ export function recordedCheck(
       "The staged check recording does not hold this question; record it with the Python recording test.",
     );
   return indexCheck(result);
+}
+
+/** A blocker as a plan holds it, with the sentences the backend said for its
+ * kind in the language a read without one is answered in, as recorded. */
+export function servedBlocker(kind: string, fields?: readonly string[]) {
+  const said = (
+    recorded.words.blockers as Record<
+      string,
+      Record<string, { words: string; fix_words: string }>
+    >
+  )[kind]!.es!;
+  return {
+    kind,
+    ...(fields ? { fields } : {}),
+    words: said.words,
+    fixWords: said.fix_words,
+    wordsLanguage: "es",
+  };
 }
 
 /** `planApply` with the recorded answer for exactly `content` over the

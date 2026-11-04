@@ -49,6 +49,7 @@ function BlockerFixes({
   onGoToDraft,
   onRereadSealed,
   checking,
+  shareRefusal,
 }: {
   kind: PlanBlocker["kind"];
   held: Held[];
@@ -62,10 +63,13 @@ function BlockerFixes({
   /** That read is under way. */
   checking: boolean;
   port: LedgerPort;
+  /** The sentence the check served for a share no percentage reads. */
+  shareRefusal: LedgerPlan["shareRefusal"];
 }) {
   const t = useStrings();
   const [share, setShare] = useState("");
-  const [shareError, setShareError] = useState<string | null>(null);
+  const [shareRefused, setShareRefused] = useState(false);
+  const shareError = shareRefused ? (shareRefusal?.words ?? null) : null;
   const [currency, setCurrency] = useState("");
   const currencies = useFieldSuggestions("currency");
   const ids = held.filter((entry) => !entry.draft).map((entry) => entry.id);
@@ -158,11 +162,7 @@ function BlockerFixes({
             event.preventDefault();
             const parsed = parsePercent(pointsText(share));
             if (parsed.kind !== "value") {
-              setShareError(
-                t("desktop.ledger.classify.share_refused", {
-                  raw: share,
-                }),
-              );
+              setShareRefused(true);
               return;
             }
             for (const entry of held) {
@@ -197,11 +197,11 @@ function BlockerFixes({
             controlSize="sm"
             className="w-24"
             aria-label={t("desktop.ledger.classify.share")}
-            invalid={shareError ? true : undefined}
+            invalid={shareRefused ? true : undefined}
             value={share}
             onChange={(held) => {
               setShare(held);
-              setShareError(null);
+              setShareRefused(false);
             }}
           />
           <Button type="submit" variant="outline" size="xs">
@@ -389,6 +389,15 @@ function BlockerFixes({
   }
 }
 
+/** The sentence the backend served for why a blocker holds the work back,
+ * for the kinds it words; null for the kinds the window words itself. */
+const servedWords = (blocker: PlanBlocker): string | null =>
+  "words" in blocker ? blocker.words : null;
+
+/** The sentence the backend served for what puts the blocker right. */
+const servedFix = (blocker: PlanBlocker): string | null =>
+  "fixWords" in blocker ? blocker.fixWords : null;
+
 function blockerFields(t: Translate, blocker: PlanBlocker): string | null {
   const fields =
     "fields" in blocker
@@ -469,9 +478,10 @@ export function NeedsYouFirst({
             <div className="flex flex-wrap items-center gap-2">
               <Icon name="alert" size="xs" className="text-warning" />
               <span className="flex-1 font-medium">
-                {t(`desktop.ledger.apply.blocker.${kind}`, {
-                  count: held.length,
-                })}
+                {servedWords(held[0]!.blocker) ??
+                  t(`desktop.ledger.apply.blocker.${kind}`, {
+                    count: held.length,
+                  })}
               </span>
               <BlockerFixes
                 kind={kind}
@@ -484,6 +494,7 @@ export function NeedsYouFirst({
                 onRereadSealed={onRereadSealed}
                 port={port}
                 checking={locks !== null}
+                shareRefusal={plan.shareRefusal}
               />
             </div>
             {kind === "sealed_unread" && locks && (
@@ -493,6 +504,11 @@ export function NeedsYouFirst({
               >
                 <Spinner />
                 {lockProgress(t, locale, locks)}
+              </p>
+            )}
+            {servedFix(held[0]!.blocker) && (
+              <p className="text-sm text-muted-foreground">
+                {servedFix(held[0]!.blocker)}
               </p>
             )}
             {fields && (

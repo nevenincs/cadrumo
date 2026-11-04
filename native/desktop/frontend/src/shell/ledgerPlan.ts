@@ -13,6 +13,7 @@ import {
   type LedgerClassifyRequest,
   type LedgerDefinitionId,
   type LedgerRow,
+  type LedgerStagedBlocker,
   type LedgerUpdateRequest,
   type OutputLanguage,
 } from "./ledger";
@@ -59,6 +60,14 @@ const CLASSIFYING: ReadonlySet<StagedActionKind> = new Set([
 
 export type PlanField = StageField | "m210_income_classification";
 
+/** The sentences the backend served for a blocker it names: why the staged
+ * work cannot be sent, what puts it right, and the language they are in. */
+export type ServedBlockerWords = {
+  words: string;
+  fixWords: string;
+  wordsLanguage: string;
+};
+
 /** Why a row, a new movement or an action is held back from the apply. */
 export type PlanBlocker =
   | { kind: "gone" }
@@ -67,11 +76,14 @@ export type PlanBlocker =
   /** Whether a finalized declaration seals it was not read: it is never
    * planned as savable on a guess. */
   | { kind: "sealed_unread" }
-  | { kind: "cannot_clear"; fields: PlanField[] }
-  | { kind: "needs_classification"; fields: PlanField[] }
-  | { kind: "mixed_needs_share" }
-  | { kind: "share_needs_mixed" }
-  | { kind: "transfer_with_tax"; fields: (PlanField | DraftField)[] }
+  | ({ kind: "cannot_clear"; fields: PlanField[] } & ServedBlockerWords)
+  | ({ kind: "needs_classification"; fields: PlanField[] } & ServedBlockerWords)
+  | ({ kind: "mixed_needs_share" } & ServedBlockerWords)
+  | ({ kind: "share_needs_mixed" } & ServedBlockerWords)
+  | ({
+      kind: "transfer_with_tax";
+      fields: (PlanField | DraftField)[];
+    } & ServedBlockerWords)
   | { kind: "action_and_edits"; action: string }
   | { kind: "exclude_and_classification"; action: string }
   | { kind: "suggestion_and_edits"; action: string }
@@ -82,7 +94,7 @@ export type PlanBlocker =
   | { kind: "suggestion_needs_share"; action: string }
   | { kind: "actions_conflict"; actions: string[] }
   | { kind: "too_large" }
-  | { kind: "draft_incomplete"; fields: DraftField[] };
+  | ({ kind: "draft_incomplete"; fields: DraftField[] } & ServedBlockerWords);
 
 /** What the review says about a row's work without holding it back. */
 export type PlanNote =
@@ -168,6 +180,9 @@ export type LedgerPlan = {
   steps: PlanStep[];
   held: { rows: string[]; drafts: string[]; actions: string[] };
   summary: PlanSummary;
+  /** The sentence for a business share no percentage reads, as the check
+   * served it; null where it served none. */
+  shareRefusal: StagedCheck["shareRefusal"];
 };
 
 export type PlanContext = {
@@ -440,12 +455,18 @@ export function ruleApplyClashes(
   );
 }
 
-/** A blocker the backend names, in the plan's terms. Some carry no fields. */
-function heldBy(blocker: { kind: string; fields: string[] }) {
+/** A blocker the backend names, in the plan's terms, with its sentences.
+ * Some carry no fields. */
+function heldBy(blocker: LedgerStagedBlocker) {
+  const served: ServedBlockerWords = {
+    words: blocker.words,
+    fixWords: blocker.fix_words,
+    wordsLanguage: blocker.words_language,
+  };
   return blocker.kind === "mixed_needs_share" ||
     blocker.kind === "share_needs_mixed"
-    ? { kind: blocker.kind }
-    : blocker;
+    ? { kind: blocker.kind, ...served }
+    : { kind: blocker.kind, fields: blocker.fields, ...served };
 }
 
 /** The checks one movement's staged work must pass. */
@@ -855,6 +876,7 @@ export function planApply(
     steps,
     held,
     summary: summarize(steps, entries, drafts, held),
+    shareRefusal: context.check.shareRefusal,
   };
 }
 

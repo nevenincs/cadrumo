@@ -30,6 +30,8 @@ const result = (digest: string): LedgerStagedCheckResult => ({
   rows: [],
   drafts: [],
   categories: [{ category: digest, business: true, mixed: false }],
+  share_refusal_words: "A sentence about a share.",
+  share_refusal_words_language: "en",
 });
 
 function held() {
