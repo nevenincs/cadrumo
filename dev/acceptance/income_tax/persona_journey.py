@@ -370,12 +370,25 @@ def _quarters(cli: InstalledCli, *, year: int, directory: Path, oracle: Autonomo
         values = calculation.get("casilla_values")
         if not isinstance(values, dict):
             raise JourneyError(f"Modelo 130 {quarter.period} returned no casilla map")
-        observed = (
-            f"{money(Decimal(str(values['01']))):.2f}",
-            f"{money(Decimal(str(values['06']))):.2f}",
+        boxes = ("01", "02", "06", "07")
+        unresolved = [code for code in boxes if code not in values]
+        if unresolved:
+            raise JourneyError(f"Modelo 130 {quarter.period} left boxes unresolved: {', '.join(unresolved)}")
+        observed = tuple(f"{money(Decimal(str(values[code]))):.2f}" for code in boxes)
+        expected = tuple(
+            f"{amount:.2f}"
+            for amount in (
+                quarter.cumulative_income,
+                quarter.casilla_02,
+                quarter.cumulative_withholding,
+                quarter.result,
+            )
         )
-        if observed != (f"{quarter.cumulative_income:.2f}", f"{quarter.cumulative_withholding:.2f}"):
-            raise JourneyError(f"Modelo 130 {quarter.period} income and withholding oracle mismatch: {observed}")
+        if observed != expected:
+            raise JourneyError(
+                f"Modelo 130 {quarter.period} boxes 01, 02, 06 and 07 oracle mismatch: "
+                f"expected {expected}, got {observed}"
+            )
         # The register entry states the quarter as the taxpayer filed it, by the hand-worked figures.
         rows = [
             ("01", quarter.cumulative_income),
