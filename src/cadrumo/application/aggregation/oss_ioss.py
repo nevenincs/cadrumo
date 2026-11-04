@@ -46,7 +46,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
-from ...core.period import Period, PeriodError
+from ...core.period import Period, PeriodError, PeriodKind, quarter_code
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -796,8 +796,7 @@ def _wire_period(period: Period) -> str:
 
 def period_holding(day: date, filed: Period) -> Period:
     """Return the period of the same length as ``filed`` that holds ``day``."""
-    code = f"{(day.month + 2) // 3}T" if filed.quarter_ordinal is not None else f"{day.month:02d}"
-    return Period.from_year_and_code(day.year, code)
+    return Period.containing(day, PeriodKind.QUARTERLY if filed.quarter_ordinal is not None else PeriodKind.MONTHLY)
 
 
 def _correction_limit(corrected: Period, years: int) -> date:
@@ -855,8 +854,8 @@ def _caller_correction_slots(
         ):
             raise AggregationValidationError(tr("aggregation.oss_ioss.errors.correction_row_invalid"), context=details)
         number = int(texts[period])
-        code = f"{number}T" if _period_type(filed) == _QUARTER_PERIOD_TYPE else f"{number:02d}"
         try:
+            code = quarter_code(number).value if _period_type(filed) == _QUARTER_PERIOD_TYPE else f"{number:02d}"
             corrected = Period.from_year_and_code(int(numbers[year]), code)
         except (PeriodError, ValueError) as exc:
             raise AggregationValidationError(
