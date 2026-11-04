@@ -6,21 +6,20 @@ the lessor's urban rental activity under group 861 of the sección primera of
 the IAE tariffs (RDLeg 1175/1990). Each expectation below is derived from that
 rule, not from a run.
 
-The groups are a governed fact. These tests resolve the authored fact and the
-authored support envelope through the real resolver, so they hold for the
-source registry whether or not the published generation has adopted it yet.
+The groups are a governed fact. These tests read the fact and the support
+envelope from the published generation and resolve them through the real
+resolver.
 """
 
 from __future__ import annotations
 
-import tomllib
 from datetime import date
-from pathlib import Path
 from typing import Any
 
 import pytest
 
 from ....core.retencion_soportada import RetencionSoportadaClase
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from ...calculations.registry.governed_fact_scope import CandidateFactAuthority
@@ -35,21 +34,19 @@ from ..retencion_soportada_applicability import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY = Path(__file__).parents[3] / "_data" / "registry" / "aeat"
-_FACT_FILE = _REGISTRY / "facts" / "0179-rirpf-art-75-iae-urban-rental-groups.toml"
-_SUPPORT_FILE = _REGISTRY / "legal" / "supported-filing-years.toml"
 
 _RENTAL_ACTIVITY = RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD
 _ACTIVITY_INCOME = frozenset({"actividad_economica"})
 
 
 def _authored_fact_table() -> dict[str, Any]:
-    return tomllib.loads(_FACT_FILE.read_text(encoding="utf-8"))["fact"]
+    with bundled_indexed_authority().operation() as operation:
+        return operation.governed_fact(IAE_URBAN_RENTAL_GROUPS_FACT_ID).model_dump(mode="json")
 
 
 def _support() -> SupportedFilingYearsCatalogue:
-    table = tomllib.loads(_SUPPORT_FILE.read_text(encoding="utf-8"))["supported_filing_years"]
-    return SupportedFilingYearsCatalogue.model_validate(table)
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years()
 
 
 def _authority(table: dict[str, Any]) -> CandidateFactAuthority:
