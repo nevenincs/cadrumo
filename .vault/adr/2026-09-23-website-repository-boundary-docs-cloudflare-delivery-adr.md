@@ -7,9 +7,9 @@ related:
   - "[[2026-08-23-website-repository-boundary-adr]]"
   - "[[2026-09-22-website-repository-boundary-docs-deployment-ownership-reference]]"
 superseded_by: '2026-09-27-website-repository-boundary-docs-static-delivery-adr'
-modified: '2026-09-27'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6aaef4bd7769ffdb05e8e540e0938eb866336ba02c59ea6aa6afe5047d9882d8'
+body_hash: 'sha256:a9e84d2d937e7943a4792d3003f6b8c9d5761af6fc5d5be217543d4cb7a674cb'
 ---
 # `website-repository-boundary` adr: `documentation delivery moves to Cloudflare R2 and a Worker` | (**status:** `superseded`)
 
@@ -42,7 +42,6 @@ The product documentation was published to a private S3 bucket behind CloudFront
 - `dev/deploy/r2_objects.py` uploads and lists over R2's S3 API with first-party SigV4 signing; `dev/deploy/cloudflare_api.py` deploys the Worker module through the Cloudflare API, so neither Wrangler nor Node is needed to publish.
 - `dev/deploy/docs_static_site.py` composes build, validation, upload, Worker deploy, routes and live verification of both mounts; `provision` performs the one-time zone wiring and `rollback` redeploys an earlier release.
 - `.github/workflows/release.yml` publishes from the `docs` environment with five Cloudflare secrets, publishes the registry authority before every docs build, and gains a `docs` phase to republish a ref without a package release.
-- The CloudFormation template in `infra/` is retained while CloudFront still serves the landing page.
 
 ## Rationale
 

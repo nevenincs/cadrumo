@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#canonical-release-pipeline'
 date: '2026-07-27'
-modified: '2026-10-21'
-body_hash: 'sha256:9e6e26267c762179dd6eeab1e0549048a223a3e24499198fdb80b70a4fb5dec7'
+modified: '2026-11-04'
+body_hash: 'sha256:0a519f061bd47a99bc0acaaf1d1abe54dd3384ef5c7527b36f1863dc3e96b88b'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
@@ -257,7 +257,7 @@ dedicated IAM role â€” no stored AWS keys, ever, mirroring the registry's
 trusted-publishing posture â€” with least privilege enumerated:
 `s3:ListBucket`, `s3:PutObject`, `s3:DeleteObject` on the one docs bucket;
 `cloudfront:CreateInvalidation` and `cloudfront:GetInvalidation` on the one
-distribution; `cloudformation:DescribeStacks` on the one stack; trust policy
+distribution; trust policy
 pinned to this repository and a protected docs environment. The operator
 creates exactly two things (OP-3, now scheduled rather than optional): the
 GitHub OIDC identity provider in the AWS account, and that role with that

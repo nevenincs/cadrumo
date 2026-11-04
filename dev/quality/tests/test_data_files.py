@@ -9,12 +9,6 @@ from dev.quality.data_files import check, check_file, data_files
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_accepts_cloudformation_tags(tmp_path: Path) -> None:
-    source = tmp_path / "template.yaml"
-    source.write_text("value: !Ref Parameter\n", encoding="utf-8", newline="\n")
-    assert check_file(source) == ()
-
-
 def test_reports_toml_syntax(tmp_path: Path) -> None:
     source = tmp_path / "broken.toml"
     source.write_bytes(b"key = [1,\r\n")

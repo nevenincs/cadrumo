@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#frontend-legal-compliance'
 date: '2026-07-12'
-modified: '2026-10-03'
-body_hash: 'sha256:bfaafa1b345d63ba06d20122b13aadbe787afd66ae6429aa992a07d4fce986a7'
+modified: '2026-11-04'
+body_hash: 'sha256:f711eb0601ab4cd1d6362762af0ac258877d2768b9a1d336ea6b9e8d7fabfdfc'
 related: []
 ---
 
@@ -118,9 +118,8 @@ page.
 
 ### F5 — Hosting posture supports the never-collect claim
 
-The site deploys as static files to AWS S3 behind CloudFront
-(`infra/docs-static-site.yaml`); the template configures **no access
-logging**, so the operator neither enables, receives, nor stores access
+The site deploys as static files to AWS S3 behind CloudFront, configured
+with **no access logging**, so the operator neither enables, receives, nor stores access
 logs. Connection data (IP addresses) is processed transiently by AWS as
 strictly necessary to deliver the page — a delivery necessity reading under
 GDPR art. 6(1)(f) with AWS acting under its standard customer DPA. The
