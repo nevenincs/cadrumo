@@ -25,7 +25,7 @@ def _conditional():
             FormulaExpression(
                 op="greater_than", args=(FormulaExpression(casilla_id="01"), FormulaExpression(literal=Decimal(0)))
             ),
-            FormulaExpression(casilla_id="02"),
+            FormulaExpression(casilla_id="gastos-deducibles-previos"),
             FormulaExpression(literal=Decimal(0)),
         ),
     )
@@ -35,7 +35,7 @@ def test_missing_predicate_precedes_selection_and_unselected_amount_is_not_requi
     snapshot, _ = form_source
     layout = plan_layout(snapshot.revision)
     predicate = layout.entradas_cells["01"].qualified()
-    amount = layout.entradas_cells["02"].qualified()
+    amount = layout.entradas_cells["gastos-deducibles-previos"].qualified()
     guard = conditional_missing_input_guard(_conditional(), formulas={}, layout=layout)
     assert guard == f"IF(ISBLANK({predicate}),TRUE,IF((IF({predicate}>0,1,0))<>0,ISBLANK({amount}),FALSE))"
     assert not guard.startswith("OR(")
@@ -75,7 +75,10 @@ def test_ordinary_formulas_keep_the_existing_guard_policy(form_source):
     snapshot, _ = form_source
     assert (
         conditional_missing_input_guard(
-            FormulaExpression(op="add", args=(FormulaExpression(casilla_id="01"), FormulaExpression(casilla_id="02"))),
+            FormulaExpression(
+                op="add",
+                args=(FormulaExpression(casilla_id="01"), FormulaExpression(casilla_id="gastos-deducibles-previos")),
+            ),
             formulas={},
             layout=plan_layout(snapshot.revision),
         )
@@ -87,7 +90,8 @@ def test_text_predicate_errors_become_unknown_instead_of_broken_visible_formulas
     snapshot, _ = form_source
     layout = plan_layout(snapshot.revision)
     predicate = FormulaExpression(
-        op="text_equal", args=(FormulaExpression(casilla_id="01"), FormulaExpression(casilla_id="02"))
+        op="text_equal",
+        args=(FormulaExpression(casilla_id="01"), FormulaExpression(casilla_id="gastos-deducibles-previos")),
     )
     # Runtime type/emptiness checks belong to the translator: ISBLANK alone
     # misses empty-text formulas and numbers entered into a country field.
@@ -106,10 +110,11 @@ def test_required_condition_rejects_missing_invalid_or_false_predicate_before_am
     snapshot, _ = form_source
     layout = plan_layout(snapshot.revision)
     expression = FormulaExpression(
-        op="require_condition", args=(FormulaExpression(casilla_id="01"), FormulaExpression(casilla_id="02"))
+        op="require_condition",
+        args=(FormulaExpression(casilla_id="01"), FormulaExpression(casilla_id="gastos-deducibles-previos")),
     )
     predicate = layout.entradas_cells["01"].qualified()
-    amount = layout.entradas_cells["02"].qualified()
+    amount = layout.entradas_cells["gastos-deducibles-previos"].qualified()
     assert translate_formula(expression, layout=layout) == f"IF(({predicate})<>0,{amount},NA())"
     assert conditional_missing_input_guard(expression, formulas={}, layout=layout) == (
         f"IF(ISBLANK({predicate}),TRUE,IF(ISERROR({predicate}),TRUE,"
@@ -122,9 +127,10 @@ def test_required_literal_condition_still_checks_false_and_only_selected_amount(
     snapshot, _ = form_source
     layout = plan_layout(snapshot.revision)
     expression = FormulaExpression(
-        op="require_condition", args=(FormulaExpression(literal=Decimal(truth)), FormulaExpression(casilla_id="02"))
+        op="require_condition",
+        args=(FormulaExpression(literal=Decimal(truth)), FormulaExpression(casilla_id="gastos-deducibles-previos")),
     )
-    amount = layout.entradas_cells["02"].qualified()
+    amount = layout.entradas_cells["gastos-deducibles-previos"].qualified()
     assert conditional_missing_input_guard(expression, formulas={}, layout=layout) == (
         f"IF(ISERROR({truth}),TRUE,IF(OR(ISNUMBER({truth}),ISLOGICAL({truth})),"
         f"IF(({truth})<>0,ISBLANK({amount}),TRUE),TRUE))"
@@ -137,7 +143,10 @@ def test_required_text_comparison_preserves_error_guard_and_transitive_casillas(
     predicate = FormulaExpression(
         op="text_equal", args=(FormulaExpression(casilla_id="01"), FormulaExpression(text_literal="DE"))
     )
-    expression = FormulaExpression(op="require_condition", args=(predicate, FormulaExpression(casilla_id="02")))
+    expression = FormulaExpression(
+        op="require_condition",
+        args=(predicate, FormulaExpression(casilla_id="gastos-deducibles-previos")),
+    )
     guard = conditional_missing_input_guard(expression, formulas={}, layout=layout)
     assert guard is not None and guard.startswith(f"IF(ISERROR({translate_formula(predicate, layout=layout)}),TRUE,")
     assert (
@@ -167,14 +176,14 @@ def test_a_declared_unresolved_branch_is_an_unknown_in_the_workbook_and_missing_
         op="if_then_else",
         args=(
             FormulaExpression(casilla_id="01"),
-            FormulaExpression(casilla_id="02"),
+            FormulaExpression(casilla_id="gastos-deducibles-previos"),
             FormulaExpression(
                 op="unresolved_outcome", args=(FormulaExpression(text_literal="waived-refund-result-unsupported"),)
             ),
         ),
     )
     predicate = layout.entradas_cells["01"].qualified()
-    amount = layout.entradas_cells["02"].qualified()
+    amount = layout.entradas_cells["gastos-deducibles-previos"].qualified()
     assert translate_formula(expression, layout=layout) == f"IF(({predicate})<>0,{amount},NA())"
     assert conditional_missing_input_guard(expression, formulas={}, layout=layout) == (
         f"IF(ISBLANK({predicate}),TRUE,IF(({predicate})<>0,ISBLANK({amount}),TRUE))"
