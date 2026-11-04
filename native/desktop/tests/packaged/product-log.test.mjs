@@ -4,12 +4,13 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { describe, test } from "node:test";
+import { after, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -31,11 +32,48 @@ const defaults = JSON.parse(
 );
 const allowlist = loadAllowlist(resolve(here, "product-log-allowlist.json"));
 
+// The repository ignores *.log and every logs/ directory, so a case commits its
+// storage tree as storage-src/ with the log directory spelled "journal" and a
+// ".fixture" suffix on every file. Each use writes the real tree, with the
+// names the packaged run produces, into a temporary directory.
+const fixtureSuffix = ".fixture";
+const sourceDirectoryNames = { journal: "logs" };
+const materialized = [];
+
+function copyStorageTree(from, to, top) {
+  mkdirSync(to, { recursive: true });
+  for (const entry of readdirSync(from, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      const name = (top && sourceDirectoryNames[entry.name]) || entry.name;
+      copyStorageTree(join(from, entry.name), join(to, name), false);
+    } else {
+      assert(entry.name.endsWith(fixtureSuffix), `${entry.name} is a source`);
+      writeFileSync(
+        join(to, entry.name.slice(0, -fixtureSuffix.length)),
+        readFileSync(join(from, entry.name)),
+      );
+    }
+  }
+}
+
+function materializeStorage(name) {
+  const root = mkdtempSync(join(tmpdir(), "product-log-fixture-"));
+  materialized.push(root);
+  const storage = join(root, "storage");
+  copyStorageTree(resolve(fixtures, name, "storage-src"), storage, true);
+  return storage;
+}
+
+after(() => {
+  for (const root of materialized)
+    rmSync(root, { recursive: true, force: true });
+});
+
 function runCase(name, run = "setup") {
   const root = resolve(fixtures, name);
   const checksFile = resolve(root, "checks.json");
   return productLogVerdict({
-    storage: resolve(root, "storage"),
+    storage: materializeStorage(name),
     defaults,
     checks: existsSync(checksFile)
       ? JSON.parse(readFileSync(checksFile, "utf8"))
@@ -291,9 +329,8 @@ describe("sanctioned native setup failure", () => {
   });
 
   test("a record outside the fault test window fails", () => {
-    const root = resolve(fixtures, "native-allowed");
     const verdict = productLogVerdict({
-      storage: resolve(root, "storage"),
+      storage: materializeStorage("native-allowed"),
       defaults,
       checks: [
         {
