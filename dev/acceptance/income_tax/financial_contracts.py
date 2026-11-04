@@ -15,7 +15,7 @@ _SCHEMA_VERSION = "income-01-installed-tui-financial-v2"
 _STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
-_SYNTHETIC_COUNTERPARTY_NIF = "A58818501"
+_SYNTHETIC_COUNTERPARTY_NIF = "B00000034"
 
 
 @dataclass(frozen=True, slots=True)

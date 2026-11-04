@@ -313,7 +313,7 @@ def test_a_name_under_two_tax_ids_gives_a_movement_neither(authority_operation: 
     """The ambiguous name keeps both invoice parties, and its movement joins neither."""
     _save_invoices(
         _invoice("A-1", name="Comercial Duero SL", tax_id="B12345674", issued=date(2026, 1, 10)),
-        _invoice("A-2", name="comercial duero sl", tax_id="A58818501", issued=date(2026, 2, 10)),
+        _invoice("A-2", name="comercial duero sl", tax_id="B00000034", issued=date(2026, 2, 10)),
     )
     _save_movements((_movement("ambiguous", booked=date(2027, 5, 1), counterparty="Comercial Duero SL"),))
 
@@ -321,7 +321,7 @@ def test_a_name_under_two_tax_ids_gives_a_movement_neither(authority_operation: 
 
     assert [(row.name, row.tax_id, row.uses) for row in result.counterparties] == [
         ("Comercial Duero SL", None, 1),
-        ("comercial duero sl", "A58818501", 1),
+        ("comercial duero sl", "B00000034", 1),
         ("Comercial Duero SL", "B12345674", 1),
     ]
 

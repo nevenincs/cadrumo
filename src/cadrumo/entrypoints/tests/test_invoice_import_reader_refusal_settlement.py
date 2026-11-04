@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 #: A sales book whose column names no exact header vocabulary reads, so only the column-naming model reads it.
 _LIBRO = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_expedidas_2025_2026.csv"
 #: Cell values of that book; none may reach the published detail.
-_BOOK_VALUES = ("2025/0142", "Talleres Berrocal", "A82645177", "4272.00")
+_BOOK_VALUES = ("2025/0142", "Talleres Berrocal", "A00000018", "4272.00")
 _READER_REFUSAL_CODE = "REFUSED_LEDGER_IMPORT_READER"
 
 

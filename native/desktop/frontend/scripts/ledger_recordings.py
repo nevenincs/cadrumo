@@ -3,7 +3,7 @@
 The invoice figures preview, the payment-matching rule, the duplicate rule, the rule trial and the
 split check each work an answer out of the facts they are handed and read no stored record. The
 browser fixtures hold none of those rules: they look an answer up in a recording of what the rule
-said. This asks each rule every question in ``ledger_recording_questions`` and writes the questions
+said. This asks each rule every question in ``ledger-recording-questions`` and writes the questions
 beside the answers the rule gave, so the recordings hold no answer written by hand. A new case is a
 new question; run after changing a question or a rule:
 
@@ -23,8 +23,8 @@ from typing import Any
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 SCRIPTS = Path(__file__).resolve().parent
-QUESTIONS = SCRIPTS / "ledger_recording_questions"
 FIXTURES = SCRIPTS.parent / "src" / "dev" / "fixtures"
+QUESTIONS = FIXTURES / "ledger-recording-questions"
 
 _WIDTH = 80
 _INDENT = "  "

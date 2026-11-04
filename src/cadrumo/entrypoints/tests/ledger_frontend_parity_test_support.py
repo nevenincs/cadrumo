@@ -185,7 +185,7 @@ def seed_invoice(profile_id: UUID, *, number: str) -> str:
             invoice_number=number,
             issued_at=date(2025, 1, 21),
             counterparty_name="Synthetic Supplier",
-            counterparty_tax_id="A58818501",
+            counterparty_tax_id="B00000034",
             counterparty_country="ES",
             base_total=Decimal("100.00"),
             iva_total=Decimal("21.00"),

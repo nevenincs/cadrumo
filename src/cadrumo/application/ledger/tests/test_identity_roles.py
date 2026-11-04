@@ -8,7 +8,7 @@ tell. Every assertion about that shape below is written as an outcome -- what
 resolved -- rather than as a call count, because the defect is a wrong answer,
 not a wrong code path.
 
-The identifiers used here are checksum-real: `B17283946` and `A82645177` pass the
+The identifiers used here are checksum-real: `B17283946` and `A00000018` pass the
 AEAT control-character algorithm and `B17283945` fails it. That is verified by a
 control test rather than asserted in a comment, so a change to the validator
 cannot leave these cases silently testing nothing.
@@ -41,7 +41,7 @@ _OWN_NIF = "12345678Z"
 _UNRELATED_VALID_CIF = "B17283946"
 
 #: A second valid identifier, for the genuine multi-candidate case.
-_OTHER_VALID_CIF = "A82645177"
+_OTHER_VALID_CIF = "A00000018"
 
 #: A third, for proving every competitor is surfaced rather than the first two.
 _THIRD_VALID_CIF = "B10000016"
@@ -426,5 +426,5 @@ def test_an_absent_country_does_not_verify_a_foreign_identifier_as_spanish(opera
     # Positive controls: an absent country must not break the two cases that
     # can answer for themselves, or the assertion above would hold for a helper
     # that simply verifies nothing.
-    assert canonical_identity_token("A58818501", country_code=None, operation=operation) == "A58818501"
+    assert canonical_identity_token("B00000034", country_code=None, operation=operation) == "B00000034"
     assert canonical_identity_token("DE811907980", country_code=None, operation=operation) == "DE811907980"

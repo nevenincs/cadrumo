@@ -38,7 +38,7 @@ _PROFILE_FACTS = {
     "iva.voluntary_sii_enrolled": "false",
     "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
 }
-_SUPPLIER_CIF = "A58818501"
+_SUPPLIER_CIF = "B00000034"
 
 
 def _tax_id_token(value: str) -> str:

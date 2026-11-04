@@ -80,7 +80,7 @@ def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypte
         wizard = create_invoice_via_wizard(
             bucket_id=str(_PROFILE),
             kind=InvoiceKind.RECEIVED,
-            counterparty_nif="A58818501",
+            counterparty_nif="B00000034",
             counterparty_name="Synthetic supplier",
             invoice_number="PIN-WIZARD",
             invoice_date="2026-05-01",
@@ -94,7 +94,7 @@ def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypte
             operation=authority_operation,
         )
         path = tmp_path / "synthetic.csv"
-        payload = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\nA58818501,Supplier,PIN-BOOK,2026-05-01,100.00,21\n"
+        payload = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\nB00000034,Supplier,PIN-BOOK,2026-05-01,100.00,21\n"
         path.write_bytes(payload)
         source = read_bulk_invoice_import_source(path, mapper=ports.mapper, expected_sha256=sha256_hex(payload))
         imported = import_invoices_from_rows(

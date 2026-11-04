@@ -4,7 +4,7 @@
   "quit_marker_maximum_bytes": 4096,
   "quit_markers": {
     "canonical": [
-      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-111111111-222222222-333333333-1001\"}",
       "{\"schema_version\":1,\"session\":\"c2\",\"set_at_ms\":9007199254740991,\"user\":\"1000\"}",
       "{\"schema_version\":1,\"session\":\"unnamed\",\"set_at_ms\":1,\"user\":\"0\"}",
       "{\"schema_version\":1,\"session\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"set_at_ms\":1,\"user\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}"
@@ -15,12 +15,12 @@
         "canonical": "{\"schema_version\":1,\"session\":\"c2\",\"set_at_ms\":9007199254740991,\"user\":\"1000\"}"
       },
       {
-        "raw": "\r\n\t{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"} ",
-        "canonical": "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"}"
+        "raw": "\r\n\t{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-111111111-222222222-333333333-1001\"} ",
+        "canonical": "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-111111111-222222222-333333333-1001\"}"
       },
       {
-        "raw": "{\"schema_version\":1,\"session\":\"\\u0031\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"}",
-        "canonical": "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"}"
+        "raw": "{\"schema_version\":1,\"session\":\"\\u0031\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-111111111-222222222-333333333-1001\"}",
+        "canonical": "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-111111111-222222222-333333333-1001\"}"
       }
     ],
     "refused": [

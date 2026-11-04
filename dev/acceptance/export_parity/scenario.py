@@ -68,7 +68,7 @@ class Counterparty:
     tax_id: str
 
 
-CLIENT = Counterparty("Synthetic Client SL", "A58818501")
+CLIENT = Counterparty("Synthetic Client SL", "B00000034")
 SUPPLIER = Counterparty("Synthetic Office Supplies SL", "B12345674")
 ADVISER = Counterparty("Synthetic Tax Adviser", "00000001R")
 LANDLORD = Counterparty("Synthetic Urban Landlord", "00000002W")

@@ -175,7 +175,7 @@ const added: NonNullable<Story["play"]> = async ({
     }),
   );
   await typed("counterparty_name", "Norte Digital S. Coop.");
-  await typed("counterparty_tax_id", "A58818501");
+  await typed("counterparty_tax_id", "B00000034");
   await typed("counterparty_country", "ES");
   await typed("series", "F");
   await typed("invoice_number", "F-2026-021");

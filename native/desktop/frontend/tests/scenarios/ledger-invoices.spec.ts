@@ -103,7 +103,7 @@ async function fillIssued(
     })
     .click();
   await field(target, "counterparty_name").fill("Norte Digital S. Coop.");
-  await field(target, "counterparty_tax_id").fill("A58818501");
+  await field(target, "counterparty_tax_id").fill("B00000034");
   await field(target, "counterparty_country").fill("es");
   await field(target, "series").fill("F");
   await field(target, "invoice_number").fill(number);

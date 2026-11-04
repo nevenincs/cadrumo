@@ -353,7 +353,7 @@ def test_omitted_nif_checks_the_profiles_own_recorded_taxpayer_number(
 
 def test_a_supplied_nif_wins_over_the_profile_number(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """An explicit NIF is checked as given, even when the profile records another."""
-    other = "A58818501"
+    other = "B00000034"
     terminal, acquired = _settle_tgvi(tmp_path, monkeypatch, payload_nif=other, recorded_tax_id=_NIF)
 
     assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED

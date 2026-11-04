@@ -46,7 +46,7 @@ pytestmark = [
 ]
 __all__ = ["active_profile_isolated_backend"]
 
-_RECEIVED_COUNTERPARTY_CIF = "A58818501"
+_RECEIVED_COUNTERPARTY_CIF = "B00000034"
 _RUNTIME_OPERATIONS = frozenset(
     {
         INVOICE_ADD_OPERATION_DEFINITION_ID,

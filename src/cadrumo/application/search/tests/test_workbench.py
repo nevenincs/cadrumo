@@ -205,13 +205,13 @@ def test_provider_authored_labels_hashes_and_stable_ids_are_not_fields() -> None
 def test_nif_iban_label_raw_hex_identity_and_search_terms_fail_closed() -> None:
     base = _document().model_dump()
     attacks = (
-        {"label": "X2482300W · ES91 2100 0418 4502 0005 1332"},
+        {"label": "Y0000000Z · ES91 2100 0418 4502 0005 1332"},
         {"stable_id": "1" * 64},
         # `search_terms` is no longer prohibited by NAME -- `content_terms`
         # carries the operator's own words -- but an UNDECLARED field of any
         # name is still refused, which is what this line now proves.
-        {"search_terms": ("X2482300W",)},
-        {"token_digests": (hashlib.sha256(b"x2482300w").hexdigest(),)},
+        {"search_terms": ("Y0000000Z",)},
+        {"token_digests": (hashlib.sha256(b"y0000000z").hexdigest(),)},
     )
     for attack in attacks:
         with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
@@ -219,7 +219,7 @@ def test_nif_iban_label_raw_hex_identity_and_search_terms_fail_closed() -> None:
 
 
 def test_serialized_document_and_response_contain_no_plaintext_or_dictionary_token_hash() -> None:
-    sensitive_tokens = ("x2482300w", "es9121000418450200051332", _PRIVATE_IDENTITY_BASIS)
+    sensitive_tokens = ("y0000000z", "es9121000418450200051332", _PRIVATE_IDENTITY_BASIS)
     dictionary_hashes = tuple(hashlib.sha256(token.encode()).hexdigest() for token in sensitive_tokens)
     document = _document(WorkbenchSearchKind.LEDGER_ENTRY)
     request = WorkbenchSearchRequest(query="ledger entry")

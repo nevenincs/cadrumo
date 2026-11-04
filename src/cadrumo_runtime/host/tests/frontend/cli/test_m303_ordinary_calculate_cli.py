@@ -141,7 +141,7 @@ def _seed_ledger_and_wallet(bucket_id: str, *, purchase_deduction_fact_kind: str
         bucket_id=bucket_id,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Proveedor de prueba SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00000034",
         counterparty_country="ES",
         invoice_number=f"REC-{_EXERCISE}-1T",
         issued_at=date(_EXERCISE, 2, 15),

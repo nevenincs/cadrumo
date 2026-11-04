@@ -63,7 +63,7 @@ _LINK_RUNTIME_OPERATIONS = _RUNTIME_OPERATIONS | {LEDGER_LINK_OPERATION_DEFINITI
 # A valid Spanish CIF for the received-invoice counterparty; the rich Invoice
 # aggregate validates the tax-id control digit, so an arbitrary token would be
 # refused at construction.
-_RECEIVED_COUNTERPARTY_CIF = "A58818501"
+_RECEIVED_COUNTERPARTY_CIF = "B00000034"
 
 
 def _invoke_open_profile(session: NativeApiCliSession[None], *command: str) -> Result:

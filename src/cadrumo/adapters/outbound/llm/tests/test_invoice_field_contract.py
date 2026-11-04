@@ -365,7 +365,7 @@ class TestContractParityAcrossBothDerivations:
         """Every declared field reaches the draft; a field it cannot is caught here."""
         populated = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(
-                supplier_tax_id="B44531218",
+                supplier_tax_id="B00000224",
                 supplier_name="Ferretería Insular S.L.",
                 supplier_postal_code="35001",
                 supplier_country="España",

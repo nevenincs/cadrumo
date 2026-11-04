@@ -65,7 +65,7 @@ def _sociedad_limitada() -> TaxpayerProfile:
 
 def _landlord() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X9876543K",
+        tax_id="X0000000T",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("GENERAL"),

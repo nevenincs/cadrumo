@@ -43,7 +43,7 @@ def _invoice(currency: str, invoice_number: str) -> Invoice:
             bucket_id=str(_PROFILE),
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Proveedor Exterior SL",
-            counterparty_tax_id="A58818501",
+            counterparty_tax_id="B00000034",
             counterparty_country="ES",
             invoice_number=invoice_number,
             issued_at=date(2026, 3, 16),
@@ -83,7 +83,7 @@ def _present_add_result(monkeypatch: pytest.MonkeyPatch, *, currency: str, invoi
         country_code="ES",
         iva_rate="21",
         currency=currency,
-        counterparty_nif="A58818501",
+        counterparty_nif="B00000034",
     )
     return captured
 

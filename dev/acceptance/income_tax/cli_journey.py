@@ -34,7 +34,7 @@ from .scenario import (
     build_scenario,
 )
 
-_CLIENT_NIF: Final[str] = "A58818501"
+_CLIENT_NIF: Final[str] = "B00000034"
 _RENTAL_ACTIVITY_CLASS: Final[str] = "arrendamiento_inmueble_urbano_actividad"
 
 

@@ -319,7 +319,7 @@ def _persist_invoice_life(secure_objects: SecureObjectRepository) -> None:
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Cliente SA",
-            counterparty_tax_id="B58818501",
+            counterparty_tax_id="B00000141",
             counterparty_country="ES",
             invoice_number=f"FAC-{_YEAR}-{period}",
             issued_at=date(_YEAR, _QUARTER_MONTH[period], 15),

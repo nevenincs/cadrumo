@@ -55,7 +55,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LABEL = "cross-process-subject"
 _FACTS = {
-    "identity.tax_id": "45678912S",
+    "identity.tax_id": "00000011B",
     "taxpayer_type.entity_type": "natural_person",
     "identity.name": "Cross",
     "identity.surnames": "Process",

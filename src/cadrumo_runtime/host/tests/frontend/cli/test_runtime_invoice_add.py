@@ -190,7 +190,7 @@ def _add_arguments(*, number: str) -> tuple[str, ...]:
         "--kind",
         "received",
         "--counterparty-nif",
-        "A58818501",
+        "B00000034",
         "--counterparty-name",
         "Runtime supplier SL",
         "--invoice-number",

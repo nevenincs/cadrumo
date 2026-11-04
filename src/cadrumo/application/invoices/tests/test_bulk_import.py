@@ -41,7 +41,7 @@ from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "29292929-2929-4292-8292-292929292929"
-_CIF = "A58818501"
+_CIF = "B00000034"
 
 
 @contextmanager

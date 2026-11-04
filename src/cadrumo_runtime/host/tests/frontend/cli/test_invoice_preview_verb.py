@@ -51,7 +51,7 @@ def _line(**figures: str) -> str:
     return json.dumps({"description": "Synthetic service", "quantity": "1", "unit_price": "100.00", **figures})
 
 
-_NIF = "A58818501"
+_NIF = "B00000034"
 
 
 def _draft_secrets(*lines: str, nif: str | None = _NIF) -> dict[str, str]:

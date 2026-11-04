@@ -383,7 +383,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "calculate",
                 work_unit_id,
                 "--row",
-                "miembro nif=45678912S porcentaje=60 importe=10000 clave=D",
+                "miembro nif=00000011B porcentaje=60 importe=10000 clave=D",
                 "--row",
                 "miembro nif=00000001R porcentaje=40 importe=5000 clave=D",
             ],

@@ -4,7 +4,7 @@
       "invoice_id": "a-same-day",
       "kind": "received",
       "invoice_number": "PT-0999",
-      "counterparty_tax_id": "B12345674",
+      "counterparty_tax_id": "B00000026",
       "issued_at": "2026-02-01",
       "grand_total": "121.00"
     },
@@ -12,7 +12,7 @@
       "invoice_id": "b-same-number",
       "kind": "received",
       "invoice_number": "pt 0412",
-      "counterparty_tax_id": "B12345674",
+      "counterparty_tax_id": "B00000026",
       "issued_at": "2026-01-01",
       "grand_total": "50.00"
     },
@@ -20,7 +20,7 @@
       "invoice_id": "c-issued",
       "kind": "issued",
       "invoice_number": "IS-7",
-      "counterparty_tax_id": "B12345674",
+      "counterparty_tax_id": "B00000026",
       "issued_at": "2026-02-01",
       "grand_total": "121.00"
     }
@@ -31,7 +31,7 @@
       "question": {
         "kind": "received",
         "invoice_number": "PT-0412",
-        "counterparty_tax_id": "B12345674",
+        "counterparty_tax_id": "B00000026",
         "invoice_date": "2026-02-01",
         "grand_total": "121"
       }
@@ -51,7 +51,7 @@
       "question": {
         "kind": "received",
         "invoice_number": "PT-0412",
-        "counterparty_tax_id": "B00000000",
+        "counterparty_tax_id": "B00000042",
         "invoice_date": null,
         "grand_total": null
       }
@@ -81,7 +81,7 @@
       "question": {
         "kind": "received",
         "invoice_number": null,
-        "counterparty_tax_id": "B12345674",
+        "counterparty_tax_id": "B00000026",
         "invoice_date": "2026-02-02",
         "grand_total": "121"
       }
@@ -91,7 +91,7 @@
       "question": {
         "kind": "received",
         "invoice_number": null,
-        "counterparty_tax_id": "B12345674",
+        "counterparty_tax_id": "B00000026",
         "invoice_date": "2026-02-01",
         "grand_total": null
       }

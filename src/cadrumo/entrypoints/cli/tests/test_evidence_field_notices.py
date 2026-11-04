@@ -58,7 +58,7 @@ def _ambiguous() -> FieldProvenance:
         field="supplier_tax_id",
         origin=FieldOrigin.TEXT_LAYER,
         grounding=FieldGroundingOutcome.AMBIGUOUS,
-        candidates=(FieldAmbiguityCandidate(value="A82645177"), FieldAmbiguityCandidate(value="B17283946")),
+        candidates=(FieldAmbiguityCandidate(value="A00000018"), FieldAmbiguityCandidate(value="B17283946")),
     )
 
 
@@ -406,7 +406,7 @@ def test_the_identity_resolver_really_emits_the_located_but_unroled_shape(
     resolution = resolve_counterparty_identity(
         field="supplier_tax_id",
         candidates=(IdentityCandidate(value="B12345674", anchor="B-12345674", role_evidence=""),),
-        taxpayer_tax_id="A82645177",
+        taxpayer_tax_id="A00000018",
         origin=FieldOrigin.TEXT_LAYER,
         operation=authority_operation,
     )
@@ -431,7 +431,7 @@ def test_each_notice_names_what_was_seen() -> None:
     assert "1.234,56" in contradicted.message
 
     ambiguous = field_degradation_notices([_ambiguous()])[0]
-    assert "A82645177" in ambiguous.message
+    assert "A00000018" in ambiguous.message
     assert "B17283946" in ambiguous.message
     assert _context(ambiguous)["candidate_count"] == "2"
 

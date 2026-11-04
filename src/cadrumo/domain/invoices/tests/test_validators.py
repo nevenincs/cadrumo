@@ -53,9 +53,9 @@ def test_validate_spanish_tax_id_accepts_known_valid_nie() -> None:
 def test_validate_spanish_tax_id_accepts_cif_digit_control() -> None:
     """CIF leaders that mandate a digit control must accept the right digit."""
     values = (
-        # body 5881850 → digit-control 1 (Luhn sum over doubled odd positions +
-        # even positions = 29).
-        "A58818501",
+        # body 0000003 → digit-control 4 (Luhn sum over doubled odd positions +
+        # even positions = 6).
+        "B00000034",
         # body 1234567 → digit-control 4.
         "B12345674",
         "E12345674",
@@ -118,7 +118,7 @@ def test_validate_spanish_tax_id_rejects_invalid_checksum() -> None:
         "12345678A",
         "X1234567A",
         "Z1234567A",
-        "A58818500",
+        "B00000033",
         "K1234567A",
     )
 

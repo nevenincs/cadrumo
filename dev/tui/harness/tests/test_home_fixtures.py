@@ -221,7 +221,7 @@ def test_every_serialized_fixture_has_no_pii_or_secret_like_values() -> None:
         serialized = build_home_projection_fixture(scenario).model_dump_json()
         assert all(pattern.search(serialized) is None for pattern in forbidden)
         assert set(re.findall(r"\b[0-9a-f]{64}\b", serialized)) <= allowed_ids
-    assert all(spanish_identifier.fullmatch(value) for value in ("12345678Z", "X2482300W", "B12345678"))
+    assert all(spanish_identifier.fullmatch(value) for value in ("12345678Z", "Y0000000Z", "B12345678"))
 
 
 def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> None:

@@ -69,7 +69,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _DOCUMENT_TEXT = (
     "FACTURA 2026-0142\n"
     "Proveedor: EJEMPLO SL B12345674\n"
-    "Cliente: OTRA SL A82645177\n"
+    "Cliente: OTRA SL A00000018\n"
     "Base imponible 100,00 EUR\n"
     "TOTAL 121,00 EUR\n"
 )
@@ -669,7 +669,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
 
     def test_no_candidate_arrives_carrying_evidence_the_reader_merely_asserted(self) -> None:
         """With nothing printed to copy, the reader supplies nothing at all."""
-        candidates = self._candidates(supplier_tax_id="B12345674", customer_tax_id="A82645177")
+        candidates = self._candidates(supplier_tax_id="B12345674", customer_tax_id="A00000018")
 
         assert candidates, "the fixture must produce candidates, or this passes vacuously"
         assert all(not candidate.role_evidence for candidate in candidates)
@@ -702,7 +702,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             field="supplier_tax_id",
             candidates=(
                 IdentityCandidate(value="B12345674", role_evidence="printed under 'Proveedor'"),
-                IdentityCandidate(value="A82645177"),
+                IdentityCandidate(value="A00000018"),
             ),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
@@ -722,7 +722,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         """
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
-            candidates=self._candidates(supplier_tax_id="B12345674", customer_tax_id="A82645177"),
+            candidates=self._candidates(supplier_tax_id="B12345674", customer_tax_id="A00000018"),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
             operation=operation,
@@ -746,7 +746,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         """
         candidates = self._candidates(
             supplier_tax_id="B12345674",
-            customer_tax_id="A82645177",
+            customer_tax_id="A00000018",
             role_evidence={"supplier_tax_id": "Proveedor:"},
         )
 
@@ -778,7 +778,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         """
         candidates = self._candidates(
             supplier_tax_id="B12345674",
-            customer_tax_id="A82645177",
+            customer_tax_id="A00000018",
             role_evidence={"supplier_tax_id": "Lieferant:"},
         )
 
@@ -807,7 +807,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         """
         candidates = self._candidates(
             supplier_tax_id="B12345674",
-            customer_tax_id="A82645177",
+            customer_tax_id="A00000018",
             role_evidence={"supplier_tax_id": "Proveedor:", "customer_tax_id": "Cliente:"},
         )
 

@@ -38,10 +38,10 @@ _STACKED = "\n".join(
         "FACTURA",
         "EMISOR",
         "Suministros Iberia SA",
-        "NIF A22633036",
+        "NIF A00000042",
         "DESTINATARIO / CLIENTE",
         "Lucia Fernandez Ortega",
-        "NIF 45678912S",
+        "NIF 00000011B",
         "TOTAL 815,16 EUR",
     ),
 )
@@ -54,7 +54,7 @@ _TWO_COLUMN = "\n".join(
         "FACTURA",
         "EMISOR  DESTINATARIO / CLIENTE",
         "Suministros Iberia SA  Lucia Fernandez Ortega",
-        "NIF A22633036  NIF 45678912S",
+        "NIF A00000042  NIF 00000011B",
         "TOTAL 815,16 EUR",
     ),
 )

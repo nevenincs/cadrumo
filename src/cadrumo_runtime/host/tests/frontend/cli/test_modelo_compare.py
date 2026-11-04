@@ -136,7 +136,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         facts=(
             UserProfileFact(path="identity.name", value="Compare Test Autónomo"),
             UserProfileFact(path="identity.surnames", value="Compare Test Autónomo"),
-            UserProfileFact(path="identity.tax_id", value="11223344B"),
+            UserProfileFact(path="identity.tax_id", value="00000013J"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(
                 path="taxpayer_type.irpf_income_categories",

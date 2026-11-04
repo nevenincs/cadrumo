@@ -25,7 +25,7 @@ use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-const USER: &str = "S-1-5-21-1004336348-1177238915-682003330-1001";
+const USER: &str = "S-1-5-21-111111111-222222222-333333333-1001";
 const HELPER_ROLE: &str = "CADRUMO_OWNERSHIP_HELPER";
 const HELPER_TARGET: &str = "CADRUMO_OWNERSHIP_TARGET";
 /// Names the transport namespace a helper claims in, when its parent owns one.

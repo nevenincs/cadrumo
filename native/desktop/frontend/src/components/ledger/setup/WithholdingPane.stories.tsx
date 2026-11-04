@@ -188,7 +188,7 @@ export const RefusedInServedWords: Story = {
     await userEvent.selectOptions(incomeClass!, "trabajo");
     await userEvent.type(
       inside.getByLabelText(word("desktop.ledger.withholding.payer_tax_id")),
-      "A58818501",
+      "B00000034",
     );
     const onAccount = inside.getByLabelText(
       word("desktop.ledger.withholding.amount.ingreso_a_cuenta"),
@@ -284,7 +284,7 @@ const startCertificate = async (canvasElement: HTMLElement) => {
   await userEvent.selectOptions(incomeClass!, "capital_mobiliario");
   await userEvent.type(
     inside.getByLabelText(word("desktop.ledger.withholding.payer_tax_id")),
-    "A58818501",
+    "B00000034",
   );
   await userEvent.type(
     inside.getByLabelText(word("desktop.ledger.withholding.payer_legal_name")),
