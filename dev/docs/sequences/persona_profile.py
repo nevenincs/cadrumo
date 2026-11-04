@@ -23,7 +23,7 @@ from cadrumo.tests.personas import Persona, PersonaDate, ProfileAnswer, YearEnve
 __all__ = ["SANDBOX_PERSONA_ID", "pinned_persona", "profile_option_arguments", "sandbox_profile_facts"]
 
 #: The catalogue persona the docs sandbox profile holds before any frame runs.
-SANDBOX_PERSONA_ID: str = "autonomo-fontanero"
+SANDBOX_PERSONA_ID: str = "autonomo-alta-reciente"
 
 
 @contextmanager

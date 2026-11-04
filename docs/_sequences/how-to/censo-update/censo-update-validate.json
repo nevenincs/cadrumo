@@ -78,13 +78,13 @@
           "issues": [
             {
               "code": "effective_window_end_not_enforced",
-              "message": "path 'irpf.activity_income_imputation_criterion' declares valid_to '2025-12-31' but the value keeps resolving after it; record a later valid_from at 'irpf.activity_income_imputation_criterion' to supersede it",
+              "message": "path 'irpf.activity_income_imputation_criterion' declares valid_to '2026-12-31' but the value keeps resolving after it; record a later valid_from at 'irpf.activity_income_imputation_criterion' to supersede it",
               "path": "irpf.activity_income_imputation_criterion",
               "severity": "warning"
             },
             {
               "code": "effective_window_end_not_enforced",
-              "message": "path 'irpf.codigo_comercio_accounting' declares valid_to '2025-12-31' but the value keeps resolving after it; record a later valid_from at 'irpf.codigo_comercio_accounting' to supersede it",
+              "message": "path 'irpf.codigo_comercio_accounting' declares valid_to '2026-12-31' but the value keeps resolving after it; record a later valid_from at 'irpf.codigo_comercio_accounting' to supersede it",
               "path": "irpf.codigo_comercio_accounting",
               "severity": "warning"
             }

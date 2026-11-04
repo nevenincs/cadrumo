@@ -54,11 +54,11 @@
             "monedas_virtuales_extranjero_above_threshold": "",
             "pays_capital_income_with_retencion": false,
             "pays_professionals_with_retencion": false,
-            "pays_rent_with_retencion": true,
+            "pays_rent_with_retencion": false,
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
-            "tax_id": "sha256:1c9f9632",
-            "third_party_transactions_above_347_threshold": true
+            "tax_id": "sha256:7a828de5",
+            "third_party_transactions_above_347_threshold": false
           },
           "rationale": "Applicability cannot be determined for this modelo from the declared taxpayer model: it depends on a fact the profile does not express with certainty. The modelo is asserted applicable only when that fact is positively declared; otherwise no obligation is presumed. Fact required for this modelo: carries out intra-community transactions.",
           "scheduling_rationale": null,

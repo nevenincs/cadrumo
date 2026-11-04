@@ -1,14 +1,25 @@
-:persona: autonomo-fontanero
-:profile: activity-start-date=horizon:01-01
-@step State when the activity started so every quarter is a valid obligation.
+:persona: autonomo-alta-reciente
+:profile: activity-start-date
+:ledger: all
+@step State when the activity started so every quarter of the year is a valid obligation.
 :generated: begin
 @setup aeat config profile edit docs-sequence-sandbox --quiet --activity-start-date 2026-01-01
+@step Record ALT-VTA-01, Cobro factura limpieza de oficinas enero, with its tax fields.
+@setup aeat --format json app ledger add --date 2026-02-10 --amount 1210.00 --direction INCOMING --description "Cobro factura limpieza de oficinas enero" --currency EUR --counterparty "Asesores Inmobiliarios Chamberí, S.L." --classification BUSINESS --iva-category domestic_general --taxable-base 1000.00 --iva-rate 0.21 --iva-amount 210.00 --idempotency-key ALT-VTA-01
+@capture alt_vta_01 result.transaction_id
+@step Record ALT-MAT-01, Compra de material de oficina, with its tax fields.
+@setup aeat --format json app ledger add --date 2026-02-11 --amount 605.00 --direction OUTGOING --description "Compra de material de oficina" --currency EUR --counterparty "Papelería Central, S.L." --classification BUSINESS --category-id material_oficina --iva-category domestic_general --taxable-base 500.00 --iva-rate 0.21 --iva-amount 105.00 --deduction-kind domestic_current --idempotency-key ALT-MAT-01
+@capture alt_mat_01 result.transaction_id
+@step Record the issued invoice F-0001 behind ALT-VTA-01 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-name "Asesores Inmobiliarios Chamberí, S.L." --counterparty-nif B00000141 --country-code ES --invoice-number F-0001 --invoice-date 2026-02-10 --currency EUR --taxable-base 1000.00 --iva-rate 21 --iva-category domestic_general
+@capture alt_vta_01_invoice result.invoice_id
+@setup aeat app ledger link {alt_vta_01} --invoice-id {alt_vta_01_invoice}
+@step Record the received invoice C-0087 behind ALT-MAT-01 and link it to the row.
+@setup aeat --format json app ledger invoice add --kind received --counterparty-name "Papelería Central, S.L." --counterparty-nif B00000158 --country-code ES --invoice-number C-0087 --invoice-date 2026-02-11 --currency EUR --taxable-base 500.00 --iva-rate 21 --iva-category domestic_general
+@capture alt_mat_01_invoice result.invoice_id
+@setup aeat app ledger link {alt_mat_01} --invoice-id {alt_mat_01_invoice}
+@step Register document factura-material as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --idempotency-key persona-autonomo-alta-reciente-factura-material
+@capture factura_material_evidence result.evidence_id
+@setup aeat app ledger attach {alt_mat_01} --purchase-invoice-evidence-id {factura_material_evidence}
 :generated: end
-@step Add the quarter's income row directly with its tax fields.
-@setup aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key qs-venta
-@step Register the supplier invoice for the deductible expense.
-@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 21 --iva-amount 105 --idempotency-key qs-factura
-@capture evidence_id result.evidence_id
-@step Add the quarter's deductible expense row with the invoice linked.
-@setup aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --purchase-invoice-evidence-id {evidence_id} --idempotency-key qs-compra
-@capture expense_id result.transaction_id

@@ -146,7 +146,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "d2b3172a2421ffeff82b9ad918f4e5327056985db8fb1a3f1e6d181ca718716c",
+          "calculation_revision_id": "300a6bf42dbbb7ff70b5837faa4f65514465fcabc4375838a19911970e03bbcd",
           "casilla_values": {
             "01": "4000",
             "02": "912.50",
@@ -296,7 +296,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision d2b3172a2421ffeff82b9ad918f4e5327056985db8fb1a3f1e6d181ca718716c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 300a6bf42dbbb7ff70b5837faa4f65514465fcabc4375838a19911970e03bbcd (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -511,7 +511,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "d2b3172a2421ffeff82b9ad918f4e5327056985db8fb1a3f1e6d181ca718716c",
+          "calculation_revision_id": "300a6bf42dbbb7ff70b5837faa4f65514465fcabc4375838a19911970e03bbcd",
           "completeness_status": "complete",
           "findings": [
             {
@@ -608,7 +608,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "ea6dfc18c1ff31cd93b36b6cc1dec570a5809ff42908e4c2860fdc7701525ec2",
+          "verification_report_id": "be8f61a37e35eef6730a5592e48bedbe622ffc64327f8ee93955a051812ca196",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -675,11 +675,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "f604361b96b7d6ce22fba9817820ffc5c0c4031248266e409abe0d3a6631259c",
+          "bucket_event_id": "fb31add8302c8ad7c5e22e7d2564b15d855693e6f720aefb76fb54b92c292d7e",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "d2b3172a2421ffeff82b9ad918f4e5327056985db8fb1a3f1e6d181ca718716c",
-          "file_sha256": "c41fbb66a71ad3b0bda0e12afe0a143225ad8bed8fe35feca0c407bd4ac51bdd",
+          "calculation_revision_id": "300a6bf42dbbb7ff70b5837faa4f65514465fcabc4375838a19911970e03bbcd",
+          "file_sha256": "fcc26fa6390a41b0460b8ed64d125df2966eda0088f6ed1d0aaec992e95886e7",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": null,

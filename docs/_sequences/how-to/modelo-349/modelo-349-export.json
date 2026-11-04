@@ -202,11 +202,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "9f1e4540b9425f31c65580ef67fa2d912ce5b57be5f15ba2fe7b2d873cbab172",
+          "bucket_event_id": "8e344d22d3205ed8b89bf0a63927db8507c70817239a778827f776de0e7de247",
           "bucket_id": "<bucket-id>",
           "byte_size": 1500,
-          "calculation_revision_id": "76f2e64eea12a1da93442f405c25b30d32a629e75e9e87362d710a6396428240",
-          "file_sha256": "85d698e1af23b7165552e398ae49616063cfd888c0287927c3e9cc3c44678ab5",
+          "calculation_revision_id": "1c66eef55e76cf96c68d8ee2e61c779de9e2c23db4ebc6dd9e10d093b9fc283d",
+          "file_sha256": "44429f22042372b15c93d323bea61b9dd278d71e1d6263cca6a44b6f5c93d7d2",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": null,

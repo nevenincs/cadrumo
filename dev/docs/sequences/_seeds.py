@@ -35,7 +35,7 @@ _UTF_8: Final[str] = UTF_8
 #: The persona directive lines of a generated recipe (see :mod:`.seed_generator`). They
 #: declare where the generated region comes from and carry no frame, so the frame grammar
 #: never sees them.
-_PERSONA_DIRECTIVE: Final = re.compile(r"^:(persona|profile|identities|generated):")
+_PERSONA_DIRECTIVE: Final = re.compile(r"^:(persona|profile|identities|ledger|carry|file|generated):")
 
 
 def default_seeds_root() -> Path:

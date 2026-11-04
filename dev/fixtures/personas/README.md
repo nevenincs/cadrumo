@@ -22,6 +22,7 @@ dev/fixtures/personas/
 | id | taxpayer | scenario | modelos |
 | --- | --- | --- | --- |
 | `autonomo-fontanero` | `fontanero.titular` (primary identity) | Plumber, estimación directa simplificada, IVA 21 % and 10 % (dwelling repairs), rents a workshop with 19 % retención | 303, 390, 130, 115, 180, 347, 100 |
+| `autonomo-alta-reciente` | `alta.titular` | Office-cleaning business registered on 1 January of the horizon year, estimación directa simplificada by cobros y pagos, IVA 21 %, no retención on its income; the first quarter only | 303, 130, 390, 347, 100 |
 | `traductora-profesional` | `traductora.titular` | Translator whose income is over 70 % withheld (no 130), pays a natural-person tax adviser with 15 % retención | 303, 390, 111, 190, 100 |
 | `intracomunitario-desarrollador` | `intracom.titular` (NIE) | Software professional with EU B2B clients, an Irish cloud supplier (reverse charge), ROI enrolled | 303, 349, 390, 130, 100 |
 | `minorista-recargo` | `minorista.titular` | Clothing retailer in recargo de equivalencia (no 303/390) | 130, 347, 100 |
@@ -32,6 +33,12 @@ dev/fixtures/personas/
 Every persona's main fiscal year is `horizon-1` and its clock is the 16th of
 February of `horizon`: the January filings of the year are due and past, the
 Modelo 347 window is open, and the Renta campaign has not begun.
+
+`autonomo-alta-reciente` is the exception: its activity begins in `horizon`,
+so its fiscal year is `horizon` and its clock is the 1st of April of
+`horizon`, when the first quarter has closed and its filing window is open.
+Windows that close after `horizon` lie outside the envelope and are not stated
+as deadlines.
 
 ## Common rules
 

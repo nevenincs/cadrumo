@@ -40,7 +40,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\t<unset>\niva.regime\tGENERAL\ntax_residence.ccaa\tmadrid\nNext step: `aeat app overview status`\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:7a828de5\nactivities.description\t<unset>\niva.regime\tGENERAL\ntax_residence.ccaa\tmadrid\nNext step: `aeat app overview status`\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -93,11 +93,11 @@
             "monedas_virtuales_extranjero_above_threshold": "",
             "pays_capital_income_with_retencion": false,
             "pays_professionals_with_retencion": false,
-            "pays_rent_with_retencion": true,
+            "pays_rent_with_retencion": false,
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
-            "tax_id": "sha256:1c9f9632",
-            "third_party_transactions_above_347_threshold": true
+            "tax_id": "sha256:7a828de5",
+            "third_party_transactions_above_347_threshold": false
           },
           "rationale": "Modelo 303 (autoliquidación del IVA): el contribuyente realiza una actividad económica sujeta al IVA y presenta la autoliquidación periódica.",
           "scheduling_rationale": "Aplica segun la ventana registral del modelo.",
@@ -163,7 +163,7 @@
           }
         ],
         "result": {
-          "authority_generation": "7e96b38f1e11828eaa59f6039e2a579d8a3224e2d2d6cfe992a27d9cf3118e04",
+          "authority_generation": "cb0c13a2caf931f415859958b5e5a053f284427f4c2487e02476323c165b5ef8",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,

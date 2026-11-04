@@ -12,10 +12,11 @@ Three modes over one engine:
   divergence: the page, the sequence id, the frame index and argv, the
   post-mask differing paths or unified text diff, and the exact ``refresh``
   invocation that updates the golden.
-- ``seeds [--check]`` renders the profile frame of each persona-derived seed
-  recipe from the catalogue persona it declares; ``--check`` fails on drift
-  without writing (:mod:`dev.docs.sequences.seed_generator`). The unscoped
-  ``check`` mode includes the same drift check.
+- ``seeds [--check]`` renders the generated frames of each persona-derived
+  seed recipe, and the sandbox persona's statement fixture, from the catalogue
+  personas they declare; ``--check`` fails on drift without writing
+  (:mod:`dev.docs.sequences.seed_generator`). The unscoped ``check`` mode
+  includes the same drift check.
 
 Every mode that executes a sequence first confirms the registry authority the
 runner reads is current, and exits 1 naming the republish command when it is

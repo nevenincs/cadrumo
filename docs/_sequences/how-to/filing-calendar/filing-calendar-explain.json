@@ -77,11 +77,11 @@
             "monedas_virtuales_extranjero_above_threshold": "",
             "pays_capital_income_with_retencion": false,
             "pays_professionals_with_retencion": false,
-            "pays_rent_with_retencion": true,
+            "pays_rent_with_retencion": false,
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
-            "tax_id": "sha256:1c9f9632",
-            "third_party_transactions_above_347_threshold": true
+            "tax_id": "sha256:7a828de5",
+            "third_party_transactions_above_347_threshold": false
           },
           "rationale": "Modelo 130 (pago fraccionado del IRPF): la persona física residente IRPF declara rendimientos de actividades económicas en estimación directa, que generan la obligación del pago fraccionado.",
           "scheduling_rationale": "Autonomo en estimacion directa salvo la excepcion Art. 109 por cobertura de retencion o ingreso a cuenta en actividades profesionales, agricolas, ganaderas o forestales.",

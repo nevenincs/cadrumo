@@ -22,39 +22,43 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "app",
         "ledger",
-        "import",
-        "--file",
-        "fixtures/movimientos-2026-1t.csv",
-        "--provider",
-        "csv"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "app",
-        "ledger",
-        "classify",
-        "71a5db2b",
+        "add",
+        "--date",
+        "2026-02-10",
+        "--amount",
+        "1210.00",
+        "--direction",
+        "INCOMING",
+        "--description",
+        "Cobro factura limpieza de oficinas enero",
+        "--currency",
+        "EUR",
+        "--counterparty",
+        "Asesores Inmobiliarios Chamberí, S.L.",
         "--classification",
         "BUSINESS",
+        "--iva-category",
+        "domestic_general",
         "--taxable-base",
-        "1000",
+        "1000.00",
         "--iva-rate",
         "0.21",
         "--iva-amount",
-        "210"
+        "210.00",
+        "--idempotency-key",
+        "ALT-VTA-01"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "alt_vta_01",
+          "value": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
+        }
+      ],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -65,22 +69,169 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "app",
         "ledger",
-        "classify",
-        "e3eeac5e",
+        "add",
+        "--date",
+        "2026-02-11",
+        "--amount",
+        "605.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "Compra de material de oficina",
+        "--currency",
+        "EUR",
+        "--counterparty",
+        "Papelería Central, S.L.",
         "--classification",
         "BUSINESS",
         "--category-id",
         "material_oficina",
+        "--iva-category",
+        "domestic_general",
         "--taxable-base",
-        "500",
+        "500.00",
         "--iva-rate",
         "0.21",
         "--iva-amount",
-        "105",
+        "105.00",
         "--deduction-kind",
-        "domestic_current"
+        "domestic_current",
+        "--idempotency-key",
+        "ALT-MAT-01"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "alt_mat_01",
+          "value": "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "add",
+        "--kind",
+        "issued",
+        "--counterparty-name",
+        "Asesores Inmobiliarios Chamberí, S.L.",
+        "--counterparty-nif",
+        "B00000141",
+        "--country-code",
+        "ES",
+        "--invoice-number",
+        "F-0001",
+        "--invoice-date",
+        "2026-02-10",
+        "--currency",
+        "EUR",
+        "--taxable-base",
+        "1000.00",
+        "--iva-rate",
+        "21",
+        "--iva-category",
+        "domestic_general"
+      ],
+      "captures": [
+        {
+          "json_path": "result.invoice_id",
+          "name": "alt_vta_01_invoice",
+          "value": "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "link",
+        "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
+        "--invoice-id",
+        "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "add",
+        "--kind",
+        "received",
+        "--counterparty-name",
+        "Papelería Central, S.L.",
+        "--counterparty-nif",
+        "B00000158",
+        "--country-code",
+        "ES",
+        "--invoice-number",
+        "C-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--currency",
+        "EUR",
+        "--taxable-base",
+        "500.00",
+        "--iva-rate",
+        "21",
+        "--iva-category",
+        "domestic_general"
+      ],
+      "captures": [
+        {
+          "json_path": "result.invoice_id",
+          "name": "alt_mat_01_invoice",
+          "value": "f6888ddbf0e289edbcd4c0b6f0559c75c4a216c35ca50334379da698b18a52fd"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "link",
+        "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
+        "--invoice-id",
+        "f6888ddbf0e289edbcd4c0b6f0559c75c4a216c35ca50334379da698b18a52fd"
       ],
       "captures": [],
       "envelope": null,
@@ -100,26 +251,14 @@
         "evidence",
         "add",
         "fixtures/factura-material-oficina.pdf",
-        "--supplier",
-        "Papeleria Central SL",
-        "--invoice-number",
-        "C-2026-0087",
-        "--invoice-date",
-        "2026-02-11",
-        "--taxable-base",
-        "500",
-        "--iva-rate",
-        "21",
-        "--iva-amount",
-        "105",
         "--idempotency-key",
-        "fq-factura"
+        "persona-autonomo-alta-reciente-factura-material"
       ],
       "captures": [
         {
           "json_path": "result.evidence_id",
-          "name": "evidence_id",
-          "value": "02f887c6ff8a69c5"
+          "name": "factura_material_evidence",
+          "value": "e48551feb1ba44a0"
         }
       ],
       "envelope": null,
@@ -135,9 +274,9 @@
         "app",
         "ledger",
         "attach",
-        "e3eeac5e",
+        "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
         "--purchase-invoice-evidence-id",
-        "02f887c6ff8a69c5"
+        "e48551feb1ba44a0"
       ],
       "captures": [],
       "envelope": null,
@@ -237,7 +376,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "f92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721"
+          "value": "43d1ec86683c142e4835c8748eb5356eb7326d5d673be394c8e4567331751d47"
         }
       ],
       "envelope": {
@@ -249,7 +388,22 @@
             "code": "modelo.work.calculate.source_advisory",
             "context": {
               "binding_source": "ledger_iva_aggregation",
-              "detail": "2 ledger row(s) were placed in this period on their bank movement date because no operation date is recorded: 71a5db2bb891, e3eeac5e306e. LIVA art. 75 fixes the devengo by the operation, not the collection, so a sale near a period end can belong to the previous one",
+              "detail": "2 invoice(s) were placed in this filing period on their issue date because no operation date is recorded on them: C-0087, F-0001. LIVA art. 75.Uno binds the devengo to the date the entrega or prestacion took place, and an invoice may lawfully be issued in a later period than the one its operation belongs to, so this placement is a substitution, not a legal determination",
+              "level": "check",
+              "reason": "devengo_date_proxy_attribution",
+              "remedy": "Record the fecha de operacion on each invoice named so its period is determined by the art. 75 devengo date rather than inferred from the issue date",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_kind": "ledger_iva_aggregation"
+            },
+            "message": "Some invoices have no date for when the operation took place, so their issue date chose the period.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_source": "ledger_iva_aggregation",
+              "detail": "2 ledger row(s) were placed in this period on their bank movement date because no operation date is recorded: c866d7043d51, fcd9d7ce87ab. LIVA art. 75 fixes the devengo by the operation, not the collection, so a sale near a period end can belong to the previous one",
               "level": "check",
               "reason": "iva_row_placed_on_movement_date",
               "remedy": "Record the operation date on each row. For a pago anticipado, art. 75.Dos dates the amount received at its collection, so record the collection date",
@@ -322,7 +476,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "f92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721",
+          "calculation_revision_id": "43d1ec86683c142e4835c8748eb5356eb7326d5d673be394c8e4567331751d47",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -476,8 +630,8 @@
             "iva.rectificacion-deducciones.inversion-sujeto-pasivo": "0",
             "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base": "0",
             "iva.regularizacion-inversiones": "0",
-            "iva.repercutido.general": "210",
-            "iva.repercutido.general.base": "1000",
+            "iva.repercutido.general": "210.00",
+            "iva.repercutido.general.base": "1000.00",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.base": "0",
             "iva.repercutido.reducido.transitorio": "0",
@@ -487,8 +641,8 @@
             "iva.resultado": "105.00",
             "iva.resultado-regimen-general": "105.00",
             "iva.soportado.importaciones": "0",
-            "iva.soportado.interiores": "105",
-            "iva.soportado.interiores.base": "500",
+            "iva.soportado.interiores": "105.00",
+            "iva.soportado.interiores.base": "500.00",
             "iva.soportado.interiores.bienes-inversion": "0",
             "iva.soportado.interiores.bienes-inversion.base": "0"
           },
@@ -568,7 +722,7 @@
             {"absent_by_design":false,"casilla_id":"04","formula_id":"modelo-303-iva-devengado-reducido-base","legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.repercutido.reducido.base","iva.autoconsumo.promotor.reducido.base"],"operand_refs":["iva.repercutido.reducido.base","iva.autoconsumo.promotor.reducido.base"],"operand_values":["0","0"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"05","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"06","formula_id":"modelo-303-dr303-06-projection","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"value","operand_casilla_refs":["iva.cuota-devengada.reducido"],"operand_refs":["iva.cuota-devengada.reducido"],"operand_values":["0.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"07","formula_id":"modelo-303-iva-devengado-general-base","legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-90","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.repercutido.general.base","iva.autoconsumo.promotor.general.base"],"operand_refs":["iva.repercutido.general.base","iva.autoconsumo.promotor.general.base"],"operand_values":["1000","0"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"1000.00"},
+            {"absent_by_design":false,"casilla_id":"07","formula_id":"modelo-303-iva-devengado-general-base","legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-90","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.repercutido.general.base","iva.autoconsumo.promotor.general.base"],"operand_refs":["iva.repercutido.general.base","iva.autoconsumo.promotor.general.base"],"operand_values":["1000.00","0"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"1000.00"},
             {"absent_by_design":false,"casilla_id":"08","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"09","formula_id":"modelo-303-dr303-09-projection","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"value","operand_casilla_refs":["iva.cuota-devengada.general"],"operand_refs":["iva.cuota-devengada.general"],"operand_values":["210.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"210.00"},
             {"absent_by_design":false,"casilla_id":"10","formula_id":"modelo-303-dr303-10-projection","legal_refs":["ley-37-1992:art-13","ley-37-1992:art-15","ley-37-1992:art-69","ley-37-1992:art-70","ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"value","operand_casilla_refs":["iva.autorepercutido.intracomunitaria.devengado.base"],"operand_refs":["iva.autorepercutido.intracomunitaria.devengado.base"],"operand_values":["0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
@@ -617,8 +771,8 @@
             {"absent_by_design":false,"casilla_id":"25","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"26","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"27","formula_id":"modelo-303-dr303-27-projection","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"value","operand_casilla_refs":["iva.cuota-devengada-total"],"operand_refs":["iva.cuota-devengada-total"],"operand_values":["210.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"210.00"},
-            {"absent_by_design":false,"casilla_id":"28","formula_id":"modelo-303-iva-deducible-interiores-corrientes-base","legal_refs":["ley-37-1992:art-84","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.soportado.interiores.base","iva.autorepercutido.interior.deducible.base"],"operand_refs":["iva.soportado.interiores.base","iva.autorepercutido.interior.deducible.base"],"operand_values":["500","0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"500.00"},
-            {"absent_by_design":false,"casilla_id":"29","formula_id":"modelo-303-dr303-29-projection","legal_refs":["ley-37-1992:art-84","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.soportado.interiores","iva.autorepercutido.interior.deducible"],"operand_refs":["iva.soportado.interiores","iva.autorepercutido.interior.deducible"],"operand_values":["105","0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"105.00"},
+            {"absent_by_design":false,"casilla_id":"28","formula_id":"modelo-303-iva-deducible-interiores-corrientes-base","legal_refs":["ley-37-1992:art-84","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.soportado.interiores.base","iva.autorepercutido.interior.deducible.base"],"operand_refs":["iva.soportado.interiores.base","iva.autorepercutido.interior.deducible.base"],"operand_values":["500.00","0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"500.00"},
+            {"absent_by_design":false,"casilla_id":"29","formula_id":"modelo-303-dr303-29-projection","legal_refs":["ley-37-1992:art-84","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.soportado.interiores","iva.autorepercutido.interior.deducible"],"operand_refs":["iva.soportado.interiores","iva.autorepercutido.interior.deducible"],"operand_values":["105.00","0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"105.00"},
             {"absent_by_design":false,"casilla_id":"30","formula_id":"modelo-303-iva-deducible-interiores-bienes-inversion-base","legal_refs":["ley-37-1992:art-84","ley-37-1992:art-108","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.soportado.interiores.bienes-inversion.base","iva.autorepercutido.interior.deducible.bienes-inversion.base"],"operand_refs":["iva.soportado.interiores.bienes-inversion.base","iva.autorepercutido.interior.deducible.bienes-inversion.base"],"operand_values":["0","0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"31","formula_id":"modelo-303-iva-deducible-interiores-bienes-inversion-cuota","legal_refs":["ley-37-1992:art-84","ley-37-1992:art-108","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.soportado.interiores.bienes-inversion","iva.autorepercutido.interior.deducible.bienes-inversion"],"operand_refs":["iva.soportado.interiores.bienes-inversion","iva.autorepercutido.interior.deducible.bienes-inversion"],"operand_values":["0","0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"32","formula_id":null,"legal_refs":["ley-37-1992:art-17","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -772,7 +926,7 @@
               ],
               "value": "210.00"
             },
-            {"absent_by_design":false,"casilla_id":"iva.cuota-devengada.general","formula_id":"modelo-303-iva-cuota-devengada-general","legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-90","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.repercutido.general","iva.autoconsumo.promotor.general.base"],"operand_refs":["iva.repercutido.general","iva.autoconsumo.promotor.general.base","m303-dr303-08-tipo-porcentaje"],"operand_values":["210","0","21"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"210.00"},
+            {"absent_by_design":false,"casilla_id":"iva.cuota-devengada.general","formula_id":"modelo-303-iva-cuota-devengada-general","legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-90","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.repercutido.general","iva.autoconsumo.promotor.general.base"],"operand_refs":["iva.repercutido.general","iva.autoconsumo.promotor.general.base","m303-dr303-08-tipo-porcentaje"],"operand_values":["210.00","0","21"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"210.00"},
             {"absent_by_design":false,"casilla_id":"iva.cuota-devengada.reducido","formula_id":"modelo-303-iva-cuota-devengada-reducido","legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.repercutido.reducido","iva.autoconsumo.promotor.reducido.base"],"operand_refs":["iva.repercutido.reducido","iva.autoconsumo.promotor.reducido.base","m303-dr303-05-tipo-porcentaje"],"operand_values":["0","0","10"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"iva.cuota-devengada.super-reducido","formula_id":"modelo-303-iva-cuota-devengada-super-reducido","legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.repercutido.super-reducido","iva.autoconsumo.promotor.super-reducido.base"],"operand_refs":["iva.repercutido.super-reducido","iva.autoconsumo.promotor.super-reducido.base","m303-dr303-02-tipo-porcentaje"],"operand_values":["0","0","4"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"iva.prorrata-porcentaje","formula_id":"modelo-303-iva-prorrata-porcentaje","legal_refs":["ley-37-1992:art-104","ley-37-1992:art-102","ley-37-1992:art-94","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"if_then_else","operand_casilla_refs":["iva.prorrata-volumen-total"],"operand_refs":["iva.prorrata-volumen-total"],"operand_values":["0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"100"},
@@ -785,8 +939,8 @@
             {"absent_by_design":false,"casilla_id":"iva.rectificacion-deducciones.inversion-sujeto-pasivo","formula_id":null,"legal_refs":["ley-37-1992:art-80","ley-37-1992:art-92","ley-37-1992:art-99","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.rectificacion-deducciones.inversion-sujeto-pasivo.base","formula_id":null,"legal_refs":["ley-37-1992:art-80","ley-37-1992:art-92","ley-37-1992:art-99","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.regularizacion-inversiones","formula_id":null,"legal_refs":["ley-37-1992:art-107","ley-37-1992:art-108","ley-37-1992:art-109","ley-37-1992:art-110","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"iva.repercutido.general","formula_id":null,"legal_refs":["ley-37-1992:art-88","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"210"},
-            {"absent_by_design":false,"casilla_id":"iva.repercutido.general.base","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"1000"},
+            {"absent_by_design":false,"casilla_id":"iva.repercutido.general","formula_id":null,"legal_refs":["ley-37-1992:art-88","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"210.00"},
+            {"absent_by_design":false,"casilla_id":"iva.repercutido.general.base","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"1000.00"},
             {"absent_by_design":false,"casilla_id":"iva.repercutido.reducido","formula_id":null,"legal_refs":["ley-37-1992:art-88","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.repercutido.reducido.base","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.repercutido.reducido.transitorio","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -796,8 +950,8 @@
             {"absent_by_design":false,"casilla_id":"iva.resultado","formula_id":"modelo-303-iva-resultado","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30"],"op":"subtract","operand_casilla_refs":["66","77","68","108","iva.compensacion-aplicada-periodo"],"operand_refs":["66","77","68","108","iva.compensacion-aplicada-periodo"],"operand_values":["105.00","0","0","0","0.00"],"source_refs":["aeat-dr-303-2024-late","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"105.00"},
             {"absent_by_design":false,"casilla_id":"iva.resultado-regimen-general","formula_id":"modelo-303-iva-resultado-regimen-general","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"subtract","operand_casilla_refs":["iva.cuota-devengada-total","iva.cuota-deducible-total"],"operand_refs":["iva.cuota-devengada-total","iva.cuota-deducible-total"],"operand_values":["210.00","105.00"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"105.00"},
             {"absent_by_design":false,"casilla_id":"iva.soportado.importaciones","formula_id":null,"legal_refs":["ley-37-1992:art-17","ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"iva.soportado.interiores","formula_id":null,"legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"105"},
-            {"absent_by_design":false,"casilla_id":"iva.soportado.interiores.base","formula_id":null,"legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"500"},
+            {"absent_by_design":false,"casilla_id":"iva.soportado.interiores","formula_id":null,"legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"105.00"},
+            {"absent_by_design":false,"casilla_id":"iva.soportado.interiores.base","formula_id":null,"legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"500.00"},
             {"absent_by_design":false,"casilla_id":"iva.soportado.interiores.bienes-inversion","formula_id":null,"legal_refs":["ley-37-1992:art-92","ley-37-1992:art-108","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.soportado.interiores.bienes-inversion.base","formula_id":null,"legal_refs":["ley-37-1992:art-92","ley-37-1992:art-108","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"}
           ],
@@ -890,7 +1044,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision f92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 43d1ec86683c142e4835c8748eb5356eb7326d5d673be394c8e4567331751d47 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -901,7 +1055,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+              "source_ref": "transaction:c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
             },
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -912,7 +1066,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+              "source_ref": "transaction:fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
             },
             {
               "contributor_binding_source": "prorrata_regularizacion",
@@ -951,7 +1105,7 @@
         "modelo",
         "work",
         "verify",
-        "f92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721"
+        "43d1ec86683c142e4835c8748eb5356eb7326d5d673be394c8e4567331751d47"
       ],
       "captures": [],
       "envelope": {
@@ -979,7 +1133,7 @@
             "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
-              "binding_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+              "binding_id": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
               "diagnostic_reason_code": "missing_transaction_evidence",
               "kind": "advisory",
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
@@ -999,7 +1153,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "f92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721",
+          "calculation_revision_id": "43d1ec86683c142e4835c8748eb5356eb7326d5d673be394c8e4567331751d47",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1050,7 +1204,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "4afff777a0b7bf00392f45d70c9e0d46548b9c02110f2ddb46b11e8375b8c793",
+          "verification_report_id": "d4fe67bd038ac016548278e2f9b6fabcdb56d4a2524f8901bf058e7e16d4d516",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1082,7 +1236,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\tee33d2617ad3b2891d72b6eaf7826ee028f86377b391e0dd34882302e01b4401\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\tf92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t25036af38699781e2b4385ff07f5c0daf6902e49de82a29e77b265a25c01c8f1\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t43d1ec86683c142e4835c8748eb5356eb7326d5d673be394c8e4567331751d47\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -1139,11 +1293,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "59fc2340ed592c314ece18a68d11d951dbb536426fdfcd8846cfd7858c502938",
+          "bucket_event_id": "e8a63b03e8719c2b4b168e70a3d8e1e9eadc4bb11a488460137b411ee8377284",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "f92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721",
-          "file_sha256": "6bff827e391f2d33e2de3373d552fb7059fe7b72aa7e4b1cfa56cea295a64abb",
+          "calculation_revision_id": "43d1ec86683c142e4835c8748eb5356eb7326d5d673be394c8e4567331751d47",
+          "file_sha256": "99bf280fa20103b0a13b53129ca4fc7563f4226b9a4a0fe5ae6b5e64c26666e0",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": {
@@ -1153,7 +1307,7 @@
             "authority_source_refs": [
               "sha256:64bc1cee701fc87c375234c8799bc82399c69968a5cc5e312b265e764a3ed334"
             ],
-            "decision_ref": "sha256:4c310e680d2cfcf762e02632eb11d35a3e3c1bcd873094cf589fa50bb526a362",
+            "decision_ref": "sha256:bde5f11c1ab854752803fc6ce54902e46d03da30bb616f857fba423f1337787c",
             "divergence": "first_period_zero",
             "selected_authority": "local_recurrence",
             "target_period": {

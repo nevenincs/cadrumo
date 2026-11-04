@@ -187,6 +187,14 @@ value = "00000018H"
 name = "Jorge"
 surnames = "Peiró Mira"
 
+[[identities]]
+role = "alta.titular"
+persona = "autonomo-alta-reciente"
+kind = "nif"
+value = "00000020C"
+name = "Clara"
+surnames = "Benítez Morales"
+
 # Natural persons (NIE), counter zero of each prefix.
 
 [[identities]]
@@ -299,6 +307,20 @@ persona = "asalariada-familia"
 kind = "cif"
 value = "B00000133"
 legal_name = "Escuela Infantil Los Almendros, S.L."
+
+[[identities]]
+role = "alta.cliente"
+persona = "autonomo-alta-reciente"
+kind = "cif"
+value = "B00000141"
+legal_name = "Asesores Inmobiliarios Chamberí, S.L."
+
+[[identities]]
+role = "alta.papeleria"
+persona = "autonomo-alta-reciente"
+kind = "cif"
+value = "B00000158"
+legal_name = "Papelería Central, S.L."
 
 [[identities]]
 role = "fontanero.comunidad"
