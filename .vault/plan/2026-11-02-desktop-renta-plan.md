@@ -18,7 +18,7 @@ related:
   - '[[2026-11-03-backend-served-surface-plan]]'
 modified: '2026-11-03'
 body_schema: body-v2
-body_hash: 'sha256:196b46d49d8772943c63e0c1e048f4446d16c96580fa3505ae933f7c9d363cc4'
+body_hash: 'sha256:15b88897aa6c78bc78cc5f43b6454ec263a3110c8a4e7b74d1c6fd64ebf45365'
 ---
 
 # `desktop-renta` plan
@@ -88,7 +88,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 - [x] `P01.S48` - [Sonnet high] resolve the low plan-close findings: required authored_year, settlement-unsupported words naming a waived refund in all four locales; `src/cadrumo/application/modelo/profile_derived_facts.py`.
 - [x] `P01.S49` - [Sonnet high] mirror the merged backend on the desktop: regenerate the modelo and ledger contracts for the disagreement operations and the form note finding id, and give the withholding certificate record a certificate file picker with served words for the custody refusals; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
 - [x] `P01.S50` - [Sonnet high] let a projected Modelo 100 year resolve the Anexo D inventory applicability through the registry selection instead of an exact year match, and serve state-projection readiness at the grade the year reaches; `src/cadrumo/application/aggregation/inventory.py`.
-- [ ] `P01.S51` - [Opus medium] design and [Sonnet high] build the Modelo workspace door for a blocking credit or tier disagreement: list the served disagreements, accept one with a reason and revoke an acceptance at its expected revision, all in served words with stories and a scenario; `native/desktop/frontend/src/components/modelo/workspace`.
+- [x] `P01.S51` - [Opus medium] design and [Sonnet high] build the Modelo workspace door for a blocking credit or tier disagreement: list the served disagreements, accept one with a reason and revoke an acceptance at its expected revision, all in served words with stories and a scenario; `native/desktop/frontend/src/components/modelo/workspace`.
 - [x] `P01.S52` - [Sonnet high] show the withholding record's served refusal words for the three certificate custody refusals in the withholding pane, as invoice add already shows its served words; `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.tsx`.
 - [x] `P01.S53` - [Sonnet high] once the withholding record serves refusal words for every reason, delete the pane's own desktop.ledger.withholding.refusal words so the window holds no words of its own for the operation; `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`.
 - [x] `P01.S54` - [Sonnet high] delete the ledger classification constants and their classify rules now that the backend serves the classification flags; the rest of the window deletions run under the backend-served surface plan; `native/desktop/frontend/src/shell/ledgerContract.ts`.
