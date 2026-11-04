@@ -43,11 +43,12 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.pid_liveness import pid_is_alive
 from cadrumo.core.time.clock import frozen_clock
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from dev._paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root
 
 from .errors import SequenceExecutionError
+from .persona_profile import sandbox_profile_facts
 from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store
 from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
 
@@ -63,35 +64,6 @@ SANDBOX_PROFILE_LABEL: str = "docs-sequence-sandbox"
 #: An existing alternative for the documented selected-profile deletion journey.
 SANDBOX_REPLACEMENT_PROFILE_ID = "f6a2ae44-2493-4c98-b856-ea071ff26dea"
 SANDBOX_REPLACEMENT_PROFILE_LABEL = "docs-sequence-replacement"
-
-#: Synthetic profile facts for the injected sandbox identity, mirroring the
-#: fact paths the workspace-initialization service persists. All values are
-#: synthetic; richer fixture state is built by ``@setup`` frames.
-_SANDBOX_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Docs"),
-    UserProfileFact(path="identity.surnames", value="Sandbox"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    # Required by the profile schema: the territorial regime is declared
-    # explicitly rather than inferred. The sandbox declares the common regime,
-    # since the foral branch is the unsupported one and no documented sequence
-    # exercises it.
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="documentation examples"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    # Declaring an IVA regime claims the IVA block, which requires the Modelo
-    # 303 composition to be stated explicitly rather than inferred from it.
-    # ``general`` is the arm matching the regime above.
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    # The IVA block also requires each optional-regime enrolment to be declared
-    # rather than assumed absent, so a taxpayer is never silently treated as
-    # outside a regime nobody asked about. The sandbox is a plain general-regime
-    # filer enrolled in none of them.
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-)
 
 
 @dataclass(frozen=True)
@@ -267,7 +239,9 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
         from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
         from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
 
-        record = upsert_test_profile_facts(SANDBOX_PROFILE_ID, _SANDBOX_PROFILE_FACTS)
+        # The facts are the catalogue persona's, judged by the wizard patch rules; the sandbox
+        # states none of its own.
+        record = upsert_test_profile_facts(SANDBOX_PROFILE_ID, sandbox_profile_facts())
         with bound_test_profile_record(SANDBOX_PROFILE_ID) as repository:
             repository.complete_setup(
                 SANDBOX_PROFILE_ID,

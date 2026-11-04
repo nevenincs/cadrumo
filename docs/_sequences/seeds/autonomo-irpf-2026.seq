@@ -1,5 +1,9 @@
-@step Record when the activity started on the profile.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+:persona: autonomo-fontanero
+:profile: activity-start-date=horizon:01-01
+@step State when the activity started on the profile.
+:generated: begin
+@setup aeat config profile edit docs-sequence-sandbox --quiet --activity-start-date 2026-01-01
+:generated: end
 @step Bring the quarter's movements into the ledger; already-imported rows are skipped.
 @setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Classify the collected payment as business income.

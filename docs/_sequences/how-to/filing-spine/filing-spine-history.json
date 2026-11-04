@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -279,9 +278,9 @@
             },
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "4dfad50768ea1aef536042f360b4c7683219418feddd9b43cee553a0fae8bc87",
+              "event_id": "d57b9ae38f6c82d1d3367fd444b7fd9c308a2d0ed42c95bf223eef5be69f719b",
               "event_type": "modelo.calculation.created",
-              "object_id": "382dc82c76a29f355e5e18fd1d8c6d42346c9140f0d108cb58b84f6ccf433ddf",
+              "object_id": "f92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721",
               "object_type": "calculation_revision",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -289,7 +288,7 @@
                 "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "borrador_participated": "false",
                 "borrador_snapshot_id": "",
-                "calculation_revision_id": "382dc82c76a29f355e5e18fd1d8c6d42346c9140f0d108cb58b84f6ccf433ddf",
+                "calculation_revision_id": "f92540cb0879aa15ae6cd9294f308b0f821b4e96d3e70ff5b31f247abf1e0721",
                 "casilla_count": "167",
                 "filing_year": "2026",
                 "formula_count": "40",

@@ -6,15 +6,18 @@ quarter" declared once and inlined before a sequence's own frames by the
 ``:seed: <name>`` directive option. Seeding is *executed CLI truth*: a seed line
 runs and golden-gates like any frame, it merely renders collapsed.
 
-A seed recipe may contain ONLY ``@setup`` frames (with their ``@capture`` /
-``@expect`` annotations). A visible command frame or a ``@result`` frame in a
-recipe is refused -- the terminal verification frame is always the sequence's own,
-and a shared fragment must stay collapsed setup. A missing recipe is an
+A seed recipe may declare the persona its profile frame is generated from
+(:mod:`.seed_generator`); those directive lines are not frames. It may contain
+ONLY ``@setup`` frames (with their ``@capture`` / ``@expect`` annotations). A
+visible command frame or a ``@result`` frame in a recipe is refused -- the
+terminal verification frame is always the sequence's own, and a shared fragment
+must stay collapsed setup. A missing recipe is an
 instructive problem, not a crash, so the parser accumulates it with the rest.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Final
 
@@ -28,6 +31,11 @@ __all__ = ["SEED_SUFFIX", "default_seeds_root", "load_seed_frames"]
 #: File extension of a committed seed recipe.
 SEED_SUFFIX: str = ".seq"
 _UTF_8: Final[str] = UTF_8
+
+#: The persona directive lines of a generated recipe (see :mod:`.seed_generator`). They
+#: declare where the generated region comes from and carry no frame, so the frame grammar
+#: never sees them.
+_PERSONA_DIRECTIVE: Final = re.compile(r"^:(persona|profile|identities|generated):")
 
 
 def default_seeds_root() -> Path:
@@ -73,6 +81,8 @@ def load_seed_frames(
     except OSError as exc:
         return [], [f"{source}: cannot read recipe at {recipe_path} ({exc})"]
 
+    # Blank rather than drop each directive line so diagnostics keep the file's line numbers.
+    text = "\n".join("" if _PERSONA_DIRECTIVE.match(line) else line for line in text.splitlines())
     builders, problems = parse_frame_lines(text, source=source)
     for builder in builders:
         if builder.kind is not FrameKind.SETUP:

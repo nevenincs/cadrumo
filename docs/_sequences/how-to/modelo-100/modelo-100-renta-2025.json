@@ -8,19 +8,16 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--irpf-income-categories",
         "trabajo",
         "--taxpayer-birth-date",
-        "1985-06-15",
+        "1987-06-14",
         "--tax-residence-ccaa",
         "madrid",
         "--taxation-type",
         "1",
         "--taxpayer-sex",
-        "H",
-        "--taxpayer-marital-status",
-        "1"
+        "M"
       ],
       "captures": [],
       "envelope": null,
@@ -162,7 +159,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da"
+          "value": "c89929520578043a6a9e4f94dfc99f2b0ef49d66a69a1136703ba2cc61149eb5"
         }
       ],
       "envelope": {
@@ -342,9 +339,11 @@
             "renta-maritime-qualifying-days": "0",
             "renta-modelo-130-pagos-fraccionados": "0",
             "renta-modelo-131-pagos-fraccionados": "0",
+            "renta-profile-activity-cash-criterion-0169": "false",
             "renta-profile-anualidades-sin-minimo-descendientes": "true",
             "renta-profile-declaration-type": "1",
             "renta-profile-deduccion-maternidad": "0",
+            "renta-profile-family-situacion-familiar": "soltero",
             "renta-profile-has-economic-activity": "false",
             "renta-profile-madrid-nacimiento-adopcion-eligible-count": "0",
             "renta-profile-marriage-full-year": "false",
@@ -353,14 +352,14 @@
             "renta-profile-minimo-descendientes-autonomico": "0",
             "renta-profile-minimo-descendientes-estatal": "0",
             "renta-profile-tax-residence-ccaa": "madrid",
-            "renta-profile-taxpayer-birth-date": "1985-06-15",
+            "renta-profile-taxpayer-birth-date": "1987-06-14",
             "renta-profile-unidad-familiar-otros-miembros-base": "0",
             "renta-retencion-soportada-arrendamiento-actividad": "0",
             "renta-retencion-soportada-capital-mobiliario": "0",
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da",
+          "calculation_revision_id": "c89929520578043a6a9e4f94dfc99f2b0ef49d66a69a1136703ba2cc61149eb5",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -2227,9 +2226,9 @@
             "1832": "0",
             "1843": "0",
             "DPNIF_D": "sha256:1c9f9632",
-            "DP_APENOM_D": "Sandbox Docs",
+            "DP_APENOM_D": "Montero Alcaraz Javier",
             "ECIVIL": "1",
-            "SEXO_D": "H",
+            "SEXO_D": "M",
             "TIPOTRIBUTACION": "1"
           },
           "modality": null,
@@ -2375,7 +2374,7 @@
             {"absent_by_design":false,"casilla_id":"0162","formula_id":null,"legal_refs":["ley-35-2006:art-86","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0163","formula_id":null,"legal_refs":["ley-35-2006:art-31","ley-35-2006:art-86","rd-439-2007:art-39","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0164","formula_id":null,"legal_refs":["ley-35-2006:art-86","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":true,"casilla_id":"0169","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"0169","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0170","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0171","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0172","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0"},
@@ -2670,8 +2669,8 @@
             {"absent_by_design":false,"casilla_id":"0508","formula_id":null,"legal_refs":["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0509","formula_id":null,"legal_refs":["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0510","formula_id":"renta-base-liquidable-del-ahorro","legal_refs":["ley-35-2006:art-49","ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0460","0506","0507"],"operand_refs":["0460","0506","0507"],"operand_values":["0.00","0.00","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"0511","formula_id":"renta-minimo-contribuyente-estatal","legal_refs":["ley-35-2006:art-56","ley-35-2006:art-57","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":[],"operand_refs":["renta-minimo-contribuyente-base","renta-profile-taxpayer-birth-date"],"operand_values":["5550","40"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"5550.00"},
-            {"absent_by_design":false,"casilla_id":"0512","formula_id":"renta-minimo-contribuyente-autonomica","legal_refs":["ley-35-2006:art-56","ley-35-2006:art-57","ley-35-2006:art-73","orden-hac-277-2026:art-3","andalucia-ley-5-2021:art-23-bis","asturias-dl-2-2014:art-2-bis","canarias-dl-1-2009:art-18-quater","galicia-dl-1-2011:art-4-bis","madrid-dl-1-2010:art-2","valenciana-ley-13-1997:art-2-bis"],"op":"sum","operand_casilla_refs":[],"operand_refs":["renta-profile-tax-residence-ccaa","renta-minimo-contribuyente-base-madrid","renta-profile-taxpayer-birth-date"],"operand_values":["5956.65","40"],"source_refs":["aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form"],"value":"5956.65"},
+            {"absent_by_design":false,"casilla_id":"0511","formula_id":"renta-minimo-contribuyente-estatal","legal_refs":["ley-35-2006:art-56","ley-35-2006:art-57","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":[],"operand_refs":["renta-minimo-contribuyente-base","renta-profile-taxpayer-birth-date"],"operand_values":["5550","38"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"5550.00"},
+            {"absent_by_design":false,"casilla_id":"0512","formula_id":"renta-minimo-contribuyente-autonomica","legal_refs":["ley-35-2006:art-56","ley-35-2006:art-57","ley-35-2006:art-73","orden-hac-277-2026:art-3","andalucia-ley-5-2021:art-23-bis","asturias-dl-2-2014:art-2-bis","canarias-dl-1-2009:art-18-quater","galicia-dl-1-2011:art-4-bis","madrid-dl-1-2010:art-2","valenciana-ley-13-1997:art-2-bis"],"op":"sum","operand_casilla_refs":[],"operand_refs":["renta-profile-tax-residence-ccaa","renta-minimo-contribuyente-base-madrid","renta-profile-taxpayer-birth-date"],"operand_values":["5956.65","38"],"source_refs":["aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form"],"value":"5956.65"},
             {"absent_by_design":false,"casilla_id":"0513","formula_id":"renta-minimo-descendientes-estatal","legal_refs":["ley-35-2006:art-58","ley-35-2006:art-61"],"op":"copy","operand_casilla_refs":[],"operand_refs":["renta-profile-minimo-descendientes-estatal"],"operand_values":["0"],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0514","formula_id":"renta-minimo-descendientes-autonomico","legal_refs":["ley-35-2006:art-58","ley-35-2006:art-61","ley-35-2006:art-73","madrid-dl-1-2010:art-2"],"op":"copy","operand_casilla_refs":[],"operand_refs":["renta-profile-minimo-descendientes-autonomico"],"operand_values":["0"],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0515","formula_id":null,"legal_refs":["ley-35-2006:art-56","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
@@ -4262,7 +4261,7 @@
             {"absent_by_design":false,"casilla_id":"CONVASDLG","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"D","formula_id":null,"legal_refs":["ley-35-2006:art-68","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"DPNIF_D","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"sha256:1c9f9632"},
-            {"absent_by_design":false,"casilla_id":"DP_APENOM_D","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"Sandbox Docs"},
+            {"absent_by_design":false,"casilla_id":"DP_APENOM_D","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"Montero Alcaraz Javier"},
             {"absent_by_design":false,"casilla_id":"E","formula_id":null,"legal_refs":["ley-35-2006:dt-18","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"ECIVIL","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"1"},
             {"absent_by_design":false,"casilla_id":"F","formula_id":null,"legal_refs":["ley-35-2006:dt-15","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
@@ -4275,7 +4274,7 @@
             {"absent_by_design":true,"casilla_id":"NORESIDENTE","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":true,"casilla_id":"PH18","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":true,"casilla_id":"RESIDENTEUE","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"SEXO_D","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"H"},
+            {"absent_by_design":false,"casilla_id":"SEXO_D","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"M"},
             {"absent_by_design":false,"casilla_id":"TIPOTRIBUTACION","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"1"},
             {"absent_by_design":false,"casilla_id":"base-liq-neg-general-base-positiva-compensable","formula_id":"renta-base-liquidable-negativa-general-base-positiva-compensable","legal_refs":["ley-35-2006:art-50"],"op":"max","operand_casilla_refs":["0500"],"operand_refs":["0500"],"operand_values":["22000.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"22000.00"},
             {"absent_by_design":false,"casilla_id":"base-liq-neg-general-em1-aplicada-maxima","formula_id":"renta-base-liquidable-negativa-general-em1-aplicada-maxima","legal_refs":["ley-35-2006:art-50"],"op":"min","operand_casilla_refs":["1388","base-liq-neg-general-base-positiva-compensable","base-liq-neg-general-em4-aplicada-maxima","base-liq-neg-general-em3-aplicada-maxima","base-liq-neg-general-em2-aplicada-maxima"],"operand_refs":["1388","base-liq-neg-general-base-positiva-compensable","base-liq-neg-general-em4-aplicada-maxima","base-liq-neg-general-em3-aplicada-maxima","base-liq-neg-general-em2-aplicada-maxima"],"operand_values":["0","22000.00","0.00","0.00","0.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
@@ -4316,7 +4315,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision c89929520578043a6a9e4f94dfc99f2b0ef49d66a69a1136703ba2cc61149eb5 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "retencion_soportada",
@@ -4410,7 +4409,7 @@
         "modelo",
         "work",
         "verify",
-        "80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da"
+        "c89929520578043a6a9e4f94dfc99f2b0ef49d66a69a1136703ba2cc61149eb5"
       ],
       "captures": [],
       "envelope": {
@@ -4545,7 +4544,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da",
+          "calculation_revision_id": "c89929520578043a6a9e4f94dfc99f2b0ef49d66a69a1136703ba2cc61149eb5",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4617,7 +4616,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "a1ec3dd47773d6c3bbe3c26368d63919d74405eb9239ea769b36679e1956ed3c",
+          "verification_report_id": "9587df06fb3273fb2ce658bddd0af23ad654fb027aa012a5ce7b4044c162d7f2",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

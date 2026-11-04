@@ -46,11 +46,10 @@
           }
         ],
         "result": {
-          "applicable": false,
+          "applicable": true,
           "generated_at": "2026-04-01T09:00:00Z",
           "legal_refs": [
-            "ley-35-2006:art-99",
-            "ley-27-2014:art-124"
+            "ley-37-1992:art-99"
           ],
           "modelo": "303",
           "out_of_plazo_warning": null,
@@ -60,8 +59,8 @@
             "does_intracomunitario": false,
             "entity_type": "natural_person",
             "has_employees": false,
-            "irpf_estimation_regime": "",
-            "irpf_income_categories": "",
+            "irpf_estimation_regime": "directa_simplificada",
+            "irpf_income_categories": "actividad_economica",
             "iva.group_dominant_entity_enrolled": false,
             "iva.group_member_enrolled": false,
             "iva.intracommunity_operations_exceed_50000_eur": false,
@@ -72,15 +71,15 @@
             "monedas_virtuales_extranjero_above_threshold": "",
             "pays_capital_income_with_retencion": false,
             "pays_professionals_with_retencion": false,
-            "pays_rent_with_retencion": false,
+            "pays_rent_with_retencion": true,
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
             "tax_id": "sha256:1c9f9632",
-            "third_party_transactions_above_347_threshold": ""
+            "third_party_transactions_above_347_threshold": true
           },
-          "rationale": "Applicability cannot be determined: the taxpayer type is not declared. The entity type is missing, and with it the IRPF income categories where they apply.",
+          "rationale": "Modelo 303 (autoliquidación del IVA): el contribuyente realiza una actividad económica sujeta al IVA y presenta la autoliquidación periódica.",
           "scheduling_rationale": "Aplica segun la ventana registral del modelo.",
-          "verdict": "incomplete",
+          "verdict": "applicable",
           "year": 2026
         },
         "schema_version": "2",

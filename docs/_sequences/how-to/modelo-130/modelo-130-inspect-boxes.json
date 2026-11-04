@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -256,7 +255,7 @@
           }
         ],
         "result": {
-          "authority_generation": "8bb9830ecce738ba046c5b00c3d261f6352c3ea528d4111eabd7bdbab217bd61",
+          "authority_generation": "7e96b38f1e11828eaa59f6039e2a579d8a3224e2d2d6cfe992a27d9cf3118e04",
           "binding_count": 9,
           "bindings": [
             {

@@ -1,6 +1,6 @@
 """``python -m dev.docs.sequences`` — the golden refresh and check CLI.
 
-Two modes over one engine:
+Three modes over one engine:
 
 - ``refresh [--page PAGE | --sequence ID]`` re-executes the addressed
   sequences in fresh hermetic sandboxes and rewrites their committed golden
@@ -12,6 +12,10 @@ Two modes over one engine:
   divergence: the page, the sequence id, the frame index and argv, the
   post-mask differing paths or unified text diff, and the exact ``refresh``
   invocation that updates the golden.
+- ``seeds [--check]`` renders the profile frame of each persona-derived seed
+  recipe from the catalogue persona it declares; ``--check`` fails on drift
+  without writing (:mod:`dev.docs.sequences.seed_generator`). The unscoped
+  ``check`` mode includes the same drift check.
 
 Every mode that executes a sequence first confirms the registry authority the
 runner reads is current, and exits 1 naming the republish command when it is
@@ -55,6 +59,7 @@ from .errors import SequenceEngineError
 from .golden_store import (
     refresh_invocation,
 )
+from .seed_generator import check_seeds, write_seeds
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -64,6 +69,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.mode == "refresh":
         return _refresh_mode(args)
+
+    if args.mode == "seeds":
+        return _seeds_mode(args)
 
     if args.coherence:
         return _coherence_mode(args)
@@ -128,6 +136,23 @@ def _refresh_mode(args: argparse.Namespace) -> int:
     if written and not problems:
         print(f"{len(written)} golden(s) rewritten; review the git diff and commit them")
     return 1 if problems else 0
+
+
+def _seeds_mode(args: argparse.Namespace) -> int:
+    """Render the persona-derived recipe frames, or with ``--check`` report drift without writing."""
+    if args.check:
+        problems = check_seeds(seeds_root=args.seeds_root)
+        for problem in problems:
+            print(f"FAIL: {problem}", file=sys.stderr)
+        if problems:
+            return 1
+        print("seed recipes: clean")
+        return 0
+    written = write_seeds(seeds_root=args.seeds_root)
+    for recipe in written:
+        print(f"regenerated: {recipe}")
+    print(f"{len(written)} seed recipe(s) rewritten" if written else "seed recipes: already current")
+    return 0
 
 
 def _coherence_mode(args: argparse.Namespace) -> int:

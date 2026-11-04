@@ -1,2 +1,6 @@
-@step Declare an economic-activity IRPF obligation on the profile so the calendar has modelos to show.
+:persona: autonomo-fontanero
+:profile: irpf-income-categories activity-start-date=horizon-1:01-01
+@step State an economic-activity IRPF obligation on the profile so the calendar has modelos to show.
+:generated: begin
 @setup aeat config profile edit docs-sequence-sandbox --quiet --irpf-income-categories actividad_economica --activity-start-date 2025-01-01
+:generated: end

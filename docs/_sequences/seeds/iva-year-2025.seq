@@ -1,5 +1,9 @@
-@step Record when the activity started so every 2025 quarter is a valid obligation.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
+:persona: autonomo-fontanero
+:profile: activity-start-date=horizon-1:01-01
+@step State when the activity started so every 2025 quarter is a valid obligation.
+:generated: begin
+@setup aeat config profile edit docs-sequence-sandbox --quiet --activity-start-date 2025-01-01
+:generated: end
 @step Record a first-quarter sale with output VAT.
 @setup aeat app ledger add --date 2025-02-10 --amount 2420 --direction INCOMING --description "Servicio de consultoria primer trimestre" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420 --iva-category domestic_general --idempotency-key venta-1t-2025
 @step Record a second-quarter sale with output VAT.

@@ -1,5 +1,9 @@
-@step Record when the activity started so the quarter is a valid obligation.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+:persona: autonomo-fontanero
+:profile: activity-start-date=horizon:01-01
+@step State when the activity started so every quarter is a valid obligation.
+:generated: begin
+@setup aeat config profile edit docs-sequence-sandbox --quiet --activity-start-date 2026-01-01
+:generated: end
 @step Import the quarter's bank movements into the ledger.
 @setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Classify the collected payment as business income with output VAT.

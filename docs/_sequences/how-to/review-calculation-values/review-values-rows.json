@@ -106,7 +106,7 @@
         "--row",
         "miembro nif=00000019L clave=C porcentaje=60 importe=10000",
         "--row",
-        "miembro nif=00000001R clave=C porcentaje=40 importe=5000"
+        "miembro nif=00000299T clave=C porcentaje=40 importe=5000"
       ],
       "captures": [],
       "envelope": {
@@ -142,7 +142,7 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "0af16bfcf28eec09d1f2a3b3c373345d6e3cb67c28608a11e97733fcc2e542ab",
+          "calculation_revision_id": "327a88bbc8c14ba935177d70c83d755e3a361c7f5df2d202856894783aa31cb3",
           "casilla_values": {
             "decl.ejercicio": "2024",
             "decl.entidad-extranjera.porcentaje-renta-residentes": "0",
@@ -238,7 +238,7 @@
                 "importe": "5000",
                 "miembro_a_31_diciembre": null,
                 "naturaleza_inmueble": null,
-                "nif": "sha256:5637d0fd",
+                "nif": "sha256:204c5dac",
                 "nombre": "",
                 "pais": null,
                 "porcentaje": "40",
@@ -327,7 +327,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 0af16bfcf28eec09d1f2a3b3c373345d6e3cb67c28608a11e97733fcc2e542ab (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 327a88bbc8c14ba935177d70c83d755e3a361c7f5df2d202856894783aa31cb3 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [],
           "state": "borrador",
           "superseded_at": null,

@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -252,7 +251,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "e7c4fbe890b038ccaacb6ebd5d8c0367d64fa3828ee4a619ebb106d1871982e9",
+          "calculation_revision_id": "5498b998b338c6392c475e085eae07f1c78bf3fcdb1d5671e6189ea1c035277c",
           "casilla_values": {
             "01": "1000",
             "02": "525.00",
