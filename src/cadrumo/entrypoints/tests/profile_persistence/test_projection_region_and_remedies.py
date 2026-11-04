@@ -19,7 +19,10 @@ from cadrumo.application.modelo.projection import (
     ModeloProjectRegionUnstatedError,
     ModeloProjectRevisionNotMappedError,
 )
-from cadrumo.application.modelo.projection_declaration import modelo_projection_available
+from cadrumo.application.modelo.projection_declaration import (
+    modelo_projection_available,
+    registry_projection_declaration,
+)
 from cadrumo.application.modelo.projection_operation import ModeloProjectOperationProjection
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.next_step import OperationCalculateWorkStepV1, OperationCreateWorkStepV1
@@ -29,6 +32,7 @@ from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import supported_exercises_with_projection
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 from .projection_m130_seeding_support import (
@@ -244,17 +248,19 @@ def test_each_figure_of_the_projection_is_named_in_every_language(
     assert not english & {*served["es"].m130_accumulated.words.model_dump().values()}
 
 
-@pytest.mark.parametrize(("year", "named"), [(2022, False), (2023, False), (2024, False), (PROJECTION_YEAR, True)])
+@pytest.mark.parametrize("year", supported_exercises_with_projection("100"))
 def test_the_projection_runs_only_for_a_year_the_registry_mapping_names(
-    year: int, named: bool, tmp_path: Path, *, operation: PinnedAuthorityOperation
+    year: int, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The mapping names the 2025 annual return; the operation follows the capability the form serves.
+    """The mapping names one annual return's revision; the operation follows the capability the form serves.
 
-    The expected answer is read from the mapping's own revision, not from the
-    check: the 2022 to 2024 returns are other revisions than the one named.
+    The expected answer is read from the revision the mapping names, not from
+    the check: every supported year, the projected one included, is named
+    exactly when the registry selects that revision for it.
     """
+    mapped = registry_projection_declaration(PROJECTION_YEAR, operation=operation).target_revision
     revision = operation.revision_for_context("100", filing_year=year, period="0A")
-    assert (str(revision.id) == "2025") is named
+    named = str(revision.id) == mapped
     served = modelo_projection_available(
         modelo="100",
         period=Period.from_year_and_code(year, "0A"),
@@ -264,8 +270,14 @@ def test_the_projection_runs_only_for_a_year_the_registry_mapping_names(
     )
     assert served is named
 
-    if named:
+    if named and year == PROJECTION_YEAR:
         assert run_projection(tmp_path, operation, ccaa=None, year=year).year == year
+        return
+    if named:
+        # The mapping admits the year, so the projection goes on to read its quarters: the stored one is
+        # another year's, and the refusal is that year's missing quarter, not the mapping's.
+        with pytest.raises(ModeloProjectNoM130UnitsError):
+            run_projection(tmp_path, operation, ccaa=None, year=year)
         return
     with pytest.raises(ModeloProjectRevisionNotMappedError) as refused:
         run_projection(tmp_path, operation, ccaa=None, year=year)

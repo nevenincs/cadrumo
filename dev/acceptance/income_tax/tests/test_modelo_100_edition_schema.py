@@ -32,6 +32,7 @@ from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
+from cadrumo.domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from cadrumo.domain.filing.protocols import ModeloInputValue
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -182,8 +183,8 @@ def test_activity_figures_without_the_activity_key_refuse_by_that_box(
 
 
 _COMPENSATION_BLOCK = "DatosEconomicos/Resultados/BaseLiquidableRes"
-# Origin years whose applied compensation the base liquidable general feeds, from the edition that applies it.
-_COMPENSATING_EDITIONS = tuple(year for year in sorted(_XSD_BY_YEAR) if year >= 2022)
+# Editions whose applied compensation the base liquidable general feeds, from the registry's support floor up.
+_COMPENSATING_EDITIONS = tuple(year for year in sorted(_XSD_BY_YEAR) if year in supported_authored_exercises("100"))
 
 
 @pytest.mark.parametrize("year", _COMPENSATING_EDITIONS)

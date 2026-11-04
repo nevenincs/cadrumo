@@ -45,6 +45,7 @@ from pydantic.json_schema import models_json_schema
 from cadrumo.application.modelo.amendment_context_operation import ModeloWorkAmendmentContextProjection
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.operations import OperationEffect
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
 FRONTEND = Path(__file__).resolve().parents[1]
@@ -144,10 +145,11 @@ HELP_BOXES: Mapping[str, tuple[str, ...]] = {
     "100": ("0596", "0670"),
 }
 
-#: The tax year and period of the Renta the envelopes read.
-RENTA_YEAR = 2025
+#: The tax year and period of the Renta the envelopes read: the first exercise of the newest edition the registry
+#: authors, so the scenarios follow the registry when an edition is authored.
+RENTA_YEAR = newest_authored_edition("100")
 RENTA_PERIOD = "0A"
-#: What the filer answers for the 2025 Renta: the earlier year's negative general base, the negative general base
+#: What the filer answers for that Renta: the earlier year's negative general base, the negative general base
 #: still pending at the start of each of the three years before, and whether direct estimation is normal. The
 #: calculation refuses without all of them.
 RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
@@ -165,8 +167,8 @@ RENTA_PAYER_TAX_ID = "B12345674"
 #: tax residence, which the projection takes when it is not named.
 RENTA_QUARTER = "1T"
 RENTA_CCAA = "madrid"
-#: A day within the 2025 return's filing period, which closes on 30 June 2026.
-RENTA_FILING_PERIOD_DAY = datetime(2026, 5, 20, 9, 0, tzinfo=UTC)
+#: A day within the Renta's filing period, which closes on 30 June of the year after.
+RENTA_FILING_PERIOD_DAY = datetime(RENTA_YEAR + 1, 5, 20, 9, 0, tzinfo=UTC)
 
 
 # -- wire types ---------------------------------------------------------------
@@ -944,8 +946,9 @@ class RentaFiler:
     #: Whether the profile also holds the year's calculated first-quarter Modelo 130, which the projection of the
     #: annual return from the quarters reads; the projection is read for the filer only then.
     quarter_130: bool = False
-    #: The day the filer's profile is read on, where it matters: the filing period of the 2025 return runs to the end
-    #: of June 2026, and a result to pay is offered in two instalments only within it. ``None`` reads on today's date.
+    #: The day the filer's profile is read on, where it matters: the filing period of the return runs to the end
+    #: of June of the year after, and a result to pay is offered in two instalments only within it. ``None`` reads
+    #: on today's date.
     read_on: datetime | None = None
     #: What the profile states of the household, by name (see ``_household_facts``).
     household: str = "single"
@@ -1523,9 +1526,9 @@ BORRADOR_PRINTED_OFF = ("0585", Decimal("1.25"))
 #: and the Social Security contributions, stated as typed.
 BORRADOR_PRINTED_EXTRA: tuple[tuple[str, str], ...] = (("0003", "29500.00"), ("0013", "1900.00"))
 #: When a draft the rules refuse was stored, when the first draft was imported and when the second was.
-BORRADOR_REFUSED_AT = datetime(2026, 4, 2, 10, 0, tzinfo=UTC)
-BORRADOR_FIRST_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
-BORRADOR_SECOND_AT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
+BORRADOR_REFUSED_AT = datetime(RENTA_YEAR + 1, 4, 2, 10, 0, tzinfo=UTC)
+BORRADOR_FIRST_AT = datetime(RENTA_YEAR + 1, 4, 3, 10, 0, tzinfo=UTC)
+BORRADOR_SECOND_AT = datetime(RENTA_YEAR + 1, 4, 5, 10, 0, tzinfo=UTC)
 
 
 def _borrador_comparison(work: Any, language: str) -> BaseModel:

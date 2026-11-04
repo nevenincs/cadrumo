@@ -29,6 +29,10 @@ from uuid import UUID
 import pytest
 
 from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    supported_authored_exercises,
+    supported_exercises_with_projection,
+)
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -52,6 +56,7 @@ from ....application.modelo.calculation_bucket_actions import (
 )
 from ....application.modelo.operation_shared import resolve_active_workflow_profile
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_missing_input import ModeloWorkMissingInputError
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -82,7 +87,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _MODELO = "100"
 _PERIOD = "0A"
-_SUPPORTED_FILING_YEARS = (2022, 2023, 2024, 2025)
+#: Every supported Renta exercise, the projected one past the newest authored edition included: each calculates.
+_SUPPORTED_FILING_YEARS = supported_exercises_with_projection(_MODELO)
+#: The exercises an authored edition governs. Only their verification runs the Art. 50.3 gates: a projected year's
+#: verification refuses the filing claim before any of them, which its own verification test covers.
+_VERIFIED_FILING_YEARS = supported_authored_exercises(_MODELO)
+#: The verified exercises whose prior return is itself a supported one.
+_YEARS_WITH_SUPPORTED_PRIOR = _VERIFIED_FILING_YEARS[1:]
 _PROFILE_ID = "10010000-0000-4100-8100-000000000503"
 _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
@@ -205,7 +216,7 @@ def _seed_prior_return(filing_year: int, carried: Mapping[CasillaId, Decimal]) -
 
 def _operator_zeros(filing_year: int) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:
     """Zero every operator-owned channel except the withholding register and the prior-year carries."""
-    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
+    snapshot = published_authority_operation().reading_snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
     binding_values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -226,13 +237,16 @@ def _stated_stocks(**stocks: str) -> dict[BindingId, Decimal]:
 
 
 def _create_work_unit(filing_year: int) -> WorkUnitId:
+    period = Period.from_year_and_code(filing_year, _PERIOD)
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_PROFILE_ID,
             modelo=_MODELO,
             filing_year=filing_year,
-            period=Period.from_year_and_code(filing_year, _PERIOD),
-            revision_id=str(filing_year),
+            period=period,
+            revision_id=law_selected_revision_for_work_target(
+                modelo=_MODELO, filing_year=filing_year, period=period, operation=operation
+            ),
             ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
             operation=operation,
             clock=_CLOCK,
@@ -343,7 +357,7 @@ _REMAINDER_EM2: CasillaId = validated_casilla_id("1387")
 _REMAINDER_EM1: CasillaId = validated_casilla_id("1390")
 
 
-@pytest.mark.parametrize("filing_year", _SUPPORTED_FILING_YEARS)
+@pytest.mark.parametrize("filing_year", _VERIFIED_FILING_YEARS)
 def test_every_origin_row_applied_at_its_maximum_passes_and_sums_into_0501(tmp_path: Path, filing_year: int) -> None:
     """A base larger than every stock absorbs them all; 0501 is their sum and nothing remains."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
@@ -366,7 +380,7 @@ def test_every_origin_row_applied_at_its_maximum_passes_and_sums_into_0501(tmp_p
     assert findings == {}
 
 
-@pytest.mark.parametrize("filing_year", _SUPPORTED_FILING_YEARS)
+@pytest.mark.parametrize("filing_year", _VERIFIED_FILING_YEARS)
 def test_a_small_base_is_consumed_oldest_row_first(tmp_path: Path, filing_year: int) -> None:
     """Stocks above the base: the older rows take it all, and the younger rows' maximum is zero."""
     stocks = {
@@ -420,7 +434,7 @@ def test_a_small_base_is_consumed_oldest_row_first(tmp_path: Path, filing_year: 
     )
 
 
-@pytest.mark.parametrize("filing_year", _SUPPORTED_FILING_YEARS)
+@pytest.mark.parametrize("filing_year", _VERIFIED_FILING_YEARS)
 @pytest.mark.parametrize(
     ("applied", "stock_refused"),
     (
@@ -460,7 +474,7 @@ def test_an_application_other_than_the_row_maximum_is_refused(
     )
 
 
-@pytest.mark.parametrize("filing_year", _SUPPORTED_FILING_YEARS)
+@pytest.mark.parametrize("filing_year", _VERIFIED_FILING_YEARS)
 def test_a_positive_application_with_no_positive_base_is_refused(tmp_path: Path, filing_year: int) -> None:
     """Art. 50.3 compensates only against a positive base, so a zero base admits nothing on any row."""
     em4 = _ROW_BY_NAME["em4"]
@@ -494,7 +508,7 @@ def test_a_positive_application_with_no_positive_base_is_refused(tmp_path: Path,
     assert nothing.casilla_values[_REMAINDER_EM1] == _EVERY_ROW_STOCKED["em1"]
 
 
-@pytest.mark.parametrize("filing_year", _SUPPORTED_FILING_YEARS)
+@pytest.mark.parametrize("filing_year", _VERIFIED_FILING_YEARS)
 def test_a_positive_application_against_a_proven_zero_stock_is_refused(tmp_path: Path, filing_year: int) -> None:
     """A stated zero stock leaves nothing to compensate, so 500 applied from it fails both of its gates."""
     em2 = _ROW_BY_NAME["em2"]
@@ -541,7 +555,7 @@ def test_an_unknown_stock_of_any_row_stops_the_calculation(tmp_path: Path, filin
     assert refused.value.binding_id == unknown_binding
 
 
-@pytest.mark.parametrize("filing_year", (2023, 2024, 2025))
+@pytest.mark.parametrize("filing_year", _YEARS_WITH_SUPPORTED_PRIOR)
 def test_the_prior_return_opens_each_row_one_year_older(tmp_path: Path, filing_year: int) -> None:
     """The prior 1384, 1387, 1390 and 1391 open this year's 1380, 1382, 1385 and 1388."""
     amounts = (Decimal("100.00"), Decimal("200.00"), Decimal("300.00"), Decimal("400.00"))
