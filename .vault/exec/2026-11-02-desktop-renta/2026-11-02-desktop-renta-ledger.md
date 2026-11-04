@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:29fff6abd7d48a4d780e1a31747eb9c5aec934edc1bd538ffd0871325dfeace2'
+body_hash: 'sha256:a0963c62aded107e12411fca8caec47fb5b33d668fb85384ed7658d0283f2d15'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -1251,6 +1251,15 @@ related:
 - `S51` `verify:` `relay_contracts.py --check (modelo, ledger)` -> `pass`
 - `S51` `verify:` `test_window_holds_no_tax_data` -> `pass`
 - `S51` `verify:` `playwright modelo-workspace.spec.ts:156` -> `fail`
+- `S45` `M` `dev/acceptance/income_tax/tests/test_modelo_100_edition_schema.py`
+- `S45` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S45` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_art_50_3_compensation_verification.py`
+- `S45` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_region_and_remedies.py`
+- `S45` `verify:` `pytest test_projection_region_and_remedies` -> `pass`
+- `S45` `verify:` `pytest test_modelo_100_edition_schema` -> `pass`
+- `S45` `verify:` `ruff check/format` -> `pass`
+- `S45` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S45` `verify:` `pytest test_modelo_100_art_50_3_compensation_verification` -> `fail`
 
 ## Notes
 
@@ -1316,3 +1325,4 @@ related:
 - `S53` Commit e291a27cd0. The withholding pane shows only served refusal words for both operations; 13 `desktop.ledger.withholding.refusal.*` keys deleted in four locales. Remaining locale failures belong to other in-flight work (prorrata served keys, `credit_resolution` `served_source` identity, 17 unused chrome keys).
 - `S54` Commit b3a41c4296 (backend-served-surface P01.S03 window half). Three window classification sets deleted; served rows held in ledgerClassifications.ts. tsc errors are S51's uncommitted modeloFixture.ts. Not served yet: a 'carries business figures' flag (window still uses generated isBusinessBearing) and the mixed usage-ratio lookup. Committed via a temporary index around a held index.lock; history verified linear.
 - `S51` Commits 9f34651a2e, 16c59d4e91, 4be1830c46. 9f34651a2e also carried another worker's aggregation served locale hunks. modelo-workspace.spec.ts:156 still fails: the Modelo 130 income form's `unresolved_binding` note names no box or profile fact (missing estimation regime); handed to the backend owner. storybook:build was not run during the CHECKS hold.
+- `S45` 63401f110a: Renta test years derived from `authored_editions;` `RENTA_YEAR` = `newest_authored_edition.` Ruling: art. 50.3 findings cases run over authored years only, because a projected year refuses the filing claim first (covered by `test_modelo_100_projected_year_verification);` the calculation-only case keeps the projected year. The art. 50.3 file fails on another worker's uncommitted `prepare_calculation(usage_ratio_profile_loader)` edit, so it must be rerun once that settles. Open: servedRentaYears.ts projected still derived in the window (backend projected field requested); fixture re-record awaits the box 13 note and the M303 gate-order change.
