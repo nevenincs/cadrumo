@@ -63,7 +63,9 @@ can differ, and `--casilla` refuses a printed number that is not the
 `casilla_id`.
 
 `--casilla` works only on manual boxes. A `bound` box is filled automatically from its source, so `--casilla` refuses it with `cannot override bucket-derived
-source-bound casillas` (for example, Modelo 130 box `02` <span lang="es">Gastos</span> is `bound`). Fix
+source-bound casillas` (for example, Modelo 130 box `01` <span lang="es">Ingresos</span> is `bound`). A `computed`
+box, such as Modelo 130 box `02` <span lang="es">Gastos</span>, comes from a formula and cannot be supplied
+with `--casilla` either. Fix
 the source instead. See [Supply a missing field value](#supply-a-missing-field-value).
 
 A first-period filing also needs its prior-period values supplied (record them

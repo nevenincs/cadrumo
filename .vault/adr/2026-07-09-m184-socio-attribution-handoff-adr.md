@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m184-socio-attribution-handoff'
 date: '2026-07-09'
-modified: '2026-10-03'
-body_hash: 'sha256:332e08a3a8463215dd8dca18f9873fe04175e0a56ca45d59fa1d89d8fc07e48a'
+modified: '2026-11-04'
+body_hash: 'sha256:574716a39c7257f5d83167d38aa7c04941c25290c6b9360990562edf8496f6d8'
 related:
   - '[[2026-07-10-m184-socio-attribution-handoff-research]]'
 ---
@@ -170,7 +170,7 @@ transport upgrade rather than a redesign.
   discover the omission. The loud channel for this case is the S413 M184-side
   handoff Notice (emitted on the ENTITY operator's verify/file, instructing them
   to relay each socio's attributed value); full socio-bucket coverage of the
-  fully-forgotten case awaits cross-bucket auto-flow (Option A) or a 2024
+  fully-forgotten case awaits cross-bucket auto-flow (Option A) or a
   relation-symmetry follow-up. This is the exact hazard the Considerations name,
   accepted here as bounded because Option A is deferred behind its own security
   ADR.
@@ -205,20 +205,20 @@ authority snapshot of the target M100 revisions:
 - The canonical M100 régimen-de-atribución income casilla for an attributed
   actividad-económica base is **1577** ("Rendimiento neto de actividad
   económica atribuido por entidades en régimen de atribución de rentas").
-- **2025** M100 already binds casilla 1577 via
+- The newer M100 revision already binds casilla 1577 via
   `renta-2025-modelo-184-atribucion-actividades-economicas`,
   `source = "relation_prefill"` (selector `source_modelo = "184"`,
   `source_casilla_id = "tipo2.renta-atribuible-importe"`, `op = "sum"`),
   landed by commit `be47886cd1` ("relation canonical for cross-modelo
-  fold-in"). **2024** M100 leaves 1577 unbound (`input_kind = informational`).
+  fold-in"). The older M100 revision leaves 1577 unbound (`input_kind = informational`).
 - A casilla holds exactly one binding, and the `calculation-source-canonical-
   mechanism` rule states verbatim "cross-MODELO fold-ins are relations" and
   "never model one fold-in two ways at once". The M184→M100 attributed income
   IS a cross-modelo fold-in.
 
 Therefore the Implementation §2 proposal — a `source = "profile"` binding onto
-the atribución casilla — is **rejected**: on 2025 it double-binds the
-relation-canonical casilla 1577, and on 2024 it would model the same
+the atribución casilla — is **rejected**: on the newer revision it double-binds the
+relation-canonical casilla 1577, and on the older it would model the same
 cross-modelo fold-in a second way. The relation is the intra-bucket transport
 (a socio who files both the entity's M184 and their own M100 in one
 workspace); this ADR's concern is the CROSS-bucket transport (SC bucket ≠
@@ -228,7 +228,7 @@ the active bucket.
 ### Why this amendment is required either way
 
 Note a `source = "profile"` binding onto casilla 1577 is not merely a
-double-binding hazard: even restricted to 2024 (where 1577 is unbound), it
+double-binding hazard: even restricted to the older revision (where 1577 is unbound), it
 would model a CROSS-MODELO fold-in (M184 → M100 attributed income) through a
 PROFILE fact — a NEW aggregation surface that no row of the
 `calculation-source-canonical-mechanism` taxonomy covers (the taxonomy routes
@@ -244,38 +244,38 @@ Casilla 1577 is a cross-modelo fold-in and stays relation-canonical wherever a
 relation exists. The open question is how the CROSS-bucket value (SC bucket ≠
 socio bucket, which a relation cannot serve) reaches the socio's M100.
 
-- **(a) No profile binding either year; cross-bucket served manually —
+- **(a) No profile binding on either revision; cross-bucket served manually —
   RECOMMENDED.** The socio's typed `attribution_received` facts (S411) are the
   provenance-carrying home and transcription source. The M184 handoff Notice
   (S413) emits the per-socio value plus the exact profile-capture command; the
   M100 omission advisory (S414) fires — non-blocking, LOUD — when
   `attribution_received` facts exist for the filing year but the atribución
   casilla resolves empty. The cross-bucket value enters M100 via a documented
-  manual `--binding` override on 1577, BOTH years. Rule-symmetric (1577 stays
-  relation-canonical where a relation exists; cross-bucket manual both years),
+  manual `--binding` override on 1577, on BOTH revisions. Rule-symmetric (1577 stays
+  relation-canonical where a relation exists; cross-bucket manual on both revisions),
   no new aggregation surface, consistent with this ADR's own deferral of
   cross-bucket auto-flow (Option A) behind a future security ADR.
-- **(b) 2024 `source = "profile"` binding + 2025 stays relation.** Pragmatic —
-  ships cross-bucket auto-flow for 2024 (no manual transcription that year).
-  Honest cost: **asymmetric** — 2024 cross-bucket auto-flows via the profile
-  fact while 2025 cross-bucket stays manual, a distinction that is purely an
-  artifact of the relation campaign having covered only 2025, not a principled
+- **(b) `source = "profile"` binding on the older revision + the newer stays relation.** Pragmatic —
+  ships cross-bucket auto-flow for the older revision (no manual transcription there).
+  Honest cost: **asymmetric** — the older revision's cross-bucket auto-flows via the profile
+  fact while the newer's cross-bucket stays manual, a distinction that is purely an
+  artifact of the relation campaign having covered only the newer revision, not a principled
   legal or design difference. It also introduces the new profile-based
   cross-modelo aggregation surface named above (and needs the
   `_profile_binding.py` repeatable-group sum injector), which the
   canonical-mechanism taxonomy disfavours.
-- **(option 3) Extend the relation to 2024 for full symmetry.** Author a 2024
-  M100 `relation_prefill` binding on 1577 mirroring 2025, so the relation
-  covers both years and cross-bucket is manual both years — the symmetric twin
-  of (a) that additionally closes the 2024 same-bucket gap. Attractive, but the
-  2024 relation binding is a registry change owned by the relation-canonical
+- **(option 3) Extend the relation to the older revision for full symmetry.** Author an
+  M100 `relation_prefill` binding on 1577 for the older revision mirroring the newer, so the relation
+  covers both revisions and cross-bucket is manual on both — the symmetric twin
+  of (a) that additionally closes the older revision's same-bucket gap. Attractive, but the
+  older revision's relation binding is a registry change owned by the relation-canonical
   campaign's scope (and presupposes the same-bucket M184), so it belongs to a
   follow-up rather than this cross-bucket-handoff slice. Recorded as the future
   symmetry improvement; (a) does not foreclose it.
 
 **Recommendation: (a).** It is rule-symmetric, minimal-blast, introduces no new
 aggregation surface, and matches this ADR's deferral of auto-flow. (b)'s only
-gain (2024 auto-flow) is bought with a principled-looking-but-accidental
+gain (older-revision auto-flow) is bought with a principled-looking-but-accidental
 asymmetry and a disfavoured new surface; option 3 is the right way to gain
 symmetry later, as a relation-campaign follow-up.
 

@@ -150,36 +150,159 @@
         "--casilla",
         "0003=24000",
         "--binding",
-        "renta-base-liquidable-negativa-general-anterior=0"
+        "renta-base-liquidable-negativa-general-anterior=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e"
+          "value": "80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da"
         }
       ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
         "notices": [
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0186-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0186","casilla_id":"0186","detail":"binding 'renta-ledger-expense-0186-deductible' reaches box 0186 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0186-deductible"},"message":"Box 0186: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0192-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0192","casilla_id":"0192","detail":"binding 'renta-ledger-expense-0192-deductible' reaches box 0192 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0192-deductible"},"message":"Box 0192: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0199-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0199","casilla_id":"0199","detail":"binding 'renta-ledger-expense-0199-deductible' reaches box 0199 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0199-deductible"},"message":"Box 0199: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0203-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0203","casilla_id":"0203","detail":"binding 'renta-ledger-expense-0203-deductible' reaches box 0203 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0203-deductible"},"message":"Box 0203: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-income-0171","binding_source":"ledger_renta_income_aggregation","box":"0171","casilla_id":"0171","detail":"binding 'renta-ledger-income-0171' reaches box 0171 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_income_aggregation","source_ref":"renta-ledger-income-0171"},"message":"Box 0171: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-actividad-retenciones-0599","binding_source":"ledger_renta_income_aggregation","box":"0599","casilla_id":"0599","detail":"binding 'renta-ledger-actividad-retenciones-0599' reaches box 0599 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_income_aggregation","source_ref":"renta-ledger-actividad-retenciones-0599"},"message":"Box 0599: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0183-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0183","casilla_id":"0183","detail":"binding 'renta-ledger-expense-0183-deductible' reaches box 0183 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0183-deductible"},"message":"Box 0183: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0191-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0191","casilla_id":"0191","detail":"binding 'renta-ledger-expense-0191-deductible' reaches box 0191 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0191-deductible"},"message":"Box 0191: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0193-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0193","casilla_id":"0193","detail":"binding 'renta-ledger-expense-0193-deductible' reaches box 0193 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0193-deductible"},"message":"Box 0193: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0194-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0194","casilla_id":"0194","detail":"binding 'renta-ledger-expense-0194-deductible' reaches box 0194 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0194-deductible"},"message":"Box 0194: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0195-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0195","casilla_id":"0195","detail":"binding 'renta-ledger-expense-0195-deductible' reaches box 0195 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0195-deductible"},"message":"Box 0195: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0200-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0200","casilla_id":"0200","detail":"binding 'renta-ledger-expense-0200-deductible' reaches box 0200 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0200-deductible"},"message":"Box 0200: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0202-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0202","casilla_id":"0202","detail":"binding 'renta-ledger-expense-0202-deductible' reaches box 0202 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0202-deductible"},"message":"Box 0202: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0206-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0206","casilla_id":"0206","detail":"binding 'renta-ledger-expense-0206-deductible' reaches box 0206 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0206-deductible"},"message":"Box 0206: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"binding_id":"renta-ledger-expense-0217-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","box":"0217","casilla_id":"0217","detail":"binding 'renta-ledger-expense-0217-deductible' reaches box 0217 with a proven zero: its rows carry nothing the imputation_period_ungrounded cap concerns","level":"info","reason":"advisory_binding_value","source_kind":"ledger_renta_gastos_estimacion_directa_aggregation","source_ref":"renta-ledger-expense-0217-deductible"},"message":"Box 0217: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"info"},
-          {"action":null,"code":"modelo.work.calculate.source_advisory","context":{"box":"0513","casilla_id":"0513","detail":"casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero and the active profile declares no descendant facts","legal_refs":"ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3","level":"missing","reason":"source_issue","remedy":"Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.","source_kind":"minimo_descendientes_undeclared"},"message":"Some information this figure depends on is missing or could not be used.","severity":"warning"},
-          {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "box": "0513",
+              "casilla_id": "0513",
+              "detail": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero and the active profile declares no descendant facts",
+              "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
+              "level": "missing",
+              "reason": "source_issue",
+              "remedy": "Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.",
+              "source_kind": "minimo_descendientes_undeclared"
+            },
+            "message": "Some information this figure depends on is missing or could not be used.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_source": "retencion_soportada",
+              "box": "0596",
+              "casilla_id": "0596",
+              "detail": "credit casilla '0596': cross-check 'borrador' (binding:renta-retencion-soportada-trabajo) holds nothing to compare, so the figure is not cross-checked",
+              "level": "check",
+              "reason": "credit_cross_check_absent",
+              "source_kind": "credit_reconciliation",
+              "source_ref": "binding:renta-retencion-soportada-trabajo"
+            },
+            "message": "Box 0596: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_source": "retencion_soportada",
+              "box": "0597",
+              "casilla_id": "0597",
+              "detail": "credit casilla '0597': cross-check 'borrador' (binding:renta-retencion-soportada-capital-mobiliario) holds nothing to compare, so the figure is not cross-checked",
+              "level": "check",
+              "reason": "credit_cross_check_absent",
+              "source_kind": "credit_reconciliation",
+              "source_ref": "binding:renta-retencion-soportada-capital-mobiliario"
+            },
+            "message": "Box 0597: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "box": "0598",
+              "casilla_id": "0598",
+              "detail": "credit casilla '0598': cross-check 'retencion_soportada' (income_class:arrendamiento_inmueble_urbano) holds nothing to compare, so the figure is not cross-checked",
+              "level": "check",
+              "reason": "credit_cross_check_absent",
+              "source_kind": "credit_reconciliation",
+              "source_ref": "income_class:arrendamiento_inmueble_urbano"
+            },
+            "message": "Box 0153: there is nothing in the payer certificates to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_source": "ledger_renta_income_aggregation",
+              "box": "0599",
+              "casilla_id": "0599",
+              "detail": "credit casilla '0599': cross-check 'retencion_soportada' (income_class:actividad_economica) holds nothing to compare, so the figure is not cross-checked",
+              "level": "check",
+              "reason": "credit_cross_check_absent",
+              "source_kind": "credit_reconciliation",
+              "source_ref": "income_class:actividad_economica"
+            },
+            "message": "Box 0599: there is nothing in the payer certificates to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_source": "ledger_renta_income_aggregation",
+              "box": "0599",
+              "casilla_id": "0599",
+              "detail": "credit casilla '0599': cross-check 'borrador' (binding:renta-ledger-actividad-retenciones-0599) holds nothing to compare, so the figure is not cross-checked",
+              "level": "check",
+              "reason": "credit_cross_check_absent",
+              "source_kind": "credit_reconciliation",
+              "source_ref": "binding:renta-ledger-actividad-retenciones-0599"
+            },
+            "message": "Box 0599: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_source": "ledger_renta_income_aggregation",
+              "box": "0599",
+              "casilla_id": "0599",
+              "detail": "credit casilla '0599': cross-check 'filed_observation' (filed:130:4T:06) holds nothing to compare, so the figure is not cross-checked",
+              "level": "check",
+              "reason": "credit_cross_check_absent",
+              "source_kind": "credit_reconciliation",
+              "source_ref": "filed:130:4T:06"
+            },
+            "message": "Box 0599: there is nothing in the return you filed to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_source": "retencion_soportada",
+              "box": "0603",
+              "casilla_id": "0603",
+              "detail": "credit casilla '0603': cross-check 'borrador' (binding:renta-retencion-soportada-ganancia-patrimonial) holds nothing to compare, so the figure is not cross-checked",
+              "level": "check",
+              "reason": "credit_cross_check_absent",
+              "source_kind": "credit_reconciliation",
+              "source_ref": "binding:renta-retencion-soportada-ganancia-patrimonial"
+            },
+            "message": "Box 0603: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
         ],
         "result": {
           "authorization_state": null,
@@ -193,6 +316,9 @@
             "renta-activity-asset-disposal-loss-no-transmission-0305": "0",
             "renta-activity-asset-disposal-loss-property-1832": "0",
             "renta-base-liquidable-negativa-general-anterior": "0",
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": "0",
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": "0",
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": "0",
             "renta-ledger-actividad-retenciones-0599": "0",
             "renta-ledger-expense-0183-deductible": "0",
             "renta-ledger-expense-0186-deductible": "0",
@@ -229,11 +355,12 @@
             "renta-profile-tax-residence-ccaa": "madrid",
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0",
+            "renta-retencion-soportada-arrendamiento-actividad": "0",
             "renta-retencion-soportada-capital-mobiliario": "0",
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e",
+          "calculation_revision_id": "80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -665,7 +792,7 @@
             "0503": "0",
             "0504": "0",
             "0505": "22000.00",
-            "0506": "0",
+            "0506": "0.00",
             "0507": "0",
             "0508": "0",
             "0509": "0",
@@ -816,7 +943,7 @@
             "0695": "1072.12",
             "0698": "0",
             "0699": "0",
-            "0700": "0",
+            "0700": "1072.12",
             "0701": "0",
             "0702": "0",
             "0703": "0",
@@ -1413,14 +1540,14 @@
             "1381": "0",
             "1382": "0",
             "1383": "0",
-            "1384": "0",
+            "1384": "0.00",
             "1385": "0",
             "1386": "0",
-            "1387": "0",
+            "1387": "0.00",
             "1388": "0",
             "1389": "0",
             "1390": "0.00",
-            "1391": "0",
+            "1391": "0.00",
             "1392": "0",
             "1396": "0",
             "1398": "0",
@@ -2044,7 +2171,11 @@
             "NORESIDENTE": "0",
             "PH18": "0",
             "RESIDENTEUE": "0",
-            "base-liq-neg-general-2024-aplicada-maxima": "0.00",
+            "base-liq-neg-general-base-positiva-compensable": "22000.00",
+            "base-liq-neg-general-em1-aplicada-maxima": "0.00",
+            "base-liq-neg-general-em2-aplicada-maxima": "0.00",
+            "base-liq-neg-general-em3-aplicada-maxima": "0.00",
+            "base-liq-neg-general-em4-aplicada-maxima": "0.00",
             "eo-agraria-reduccion-irregularidad-base": "0",
             "prestacion-inss-maternidad-paternidad-exenta": "0",
             "trabajo-mar-renta-exenta": "0.00"
@@ -2086,6 +2217,9 @@
             "0597": "0",
             "0599": "0",
             "0603": "0",
+            "1380": "0",
+            "1382": "0",
+            "1385": "0",
             "1388": "0",
             "1478": "0",
             "1639": "0",
@@ -2241,7 +2375,7 @@
             {"absent_by_design":false,"casilla_id":"0162","formula_id":null,"legal_refs":["ley-35-2006:art-86","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0163","formula_id":null,"legal_refs":["ley-35-2006:art-31","ley-35-2006:art-86","rd-439-2007:art-39","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0164","formula_id":null,"legal_refs":["ley-35-2006:art-86","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"0169","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
+            {"absent_by_design":true,"casilla_id":"0169","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0170","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0171","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0172","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0"},
@@ -2471,7 +2605,7 @@
             {"absent_by_design":false,"casilla_id":"0432","formula_id":"renta-saldo-neto-rendimientos-base-imponible-general","legal_refs":["ley-35-2006:art-17","ley-35-2006:art-22","ley-35-2006:art-25","ley-35-2006:art-27","ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0025","0060","0155","0156","0235"],"operand_refs":["0025","0060","0155","0156","0235"],"operand_values":["22000.00","0.00","0.00","0.00","0.00"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"22000.00"},
             {"absent_by_design":false,"casilla_id":"0433","formula_id":"renta-saldo-gp-base-general-cap-25","legal_refs":["ley-35-2006:art-48","ley-35-2006:art-50"],"op":"min","operand_casilla_refs":["0421","0432"],"operand_refs":["0421","0432"],"operand_values":["0.00","22000.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0434","formula_id":null,"legal_refs":["ley-35-2006:art-48","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"0435","formula_id":"renta-base-imponible-general","legal_refs":["ley-35-2006:art-48","orden-hac-277-2026:art-3"],"op":"max","operand_casilla_refs":["0432","0433"],"operand_refs":["0432","0433"],"operand_values":["22000.00","0.00"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"22000.00"},
+            {"absent_by_design":false,"casilla_id":"0435","formula_id":"renta-base-imponible-general","legal_refs":["ley-35-2006:art-48","orden-hac-277-2026:art-3"],"op":"subtract","operand_casilla_refs":["0432","0433"],"operand_refs":["0432","0433"],"operand_values":["22000.00","0.00"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"22000.00"},
             {"absent_by_design":false,"casilla_id":"0436","formula_id":"renta-saldo-capital-mobiliario-cap-25-base-ahorro","legal_refs":["ley-35-2006:art-49"],"op":"min","operand_casilla_refs":["0430","0424"],"operand_refs":["0430","0424"],"operand_values":["0","0.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0437","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0438","formula_id":null,"legal_refs":["ley-35-2006:art-51","ley-35-2006:art-52","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
@@ -2525,17 +2659,17 @@
             {"absent_by_design":false,"casilla_id":"0496","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0497","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0499","formula_id":null,"legal_refs":["ley-35-2006:art-51","ley-35-2006:art-52","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"0500","formula_id":"renta-base-liquidable-general","legal_refs":["ley-35-2006:art-50","ley-35-2006:art-52","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0435","0461","0468","0501"],"operand_refs":["0435","0461","0468","0501"],"operand_values":["22000.00","0.00","0.00","0.00"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"22000.00"},
-            {"absent_by_design":false,"casilla_id":"0501","formula_id":"renta-base-liquidable-negativa-general-compensacion-total","legal_refs":["ley-35-2006:art-50"],"op":"sum","operand_casilla_refs":["1389"],"operand_refs":["1389"],"operand_values":["0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"0500","formula_id":"renta-base-liquidable-general","legal_refs":["ley-35-2006:art-50","ley-35-2006:art-52","orden-hac-277-2026:art-3"],"op":"if_then_else","operand_casilla_refs":["0435","0435","0461","0468"],"operand_refs":["0435","0435","0461","0468"],"operand_values":["22000.00","22000.00","0.00","0.00"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"22000.00"},
+            {"absent_by_design":false,"casilla_id":"0501","formula_id":"renta-base-liquidable-negativa-general-compensacion-total","legal_refs":["ley-35-2006:art-50"],"op":"sum","operand_casilla_refs":["1381","1383","1386","1389"],"operand_refs":["1381","1383","1386","1389"],"operand_values":["0","0","0","0"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0502","formula_id":null,"legal_refs":["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0503","formula_id":null,"legal_refs":["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0504","formula_id":null,"legal_refs":["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"0505","formula_id":"renta-base-liquidable-general-sometida-a-gravamen","legal_refs":["ley-35-2006:art-50","ley-35-2006:art-63","orden-hac-277-2026:art-3"],"op":"max","operand_casilla_refs":["0500"],"operand_refs":["0500"],"operand_values":["22000.00"],"source_refs":["lirpf-cuota-chain-authority","aeat-dr-100-2025-dictionary"],"value":"22000.00"},
-            {"absent_by_design":false,"casilla_id":"0506","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"0505","formula_id":"renta-base-liquidable-general-sometida-a-gravamen","legal_refs":["ley-35-2006:art-50","ley-35-2006:art-63","orden-hac-277-2026:art-3"],"op":"max","operand_casilla_refs":["0500","0501"],"operand_refs":["0500","0501"],"operand_values":["22000.00","0.00"],"source_refs":["lirpf-cuota-chain-authority","aeat-dr-100-2025-dictionary"],"value":"22000.00"},
+            {"absent_by_design":false,"casilla_id":"0506","formula_id":"renta-reduccion-art-84-conjunta-remanente-ahorro","legal_refs":["ley-35-2006:art-84","ley-35-2006:art-50"],"op":"max","operand_casilla_refs":["0460","0461","0435"],"operand_refs":["0460","0461","0435"],"operand_values":["0.00","0.00","22000.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0507","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0508","formula_id":null,"legal_refs":["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0509","formula_id":null,"legal_refs":["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"0510","formula_id":"renta-base-liquidable-del-ahorro","legal_refs":["ley-35-2006:art-49","ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0460","0506","0507"],"operand_refs":["0460","0506","0507"],"operand_values":["0.00","0","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"0510","formula_id":"renta-base-liquidable-del-ahorro","legal_refs":["ley-35-2006:art-49","ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0460","0506","0507"],"operand_refs":["0460","0506","0507"],"operand_values":["0.00","0.00","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0511","formula_id":"renta-minimo-contribuyente-estatal","legal_refs":["ley-35-2006:art-56","ley-35-2006:art-57","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":[],"operand_refs":["renta-minimo-contribuyente-base","renta-profile-taxpayer-birth-date"],"operand_values":["5550","40"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"5550.00"},
             {"absent_by_design":false,"casilla_id":"0512","formula_id":"renta-minimo-contribuyente-autonomica","legal_refs":["ley-35-2006:art-56","ley-35-2006:art-57","ley-35-2006:art-73","orden-hac-277-2026:art-3","andalucia-ley-5-2021:art-23-bis","asturias-dl-2-2014:art-2-bis","canarias-dl-1-2009:art-18-quater","galicia-dl-1-2011:art-4-bis","madrid-dl-1-2010:art-2","valenciana-ley-13-1997:art-2-bis"],"op":"sum","operand_casilla_refs":[],"operand_refs":["renta-profile-tax-residence-ccaa","renta-minimo-contribuyente-base-madrid","renta-profile-taxpayer-birth-date"],"operand_values":["5956.65","40"],"source_refs":["aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form"],"value":"5956.65"},
             {"absent_by_design":false,"casilla_id":"0513","formula_id":"renta-minimo-descendientes-estatal","legal_refs":["ley-35-2006:art-58","ley-35-2006:art-61"],"op":"copy","operand_casilla_refs":[],"operand_refs":["renta-profile-minimo-descendientes-estatal"],"operand_values":["0"],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0.00"},
@@ -2623,7 +2757,7 @@
             {"absent_by_design":false,"casilla_id":"0595","formula_id":"renta-cuota-resultante-autoliquidacion","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0587","0588","0414","0589","0590","0591"],"operand_refs":["0587","0588","0414","0589","0590","0591"],"operand_values":["3472.12","0","0","0","0","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"3472.12"},
             {"absent_by_design":false,"casilla_id":"0596","formula_id":null,"legal_refs":["ley-35-2006:art-17","ley-35-2006:art-18","ley-35-2006:art-19","ley-35-2006:art-20","ley-35-2006:art-101","rd-439-2007:art-80","rd-439-2007:art-86","ley-35-2006:art-99","rd-439-2007:art-108","orden-hac-277-2026:art-3","orden-eha-3127-2009:art-1","orden-hac-1431-2025:art-2"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form","aeat-renta-2025-manual-parte1","aeat-modelo-190-instructions-2025","boe-modelo-190-2025-form"],"value":"2400"},
             {"absent_by_design":false,"casilla_id":"0597","formula_id":null,"legal_refs":["ley-35-2006:art-25","ley-35-2006:art-26","ley-35-2006:art-101","rd-439-2007:art-90","ley-35-2006:art-99","orden-eha-3377-2011:art-1","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form","aeat-modelo-193-296-note-2025","boe-modelo-193-2011-form"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"0598","formula_id":"renta-retenciones-arrendamientos-urbanos","legal_refs":["ley-35-2006:art-99","ley-35-2006:art-22","ley-35-2006:art-23","ley-35-2006:art-24","ley-35-2006:art-101","rd-439-2007:art-100","orden-hac-277-2026:art-3"],"op":"copy","operand_casilla_refs":["0153"],"operand_refs":["0153"],"operand_values":["0"],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"0598","formula_id":"renta-retenciones-arrendamientos-urbanos","legal_refs":["ley-35-2006:art-99","ley-35-2006:art-22","ley-35-2006:art-23","ley-35-2006:art-24","ley-35-2006:art-101","rd-439-2007:art-100","orden-hac-277-2026:art-3"],"op":"sum","operand_casilla_refs":["0153"],"operand_refs":["0153","renta-retencion-soportada-arrendamiento-actividad"],"operand_values":["0","0.00"],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"0599","formula_id":null,"legal_refs":["ley-35-2006:art-99","rd-439-2007:art-95","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0600","formula_id":null,"legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","ley-35-2006:art-37","ley-35-2006:art-86","ley-35-2006:art-87","ley-35-2006:art-88","ley-35-2006:art-89","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0601","formula_id":null,"legal_refs":["ley-35-2006:art-86","ley-35-2006:art-87","ley-35-2006:art-88","ley-35-2006:art-89","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"],"value":"0"},
@@ -2682,7 +2816,7 @@
             {"absent_by_design":false,"casilla_id":"0695","formula_id":"renta-resto-a-ingresar-positivo","legal_refs":["ley-35-2006:art-77","ley-35-2006:art-99"],"op":"max","operand_casilla_refs":["0670","0693"],"operand_refs":["0670","0693"],"operand_values":["1072.12","0"],"source_refs":["lirpf-cuota-chain-authority"],"value":"1072.12"},
             {"absent_by_design":false,"casilla_id":"0698","formula_id":null,"legal_refs":["ley-35-2006:dt-18","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0699","formula_id":null,"legal_refs":["ley-35-2006:dt-18","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"0700","formula_id":null,"legal_refs":["ley-35-2006:art-97","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"0700","formula_id":"renta-resultado-ingresar-o-devolver","legal_refs":["ley-35-2006:art-97","orden-hac-277-2026:art-3"],"op":"if_then_else","operand_casilla_refs":["0694","0693","0670"],"operand_refs":["0694","0693","0670"],"operand_values":["0","0","1072.12"],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"1072.12"},
             {"absent_by_design":false,"casilla_id":"0701","formula_id":null,"legal_refs":["ley-35-2006:art-97","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0702","formula_id":null,"legal_refs":["ley-35-2006:dt-18","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0703","formula_id":null,"legal_refs":["ley-35-2006:dt-18","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
@@ -3507,14 +3641,14 @@
             {"absent_by_design":false,"casilla_id":"1381","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"1382","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"1383","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"1384","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"1384","formula_id":"renta-base-liquidable-negativa-general-em3-pendiente-fin","legal_refs":["ley-35-2006:art-50"],"op":"max","operand_casilla_refs":["1382","1383"],"operand_refs":["1382","1383"],"operand_values":["0","0"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"1385","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"1386","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"1387","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"1387","formula_id":"renta-base-liquidable-negativa-general-em2-pendiente-fin","legal_refs":["ley-35-2006:art-50"],"op":"max","operand_casilla_refs":["1385","1386"],"operand_refs":["1385","1386"],"operand_values":["0","0"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"1388","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"1389","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"1390","formula_id":"renta-base-liquidable-negativa-general-2024-pendiente-fin","legal_refs":["ley-35-2006:art-50"],"op":"max","operand_casilla_refs":["1388","1389"],"operand_refs":["1388","1389"],"operand_values":["0","0"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"1391","formula_id":null,"legal_refs":["ley-35-2006:art-50","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"1390","formula_id":"renta-base-liquidable-negativa-general-em1-pendiente-fin","legal_refs":["ley-35-2006:art-50"],"op":"max","operand_casilla_refs":["1388","1389"],"operand_refs":["1388","1389"],"operand_values":["0","0"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"1391","formula_id":"renta-base-liquidable-negativa-general-generada","legal_refs":["ley-35-2006:art-50"],"op":"max","operand_casilla_refs":["0500"],"operand_refs":["0500"],"operand_values":["22000.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"1392","formula_id":null,"legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"1396","formula_id":null,"legal_refs":["ley-35-2006:art-23","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"1398","formula_id":null,"legal_refs":["ley-35-2006:art-23","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
@@ -4134,16 +4268,20 @@
             {"absent_by_design":false,"casilla_id":"F","formula_id":null,"legal_refs":["ley-35-2006:dt-15","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"G","formula_id":null,"legal_refs":["ley-49-2002:art-19","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"H","formula_id":null,"legal_refs":["ley-49-2002:art-19","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"HIJOSUE","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
+            {"absent_by_design":true,"casilla_id":"HIJOSUE","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"I","formula_id":null,"legal_refs":["ley-35-2006:art-68","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"J","formula_id":null,"legal_refs":["ley-49-2002:art-19","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"M","formula_id":null,"legal_refs":["ley-35-2006:art-68","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form","aeat-modelo-100-procedure"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"NORESIDENTE","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"PH18","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"RESIDENTEUE","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
+            {"absent_by_design":true,"casilla_id":"NORESIDENTE","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
+            {"absent_by_design":true,"casilla_id":"PH18","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
+            {"absent_by_design":true,"casilla_id":"RESIDENTEUE","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"SEXO_D","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"H"},
             {"absent_by_design":false,"casilla_id":"TIPOTRIBUTACION","formula_id":null,"legal_refs":["orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"],"value":"1"},
-            {"absent_by_design":false,"casilla_id":"base-liq-neg-general-2024-aplicada-maxima","formula_id":"renta-base-liquidable-negativa-general-2024-aplicada-maxima","legal_refs":["ley-35-2006:art-50"],"op":"min","operand_casilla_refs":["1388","0435","0461","0468"],"operand_refs":["1388","0435","0461","0468"],"operand_values":["0","22000.00","0.00","0.00"],"source_refs":["aeat-renta-2025-manual-parte1","boe-modelo-100-2025-form"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"base-liq-neg-general-base-positiva-compensable","formula_id":"renta-base-liquidable-negativa-general-base-positiva-compensable","legal_refs":["ley-35-2006:art-50"],"op":"max","operand_casilla_refs":["0500"],"operand_refs":["0500"],"operand_values":["22000.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"22000.00"},
+            {"absent_by_design":false,"casilla_id":"base-liq-neg-general-em1-aplicada-maxima","formula_id":"renta-base-liquidable-negativa-general-em1-aplicada-maxima","legal_refs":["ley-35-2006:art-50"],"op":"min","operand_casilla_refs":["1388","base-liq-neg-general-base-positiva-compensable","base-liq-neg-general-em4-aplicada-maxima","base-liq-neg-general-em3-aplicada-maxima","base-liq-neg-general-em2-aplicada-maxima"],"operand_refs":["1388","base-liq-neg-general-base-positiva-compensable","base-liq-neg-general-em4-aplicada-maxima","base-liq-neg-general-em3-aplicada-maxima","base-liq-neg-general-em2-aplicada-maxima"],"operand_values":["0","22000.00","0.00","0.00","0.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"base-liq-neg-general-em2-aplicada-maxima","formula_id":"renta-base-liquidable-negativa-general-em2-aplicada-maxima","legal_refs":["ley-35-2006:art-50"],"op":"min","operand_casilla_refs":["1385","base-liq-neg-general-base-positiva-compensable","base-liq-neg-general-em4-aplicada-maxima","base-liq-neg-general-em3-aplicada-maxima"],"operand_refs":["1385","base-liq-neg-general-base-positiva-compensable","base-liq-neg-general-em4-aplicada-maxima","base-liq-neg-general-em3-aplicada-maxima"],"operand_values":["0","22000.00","0.00","0.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"base-liq-neg-general-em3-aplicada-maxima","formula_id":"renta-base-liquidable-negativa-general-em3-aplicada-maxima","legal_refs":["ley-35-2006:art-50"],"op":"min","operand_casilla_refs":["1382","base-liq-neg-general-base-positiva-compensable","base-liq-neg-general-em4-aplicada-maxima"],"operand_refs":["1382","base-liq-neg-general-base-positiva-compensable","base-liq-neg-general-em4-aplicada-maxima"],"operand_values":["0","22000.00","0.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"base-liq-neg-general-em4-aplicada-maxima","formula_id":"renta-base-liquidable-negativa-general-em4-aplicada-maxima","legal_refs":["ley-35-2006:art-50"],"op":"min","operand_casilla_refs":["1380","base-liq-neg-general-base-positiva-compensable"],"operand_refs":["1380","base-liq-neg-general-base-positiva-compensable"],"operand_values":["0","22000.00"],"source_refs":["lirpf-cuota-chain-authority"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"eo-agraria-reduccion-irregularidad-base","formula_id":null,"legal_refs":["ley-35-2006:art-32"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-renta-2025-manual-parte1"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"prestacion-inss-maternidad-paternidad-exenta","formula_id":null,"legal_refs":["ley-35-2006:art-7-h"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-renta-2025-manual-parte1"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"trabajo-mar-renta-exenta","formula_id":"renta-maritime-exempt-income","legal_refs":["ley-35-2006:art-7","ley-19-1994:art-75"],"op":"if_then_else","operand_casilla_refs":[],"operand_refs":["renta-maritime-path-rebeca","renta-maritime-annual-salary","renta-maritime-qualifying-days","lirpf-art-7p-exemption-cap"],"operand_values":["0","0","0","60100"],"source_refs":["boe-lirpf-statutory-facts","boe-ley-19-1994-art-75-statutory-facts","aeat-renta-2025-manual-parte1"],"value":"0.00"}
@@ -4178,7 +4316,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "retencion_soportada",
@@ -4212,6 +4350,17 @@
               "resolved_binding_source": "retencion_soportada",
               "resolver_id": "retencion_soportada",
               "source_ref": "profile:<profile-id>:taxpayer_type.irpf_income_categories:2025:ganancia_patrimonial"
+            },
+            {
+              "contributor_binding_source": "retencion_soportada",
+              "contributor_source_kind": "retencion_soportada",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "retencion_soportada",
+              "resolver_id": "retencion_soportada",
+              "source_ref": "profile:<profile-id>:taxpayer_type.irpf_income_categories:2025:arrendamiento_inmueble_urbano_actividad"
             },
             {
               "contributor_binding_source": "relation_prefill",
@@ -4261,35 +4410,142 @@
         "modelo",
         "work",
         "verify",
-        "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e"
+        "80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.verify",
         "notices": [
-          {"action":null,"code":"modelo.work.verify.finding.blocking_rule","context":{"casilla_id":"0011","ingreso_id":"0003","ingreso_value":"24000","kind":"blocking_rule","legal_refs":"ley-35-2006:dt-12","reduccion_id":"0011","severity":"warning","source_refs":"aeat-renta-2025-manual-parte1, boe-lirpf-statutory-facts"},"message":"Box [0003] shows 24000 EUR of employment income (rendimientos del trabajo), above the DT 12ª threshold, so box [0011] may give you a reduction you are not using yet. Check whether it applies to you.","severity":"warning"},
-          {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"kind":"advisory","legal_refs":"ley-35-2006:art-48, ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-50, orden-hac-277-2026:art-3","origin_ids":"renta-base-liquidable-negativa-general-anterior","severity":"warning","source_filing_year":"2024","source_modelo":"100","source_period":"0A","source_refs":"aeat-dr-100-2025-dictionary, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form","target_filing_year":"2025","target_modelo":"100","target_period":"0A"},"message":"Modelo 100 for 2024, period 0A, carried a zero into this declaration (modelo 100 for 2025, period 0A). Check that the zero is right.","severity":"warning"},
-          {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"kind":"advisory","legal_refs":"ley-58-2003:art-119, ley-58-2003:art-120, orden-eha-672-2007:art-1, orden-hac-277-2026:art-3, rd-439-2007:art-109, orden-eha-672-2007:art-3","severity":"warning","source_modelo_count":"2","source_modelos":"130|131","source_refs":"aeat-modelo-130-instructions, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-modelo-131-instructions"},"message":"2 modelos were not used, because they do not apply to you.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0186: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0192: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0199: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0203: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0171: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0599: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0183: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0191: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0193: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0194: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0195: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0200: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0202: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0206: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0217: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.blocking_rule",
+            "context": {
+              "casilla_id": "0011",
+              "ingreso_id": "0003",
+              "ingreso_value": "24000",
+              "kind": "blocking_rule",
+              "legal_refs": "ley-35-2006:dt-12",
+              "reduccion_id": "0011",
+              "severity": "warning",
+              "source_refs": "aeat-renta-2025-manual-parte1, boe-lirpf-statutory-facts"
+            },
+            "message": "Box [0003] shows 24000 EUR of employment income (rendimientos del trabajo), above the DT 12ª threshold, so box [0011] may give you a reduction you are not using yet. Check whether it applies to you.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
+              "kind": "advisory",
+              "legal_refs": "ley-35-2006:art-48, ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-50, orden-hac-277-2026:art-3",
+              "origin_ids": "renta-base-liquidable-negativa-general-anterior|renta-base-liquidable-negativa-general-em2-pendiente-inicio|renta-base-liquidable-negativa-general-em3-pendiente-inicio|renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+              "severity": "warning",
+              "source_filing_year": "2024",
+              "source_modelo": "100",
+              "source_period": "0A",
+              "source_refs": "aeat-dr-100-2025-dictionary, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form",
+              "target_filing_year": "2025",
+              "target_modelo": "100",
+              "target_period": "0A"
+            },
+            "message": "Modelo 100 for 2024, period 0A, carried a zero into this declaration (modelo 100 for 2025, period 0A). Check that the zero is right.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
+              "kind": "advisory",
+              "legal_refs": "ley-58-2003:art-119, ley-58-2003:art-120, orden-eha-672-2007:art-1, orden-hac-277-2026:art-3, rd-439-2007:art-109, orden-eha-672-2007:art-3",
+              "severity": "warning",
+              "source_modelo_count": "2",
+              "source_modelos": "130|131",
+              "source_refs": "aeat-modelo-130-instructions, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-modelo-131-instructions"
+            },
+            "message": "2 modelos were not used, because they do not apply to you.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0596: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0597: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0153: there is nothing in the payer certificates to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the payer certificates to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the return you filed to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0603: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
         ],
         "result": {
-          "calculation_revision_id": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e",
+          "calculation_revision_id": "80d7720ad691d4eadccb45e1f732e02861d80d67ed6b2b261af9c3159628c0da",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4361,7 +4617,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "99895d3998cacc18ed72bafc490d29391794baee135d7a06f21d8efc4cebfc8a",
+          "verification_report_id": "a1ec3dd47773d6c3bbe3c26368d63919d74405eb9239ea769b36679e1956ed3c",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

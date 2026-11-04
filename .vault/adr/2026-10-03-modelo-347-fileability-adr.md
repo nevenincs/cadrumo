@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-347-fileability'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:7a79183a2108acdfb1ecc4a3415c1b136f56be924860dd6a2192406853a1bea4'
+body_hash: 'sha256:2095679058bc5da9fa1f7eabf1c1464539042452d725a9643d26da5c2dbe1f48'
 related:
   - "[[2026-10-03-modelo-347-fileability-audit]]"
   - "[[2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr]]"
@@ -50,9 +50,9 @@ registry schema or shared mechanisms, so the choices are fixed here before imple
 - Refines `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr`: its ruling that
   non-resident counterparties are declarable stands; goods imports and exports are excluded under art. 33.2.g
   regardless of residency, and services with non-residents remain declarable.
-- Ambiguous law stays advisory, never guessed: clave D bucket separation, clave E floor for 2014-2024, the
-  withheld party's side of art. 33.2.i, partial-year SII membership, negative net rows, and the 2014-2024
-  edition until its diseño is captured.
+- Ambiguous law stays advisory, never guessed: clave D bucket separation, clave E floor for the editions whose diseño still describes it, the
+  withheld party's side of art. 33.2.i, partial-year SII membership, negative net rows, and those
+  editions until their diseño is captured.
 
 ## Implementation
 
@@ -61,7 +61,7 @@ We will make Modelo 347 fileable by extending existing mechanisms only:
 - Wire the live resolver's `row_binding_values` through `resolve_invoice_binding_row_values`; route operator
   rows through the same channel and delete `Modelo347ContraparteRow`.
 - Compute the threshold per (counterparty, bucket) from a dated registry fact mapping claves to buckets
-  (entregas B+F, adquisiciones A+G, C with the 300,51 floor, D separate, E without floor from 2025), resolved in
+  (entregas B+F, adquisiciones A+G, C with the 300,51 floor, D separate, E without floor from the edition whose diseño states it), resolved in
   `m347_threshold.py`; every caller delegates to it.
 - Render every 347 signed amount through the generalised `signed_monetary_composite` grammar.
 - Feed type 1 pos. 136-144 and 145-160 from export fields naming the existing summary bindings; delete the two
@@ -85,7 +85,7 @@ are correct for other modelos or add a second path that would drift.
 
 ## Consequences
 
-347 becomes fileable for 2025 onwards and advisory for 2014-2024 until that diseño is captured. The applicability
+347 becomes fileable for the editions whose official diseño is captured and advisory for earlier editions until their diseño is captured. The applicability
 exclusion and the category exclusion keys become available to every modelo. Tests asserting the combined
 threshold and the declared goods export change. Reconsider if AEAT publishes guidance resolving the clave D or E
 ambiguities, or a new diseño changes the record grammar. Accepted on the operator's authorization of
@@ -98,5 +98,5 @@ landlords with business-premises leases, and add a landlord-lease data family on
 follow-on Step that feeds the repeating inmueble record and type 1 positions 161 and 170.
 
 **Amendment (2026-10-03, review).** Clave E carries no floor from 2014-01-01, when consolidated RGAT art. 33.3
-("cualquiera que sea su importe", RD 828/2013 wording) took effect, not from 2025; filing years 2014-2024 keep an
+("cualquiera que sea su importe", RD 828/2013 wording) took effect, not from the later edition whose diseño first prints it; the earlier filing years keep an
 advisory because the 2011 diseño still describes E as "superiores a 3.005,06".

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:37+0100\n"
+"POT-Creation-Date: 2026-11-03 19:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -204,22 +204,26 @@ msgid ""
 "box `01` is the quarter's income, box `02` the deductible expenses, box "
 "`03` the net yield, and box `04` the instalment. Box 01 shows 1000.00, "
 "not the 1210.00 you collected: VAT is never part of your income, so the "
-"210.00 of VAT is left out. With the example records the net yield is "
-"`500.00` and the instalment is `100.00`, twenty percent of the net. The "
-"three `--binding ...=0` values are the prior-period carries a true first "
-"quarter does not have."
+"210.00 of VAT is left out. Under simplified direct estimation, the "
+"example adds a `25.00` provision for difficult-to-justify expenses: five "
+"percent of `1000.00 - 500.00`. Deductible expenses in box `02` are "
+"therefore `525.00`, the net yield is `475.00`, and the instalment is "
+"`95.00`, twenty percent of the net. The three `--binding ...=0` values "
+"are the prior-period carries a true first quarter does not have."
 msgstr ""
 "Számítsd ki. A Cadrumo beolvassa a besorolt nyilvántartásaidat, és "
 "kitölti a rovatokat: a `01` rovat a negyedév bevétele, a `02` rovat a "
 "levonható kiadások, a `03` rovat a nettó hozam, a `04` rovat pedig az "
 "előleg. A 01 rovat 1000.00-t mutat, nem azt az 1210.00-t, amit beszedtél:"
-" az IVA soha nem része a bevételednek, ezért a 210.00 IVA kimarad. A "
-"példában szereplő nyilvántartásokkal a nettó hozam `500.00`, az előleg "
-"pedig `100.00`, vagyis a nettó húsz százaléka. A három `--binding ...=0` "
-"érték az előző időszaki átvezetés; ilyen egy valódi első negyedévben "
-"nincs."
+" az IVA soha nem része a bevételednek, ezért a 210.00 IVA kimarad. Az "
+"egyszerűsített közvetlen becslés szerint a példában `25.00` számolható el"
+" nehezen igazolható költségként: ez a `1000.00 - 500.00` öt százaléka. A "
+"`02` rovat levonható kiadása így `525.00`, a nettó hozam `475.00`, az "
+"előleg pedig `95.00`, vagyis a nettó húsz százaléka. A három `--binding "
+"...=0` érték az előző időszaki átvezetés; ilyen egy valódi első "
+"negyedévben nincs."
 
-#: ../../how-to/first-quarterly-filing.md:98
+#: ../../how-to/first-quarterly-filing.md:100
 msgid ""
 "Check the draft. The result reads `granted_verificado_completo` true, so "
 "the draft is complete and ready to file."
@@ -227,11 +231,11 @@ msgstr ""
 "Ellenőrizd a piszkozatot. Az eredmény `granted_verificado_completo` "
 "értéke igaz, így a piszkozat teljes és benyújtásra kész."
 
-#: ../../how-to/first-quarterly-filing.md:101
+#: ../../how-to/first-quarterly-filing.md:103
 msgid "When your expenses exceed your income"
 msgstr "Amikor a kiadásai meghaladják a bevételeit"
 
-#: ../../how-to/first-quarterly-filing.md:103
+#: ../../how-to/first-quarterly-filing.md:105
 msgid ""
 "In a quarter where your deductible expenses are larger than your income, "
 "the net yield is negative. The example below records a second office-"
@@ -245,7 +249,7 @@ msgstr ""
 "1500.00-t az 1000.00 bevétellel szemben, majd újra kiszámítja és "
 "ellenőrzi a piszkozatot:"
 
-#: ../../how-to/first-quarterly-filing.md:112
+#: ../../how-to/first-quarterly-filing.md:114
 msgid ""
 "What the calculation shows, with the rule each box follows in the "
 "official AEAT instructions for Modelo 130:"
@@ -253,7 +257,7 @@ msgstr ""
 "Amit a számítás mutat, azzal a szabállyal együtt, amelyet az egyes "
 "rovatok az AEAT hivatalos Modelo 130 kitöltési útmutatójában követnek:"
 
-#: ../../how-to/first-quarterly-filing.md:115
+#: ../../how-to/first-quarterly-filing.md:117
 msgid ""
 "Box `03`, the net yield, is `-500.00`. A negative net yield is entered "
 "with a minus sign (instructions, box 03)."
@@ -261,7 +265,7 @@ msgstr ""
 "A `03` rovat, a nettó hozam, `-500.00`. A negatív nettó hozamot "
 "mínuszjellel kell feltüntetni (útmutató, 03 rovat)."
 
-#: ../../how-to/first-quarterly-filing.md:117
+#: ../../how-to/first-quarterly-filing.md:119
 msgid ""
 "Box `04`, the instalment, is `0.00`. The 20 percent applies only to a "
 "positive net yield; when box 03 is negative, box 04 is zero "
@@ -273,7 +277,7 @@ msgstr ""
 "rovat). A `07` rovat szintén `0.00`, mert ennek az első negyedévnek nincs"
 " levonandó korábbi előlege vagy levonása."
 
-#: ../../how-to/first-quarterly-filing.md:121
+#: ../../how-to/first-quarterly-filing.md:123
 msgid ""
 "Box `13` is the `100.00` reduction for a prior-year net income of 9000 "
 "euros or less; with no activity last year, that income counts as zero "
@@ -288,7 +292,7 @@ msgstr ""
 " mínuszjelet, így a `14`, `17` és `19` rovat egyaránt `-100.00` "
 "(útmutató, 14, 17 és 19 rovat)."
 
-#: ../../how-to/first-quarterly-filing.md:127
+#: ../../how-to/first-quarterly-filing.md:129
 msgid ""
 "Nothing is payable for this quarter: only a positive box 19 is paid "
 "(instructions, section \"<span lang=\"es\">Ingreso</span>\"). In the "
@@ -316,11 +320,11 @@ msgstr ""
 "Modelo 130 IRPF-részlet előkészítése](modelo-130.md#each-quarter-is-"
 "cumulative)."
 
-#: ../../how-to/first-quarterly-filing.md:137
+#: ../../how-to/first-quarterly-filing.md:139
 msgid "Check the figures and record the filing"
 msgstr "Ellenőrizd a számokat, és rögzítsd a benyújtást"
 
-#: ../../how-to/first-quarterly-filing.md:139
+#: ../../how-to/first-quarterly-filing.md:141
 msgid ""
 "The result of the check is the signal that the draft is ready. The check "
 "refuses until every deductible-expense entry has its purchase invoice "
@@ -337,7 +341,7 @@ msgstr ""
 "összegyűjti az alátámasztó dokumentumokat, ezért az utólag csatolt számla"
 " nem kerül be a benyújtásba."
 
-#: ../../how-to/first-quarterly-filing.md:146
+#: ../../how-to/first-quarterly-filing.md:148
 msgid ""
 "The sequence below exports the checked draft and then records the filing."
 " Export refuses to overwrite an existing file unless you add `--replace`;"
@@ -348,7 +352,7 @@ msgstr ""
 "adod a `--replace` kapcsolót; az exportálási szabályokat [A benyújtási "
 "munkafolyamat](filing-spine.md) ismerteti."
 
-#: ../../how-to/first-quarterly-filing.md:154
+#: ../../how-to/first-quarterly-filing.md:156
 msgid ""
 "A later quarter builds on this one: leave the three prior-period values "
 "unset so Cadrumo takes them from your recorded filings. See [Prepare a "
@@ -360,22 +364,22 @@ msgstr ""
 "benyújtásokból. Az év elejétől halmozódó működésről lásd: [Egy Modelo 130"
 " IRPF-előleg előkészítése](modelo-130.md)."
 
-#: ../../how-to/first-quarterly-filing.md:159
+#: ../../how-to/first-quarterly-filing.md:161
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/first-quarterly-filing.md:161
+#: ../../how-to/first-quarterly-filing.md:163
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Egy Modelo 130 IRPF-előleg előkészítése](modelo-130.md)"
 
-#: ../../how-to/first-quarterly-filing.md:162
+#: ../../how-to/first-quarterly-filing.md:164
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók besorolása](classify-transactions.md)"
 
-#: ../../how-to/first-quarterly-filing.md:163
+#: ../../how-to/first-quarterly-filing.md:165
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/first-quarterly-filing.md:164
+#: ../../how-to/first-quarterly-filing.md:166
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Nyújtsd be a nyomtatványodat az AEAT-portálon](file-at-aeat.md)"

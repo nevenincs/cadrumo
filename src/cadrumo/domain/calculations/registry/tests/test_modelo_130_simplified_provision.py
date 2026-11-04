@@ -18,7 +18,8 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import validated_casilla_id_map
-from .....domain.period import Period, calculation_filing_date
+from .....core.period import Period
+from .....domain.period import calculation_filing_date
 from ..authority import PinnedAuthorityOperation
 from ..formula_runtime import calculate_registry_snapshot
 

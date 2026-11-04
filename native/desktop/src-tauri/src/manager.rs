@@ -151,13 +151,16 @@ impl ManagerStart {
                     supervision.borrow_and_update();
                     let observed = sign_in.observation_changed();
                     if !self.supervision_status()? {
+                        log::debug!("startup awaiting supervision");
                         supervision
                             .changed()
                             .await
                             .map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
                         continue;
                     }
+                    log::debug!("startup reading sign-in status");
                     let status = sign_in.read_status().await?;
+                    log::debug!("startup sign-in status read");
                     if status.runtime_ready() && self.supervision_status()? {
                         self.diagnostics
                             .host_outcome(HostStage::Manager, HostOutcome::Ready);

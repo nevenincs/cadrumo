@@ -1,6 +1,19 @@
-import { useCallback, useMemo, useState } from "react";
-import type { AgentSession } from "./agentSession";
-import { useAgentRead } from "./agentViews";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { AgentCatalogAnswer, AgentSession } from "./agentSession";
+import { failureCode } from "../errors";
+import type { AgentRead } from "./agentViews";
+import {
+  CATALOG_BUSY_RETRIES,
+  CATALOG_BUSY_PAUSE_MS,
+  catalogReadBusy,
+} from "./catalogReadPolicy";
 import { useAgentStatus } from "./agentLive";
 import { catalogLanes, type CatalogLane } from "./localModelLanes";
 import type { LocalModelHost } from "./localModels";
@@ -43,11 +56,38 @@ export function useLocalAiLanes(
   const available = status?.state === "ready" || status?.state === "starting";
   const [retries, setRetries] = useState(0);
   const request = useMemo(
-    () => ({ session, providerSettings, reader, again, retries }),
-    [session, providerSettings, reader, again, retries],
+    () => ({
+      session,
+      providerSettings,
+      reader,
+      active,
+      available,
+      again,
+      retries,
+    }),
+    [session, providerSettings, reader, active, available, again, retries],
   );
-  const readLanes = useMemo(() => {
-    const { session, providerSettings, reader } = request;
+  const generation = useRef(0);
+  const wake = useRef<(() => void) | null>(null);
+  const published = useRef(status);
+  useLayoutEffect(() => {
+    published.current = status;
+  }, [status]);
+  // Retire on commit, before any obsolete promise can issue its dependent
+  // settings read or publish into a new profile/host/visibility generation.
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+      wake.current = null;
+    },
+    [request, available],
+  );
+  const [state, setState] = useState<{
+    for: typeof request;
+    read: AgentRead<CatalogLane[]>;
+  } | null>(null);
+  useEffect(() => {
+    const { session, providerSettings, reader, active } = request;
     if (
       !active ||
       !available ||
@@ -55,21 +95,98 @@ export function useLocalAiLanes(
       !providerSettings ||
       reader === null
     )
-      return null;
-    return async () => {
-      const [catalog, settings] = await Promise.all([
-        session.providerCatalog(),
-        providerSettings.status(),
-      ]);
-      const keyless = new Set(
-        settings.providers
-          .filter((lane) => lane.auth_kind === "none")
-          .map((lane) => lane.id),
-      );
-      return catalogLanes(catalog).filter((lane) => keyless.has(lane.id));
+      return;
+    const mine = generation.current;
+    let alive = true;
+    let attempts = 0;
+    let timer: number | undefined;
+    const current = () => alive && mine === generation.current;
+    const put = (read: AgentRead<CatalogLane[]>) => {
+      if (current()) setState({ for: request, read });
     };
-  }, [active, available, request]);
-  const read = useAgentRead(readLanes);
+    const retryBusy = (
+      code: string,
+      busy: boolean,
+      atRead: typeof published.current,
+      collect: () => Promise<void>,
+    ) => {
+      if (!current()) return;
+      if (!busy || attempts >= CATALOG_BUSY_RETRIES) {
+        put({ kind: "failed", code });
+        return;
+      }
+      const pause = CATALOG_BUSY_PAUSE_MS * 2 ** attempts;
+      attempts += 1;
+      const resume = () => {
+        if (!current() || wake.current !== resume) return;
+        void collect();
+      };
+      wake.current = resume;
+      timer = window.setTimeout(resume, pause);
+      // A publication during this read is also a recovery signal. Both
+      // publications and fallback timers spend the same bounded budget.
+      if (atRead !== published.current) resume();
+    };
+    const collectSettings = async (catalog: AgentCatalogAnswer) => {
+      if (!current()) return;
+      wake.current = null;
+      window.clearTimeout(timer);
+      const atRead = published.current;
+      try {
+        const settings = await providerSettings.status();
+        const keyless = new Set(
+          settings.providers
+            .filter((lane) => lane.auth_kind === "none")
+            .map((lane) => lane.id),
+        );
+        put({
+          kind: "ready",
+          value: catalogLanes(catalog).filter((lane) => keyless.has(lane.id)),
+        });
+      } catch (error) {
+        const code = failureCode(error);
+        // Only an explicit busy refusal permits collecting the native cold
+        // status probe under this owner and admitted catalog.
+        retryBusy(code, code === "busy", atRead, () =>
+          collectSettings(catalog),
+        );
+      }
+    };
+    const collect = async () => {
+      if (!current()) return;
+      wake.current = null;
+      window.clearTimeout(timer);
+      const atRead = published.current;
+      let catalog;
+      try {
+        catalog = await session.providerCatalog();
+      } catch (error) {
+        const code = failureCode(error);
+        retryBusy(code, catalogReadBusy(code), atRead, collect);
+        return;
+      }
+      // Catalog admission precedes the independent provider-status probe;
+      // neither a busy catalog nor a retired read may start that probe.
+      if (current()) await collectSettings(catalog);
+    };
+    put({ kind: "loading" });
+    void collect();
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+      wake.current = null;
+    };
+  }, [request, available]);
+  useEffect(() => {
+    wake.current?.();
+  }, [status]);
+  const read: AgentRead<CatalogLane[]> =
+    active && available && reader !== null && state?.for === request
+      ? state.read
+      : {
+          kind:
+            active && available && reader !== null ? "loading" : "unavailable",
+        };
   const retry = useCallback(() => setRetries((count) => count + 1), []);
   const host = useMemo((): LocalModelHost | null => {
     if (

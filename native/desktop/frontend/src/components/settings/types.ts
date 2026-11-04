@@ -23,7 +23,7 @@ export type ProviderReadiness =
   | "unusable";
 
 /** Where the provider's credential comes from. */
-export type ProviderSource = "profile" | "environment" | "none";
+export type ProviderSource = "profile" | "none";
 
 /** How Cadrumo reaches a provider: its web API, or its own command-line
  * app on this computer. One provider can be reached both ways, and each way

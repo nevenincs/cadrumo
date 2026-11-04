@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
-modified: '2026-08-24'
-body_hash: 'sha256:1a00dfff04daa9e3d54d09dcc02d05470ffd9a1111a955b68785134af4555084'
+modified: '2026-11-04'
+body_hash: 'sha256:cc9372ae5e45b7a98d499eabf60b4de745784f778aa464799632ad0bad58fac3'
 related:
   - "[[2026-07-14-calculation-export-import-adjudication-research]]"
   - "[[2026-07-14-calculation-export-import-adjudication-reference]]"
@@ -30,7 +30,7 @@ without proof that production work is warranted.
   retired; Modelos 309 and 360 lack an outbound mandate; the other export
   candidates remain conditional and authority-windowed; extraction candidates
   require real sanitized specimens except Modelo 200's delivered-equivalent
-  submitted-file path; and Modelo 100 exercise 2026 lacks current authority.
+  submitted-file path; and a Modelo 100 exercise whose own edition is not yet authored lacks filing-grade authority.
 - Record designs prove only the formats and periods to which they apply. They do
   not prove product mandate, historical coverage, or declaration-PDF geometry.
 - Per-Modelo renderers, submitted-file parsers, declaration-PDF parsers,
@@ -116,7 +116,7 @@ adjudication is `2026-08-24-registry-completeness-closure-modelo-036-2025-filing
 its separate source disposition is recorded in
 `2026-08-24-registry-completeness-closure-modelo-036-source-connectivity-reference`.
 
-Accordingly, the capability worklist reports the exact 2025 Modelo 036 revision
+Accordingly, the capability worklist reports the exact Modelo 036 revision
 as a **terminal product-scope** refusal, distinct from a terminal
 no-authority refusal. It has no implementation owner while this scope holds:
 absence of an `m036.*` producer, semantic map, render profile, or layout is not

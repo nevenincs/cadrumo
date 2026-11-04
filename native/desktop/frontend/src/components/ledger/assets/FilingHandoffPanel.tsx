@@ -19,7 +19,7 @@ import {
 import { callRefusal, Hint } from "./AssetList";
 import { handoffRequest } from "./assetWrites";
 import { leftOutNotes } from "./handoffWords";
-import { ASSET_KEYS, countSentence, refusalText } from "./assetsWords";
+import { refusalText } from "./assetsWords";
 
 /** One box the handoff states: its casilla, its amount, and how many
  * elements its amount leaves out. */
@@ -32,6 +32,8 @@ type Stated = {
   casilla: string;
   amount: PublicDecimal;
   left: number;
+  /** The sentence the backend served for what the amount leaves out. */
+  partialWords: string | null;
 };
 
 /**
@@ -49,7 +51,6 @@ export function FilingHandoffPanel({
   locale,
   year,
   assetKind,
-  names,
 }: {
   port: LedgerPort;
   reader: string | null;
@@ -58,9 +59,6 @@ export function FilingHandoffPanel({
   /** The kind of any element the register lists, which the registry's
    * options for the year are read under; null while there is none. */
   assetKind: string | null;
-  /** The elements' names by their ids, from the list the pane holds; an
-   * element without a name is absent. */
-  names: ReadonlyMap<string, string>;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
@@ -133,6 +131,7 @@ export function FilingHandoffPanel({
                   casilla: found.target_casilla_id,
                   amount: found.amount,
                   left: 0,
+                  partialWords: null,
                 },
               ],
       ),
@@ -146,11 +145,12 @@ export function FilingHandoffPanel({
                 casilla: found.target_casilla_id,
                 amount: found.amount,
                 left: found.unavailable_asset_ids.length,
+                partialWords: found.partial_words ?? null,
               },
             ],
       ),
     ];
-    const left = leftOutNotes(t, locale, handoff, names);
+    const left = leftOutNotes(handoff);
     return (
       <>
         <SetupTable
@@ -180,13 +180,9 @@ export function FilingHandoffPanel({
                 const left = found.left;
                 return (
                   <span className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
-                    {left > 0 && (
+                    {left > 0 && found.partialWords !== null && (
                       <Hint
-                        words={countSentence(
-                          t,
-                          ASSET_KEYS.handoff.partial,
-                          left,
-                        )}
+                        words={found.partialWords}
                         className="bg-secondary px-2 py-0.5 text-xs font-medium"
                       >
                         <Icon name="alert" size="xs" className="text-warning" />

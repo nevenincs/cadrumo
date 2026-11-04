@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-dated-validity'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:dcbdc6ef209d30014ff0b3b336e105089c91a0faa9a512d42a609f669bb5d4a8'
+body_hash: 'sha256:a85816089c6d095b78dca4f54e02bdd6d836f9520c8cb9cd81fb619b46e2d165'
 related:
   - "[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]"
   - "[[2026-08-19-registry-evidence-window-axes-adr]]"
@@ -25,8 +25,8 @@ and whose problem is GROUNDING rather than an axis: its predicate selects on the
 filing year, and its earliest redaction simply predates modelo 303's earliest
 revision. The remedies differ, and the sections below keep them apart.
 
-A good acquired in 2016 stays in its nine-year window until 2025 while modelo 303
-declares revisions only from 2022. The prorrata especial provision carries two
+A good acquired before the earliest authored modelo 303 revision stays in its
+nine-year window into years that revisions cover. The prorrata especial provision carries two
 values with two validity windows AND two different comparison operators, and the
 earlier value governs years no revision covers.
 
@@ -37,15 +37,15 @@ its own axis, the caller supplies a date context, and the value whose window
 covers that axis's date is selected, raising when matches are not exactly one.
 Nothing clamps a value's window to the revision's span — the dated value
 validates only that its end is on or after its start, and revision clamping
-applies solely to bracket tables on the filing-period axis. A 2016 acquisition
-can be read from a 2022 revision today by declaring a value on a transaction-date
+applies solely to bracket tables on the filing-period axis. An acquisition
+predating a revision can be read from that revision today by declaring a value on a transaction-date
 axis.
 
 Two things genuinely block it. First, no caller supplies a non-filing axis: every
 date context in the tree is built as filing period only. Second, and decisively,
 a substantive-law citation whose end date precedes the hosting revision's start
-is refused outright, so the pre-2015 prorrata wording cannot ground a value
-hosted on a 2022 revision.
+is refused outright, so the superseded prorrata wording cannot ground a value
+hosted on a later revision.
 
 ## Considerations
 
@@ -71,7 +71,7 @@ governed. That guard is correct and stays. But prorrata needs the forward
 direction: a superseded provision hosted on a later revision. Expressing it
 through the field as shipped would require declaring both that a 1993 provision
 reaches back before its own force AND that a provision repealed in 2014 governs
-2022. Both are false, and this record's own honesty constraint forbids them.
+the years of a later revision. Both are false, and this record's own honesty constraint forbids them.
 
 A separate PROPOSED decision one layer up faced the same shape and chose to
 thread the event date into the existing call rather than build a new route. It is
@@ -190,7 +190,7 @@ lands with them.
 A typed event date on the consumer's record is NECESSARY but NOT SUFFICIENT, and
 an earlier draft of this record said otherwise. Resolution also needs the FILING
 CONTEXT — modelo, filing year and period token — because a parameter is hosted on
-a revision and only that triple names one; modelo 303's 2024 mid-year split makes
+a revision and only that triple names one; modelo 303's mid-year split makes
 the period token load-bearing, and no domain module in the tree holds it.
 
 Verified at HEAD, the bienes de inversion record does not even carry the date:
@@ -264,7 +264,7 @@ exemption is needed; they are additionally cited by bindings, casillas, construc
 and the completeness manifest in every 303 revision, so carrier exclusivity would
 deny the exemption even if it were sought. LIVA art. 103 is catalogued as a single
 entry in force from 1993 with no repealed-redaction sibling, and no 303 revision
-covers a pre-2015 filing year, so the twenty-per-cent margin is unreachable
+covers a filing year below the support floor, so the twenty-per-cent margin is unreachable
 through any sanctioned filing path and is expressed as an explicit REFUSAL rather
 than authored as data.
 

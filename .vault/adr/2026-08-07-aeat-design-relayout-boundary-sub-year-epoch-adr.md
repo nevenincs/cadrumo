@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-07'
-modified: '2026-08-08'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:cfabe00da84f5324d9b9017739e978191f4b494ed6f9678382299a45b6874739'
+body_hash: 'sha256:da79154c851180fd7adc4997b2ca746cb6631d394de383d05fd092c33f67642c'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
@@ -18,8 +18,8 @@ The accepted `2026-08-07-aeat-design-relayout-boundary-adr` rules that no
 registry revision may span an AEAT design re-layout, and authorises splitting
 Modelo 303 and Modelo 390 accordingly. It assumes throughout that every boundary
 falls between filing years. One does not: AEAT declares a Modelo 303 boundary in
-its own published filenames at periods 09 and 3T of 2024, mid-year. The
-authorised split is therefore unauthorable for 2024 until this record settles
+its own published filenames at periods 09 and 3T of one filing year, mid-year. The
+authorised split is therefore unauthorable for that year until this record settles
 whether the revision model can express an epoch narrower than a filing year, and
 by what mechanism.
 
@@ -28,10 +28,9 @@ accepted boundary record, whose property, refusal posture and
 prescripcion-bounded scoping all continue to govern; it supplies the one
 mechanism that record's implementation needs and does not name.
 
-The question is live in two directions and neither is an offset error. For 2024,
+The question is live in two directions and neither is an offset error. Inside the split year,
 the later design adds boxes the earlier one has no room for, so a 3T or 4T filing
-written under the earlier layout cannot declare them at all. For the 2025-to-2026
-transition, four fixed slots change which box they carry while staying at the
+written under the earlier layout cannot declare them at all. For the transition into the latest design, four fixed slots change which box they carry while staying at the
 same offset and length, so a filing written under the earlier semantics is
 byte-valid, length-valid and digest-valid while declaring the wrong quantities.
 No offset check, length check or digest detects either.
@@ -42,22 +41,25 @@ No offset check, length check or digest detects either.
   `.xlsx` workbooks through the shipped `extract_record_design_workbook`, keyed
   on the bracketed AEAT box number at each sheet, offset and length slot rather
   than on positional index or on free-text description. Across the five designs
-  `2023-y-siguientes` claims: 2023 to 2024-H1 is identical (0 slot meaning flips,
+  `2023-y-siguientes` claims, labelled in order D1 (the opening design), D2 (the
+  early design of the split year, through period 08 and 2T), D3 (the late design
+  of the split year, from period 09 and 3T), D4 (the following year's design) and
+  D5 (the latest design): D1 to D2 is identical (0 slot meaning flips,
   0 boxes moved, 0 boxes added, every sheet total unchanged) -- **REFUTED, see the
-  amendment below**; 2024-H1 to 2024-H2
+  amendment below**; D2 to D3
   adds 8 numbered boxes (108, 111, 165 through 170) with 0 flips and 0 moves and
-  every sheet total unchanged; 2024-H2 to 2025 shows 0 numbered-box movement but
-  grows sheet DP30302 from 1706 to 1900 positions; 2025 to 2026 flips 4 slots,
+  every sheet total unchanged; D3 to D4 shows 0 numbered-box movement but
+  grows sheet DP30302 from 1706 to 1900 positions; D4 to D5 flips 4 slots,
   moves 128 boxes and grows sheet DP30305 from 1523 to 1528. Three boundaries,
-  so `2023-y-siguientes` spans FOUR design epochs: 2023 through 2024 period 08
-  and 2T, then 2024 period 09 and 3T, then 2025, then 2026 onward.
-- **AMENDMENT (measured 2026-08-08): the 2023-to-2024-H1 identity above is FALSE
+  so `2023-y-siguientes` spans FOUR design epochs: D1 and D2 as one, then D3,
+  then D4, then D5 onward.
+- **AMENDMENT (measured 2026-08-08): the D1-to-D2 identity above is FALSE
   and the epoch count is FIVE, not four.** Four real fields are RETIRED into
   reserved space between those two designs, all on sheet DP30302 in the Régimen
   Simplificado block: the employee-count and maximum-employee-count slots for
   Actividad 1 at offsets 1110 and 1116, and the same pair for Actividad 2 at
-  offsets 1236 and 1242. Each reads as a live field in the 2023 design and as
-  `Reservado para la AEAT` in the early-2024 one.
+  offsets 1236 and 1242. Each reads as a live field in D1 and as
+  `Reservado para la AEAT` in D2.
   The two passes this record ran are **structurally incapable** of seeing that
   class, which is why the reading was honest and still wrong: the reserved block
   absorbs the freed bytes exactly, so no offset shifts and no sheet total grows.
@@ -67,9 +69,9 @@ No offset check, length check or digest detects either.
   the change that occurred; the occupancy pass this record never ran is the only
   one that reports it. That pass is now a shipped signal in the span gate.
 - No single signal finds all three boundaries, and this record initially got that
-  wrong. The box-number key alone reports 2024-H2 and 2025 as one epoch, because
+  wrong. The box-number key alone reports D3 and D4 as one epoch, because
   DP30302's growth is entirely in unnumbered modulos fields; the page-length
-  signal alone reports 2024-H1 and 2024-H2 as one epoch, because that transition
+  signal alone reports D2 and D3 as one epoch, because that transition
   displaces nothing. Each finds a boundary the other cannot see, and only their
   UNION is the epoch set. This is the accepted boundary record's own
   union-of-two-signals doctrine, and taking one instrument's verdict for the
@@ -78,11 +80,11 @@ No offset check, length check or digest detects either.
   compares unrelated fields the moment either side inserts, and produced a
   retracted reading of 56 fields relocating across 17 shift magnitudes. A
   description-keyed diff cannot separate a rename from a semantic flip, and
-  reports the 2023-to-2024-H1 wording refresh (`discapacitados` becoming
+  reports the D1-to-D2 wording refresh (`discapacitados` becoming
   `personas con discapacidad`, at identical offsets) as change. Only the
   box-number key discriminates. It has its own blind spot, stated next.
 - The box-number key is blind to slots carrying no bracketed number, and two such
-  slots do flip meaning between the 2024 halves: a one-byte flag and the
+  slots do flip meaning between D2 and D3: a one-byte flag and the
   thirteen-byte reference beside it change from `Declaracion complementaria` and
   its prior-filing receipt number to `Autoliquidacion rectificativa` and its
   identifying receipt number. That flip is real, this record's primary instrument
@@ -94,7 +96,7 @@ No offset check, length check or digest detects either.
   `PeriodSelector` carries `years`, `year_from`, `year_to` and `periods`, and has
   no within-year narrowing field.
 - A period-token partition already selects correctly with no schema change, and
-  this was measured rather than reasoned: two synthetic 2024-covering revisions
+  this was measured rather than reasoned: two synthetic revisions covering the split year
   built from the live Modelo 303 definition, one declaring the early tokens and
   one the late tokens, resolve 2T and 08 to the early revision and 3T and 09 to
   the late one through the production `select_revision`.
@@ -108,12 +110,12 @@ No offset check, length check or digest detects either.
   query refuses an as-of date explicitly rather than accepting and ignoring it, so
   the mechanism is honest where it is unavailable.
 - `PeriodSelector` is a cross product of years and period tokens, not a set of
-  year-and-period pairs. It cannot express every period of 2023 plus the early
-  periods of 2024. This is the constraint that separates the options, and it makes
+  year-and-period pairs. It cannot express every period of the opening year plus the
+  early periods of the split year. This is the constraint that separates the options, and it makes
   revision count exceed epoch count under any mechanism that does not add a schema
   axis.
 - Every mechanism leaves the year-only surface ambiguous, so that cost is shared
-  rather than a discriminator: measured, two revisions covering 2024 resolve
+  rather than a discriminator: measured, two revisions covering the split year resolve
   through `select_revision_for_year` to `AmbiguousRevisionSelectionError` unless an
   on-date is supplied. Its callers are the binding-readiness discovery helper, the
   registry describe and bindings query, and the revision diff command. The
@@ -121,25 +123,25 @@ No offset check, length check or digest detects either.
   propagates from it today.
 - The corpus already knows the boundary the selector cannot express: the
   `2023-y-siguientes` manifest names both `aeat-dr-303-2024-early` and
-  `aeat-dr-303-2024-late` in its `source_refs`, alongside the 2023, 2025 and 2026
-  designs.
+  `aeat-dr-303-2024-late` in its `source_refs`, alongside the opening, following-year and
+  latest designs.
 - The landed span gate cannot see a mid-year boundary at all, for a reason
   independent of this decision: its design inventory keeps one design per year via
-  a setdefault over a filename sort, so of the two 2024 workbooks whichever sorts
-  first wins and the other is discarded. Its silence about 2024 is therefore not
+  a setdefault over a filename sort, so of the two split-year workbooks whichever sorts
+  first wins and the other is discarded. Its silence about the split year is therefore not
   evidence.
 - The landed span gate was re-run for this record once an unrelated Modelo 202
   export-layout defect stopped blocking registry load, and its verdict corroborates
   this record while demonstrating the blindness above. It reports
   `2023-y-siguientes` as spanning 2 re-layouts and needing 3 revisions, naming
-  boundaries at 2024/2025 and 2025/2026. Those are two of the three boundaries
+  the D3/D4 and D4/D5 boundaries. Those are two of the three boundaries
   measured here, and it names them from the same evidence: sheet DP30302 growing
   1706 to 1900, and sheet DP30305 growing 1523 to 1528 alongside a large box
-  relocation. It does not name the mid-2024 boundary, exactly as its one-design-per-
+  relocation. It does not name the mid-year boundary, exactly as its one-design-per-
   year inventory predicts. The gate therefore understates this revision's split by
   one boundary and one revision, and a future reader must not take its count as the
   answer.
-- The gate and this record's instrument agree on the fact of the 2025-to-2026
+- The gate and this record's instrument agree on the fact of the D4-to-D5
   relocation but not on its exact size: the gate reports 125 of 174 shared boxes
   moved, this record's pass 128 of 183 numbered slots, because the two extract the
   box number from a field description by different conventions. The disagreement is
@@ -169,7 +171,7 @@ No offset check, length check or digest detects either.
   field already says, buying a reduction in authoring duplication and nothing in
   correctness, while giving the non-overlap property the resolver depends on two
   independent sources that can disagree.
-- **Accept the residue for one half of 2024 and refuse export there.** Rejected as
+- **Accept the residue for one half of the split year and refuse export there.** Rejected as
   the general answer, since the boundary is expressible and refusing an expressible
   year is a self-inflicted gap. Retained as the correct behaviour for any period no
   bundled design covers, which is the accepted boundary record's existing ruling
@@ -199,26 +201,27 @@ No offset check, length check or digest detects either.
   against the old id, per `carried-observations-stamp-their-revision`; the split is
   not export-layout-only and the carry paths must be re-confirmed, as the accepted
   boundary record already constrains.
-- The transitional rate rungs pinned to 2024 belong to the 2024-covering revisions
-  only. Copying them into every post-split revision is the obvious and wrong
+- The transitional rate rungs pinned to the split year belong to the revisions
+  covering it only. Copying them into every post-split revision is the obvious and wrong
   resolution.
 
 ## Implementation
 
 Express a sub-year design epoch by giving each covering revision a
 `period_selector` that declares the AEAT-published token partition: for Modelo
-303's 2024, one revision declaring the quarterly and monthly tokens through period
+303's split year, one revision declaring the quarterly and monthly tokens through period
 08 and 2T, and one declaring 3T, 4T and 09 through 12. Because the selector is a
 cross product of years and tokens, an epoch spanning a whole year plus part of the
 next needs two revisions, so Modelo 303's four design epochs are authored as five
-revisions: 2023 full and 2024-early (the same layout, split only because the
-selector cannot express one epoch crossing the year boundary), then 2024-late,
-2025 full, and 2026 onward.
+revisions: the opening year in full together with the early split-year periods
+(believed to share a layout, split only because the selector cannot express one
+epoch crossing the year boundary), then the late split-year periods, the
+following year in full, and the latest design onward.
 
 **AMENDED: the claim this paragraph originally made -- "Exactly one pair carries an
 identical export layout by construction, which is the accepted cost of not adding
-a schema axis" -- is REFUTED.** No pair shares a layout. The 2023 and early-2024
-designs differ by the four retired Régimen Simplificado slots recorded in the
+a schema axis" -- is REFUTED.** No pair shares a layout. The opening and early
+split-year designs differ by the four retired Régimen Simplificado slots recorded in the
 Considerations amendment, so the five revisions cover five distinct design epochs
 and each must parse its OWN design. The revision count of five is unchanged; the
 pairing behind it is not, and a reader must not conclude from the stable count
@@ -235,15 +238,15 @@ period-token partition, its rejection of date-only discrimination, and its
 rejection of a within-year schema axis all stand; only the layout-identity
 observation falls. This amendment rules on code and is not self-executing: it is
 implemented by Steps `S15` and `S16` of
-`2026-08-08-aeat-design-relayout-boundary-plan`, which author the 2023 and
-early-2024 revisions from their own designs, and by `S64`, which re-derives each
+`2026-08-08-aeat-design-relayout-boundary-plan`, which author the opening and
+early split-year revisions from their own designs, and by `S64`, which re-derives each
 revision's total-formula operand lists rather than copying the newest backwards.
 `S66` records the divergence in the campaign audit.
 
 The revision count of five has now survived TWO corrections of the epoch count,
 and that is coincidence twice over rather than corroboration. Under this record's
 first, wrong three-epoch pass the five arose as two layout-identical pairs; under
-four it was described as one pair plus a distinct 2024-late epoch; under the
+four it was described as one pair plus a distinct late split-year epoch; under the
 measured five it arises as five distinct epochs and no pair at all. A reader who
 re-derives the epochs and expects the count to have moved should not read its
 stability as a sign the correction was cosmetic, and a reader comparing this
@@ -316,17 +319,17 @@ from a year to a period changes that reasoning.
   behaviour change for binding-readiness discovery, the registry describe and
   bindings query, and the revision diff command; the readiness helper's existing
   catch is too narrow and will propagate the error until widened.
-- The two 2024 halves stop being interchangeable, which is the point: a 3T or 4T
-  2024 filing gains the eight boxes the earlier design cannot express, and the
+- The two halves of the split year stop being interchangeable, which is the point: a 3T or 4T
+  filing in that year gains the eight boxes the earlier design cannot express, and the
   complementaria and rectificativa slots stop being declared under the wrong
   meaning.
-- The 2025-to-2026 transition is the higher-severity half of this work and is
+- The transition into the latest design is the higher-severity half of this work and is
   current rather than historical: 128 boxes move and four slots change meaning at
   a fixed offset, in the filing year now open. Sequencing the split
   oldest-to-newest would leave that exposure standing longest.
 - Nothing here reduces the exposure until the split lands. This record makes the
   boundary expressible; it does not express it. A reader who takes the mechanism
-  as the fix will believe 2024 and 2026 are modelled when they are not.
+  as the fix will believe the split year and the latest design are modelled when they are not.
 - The gate stays untrustworthy on this axis until it reads more than one design
   per year, so a green gate must not be cited as evidence that a mid-year epoch is
   covered.

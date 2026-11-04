@@ -39,7 +39,7 @@ for (const transition of ["profile", "sign-out", "host"] as const)
               pending.push({ resolve, reject }),
             );
           const host: ProviderSettings = {
-            status: async () => ({ development: false, providers: [record] }),
+            status: async () => ({ providers: [record] }),
             set: change,
             turnOff: change,
             turnOn: change,
@@ -192,3 +192,542 @@ test("an accepted provider status supersedes an older read and still permits ref
     final: "new-host",
   });
 });
+
+// Exercise the production Local AI hook with the same catalogs and settings
+// hosts as the shell; only admission timing and obsolete responses are controlled.
+for (const recovery of [
+  "agent_service_busy",
+  "agent_reconnecting",
+  "published",
+])
+  test(`Local AI catalog recovers ${recovery} without manual Retry`, async ({
+    page,
+  }) => {
+    await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+    await page.waitForFunction(() => Boolean(window.__scenarioModules));
+    const result = await localAiProbe(page, { recovery });
+    expect(result).toEqual({
+      status: "ready",
+      lanes: ["local_api"],
+      catalog: 2,
+      settings: 1,
+      beforeAdmission: 0,
+    });
+  });
+
+// A status-host busy rejection represents the native bounded collector
+// returning busy; exercise the real hook's outer collection and owner fences.
+for (const settingsMode of [
+  "recover",
+  "published",
+  "inflight",
+  "exhaustion",
+  "shared",
+])
+  test(`Local AI collects settings busy: ${settingsMode}`, async ({ page }) => {
+    await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+    await page.waitForFunction(() => Boolean(window.__scenarioModules));
+    const result = await localAiProbe(page, { settingsMode });
+    const exhausted =
+      settingsMode === "exhaustion" || settingsMode === "shared";
+    expect(result).toEqual({
+      status: exhausted ? "failed" : "ready",
+      lanes: exhausted ? [] : ["local_api"],
+      catalog: settingsMode === "shared" ? 3 : 1,
+      settings: settingsMode === "exhaustion" ? 4 : 2,
+      pauses: exhausted ? [2_000, 4_000, 8_000] : [2_000],
+      beforeAdmission: 0,
+      maxPendingSettings: 1,
+      readsWhilePending: settingsMode === "inflight" ? 1 : 0,
+      readsAfterPublication: ["published", "inflight"].includes(settingsMode)
+        ? 2
+        : 0,
+      extraAfterWake: 0,
+      queuedAfterWake: 0,
+      retried: "ready",
+    });
+  });
+
+for (const settingsRefusal of [
+  "not_signed_in",
+  "profile_locked",
+  "catalog_unavailable",
+  "runtime_unavailable",
+  "agent_service_busy",
+  "agent_reconnecting",
+  "timeout",
+  "unknown",
+])
+  test(`Local AI does not replay settings ${settingsRefusal}`, async ({
+    page,
+  }) => {
+    await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+    await page.waitForFunction(() => Boolean(window.__scenarioModules));
+    expect(
+      await localAiProbe(page, { settingsMode: "refusal", settingsRefusal }),
+    ).toEqual({
+      status: "failed",
+      lanes: [],
+      catalog: 1,
+      settings: 1,
+      pauses: [],
+      beforeAdmission: 0,
+      maxPendingSettings: 1,
+      readsWhilePending: 0,
+      readsAfterPublication: 0,
+      extraAfterWake: 0,
+      queuedAfterWake: 0,
+      retried: "ready",
+    });
+  });
+
+for (const serviceState of ["stopped", "refused"])
+  test(`Local AI preserves a ${serviceState} service without catalog reads`, async ({
+    page,
+  }) => {
+    await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+    await page.waitForFunction(() => Boolean(window.__scenarioModules));
+    expect(await localAiProbe(page, { serviceState })).toEqual({
+      status: "failed",
+      catalog: 0,
+      settings: 0,
+    });
+  });
+
+for (const refusal of ["agent_service_busy", "agent_service_failed"])
+  test(`Local AI catalog bounds ${refusal} recovery and permits explicit Retry`, async ({
+    page,
+  }) => {
+    await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+    await page.waitForFunction(() => Boolean(window.__scenarioModules));
+    const result = await localAiProbe(page, { refusal });
+    expect(result).toEqual({
+      status: "failed",
+      catalog: refusal === "agent_service_busy" ? 4 : 1,
+      settings: 0,
+      afterPublications: refusal === "agent_service_busy" ? 4 : 1,
+      retried: "ready",
+    });
+  });
+
+for (const transition of [
+  "profile",
+  "host",
+  "provider-host",
+  "session",
+  "refresh",
+  "sign-out",
+  "hide",
+  "unmount",
+])
+  for (const stage of [
+    "catalog",
+    "catalog-failure",
+    "settings",
+    "settings-failure",
+    "settings-busy",
+    "settings-wait-busy",
+    "busy",
+  ])
+    test(`Local AI retires ${stage} work after ${transition}`, async ({
+      page,
+    }) => {
+      await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+      await page.waitForFunction(() => Boolean(window.__scenarioModules));
+      const result = await localAiProbe(page, { transition, stage });
+      expect(result.initialSettings).toBe(stage.startsWith("settings") ? 1 : 0);
+      expect(result.extraSettings).toBe(0);
+      expect(result.extraCatalogs).toBe(0);
+      expect(result.oldListeners).toBe(0);
+      const stillShown = [
+        "profile",
+        "host",
+        "provider-host",
+        "session",
+        "refresh",
+      ].includes(transition);
+      expect(result.retiredStatus).toBe(
+        stillShown
+          ? "ready"
+          : transition === "unmount"
+            ? "unmounted"
+            : "failed",
+      );
+      expect(result.retiredLanes).toEqual(stillShown ? ["local_api"] : []);
+      expect(result.status).toBe(
+        transition === "unmount" ? "unmounted" : "ready",
+      );
+      expect(result.lanes).toEqual(
+        transition === "unmount" ? [] : ["local_api"],
+      );
+    });
+
+async function localAiProbe(
+  page: import("@playwright/test").Page,
+  options: {
+    recovery?: string;
+    refusal?: string;
+    transition?: string;
+    stage?: string;
+    serviceState?: string;
+    settingsMode?: string;
+    settingsRefusal?: string;
+  },
+) {
+  return page.evaluate(async (options) => {
+    const { react, dom, client } =
+      await window.__scenarioModules!.profileViews();
+    const { lanes, agent, providers } =
+      await window.__scenarioModules!.localAiReads();
+    const fixture = agent.fixtureAgent({
+      say: () => {},
+      wait: async () => {},
+      signedIn: () => true,
+      readable: () => true,
+      empty: true,
+      stream: "steady",
+      asks: null,
+      refused: () => new Error("refused"),
+    });
+    const provider = providers.providerSettingsFixture({
+      say: () => {},
+      wait: async () => {},
+      readable: () => true,
+    }).settings;
+    const catalogAnswer = await fixture.session.providerCatalog();
+    const settingsAnswer = await provider.status();
+    const realTimeout = window.setTimeout.bind(window);
+    const realClearTimeout = window.clearTimeout.bind(window);
+    const queued = new Map<number, () => void>();
+    const pauses: number[] = [];
+    let timerId = 0;
+    window.setTimeout = ((
+      callback: TimerHandler,
+      delay?: number,
+      ...args: unknown[]
+    ) => {
+      if (
+        (options.settingsMode || options.stage === "settings-wait-busy") &&
+        delay !== undefined &&
+        delay >= 2_000
+      ) {
+        if (typeof callback !== "function")
+          throw new Error("Expected callback");
+        pauses.push(delay);
+        const resume = () => callback(...args);
+        queued.set(--timerId, resume);
+        if (options.stage === "settings-wait-busy") release = resume;
+        return timerId;
+      }
+      return realTimeout(
+        callback,
+        delay !== undefined && delay >= 2_000
+          ? delay /
+              (options.stage === "busy" ||
+              options.stage === "settings-wait-busy" ||
+              options.recovery === "published"
+                ? 10
+                : 200)
+          : delay,
+        ...args,
+      );
+    }) as typeof window.setTimeout;
+    window.clearTimeout = (id) => {
+      if (typeof id === "number" && queued.delete(id)) return;
+      realClearTimeout(id);
+    };
+    const listeners = new Set<
+      (
+        status: import("../../src/shell/agentSession").AgentServiceStatus,
+      ) => void
+    >();
+    let catalogs = 0,
+      settings = 0,
+      beforeAdmission = 0;
+    let pendingSettings = 0,
+      maxPendingSettings = 0;
+    let admitted = false,
+      succeed = false;
+    let release: (() => void) | undefined;
+    let view!: import("../../src/shell/localAiLanes").LocalAiLanes;
+    const source: import("../../src/shell/localAiLanes").LocalAiSource = {
+      reader: "A",
+      session: {
+        ...fixture.session,
+        status: async () =>
+          options.serviceState === "stopped"
+            ? { state: "stopped" }
+            : options.serviceState === "refused"
+              ? { state: "refused", code: "agent_service_failed" }
+              : { state: "starting" },
+        observeStatus: async (listener) => {
+          listeners.add(listener);
+          return () => {
+            listeners.delete(listener);
+          };
+        },
+        providerCatalog: async () => {
+          catalogs++;
+          if (options.stage?.startsWith("catalog") && catalogs === 1)
+            await new Promise<void>((resolve, reject) => {
+              release = () =>
+                options.stage === "catalog-failure"
+                  ? reject({ code: "agent_service_failed" })
+                  : resolve();
+            });
+          if (
+            (options.stage === "busy" && catalogs === 1) ||
+            (options.settingsMode === "shared" && !succeed && catalogs <= 2) ||
+            (!succeed &&
+              (options.refusal || (options.recovery && catalogs === 1)))
+          )
+            throw {
+              code:
+                options.refusal ??
+                (options.recovery === "agent_reconnecting"
+                  ? options.recovery
+                  : "agent_service_busy"),
+            };
+          admitted = true;
+          return catalogAnswer;
+        },
+      },
+      providerSettings: {
+        ...provider,
+        status: async () => {
+          settings++;
+          pendingSettings++;
+          maxPendingSettings = Math.max(maxPendingSettings, pendingSettings);
+          if (!admitted) beforeAdmission++;
+          try {
+            if (options.stage === "settings-wait-busy" && settings === 1)
+              throw { code: "busy" };
+            if (options.stage?.startsWith("settings") && settings === 1) {
+              await new Promise<void>((resolve, reject) => {
+                release = () =>
+                  options.stage === "settings-failure"
+                    ? reject({ code: "agent_service_failed" })
+                    : options.stage === "settings-busy"
+                      ? reject({ code: "busy" })
+                      : resolve();
+              });
+              return { providers: [] };
+            }
+            if (options.settingsMode && !succeed) {
+              if (options.settingsMode === "inflight" && settings === 1)
+                await new Promise<void>((resolve) => {
+                  release = resolve;
+                });
+              if (
+                settings === 1 ||
+                ["exhaustion", "shared", "refusal"].includes(
+                  options.settingsMode,
+                )
+              )
+                throw { code: options.settingsRefusal ?? "busy" };
+            }
+            return settingsAnswer;
+          } finally {
+            pendingSettings--;
+          }
+        },
+      },
+    };
+    const replacement = {
+      reader: "B",
+      session: fixture.session,
+      providerSettings: provider,
+    };
+    function Probe({
+      source,
+      active,
+      again,
+    }: {
+      source: import("../../src/shell/localAiLanes").LocalAiSource | null;
+      active: boolean;
+      again: number;
+    }) {
+      const current = lanes.useLocalAiLanes(source, active, again);
+      react.useLayoutEffect(() => {
+        view = current;
+      });
+      return null;
+    }
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = client.createRoot(container);
+    const render = (current: typeof source | null, active = true, again = 0) =>
+      dom.flushSync(() =>
+        root.render(
+          react.createElement(Probe, { source: current, active, again }),
+        ),
+      );
+    const settle = async () => {
+      for (let i = 0; i < 5; i++)
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => resolve()),
+        );
+    };
+    // Recovery timers are accelerated above; React scheduling stays real.
+    const advance = async () => {
+      await new Promise<void>((resolve) => {
+        realTimeout(resolve, 200);
+      });
+      await settle();
+    };
+    const publish = () => {
+      for (const listener of listeners)
+        listener({ state: "ready", agent_version: "fixture" });
+    };
+    let unmounted = false;
+    try {
+      render(source);
+      await settle();
+      if (options.serviceState)
+        return { status: view.status, catalog: catalogs, settings };
+      if (options.transition) {
+        const initialSettings = settings;
+        if (options.transition === "unmount") {
+          dom.flushSync(() => root.unmount());
+          unmounted = true;
+        } else if (options.transition === "hide") render(source, false);
+        else if (options.transition === "refresh") render(source, true, 1);
+        else if (options.transition === "sign-out")
+          render({ ...source, reader: null });
+        else
+          render(
+            options.transition === "profile"
+              ? { ...source, reader: "B" }
+              : options.transition === "provider-host"
+                ? { ...source, providerSettings: provider }
+                : { ...source, session: fixture.session },
+          );
+        await settle();
+        const oldListeners = listeners.size;
+        // Profile/provider replacement still owns the same session's new listener.
+        const expectedActive =
+          options.transition === "profile" ||
+          options.transition === "provider-host" ||
+          options.transition === "refresh";
+        const beforeSettings = settings,
+          beforeCatalogs = catalogs;
+        release?.();
+        await advance();
+        const extraSettings = settings - beforeSettings;
+        const extraCatalogs = catalogs - beforeCatalogs;
+        const retiredStatus = unmounted ? "unmounted" : view.status;
+        const retiredLanes = unmounted ? [] : view.lanes.map((lane) => lane.id);
+        if (!unmounted) {
+          render(
+            options.transition === "hide" || options.transition === "sign-out"
+              ? source
+              : replacement,
+          );
+          await settle();
+        }
+        return {
+          initialSettings,
+          extraSettings,
+          extraCatalogs,
+          retiredStatus,
+          retiredLanes,
+          oldListeners: expectedActive ? oldListeners - 1 : oldListeners,
+          status: unmounted ? "unmounted" : view.status,
+          lanes: unmounted ? [] : view.lanes.map((lane) => lane.id),
+        };
+      }
+      if (options.settingsMode) {
+        let readsWhilePending = 0;
+        if (options.settingsMode === "inflight") {
+          publish();
+          await settle();
+          publish();
+          await settle();
+          readsWhilePending = settings;
+          release!();
+          await settle();
+        } else if (options.settingsMode === "published") {
+          publish();
+          await settle();
+        }
+        const readsAfterPublication = ["published", "inflight"].includes(
+          options.settingsMode,
+        )
+          ? settings
+          : 0;
+        // Drive only the hook's retry timers, leaving React scheduling real.
+        for (let i = 0; i < 10 && queued.size > 0; i++) {
+          queued.values().next().value!();
+          await settle();
+        }
+        const status = view.status,
+          shown = view.lanes.map((lane) => lane.id),
+          count = settings,
+          catalog = catalogs,
+          spentPauses = [...pauses];
+        for (let i = 0; i < 6; i++) {
+          publish();
+          await settle();
+        }
+        const extraAfterWake = settings + catalogs - count - catalog;
+        const queuedAfterWake = queued.size;
+        succeed = true;
+        dom.flushSync(() => view.retry());
+        await settle();
+        return {
+          status,
+          lanes: shown,
+          catalog,
+          settings: count,
+          pauses: spentPauses,
+          beforeAdmission,
+          maxPendingSettings,
+          readsWhilePending,
+          readsAfterPublication,
+          extraAfterWake,
+          queuedAfterWake,
+          retried: view.status,
+        };
+      }
+      if (options.recovery === "published") {
+        publish();
+        await advance();
+      } else await advance();
+      if (options.refusal) {
+        // Exhaust all 2/4/8-second retries, then prove status events cannot
+        // restart an exhausted (or permanent) failure.
+        await advance();
+        await advance();
+        const status = view.status,
+          count = catalogs;
+        for (let i = 0; i < 6; i++) {
+          publish();
+          await settle();
+        }
+        const afterPublications = catalogs;
+        succeed = true;
+        dom.flushSync(() => view.retry());
+        await settle();
+        return {
+          status,
+          catalog: count,
+          settings: settings - 1,
+          afterPublications,
+          retried: view.status,
+        };
+      }
+      return {
+        status: view.status,
+        lanes: view.lanes.map((lane) => lane.id),
+        catalog: catalogs,
+        settings,
+        beforeAdmission,
+      };
+    } finally {
+      if (!unmounted) dom.flushSync(() => root.unmount());
+      container.remove();
+      window.setTimeout = realTimeout;
+      window.clearTimeout = realClearTimeout;
+    }
+  }, options);
+}

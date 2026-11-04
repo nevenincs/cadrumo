@@ -155,6 +155,10 @@ foreach(name IN LISTS CADRUMO_RUST_ENVIRONMENT_NAMES)
   string(JSON rust_environment SET "${rust_environment}" environment "${name}" "\"${value}\"")
 endforeach()
 file(CONFIGURE OUTPUT "${CONTRACT_DIR}/rust-environment.json" CONTENT "@rust_environment@\n" @ONLY)
+# Keep the raw settings above for fingerprints; command-line test wrappers
+# need configuration-resolved values, never literal generator expressions.
+file(GENERATE OUTPUT "${CONTRACT_DIR}/$<CONFIG>/rust-environment.json"
+  CONTENT "${rust_environment}\n")
 if(BUILD_TESTING)
   # Every file the last build compiled into a component must be among its declared inputs.
   # A component this graph compiles must have been built; the installer exists only on

@@ -6,8 +6,8 @@ use winit::{
   window::{Window, WindowId},
 };
 use wry::{
-  Rect, WebViewBuilder,
   dpi::{LogicalPosition, LogicalSize},
+  Rect, WebViewBuilder,
 };
 
 #[derive(Default)]
@@ -38,16 +38,13 @@ impl GfxState {
     }))
     .expect("Failed to find an appropriate adapter");
 
-    let (device, queue) = pollster::block_on(adapter.request_device(
-      &wgpu::DeviceDescriptor {
-        label: None,
-        required_features: wgpu::Features::empty(),
-        required_limits:
-          wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter.limits()),
-        memory_hints: wgpu::MemoryHints::Performance,
-      },
-      None,
-    ))
+    let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
+      label: None,
+      required_features: wgpu::Features::empty(),
+      required_limits: wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter.limits()),
+      memory_hints: wgpu::MemoryHints::Performance,
+      ..Default::default()
+    }))
     .expect("Failed to create device");
 
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -72,7 +69,7 @@ impl GfxState {
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
       label: None,
       bind_group_layouts: &[],
-      push_constant_ranges: &[],
+      immediate_size: 0,
     });
 
     let swapchain_capabilities = surface.get_capabilities(&adapter);
@@ -96,7 +93,7 @@ impl GfxState {
       primitive: wgpu::PrimitiveState::default(),
       depth_stencil: None,
       multisample: wgpu::MultisampleState::default(),
-      multiview: None,
+      multiview_mask: None,
       cache: None,
     });
 
@@ -123,10 +120,16 @@ impl GfxState {
   }
 
   fn render(&mut self) {
-    let frame = self
-      .surface
-      .get_current_texture()
-      .expect("Failed to acquire next swap chain texture");
+    let frame = match self.surface.get_current_texture() {
+      wgpu::CurrentSurfaceTexture::Success(frame)
+      | wgpu::CurrentSurfaceTexture::Suboptimal(frame) => frame,
+      wgpu::CurrentSurfaceTexture::Timeout | wgpu::CurrentSurfaceTexture::Occluded => return,
+      wgpu::CurrentSurfaceTexture::Outdated => {
+        self.surface.configure(&self.device, &self.config);
+        return;
+      }
+      status => panic!("Failed to acquire next swap chain texture: {status:?}"),
+    };
     let view = frame
       .texture
       .create_view(&wgpu::TextureViewDescriptor::default());
@@ -138,6 +141,7 @@ impl GfxState {
         label: None,
         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
           view: &view,
+          depth_slice: None,
           resolve_target: None,
           ops: wgpu::Operations {
             load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
@@ -147,6 +151,7 @@ impl GfxState {
         depth_stencil_attachment: None,
         timestamp_writes: None,
         occlusion_query_set: None,
+        multiview_mask: None,
       });
       render_pass.set_pipeline(&self.render_pipeline);
       render_pass.draw(0..3, 0..1);

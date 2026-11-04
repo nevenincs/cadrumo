@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#complexity-remediation'
 date: '2026-10-02'
-modified: '2026-10-17'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6cdf0d3f2660001330927e03c8a19ee5823fb80146ffc04de44e18cc17e3b54a'
+body_hash: 'sha256:4e2f4946e62ee4fa21b1bfc9969b604d917220fbf138b580f169f65c51524967'
 related:
   - "[[2026-10-02-complexity-remediation-plan]]"
 ---
@@ -85,6 +85,43 @@ related:
   src/cadrumo/entrypoints/operation_composition.py
 - `S06` `verify:` `Archived historical verification rows: fail=5, pass=70; latest recorded outcome=pass; summary only, not a fresh run.` -> `pass`
 - `S06` `by:` `root`
+- `S09` `M` `dev/audit/native_health.py`
+- `S09` `verify:` `uv run --no-sync pytest dev/audit/tests/test_native_health.py -q -m empty` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff check dev/audit/native_health.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check dev/audit/native_health.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest dev/audit/tests/test_native_health.py -q -m ''` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check dev/audit/native_health.py` -> `pass`
+- `S09` `M` `dev/quality/suite.py`
+- `S09` `verify:` `uv run --no-sync pytest dev/quality/tests/test_suite_gate_table.py -q` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff check dev/quality/suite.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check dev/quality/suite.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check dev/quality/suite.py` -> `pass`
+- `S06` `M` `src/cadrumo/application/operations/error_detail.py`
+- `S06` `verify:` `uv run --no-sync pytest src/cadrumo/application/operations/tests/test_error_detail_registry_verdict.py src/cadrumo/adapters/persistence/operations/tests/test_operation_error_detail.py -q -m ''` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff check src/cadrumo/application/operations/error_detail.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/operations/error_detail.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ty check src/cadrumo/application/operations/error_detail.py` -> `pass`
+- `S09` `M` `dev/registry/compiler/validate_household_row_owners.py`
+- `S09` `verify:` `uv run --no-sync pytest dev/registry/compiler/tests/test_validate_household_row_owners.py -q` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff check dev/registry/compiler/validate_household_row_owners.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check dev/registry/compiler/validate_household_row_owners.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check dev/registry/compiler/validate_household_row_owners.py` -> `pass`
+- `S09` `M` `dev/locales/_ast_key_calls.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n 0 dev/locales/tests/test_ast_key_wrapper_positions.py dev/locales/tests/test_key_scanner_discovery_behaviour.py dev/locales/tests/test_ast_scanner_fstring_fragments.py dev/locales/tests/test_ast_scanner_reports_unread_modules.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff check dev/locales/_ast_key_calls.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check dev/locales/_ast_key_calls.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check dev/locales/_ast_key_calls.py` -> `pass`
+- `S09` `M` `dev/audit/security.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n 0 dev/audit/tests/test_security.py dev/audit/tests/test_advisory_report.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff check dev/audit/security.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check dev/audit/security.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check dev/audit/security.py` -> `pass`
+- `S09` `M` `dev/registry/workbook_demo_formula_inputs.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -m "" dev/registry/tests/test_workbook_demo.py` -> `fail`
+- `S09` `verify:` `uv run --no-sync ruff check dev/registry/workbook_demo_formula_inputs.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check dev/registry/workbook_demo_formula_inputs.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check dev/registry/workbook_demo_formula_inputs.py` -> `pass`
+- `S05` `verify:` `just complexity-gate` -> `fail`
 
 ## Notes
 
@@ -270,3 +307,14 @@ related:
 - `S06` Before-threshold snapshot <operator-home>/AppData/Local/Temp/cadrumo-source-resolver.before-20261003T133149668.py; before-exclusion snapshot recorded by worker against latest30A526AF source, final8C646EA5 source after normalization. Parity log <operator-home>/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T115343.390004Z-pytest-83136-dd2fa3cd/run.log.
 - `S05` Latest completed whole scan 2026-10-03T11:53:00.844754Z through11:55:11.690201Z; source and thresholds unchanged. Post-run current `source_resolver.py` was remeasured at0 after a further concurrent edit; all other current production sources have unchanged timestamps since start. Zero count is current at this check; it does not claim future concurrent authoring cannot add a hotspot.
 - `S05` User's production complexity objective is achieved. Final audit preserves rolling checkpoint findings, captures additional invoice unchanged-by-extraction parity, and leads with latest zero receipt plus PENDING integrated verdict. S05 and remaining applicable verification Steps stay open; no Git or external state mutated.
+- `S09` Partial S09 repair: native inventory classify complexity 20 to 1; extracted helpers at most 9. Real scanner and census tests 10 passed. Full complexity gate remains open; no threshold or coverage changes.
+- `S09` Correction: the preceding verification label used the word empty as shorthand; it is not the executed marker expression. The exact command uses an empty marker expression and is recorded here. S09 remains open.
+- `S09` Partial S09: separated gate execution from result rendering;24 gate table/first-failure/native selection tests pass. No gate population, threshold, execution order or exit-code change. Full complexity inventory still unresolved.
+- `S06` Partial S06: extracted existing word-language consistency checks into private method, preserving order, messages and all public fields.20 tests pass. Closed-shape validator complexity12 to9, helper4. Full complexity gate remains red and S06 open.
+- `S09` Partial S09: decomposed tree/owner/revision household row-limit validation preserving failure order and messages.8 tests passed. Main cyclomatic17 to5; new helpers at most8; module maintainability64.6. No registry declaration or authority publication change. Full complexity gate and S09 remain open.
+
+- `S06` Operator-authorized isolated refactor committed with `--only` as `23706948c8`, row_filled_bindings.py only. Private layout/group/export helper extraction preserves all binding selections and frozen-set return behavior. Entry function cyclomatic22->6 and cognitive26->5; helpers max8cyclomatic/7cognitive; configured single-file detector reports0findings. Existing form answers across all revisions, edit admission and entrypoint admission/preflight tests61passed in433.40s; no test edits. Ruff/format/ty/basedpyright pass. S06 remains open; this is not a global complexity verdict.
+- `S09` Partial S09 helper extraction; existing key channels and argument order preserved. Scoped configured detectors: one C13 finding before, zero findings after. S09 remains open; no commit per plan. Semantic search refused client0.6.0/service0.6.4 mismatch; targeted discovery used without restarting shared service.
+- `S09` Partial S09 extraction of validated ordered finding entries; unavailable/incomplete coverage outcomes and error precedence preserved. 55 existing tests pass, scoped configured four detectors zero after baseline C11. S09 remains open and no commit per plan.
+- `S09` Partial S09 private validation-helper extraction; configured four scoped detectors C12 before and zero findings after. Full existing owning tests identical before and after:160 passed/1 known M115 seed failure at `test_current_registry_generates_form_geometry_and_xlsx[115]:1071.` Seed values, financial assertions, refusal precedence and messages unchanged. No global count inferred; S09 remains open and no commit per plan.
+- `S05` Fresh exact gate on 2026-11-04 measures 53 findings across 5560 stable source files: 40 cyclomatic, 7 maintainability, 1 cognitive and 5 length. S08 reopened for four domain residuals and S10 for one acceptance residual after reassessing the accepted import-centralization and justfile-design decisions; original history is retained. S12 fills missing ownership for five client/runtime rows within the original all-configured-production-roots zero objective. No architecture, authority, API, persisted error identity, schema, threshold or population change is authorized. Source freeze continues during the native package build; no implementation, commit or staging occurred in this metadata checkpoint.

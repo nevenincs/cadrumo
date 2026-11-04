@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-11-01'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f335a115739bf0aa3dad99d2c277c5103ad4f5c8ee0e0d4e6ce0b7c06fa9e164'
+body_hash: 'sha256:c5e85ef23716da006ec1e5f8fae243f25ffc7a36aacb9f1768fb868d54fb66c7'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-research]]"
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
@@ -83,7 +83,7 @@ Repair all affected modelo data. M190 and M193 align identity year while retaini
 physical filing dates. M210 uses canonical `EVENT-N`/`0A` identity plus the existing
 `ResultDisposition` and official two-digit tipo-renta code authorities as qualifiers,
 completing rather than bypassing its plazo-keying decision. M303, M322, and M353 retain
-rows only in their canonical revisions, including the M303 2024 cutover. The complete
+rows only in their canonical revisions, including the M303 mid-year edition cutover. The complete
 measured periodic fleet—M111, M115, M123, M130, M131, M202, M216, M303, M322, M349,
 M353, and M369—is materialised through the canonical declared supported-year horizon
 from bundled official evidence. Open frontier revisions do not imply unpublished future
@@ -144,8 +144,8 @@ wording conflicts with this section, this section governs for the payment cutoff
 - AEAT's practice of replacing an Anexo II day that falls on an inhábil day with the
   latest business day that still meets the margin is a separate procedure variant,
   recorded as AEAT administrative practice grounded in AEAT's published domiciliación
-  calendar, not in the Orden, and graded pending review. It applies from 1 January 2026,
-  the first calendar the registry bundles that shows it.
+  calendar, not in the Orden, and graded pending review. It applies from the first calendar
+  year the registry bundles that shows it.
 - Projecting window opening and closing dates is out of scope and remains a separate
   decision. Those dates stay revision-owned literal facts, and windows are still not
   projected to unpublished years.

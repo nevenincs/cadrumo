@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-10-31'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:1226b6e77f992fe6a710b4c0caedd50e6c5475712246f1b8fe5c6376a379ceb7'
+body_hash: 'sha256:22c4274bacf2de50054461c1062cf7375b05bf55f48436236a59f103fb36133a'
 related:
   - "[[2026-09-21-assets-core-ownership-contracts-reference]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
@@ -19,7 +19,7 @@ related:
 
 ## Problem Statement
 
-The accepted 2025 activity-amortization authority requires an atomic validated
+The accepted activity-amortization authority requires an atomic validated
 schedule but leaves four implementation-defining contracts open: asset identity
 and acquisition linkage, forecast versus recorded history, Modelo 130
 projection, and mixed-use-home allocation. Those commitments must be fixed
@@ -67,7 +67,7 @@ blocks competing depreciation deductions without deleting acquisition evidence.
 
 ## Constraints
 
-- The complete 2025 material/intangible source must land atomically under
+- The complete material/intangible source must land atomically under
   `2026-08-23-amortization-casilla-mapping-adr`.
 - IVA identity and regularization remain governed by
   `2026-07-01-iva-bienes-inversion-regularizacion-adr`.
@@ -75,9 +75,9 @@ blocks competing depreciation deductions without deleting acquisition evidence.
 - Unknown opening history, missing allocation, unsupported authority, and
   collision are explicit incomplete states, never zero.
 - No frontend owns depreciation arithmetic or imports the other frontend.
-- Initial filing-grade support is tax year 2025, common-regime direct normal or
+- Initial filing-grade support is the first grounded tax year, common-regime direct normal or
   simplified estimation, and material and intangible activity assets. Other
-  years and regimes remain unsupported until separately grounded and enrolled.
+  regimes remain unsupported until separately grounded and enrolled.
 
 ## Implementation
 
@@ -186,7 +186,7 @@ and typed home components preserve the allocation facts required by
 
 Authorized by the operator's registry conformance rectification brief of 2026-09-27, recorded as the approval basis of `2026-09-27-registry-conformance-rectification-plan`, on the evidence in `2026-09-27-registry-conformance-rectification-research`. The accepted body above is preserved; where it differs, this section governs.
 
-- Initial filing-grade support extends from tax year 2025 to every year of the registry support envelope, floor 2022, for the same regimes and asset kinds. The Modelo 100 and Modelo 130 projections of the same effective claims target casillas 0208, 0227 and 02 in every supported year, where their meaning is unchanged.
+- Initial filing-grade support extends from that first grounded tax year to every year of the registry support envelope for the same regimes and asset kinds. The Modelo 100 and Modelo 130 projections of the same effective claims target casillas 0208, 0227 and 02 in every supported year, where their meaning is unchanged.
 - Asset forecasts select the Modelo 100 edition canonically in every frontend; a year beyond the newest authored edition is served by projection and keeps that edition's capability limits.
 
 ## Amendment 2026-10-30

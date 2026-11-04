@@ -106,7 +106,7 @@ reach, and the corpus clause is there to check the claim against.
 ## Consequences
 
 The conformance report advances past modelos 123, 131 and 180 and now reaches
-M190/2024, which is the next genuine finding rather than a false one. The
+a Modelo 190 revision, which is the next genuine finding rather than a false one. The
 population of retroactive citations behind M190 is unmeasured, because the report
 stops at its first failure; expect further instances as it advances.
 

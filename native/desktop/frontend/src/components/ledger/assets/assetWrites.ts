@@ -25,7 +25,7 @@ import type { Landing, LandingCheck } from "../WritePause";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 import { formKeyOf } from "./assetFields";
 import type { FormField, FormValue, FormValues } from "./assetFormValues";
-import { fieldWord, reasonText } from "./assetsWords";
+import { fieldWord } from "./assetsWords";
 
 // What the Assets tab's forms decide without drawing: how each act's request
 // is put together from the values a form states, how a read of the register
@@ -337,6 +337,9 @@ export type Refusal = {
   code: string | null;
   reasonKey: string | null;
   reasonFacts: ReasonFact[];
+  /** The sentence the backend served for the refusal, in the language it
+   * names; null where it served none. */
+  words: string | null;
   /** The fields the backend says are still to fill in. */
   missing: string[];
 };
@@ -389,6 +392,8 @@ export function refusalOf(body: unknown): Refusal {
     reasonKey:
       typeof refusal?.reason_key === "string" ? refusal.reason_key : null,
     reasonFacts: facts,
+    words:
+      typeof refusal?.refusal_words === "string" ? refusal.refusal_words : null,
     missing,
   };
 }
@@ -419,13 +424,10 @@ export const neverReused = () => false;
 
 // ---- Words for a refusal ---------------------------------------------------------
 
-/** A refusal in words by its reason: the catalogue sentence the backend named,
- * filled in with its facts, else null where the caller shows the generic
- * refused word. */
-export const refusalWord = (
-  t: Translate,
-  refusal: Pick<Refusal, "reasonKey" | "reasonFacts">,
-): string | null => reasonText(t, refusal.reasonKey, refusal.reasonFacts);
+/** A refusal in words: the sentence the backend served for it, else null
+ * where the caller shows the generic refused word. */
+export const refusalWord = (refusal: Pick<Refusal, "words">): string | null =>
+  refusal.words;
 
 /** The fields still to fill in, by their labels. */
 export function missingLabels(

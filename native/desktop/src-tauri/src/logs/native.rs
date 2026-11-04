@@ -32,9 +32,8 @@ impl log::Log for NativeLogger {
             | "tao"
             | "tauri_plugin_dialog"
             | "tauri_plugin_clipboard_manager" => DiagnosticOrigin::Tauri,
-            "cadrumo_desktop" | "cadrumo_application" | "cadrumo_platform" => {
-                DiagnosticOrigin::Rust
-            }
+            "cadrumo_application" | "cadrumo_platform" => DiagnosticOrigin::Rust,
+            own if Some(own) == module_path!().split("::").next() => DiagnosticOrigin::Rust,
             _ => return,
         };
         let level = match record.level() {
@@ -74,6 +73,51 @@ pub fn install(diagnostics: Arc<Diagnostics>) {
 mod tests {
     use super::*;
     use log::Log;
+
+    #[test]
+    fn this_binarys_compiler_owned_module_is_routed_without_private_arguments() {
+        struct NeverRender;
+        impl std::fmt::Display for NeverRender {
+            fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                panic!("diagnostic arguments must not be rendered")
+            }
+        }
+        let diagnostics = Arc::new(Diagnostics::default());
+        let logger = NativeLogger(diagnostics.clone());
+        logger.log(
+            &log::Record::builder()
+                .level(log::Level::Debug)
+                .module_path_static(Some(module_path!()))
+                .target("private-target-canary")
+                .line(Some(42))
+                .args(format_args!("private-argument-canary {}", NeverRender))
+                .build(),
+        );
+        let dynamic = module_path!().to_owned();
+        logger.log(
+            &log::Record::builder()
+                .level(log::Level::Debug)
+                .module_path(Some(&dynamic))
+                .args(format_args!("private-argument-canary {}", NeverRender))
+                .build(),
+        );
+        logger.log(
+            &log::Record::builder()
+                .level(log::Level::Debug)
+                .module_path_static(Some("unrelated::module"))
+                .args(format_args!("private-argument-canary {}", NeverRender))
+                .build(),
+        );
+        let snapshot = diagnostics.snapshot(u64::MAX);
+        assert_eq!(snapshot.events.len(), 1);
+        let fact = snapshot.events[0].desktop_diagnostic.as_ref().unwrap();
+        assert_eq!(fact.logger.as_deref(), Some(module_path!()));
+        assert!(matches!(fact.origin, DiagnosticOrigin::Rust));
+        assert_eq!(fact.line, Some(42));
+        let encoded = serde_json::to_string(&snapshot).unwrap();
+        assert!(!encoded.contains("private-target-canary"));
+        assert!(!encoded.contains("private-argument-canary"));
+    }
 
     #[test]
     fn tauri_records_keep_severity_and_location_without_rendering_arguments() {

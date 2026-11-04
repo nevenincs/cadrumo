@@ -22,7 +22,7 @@ a runtime surface may serve. Independent measurement (four agents plus the
 orchestrating session, methods and figures recorded in the campaign brief and in
 `2026-08-14-registry-temporal-coverage-load-topology-reference`) established the
 scale: 97 revisions across 73 modelos, 66 of them open-ended, none reviewed, a
-coverage horizon flat at 64 modelos for every year from 2027 onward because
+coverage horizon flat at 64 modelos for every year beyond the newest authored edition because
 nothing terminates the selectors, and every filing snapshot currently refusing.
 
 Measurement also changed the problem in three ways this record's earlier draft
@@ -271,7 +271,7 @@ happens to the ungoverned coverage ledger.
   encoded regulatory values — which is kept with its justification recorded;
   or DEAD, which is deleted. `_m303_orden_constants.py` is the proven second
   case: its `SUPPORTED_EJERCICIOS` tuple, seasonal index coefficients,
-  difficult-justification percentage and Lorca 2022 reduction are orden
+  difficult-justification percentage and Lorca reduction are orden
   content encoded as Python literals. The two per-modelo formula runtimes
   are classified by the same pass rather than assumed either way. A value
   imported through the curated `core.external_constants` leaf channel is the
@@ -285,8 +285,8 @@ happens to the ungoverned coverage ledger.
   law-resolvable revision at its required grade and evidence-backed cells
   for every period of that year. The failure enumerates every missing cell
   with modelo, period and missing prerequisite. Turning a year on is
-  therefore an assertion the corpus must already satisfy: flipping 2026 or
-  2027 on with a gap takes the whole registry down loudly, never partially.
+  therefore an assertion the corpus must already satisfy: moving the floor or
+  horizon so that a year turns on with a gap takes the whole registry down loudly, never partially.
   Because the declaration and the corpus are both fingerprinted registry
   data, this gate legitimately rides the validation verdict.
 - The calendar rollover is the time-dependent half and therefore lives at

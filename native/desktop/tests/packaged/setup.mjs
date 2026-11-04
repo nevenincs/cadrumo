@@ -984,6 +984,41 @@ export function concurrentSetupVerdict(evidence) {
   );
 }
 
+async function cancelConcurrentRun(driver, item, operationId) {
+  const run = runOf((await driver.read()).snapshot, item);
+  if (run?.operation_id !== operationId || run.stage === "settled") return;
+  if (!run.cancel_requested) {
+    const reply = await driver.session.call("desktop_setup_cancel", {
+      operationId,
+    });
+    if (!reply.ok) throw new Error("concurrent setup cleanup was refused");
+  }
+  return { item, operationId, stage: "settled" };
+}
+
+async function settleConcurrentRuns(driver, owned, gates) {
+  let settled = true;
+  const pending = [];
+  for (const [item, operationId] of owned) {
+    try {
+      const wanted = await cancelConcurrentRun(driver, item, operationId);
+      if (wanted) pending.push(wanted);
+    } catch {
+      settled = false;
+    }
+  }
+  // A held transfer cannot observe cancellation until its gate is released.
+  for (const gate of gates) gate.release();
+  if (pending.length) {
+    try {
+      await waitSetupSignal(driver.session, pending, 30000);
+    } catch {
+      settled = false;
+    }
+  }
+  driver.note("concurrent-setup-cleanup", { settled });
+}
+
 /** Leaves both runs cancelled so the existing browser resume lane can follow. */
 export async function runConcurrentSetup(
   driver,
@@ -993,6 +1028,7 @@ export async function runConcurrentSetup(
   const { session, proxy } = driver;
   const evidence = {};
   const gates = [];
+  const owned = new Map();
   try {
     await driver.openComponents();
     const disclosure = session.page.locator(
@@ -1001,11 +1037,18 @@ export async function runConcurrentSetup(
     if ((await disclosure.getAttribute("aria-expanded")) !== "true")
       await disclosure.click();
     await driver.click(ROW_BUTTON("browser"), "browser setup");
-    await waitSetupSignal(session, [{ item: "browser", stage: "review" }]);
+    const browserReview = await waitSetupSignal(session, [
+      { item: "browser", stage: "review" },
+    ]);
+    owned.set("browser", runOf(browserReview.snapshot, "browser").operation_id);
     await session.page
       .locator(`${DIALOG} [data-model="${CSSescape(model)}"] button`)
       .first()
       .click();
+    const localReview = await waitSetupSignal(session, [
+      { item: "local_ai", stage: "review" },
+    ]);
+    owned.set("local_ai", runOf(localReview.snapshot, "local_ai").operation_id);
     const reviews = await waitSetupSignal(session, [
       { item: "browser", stage: "review" },
       { item: "local_ai", stage: "review" },
@@ -1150,6 +1193,13 @@ export async function runConcurrentSetup(
     evidence.spinnerAfter = await spinnerSignal(session, false);
     driver.note("concurrent-setup", { lane, model, ...evidence });
     return concurrentSetupVerdict(evidence);
+  } catch (error) {
+    try {
+      await settleConcurrentRuns(driver, owned, gates);
+    } catch {
+      // Optional cleanup evidence must not replace the check's original failure.
+    }
+    throw error;
   } finally {
     for (const gate of gates) gate.release();
   }

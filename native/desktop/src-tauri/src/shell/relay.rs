@@ -39,7 +39,7 @@ pub struct Failure {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) terminal_failure: Option<TerminalFailure>,
+    pub(crate) terminal_failure: Option<Box<TerminalFailure>>,
     /// The finished sentence the application served for a refusal, in the
     /// language it worded it in, where the operation serves one. The window
     /// shows it as served.

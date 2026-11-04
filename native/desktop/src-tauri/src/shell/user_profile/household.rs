@@ -68,7 +68,8 @@ const STATED_ANSWERS: [&str; 2] = ["true", "false"];
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Item {
-    FamilyGroup {
+    #[serde(rename = "family_group")]
+    Group {
         group_key: String,
         label: String,
         state: GroupState,
@@ -78,12 +79,14 @@ enum Item {
         max_rows: Option<usize>,
         leaves: Vec<Leaf>,
     },
-    FamilyRow {
+    #[serde(rename = "family_row")]
+    Row {
         group_key: String,
         row_index: String,
         facts: Vec<Fact>,
     },
-    FamilyQuestion {
+    #[serde(rename = "family_question")]
+    Question {
         question_id: String,
         path: String,
         prompt: String,
@@ -173,7 +176,7 @@ impl Family {
         let last = page.is_last();
         for item in page.items {
             match item {
-                Item::FamilyGroup {
+                Item::Group {
                     group_key,
                     label,
                     state,
@@ -207,7 +210,7 @@ impl Family {
                         rows: vec![],
                     });
                 }
-                Item::FamilyRow {
+                Item::Row {
                     group_key,
                     row_index,
                     mut facts,
@@ -234,7 +237,7 @@ impl Family {
                     }
                     group.rows.push(Row { row_index, facts });
                 }
-                Item::FamilyQuestion {
+                Item::Question {
                     question_id,
                     path,
                     prompt,
@@ -267,7 +270,7 @@ impl Family {
                         choices,
                     });
                 }
-                Item::FamilyGroup { .. } => return Err(protocol()),
+                Item::Group { .. } => return Err(protocol()),
             }
         }
         self.pin.advance(next);

@@ -104,6 +104,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1291.59",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -156,6 +157,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "3005.87",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -208,6 +210,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "4720.16",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -266,6 +269,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "6434.44",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -308,6 +312,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "8148.73",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -350,6 +355,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "9863.01",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -392,6 +398,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "11577.30",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -434,6 +441,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "13291.59",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -476,6 +484,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "15005.87",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -510,6 +519,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "16720.16",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
     ],
@@ -1147,6 +1157,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -1174,6 +1185,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -1201,6 +1213,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -1252,6 +1265,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -1303,6 +1317,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -1336,6 +1351,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -1369,6 +1385,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -1402,6 +1419,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
     ],
@@ -2011,6 +2029,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2038,6 +2057,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2065,6 +2085,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2116,6 +2137,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2167,6 +2189,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2218,6 +2241,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2269,6 +2293,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2320,6 +2345,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2361,6 +2387,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2402,6 +2429,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2443,6 +2471,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2484,6 +2513,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -2517,6 +2547,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
     ],
@@ -3270,6 +3301,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "200.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -3322,6 +3354,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "400.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -3364,6 +3397,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "600.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -3406,6 +3440,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "800.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -3445,6 +3480,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "800.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
     ],
@@ -4033,6 +4069,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -4084,6 +4121,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -4135,6 +4173,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -4186,6 +4225,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
       {
@@ -4237,6 +4277,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
     ],
@@ -4920,6 +4961,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "274.59",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -4972,6 +5014,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "574.59",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5014,6 +5057,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "874.59",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5056,6 +5100,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1174.59",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5098,6 +5143,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1474.59",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5140,6 +5186,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1774.59",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5174,6 +5221,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1800.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
     ],
@@ -5733,6 +5781,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "73.09",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5785,6 +5834,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "198.09",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5837,6 +5887,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "323.09",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5879,6 +5930,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "448.09",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5921,6 +5973,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "573.09",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -5955,6 +6008,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "698.09",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
     ],
@@ -6511,6 +6565,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "475.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -6553,6 +6608,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "950.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -6595,6 +6651,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1425.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -6637,6 +6694,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1900.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -6671,6 +6729,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "2375.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
     ],
@@ -7279,6 +7338,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "450.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -7315,6 +7375,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "900.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -7351,6 +7412,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1350.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
       {
@@ -7387,6 +7449,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           decimal: "1800.00",
         },
         minimum_reason_key: null,
+        minimum_has_no_table: false,
         minimum_complete: true,
       },
     ],
@@ -7736,6 +7799,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
     ],
@@ -8188,6 +8252,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: null,
         minimum_reason_key:
           "ledger.actividad_asset.disposal_finding.minimum_unresolved",
+        minimum_has_no_table: false,
         minimum_complete: false,
       },
     ],

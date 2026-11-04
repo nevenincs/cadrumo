@@ -174,10 +174,7 @@ class OperationErrorDetailV1(BaseModel):
         keys = tuple(entry.key for entry in self.context)
         if keys != tuple(sorted(set(keys))):
             raise ValueError("operation error detail context keys must be unique and ordered")
-        if (self.refusal_words is None) != (self.refusal_words_language is None):
-            raise ValueError("served words name the language they are in")
-        if self.next_step is not None and self.refusal_words_language is None:
-            raise ValueError("a served step is worded in the language of the refusal's own words")
+        self._check_word_language()
         if self.kind is OperationErrorDetailKind.REGISTERED_ERROR:
             if self.error_code is None:
                 raise ValueError("a registered error detail requires its registered code")
@@ -191,6 +188,13 @@ class OperationErrorDetailV1(BaseModel):
             raise ValueError("a record validation detail carries only its fault context")
         self.precondition_verdict()
         return self
+
+    def _check_word_language(self) -> None:
+        """Keep the refusal and its offered step bound to their served language."""
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
+        if self.next_step is not None and self.refusal_words_language is None:
+            raise ValueError("a served step is worded in the language of the refusal's own words")
 
     def context_mapping(self) -> dict[str, str]:
         """Return the scrubbed context as the envelope's string mapping."""

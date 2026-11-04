@@ -132,11 +132,13 @@ the requested schema family and filing context. A revision that combines differe
 annual form designs or time-bounded substantive provisions is split into the
 smallest source-grounded epochs needed for unambiguous selection. Modelo 390 is the
 first mandatory repair: its mixed `2010-y-siguientes` revision is replaced, on the
-currently enrolled evidence, by disjoint 2022, 2023, 2024, and 2025 filing-year
-epochs. Each epoch selects only its own record design; the 2025 source is capped at
-2025-12-31; and the time-bounded RDL 4/2024 provision appears only in the 2024
-slice. Filing years 2010-2021 and 2026 refuse as unsupported until their own source
-authority is enrolled. The repair preserves canonical casilla identity and
+currently enrolled evidence, by disjoint annual filing-year epochs, one per
+enrolled record design. Each epoch selects only its own record design; the newest
+enrolled source is capped at the end of its filing year; and the time-bounded
+RDL 4/2024 provision appears only in the epoch it governs. A supported filing year
+with no epoch of its own is calculated from the nearest authored epoch at
+calculation grade, and filing grade waits for that year's own source authority;
+years below the registry floor refuse. The repair preserves canonical casilla identity and
 continuity where meaning persists; it does not copy a later design backward or
 retain the open revision as a compatibility fallback.
 

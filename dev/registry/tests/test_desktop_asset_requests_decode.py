@@ -44,6 +44,7 @@ from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetRevisionSnapshot,
 )
 from cadrumo.application.actividad_asset.register_reads import method_facts_view
+from cadrumo.application.ledger.entry_limits import ledger_entry_limits
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.renta.actividad_asset.disposal import (
@@ -330,7 +331,13 @@ def _served() -> dict[str, Any]:
 def _run(bundle: Path, scenarios: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     done = subprocess.run(  # noqa: S603 - fixed node program on a bundle built above
         [_node(), str(bundle)],
-        input=json.dumps({"served": _served(), "scenarios": scenarios}),
+        input=json.dumps(
+            {
+                "served": _served(),
+                "limits": json.loads(ledger_entry_limits().model_dump_json()),
+                "scenarios": scenarios,
+            }
+        ),
         check=True,
         capture_output=True,
         text=True,

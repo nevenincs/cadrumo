@@ -22,7 +22,7 @@ related:
 
 ## Problem Statement
 
-The desktop Modelo workspace draws every declaration from the generated `modelo.work.form` read model. For the 2025 Modelo 100 that read is about 3.8 MB per language, holds four pages and 87 sections, and 75 of those section headings are dictionary tokens disclosed as `technical`. Descendants and ascendants are flat boxes with no row groups. The household, the imputation criterion, the comparison of individual and joint taxation, the settlement of the result and the borrador comparison have no place in the form at all. A filer cannot navigate or finish a Renta return with the generic workspace alone. A Renta screen must not compute in the window, and it must not grow modelo-specific branches there either. The boundary between what stays generated and what becomes a dedicated element has to be settled before the build.
+The desktop Modelo workspace draws every declaration from the generated `modelo.work.form` read model. For the Modelo 100 that read is about 3.8 MB per language, holds four pages and 87 sections, and 75 of those section headings are dictionary tokens disclosed as `technical`. Descendants and ascendants are flat boxes with no row groups. The household, the imputation criterion, the comparison of individual and joint taxation, the settlement of the result and the borrador comparison have no place in the form at all. A filer cannot navigate or finish a Renta return with the generic workspace alone. A Renta screen must not compute in the window, and it must not grow modelo-specific branches there either. The boundary between what stays generated and what becomes a dedicated element has to be settled before the build.
 
 ## Considerations
 

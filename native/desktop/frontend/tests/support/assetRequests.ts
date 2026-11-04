@@ -35,7 +35,9 @@ import type {
   AcquisitionCandidate,
   DisposalFacts,
   FormOptions,
+  LedgerEntryLimits,
 } from "../../src/shell/ledgerSetup";
+import { holdLedgerLimits } from "../../src/shell/ledgerLimits";
 
 /** What the backend serves with the options of a form. */
 type Served = {
@@ -77,7 +79,11 @@ type Scenario =
   | { id: string; kind: "baja_fields"; asset_kind: string }
   | { id: string; kind: "vehicle_fields"; asset_kind: string };
 
-type Input = { served: Served; scenarios: Scenario[] };
+type Input = {
+  served: Served;
+  limits: LedgerEntryLimits;
+  scenarios: Scenario[];
+};
 
 const hex = (seed: string) => seed.repeat(64).slice(0, 64);
 
@@ -256,7 +262,8 @@ let input = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk) => (input += chunk));
 process.stdin.on("end", () => {
-  const { served, scenarios } = JSON.parse(input) as Input;
+  const { served, limits, scenarios } = JSON.parse(input) as Input;
+  holdLedgerLimits(limits);
   process.stdout.write(
     JSON.stringify(scenarios.map((scenario) => run(scenario, served))),
   );

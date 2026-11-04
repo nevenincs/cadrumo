@@ -308,6 +308,7 @@ impl SignIn {
         // status publication while this call waited is the current state,
         // not a reason to reject an already-held usable person.
         let mut cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
+        log::debug!("person cache acquired");
         let observed = self.watch.latest()?;
         if observed.profile_id.as_deref() != Some(profile_id)
             || observed.status.state != Presence::Present
@@ -326,6 +327,7 @@ impl SignIn {
                 return Ok(held);
             }
         }
+        log::debug!("person restoring stored sign-in");
         let mut person = self
             .restoration
             .lock()
@@ -334,14 +336,19 @@ impl SignIn {
                 self.resume(profile_id).inspect_err(|failure| {
                     // This real attempt is logged once; returning its cached refusal
                     // to later status readers must not create a diagnostic storm.
-                    self.diagnostics.failure(failure.error.clone());
+                    self.diagnostics.failure((*failure.error).clone());
                 })
             })?;
-        if self.watch.latest()? != observed {
-            return Err(
-                failure(ErrorCode::SessionUnavailable).with_reason("person_observation_changed")
-            );
-        }
+        log::debug!("person stored sign-in restored");
+        let observed = restoration::observation_after_proof(
+            &observed,
+            || self.watch.latest(),
+            || {
+                person
+                    .exchange(serde_json::json!({"action": "status"}))
+                    .map(|_| ())
+            },
+        )?;
         let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
             return Err(closing());
@@ -558,7 +565,9 @@ impl SignIn {
         }
         loop {
             // Await only outside any mutation or person-cache lock.
+            log::debug!("sign-in awaiting fresh observation");
             let observed = self.watch.current().await?;
+            log::debug!("sign-in fresh observation read");
             if observed.status.state == Presence::Present
                 && observed.status.runtime_ready()
                 && let Some(profile_id) = observed.profile_id.clone()
@@ -567,6 +576,7 @@ impl SignIn {
                 // A runtime's stored presence alone does not grant this new
                 // desktop a session. Establish it before announcing usability.
                 let _ = super::blocking(move || Ok(owner.person(&profile_id))).await?;
+                log::debug!("sign-in person preparation settled");
             }
             match self.watch.latest() {
                 Ok(latest) if latest == observed => return Ok(self.shown(&observed)),
@@ -776,9 +786,11 @@ impl SignIn {
             .as_ref()
             .map_err(|error| restoration::Failed::unavailable(error.clone()))?;
         let recovery = self.recovery().map_err(restoration::Failed::unavailable)?;
+        log::debug!("person opening runtime connection");
         let connection = self
             .connect(waiting.deadline())
             .map_err(restoration::Failed::runtime)?;
+        log::debug!("person runtime connection opened");
         let pushed = connection.subscribe_scoped();
         let admitted = connection
             .resume_receipt(
@@ -788,6 +800,7 @@ impl SignIn {
                 waiting.deadline(),
             )
             .map_err(restoration::Failed::resume)?;
+        log::debug!("person receipt admitted");
         crate::agent::person::Person::native(connection, pushed, admitted, None, recovery)
             .map_err(restoration::Failed::unavailable)
     }

@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import type { LedgerPort } from "../../../shell/ledger";
+import { inLanguage } from "../../../shell/ledgerLanguage";
 import type { ActivityAssetListResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { RightPanel } from "../inspector/RightPanel";
@@ -51,7 +52,7 @@ function useAssetList(port: LedgerPort, reader: string | null) {
       const answer = await setupCall(
         port,
         "ledger.actividad-asset.list",
-        {},
+        inLanguage({}),
         false,
       );
       if (!active) return;
@@ -126,15 +127,6 @@ export function FixedAssetsPane({
   const offered = [...official, ...estimated];
   const year = chosenYear ?? loaded?.default_year ?? null;
   const row = rows.find((found) => found.asset_id === selected) ?? null;
-  // The names the list holds; an element not yet described has none, and is
-  // never said by its id.
-  const names = new Map(
-    rows.flatMap((found) =>
-      found.name !== null && found.name.trim() !== ""
-        ? [[found.asset_id, found.name] as const]
-        : [],
-    ),
-  );
 
   const form = () => {
     if (!request) return null;
@@ -283,7 +275,6 @@ export function FixedAssetsPane({
               locale={locale}
               year={year}
               assetKind={rows[0]?.asset_kind ?? null}
-              names={names}
             />
           </div>
         )}

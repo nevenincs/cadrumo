@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:16+0100\n"
+"POT-Creation-Date: 2026-11-03 19:37+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -148,16 +148,21 @@ msgstr ""
 #: ../../how-to/modelo-130.md:50
 msgid ""
 "With the two entries above, calculate reports cumulative income (box "
-"`01`) of `1000.00`, net income (box `03`) of `500.00` - income base minus"
-" expense base - and a payment instalment (box `04`) of `100.00`, 20 "
-"percent of the net."
+"`01`) of `1000.00`. Under simplified direct estimation, the provision for"
+" difficult-to-justify expenses is `25.00`: five percent of `1000.00 - "
+"500.00`, within the annual `2000.00` cap. Deductible expenses (box `02`) "
+"are `525.00`, net income (box `03`) is `475.00`, and the payment "
+"instalment (box `04`) is `95.00`, 20 percent of the net."
 msgstr ""
-"Con los dos apuntes anteriores, el cálculo informa de unos ingresos "
-"acumulados (casilla `01`) de `1000.00`, un rendimiento neto (casilla "
-"`03`) de `500.00` (base de ingresos menos base de gasto) y un pago "
-"fraccionado (casilla `04`) de `100.00`, el 20 por ciento del neto."
+"Con los dos apuntes anteriores, el cálculo muestra ingresos acumulados "
+"(casilla `01`) de `1000.00`. En estimación directa simplificada, la "
+"provisión para gastos de difícil justificación es `25.00`: el cinco por "
+"ciento de `1000.00 - 500.00`, dentro del límite anual de `2000.00`. Los "
+"gastos deducibles (casilla `02`) son `525.00`, el rendimiento neto "
+"(casilla `03`) es `475.00` y el pago fraccionado (casilla `04`) es "
+"`95.00`, el 20 por ciento del neto."
 
-#: ../../how-to/modelo-130.md:53
+#: ../../how-to/modelo-130.md:56
 msgid ""
 "`verify` reports `completeness complete` and `granted true`. `export` "
 "then writes the local fichero-BOE file and reports its checksum."
@@ -166,11 +171,11 @@ msgstr ""
 "escribe después el fichero local fichero-BOE e informa de su suma de "
 "comprobación."
 
-#: ../../how-to/modelo-130.md:56
+#: ../../how-to/modelo-130.md:59
 msgid "Before you create the draft"
 msgstr "Antes de crear el borrador"
 
-#: ../../how-to/modelo-130.md:58
+#: ../../how-to/modelo-130.md:61
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md). Modelo 130 applies to a"
 " profile with self-employed activity under estimación directa; check "
@@ -190,7 +195,7 @@ msgstr ""
 " fraccionado por esa actividad (art. 109 del Reglamento del IRPF). Las "
 "actividades agrícolas y forestales tienen su propia regla."
 
-#: ../../how-to/modelo-130.md:65
+#: ../../how-to/modelo-130.md:68
 msgid ""
 "[Plan your filing calendar](filing-calendar.md). Modelo 130 uses "
 "quarterly periods `1T` through `4T` only."
@@ -198,7 +203,7 @@ msgstr ""
 "[Planificar tu calendario de presentaciones](filing-calendar.md). El "
 "Modelo 130 usa solo los periodos trimestrales `1T` a `4T`."
 
-#: ../../how-to/modelo-130.md:67
+#: ../../how-to/modelo-130.md:70
 msgid ""
 "[Import or add your transactions](import-bank-statements.md), then "
 "[classify them](classify-transactions.md). Modelo 130 reads classified "
@@ -209,11 +214,11 @@ msgstr ""
 "clasificados de ingreso y gasto de la actividad; los gastos necesitan una"
 " categoría."
 
-#: ../../how-to/modelo-130.md:71
+#: ../../how-to/modelo-130.md:74
 msgid "What Modelo 130 calculates"
 msgstr "Qué calcula el Modelo 130"
 
-#: ../../how-to/modelo-130.md:73
+#: ../../how-to/modelo-130.md:76
 msgid ""
 "Modelo 130 calculates the quarter's IRPF payment on account from your "
 "activity's year-to-date figures: cumulative income (box `01`) minus "
@@ -237,7 +242,7 @@ msgstr ""
 " Un saldo negativo de la casilla `17` se arrastra como `saldo-negativo-"
 "fin-periodo` para los trimestres posteriores."
 
-#: ../../how-to/modelo-130.md:82
+#: ../../how-to/modelo-130.md:85
 msgid ""
 "Your records feed the cumulative income, expense, and withholding figures"
 " through the rules that fill each box; earlier filings feed the carries. "
@@ -254,11 +259,11 @@ msgstr ""
 "por vivienda habitual, resultados complementarios previos). Inspecciona "
 "qué casillas están rellenadas, cuáles faltan y cuáles son manuales:"
 
-#: ../../how-to/modelo-130.md:92
+#: ../../how-to/modelo-130.md:95
 msgid "Supply a manual box value"
 msgstr "Aporta el valor de una casilla manual"
 
-#: ../../how-to/modelo-130.md:94
+#: ../../how-to/modelo-130.md:97
 msgid ""
 "Box `06` (Retenciones e ingresos a cuenta) is a manual box: your records "
 "do not fill it, so you supply it by hand with `--casilla`. Pass it in the"
@@ -271,7 +276,7 @@ msgstr ""
 "primer periodo, y revisa después el cálculo guardado para confirmar que "
 "tu valor quedó registrado:"
 
-#: ../../how-to/modelo-130.md:103
+#: ../../how-to/modelo-130.md:106
 msgid ""
 "`--casilla` works only on `manual` boxes; a `bound` box filled from your "
 "records (like box `02`) refuses the override. Check a box's kind with "
@@ -286,11 +291,11 @@ msgstr ""
 "consulta [Revisa y aporta las entradas de cálculo](review-calculation-"
 "values.md) para el flujo de entrada completo."
 
-#: ../../how-to/modelo-130.md:109
+#: ../../how-to/modelo-130.md:112
 msgid "Each quarter is cumulative"
 msgstr "Cada trimestre es acumulativo"
 
-#: ../../how-to/modelo-130.md:111
+#: ../../how-to/modelo-130.md:114
 msgid ""
 "Modelo 130 is a year-to-date form, not a quarter-slice form. The second "
 "quarter's box `01` covers January through June, not April through June; "
@@ -303,7 +308,7 @@ msgstr ""
 "calcula sobre todo el año transcurrido, y los pagos fraccionados que ya "
 "realizaste se restan mediante la casilla `05`."
 
-#: ../../how-to/modelo-130.md:116
+#: ../../how-to/modelo-130.md:119
 msgid ""
 "Cadrumo does this by adding up your records from the start of the year "
 "(for `2T`, January 1 to June 30) and by reading your own earlier filed "
@@ -313,7 +318,7 @@ msgstr ""
 " `2T`, del 1 de enero al 30 de junio) y leyendo tus propios trimestres "
 "presentados anteriormente (`previous_filing`):"
 
-#: ../../how-to/modelo-130.md:120
+#: ../../how-to/modelo-130.md:123
 msgid ""
 "`modelo-130-pagos-fraccionados-anteriores` - the instalments already paid"
 " this year, from your recorded `1T`..`3T` filings."
@@ -321,7 +326,7 @@ msgstr ""
 "`modelo-130-pagos-fraccionados-anteriores`: los pagos fraccionados ya "
 "realizados este año, de tus presentaciones registradas `1T`..`3T`."
 
-#: ../../how-to/modelo-130.md:122
+#: ../../how-to/modelo-130.md:125
 msgid ""
 "`modelo-130-resultados-negativos-anteriores` - negative results carried "
 "from earlier quarters."
@@ -329,7 +334,7 @@ msgstr ""
 "`modelo-130-resultados-negativos-anteriores`: los resultados negativos "
 "arrastrados de trimestres anteriores."
 
-#: ../../how-to/modelo-130.md:124
+#: ../../how-to/modelo-130.md:127
 msgid ""
 "`irpf.previous_year_economic_activity_net_income` - last year's net "
 "income, which decides the minoración tier."
@@ -337,7 +342,7 @@ msgstr ""
 "`irpf.previous_year_economic_activity_net_income`: el rendimiento neto "
 "del año pasado, que decide el tramo de la minoración."
 
-#: ../../how-to/modelo-130.md:127
+#: ../../how-to/modelo-130.md:130
 msgid ""
 "For a first period these have no history, which is why the first-quarter "
 "chain passes them as `--binding ...=0`. For later quarters do NOT pass "
@@ -357,11 +362,11 @@ msgstr ""
 " [Conciliar un modelo presentado con tu justificante de la "
 "AEAT](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:136
+#: ../../how-to/modelo-130.md:139
 msgid "Calculate, review, check, record filing"
 msgstr "Calcula, revisa, comprueba, registra la presentación"
 
-#: ../../how-to/modelo-130.md:138
+#: ../../how-to/modelo-130.md:141
 msgid ""
 "The chain is the standard filing workflow - see [The filing workflow"
 "](filing-spine.md) for how declarations and earlier calculations behave. "
@@ -371,7 +376,7 @@ msgstr ""
 "presentación](filing-spine.md) para saber cómo se comportan las "
 "declaraciones y los cálculos anteriores. En resumen:"
 
-#: ../../how-to/modelo-130.md:146
+#: ../../how-to/modelo-130.md:149
 msgid ""
 "Once the draft passes the check, record the filing. The check refuses "
 "until every deductible-expense entry has its purchase invoice linked as a"
@@ -390,7 +395,7 @@ msgstr ""
 "comprobarlo, así que una factura adjuntada después no llega a la "
 "presentación."
 
-#: ../../how-to/modelo-130.md:153
+#: ../../how-to/modelo-130.md:156
 msgid ""
 "The following example exports the checked draft, then records the filing."
 " Export refuses to overwrite an existing file unless you add `--replace`,"
@@ -401,7 +406,7 @@ msgstr ""
 " salvo que añadas `--replace`, y se niega cuando la carpeta de salida no "
 "existe."
 
-#: ../../how-to/modelo-130.md:161
+#: ../../how-to/modelo-130.md:164
 msgid ""
 "Recording the filing applies only while the obligation window is open. It"
 " is an internal note that you have already presented the figures at the "
@@ -411,7 +416,7 @@ msgstr ""
 "obligación esté abierta. Es una nota interna de que ya has presentado las"
 " cifras en el portal."
 
-#: ../../how-to/modelo-130.md:164
+#: ../../how-to/modelo-130.md:167
 msgid ""
 "Each computed box carries its formula, legal references, and source "
 "references; show them with the saved-calculation view or [review the "
@@ -426,7 +431,7 @@ msgstr ""
 "(consulta [Conciliar un modelo presentado con tu justificante de la "
 "AEAT](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:170
+#: ../../how-to/modelo-130.md:173
 msgid ""
 "Modelo 130's quarterly results feed your annual Renta declaration: the "
 "four instalments are folded into Modelo 100 as payments on account. See "
@@ -437,27 +442,27 @@ msgstr ""
 "como pagos a cuenta. Consulta [Preparar la declaración anual de la Renta "
 "con el Modelo 100](modelo-100.md)."
 
-#: ../../how-to/modelo-130.md:174
+#: ../../how-to/modelo-130.md:177
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/modelo-130.md:176
+#: ../../how-to/modelo-130.md:179
 msgid "[The income-tax year (run-through)](irpf-lifecycle.md)"
 msgstr "[El año del IRPF (recorrido)](irpf-lifecycle.md)"
 
-#: ../../how-to/modelo-130.md:177
+#: ../../how-to/modelo-130.md:180
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flujo de presentación](filing-spine.md)"
 
-#: ../../how-to/modelo-130.md:178
+#: ../../how-to/modelo-130.md:181
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/modelo-130.md:179
+#: ../../how-to/modelo-130.md:182
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Presentar tu modelo en el portal de la AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-130.md:180
+#: ../../how-to/modelo-130.md:183
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr ""
 "[Conciliar un modelo presentado con tu justificante de la "

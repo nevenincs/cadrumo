@@ -38,7 +38,7 @@ Three registry-derivation questions are answered in many places with divergent p
 ## Constraints
 
 - Each landing is one atomic relocation commit: canonical site plus every consumer retarget plus facade export together, clean `--collect-only` before commit.
-- The official-box classifier is truthful on M720 and M100 2024+ only after the A-01/A-02 registry corrections land; those are plan preconditions, not part of this decision.
+- The official-box classifier is truthful on M720 and the later Modelo 100 editions only after the A-01/A-02 registry corrections land; those are plan preconditions, not part of this decision.
 - `CasillaProducerInventory` is a different grain and is left untouched.
 
 ## Implementation

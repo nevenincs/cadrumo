@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:37+0100\n"
+"POT-Creation-Date: 2026-11-03 20:04+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -167,18 +167,22 @@ msgid ""
 "`--casilla` works only on manual boxes. A `bound` box is filled "
 "automatically from its source, so `--casilla` refuses it with `cannot "
 "override bucket-derived source-bound casillas` (for example, Modelo 130 "
-"box `02` <span lang=\"es\">Gastos</span> is `bound`). Fix the source "
+"box `01` <span lang=\"es\">Ingresos</span> is `bound`). A `computed` box,"
+" such as Modelo 130 box `02` <span lang=\"es\">Gastos</span>, comes from "
+"a formula and cannot be supplied with `--casilla` either. Fix the source "
 "instead. See [Supply a missing field value](#supply-a-missing-field-"
 "value)."
 msgstr ""
 "A `--casilla` csak kézi rovatokon működik. Egy `bound` rovat "
 "automatikusan töltődik ki a forrásából, ezért a `--casilla` a `cannot "
 "override bucket-derived source-bound casillas` üzenettel utasítja el "
-"(például a Modelo 130 `02` <span lang=\"es\">Gastos</span> rovata "
-"`bound`). Helyette a forrást javítsd ki. Lásd: [Hiányzó mezőérték "
-"megadása](#supply-a-missing-field-value)."
+"(például a Modelo 130 `01` <span lang=\"es\">Ingresos</span> rovata "
+"`bound`). Egy `computed` rovat, például a Modelo 130 `02` <span "
+"lang=\"es\">Gastos</span> rovata képletből származik, ezért szintén nem "
+"adható meg a `--casilla` kapcsolóval. Helyette a forrást javítsd ki. "
+"Lásd: [Hiányzó mezőérték megadása](#supply-a-missing-field-value)."
 
-#: ../../how-to/review-calculation-values.md:69
+#: ../../how-to/review-calculation-values.md:71
 msgid ""
 "A first-period filing also needs its prior-period values supplied (record"
 " them as `0` when you have no prior figure). Supply the manual box and "
@@ -192,7 +196,7 @@ msgstr ""
 "beállítja a `06` rovatot (Retenciones e ingresos a cuenta, egy kézi "
 "rovat), és feltölti a három első időszakos értéket:"
 
-#: ../../how-to/review-calculation-values.md:77
+#: ../../how-to/review-calculation-values.md:79
 msgid ""
 "Do not enter a box value without checking the list first. Read the label "
 "so you know which field you are filling. If your value differs from the "
@@ -203,11 +207,11 @@ msgstr ""
 "amelyet a Cadrumo levezet, a számítás figyelmeztet, és megtartja az "
 "értékedet."
 
-#: ../../how-to/review-calculation-values.md:82
+#: ../../how-to/review-calculation-values.md:84
 msgid "Supply a missing field value"
 msgstr "Adj meg egy hiányzó mezőértéket"
 
-#: ../../how-to/review-calculation-values.md:84
+#: ../../how-to/review-calculation-values.md:86
 msgid ""
 "When Cadrumo cannot fill a field automatically, the field appears in the "
 "list of fields (`bindings list`). The `--missing` filter keeps the fields"
@@ -224,7 +228,7 @@ msgstr ""
 " az egyes `source` értékeket, hogy lásd, mely mezőkhöz kell tőled "
 "bemenet, majd add meg az értéket a számítás során."
 
-#: ../../how-to/review-calculation-values.md:90
+#: ../../how-to/review-calculation-values.md:92
 msgid ""
 "List every field of the modelo, keep only the fields still owed, preview "
 "what a value would produce without saving, then supply the first-period "
@@ -234,11 +238,11 @@ msgstr ""
 "nézd meg mentés nélkül, mit eredményezne egy érték, majd add meg az első "
 "időszakos értékeket a számítás során:"
 
-#: ../../how-to/review-calculation-values.md:99
+#: ../../how-to/review-calculation-values.md:101
 msgid "Where a field's value comes from"
 msgstr "Honnan jön egy mező értéke"
 
-#: ../../how-to/review-calculation-values.md:101
+#: ../../how-to/review-calculation-values.md:103
 msgid ""
 "The `bindings list` output shows, for each field, a `source` and a "
 "`readiness` label. The `source` tells you who supplies the value; the "
@@ -252,7 +256,7 @@ msgstr ""
 "`ledger data` vagy `prior filed declaration`). A `source` alapján döntsd "
 "el, hogyan add meg az értéket. A gyakori forráskategóriák:"
 
-#: ../../how-to/review-calculation-values.md:107
+#: ../../how-to/review-calculation-values.md:109
 msgid ""
 "**Profile fact** - Cadrumo fills it from your taxpayer profile, such as "
 "residence, declaration type, or family composition. Update your profile "
@@ -262,7 +266,7 @@ msgstr ""
 "lakóhelyből, bevallástípusból vagy családi összetételből. Az érték kézi "
 "megadása helyett frissítsd a profilod."
 
-#: ../../how-to/review-calculation-values.md:110
+#: ../../how-to/review-calculation-values.md:112
 msgid ""
 "**Records** (labelled `ledger data`) - Cadrumo computes it by summing "
 "your classified transactions and invoices. You cannot override these; fix"
@@ -272,7 +276,7 @@ msgstr ""
 "tranzakcióid és számláid összegzésével számítja ki. Ezeket nem írhatod "
 "felül; ehelyett javítsd ki a nyilvántartásaidat."
 
-#: ../../how-to/review-calculation-values.md:111
+#: ../../how-to/review-calculation-values.md:113
 msgid ""
 "**Earlier declaration** (labelled `prior filed declaration`) - carried "
 "forward from an earlier period you already recorded as filed in Cadrumo."
@@ -280,7 +284,7 @@ msgstr ""
 "**Korábbi bevallás** (címkéje: `prior filed declaration`): egy korábbi "
 "időszakból áthozva, amelyet már benyújtottként rögzítettél a Cadrumóban."
 
-#: ../../how-to/review-calculation-values.md:113
+#: ../../how-to/review-calculation-values.md:115
 msgid ""
 "**Relation input** - folded in from another modelo's earlier figures. "
 "Supply it with `--relation KEY=VALUE` only when the `bindings list` "
@@ -290,7 +294,7 @@ msgstr ""
 "beolvasztva. A `--relation KEY=VALUE` kapcsolóval csak akkor add meg, ha "
 "a `bindings list` kimenete megnevezi a relációt."
 
-#: ../../how-to/review-calculation-values.md:115
+#: ../../how-to/review-calculation-values.md:117
 msgid ""
 "**Manual input** - this kind always needs you to type a value, with "
 "`--binding KEY=VALUE`, or `--casilla` for a box."
@@ -299,7 +303,7 @@ msgstr ""
 "a `--binding KEY=VALUE` kapcsolóval, vagy egy rovatnál a `--casilla` "
 "kapcsolóval."
 
-#: ../../how-to/review-calculation-values.md:118
+#: ../../how-to/review-calculation-values.md:120
 msgid ""
 "This list, written for readers, is not the complete set of source kinds. "
 "Other modelos use additional kinds of source, including invoice, "
@@ -313,7 +317,7 @@ msgstr ""
 "feltételezd, hogy egy fel nem sorolt forrás kézi; nézd meg a kiválasztott"
 " nyomtatvány `bindings list` kimenetét."
 
-#: ../../how-to/review-calculation-values.md:123
+#: ../../how-to/review-calculation-values.md:125
 msgid ""
 "A manual field always needs a value you enter by hand. An **earlier "
 "declaration** field also needs one when there is no earlier filing yet to"
@@ -329,7 +333,7 @@ msgstr ""
 " származhatnak egy másik benyújtásból, vagy megkövetelhetik a "
 "`--relation` opciót, ahogy a `bindings list` kimenete megjelöli."
 
-#: ../../how-to/review-calculation-values.md:127
+#: ../../how-to/review-calculation-values.md:129
 msgid ""
 "If you are filing for the first time and a field asks for a prior-period "
 "figure you do not have, record it as zero, for example `--binding <field-"
@@ -341,11 +345,11 @@ msgstr ""
 "id>=0`. Valódi korábbi adatot csak akkor adj meg, ha előkészítetted a "
 "Cadrumón kívül."
 
-#: ../../how-to/review-calculation-values.md:131
+#: ../../how-to/review-calculation-values.md:133
 msgid "Régimen de atribución de rentas (members)"
 msgstr "Jövedelem-hozzárendelési rendszer (tagok)"
 
-#: ../../how-to/review-calculation-values.md:133
+#: ../../how-to/review-calculation-values.md:135
 msgid ""
 "If you are a <span lang=\"es\">socio</span>, <span "
 "lang=\"es\">comunero</span>, or <span lang=\"es\">partícipe</span> of an "
@@ -362,7 +366,7 @@ msgstr ""
 "bevallásod nem olvassa össze a profilok adatait, ezért a neked "
 "tulajdonított adóalapot kézzel add meg."
 
-#: ../../how-to/review-calculation-values.md:138
+#: ../../how-to/review-calculation-values.md:140
 msgid ""
 "Record the received share on your profile as `attribution_received` facts"
 " (entity NIF, entity name, share percentage, attributed base, and filing "
@@ -383,11 +387,11 @@ msgstr ""
 "üres, vagy van rovatérték, de nincs mögötte tény), így az elfelejtett "
 "átírás soha nem kerül csendben benyújtásra."
 
-#: ../../how-to/review-calculation-values.md:145
+#: ../../how-to/review-calculation-values.md:147
 msgid "Handle offsets and carry-forwards"
 msgstr "Beszámítások és áthozatok kezelése"
 
-#: ../../how-to/review-calculation-values.md:147
+#: ../../how-to/review-calculation-values.md:149
 msgid ""
 "Some modelos need prior-period values, credits, or compensation amounts. "
 "Do not guess these from your current transactions."
@@ -396,7 +400,7 @@ msgstr ""
 "kompenzációs összegekre van szükségük. Ne találgassa ezeket a jelenlegi "
 "tranzakcióiból."
 
-#: ../../how-to/review-calculation-values.md:149
+#: ../../how-to/review-calculation-values.md:151
 msgid ""
 "For Modelo 303 VAT compensation, inspect the local wallet, seed a first-"
 "period opening balance, then correct it if you seeded the wrong amount:"
@@ -405,7 +409,7 @@ msgstr ""
 "az első időszakos nyitó egyenleget, majd javítsd ki, ha rossz összeget "
 "vittél fel:"
 
-#: ../../how-to/review-calculation-values.md:156
+#: ../../how-to/review-calculation-values.md:158
 msgid ""
 "Use `--amount 0` only for a true first Modelo 303 period with no previous"
 " VAT compensation balance. Use a positive amount only when you have the "
@@ -418,7 +422,7 @@ msgstr ""
 "függő kompenzációs összeg, amelyet ezen a helyi előzményen kívül "
 "készítettél elő."
 
-#: ../../how-to/review-calculation-values.md:161
+#: ../../how-to/review-calculation-values.md:163
 #, python-brace-format
 msgid ""
 "Seeding refuses if a record already exists for the period. The correction"
@@ -438,7 +442,7 @@ msgstr ""
 "(lásd: {ref}`Helyesbíts egy már benyújtottként rögzített bevallást "
 "<correct-an-already-filed-local-record>`)."
 
-#: ../../how-to/review-calculation-values.md:167
+#: ../../how-to/review-calculation-values.md:169
 msgid ""
 "If your carry-in comes from proof held outside Cadrumo, `aeat app modelo "
 "iva-wallet override` records it with a `--reason` and an `--evidence-"
@@ -451,7 +455,7 @@ msgstr ""
 "feloldására szolgál, és nem teljesíti az ellenőrzés hivatalos igazolásra "
 "vonatkozó követelményét."
 
-#: ../../how-to/review-calculation-values.md:172
+#: ../../how-to/review-calculation-values.md:174
 msgid ""
 "For relation values, calculation accepts repeatable `--relation "
 "KEY=VALUE` inputs. Use them only when the `bindings list` output "
@@ -465,11 +469,11 @@ msgstr ""
 "előlegfizetéseinek megadása előtt munkaviszonyt és az egyszerűsített "
 "közvetlen becslési rend szerinti tevékenységet rögzít:"
 
-#: ../../how-to/review-calculation-values.md:182
+#: ../../how-to/review-calculation-values.md:184
 msgid "Add rows for list-based forms (184, 232, 349)"
 msgstr "Adj hozzá sorokat a listaalapú nyomtatványokhoz (184, 232, 349)"
 
-#: ../../how-to/review-calculation-values.md:184
+#: ../../how-to/review-calculation-values.md:186
 msgid ""
 "Some informational modelos report a list of records rather than one set "
 "of boxes: attribution members (Modelo 184), related-party operations "
@@ -481,7 +485,7 @@ msgstr ""
 "ügyleteit (Modelo 232) és közösségen belüli szereplőket (Modelo 349). "
 "Minden tételt ismételhető `--row` bemenetként adj meg."
 
-#: ../../how-to/review-calculation-values.md:189
+#: ../../how-to/review-calculation-values.md:191
 msgid ""
 "Each `--row` starts with the record type, followed by its fields. A "
 "modelo applies only to its matching taxpayer type. The example first sets"
@@ -496,7 +500,7 @@ msgstr ""
 "create` elutasít, hacsak meg nem adod az `--allow-not-applicable` "
 "kapcsolót:"
 
-#: ../../how-to/review-calculation-values.md:199
+#: ../../how-to/review-calculation-values.md:201
 msgid ""
 "Take the declaration id from the `work_unit_id` field that `work create` "
 "prints. For these multi-record modelos, pass the declaration id as the "
@@ -508,11 +512,11 @@ msgstr ""
 " argumentumként add át az azonosítót, ne az oldalon máshol használt "
 "`--modelo / --year / --period` kapcsolókkal."
 
-#: ../../how-to/review-calculation-values.md:202
+#: ../../how-to/review-calculation-values.md:204
 msgid "Use one of these record types:"
 msgstr "Használd az alábbi rekordtípusok egyikét:"
 
-#: ../../how-to/review-calculation-values.md:204
+#: ../../how-to/review-calculation-values.md:206
 msgid ""
 "`miembro` - an attribution member (Modelo 184). Each row names the income"
 " `clave` it attributes, such as `C` for <span lang=\"es\">rendimientos "
@@ -522,15 +526,15 @@ msgstr ""
 "általa hozzárendelt jövedelem `clave` kódját, például a `C` az "
 "ingatlanból származó tőkejövedelmet jelöli."
 
-#: ../../how-to/review-calculation-values.md:206
+#: ../../how-to/review-calculation-values.md:208
 msgid "`vinculada` - a related-party operation (Modelo 232)."
 msgstr "`vinculada`: egy kapcsolt ügylet (Modelo 232)."
 
-#: ../../how-to/review-calculation-values.md:207
+#: ../../how-to/review-calculation-values.md:209
 msgid "`operador` - an intra-community trader (Modelo 349)."
 msgstr "`operador`: egy közösségen belüli szereplő (Modelo 349)."
 
-#: ../../how-to/review-calculation-values.md:209
+#: ../../how-to/review-calculation-values.md:211
 msgid ""
 "Cadrumo validates each row against the modelo's rules and refuses an "
 "incomplete set:"
@@ -538,13 +542,13 @@ msgstr ""
 "A Cadrumo minden sort érvényesít a nyomtatvány szabályaival szemben, és "
 "elutasítja a hiányos készletet:"
 
-#: ../../how-to/review-calculation-values.md:212
+#: ../../how-to/review-calculation-values.md:214
 msgid "Modelo 184 - the members' `porcentaje` values must sum to 100."
 msgstr ""
 "Modelo 184: a tagok `porcentaje` értékeinek összegének 100-nak kell "
 "lennie."
 
-#: ../../how-to/review-calculation-values.md:213
+#: ../../how-to/review-calculation-values.md:215
 msgid ""
 "Modelo 349 - the trader's intra-community NIF must match its country "
 "format."
@@ -552,7 +556,7 @@ msgstr ""
 "Modelo 349: a szereplő közösségen belüli NIF-jének meg kell egyeznie az "
 "országformátumával."
 
-#: ../../how-to/review-calculation-values.md:215
+#: ../../how-to/review-calculation-values.md:217
 msgid ""
 "The saved rows appear in the calculation output as `detail_row` lines. "
 "Check them to confirm what was recorded."
@@ -560,7 +564,7 @@ msgstr ""
 "A mentett sorok a számítás kimenetében `detail_row` sorokként jelennek "
 "meg. Ellenőrizd őket, hogy megbizonyosodj róla, mi lett rögzítve."
 
-#: ../../how-to/review-calculation-values.md:218
+#: ../../how-to/review-calculation-values.md:220
 msgid ""
 "Direct `--row` support is only one way repeating data can reach a "
 "calculation. Modelo 347 counterparty records come from the invoices you "
@@ -577,11 +581,11 @@ msgstr ""
 "közvetlen `--row` listán. Ne tekintsd a közvetlen sorparancs hiányát "
 "hiányzó forrásnak."
 
-#: ../../how-to/review-calculation-values.md:224
+#: ../../how-to/review-calculation-values.md:226
 msgid "Special calculation tools (IRPF comparison and exemptions)"
 msgstr "Különleges számítási eszközök (IRPF-összehasonlítás és mentességek)"
 
-#: ../../how-to/review-calculation-values.md:226
+#: ../../how-to/review-calculation-values.md:228
 msgid ""
 "For specialized calculations, the CLI provides evaluation and comparison "
 "commands:"
@@ -589,7 +593,7 @@ msgstr ""
 "Speciális számításokhoz a CLI értékelő és összehasonlító parancsokat "
 "kínál:"
 
-#: ../../how-to/review-calculation-values.md:228
+#: ../../how-to/review-calculation-values.md:230
 msgid ""
 "**Joint vs. individual Impuesto sobre la Renta de las Personas Físicas "
 "(IRPF) comparison (`compare-taxation`)**: Compare filing jointly as a "
@@ -607,7 +611,7 @@ msgstr ""
 "hozd létre a Modelo 100 piszkozatát, különben a parancs a `No active work"
 " unit matches this modelo, year, and period` üzenettel elutasít:"
 
-#: ../../how-to/review-calculation-values.md:244
+#: ../../how-to/review-calculation-values.md:246
 msgid ""
 "This check does not save a draft. It shows the tax difference and a "
 "recommendation. The individual figure reuses the family unit's combined "
@@ -623,7 +627,7 @@ msgstr ""
 "egy általa igényelt előző évi adat, például a negatív alap áthozata, és "
 "nincs hozzá `--binding` kapcsoló."
 
-#: ../../how-to/review-calculation-values.md:251
+#: ../../how-to/review-calculation-values.md:253
 msgid ""
 "**Maritime worker exemption preview (`preview-maritime-exemption`)**: "
 "Preview the IRPF exemption for maritime workers (Art. 7.p LIRPF or the "
@@ -635,7 +639,7 @@ msgstr ""
 "cikke, vagy a Kanári-szigeteki Hajók és Hajózási Társaságok Különleges "
 "Nyilvántartása (REBECA) alapján járó 50 százalékos mentesség):"
 
-#: ../../how-to/review-calculation-values.md:259
+#: ../../how-to/review-calculation-values.md:261
 msgid ""
 "The command shows which tax boxes are affected by the exemption and the "
 "amounts, with references to the applicable law and the Régimen Especial "
@@ -648,11 +652,11 @@ msgstr ""
 "hivatkozásokkal. Ez csak a tengerészeti dolgozókra vonatkozik. A legtöbb "
 "bevalló kihagyhatja ezt a szakaszt."
 
-#: ../../how-to/review-calculation-values.md:265
+#: ../../how-to/review-calculation-values.md:267
 msgid "Correct a declaration already recorded as filed"
 msgstr "Helyesbíts egy már benyújtottként rögzített bevallást"
 
-#: ../../how-to/review-calculation-values.md:267
+#: ../../how-to/review-calculation-values.md:269
 msgid ""
 "If a filing was already made at AEAT and later needs correction, use the "
 "correction command. Do not recalculate the same period. That would not "
@@ -662,7 +666,7 @@ msgstr ""
 "szorul, használd a helyesbítési parancsot. Ne számítsd újra ugyanazt az "
 "időszakot. Az nem hozná létre a megfelelő kiegészítő bevallás bejegyzést:"
 
-#: ../../how-to/review-calculation-values.md:274
+#: ../../how-to/review-calculation-values.md:276
 #, python-brace-format
 msgid ""
 "The correction starts from a filing record that carries an imported AEAT "
@@ -680,32 +684,32 @@ msgstr ""
 "igazolás), majd add át az azonosítóját a `--from-filing-record` "
 "kapcsolónak. A helyesbítési parancs nem nyújt be semmit az AEAT-nál."
 
-#: ../../how-to/review-calculation-values.md:280
+#: ../../how-to/review-calculation-values.md:282
 msgid "Where to go next"
 msgstr "Merre tovább"
 
-#: ../../how-to/review-calculation-values.md:282
+#: ../../how-to/review-calculation-values.md:284
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Gyorsindító: nyomtatvány-benyújtás előkészítése](quickstart.md)"
 
-#: ../../how-to/review-calculation-values.md:283
+#: ../../how-to/review-calculation-values.md:285
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/review-calculation-values.md:284
+#: ../../how-to/review-calculation-values.md:286
 msgid "[Prepare a Modelo 303 VAT filing](modelo-303.md)"
 msgstr "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md)"
 
-#: ../../how-to/review-calculation-values.md:285
+#: ../../how-to/review-calculation-values.md:287
 msgid "[Prepare the annual Modelo 390 VAT summary](modelo-390.md)"
 msgstr "[Az éves Modelo 390 IVA-összesítő előkészítése](modelo-390.md)"
 
-#: ../../how-to/review-calculation-values.md:286
+#: ../../how-to/review-calculation-values.md:288
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr ""
 "[Számítások áttekintése Google Sheets segítségével](review-with-google-"
 "sheets.md)"
 
-#: ../../how-to/review-calculation-values.md:287
+#: ../../how-to/review-calculation-values.md:289
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"

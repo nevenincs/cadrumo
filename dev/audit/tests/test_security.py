@@ -1,8 +1,8 @@
-"""Security report shape and parsing over synthetic-free, real captured output.
+"""Security report shape and parsing over captured and boundary-case output.
 
 In-process checks only: the parser reads a real captured semgrep ``--json``
-payload (trimmed from an actual scoped run against ``src/cadrumo/core``, not
-synthesised), and the typed result/renderer are exercised directly. Split
+payload (trimmed from an actual scoped run against ``src/cadrumo/core``),
+boundary payloads, and the typed result/renderer directly. Split
 from the live-scan half so each module carries one execution lane -- the gate
 that actually runs semgrep over the tree lives in ``test_security_scan``.
 """
@@ -18,6 +18,7 @@ from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT, TEMP_ROOT
 from dev.first_party_source import SOURCE_PACKAGES
 
+from .. import security
 from ..security import (
     _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
     SecurityOutcome,
@@ -219,6 +220,70 @@ def test_zero_findings_over_real_scanned_files_is_green() -> None:
     assert result.outcome is SecurityOutcome.OBSERVED_ZERO
     assert result.is_green is True
     assert result.files_scanned == 1
+
+
+@pytest.mark.parametrize("error_count", (1, 6))
+def test_zero_findings_with_parse_errors_has_incomplete_coverage(error_count: int) -> None:
+    errors = [{"path": f"src/unparsed{i}.py", "message": "Syntax error"} for i in range(error_count)]
+    raw = json.dumps({"results": [], "errors": errors, "paths": {"scanned": ["src/parsed.py"]}})
+
+    result = classify_semgrep_output(raw)
+
+    assert result.outcome.value == "incomplete"
+    assert result.is_green is False
+    assert result.files_scanned == 1
+    assert result.findings == ()
+    assert result.parse_errors == tuple(f"src/unparsed{i}.py: Syntax error" for i in range(error_count))
+    assert result.raw_json == raw
+    assert "incomplete coverage" in result.headline()
+    assert all(error in render_console_report(result, full=True) for error in result.parse_errors)
+
+
+def test_observed_zero_rejects_parse_errors() -> None:
+    with pytest.raises(ValueError, match="observed_zero"):
+        SecurityResult.observed_zero(1, ("src/unparsed.py: Syntax error",), "{}")
+
+
+@pytest.mark.parametrize("files_scanned,parse_errors", ((0, ("Syntax error",)), (-1, ("Syntax error",)), (1, ())))
+def test_incomplete_requires_measured_files_and_parse_errors(files_scanned: int, parse_errors: tuple[str, ...]) -> None:
+    with pytest.raises(ValueError, match="incomplete"):
+        SecurityResult.incomplete(files_scanned, parse_errors, "{}")
+
+
+@pytest.mark.parametrize(
+    "result",
+    (
+        SecurityResult(SecurityOutcome.OBSERVED_ZERO),
+        SecurityResult(SecurityOutcome.OBSERVED_ZERO, files_scanned=-1),
+        SecurityResult(SecurityOutcome.OBSERVED_ZERO, files_scanned=1, parse_errors=("Syntax error",)),
+        SecurityResult(
+            SecurityOutcome.OBSERVED_ZERO,
+            files_scanned=1,
+            findings=classify_semgrep_output(_CAPTURED_JSON).findings,
+        ),
+    ),
+)
+def test_direct_construction_cannot_earn_green_without_clean_evidence(result: SecurityResult) -> None:
+    assert result.is_green is False
+
+
+@pytest.mark.parametrize("state", ("clean", "incomplete", "findings", "unavailable"))
+def test_standalone_exit_distinguishes_available_data_from_unavailable(
+    state: str, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    errors = [{"path": "src/unparsed.py", "message": "Syntax error"}] if state == "incomplete" else []
+    raw = json.dumps({"results": [], "errors": errors, "paths": {"scanned": ["src/parsed.py"]}})
+    result = classify_semgrep_output(_CAPTURED_JSON if state == "findings" else raw)
+    if state == "unavailable":
+        result = SecurityResult.unavailable("scanner missing")
+    monkeypatch.setattr(security, "run_security_scan", lambda _root: result)
+    monkeypatch.setattr("sys.argv", ["audit-code-security", "--json"])
+
+    assert security.main() == (7 if state == "unavailable" else 0)
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["files_scanned"] == result.files_scanned
+    assert payload["parse_errors"] == list(result.parse_errors)
+    assert payload["outcome"] == result.outcome.value
 
 
 def test_from_findings_rejects_an_empty_tuple() -> None:

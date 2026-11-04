@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:16+0100\n"
+"POT-Creation-Date: 2026-11-03 19:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -322,18 +322,25 @@ msgid ""
 "first filing they are all zero, supplied by you so the calculation has no"
 " missing inputs. The tool fills the boxes from your records: box `01` is "
 "the quarter's income (`1000`, the taxable base, since VAT is never part "
-"of your income), box `03` the net yield (`500.00`), and box `04` the "
-"instalment (`100.00`, twenty percent of the net)."
+"of your income), box `02` the deductible expenses (`525.00`, including "
+"the simplified modality's `25.00` provision for difficult-to-justify "
+"expenses), box `03` the net yield (`475.00`), and box `04` the instalment"
+" (`95.00`, twenty percent of the net). The provision is five percent of "
+"`1000.00 - 500.00`, within the annual `2000.00` cap."
 msgstr ""
 "Calcula els valors. El Modelo 130 necessita tres xifres de període "
 "anterior; per a una primera presentació totes són zero, que aportes tu "
 "perquè al càlcul no li falti cap entrada. L'eina omple les caselles a "
 "partir dels teus registres: la casella `01` són els ingressos del "
 "trimestre (`1000`, la base imposable, ja que l'IVA mai no forma part dels"
-" teus ingressos), la casella `03` el rendiment net (`500.00`) i la "
-"casella `04` el pagament fraccionat (`100.00`, el vint per cent del net)."
+" teus ingressos), la casella `02` les despeses deduïbles (`525.00`, "
+"inclosa la provisió de `25.00` per a despeses de difícil justificació de "
+"la modalitat simplificada), la casella `03` el rendiment net (`475.00`) i"
+" la casella `04` el pagament fraccionat (`95.00`, el vint per cent del "
+"net). La provisió és el cinc per cent de `1000.00 - 500.00`, dins del "
+"límit anual de `2000.00`."
 
-#: ../../how-to/quickstart.md:155
+#: ../../how-to/quickstart.md:158
 msgid ""
 "Check the draft. The check is local. It does not send anything to AEAT. "
 "When the draft is complete the report reads `completeness_status "
@@ -349,11 +356,11 @@ msgstr ""
 "100 anterior s'ha deixat de banda perquè la teva activitat va començar el"
 " 2026. L'altre indica que la fila d'ingressos no té cap justificant."
 
-#: ../../how-to/quickstart.md:157
+#: ../../how-to/quickstart.md:160
 msgid "Review every saved box with:"
 msgstr "Revisa cada casella desada amb:"
 
-#: ../../how-to/quickstart.md:163
+#: ../../how-to/quickstart.md:166
 msgid ""
 "If a value is missing or a modelo needs a value you must enter by hand, "
 "see [Review and supply calculation inputs](review-calculation-values.md)."
@@ -368,15 +375,15 @@ msgstr ""
 "saber com organitza l'eina la feina de presentació entre bastidors, "
 "consulta [El flux de treball de presentació](filing-spine.md)."
 
-#: ../../how-to/quickstart.md:170
+#: ../../how-to/quickstart.md:173
 msgid "5. Export the checked draft"
 msgstr "5. Exporta l'esborrany comprovat"
 
-#: ../../how-to/quickstart.md:172
+#: ../../how-to/quickstart.md:175
 msgid "Export the checked Modelo 130 fichero-BOE file:"
 msgstr "Exporta el fichero-BOE del Modelo 130 comprovat:"
 
-#: ../../how-to/quickstart.md:178
+#: ../../how-to/quickstart.md:181
 msgid ""
 "The exported file is a local file, not proof that AEAT accepted the "
 "return. Present it through the AEAT portal, as step 7 describes. Export "
@@ -389,7 +396,7 @@ msgstr ""
 "existent tret que afegeixis `--replace`. També es nega si el directori de"
 " sortida no existeix."
 
-#: ../../how-to/quickstart.md:180
+#: ../../how-to/quickstart.md:183
 msgid ""
 "Step 2 linked the purchase invoice before you calculated. The check "
 "refuses a deducted VAT row that carries no invoice (the message reads "
@@ -400,7 +407,7 @@ msgstr ""
 "missatge diu `Deductible IVA ledger rows require linked purchase invoice "
 "evidence`)."
 
-#: ../../how-to/quickstart.md:182
+#: ../../how-to/quickstart.md:185
 msgid ""
 "A draft collects its supporting documents when you check it, so an "
 "invoice attached afterwards does not reach a draft that is already "
@@ -414,11 +421,11 @@ msgstr ""
 "i [Prepara una presentació d'IVA del Modelo 303](modelo-303.md) expliquen"
 " tot el flux de justificants de cap a cap."
 
-#: ../../how-to/quickstart.md:184
+#: ../../how-to/quickstart.md:187
 msgid "6. Check what else is due (optional)"
 msgstr "6. Comprova què més venç (opcional)"
 
-#: ../../how-to/quickstart.md:186
+#: ../../how-to/quickstart.md:189
 msgid ""
 "Use the local calendar to see what may be due for the active profile. On "
 "a fresh profile, first declare that your income comes from an economic "
@@ -433,7 +440,7 @@ msgstr ""
 "s'omplin totes les dades del perfil. L'última ordre explica per què "
 "s'aplica el Modelo 130:"
 
-#: ../../how-to/quickstart.md:196
+#: ../../how-to/quickstart.md:199
 msgid ""
 "The calendar uses profile facts and local filing context. It does not "
 "replace AEAT's official portal. For the full calendar flow, see [Plan "
@@ -444,23 +451,23 @@ msgstr ""
 "del calendari, consulta [Planifica el teu calendari de presentacions"
 "](filing-calendar.md)."
 
-#: ../../how-to/quickstart.md:200
+#: ../../how-to/quickstart.md:203
 msgid "7. File manually through AEAT"
 msgstr "7. Presenta manualment a través de l'AEAT"
 
-#: ../../how-to/quickstart.md:202
+#: ../../how-to/quickstart.md:205
 msgid "The final filing step is outside `aeat`:"
 msgstr "El pas final de presentació és fora d'`aeat`:"
 
-#: ../../how-to/quickstart.md:204
+#: ../../how-to/quickstart.md:207
 msgid "Log in to the official AEAT electronic filing portal."
 msgstr "Inicia sessió al portal oficial de presentació electrònica de l'AEAT."
 
-#: ../../how-to/quickstart.md:205
+#: ../../how-to/quickstart.md:208
 msgid "Open the Modelo 130 form for the relevant year and period."
 msgstr "Obre el Modelo 130 de l'any i el període corresponents."
 
-#: ../../how-to/quickstart.md:206
+#: ../../how-to/quickstart.md:209
 msgid ""
 "Enter the box values the calculation produced. The step below reads them "
 "back before it records the filing."
@@ -468,7 +475,7 @@ msgstr ""
 "Introdueix els valors de les caselles produïts pel càlcul. El pas següent"
 " els torna a llegir abans de registrar la presentació."
 
-#: ../../how-to/quickstart.md:207
+#: ../../how-to/quickstart.md:210
 msgid ""
 "Review, sign, and keep the AEAT receipt (justificante) that AEAT issues "
 "after filing."
@@ -476,7 +483,7 @@ msgstr ""
 "Revisa, signa i conserva el justificant de l'AEAT que aquesta emet "
 "després de presentar."
 
-#: ../../how-to/quickstart.md:210
+#: ../../how-to/quickstart.md:213
 msgid ""
 "The full handoff checklist is in [File your modelo at the AEAT portal"
 "](file-at-aeat.md)."
@@ -484,11 +491,11 @@ msgstr ""
 "La llista de comprovació completa del traspàs és a [Presenta el teu model"
 " al portal de l'AEAT](file-at-aeat.md)."
 
-#: ../../how-to/quickstart.md:213
+#: ../../how-to/quickstart.md:216
 msgid "After a real filing, record it as filed:"
 msgstr "Després d'una presentació real, registra-la com a presentada:"
 
-#: ../../how-to/quickstart.md:219
+#: ../../how-to/quickstart.md:222
 msgid ""
 "`work file` refuses a deducted VAT row whose invoice is not linked "
 "(`Deductible IVA ledger rows require linked purchase invoice evidence`). "
@@ -500,7 +507,7 @@ msgstr ""
 "L'esborrany comprovat al pas 4 ja porta la seva factura, de manera que la"
 " presentació es registra."
 
-#: ../../how-to/quickstart.md:221
+#: ../../how-to/quickstart.md:224
 msgid ""
 "This only records the action on your own computer. It does not contact "
 "AEAT. To compare your local record with the AEAT receipt, see [Reconcile "
@@ -511,11 +518,11 @@ msgstr ""
 "consulta [Concilia un model presentat amb el teu justificant de "
 "l'AEAT](reconcile.md)."
 
-#: ../../how-to/quickstart.md:224
+#: ../../how-to/quickstart.md:227
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/quickstart.md:226
+#: ../../how-to/quickstart.md:229
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) if profile facts are "
 "still incomplete."
@@ -523,7 +530,7 @@ msgstr ""
 "[Configura el teu perfil de contribuent](profile-setup.md) si les dades "
 "del perfil encara són incompletes."
 
-#: ../../how-to/quickstart.md:228
+#: ../../how-to/quickstart.md:231
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) when your "
 "records are not ready yet."
@@ -531,7 +538,7 @@ msgstr ""
 "[Importa i gestiona els moviments](import-bank-statements.md) quan els "
 "teus registres encara no estan a punt."
 
-#: ../../how-to/quickstart.md:230
+#: ../../how-to/quickstart.md:233
 msgid ""
 "[Classify transactions](classify-transactions.md) before calculating from"
 " imported rows."
@@ -539,7 +546,7 @@ msgstr ""
 "[Classifica els moviments](classify-transactions.md) abans de calcular a "
 "partir de files importades."
 
-#: ../../how-to/quickstart.md:232
+#: ../../how-to/quickstart.md:235
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md): understand the transaction-to-box pipeline."
@@ -548,7 +555,7 @@ msgstr ""
 "tributàries](../explanation/from-records-to-figures.md): entén el flux de"
 " moviment a casella."
 
-#: ../../how-to/quickstart.md:235
+#: ../../how-to/quickstart.md:238
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) when"
 " a modelo needs manual values, offsets, or a review of calculated values."
@@ -557,7 +564,7 @@ msgstr ""
 "un model necessita valors manuals, desplaçaments o una revisió dels "
 "valors calculats."
 
-#: ../../how-to/quickstart.md:237
+#: ../../how-to/quickstart.md:240
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) if a command "
 "stops or the local state looks wrong."

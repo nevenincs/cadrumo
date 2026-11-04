@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Literal, override
 
 import pytest
 
@@ -98,7 +98,7 @@ def _without_version(src: str) -> str:
 def flavor_sites(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
     """The fixture site built once per flavor with the default configuration."""
     return {
-        "web": built_site(tmp_path_factory.mktemp("web-flavor")),
+        "web": built_site(tmp_path_factory.mktemp("web-flavor"), CADRUMO_DOCS_FLAVOR="web"),
         "desktop": built_site(tmp_path_factory.mktemp("desktop-flavor"), CADRUMO_DOCS_FLAVOR="desktop"),
     }
 
@@ -133,6 +133,47 @@ def test_web_page_keeps_its_scripts(flavor_pages: dict[str, str]) -> None:
     """The published flavor still ships the scripts it did before, and no bridge."""
     sources = [_without_version(tag["src"]) for tag in _script_tags(flavor_pages["web"])]
     assert sources == _WEB_SCRIPTS
+
+
+@pytest.mark.parametrize("flavor", ["web", "desktop"])
+@pytest.mark.parametrize("reduced_motion", ["no-preference", "reduce"])
+def test_cross_document_transition_policy(
+    flavor_sites: dict[str, Path], flavor: str, reduced_motion: Literal["no-preference", "reduce"]
+) -> None:
+    """Loaded styles opt only the published, normal-motion pages into snapshot transitions."""
+    from playwright.sync_api import sync_playwright
+
+    with serve_directory(flavor_sites[flavor]) as (_, port), sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        try:
+            page = browser.new_page()
+            page.emulate_media(reduced_motion=reduced_motion)
+            page.goto(f"http://127.0.0.1:{port}/fixture.html", wait_until="load")
+            policies = page.evaluate(
+                """() => {
+                    const policies = [];
+                    function visit(rules) {
+                        for (const rule of rules) {
+                            if (rule instanceof CSSMediaRule) {
+                                if (matchMedia(rule.conditionText).matches) visit(rule.cssRules);
+                            } else if (rule instanceof CSSViewTransitionRule) {
+                                policies.push(rule.navigation);
+                            }
+                        }
+                    }
+                    for (const sheet of document.styleSheets) {
+                        if (!sheet.disabled && (!sheet.media.length || matchMedia(sheet.media.mediaText).matches)) {
+                            visit(sheet.cssRules);
+                        }
+                    }
+                    return policies;
+                }"""
+            )
+            assert policies, "the browser found no applicable view-transition rule in the loaded stylesheets"
+            expected = "auto" if flavor == "web" and reduced_motion == "no-preference" else "none"
+            assert policies[-1] == expected, policies
+        finally:
+            browser.close()
 
 
 @pytest.mark.parametrize("flavor", ["web", "desktop"])

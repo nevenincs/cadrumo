@@ -294,6 +294,17 @@ _SEEDERS = {
 }
 
 
+def _validate_formula_inputs(
+    snapshot: RegistrySnapshot, values: InputValues, bindings: dict[str, Decimal], numeric_binding_ids: set[str]
+) -> None:
+    known = {str(c.id) for c in snapshot.revision.casillas}
+    if not values.keys() <= known or not bindings.keys() <= numeric_binding_ids:
+        raise ValueError("demonstration assumptions no longer match the registry")
+    calculated = {str(c.id) for c in snapshot.revision.casillas if c.formula is not None}
+    if calculated & values.keys():
+        raise ValueError("demonstration inputs cannot override calculated casillas")
+
+
 def formula_inputs(snapshot: RegistrySnapshot, case: DemoCase) -> tuple[OperatorInputs, dict[str, Decimal]]:
     """Seed one registered result branch, retaining unknown unrelated inputs."""
     if case.result_casilla is None:
@@ -305,12 +316,7 @@ def formula_inputs(snapshot: RegistrySnapshot, case: DemoCase) -> tuple[Operator
     seed = _SEEDERS.get(case.modelo)
     if seed is not None:
         seed(snapshot, case, values, bindings, binding_ids)
-    known = {str(c.id) for c in snapshot.revision.casillas}
-    if not values.keys() <= known or not bindings.keys() <= binding_ids - text_ids:
-        raise ValueError("demonstration assumptions no longer match the registry")
-    calculated = {str(c.id) for c in snapshot.revision.casillas if c.formula is not None}
-    if calculated & values.keys():
-        raise ValueError("demonstration inputs cannot override calculated casillas")
+    _validate_formula_inputs(snapshot, values, bindings, binding_ids - text_ids)
     return OperatorInputs(
         values=tuple(OperatorInput(casilla_id=k, value=v) for k, v in sorted(values.items()))
     ), bindings

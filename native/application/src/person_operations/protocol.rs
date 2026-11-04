@@ -20,7 +20,7 @@ pub(super) const SUBJECT_REF_MAX_CHARS: usize = 256;
 pub(super) const ERROR_DETAIL_SCHEMA_ID: &str = "operation.error_detail";
 pub(super) const ERROR_DETAIL_SCHEMA_VERSION: u64 = 1;
 pub(super) const ERROR_DETAIL_SCHEMA_FINGERPRINT: &str =
-    "cf1bbc93defa151d2342c645c15d246c7c7a05ac21ab49feb8d53fd4f5f4de04";
+    "82c51a0033dc989dc6e55902ea5f89b1c2c9d44b45337296501171992dab2348";
 
 /// The runtime's transport refusals: it failed rather than denied, so the
 /// relay names none of them and answers `unavailable`.

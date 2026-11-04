@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-10-30'
-modified: '2026-10-31'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:17ce8f50aeb85ee7974d71b45b1a23165d7c942b4062698205d511953c438027'
+body_hash: 'sha256:13d60ba1dfb9f348420cb1a909e67b5a8b79b394a36abce069b052cd7440cc9d'
 related:
   - "[[2026-10-30-assets-core-amortization-law-and-form-placement-research]]"
   - "[[2026-10-30-assets-core-implementation-state-against-law-reference]]"
@@ -76,9 +76,9 @@ No minimum exists where no maximum period or fixed percentage does, including in
 | Fact | Destination | Standing |
 | --- | --- | --- |
 | Gain on transmission, non-property | 1654 to 0387, ahorro | Research; formula exists |
-| Gain on transmission, inmueble | 1843 to 1846, ahorro | Research; formula exists from 2022 |
-| Loss on transmission, non-property | 1639 to 0385, ahorro | Direct: 2025 dictionary; no afecto split exists |
-| Loss on transmission, inmueble | 1832 to 1844, ahorro | Direct: 2025 dictionary |
+| Gain on transmission, inmueble | 1843 to 1846, ahorro | Research; formula exists in the registry |
+| Loss on transmission, non-property | 1639 to 0385, ahorro | Direct: the edition's casilla dictionary; no afecto split exists |
+| Loss on transmission, inmueble | 1832 to 1844, ahorro | Direct: the edition's casilla dictionary |
 | Baja without transmission (theft, destruction, scrapping) | 0304 or 0305 to 0306 or 0307, general | Base direct in V2285-14; casilla derived from LIRPF arts. 45 and 46.b; scrapping by analogy |
 | DA 30 or DA 59 excess, estimación directa | 0179 | DA 30 by label; DA 59 derived from the manual heading |
 | DA 59 excess, módulos non-agrarian | 1478 | Derived from DA 59.2 and manual line 22058 |
@@ -107,7 +107,7 @@ The append-only record wins because the lifecycle contract already requires immu
 - A taxpayer with no claims still gets a lawful net value, and a smaller deduction never blocks a return.
 - A late baja changes an already-calculated year, so the calculation revision must consume the disposal revision ID or the drift gate of Step S09 will not see it.
 - Until clave 1626's meanings are found, rows that need it carry a blocking note. This is the known limit of the decision.
-- The manual example at part 1 line 36479 charges 486 for half of 2025, above the 482.01 day-count maximum, so the product gives 169,726.01 against the manual's 169,730. It serves only as an arithmetic oracle and that difference is expected.
+- The manual example at part 1 line 36479 charges 486 for half of the year, above the 482.01 day-count maximum, so the product gives 169,726.01 against the manual's 169,730. It serves only as an arithmetic oracle and that difference is expected.
 - Reconsider if a source fixes the counterfactual coefficient, the disposal-day convention, scrapping or clave 1626, or if the DYCTEA original of TEAC 01524/2017 differs from the reproduction.
 
 ## Amendment 2026-10-30, later

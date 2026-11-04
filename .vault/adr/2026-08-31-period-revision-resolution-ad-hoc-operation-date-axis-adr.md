@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#period-revision-resolution'
 date: '2026-08-31'
-modified: '2026-10-22'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3267be7289e38a261518737bd2e195a487a86aba9eb644c6da498e468ae3d59f'
+body_hash: 'sha256:59f7185a82074402bb02734c806ff24567e80a258f26b6fbba6cff3df0176c29'
 related:
   - "[[2026-06-10-period-revision-resolution-adr]]"
   - '[[2026-06-10-period-revision-resolution-research]]'
@@ -27,7 +27,7 @@ revision-selection axis for 308, on the premise that its period token carried no
   `aeat-dr-308-2009` admits `1T`-`4T`, and `aeat-dr-308-2011-july` admits `1T`-`4T`,
   `01`-`12` and `0A`. The July boundary falls between `2T` and `3T`.
 - `PeriodSelector.period_overrides` already partitions a split year by period, as
-  modelo 303 does for 2024.
+  modelo 303 does for its mid-year split.
 - `aeat-registry-authority-flow` requires `(modelo, filing_year, period)` to select
   exactly one revision.
 

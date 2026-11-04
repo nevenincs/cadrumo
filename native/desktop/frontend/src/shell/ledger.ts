@@ -29,6 +29,7 @@ import type {
   ActivityAssetCreateRequest,
   ActivityAssetDescribeRequest,
   ActivityAssetDisposalCalculateRequest,
+  ActivityAssetListRequest,
   ActivityAssetDisposalCalculateResult,
   ActivityAssetDisposeRequest,
   ActivityAssetFormOptionsRequest,
@@ -2421,7 +2422,7 @@ export interface LedgerRequests {
   "ledger.actividad-asset.create": ActivityAssetCreateRequest;
   "ledger.actividad-asset.inspect": ActivityAssetInspectRequest;
   "ledger.actividad-asset.correct": ActivityAssetCorrectRequest;
-  "ledger.actividad-asset.list": Record<string, never>;
+  "ledger.actividad-asset.list": ActivityAssetListRequest;
   "ledger.actividad-asset.plan": ActivityAssetPlanRequest;
   "ledger.actividad-asset.timeline": ActivityAssetTimelineRequest;
   "ledger.actividad-asset.form-options": ActivityAssetFormOptionsRequest;

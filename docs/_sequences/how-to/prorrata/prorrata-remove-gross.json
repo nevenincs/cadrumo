@@ -1,0 +1,79 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "prorrata",
+        "declare-gross",
+        "--ejercicio",
+        "2026",
+        "--period",
+        "1T",
+        "--amount",
+        "400.00",
+        "--evidence",
+        "operator-evidence:303-1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "prorrata",
+        "remove-gross",
+        "--ejercicio",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.prorrata.remove_gross",
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "count": 0,
+          "declaration": {
+            "declared_at": "2026-04-01T09:00:00+00:00",
+            "ejercicio": 2026,
+            "evidence_reference": "operator-evidence:303-1T",
+            "gross_cuota": "400.00",
+            "period": "1T",
+            "provenance": "operator_declared",
+            "sector_id": null
+          }
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "prorrata-remove-gross"
+}

@@ -405,26 +405,16 @@ export function ProrrataPane({
     reload();
   };
 
-  /** A refusal said in the words the backend served for it, else in the
-   * register's own reason, with what it accepts. */
+  /** A refusal said in the words the register served for it; null where it
+   * served none, which the call line says plainly. */
   const refusal = () => {
     const last = write.last;
     if (last?.kind !== "refused") return null;
-    const served = servedRefusalWords(last.detail);
-    if (served) return served;
-    const found = (last.detail as ProrrataMutationResult | null)?.refusal;
-    if (!found) return null;
-    const said = t(`desktop.ledger.prorrata.refusal.${found.reason}`);
-    return found.accepted_provenances.length
-      ? `${said} ${t("desktop.ledger.prorrata.accepted", {
-          provenances: listed(
-            t,
-            found.accepted_provenances.map((value) =>
-              tokenText(t, "prorrata.provenance", value),
-            ),
-          ),
-        })}`
-      : said;
+    return (
+      servedRefusalWords(
+        (last.detail as ProrrataMutationResult | null)?.refusal,
+      ) ?? servedRefusalWords(last.detail)
+    );
   };
   const percent = (value: { decimal: string } | null) =>
     value ? formatPercent(locale, value.decimal, { unit: "points" }) : "—";

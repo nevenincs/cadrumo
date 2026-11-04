@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cross-domain-continuity'
 date: '2026-07-11'
-modified: '2026-08-15'
-body_hash: 'sha256:46b474ee01f6e5700c66b7a0d2c47a7e2333315ddd228796dcc03a706d991525'
+modified: '2026-11-04'
+body_hash: 'sha256:71c1c71fcc62cfabcc75aabca07a3cd79430c15aad9b5d18566683c065e688e8'
 related:
   - "[[2026-07-11-cross-domain-continuity-research]]"
 ---
@@ -36,7 +36,7 @@ conditional preview, and a statutory assessment. These are different domain
 claims with different evidence thresholds; a Boolean on one recargo payload
 cannot make unproven primitives legally sufficient.
 
-The calendar rule remains independently useful. The post-2021 scale keeps the
+The calendar rule remains independently useful. The scale in force after the Ley 11/2021 reform keeps the
 exact twelve-month anniversary at 13 percent without interest and moves to the
 15-percent-plus-interest tail only on the following day. That rate boundary must
 not be weakened while the assessment boundary is tightened.

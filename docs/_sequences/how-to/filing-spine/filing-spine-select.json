@@ -228,7 +228,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "selected_revision_id",
-          "value": "a8d30151050062a8738602addc1ab9e6ea82d07acfa48ee3493a452fe6cd729e"
+          "value": "1288280509975c3d481198c3f382165e6b5fc32e0658195918f18a818a0ec045"
         }
       ],
       "envelope": null,
@@ -323,7 +323,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a8d30151050062a8738602addc1ab9e6ea82d07acfa48ee3493a452fe6cd729e",
+          "calculation_revision_id": "1288280509975c3d481198c3f382165e6b5fc32e0658195918f18a818a0ec045",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -925,7 +925,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+              "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             }
           ],
           "state": "borrador",
@@ -1053,7 +1053,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a8d30151050062a8738602addc1ab9e6ea82d07acfa48ee3493a452fe6cd729e",
+          "calculation_revision_id": "1288280509975c3d481198c3f382165e6b5fc32e0658195918f18a818a0ec045",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1655,7 +1655,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+              "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             }
           ],
           "state": "verificado_completo",
@@ -1707,7 +1707,7 @@
         "modelo",
         "work",
         "revision",
-        "a8d30151050062a8738602addc1ab9e6ea82d07acfa48ee3493a452fe6cd729e"
+        "1288280509975c3d481198c3f382165e6b5fc32e0658195918f18a818a0ec045"
       ],
       "captures": [],
       "envelope": {
@@ -1776,7 +1776,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a8d30151050062a8738602addc1ab9e6ea82d07acfa48ee3493a452fe6cd729e",
+          "calculation_revision_id": "1288280509975c3d481198c3f382165e6b5fc32e0658195918f18a818a0ec045",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -2378,7 +2378,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+              "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             }
           ],
           "state": "presentado",
@@ -2482,7 +2482,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a8d30151050062a8738602addc1ab9e6ea82d07acfa48ee3493a452fe6cd729e",
+          "calculation_revision_id": "1288280509975c3d481198c3f382165e6b5fc32e0658195918f18a818a0ec045",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -3084,7 +3084,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+              "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             }
           ],
           "state": "presentado",

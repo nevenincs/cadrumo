@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-10-29'
-body_hash: 'sha256:6955f45cb987008beac60fc6bcd9faca9ae8d97225c2635dc317014b5249a789'
+modified: '2026-11-04'
+body_hash: 'sha256:ba8220c3f4fceda42883e19c4c217cc6904d0bafc3fef0f07769b35f6b14a840'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
@@ -157,10 +157,10 @@ no nested fences. The grammar:
 Worked example, exactly as authored in a how-to page:
 
     ```{cli-sequence} modelo-303-first-quarter
-    :seed: autonomo-basic-2026
+    :seed: autonomo-basic
     :verify: Verify the calculation before exporting.
-    @setup aeat app ledger import --file fixtures/2026-1t-statement.csv
-    aeat app modelo create 303 --year 2026 --period 1T
+    @setup aeat app ledger import --file fixtures/first-quarter-statement.csv
+    aeat app modelo create 303 --year <year> --period 1T
     @capture work_unit_id result.work_unit_id
     aeat app modelo calculate {work_unit_id}
     @result aeat app modelo verify {work_unit_id}

@@ -87,4 +87,4 @@ from what remains impossible to claim. The schema and focused tests become more
 verbose, and future candidates must supply official comparison evidence rather
 than inheriting trust from a host or logo. M036 and M349 continue to test parser
 robustness but cannot count as current-form verification; M303 cannot count for
-2026.
+the current edition.

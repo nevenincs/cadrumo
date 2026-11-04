@@ -315,7 +315,7 @@ export function ClaimFlow({
               <span className="flex flex-col gap-1">
                 {nothingOpen.why}
                 <Remedy
-                  fieldKey={nothingOpen.remedyFieldKey}
+                  words={nothingOpen.remedyWords}
                   onCorrect={onCorrectElement}
                 />
               </span>

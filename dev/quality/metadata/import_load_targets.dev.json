@@ -84,6 +84,8 @@
         "dev.acceptance.income_tax.installed_tui_child",
         "dev.acceptance.income_tax.installed_tui_continuations",
         "dev.acceptance.income_tax.installed_tui_financial_child",
+        "dev.acceptance.income_tax.persona_journey",
+        "dev.acceptance.income_tax.personas",
         "dev.acceptance.income_tax.scenario",
         "dev.acceptance.income_tax.tui_checkbox",
         "dev.acceptance.income_tax.tui_continuation_evidence",

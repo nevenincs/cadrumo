@@ -59,6 +59,19 @@ int main(int argc, char **argv) {
     assert(cadrumo_platform_create(1, &ctx, NULL) == 2);
     assert(cadrumo_platform_path(NULL, 0, &path) == 2);
     assert(cadrumo_platform_create(1, &ctx, &error) == 0);
+    if (argc == 4 && strcmp(argv[1], "--expect-paths") == 0) {
+        for (uint32_t key = 0; key < 2; ++key) {
+            assert(cadrumo_platform_path(ctx, key, &path) == 0);
+            size_t length = (size_t)path.len;
+            while (length > 0 && (path.data[length - 1] == '/' || path.data[length - 1] == '\\')) --length;
+            if (length != strlen(argv[key + 2]) || memcmp(path.data, argv[key + 2], length) != 0) {
+                fprintf(stderr, "Path key %u: got %.*s, expected %s\n", key, (int)path.len, path.data, argv[key + 2]);
+            }
+            assert(length == strlen(argv[key + 2]));
+            assert(memcmp(path.data, argv[key + 2], length) == 0);
+            cadrumo_platform_release(&path);
+        }
+    }
     for (uint32_t key = 0; key < CADRUMO_PATH_KEYS; ++key) {
         assert(cadrumo_platform_path(ctx, key, &path) == 0);
         assert(path.data != NULL && path.len > 0);

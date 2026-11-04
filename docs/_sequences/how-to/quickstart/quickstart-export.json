@@ -140,6 +140,30 @@
     {
       "argv": [
         "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--irpf-estimation-regime",
+        "directa_simplificada",
+        "--irpf-activity-income-imputation-criterion",
+        "cobros_y_pagos",
+        "--irpf-activity-income-imputation-year",
+        "2026",
+        "--no-irpf-codigo-comercio-accounting"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
         "app",
         "modelo",
         "work",
@@ -264,11 +288,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "7f3e14e9ae36fb8f1d2f21493edec23a0323c9fe3c2fc72439c0b107961d1478",
+          "bucket_event_id": "63280c404722bc46cd5d6d120d2ab7f45f3aeb75fc674a4014da1d232e812c31",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "a78a0ebf2e34b80743ea783a8b041079d03048a6e11117e6c9ee824db247662b",
-          "file_sha256": "2f214c53d547645260dcf5747f4d57803e68cfeb3bf181e7312272deb70efe05",
+          "calculation_revision_id": "e7c4fbe890b038ccaacb6ebd5d8c0367d64fa3828ee4a619ebb106d1871982e9",
+          "file_sha256": "11865d95acd5eed9b4d35a6b945ef5d9eee77868c523efdb0fc4f934bd96f785",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": null,
@@ -288,7 +312,7 @@
             "election": "keep"
           },
           "refund_election": null,
-          "resolved_result_disposition": "N",
+          "resolved_result_disposition": "B",
           "software_identity_grade": "development_mock",
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },

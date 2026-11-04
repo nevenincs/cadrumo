@@ -738,14 +738,14 @@ fn cancellation_during_candidate_verification_propagates_through_both_fallbacks(
     let newest = fixture.version(&prefix, "2.0.0");
     let fallback = fixture.prefix("valid fallback prefix");
     fixture.version(&fallback, "1.0.0");
-    let payload = fs::File::create(newest.join("large.bin")).unwrap();
+    let member = fixture.contract.manager_member().unwrap();
+    let payload = fs::OpenOptions::new()
+        .write(true)
+        .open(member.under(&newest))
+        .unwrap();
     payload.set_len(512 * 1024 * 1024).unwrap();
-    fixture.amend(&newest, |value| {
-        value["files"]["large.bin"] = json!("00".repeat(32))
-    });
     let cancellation = Arc::new(Cancellation::default());
     let worker_token = cancellation.clone();
-    let member = fixture.contract.manager_member().unwrap();
     let image = member.under(&older);
     let fallback_entry = member.under(&fallback);
     let registered = RegistrationHints {
@@ -760,8 +760,9 @@ fn cancellation_during_candidate_verification_propagates_through_both_fallbacks(
             contract.discover_cancellable(&image, &registered, &worker_token)
         });
         ready.recv_timeout(Duration::from_secs(5)).unwrap();
-        // A large logical member adds verification work without writing payload
-        // bytes. This handshake precedes discover, so hashing entry is not
+        // Discovery verifies the manager image, not every package member. Extend
+        // that image without replacing its binary header to keep verification
+        // active. This handshake precedes discover, so hashing entry is not
         // independently observed. The reader unit test proves the exact chunk
         // boundary; this integration exercises both public fallback layers.
         thread::sleep(Duration::from_millis(20));

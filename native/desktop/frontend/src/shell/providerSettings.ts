@@ -48,9 +48,6 @@ export type ProviderSettingsRecord = {
 };
 
 export type ProviderSettingsAnswer = {
-  /** A development build, where a provider with no key uses the
-   * environment's. The host says which build it is. */
-  development: boolean;
   providers: ProviderSettingsRecord[];
   /** Canonical providers the agent declares usable from the GUI sign-in flow.
    * Missing means no provider supports it. */
@@ -162,7 +159,6 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
 
 export type ProviderSettingsView = {
   read: AgentRead<{
-    development: boolean;
     providers: ProviderStatus[];
     signInProviders: string[];
     signInMethods: Readonly<Record<string, readonly ProviderSignInMethod[]>>;
@@ -227,7 +223,6 @@ export function useProviderSettings(
         ? {
             kind: "ready",
             value: {
-              development: answer.value.development,
               providers: answer.value.providers.map(providerStatus),
               signInProviders: Array.isArray(answer.value.sign_in_providers)
                 ? [...new Set(answer.value.sign_in_providers)]

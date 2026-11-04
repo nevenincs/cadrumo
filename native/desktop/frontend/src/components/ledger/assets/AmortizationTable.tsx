@@ -9,13 +9,8 @@ import { useStrings } from "../../../shell/strings";
 import { Claims, Status, Days } from "./AmortizationClaims";
 import { Estimated, Figure } from "./AmortizationFigures";
 import { Hint, NotApplicable, NotKnown, Remedy } from "./AssetList";
-import { ASSET_KEYS, reasonText, tokenWord } from "./assetsWords";
-import {
-  absentText,
-  recordedMark,
-  isStatedZero,
-  NO_TABLE_MINIMUM,
-} from "./planWords";
+import { ASSET_KEYS, tokenWord } from "./assetsWords";
+import { absentText, recordedMark, isStatedZero } from "./planWords";
 
 export function AmortizationTable({
   locale,
@@ -215,7 +210,7 @@ export function AmortizationTable({
                       absent={absentText(t, planned)}
                       remedy={
                         <Remedy
-                          fieldKey={planned.absence_remedy_field_key}
+                          words={planned.absence_remedy_words}
                           onCorrect={onCorrectElement}
                         />
                       }
@@ -244,11 +239,11 @@ export function AmortizationTable({
                       locale={locale}
                       amount={planned.minimum_through}
                       why={
-                        reasonText(t, planned.minimum_reason_key) ??
+                        planned.minimum_reason_words ??
                         t(ASSET_KEYS.plan.minimum_missing)
                       }
                       mark={
-                        planned.minimum_reason_key === NO_TABLE_MINIMUM
+                        planned.minimum_has_no_table
                           ? "not_applicable"
                           : "not_known"
                       }

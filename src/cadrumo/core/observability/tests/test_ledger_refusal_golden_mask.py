@@ -1,4 +1,4 @@
-"""Finite invocation-id policy for the two registered ledger read refusals."""
+"""Finite invocation-id policy for registered read refusals."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _PAIRS = (
     ("ledger.view", "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX"),
     ("ledger.evidence.view", "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"),
+    ("config.google.status", "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"),
 )
 
 
@@ -68,6 +69,8 @@ def test_missing_invocation_id_remains_visible(command: str, code: str) -> None:
         ("ledger.evidence.view", "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX"),
         ("ledger.update", "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX"),
         ("ledger.evidence.view", "CONFLICT_RUNTIME_OPERATION_INVALID_FRAME"),
+        ("config.google.status", "REFUSED_GOOGLE_CONFIGURATION"),
+        ("config.google.login", "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"),
     ),
 )
 def test_other_command_or_code_keeps_its_invocation_id(command: str, code: str) -> None:

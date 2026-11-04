@@ -221,11 +221,16 @@ def test_packaged_contract_carries_no_development_tool_location(tmp_path: Path) 
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
     installed_bases = {candidate.variable for rule in STORAGE_ROOT.installed_defaults for candidate in rule.candidates}
     tool_names = _DEVELOPMENT_VARIABLES | (set(TOOL_STORAGE_LOCATIONS) - installed_bases)
-    assert not {name for name in tool_names if f'"{name}"' in generated}
+    for filename in ("contract.rs", "contract.json", "contract.h", "operational-settings.ts"):
+        projection = (tmp_path / filename).read_text(encoding="utf-8")
+        assert not {name for name in tool_names if f'"{name}"' in projection}, filename
     for retired in ("TOOL_CACHE_ENV", "TOOL_CACHE_DEFAULT", "STORAGE_ENV_ALLOWLIST", "STORAGE_ROOT_ENV"):
         assert f"pub const {retired}:" not in generated
     contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
-    assert "locations" not in contract and "settings" not in contract and "storage" not in contract
+    assert "locations" not in contract and "storage" not in contract
+    # Only declared operational defaults belong here, never developer tool locations.
+    assert contract["settings"] == {name: entry["default"] for name, entry in load(REPO_ROOT).settings.items()}
+    assert all(type(value) is int for value in contract["settings"].values())
 
 
 _ENVIRONMENT_NAME: re.Pattern[str] = re.compile(r"[A-Z][A-Z0-9_]+")

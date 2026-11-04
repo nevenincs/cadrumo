@@ -22,6 +22,24 @@ async function readCatalog(session, driver) {
   return answer;
 }
 
+// The real Tauri status collector is bounded too. A cold probe may still
+// answer busy after that collection; only that explicit read refusal is
+// safe to collect again. Transport failures and other refusals stay final.
+async function readProviderSettings(session, driver) {
+  const answer = await driver.wait(
+    async () => {
+      const reply = await session.call("provider_settings_status");
+      return !reply.ok && reply.error?.code === "busy" ? null : reply;
+    },
+    { timeout: 30000, what: "the provider settings read handshake" },
+  );
+  if (!answer.ok)
+    throw new Error(
+      `the provider settings were refused: ${answer.error?.code}`,
+    );
+  return answer;
+}
+
 /** Selection is acceptance-only: every identity and byte figure comes from the agent. */
 export function smallestLocalModels(catalog, settings) {
   const keyless = new Set(
@@ -92,14 +110,9 @@ export async function openLocalAi(driver) {
 
 /** Read real catalogue metadata, open the dropdown and list its smallest model. */
 export async function prepareSmallestModel({ session, driver }) {
-  const [catalog, settings] = await Promise.all([
-    readCatalog(session, driver),
-    session.call("provider_settings_status"),
-  ]);
-  if (!catalog.ok || !settings.ok)
-    throw new Error(
-      "the real model catalog or provider settings could not be read",
-    );
+  // The catalog handshake establishes service admission before dependent reads.
+  const catalog = await readCatalog(session, driver);
+  const settings = await readProviderSettings(session, driver);
   const selected = smallestLocalModels(catalog.value, settings.value);
   await openLocalAi(driver);
   await session.page
@@ -119,10 +132,8 @@ export async function prepareSmallestModel({ session, driver }) {
 export async function addCustomLocalModel({ session, driver, lane, model }) {
   await openLocalAi(driver);
   // LocalModels renders one form for each keyless lane, in catalogue order.
-  const settings = await session.call("provider_settings_status");
   const catalog = await readCatalog(session, driver);
-  if (!settings.ok || !catalog.ok)
-    throw new Error("local lane metadata could not be read");
+  const settings = await readProviderSettings(session, driver);
   const answer = catalog.value;
   const lanes =
     answer.kind === "declared" ? answer.catalog.providers : answer.providers;
@@ -607,6 +618,34 @@ export async function planPartsObservation(session, item) {
   }, item);
 }
 
+// An independent oracle for the authored 1024-byte display policy. Do not
+// import the UI formatter: this check must still catch a wrong rendered size.
+function expectedPlanSize(locale, bytes) {
+  if (bytes === null) return null;
+  if (!Number.isSafeInteger(bytes) || bytes < 0)
+    throw new Error("the plan did not provide a safe byte count");
+  const units = ["B", "KB", "MB", "GB"];
+  let value = bytes;
+  let index = 0;
+  for (;;) {
+    const places = index > 0 && value < 10 ? 1 : 0;
+    const factor = 10 ** places;
+    const rounded = Math.round(value * factor) / factor;
+    if (index < units.length - 1 && (value >= 1024 || rounded >= 1024)) {
+      value /= 1024;
+      index += 1;
+      continue;
+    }
+    const number = new Intl.NumberFormat(locale, {
+      numberingSystem: "latn",
+      useGrouping: "always",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: places,
+    }).format(rounded);
+    return `${number}\u00a0${units[index]}`;
+  }
+}
+
 export async function assertPlanSizes(session, snapshot) {
   const evidence = [];
   const locale = await session.shell(() => document.documentElement.lang);
@@ -616,28 +655,11 @@ export async function assertPlanSizes(session, snapshot) {
       .waitFor({ state: "visible", timeout: 30000 });
     const expected = run.review.entries
       .flatMap((entry) => entry.parts)
-      .map((part) => {
-        let value = part.download_bytes;
-        let index = 0;
-        const units = ["byte", "kilobyte", "megabyte", "gigabyte"];
-        while (value >= 1000 && index < units.length - 1) {
-          value /= 1000;
-          index += 1;
-        }
-        return {
-          part: part.part,
-          sizeBytes: part.download_bytes,
-          sizeText:
-            part.download_bytes === null
-              ? null
-              : new Intl.NumberFormat(locale, {
-                  style: "unit",
-                  unit: units[index],
-                  unitDisplay: "short",
-                  maximumFractionDigits: index > 0 && value < 10 ? 1 : 0,
-                }).format(value),
-        };
-      });
+      .map((part) => ({
+        part: part.part,
+        sizeBytes: part.download_bytes,
+        sizeText: expectedPlanSize(locale, part.download_bytes),
+      }));
     if (expected.length === 0) continue;
     const rendered = await planPartsObservation(session, run.item);
     const result = partSizesVerdict(expected, rendered);

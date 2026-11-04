@@ -52,6 +52,7 @@ _LAST_YEAR_NEEDING_COTIZACIONES: Final[int] = 2024
 _COTIZACIONES_BINDING: Final[str] = "renta-profile-cotizaciones-ss-madre"
 _ACTIVITY_CHAIN_CASILLAS: Final[tuple[str, ...]] = ("0171", "0180", "0218", "0220", "0224")
 _CREDIT_CASILLAS: Final[tuple[str, ...]] = ("0596", "0597", "0598", "0599", "0603", "0604", "0609")
+_ACTIVITY_INVENTORY: Final[str] = "actividad-servicios"
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,6 +209,67 @@ def _record_certificate(
     )
     if recorded.get("status") == "error":
         raise JourneyError(f"certificate record refused: {json.dumps(recorded.get('error'), default=str)[:900]}")
+
+
+def _record_no_existencias(cli: InstalledCli, *, directory: Path, year: int) -> None:
+    """Record that the persona's service activity held no existencias in the ejercicio.
+
+    The stock variation of casillas 0177 and 0182 is the difference between the existencias iniciales and
+    finales, and casilla 0181 the purchases of mercaderias (Manual practico de Renta 2025, parte 1, pp. 422
+    and 425). A service activity that holds no stock opens the book at zero, records no movement, and closes
+    it on its movements with the statement that shows it, so all three are zero on evidence, never by default.
+    """
+    cli.run(
+        (
+            "app",
+            "ledger",
+            "inventory",
+            "create",
+            _ACTIVITY_INVENTORY,
+            "--year",
+            str(year),
+            "--valuation-method",
+            "fifo",
+            "--opening-stock",
+            "0",
+        )
+    )
+    statement = directory / f"no-existencias-{year}.pdf"
+    statement.write_bytes(f"%PDF-1.4 synthetic statement: no existencias held in {year}".encode())
+    stored = command_result(cli.run(("app", "ledger", "inventory", "evidence-add", str(statement))))
+    reference = {"reference": str(stored["reference"])}
+    digest = str(stored["content_digest"])
+    facts = directory / f"no-existencias-{year}.json"
+    facts.write_text(
+        json.dumps(
+            {
+                "decision_id": f"no-existencias-{year}",
+                "authority": "movement_derived",
+                "reason": "The service activity held no existencias at any time in the ejercicio.",
+                "decision_evidence": [
+                    {"reference": reference, "role": "authority_reconciliation", "content_digest": digest}
+                ],
+                "prior_evidence": [{"reference": reference, "content_digest": digest}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    recorded = cli.run(
+        (
+            "app",
+            "ledger",
+            "inventory",
+            "closing-value-record",
+            _ACTIVITY_INVENTORY,
+            "--year",
+            str(year),
+            "--file",
+            str(facts),
+        ),
+        allow_error=True,
+    )
+    if recorded.get("status") == "error":
+        raise JourneyError(f"closing value refused: {json.dumps(recorded.get('error'), default=str)[:900]}")
 
 
 def _calculate_annual(
@@ -417,6 +479,7 @@ def run_employee_autonomo(
     )
     attest_no_withholding(cli, year=year, income_class="arrendamiento_inmueble_urbano_actividad")
     _carry_prior_year(cli, directory=directory, year=year)
+    _record_no_existencias(cli, directory=directory, year=year)
     ingest_income_fixture(cli, year=year, income=oracle.income, expenses=oracle.expenses)
     _record_certificate(cli, directory=directory, year=year, certificate=oracle.employer, income_class="trabajo")
     _quarters(cli, year=year, directory=directory, oracle=oracle)

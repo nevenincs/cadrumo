@@ -26,7 +26,7 @@ The previously shipped scalar activity-asset records, recorded annual amounts, r
 - Transaction-ledger amortization categories compete with asset-schedule ownership and cannot participate in a second aggregation path.
 - Finca amortization has a different legal regime, source grain, calculation contract, and filing destination.
 - The accepted connectivity architecture requires one resolver-owned authoritative source with explicit collision, absence, override, provenance, and persistence behavior; `2026-08-22-source-casilla-integration-adr`.
-- The grounding supports only the 2025 activity-amortization revision window.
+- The grounding supports only the activity-amortization revision window it examined; the amendment below widens the scope.
 
 - A writerless persisted slice and its self-tests do not establish product reachability or source authority; `2026-09-04-reachability-burndown-reference`.
 - The existing scalar records cannot be incrementally promoted into filing authority because their shape omits facts required by the accepted validation and destination contract; `2026-08-23-amortization-casilla-grounding-research`.
@@ -56,7 +56,7 @@ Use a complete, legally validated activity-asset schedule as the sole automated 
 
 ## Constraints
 
-- Scope is limited to 2025 Modelo 100 activity amortization.
+- Scope is limited to Modelo 100 activity amortization of the grounded revision window (widened by the amendment below).
 - Material assets produce casilla `0208`; intangible assets produce casilla `0227`.
 - Every scheduled asset must carry and validate its legal classification, amortization method, applicable coefficient, useful life, service window, accumulated amortization basis, and any claimed special election.
 - Missing, incomplete, internally inconsistent, or unreadable authoritative inputs fail closed; they never become zero, partial output, or caller-provided completion.
@@ -76,7 +76,7 @@ Use a complete, legally validated activity-asset schedule as the sole automated 
 
 Withdraw the existing scalar activity-asset and recorded-amortization slice in full, including its domain records, repositories, secure-storage declarations, public exposure, error registrations, and tests whose only purpose is to exercise that isolated slice. Do not leave aliases, readers, schema reservations, empty namespaces, or compatibility adapters behind. This withdrawal does not alter the separate finca amortization or bienes-inversión contracts.
 
-Introduce the accepted 2025 activity-asset authority only as an atomic end-to-end source. Its typed acquisition boundary must collect every fact required by the validated schedule; its governed legal parameters and computation must establish the deductible annual amount and material or intangible destination; and its secure persistence must retain the authoritative inputs and resulting provenance needed for replay and audit.
+Introduce the accepted activity-asset authority only as an atomic end-to-end source. Its typed acquisition boundary must collect every fact required by the validated schedule; its governed legal parameters and computation must establish the deductible annual amount and material or intangible destination; and its secure persistence must retain the authoritative inputs and resulting provenance needed for replay and audit.
 
 Enroll the source through the existing registry and calculation resolver architecture in the same delivery. The resolver exclusively owns casillas `0208` and `0227`, refuses incomplete schedules, caller overrides, and competing transaction-ledger amortization claims, and emits operator-visible diagnostics and authoritative provenance. No filing value or partial product surface exists until that complete path is executable.
 
@@ -90,7 +90,7 @@ Atomic delivery prevents persistence shape, public vocabulary, and synthetic rou
 
 ## Consequences
 
-- Casillas `0208` and `0227` gain one auditable automated authority for the grounded 2025 activity scope.
+- Casillas `0208` and `0227` gain one auditable automated authority for the grounded activity scope.
 - Material and intangible amortization cannot be conflated by an unclassified scalar entry.
 - Duplicate transaction declarations and caller overrides become hard, diagnosable refusals.
 - Partial schedules, unsupported revisions, unreadable records, and ungrounded elections remain manual or blocked rather than producing plausible but unsupported amounts.
@@ -107,7 +107,7 @@ Atomic delivery prevents persistence shape, public vocabulary, and synthetic rou
 
 Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research` and `2026-10-30-assets-core-implementation-state-against-law-reference`. The accepted body above is preserved; where it differs, this section governs.
 
-- Scope follows `2026-09-21-assets-core-lifecycle-contract-adr` as amended: every year of the registry support envelope, floor 2022, not 2025 alone.
+- Scope follows `2026-09-21-assets-core-lifecycle-contract-adr` as amended: every year of the registry support envelope, not only the year the grounding examined.
 - The activity-asset register is the only route to casillas `0208` and `0227`. This holds in every year, whether or not the register holds a claim for that year. Ledger categories whose destination is `0208` or `0227`, including the low-value and home-depreciation categories, route no deductible amount.
 - A ledger row in such a category is acquisition evidence. If the register owns it, it is withheld as today. If the register does not own it, the calculation carries a blocking note naming the row and the remedy, which is to register the element. It is never deducted, and it is never omitted with only an advisory.
 - Casilla `0227` receives its binding in every supported Modelo 100 revision. A destination the source owns without a binding is a defect of this decision, not an unsupported case.

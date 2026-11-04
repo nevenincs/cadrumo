@@ -250,26 +250,33 @@ mod tests {
 
     #[test]
     fn only_a_bundle_directly_in_an_applications_folder_is_installed() {
-        let payload = Path::new("Contents/Resources/app");
+        fn fixture_path(value: &str) -> PathBuf {
+            if cfg!(windows) && value.starts_with('/') {
+                PathBuf::from(format!("C:{value}"))
+            } else {
+                PathBuf::from(value)
+            }
+        }
+        let payload = &fixture_path("Contents/Resources/app");
         let applications = [
-            PathBuf::from("/Applications"),
-            PathBuf::from("/Users/u/Applications"),
+            fixture_path("/Applications"),
+            fixture_path("/Users/u/Applications"),
         ];
         assert_eq!(
             installed_bundle(
-                Path::new("/Applications/Cadrumo.app/Contents/Resources/app"),
+                &fixture_path("/Applications/Cadrumo.app/Contents/Resources/app"),
                 payload,
                 &applications
             ),
-            Some(PathBuf::from("/Applications/Cadrumo.app"))
+            Some(fixture_path("/Applications/Cadrumo.app"))
         );
         assert_eq!(
             installed_bundle(
-                Path::new("/Users/u/Applications/Cadrumo Preview.app/Contents/Resources/app"),
+                &fixture_path("/Users/u/Applications/Cadrumo Preview.app/Contents/Resources/app"),
                 payload,
                 &applications
             ),
-            Some(PathBuf::from("/Users/u/Applications/Cadrumo Preview.app"))
+            Some(fixture_path("/Users/u/Applications/Cadrumo Preview.app"))
         );
         for refused in [
             "/Users/u/build/macos-arm64/stage/Cadrumo.app/Contents/Resources/app",
@@ -281,15 +288,15 @@ mod tests {
             "/Contents/Resources/app",
         ] {
             assert_eq!(
-                installed_bundle(Path::new(refused), payload, &applications),
+                installed_bundle(&fixture_path(refused), payload, &applications),
                 None,
                 "{refused}"
             );
         }
-        let relative = [PathBuf::from("Applications")];
+        let relative = [fixture_path("Applications")];
         assert_eq!(
             installed_bundle(
-                Path::new("/Applications/Cadrumo.app/Contents/Resources/app"),
+                &fixture_path("/Applications/Cadrumo.app/Contents/Resources/app"),
                 payload,
                 &relative
             ),
@@ -297,8 +304,8 @@ mod tests {
         );
         assert_eq!(
             installed_bundle(
-                Path::new("/Applications/Cadrumo.app/Contents/Resources/app"),
-                Path::new(""),
+                &fixture_path("/Applications/Cadrumo.app/Contents/Resources/app"),
+                &fixture_path(""),
                 &applications
             ),
             None

@@ -46,7 +46,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Modelo\t130\nTitle\tIRPF instalment payment, direct assessment\nOfficial name\tPersonal Income Tax. Business activities under direct assessment. Instalment payment.\nTax domain\tirpf\nCadence\tquarterly\nRevision\t2019-y-siguientes\nRevision ids\t2019-y-siguientes\nPeriods\t1T, 2T, 3T, 4T\nCasillas\t20\nBox sources\t6\nFormulas\t12\n"
+      "text": "Modelo\t130\nTitle\tIRPF instalment payment, direct assessment\nOfficial name\tPersonal Income Tax. Business activities under direct assessment. Instalment payment.\nTax domain\tirpf\nCadence\tquarterly\nRevision\t2019-y-siguientes\nRevision ids\t2019-y-siguientes\nPeriods\t1T, 2T, 3T, 4T\nCasillas\t23\nBox sources\t9\nFormulas\t14\n"
     },
     {
       "argv": [
@@ -67,15 +67,15 @@
         "notices": [],
         "result": {
           "authority_grade": "filing",
-          "binding_count": 6,
-          "bound_casilla_count": 3,
+          "binding_count": 9,
+          "bound_casilla_count": 5,
           "cadence": "quarterly",
-          "casilla_count": 20,
+          "casilla_count": 23,
           "code": "130",
-          "computed_casilla_count": 12,
+          "computed_casilla_count": 14,
           "filing_period": null,
           "filing_year": null,
-          "formula_count": 12,
+          "formula_count": 14,
           "jurisdiction": "ES-AEAT",
           "legal_refs": [
             "rd-439-2007:art-110",
@@ -83,7 +83,7 @@
             "ley-35-2006:art-99",
             "rd-439-2007:art-95"
           ],
-          "manual_casilla_count": 5,
+          "manual_casilla_count": 4,
           "official_name": "Personal Income Tax. Business activities under direct assessment. Instalment payment.",
           "operation": "modelo.describe",
           "period": "1T",

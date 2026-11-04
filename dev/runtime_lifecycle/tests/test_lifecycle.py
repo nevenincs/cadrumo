@@ -5,6 +5,7 @@ from __future__ import annotations
 import secrets
 import statistics
 import time
+from collections.abc import Mapping, Sequence
 from uuid import uuid4
 
 import pytest
@@ -39,6 +40,18 @@ pytestmark = [
     pytest.mark.os_keychain,
     pytest.mark.external_tool,
 ]
+
+
+def _ready_replacement_pid(events: Sequence[Mapping[str, object]], retired_pid: int) -> int | None:
+    """Wait for the latest launched replacement's facts before authenticating its pipe."""
+    launched = [event["pid"] for event in events if event["kind"] == "launched" and event["pid"] != retired_pid]
+    if not launched:
+        return None
+    replacement = launched[-1]
+    assert isinstance(replacement, int) and not isinstance(replacement, bool) and replacement > 0
+    observed = {(event["kind"], event["pid"]) for event in events}
+    required = {("exited", retired_pid), ("ready", replacement), ("boot_confirmed", replacement)}
+    return replacement if required <= observed else None
 
 
 def test_login_logout_profile_switch_and_stale_receipt(harness: LifecycleHarness) -> None:
@@ -201,6 +214,7 @@ def test_manager_death_preserves_custody_and_successor_restores_verified_supervi
     live = harness.connect(profile.profile_id)
     live.client.login_password(bytearray(profile.password, "utf-8"), persist_receipt=True)
     boot, pid = live.wire.hello.boot_id, live.native.peer.process_id
+    assert pid is not None
     stale_session = live.client.session_id
     _read(live)
     harness.terminate_manager()
@@ -215,14 +229,14 @@ def test_manager_death_preserves_custody_and_successor_restores_verified_supervi
         time.sleep(0.05)
     # Adoption retains exact native custody, then drains the survivor because
     # its old manager's heartbeat channel cannot be recovered.
-    recovered = harness.connect(profile.profile_id, after_boot=boot)
-    assert recovered.native.peer.process_id != pid
-    while not all(
-        any(event["kind"] == kind and event["pid"] == recovered.native.peer.process_id for event in harness.events())
-        for kind in ("ready", "boot_confirmed")
-    ):
+    # Authenticating the survivor's pipe while it exits can correctly refuse an
+    # unverifiable peer. Await the replacement's native facts before connecting.
+    while (replacement_pid := _ready_replacement_pid(harness.events(), pid)) is None:
         assert time.monotonic() < deadline, "Replacement lacked verified readiness and restored control"
         time.sleep(0.05)
+    recovered = harness.connect(profile.profile_id, after_boot=boot)
+    assert recovered.native.peer.process_id == replacement_pid
+    assert recovered.native.peer.process_id != pid
     with pytest.raises(RefusalError) as stale:
         _private_request(live, stale_session)
     assert stale.value.reason in {

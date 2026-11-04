@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:53+0100\n"
+"POT-Creation-Date: 2026-11-03 19:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -199,22 +199,30 @@ msgstr ""
 #: ../../how-to/irpf-lifecycle.md:85
 #, python-brace-format
 msgid ""
-"The figures show the year so far: 1000 earned, 500 spent, and an "
-"instalment of 20 percent on the net. The net income in {term}`box "
-"<casilla>` `03` is 500.00, and the instalment in {term}`box <casilla>` "
-"`04` is 100.00. The low-income minoración in {term}`box <casilla>` `13` "
-"is 100.00 and absorbs the whole instalment, leaving a final result of "
-"0.00 in {term}`box <casilla>` `19`."
+"The figures show the year so far: 1000.00 earned and 500.00 spent. Under "
+"simplified direct estimation, the provision for difficult-to-justify "
+"expenses is 25.00: five percent of `1000.00 - 500.00`, within the annual "
+"2000.00 cap. Deductible expenses in {term}`box <casilla>` `02` are "
+"525.00, net income in {term}`box <casilla>` `03` is 475.00, and the "
+"instalment in {term}`box <casilla>` `04` is 95.00, twenty percent of the "
+"net. The low-income minoración in {term}`box <casilla>` `13` is 100.00, "
+"leaving -5.00 in boxes `14`, `17`, and `19`. No payment arises from this "
+"negative result; Cadrumo records 5.00 as `saldo-negativo-fin-periodo` for"
+" later quarters to deduct."
 msgstr ""
-"A számok az év addigi állását mutatják: 1000 bevétel, 500 kiadás és a "
-"nettó összeg 20 százalékának megfelelő előleg. A nettó jövedelem a "
-"{term}`rovat <casilla>` `03` mezőben 500.00, az előleg pedig a "
-"{term}`rovat <casilla>` `04` mezőben 100.00. Az alacsony jövedelem miatti"
-" csökkentés a {term}`rovat <casilla>` `13` mezőben 100.00, ami a teljes "
-"előleget elnyeli, így a végeredmény a {term}`rovat <casilla>` `19` "
-"mezőben 0.00."
+"Az adatok az év eddigi részét mutatják: 1000.00 bevétel és 500.00 kiadás."
+" Az egyszerűsített közvetlen becslés szerint nehezen igazolható "
+"költségként 25.00 számolható el: ez a `1000.00 - 500.00` öt százaléka, az"
+" éves 2000.00 korláton belül. A {term}`rovat <casilla>` `02` levonható "
+"kiadása 525.00, a {term}`rovat <casilla>` `03` nettó hozama 475.00, a "
+"{term}`rovat <casilla>` `04` előlege pedig 95.00, a nettó húsz százaléka."
+" A {term}`rovat <casilla>` `13` alacsony jövedelem miatti csökkentése "
+"100.00, így a `14`, `17` és `19` rovatban -5.00 marad. Ez a negatív "
+"eredmény nem keletkeztet fizetést; a Cadrumo 5.00 értéket rögzít a "
+"`saldo-negativo-fin-periodo` alatt, amely a későbbi negyedévekben "
+"levonható."
 
-#: ../../how-to/irpf-lifecycle.md:91
+#: ../../how-to/irpf-lifecycle.md:95
 msgid ""
 "The check reports `completeness_status complete` and "
 "`granted_verificado_completo true` (the sequence above asserts this). "
@@ -229,7 +237,7 @@ msgstr ""
 " adod meg a `--replace` kapcsolót; lásd: [A benyújtási munkafolyamat"
 "](filing-spine.md)."
 
-#: ../../how-to/irpf-lifecycle.md:97
+#: ../../how-to/irpf-lifecycle.md:101
 msgid ""
 "Enter the calculated figures at the AEAT portal (the checklist is [File "
 "your modelo at the AEAT portal](file-at-aeat.md)), then record the filing"
@@ -250,11 +258,11 @@ msgstr ""
 "paranccsal, hogy a hivatalos nyugta is bekerüljön a nyilvántartásba. "
 "Mindkét parancs a fenti lépéssor lezárásaként szerepel, futtatás nélkül."
 
-#: ../../how-to/irpf-lifecycle.md:106
+#: ../../how-to/irpf-lifecycle.md:110
 msgid "Stage 3: the second and third quarters"
 msgstr "3. szakasz: a második és a harmadik negyedév"
 
-#: ../../how-to/irpf-lifecycle.md:108
+#: ../../how-to/irpf-lifecycle.md:112
 msgid ""
 "The year continues; record each quarter's activity as it happens. For the"
 " second quarter, say Ana invoices twice and buys once. Register the "
@@ -274,11 +282,11 @@ msgstr ""
 "sorozat egy benyújtottként rögzített első negyedévből indul, majd "
 "végigviszi az egész második negyedévet az exportig:"
 
-#: ../../how-to/irpf-lifecycle.md:120
+#: ../../how-to/irpf-lifecycle.md:124
 msgid "Read the saved calculation and compare it with the first quarter's:"
 msgstr "Olvasd el a mentett számítást, és hasonlítsd össze az első negyedévével:"
 
-#: ../../how-to/irpf-lifecycle.md:122
+#: ../../how-to/irpf-lifecycle.md:126
 msgid ""
 "Box `01` (income) now covers January through June - the records used for "
 "`2T` are the year to date, not the quarter alone."
@@ -287,7 +295,7 @@ msgstr ""
 "a `2T` esetén figyelembe vett adatok az év elejétől halmozódnak, tehát "
 "nem csak a negyedévre vonatkoznak."
 
-#: ../../how-to/irpf-lifecycle.md:124
+#: ../../how-to/irpf-lifecycle.md:128
 msgid ""
 "Box `05` (pagos fraccionados anteriores) carries the instalment you paid "
 "in the first quarter, read from your own recorded filing."
@@ -296,13 +304,13 @@ msgstr ""
 "negyedévben befizetett előleget; az adat a saját, rögzített bevallásodból"
 " származik."
 
-#: ../../how-to/irpf-lifecycle.md:126
+#: ../../how-to/irpf-lifecycle.md:130
 msgid "If an earlier quarter had ended negative, box `15` would offset it here."
 msgstr ""
 "Ha egy korábbi negyedév negatívan zárult volna, a `15` rovat itt "
 "beszámítaná."
 
-#: ../../how-to/irpf-lifecycle.md:128
+#: ../../how-to/irpf-lifecycle.md:132
 msgid ""
 "If calculate blocks instead with an issue about an earlier period, the "
 "first quarter is not recorded as filed and backed by an AEAT receipt in "
@@ -317,7 +325,7 @@ msgstr ""
 "találja ki a hiányzó negyedévet; egy látható üres hely jobb, mint egy "
 "kitalált nulla."
 
-#: ../../how-to/irpf-lifecycle.md:133
+#: ../../how-to/irpf-lifecycle.md:137
 msgid ""
 "Record this quarter's filing with `aeat app modelo work file` once the "
 "July window opens. That command is shown as an example that is not run "
@@ -329,7 +337,7 @@ msgstr ""
 "példaként látható, mert a benyújtási időablakon kívül elutasít, utána "
 "pedig a `reconcile pull` következik."
 
-#: ../../how-to/irpf-lifecycle.md:137
+#: ../../how-to/irpf-lifecycle.md:141
 msgid ""
 "The third quarter is the same chain one period later, with `3T` in place "
 "of `2T` throughout. Every quarter after the first is this one rhythm."
@@ -337,11 +345,11 @@ msgstr ""
 "A harmadik negyedév ugyanaz a lánc egy időszakkal később, végig `3T`-vel "
 "a `2T` helyett. Az első utáni minden negyedév ugyanezt a ritmust követi."
 
-#: ../../how-to/irpf-lifecycle.md:140
+#: ../../how-to/irpf-lifecycle.md:144
 msgid "Stage 4: the fourth quarter closes the instalment year"
 msgstr "4. szakasz: a negyedik negyedév lezárja az előlegévet"
 
-#: ../../how-to/irpf-lifecycle.md:142
+#: ../../how-to/irpf-lifecycle.md:146
 msgid ""
 "Run the same chain for `4T` in January of the following year, the fourth "
 "quarter's filing window being January 1 to 30. After it is filed, Ana has"
@@ -354,15 +362,15 @@ msgstr ""
 "előlegfizetések, amelyeket az éves bevallás a teljes éves jövedelmével "
 "szemben számít majd el."
 
-#: ../../how-to/irpf-lifecycle.md:147
+#: ../../how-to/irpf-lifecycle.md:151
 msgid "Check the year's IRPF position at any point:"
 msgstr "Bármikor ellenőrizd az év IRPF-helyzetét:"
 
-#: ../../how-to/irpf-lifecycle.md:153
+#: ../../how-to/irpf-lifecycle.md:157
 msgid "Stage 5: the annual Renta declaration"
 msgstr "5. szakasz: az éves jövedelemadó-bevallás"
 
-#: ../../how-to/irpf-lifecycle.md:155
+#: ../../how-to/irpf-lifecycle.md:159
 msgid ""
 "The following spring, the annual Modelo 100 gathers the year. It is "
 "annual, so the period code is `0A`, and the filing year is the income "
@@ -372,7 +380,7 @@ msgstr ""
 "az időszakkód `0A`, és a benyújtási év a jövedelem éve - a 2026-os "
 "bevallást 2027-ben készítik elő és nyújtják be."
 
-#: ../../how-to/irpf-lifecycle.md:159
+#: ../../how-to/irpf-lifecycle.md:163
 msgid ""
 "Before creating it, confirm the year's records are clean. The preflight "
 "of your records for the annual period runs locally:"
@@ -381,7 +389,7 @@ msgstr ""
 " vannak. Az éves időszakra vonatkozó, a nyilvántartásaidat vizsgáló "
 "előellenőrzés helyben fut:"
 
-#: ../../how-to/irpf-lifecycle.md:166
+#: ../../how-to/irpf-lifecycle.md:170
 msgid ""
 "The rest of the annual chain uses the four instalments recorded as filed "
 "and the 2026 version of the Modelo 100, which is published for the 2027 "
@@ -409,7 +417,7 @@ msgstr ""
 "rovatokban adható meg; a szükséges rovatokat a `bindings list --missing` "
 "paranccsal találhatod meg:"
 
-#: ../../how-to/irpf-lifecycle.md:180
+#: ../../how-to/irpf-lifecycle.md:184
 msgid ""
 "How every value arrives, and how to trace any figure to its rule and its "
 "article of law, is the subject of [Deep dive: how the Renta declaration "
@@ -420,11 +428,11 @@ msgstr ""
 "a jövedelemadó-bevallás](../explanation/how-renta-is-assembled.md) oldal "
 "tárgyalja."
 
-#: ../../how-to/irpf-lifecycle.md:184
+#: ../../how-to/irpf-lifecycle.md:188
 msgid "What you completed"
 msgstr "Amit elvégzett"
 
-#: ../../how-to/irpf-lifecycle.md:186
+#: ../../how-to/irpf-lifecycle.md:190
 msgid ""
 "You carried one taxpayer through a whole IRPF year: a first quarter with "
 "explicit zero carries, three quarters whose carries came from your own "
@@ -438,11 +446,11 @@ msgstr ""
 " pedig egyetlen elszámolásban összesítette az előlegeket. Minden adat "
 "visszakövethető maradt az azt előállító tételekig és szabályokig."
 
-#: ../../how-to/irpf-lifecycle.md:191
+#: ../../how-to/irpf-lifecycle.md:195
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/irpf-lifecycle.md:193
+#: ../../how-to/irpf-lifecycle.md:197
 msgid ""
 "[The VAT year](iva-lifecycle.md) - the same persona and records, through "
 "the VAT cycle."
@@ -450,7 +458,7 @@ msgstr ""
 "[Az IVA-év](iva-lifecycle.md) - ugyanaz a személy és ugyanazok a "
 "nyilvántartások, az IVA-cikluson keresztül."
 
-#: ../../how-to/irpf-lifecycle.md:195
+#: ../../how-to/irpf-lifecycle.md:199
 msgid ""
 "[Prepare a Modelo 130 IRPF instalment](modelo-130.md) - the standalone "
 "per-quarter recipe."
@@ -458,11 +466,11 @@ msgstr ""
 "[Egy Modelo 130 IRPF-előleg előkészítése](modelo-130.md) - az önálló, "
 "negyedévenkénti recept."
 
-#: ../../how-to/irpf-lifecycle.md:197
+#: ../../how-to/irpf-lifecycle.md:201
 msgid "[Prepare the annual Modelo 100 Renta declaration](modelo-100.md)"
 msgstr "[Az éves Modelo 100 jövedelemadó-bevallás előkészítése](modelo-100.md)"
 
-#: ../../how-to/irpf-lifecycle.md:198
+#: ../../how-to/irpf-lifecycle.md:202
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
@@ -470,6 +478,6 @@ msgstr ""
 "[Elmélyülés: hogyan áll össze a jövedelemadó-bevallás](../explanation"
 "/how-renta-is-assembled.md)"
 
-#: ../../how-to/irpf-lifecycle.md:199
+#: ../../how-to/irpf-lifecycle.md:203
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
 msgstr "[Diagnosztizáld és javítsd a helyi beállításaidat](troubleshooting.md)"

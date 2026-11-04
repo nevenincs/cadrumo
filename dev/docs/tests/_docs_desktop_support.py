@@ -44,17 +44,19 @@ def build_fixture_site(work: Path, **env_overrides: str) -> tuple[Path, CommandR
     for name in ("_static", "_templates", "_inventories"):
         shutil.copytree(DOCS / name, source / name)
     (source / "fixture.md").write_text(FIXTURE_PAGE, encoding="utf-8")
-    env = {key: value for key, value in os.environ.items() if key not in {"CADRUMODOCS_BASE_URL", "CADRUMODOCS_FLAVOR"}}
+    env = {
+        key: value for key, value in os.environ.items() if key not in {"CADRUMO_DOCS_BASE_URL", "CADRUMO_DOCS_FLAVOR"}
+    }
     env.update(
         {
-            "CADRUMODOCS_PROJECT_ROOT": str(REPO_ROOT),
-            "CADRUMODOCS_SCOPE": "user",
-            "CADRUMODOCS_OFFLINE": "1",
-            "CADRUMODOCS_ONLY": "fixture.md",
-            "CADRUMODOCS_MASTER_DOC": "fixture",
-            "CADRUMODOCS_SKIP_SEQUENCE_CHECK": "1",
-            "CADRUMODOCS_SKIP_CLI_TREE": "1",
-            "CADRUMODOCS_SKIP_CLI_REFERENCE": "1",
+            "CADRUMO_DOCS_PROJECT_ROOT": str(REPO_ROOT),
+            "CADRUMO_DOCS_SCOPE": "user",
+            "CADRUMO_DOCS_OFFLINE": "1",
+            "CADRUMO_DOCS_ONLY": "fixture.md",
+            "CADRUMO_DOCS_MASTER_DOC": "fixture",
+            "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
+            "CADRUMO_DOCS_SKIP_CLI_TREE": "1",
+            "CADRUMO_DOCS_SKIP_CLI_REFERENCE": "1",
             "CADRUMO_STORAGE_ROOT": str(work / "state"),
             **env_overrides,
         }

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-dated-validity'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:0369f6b09f9e8e102424c380d23a5ad6c66aebe9243d5e4898857e53ecf84d02'
+body_hash: 'sha256:b13cb24f1f7153322d05f471ec0639fcc985ba6714dc8741f0f7ac03c54db087'
 related:
   - "[[2026-09-04-registry-dated-validity-event-date-keyed-parameters-adr]]"
   - '[[2026-08-27-registry-dated-validity-research]]'
@@ -20,7 +20,7 @@ that triple. When the sibling event-date record tried to give the bienes de
 inversion figures a registry home, threading the acquisition year into the domain
 functions turned out to be necessary but not sufficient: the consumer still could
 not name the revision that hosts the parameter, and the modelo 303 mid-year split
-for 2024 makes the period token load-bearing rather than derivable from a year.
+makes the period token load-bearing rather than derivable from a year.
 
 That is not a fact about one feature. It is a question about where a registry read
 belongs, and it will be asked again by every domain calculator that needs a
@@ -43,7 +43,7 @@ What is NOT sanctioned in those sites is how they name a revision. Each passes t
 filing year as the revision id, which works only because modelo 100's revision
 directories are exactly the years and its parameters are year-suffixed. That is a
 coincidence of one modelo's naming, not a mechanism. Modelo 303 already broke it
-in 2024.
+with its mid-year split.
 
 ## Considered options
 

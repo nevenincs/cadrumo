@@ -145,6 +145,11 @@ declare global {
       declarationsList(): Promise<
         typeof import("../components/modelo/declarations/useDeclarationsList")
       >;
+      localAiReads(): Promise<{
+        lanes: typeof import("../shell/localAiLanes");
+        agent: typeof import("./agentFixtureHost");
+        providers: typeof import("./providerSettingsFixture");
+      }>;
       providerReads(): Promise<{
         settings: typeof import("../shell/providerSettings");
         views: typeof import("../shell/agentViews");
@@ -158,6 +163,11 @@ declare global {
 }
 
 window.__scenarioModules = {
+  localAiReads: async () => ({
+    lanes: await import("../shell/localAiLanes"),
+    agent: await import("./agentFixtureHost"),
+    providers: await import("./providerSettingsFixture"),
+  }),
   agentReaders: async () => ({
     models: await import("../shell/readingModel"),
     live: await import("../shell/agentLive"),

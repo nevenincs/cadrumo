@@ -6,9 +6,36 @@ use cadrumo_application::{
     runtime_client::{refusal::Refusal, stored_proof::ResumeRefusal},
 };
 
+/// A proof may itself cue a fresh observation. Recheck the admitted session
+/// against that observation before publishing it; a cue during that check
+/// still invalidates the candidate.
+pub(super) fn observation_after_proof(
+    before: &Observed,
+    mut current: impl FnMut() -> cadrumo_application::error::application::Result<Observed>,
+    verify: impl FnOnce() -> cadrumo_application::error::application::Result<()>,
+) -> cadrumo_application::error::application::Result<Observed> {
+    let latest = current()?;
+    if latest == *before {
+        return Ok(latest);
+    }
+    let changed =
+        || failure(ErrorCode::SessionUnavailable).with_reason("person_observation_changed");
+    if latest.profile_id != before.profile_id
+        || latest.status.state != wire::Presence::Present
+        || !latest.status.runtime_ready()
+    {
+        return Err(changed());
+    }
+    verify()?;
+    if current()? != latest {
+        return Err(changed());
+    }
+    Ok(latest)
+}
+
 #[derive(Clone)]
 pub(super) struct Failed {
-    pub error: ApplicationError,
+    pub error: Box<ApplicationError>,
     pub refusal: wire::Refusal,
     terminal: bool,
 }
@@ -42,13 +69,15 @@ impl Failed {
                     other => other,
                 };
                 Self {
-                    error: failure(ErrorCode::SessionUnavailable)
-                        .with_reason("person_resume_refused")
-                        .caused_by(ChildRefusal {
-                            code: Some("receipt_refused".into()),
-                            reason: admitted.map(str::to_owned),
-                            ..ChildRefusal::default()
-                        }),
+                    error: Box::new(
+                        failure(ErrorCode::SessionUnavailable)
+                            .with_reason("person_resume_refused")
+                            .caused_by(ChildRefusal {
+                                code: Some("receipt_refused".into()),
+                                reason: admitted.map(str::to_owned),
+                                ..ChildRefusal::default()
+                            }),
+                    ),
                     refusal: wire::Refusal {
                         code: public.to_owned(),
                         retry_after_seconds: None,
@@ -97,7 +126,7 @@ impl Failed {
                 }),
         };
         Self {
-            error,
+            error: Box::new(error),
             refusal: public,
             terminal,
         }
@@ -105,7 +134,7 @@ impl Failed {
 
     pub fn unavailable(error: ApplicationError) -> Self {
         Self {
-            error,
+            error: Box::new(error),
             refusal: wire::Refusal {
                 code: "person_resume_unavailable".into(),
                 retry_after_seconds: None,
@@ -141,10 +170,10 @@ impl Restoration {
         restore: impl FnOnce() -> std::result::Result<T, Failed>,
     ) -> cadrumo_application::error::application::Result<T> {
         if let Some(refused) = self.refusal(observed) {
-            return Err(refused.error);
+            return Err(*refused.error);
         }
         restore().map_err(|refused| {
-            let error = refused.error.clone();
+            let error = (*refused.error).clone();
             self.failed(observed, refused);
             error
         })
@@ -176,6 +205,220 @@ mod tests {
             profiles: None,
         }
     }
+
+    #[test]
+    fn a_proofs_own_cue_rechecks_the_exact_session_before_accepting_fresh_values() {
+        let before = observed();
+        let mut after = before.clone();
+        after.sequence += 1;
+        let mut checked = 0;
+        let admitted = observation_after_proof(
+            &before,
+            || Ok(after.clone()),
+            || {
+                checked += 1;
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(admitted, after);
+        assert_eq!(checked, 1);
+    }
+
+    #[test]
+    fn a_second_cue_during_session_verification_still_rejects_the_candidate() {
+        let before = observed();
+        let mut after = before.clone();
+        after.sequence += 1;
+        let mut later = after.clone();
+        later.sequence += 1;
+        let mut observations = [after, later].into_iter();
+        let mut checked = 0;
+        let refused = observation_after_proof(
+            &before,
+            || Ok(observations.next().unwrap()),
+            || {
+                checked += 1;
+                Ok(())
+            },
+        )
+        .unwrap_err();
+        assert_eq!(
+            refused.reason.as_deref(),
+            Some("person_observation_changed")
+        );
+        assert_eq!(checked, 1);
+    }
+
+    #[test]
+    fn a_fresh_observation_never_replaces_the_admitted_sessions_authority() {
+        let before = observed();
+        let mut after = before.clone();
+        after.sequence += 1;
+        let refused = observation_after_proof(
+            &before,
+            || Ok(after.clone()),
+            || Err(failure(ErrorCode::ReadFailed).with_reason("person_reply_identity_mismatch")),
+        )
+        .unwrap_err();
+        assert_eq!(
+            refused.reason.as_deref(),
+            Some("person_reply_identity_mismatch")
+        );
+    }
+
+    #[test]
+    fn another_profile_sign_out_or_unavailability_cannot_revalidate_the_candidate() {
+        let before = observed();
+        for invalidation in 0..3 {
+            let mut after = before.clone();
+            after.sequence += 1;
+            match invalidation {
+                0 => after.profile_id = Some("other-profile".into()),
+                1 => after.status.state = wire::Presence::Absent,
+                _ => after.status.runtime_available = false,
+            }
+            let refused = observation_after_proof(
+                &before,
+                || Ok(after.clone()),
+                || panic!("an invalidated observation cannot revalidate a session"),
+            )
+            .unwrap_err();
+            assert_eq!(
+                refused.reason.as_deref(),
+                Some("person_observation_changed")
+            );
+        }
+    }
+
+    #[test]
+    fn an_unchanged_observation_needs_no_extra_session_exchange() {
+        let before = observed();
+        assert_eq!(
+            observation_after_proof(
+                &before,
+                || Ok(before.clone()),
+                || { panic!("unchanged observation already brackets this proof") }
+            )
+            .unwrap(),
+            before
+        );
+    }
+
+    #[test]
+    fn revalidation_requires_the_admitted_persons_exact_authenticated_status() {
+        use cadrumo_application::runtime_client::{
+            connection::SessionExchange, events::Pushed, session::Admitted,
+        };
+        use serde_json::{Map, Value, json};
+        use std::{
+            sync::{Arc, Mutex, mpsc},
+            time::Instant,
+        };
+
+        struct Status {
+            reply: Value,
+            subscribers: Mutex<Vec<mpsc::Sender<Pushed>>>,
+        }
+        impl SessionExchange for Status {
+            fn exchange(&self, request: &Value, _: Instant) -> Result<Map<String, Value>, Refusal> {
+                assert_eq!(request["action"], "session_status");
+                let mut reply = self.reply.clone();
+                reply["request_id"] = request["request_id"].clone();
+                Ok(reply.as_object().unwrap().clone())
+            }
+            fn exchange_with_secret(
+                &self,
+                _: &Value,
+                _: &[u8],
+                _: Instant,
+            ) -> Result<Map<String, Value>, Refusal> {
+                panic!("status revalidation presents no new proof")
+            }
+            fn exchange_streamed(
+                &self,
+                _: &Value,
+                _: &[u8],
+                _: Instant,
+            ) -> Result<Map<String, Value>, Refusal> {
+                panic!("status revalidation sends no payload")
+            }
+            fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
+                let (sender, receiver) = mpsc::channel();
+                self.subscribers.lock().unwrap().push(sender);
+                receiver
+            }
+            fn close(&self) {}
+        }
+
+        let profile = "11111111-1111-4111-8111-111111111111";
+        let session = "22222222-2222-4222-8222-222222222222";
+        let boot = "33333333-3333-4333-8333-333333333333";
+        let connection = "44444444-4444-4444-8444-444444444444";
+        let other = "55555555-5555-4555-8555-555555555555";
+        let valid = json!({
+            "kind": "profile_status", "runtime_boot_id": boot, "connection_id": connection,
+            "status": {"profile_id": profile, "session_id": session, "connected": true,
+                "credential_authenticated": true, "profile_bound": true,
+                "session_expires_at": "2026-11-03T23:59:00Z", "denial": null}
+        });
+        for invalidation in 0..10 {
+            let mut reply = valid.clone();
+            match invalidation {
+                0 => {}
+                1 => reply["runtime_boot_id"] = json!(other),
+                2 => reply["connection_id"] = json!(other),
+                3 => reply["status"]["profile_id"] = json!(other),
+                4 => reply["status"]["session_id"] = json!(other),
+                5 => reply["status"]["connected"] = json!(false),
+                6 => reply["status"]["credential_authenticated"] = json!(false),
+                7 => reply["status"]["profile_bound"] = json!(false),
+                8 => reply["status"]["session_expires_at"] = Value::Null,
+                _ => reply["status"]["denial"] = json!({"code": "custody_recovering"}),
+            }
+            let exchange = Arc::new(Status {
+                reply,
+                subscribers: Mutex::new(Vec::new()),
+            });
+            let pushed = exchange.subscribe_scoped();
+            let mut person = crate::agent::person::Person::native(
+                exchange,
+                pushed,
+                Admitted {
+                    profile_id: profile.into(),
+                    session_id: session.into(),
+                    runtime_boot_id: boot.into(),
+                    connection_id: connection.into(),
+                    expires_at: None,
+                    session_persisted: None,
+                    signed_out_profile_ids: Vec::new(),
+                },
+                None,
+                crate::agent::recovery::rebind::Recovery {
+                    custody: crate::agent::recovery::Custody::default(),
+                    proof: Arc::new(crate::agent::recovery::rebind::StoredReceipt {
+                        storage_root: "unused-status-only".into(),
+                    }),
+                },
+            )
+            .unwrap();
+            let mut before = observed();
+            before.profile_id = Some(profile.into());
+            let mut after = before.clone();
+            after.sequence += 1;
+            let result = observation_after_proof(
+                &before,
+                || Ok(after.clone()),
+                || person.exchange(json!({"action": "status"})).map(|_| ()),
+            );
+            assert_eq!(
+                result.is_ok(),
+                invalidation == 0,
+                "status case {invalidation}"
+            );
+        }
+    }
+
     #[test]
     fn known_receipt_refusal_is_reused_until_status_or_password_changes() {
         let mut restoration = Restoration::default();

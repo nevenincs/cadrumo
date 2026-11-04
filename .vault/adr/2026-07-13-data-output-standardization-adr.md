@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-10-31'
-body_hash: 'sha256:689d7b588635623a77b62c56b13bcf8b07b650544d2f289e40ba79368bdb9dd0'
+modified: '2026-11-04'
+body_hash: 'sha256:9e748b71587bb299a31886958dd77756413bd3f61286dd0d54028cb4d8afb6f6'
 related:
   - "[[2026-07-13-data-output-standardization-research]]"
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
@@ -130,7 +130,7 @@ rename to `cadrumo-ledger-*`/`cadrumo-manual-ledger` marker forms. Directory
 stems under the root stay English generic for framework concepts and Spanish
 for AEAT-domain nouns per the existing stem rule; the export-filename schema
 is fixed as `modelo-<id>-<year>-<period>` with canonical AEAT period tokens
-(e.g. `modelo-303-2026-1T`), used by tests and any future default composer.
+(e.g. `modelo-303-<year>-1T`), used by tests and any future default composer.
 No aliases, no read-tolerance of old names.
 
 **R5 — One scratch convention (amended 2026-10-29).** Repo-root `.tmp/` is the sole mandated

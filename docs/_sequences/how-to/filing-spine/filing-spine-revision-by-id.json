@@ -193,7 +193,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "e703ac48e438f1dca583e62653b8123ef41a8b734b002da5228a45a503b399f7"
+          "value": "382dc82c76a29f355e5e18fd1d8c6d42346c9140f0d108cb58b84f6ccf433ddf"
         }
       ],
       "envelope": null,
@@ -212,7 +212,7 @@
         "modelo",
         "work",
         "revision",
-        "e703ac48e438f1dca583e62653b8123ef41a8b734b002da5228a45a503b399f7"
+        "382dc82c76a29f355e5e18fd1d8c6d42346c9140f0d108cb58b84f6ccf433ddf"
       ],
       "captures": [],
       "envelope": {
@@ -281,7 +281,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "e703ac48e438f1dca583e62653b8123ef41a8b734b002da5228a45a503b399f7",
+          "calculation_revision_id": "382dc82c76a29f355e5e18fd1d8c6d42346c9140f0d108cb58b84f6ccf433ddf",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -872,7 +872,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+              "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             }
           ],
           "state": "borrador",

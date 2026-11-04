@@ -232,31 +232,37 @@
             "modelo-130-actividad-economica-gastos-cumulative": "500",
             "modelo-130-actividad-economica-ingresos-cumulative": "1000",
             "modelo-130-actividad-economica-retenciones-cumulative": "0",
+            "modelo-130-estimacion-directa-modalidad": "directa_simplificada",
             "modelo-130-pagos-fraccionados-anteriores": "0",
-            "modelo-130-resultados-negativos-anteriores": "0"
+            "modelo-130-resultados-negativos-anteriores": "0",
+            "modelo-130-retenciones-agrarias": "0",
+            "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "af5dc9bddb0c75b07fe6473e53e30b65f9f54038f766924f2af6d22277c37b9b",
+          "calculation_revision_id": "21dca596a526400ed6fdbd0e3ea1e32cb3980434cc1b6dfdde76e4681325ca74",
           "casilla_values": {
             "01": "1000",
-            "02": "500",
-            "03": "500.00",
-            "04": "100.00",
+            "02": "525.00",
+            "03": "475.00",
+            "04": "95.00",
             "05": "0",
             "06": "0",
-            "07": "100.00",
+            "07": "95.00",
             "08": "0",
             "09": "0.00",
             "10": "0",
             "11": "0.00",
-            "12": "100.00",
+            "12": "95.00",
             "13": "100.00",
-            "14": "0.00",
+            "14": "-5.00",
             "15": "0.00",
             "16": "0",
-            "17": "0.00",
+            "17": "-5.00",
             "18": "0",
-            "19": "0.00",
-            "saldo-negativo-fin-periodo": "0.00"
+            "19": "-5.00",
+            "gastos-deducibles-previos": "500",
+            "provisiones-gastos-dificil-justificacion": "25.00",
+            "rendimiento-neto-reducible-art-32-1": "0",
+            "saldo-negativo-fin-periodo": "5.00"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -272,33 +278,38 @@
           "filed_by": null,
           "input_values_by_casilla_id": {
             "01": "1000",
-            "02": "500",
             "05": "0",
-            "06": "0"
+            "06": "0",
+            "08": "0",
+            "10": "0",
+            "gastos-deducibles-previos": "500"
           },
           "modality": null,
           "modality_reason": null,
           "observations": [
             {"absent_by_design":false,"casilla_id":"01","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-27","ley-35-2006:art-28"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"1000"},
-            {"absent_by_design":false,"casilla_id":"02","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-28","ley-35-2006:art-30"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"500"},
-            {"absent_by_design":false,"casilla_id":"03","formula_id":"modelo-130-rendimiento-neto","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["01","02"],"operand_refs":["01","02"],"operand_values":["1000","500"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"500.00"},
-            {"absent_by_design":false,"casilla_id":"04","formula_id":"modelo-130-pago-fraccionado-directa","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"max","operand_casilla_refs":["03"],"operand_refs":["03","irpf.direct_estimation_fractional_payment_rate"],"operand_values":["500.00","20"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"100.00"},
+            {"absent_by_design":false,"casilla_id":"02","formula_id":"modelo-130-gastos","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-28","ley-35-2006:art-30","rd-439-2007:art-30"],"op":"add","operand_casilla_refs":["gastos-deducibles-previos","provisiones-gastos-dificil-justificacion"],"operand_refs":["gastos-deducibles-previos","provisiones-gastos-dificil-justificacion"],"operand_values":["500","25.00"],"source_refs":["aeat-modelo-130-instructions"],"value":"525.00"},
+            {"absent_by_design":false,"casilla_id":"03","formula_id":"modelo-130-rendimiento-neto","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-32-2015"],"op":"subtract","operand_casilla_refs":["01","02","rendimiento-neto-reducible-art-32-1"],"operand_refs":["01","02","rendimiento-neto-reducible-art-32-1","irpf.art-32-1-reduction-ceiling","irpf.art-32-1-reduction-rate"],"operand_values":["1000","525.00","0","300000","30"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"475.00"},
+            {"absent_by_design":false,"casilla_id":"04","formula_id":"modelo-130-pago-fraccionado-directa","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"max","operand_casilla_refs":["03"],"operand_refs":["03","irpf.direct_estimation_fractional_payment_rate"],"operand_values":["475.00","20"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"95.00"},
             {"absent_by_design":false,"casilla_id":"05","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"06","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"07","formula_id":"modelo-130-resultado-apartado-i","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["04","05","06"],"operand_refs":["04","05","06"],"operand_values":["100.00","0","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"100.00"},
+            {"absent_by_design":false,"casilla_id":"07","formula_id":"modelo-130-resultado-apartado-i","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["04","05","06"],"operand_refs":["04","05","06"],"operand_values":["95.00","0","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"95.00"},
             {"absent_by_design":false,"casilla_id":"08","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"09","formula_id":"modelo-130-pago-fraccionado-agrario","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"percent","operand_casilla_refs":["08"],"operand_refs":["08","irpf.agriculture_fractional_payment_rate"],"operand_values":["0","2"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"10","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"11","formula_id":"modelo-130-resultado-apartado-ii","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["09","10"],"operand_refs":["09","10"],"operand_values":["0.00","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"12","formula_id":"modelo-130-suma-parciales","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"max","operand_casilla_refs":["07","11"],"operand_refs":["07","11"],"operand_values":["100.00","0.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"100.00"},
+            {"absent_by_design":false,"casilla_id":"12","formula_id":"modelo-130-suma-parciales","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"max","operand_casilla_refs":["07","11"],"operand_refs":["07","11"],"operand_values":["95.00","0.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"95.00"},
             {"absent_by_design":false,"casilla_id":"13","formula_id":"modelo-130-minoracion-rendimientos-netos","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"if_then_else","operand_casilla_refs":[],"operand_refs":["irpf.previous_year_economic_activity_net_income"],"operand_values":["0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"100.00"},
-            {"absent_by_design":false,"casilla_id":"14","formula_id":"modelo-130-neto-tras-minoracion","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["12","13"],"operand_refs":["12","13"],"operand_values":["100.00","100.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"15","formula_id":"modelo-130-resultados-negativos-anteriores-cap","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"min","operand_casilla_refs":["14"],"operand_refs":["modelo-130-resultados-negativos-anteriores","14"],"operand_values":["0","0.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"14","formula_id":"modelo-130-neto-tras-minoracion","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["12","13"],"operand_refs":["12","13"],"operand_values":["95.00","100.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"-5.00"},
+            {"absent_by_design":false,"casilla_id":"15","formula_id":"modelo-130-resultados-negativos-anteriores-cap","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"min","operand_casilla_refs":["14"],"operand_refs":["modelo-130-resultados-negativos-anteriores","14"],"operand_values":["0","-5.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"16","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"17","formula_id":"modelo-130-diferencia","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["14","15","16"],"operand_refs":["14","15","16"],"operand_values":["0.00","0.00","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"17","formula_id":"modelo-130-diferencia","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["14","15","16"],"operand_refs":["14","15","16"],"operand_values":["-5.00","0.00","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"-5.00"},
             {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"19","formula_id":"modelo-130-resultado-final","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["17","18"],"operand_refs":["17","18"],"operand_values":["0.00","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"saldo-negativo-fin-periodo","formula_id":"modelo-130-saldo-negativo-fin-periodo","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"max","operand_casilla_refs":["17"],"operand_refs":["17"],"operand_values":["0.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"}
+            {"absent_by_design":false,"casilla_id":"19","formula_id":"modelo-130-resultado-final","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["17","18"],"operand_refs":["17","18"],"operand_values":["-5.00","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"-5.00"},
+            {"absent_by_design":false,"casilla_id":"gastos-deducibles-previos","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-28","ley-35-2006:art-30"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"500"},
+            {"absent_by_design":false,"casilla_id":"provisiones-gastos-dificil-justificacion","formula_id":"modelo-130-provisiones-gastos-dificil-justificacion","legal_refs":["rd-439-2007:art-30","ley-35-2006:art-30","ley-35-2006:da-56","rd-439-2007:art-110"],"op":"if_then_else","operand_casilla_refs":["01","gastos-deducibles-previos"],"operand_refs":["modelo-130-estimacion-directa-modalidad","01","gastos-deducibles-previos","irpf.art-30-2-provision-rate","irpf.art-30-2-provision-annual-cap"],"operand_values":["1","1000","500","5","2000"],"source_refs":["aeat-modelo-130-instructions"],"value":"25.00"},
+            {"absent_by_design":false,"casilla_id":"rendimiento-neto-reducible-art-32-1","formula_id":null,"legal_refs":["ley-35-2006:art-32-2015"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-modelo-130-instructions"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"saldo-negativo-fin-periodo","formula_id":"modelo-130-saldo-negativo-fin-periodo","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"add","operand_casilla_refs":["15","19"],"operand_refs":["modelo-130-resultados-negativos-anteriores","15","19"],"operand_values":["0","0.00","-5.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"5.00"}
           ],
           "operation": "modelo.work.calculate",
           "registry_snapshot_ref": {
@@ -310,22 +321,28 @@
           "relation_overrides": {},
           "result_summary": [
             {
+              "casilla_id": "02",
+              "label": "Expenses",
+              "role": "key_figure",
+              "value": "525.00"
+            },
+            {
               "casilla_id": "03",
               "label": "Net yield",
               "role": "key_figure",
-              "value": "500.00"
+              "value": "475.00"
             },
             {
               "casilla_id": "04",
               "label": "Fractional payment amount",
               "role": "key_figure",
-              "value": "100.00"
+              "value": "95.00"
             },
             {
               "casilla_id": "07",
               "label": "Partial result of Section I",
               "role": "key_figure",
-              "value": "100.00"
+              "value": "95.00"
             },
             {
               "casilla_id": "09",
@@ -343,7 +360,7 @@
               "casilla_id": "12",
               "label": "Sum of partial results",
               "role": "key_figure",
-              "value": "100.00"
+              "value": "95.00"
             },
             {
               "casilla_id": "13",
@@ -355,23 +372,23 @@
               "casilla_id": "14",
               "label": "Net amount after reduction",
               "role": "key_figure",
-              "value": "0.00"
+              "value": "-5.00"
             },
             {
               "casilla_id": "17",
               "label": "Difference",
               "role": "key_figure",
-              "value": "0.00"
+              "value": "-5.00"
             },
             {
               "casilla_id": "19",
               "label": "Final result",
               "role": "key_figure",
-              "value": "0.00"
+              "value": "-5.00"
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision af5dc9bddb0c75b07fe6473e53e30b65f9f54038f766924f2af6d22277c37b9b (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 21dca596a526400ed6fdbd0e3ea1e32cb3980434cc1b6dfdde76e4681325ca74 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -485,7 +502,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "af5dc9bddb0c75b07fe6473e53e30b65f9f54038f766924f2af6d22277c37b9b",
+          "calculation_revision_id": "21dca596a526400ed6fdbd0e3ea1e32cb3980434cc1b6dfdde76e4681325ca74",
           "completeness_status": "complete",
           "findings": [
             {
@@ -531,7 +548,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "394ece1141011c31d4d7eb27396557474f431c85440a10825d8402a347d1dc56",
+          "verification_report_id": "c65b8e703a5c8013217b54ee957d53e8af016731b2b6dc77d8d11f4628a155c3",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -598,11 +615,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "b16f84909def051318ee06ec7516a1df1726a337f577f5a071342eb57f370317",
+          "bucket_event_id": "7e54c27e33e176230b3e684ac345ecbaaf4339393446576fb9a2a04e30cc0871",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "af5dc9bddb0c75b07fe6473e53e30b65f9f54038f766924f2af6d22277c37b9b",
-          "file_sha256": "2f214c53d547645260dcf5747f4d57803e68cfeb3bf181e7312272deb70efe05",
+          "calculation_revision_id": "21dca596a526400ed6fdbd0e3ea1e32cb3980434cc1b6dfdde76e4681325ca74",
+          "file_sha256": "11865d95acd5eed9b4d35a6b945ef5d9eee77868c523efdb0fc4f934bd96f785",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": null,
@@ -622,7 +639,7 @@
             "election": "keep"
           },
           "refund_election": null,
-          "resolved_result_disposition": "N",
+          "resolved_result_disposition": "B",
           "software_identity_grade": "development_mock",
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },

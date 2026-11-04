@@ -10,7 +10,7 @@ import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { Interval } from "./AmortizationFigures";
 import { Hint, NotApplicable, NotKnown, Remedy } from "./AssetList";
-import { ASSET_KEYS, reasonText, stateIcon, tokenWord } from "./assetsWords";
+import { ASSET_KEYS, stateIcon, tokenWord } from "./assetsWords";
 import { figureText, isStatedZero, PLAN_KEYS, stateTone } from "./planWords";
 
 /** Every claim a year holds, the replaced ones with the claim that replaced
@@ -203,11 +203,7 @@ export function Status({
     planned.claimable_refusal_key !== null &&
     planned.claimable_refusal_key === planned.absence_reason_key
       ? null
-      : reasonText(
-          t,
-          planned.claimable_refusal_key,
-          planned.claimable_refusal_facts,
-        );
+      : (planned.claimable_refusal_words ?? null);
   // A claim in effect that no longer matches the plan is a warning, never a
   // tick, whatever the year's state says.
   const stale = planned.claims.some(
@@ -261,7 +257,7 @@ export function Status({
               <span className="flex flex-col gap-0.5 text-xs text-muted-foreground">
                 {refusal}
                 <Remedy
-                  fieldKey={planned.claimable_refusal_remedy_field_key}
+                  words={planned.claimable_refusal_remedy_words}
                   onCorrect={onCorrectElement}
                 />
               </span>

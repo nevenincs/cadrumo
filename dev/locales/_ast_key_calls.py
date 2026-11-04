@@ -75,21 +75,33 @@ def _call_site_key_argument_exprs(
     name = _callee_name(node.func)
     exprs: list[ast.expr] = []
     if name is not None:
-        # Signature analysis also proves key channels beyond a wrapper's first
-        # argument; constants must follow the same positions as literal keys.
-        if key_positions is not None:
-            exprs.extend(node.args[index] for index in key_positions.get(name, ()) if index < len(node.args))
-        is_first_arg_sink = (
-            _is_translator_call(node.func, tr_names) or name == "failed" or name.endswith(("Error", "Exception"))
-        )
-        if is_first_arg_sink and node.args:
-            exprs.append(node.args[0])
-        elif name == "build_entry":
-            for kw in node.keywords:
-                collect_build_entry_argument(kw, exprs)
+        exprs.extend(_callee_key_argument_exprs(node, name, tr_names, key_positions))
     for kw in node.keywords:
         if kw.arg in _TRANSLATION_KEY_KWARGS:
             exprs.append(kw.value)
+    return exprs
+
+
+def _callee_key_argument_exprs(
+    node: ast.Call,
+    name: str,
+    tr_names: frozenset[str],
+    key_positions: dict[str, frozenset[int]] | None,
+) -> list[ast.expr]:
+    """Collect signature and callee-specific key channels in their existing order."""
+    exprs: list[ast.expr] = []
+    # Signature analysis also proves key channels beyond a wrapper's first
+    # argument; constants must follow the same positions as literal keys.
+    if key_positions is not None:
+        exprs.extend(node.args[index] for index in key_positions.get(name, ()) if index < len(node.args))
+    is_first_arg_sink = (
+        _is_translator_call(node.func, tr_names) or name == "failed" or name.endswith(("Error", "Exception"))
+    )
+    if is_first_arg_sink and node.args:
+        exprs.append(node.args[0])
+    elif name == "build_entry":
+        for kw in node.keywords:
+            collect_build_entry_argument(kw, exprs)
     return exprs
 
 

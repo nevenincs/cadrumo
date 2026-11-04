@@ -26,9 +26,7 @@ import {
   COUNT_ICON,
   COUNT_KINDS,
   countWord,
-  openingRemedy,
   refusalText,
-  wordOfKey,
   tokenWord,
 } from "./assetsWords";
 import { figureText } from "./planWords";
@@ -100,20 +98,17 @@ export function NotKnown({ why }: { why?: string | null }) {
   );
 }
 
-/** Where to fix what a figure lacks: the sentence that names the entry to fill
- * in, as a button that opens the correction form. Nothing is drawn where there
- * is no entry to name or the entry has no word. */
+/** Where to fix what a figure lacks: the sentence the backend served that
+ * names the entry to fill in, as a button that opens the correction form.
+ * Nothing is drawn where it served none. */
 export function Remedy({
-  fieldKey,
+  words,
   onCorrect,
 }: {
-  fieldKey: string | null;
+  words: string | null | undefined;
   onCorrect?: () => void;
 }) {
-  const t = useStrings();
-  const field = wordOfKey(t, fieldKey);
-  if (field === null) return null;
-  const words = t(ASSET_KEYS.opening_unknown, { field });
+  if (words === null || words === undefined) return null;
   if (onCorrect === undefined)
     return <span className="text-xs text-muted-foreground">{words}</span>;
   return (
@@ -299,7 +294,7 @@ export function AssetList({
             );
           const pending = figureText(locale, row.pending);
           return pending === null ? (
-            <NotKnown why={openingRemedy(t, row.opening_remedy_field_key)} />
+            <NotKnown why={row.opening_remedy_words ?? null} />
           ) : (
             <span className="whitespace-nowrap">{pending}</span>
           );

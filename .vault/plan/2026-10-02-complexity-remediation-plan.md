@@ -9,9 +9,9 @@ related:
   - '[[2026-09-11-justfile-design-adr]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]'
-modified: '2026-10-02'
+modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:daf4c0775385c75328eb1adbb8e48b0d47e5c57f8808112b0c98e72b86243fa3'
+body_hash: 'sha256:25a8b9b4679263e96f58005018255044d71f3734cc472df831536c916649a00c'
 ---
 
 # `complexity-remediation` plan
@@ -33,10 +33,11 @@ The accepted import-centralization decision governs canonical defining modules a
 - [ ] `S05` - Verify the complete live complexity inventory and review the integrated refactors; `dev/audit/complexity.py .vault/audit`.
 - [ ] `S06` - Decompose product application hotspots in bounded disjoint groups while preserving behavior; `src/cadrumo/application`.
 - [ ] `S07` - Decompose entrypoint hotspots while preserving command and TUI contracts; `src/cadrumo/entrypoints`.
-- [x] `S08` - Decompose domain core and harness hotspots while preserving typed authority and resource contracts; `src/cadrumo/domain src/cadrumo/core src/cadrumo_harness`.
+- [ ] `S08` - Decompose domain core and harness hotspots while preserving typed authority and resource contracts; `src/cadrumo/domain src/cadrumo/core src/cadrumo_harness`.
 - [ ] `S09` - Decompose remaining development registry quality and locale hotspots within existing authorities; `dev/registry dev/quality dev/locales dev/audit dev/test_runs dev/docs dev/corpus dev/env dev/ci`.
-- [x] `S10` - Decompose installed acceptance harness hotspots while preserving their observable contracts; `dev/acceptance`.
+- [ ] `S10` - Decompose installed acceptance harness hotspots while preserving their observable contracts; `dev/acceptance`.
 - [ ] `S11` - Decompose adapter hotspots while preserving persistence, local-runtime, and outbound integration contracts; `src/cadrumo/adapters`.
+- [ ] `S12` - Decompose the remaining client and runtime hotspots while preserving custody, session admission, containment and operation-host behavior; `src/cadrumo_client/commands/custody.py src/cadrumo_runtime/application/session_authority_core.py src/cadrumo_runtime/adapters/macos_worker_process.py src/cadrumo_runtime/host/operation_host.py`.
 
 ## Parallelization
 

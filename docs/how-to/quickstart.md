@@ -150,8 +150,11 @@ Read the steps in order:
   filing they are all zero, supplied by you so the calculation has no missing
   inputs. The tool fills the boxes from your records: box `01` is the quarter's
   income (`1000`, the taxable base, since VAT is never part of your income),
-  box `03` the net yield (`500.00`), and box `04` the instalment (`100.00`,
-  twenty percent of the net).
+  box `02` the deductible expenses (`525.00`, including the simplified
+  modality's `25.00` provision for difficult-to-justify expenses), box `03` the
+  net yield (`475.00`), and box `04` the instalment (`95.00`, twenty percent
+  of the net). The provision is five percent of `1000.00 - 500.00`, within
+  the annual `2000.00` cap.
 - Check the draft. The check is local. It does not send anything to AEAT. When the draft is complete the report reads `completeness_status complete` and `granted_verificado_completo true`. The report also carries two advisories, which do not block filing. One notes that the earlier Modelo 100 is set aside because your activity started in 2026. The other notes that the income row has no supporting document.
 
 Review every saved box with:

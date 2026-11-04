@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:53+0100\n"
+"POT-Creation-Date: 2026-11-03 19:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -199,22 +199,30 @@ msgstr ""
 #: ../../how-to/irpf-lifecycle.md:85
 #, python-brace-format
 msgid ""
-"The figures show the year so far: 1000 earned, 500 spent, and an "
-"instalment of 20 percent on the net. The net income in {term}`box "
-"<casilla>` `03` is 500.00, and the instalment in {term}`box <casilla>` "
-"`04` is 100.00. The low-income minoración in {term}`box <casilla>` `13` "
-"is 100.00 and absorbs the whole instalment, leaving a final result of "
-"0.00 in {term}`box <casilla>` `19`."
+"The figures show the year so far: 1000.00 earned and 500.00 spent. Under "
+"simplified direct estimation, the provision for difficult-to-justify "
+"expenses is 25.00: five percent of `1000.00 - 500.00`, within the annual "
+"2000.00 cap. Deductible expenses in {term}`box <casilla>` `02` are "
+"525.00, net income in {term}`box <casilla>` `03` is 475.00, and the "
+"instalment in {term}`box <casilla>` `04` is 95.00, twenty percent of the "
+"net. The low-income minoración in {term}`box <casilla>` `13` is 100.00, "
+"leaving -5.00 in boxes `14`, `17`, and `19`. No payment arises from this "
+"negative result; Cadrumo records 5.00 as `saldo-negativo-fin-periodo` for"
+" later quarters to deduct."
 msgstr ""
-"Las cifras muestran el acumulado del año: 1000 de ingresos, 500 de gastos"
-" y un pago fraccionado del 20 por ciento sobre el neto. El rendimiento "
-"neto de la {term}`casilla <casilla>` `03` es 500.00 y el pago fraccionado"
-" de la {term}`casilla <casilla>` `04` es 100.00. La minoración por bajos "
-"rendimientos de la {term}`casilla <casilla>` `13` es 100.00 y absorbe "
-"todo el pago fraccionado, dejando un resultado final de 0.00 en la "
-"{term}`casilla <casilla>` `19`."
+"Las cifras muestran el año hasta ahora: 1000.00 de ingresos y 500.00 de "
+"gastos. En estimación directa simplificada, la provisión para gastos de "
+"difícil justificación es 25.00: el cinco por ciento de `1000.00 - "
+"500.00`, dentro del límite anual de 2000.00. Los gastos deducibles de la "
+"{term}`casilla <casilla>` `02` son 525.00, el rendimiento neto de la "
+"{term}`casilla <casilla>` `03` es 475.00 y el pago fraccionado de la "
+"{term}`casilla <casilla>` `04` es 95.00, el veinte por ciento del neto. "
+"La minoración por rendimientos bajos de la {term}`casilla <casilla>` `13`"
+" es 100.00, lo que deja -5.00 en las casillas `14`, `17` y `19`. Este "
+"resultado negativo no genera ningún pago; Cadrumo registra 5.00 como "
+"`saldo-negativo-fin-periodo` para deducirlo en trimestres posteriores."
 
-#: ../../how-to/irpf-lifecycle.md:91
+#: ../../how-to/irpf-lifecycle.md:95
 msgid ""
 "The check reports `completeness_status complete` and "
 "`granted_verificado_completo true` (the sequence above asserts this). "
@@ -228,7 +236,7 @@ msgstr ""
 " comprobación. Se niega a sobrescribir un fichero existente salvo que "
 "añadas `--replace`; consulta [El flujo de presentación](filing-spine.md)."
 
-#: ../../how-to/irpf-lifecycle.md:97
+#: ../../how-to/irpf-lifecycle.md:101
 msgid ""
 "Enter the calculated figures at the AEAT portal (the checklist is [File "
 "your modelo at the AEAT portal](file-at-aeat.md)), then record the filing"
@@ -249,11 +257,11 @@ msgstr ""
 " pull` para que el justificante oficial quede registrado. Ambos comandos "
 "cierran la secuencia de arriba como ejemplos que no se ejecutan."
 
-#: ../../how-to/irpf-lifecycle.md:106
+#: ../../how-to/irpf-lifecycle.md:110
 msgid "Stage 3: the second and third quarters"
 msgstr "Etapa 3: el segundo y el tercer trimestre"
 
-#: ../../how-to/irpf-lifecycle.md:108
+#: ../../how-to/irpf-lifecycle.md:112
 msgid ""
 "The year continues; record each quarter's activity as it happens. For the"
 " second quarter, say Ana invoices twice and buys once. Register the "
@@ -274,11 +282,11 @@ msgstr ""
 "trimestre registrado como presentado y recorre todo el segundo trimestre "
 "hasta su exportación:"
 
-#: ../../how-to/irpf-lifecycle.md:120
+#: ../../how-to/irpf-lifecycle.md:124
 msgid "Read the saved calculation and compare it with the first quarter's:"
 msgstr "Lee el cálculo guardado y compáralo con el del primer trimestre:"
 
-#: ../../how-to/irpf-lifecycle.md:122
+#: ../../how-to/irpf-lifecycle.md:126
 msgid ""
 "Box `01` (income) now covers January through June - the records used for "
 "`2T` are the year to date, not the quarter alone."
@@ -286,7 +294,7 @@ msgstr ""
 "La casilla `01` (ingresos) ahora abarca de enero a junio: los registros "
 "usados para `2T` son los del año en curso, no solo los del trimestre."
 
-#: ../../how-to/irpf-lifecycle.md:124
+#: ../../how-to/irpf-lifecycle.md:128
 msgid ""
 "Box `05` (pagos fraccionados anteriores) carries the instalment you paid "
 "in the first quarter, read from your own recorded filing."
@@ -295,13 +303,13 @@ msgstr ""
 "fraccionado que ingresaste en el primer trimestre, leído de tu propia "
 "presentación registrada."
 
-#: ../../how-to/irpf-lifecycle.md:126
+#: ../../how-to/irpf-lifecycle.md:130
 msgid "If an earlier quarter had ended negative, box `15` would offset it here."
 msgstr ""
 "Si un trimestre anterior hubiera terminado en negativo, la casilla `15` "
 "lo compensaría aquí."
 
-#: ../../how-to/irpf-lifecycle.md:128
+#: ../../how-to/irpf-lifecycle.md:132
 msgid ""
 "If calculate blocks instead with an issue about an earlier period, the "
 "first quarter is not recorded as filed and backed by an AEAT receipt in "
@@ -316,7 +324,7 @@ msgstr ""
 "inventa el trimestre que falta; un blanco visible es mejor que un cero "
 "adivinado."
 
-#: ../../how-to/irpf-lifecycle.md:133
+#: ../../how-to/irpf-lifecycle.md:137
 msgid ""
 "Record this quarter's filing with `aeat app modelo work file` once the "
 "July window opens. That command is shown as an example that is not run "
@@ -328,7 +336,7 @@ msgstr ""
 "ejemplo que no se ejecuta porque se rechaza fuera de su plazo de "
 "presentación, y después aparece `reconcile pull`."
 
-#: ../../how-to/irpf-lifecycle.md:137
+#: ../../how-to/irpf-lifecycle.md:141
 msgid ""
 "The third quarter is the same chain one period later, with `3T` in place "
 "of `2T` throughout. Every quarter after the first is this one rhythm."
@@ -337,11 +345,11 @@ msgstr ""
 "lugar de `2T` en cada paso. Todos los trimestres después del primero "
 "siguen este mismo ritmo."
 
-#: ../../how-to/irpf-lifecycle.md:140
+#: ../../how-to/irpf-lifecycle.md:144
 msgid "Stage 4: the fourth quarter closes the instalment year"
 msgstr "Etapa 4: el cuarto trimestre cierra el año de pagos fraccionados"
 
-#: ../../how-to/irpf-lifecycle.md:142
+#: ../../how-to/irpf-lifecycle.md:146
 msgid ""
 "Run the same chain for `4T` in January of the following year, the fourth "
 "quarter's filing window being January 1 to 30. After it is filed, Ana has"
@@ -354,15 +362,15 @@ msgstr ""
 "conjunto son los pagos a cuenta que la declaración anual descontará de su"
 " renta del año completo."
 
-#: ../../how-to/irpf-lifecycle.md:147
+#: ../../how-to/irpf-lifecycle.md:151
 msgid "Check the year's IRPF position at any point:"
 msgstr "Comprueba la situación de IRPF del año en cualquier momento:"
 
-#: ../../how-to/irpf-lifecycle.md:153
+#: ../../how-to/irpf-lifecycle.md:157
 msgid "Stage 5: the annual Renta declaration"
 msgstr "Etapa 5: la declaración anual de la Renta"
 
-#: ../../how-to/irpf-lifecycle.md:155
+#: ../../how-to/irpf-lifecycle.md:159
 msgid ""
 "The following spring, the annual Modelo 100 gathers the year. It is "
 "annual, so the period code is `0A`, and the filing year is the income "
@@ -372,7 +380,7 @@ msgstr ""
 "que el código de periodo es `0A`, y el ejercicio de presentación es el "
 "año de la renta: la declaración de 2026 se prepara y se presenta en 2027."
 
-#: ../../how-to/irpf-lifecycle.md:159
+#: ../../how-to/irpf-lifecycle.md:163
 msgid ""
 "Before creating it, confirm the year's records are clean. The preflight "
 "of your records for the annual period runs locally:"
@@ -381,7 +389,7 @@ msgstr ""
 "comprobación previa de tus registros para el periodo anual se ejecuta "
 "localmente:"
 
-#: ../../how-to/irpf-lifecycle.md:166
+#: ../../how-to/irpf-lifecycle.md:170
 msgid ""
 "The rest of the annual chain uses the four instalments recorded as filed "
 "and the 2026 version of the Modelo 100, which is published for the 2027 "
@@ -409,7 +417,7 @@ msgstr ""
 "del trabajo o del capital que tus registros no pueden conocer se aportan "
 "como casillas manuales, que se encuentran con `bindings list --missing`:"
 
-#: ../../how-to/irpf-lifecycle.md:180
+#: ../../how-to/irpf-lifecycle.md:184
 msgid ""
 "How every value arrives, and how to trace any figure to its rule and its "
 "article of law, is the subject of [Deep dive: how the Renta declaration "
@@ -419,11 +427,11 @@ msgstr ""
 "su artículo de la ley, es el tema de [Análisis a fondo: cómo se compone "
 "la declaración de la renta](../explanation/how-renta-is-assembled.md)."
 
-#: ../../how-to/irpf-lifecycle.md:184
+#: ../../how-to/irpf-lifecycle.md:188
 msgid "What you completed"
 msgstr "Lo que has completado"
 
-#: ../../how-to/irpf-lifecycle.md:186
+#: ../../how-to/irpf-lifecycle.md:190
 msgid ""
 "You carried one taxpayer through a whole IRPF year: a first quarter with "
 "explicit zero carries, three quarters whose carries came from your own "
@@ -438,11 +446,11 @@ msgstr ""
 "cifra se mantuvo rastreable hasta los apuntes y las reglas que la "
 "produjeron."
 
-#: ../../how-to/irpf-lifecycle.md:191
+#: ../../how-to/irpf-lifecycle.md:195
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/irpf-lifecycle.md:193
+#: ../../how-to/irpf-lifecycle.md:197
 msgid ""
 "[The VAT year](iva-lifecycle.md) - the same persona and records, through "
 "the VAT cycle."
@@ -450,7 +458,7 @@ msgstr ""
 "[El año del IVA](iva-lifecycle.md): la misma persona y los mismos "
 "registros, a lo largo del ciclo del IVA."
 
-#: ../../how-to/irpf-lifecycle.md:195
+#: ../../how-to/irpf-lifecycle.md:199
 msgid ""
 "[Prepare a Modelo 130 IRPF instalment](modelo-130.md) - the standalone "
 "per-quarter recipe."
@@ -458,13 +466,13 @@ msgstr ""
 "[Preparar un pago fraccionado del IRPF con el Modelo 130](modelo-130.md):"
 " la receta independiente por trimestre."
 
-#: ../../how-to/irpf-lifecycle.md:197
+#: ../../how-to/irpf-lifecycle.md:201
 msgid "[Prepare the annual Modelo 100 Renta declaration](modelo-100.md)"
 msgstr ""
 "[Preparar la declaración anual de la Renta con el Modelo "
 "100](modelo-100.md)"
 
-#: ../../how-to/irpf-lifecycle.md:198
+#: ../../how-to/irpf-lifecycle.md:202
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
@@ -472,6 +480,6 @@ msgstr ""
 "[Análisis a fondo: cómo se compone la declaración de la "
 "renta](../explanation/how-renta-is-assembled.md)"
 
-#: ../../how-to/irpf-lifecycle.md:199
+#: ../../how-to/irpf-lifecycle.md:203
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
 msgstr "[Diagnosticar y reparar tu configuración local](troubleshooting.md)"

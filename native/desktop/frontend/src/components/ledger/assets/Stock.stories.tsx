@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { userEvent, waitFor, within } from "storybook/test";
 import { typeAsAPerson } from "@/dev/personTyping";
+import servedWords from "@/dev/fixtures/ledgerServedWords.json";
 import {
   STORY_PERIOD,
   STORY_READER,
@@ -30,8 +31,9 @@ type Answer = "fixture" | "one" | "empty" | "refused" | "loading";
 /** How the choices the forms offer are answered. */
 type Choices = "fixture" | "refused";
 
-/** What the backend answers when a chosen file cannot be kept. */
-const FILE_REFUSED = {
+/** What the backend answers when a chosen file cannot be kept, with the
+ * sentence it serves for that refusal in `locale`. */
+const fileRefusedAnswer = (locale: string) => ({
   kind: "refused",
   operation_id: "story",
   revision: 1,
@@ -51,9 +53,16 @@ const FILE_REFUSED = {
       reason_key:
         "application.inventory.service.errors.evidence_file_not_admitted",
       reason_facts: [],
+      ...servedFileRefusal(locale),
     },
   },
-};
+});
+
+function servedFileRefusal(locale: string) {
+  const words = servedWords.inventory.evidence_file_not_admitted;
+  const language = locale in words ? (locale as keyof typeof words) : "en";
+  return { refusal_words: words[language], refusal_words_language: language };
+}
 
 type Args = {
   shape?: LedgerShape;
@@ -77,6 +86,7 @@ function withListAnswer(
   answer: Answer,
   choices: Choices,
   fileRefused: boolean,
+  locale: string,
 ): LedgerPort {
   if (answer === "fixture" && choices === "fixture" && !fileRefused)
     return port;
@@ -84,7 +94,7 @@ function withListAnswer(
     ...port,
     submit: ((definition: string, payload: never) => {
       if (definition === "ledger.inventory.evidence.add" && fileRefused)
-        return Promise.resolve(FILE_REFUSED);
+        return Promise.resolve(fileRefusedAnswer(locale));
       if (definition === "ledger.inventory.options" && choices === "refused")
         return Promise.resolve({
           kind: "refused",
@@ -218,8 +228,8 @@ function Stage({
 }: Args) {
   const base = useLedgerPort(shape);
   const port = useMemo(
-    () => withListAnswer(base, answer, choices, fileRefused),
-    [base, answer, choices, fileRefused],
+    () => withListAnswer(base, answer, choices, fileRefused, locale),
+    [base, answer, choices, fileRefused, locale],
   );
   const { stage, onStage } = useStoryStage();
   const reader = signedOut ? null : STORY_READER;

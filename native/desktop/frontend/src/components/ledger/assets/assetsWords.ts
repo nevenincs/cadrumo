@@ -2,19 +2,15 @@
 // the desktop.ledger.assets family. Every word for something the backend states comes
 // from the canonical catalogue, by the backend's own token: the members of its
 // enums are worded under `ledger.actividad_asset.<family>.<token>`, and a
-// refusal or an absence arrives as a catalogue key with the facts that fill it
-// in. A token or key the catalogue has no word for reads as a generic word,
-// never as the raw token. Nothing here decides anything.
+// refusal, an absence or a finding arrives with its sentence already said by
+// the backend, so none is worded here. A token or key the catalogue has no
+// word for reads as a generic word, never as the raw token. Nothing here
+// decides anything.
 
 import type { IconName } from "@/components/ui/icon";
 import type { Translate } from "../../../shell/strings";
-import type {
-  AssetCounts,
-  ListDisposal,
-  ReasonFact,
-} from "../../../shell/ledgerSetup";
+import type { AssetCounts, ListDisposal } from "../../../shell/ledgerSetup";
 import { formatDay } from "../../../shared/dateFormats";
-import { formatAmount, formatPercent } from "../../../shared/numbers";
 
 /** What the register's amounts are in: it keeps every figure in euros, and a
  * payment in another currency is converted before an element can name it. */
@@ -148,18 +144,7 @@ export const ASSET_KEYS = {
     nothing_recorded: "desktop.ledger.assets.mark.nothing_recorded",
     not_applicable: "desktop.ledger.assets.mark.not_applicable",
   },
-  opening_unknown: "desktop.ledger.assets.opening_unknown",
   field_other: "desktop.ledger.assets.field.other",
-  handoff: {
-    partial: {
-      one: "desktop.ledger.assets.handoff_partial_one",
-      other: "desktop.ledger.assets.handoff_partial",
-    },
-    unnamed: {
-      one: "desktop.ledger.assets.handoff_gap_unnamed_one",
-      other: "desktop.ledger.assets.handoff_gap_unnamed",
-    },
-  },
   year: "desktop.ledger.assets.year",
   year_estimated: "desktop.ledger.assets.year_estimated",
   year_estimated_note: "desktop.ledger.assets.year_estimated_note",
@@ -206,9 +191,6 @@ export const ASSET_FAMILY = {
   vehicle_private_use: "ledger.actividad_asset.vehicle_private_use.",
 } as const;
 
-/** The family every reason key the backend serves belongs to. */
-export const ASSET_REASON_FAMILY = "ledger.actividad_asset.errors.";
-
 export type AssetFamily = keyof typeof ASSET_FAMILY;
 
 /** A value worded by the catalogue key the backend served with it, else the
@@ -242,72 +224,13 @@ export function tokenWord(
   return said === key ? t(ASSET_KEYS.unrecognised) : said;
 }
 
-/** A fact as the person reads it, drawn by the kind the backend served with
- * it: a date in the language of the interface, an amount to the cent, a
- * percent as a percentage. A count, such as a tax year, and a text stand as
- * they are, so a year never gets a thousands separator. */
-export function factText(t: Translate, fact: ReasonFact): string {
-  const locale = t.locale ?? "en";
-  switch (fact.kind) {
-    case "date":
-      return formatDay(locale, fact.value);
-    case "amount":
-      return formatAmount(locale, fact.value);
-    case "percent":
-      return formatPercent(locale, fact.value, { unit: "fraction" });
-    case "count":
-    case "text":
-      return fact.value;
-  }
-}
-
-/** Whether a key is one the backend words a reason with: a refusal's own
- * family, or one of the token families, such as a finding. */
-const inReasonFamilies = (key: string) =>
-  key.startsWith(ASSET_REASON_FAMILY) ||
-  Object.values(ASSET_FAMILY).some((family) => key.startsWith(family));
-
-/** Facts a refusal carries for a screen to act on, never to say: the
- * recorded dotaciones an overlap meets. */
-const NOT_DRAWN_FACTS: ReadonlySet<string> = new Set(["conflicting_claim_ids"]);
-
-/**
- * A reason in words: the catalogue sentence of the key the backend gave,
- * filled in with the facts it gave. Null where the sentence cannot be said
- * whole: no key, a key outside the reason families or that the generated
- * strings lack, or a fact the sentence needs that was not given. The caller
- * then shows its own generic word.
- */
-export function reasonText(
-  t: Translate,
-  key: string | null,
-  facts: readonly ReasonFact[] = [],
-): string | null {
-  if (key === null || !inReasonFamilies(key)) return null;
-  const said = t(
-    key,
-    Object.fromEntries(
-      facts
-        .filter((fact) => !NOT_DRAWN_FACTS.has(fact.key))
-        .map((fact) => [fact.key, factText(t, fact)]),
-    ),
-  );
-  return said === key || /\{\w+\}/.test(said) ? null : said;
-}
-
-/** A refusal in words: its reason, else the generic refused word. */
+/** A refusal in words: the sentence the backend served for it, in the
+ * language it names, else the generic refused word. */
 export function refusalText(
   t: Translate,
-  refusal: {
-    code?: string;
-    reason_key?: string | null;
-    reason_facts?: readonly ReasonFact[];
-  } | null,
+  refusal: { refusal_words?: string | null } | null,
 ): string {
-  return (
-    reasonText(t, refusal?.reason_key ?? null, refusal?.reason_facts ?? []) ??
-    t(ASSET_KEYS.write.refused)
-  );
+  return refusal?.refusal_words ?? t(ASSET_KEYS.write.refused);
 }
 
 /** The glyph a year's claim state is drawn with; the word sits in its tooltip
@@ -368,13 +291,6 @@ export function bajaText(
       tokenWord(t, "disposal_reason", disposal.reason),
   });
 }
-
-/** What to do when the amortization already deducted is not known: where to
- * enter it, by the word of that field. */
-export const openingRemedy = (t: Translate, fieldKey: string | null) => {
-  const field = wordOfKey(t, fieldKey);
-  return field === null ? null : t(ASSET_KEYS.opening_unknown, { field });
-};
 
 /** The word the catalogue has for a key the backend served with a value, or
  * null where the key is outside the register's families or has no word. */

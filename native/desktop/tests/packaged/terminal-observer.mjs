@@ -143,10 +143,17 @@ export class TerminalObserver {
   }
 
   async frame(state, record, deferDrain = false) {
+    const count = record.count === undefined ? 1 : record.count;
     if (
       !Number.isSafeInteger(record.index) ||
+      !Number.isSafeInteger(count) ||
+      count < 1 ||
+      !Number.isSafeInteger(record.index + count) ||
       record.index < state.next ||
-      state.pending.has(record.index) ||
+      [...state.pending].some(
+        ([index, pending]) =>
+          record.index < index + pending.count && index < record.index + count,
+      ) ||
       state.ended
     ) {
       this.lose(state.kind, state.generation, "TerminalObservationFrameOrder");
@@ -155,6 +162,7 @@ export class TerminalObserver {
     const raw = record.bytes ?? [];
     if (
       (!Array.isArray(raw) && !(raw instanceof Uint8Array)) ||
+      (count !== 1 && (record.end || raw[0] !== 0)) ||
       (!record.end && (!raw.length || raw[0] > 3)) ||
       raw.length > OBSERVATION_LIMITS.bytes ||
       this.totals("pendingBytes") + raw.length > OBSERVATION_LIMITS.bytes ||
@@ -177,7 +185,7 @@ export class TerminalObserver {
         return;
       }
     const bytes = Uint8Array.from(raw);
-    state.pending.set(record.index, { bytes, end: record.end });
+    state.pending.set(record.index, { bytes, end: record.end, count });
     state.pendingBytes += bytes.length;
     state.pendingCount = state.pending.size;
     this.metrics.peakPendingBytes = Math.max(
@@ -201,11 +209,12 @@ export class TerminalObserver {
         state.ended = true;
         break;
       }
-      state.next += 1;
+      state.next += next.count;
       if (next.bytes[0] === 0) {
-        // Validate and retain every frame separately; only parser writes are
-        // joined. Control/end frames and gaps remain ordering barriers.
+        // Browser spans already contain only contiguous data frames. Keep their
+        // index ranges intact; controls, end frames and gaps remain barriers.
         const chunks = [next.bytes.subarray(1)];
+        let frames = next.count;
         let length = next.bytes.length - 1;
         while (chunks.length < OBSERVATION_LIMITS.records) {
           const following = state.pending.get(state.next);
@@ -217,7 +226,8 @@ export class TerminalObserver {
           )
             break;
           state.pending.delete(state.next);
-          state.next += 1;
+          state.next += following.count;
+          frames += following.count;
           state.pendingBytes -= following.bytes.length;
           state.pendingCount = state.pending.size;
           chunks.push(following.bytes.subarray(1));
@@ -237,7 +247,7 @@ export class TerminalObserver {
         }
         if (this.disposed || !state.term) return;
         state.interpreted += length;
-        this.metrics.dataFrames += chunks.length;
+        this.metrics.dataFrames += frames;
         this.metrics.bytes += length;
       }
     }
@@ -345,7 +355,7 @@ export class TerminalObserver {
               break;
             await this.frame(state, candidate, true);
             count += 1;
-            frames += 1;
+            frames += candidate.count ?? 1;
             bytes += candidate.bytes.length;
             if (!state.term) break;
           }

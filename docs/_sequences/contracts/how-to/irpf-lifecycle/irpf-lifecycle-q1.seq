@@ -11,8 +11,15 @@ aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --descri
 aeat app modelo work create --modelo 130 --year 2026 --period 1T
 @step Calculate it with the three first-period carries passed as zeros.
 aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@expect result.casilla_values.03 == "500.00"
-@expect result.casilla_values.04 == "100.00"
+@expect result.casilla_values.02 == "525.00"
+@expect result.casilla_values["provisiones-gastos-dificil-justificacion"] == "25.00"
+@expect result.casilla_values.03 == "475.00"
+@expect result.casilla_values.04 == "95.00"
+@expect result.casilla_values.13 == "100.00"
+@expect result.casilla_values.14 == "-5.00"
+@expect result.casilla_values.17 == "-5.00"
+@expect result.casilla_values.19 == "-5.00"
+@expect result.casilla_values["saldo-negativo-fin-periodo"] == "5.00"
 @step Check the instalment before exporting it.
 aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true

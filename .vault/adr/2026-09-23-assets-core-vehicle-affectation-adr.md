@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-10-30'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b980d80bb4f667ad3fad7a0073dd627abeafdf6c3e6dd04873ca7068518bad65'
+body_hash: 'sha256:754abae606661ba1da15d13c5b03d9f46f376ebc99e9bee97fe8d816b6b59232'
 related:
   - "[[2026-09-23-assets-core-vehicle-affectation-research]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
@@ -17,7 +17,7 @@ related:
 ## Problem Statement
 
 The lifecycle decision `2026-09-21-assets-core-lifecycle-contract-adr` left
-vehicles outside its scope, but the 2025 registry still admits the transport
+vehicles outside its scope, but the registry still admits the transport
 table classes without any affectation test, so a passenger car also used
 privately can be amortized. `2026-09-23-assets-core-vehicle-affectation-research`
 shows such a car is not an affected asset at all. The product must either
@@ -50,8 +50,8 @@ free depreciation of new electric vehicles depends on the same facts.
 - The revision is the accepted immutable carrier of amortization facts
   (`2026-09-23-assets-core-amortization-method-set-adr`); the declaration joins
   it, so a change of affectation is an explicit correction.
-- The DA 18a entry-into-service window for the 2025 IRPF period follows the
-  AEAT 2025 manual (2024 and 2025) until the RDL 7/2026 effect-clause question
+- The DA 18a entry-into-service window follows the
+  AEAT manual of the governing edition until the RDL 7/2026 effect-clause question
   in the proration research is settled.
 
 ## Implementation
@@ -99,4 +99,4 @@ continuity contract rather than a new store.
 
 Authorized by the operator on 2026-10-30, on the evidence in `2026-09-23-assets-core-proration-and-incentive-scope-research`. The accepted body is preserved; where it differs, this section governs.
 
-The RDL 7/2026 question named under Constraints is settled. Its art. 37 reaches only periods not concluded at 22 March 2026, so the DA 18 window for IRPF 2025 stays 2024 and 2025 on RDL 4/2024. A 2026 window requires a 2026 edition citing RDL 7/2026, as the 2026-10-30 amendment of `2026-09-23-assets-core-amortization-method-set-adr` states.
+The RDL 7/2026 question named under Constraints is settled. Its art. 37 reaches only periods not concluded at 22 March 2026, so the DA 18 window of the period RDL 4/2024 governs stays as that decree sets it. A later window requires an edition of its own citing RDL 7/2026, as the 2026-10-30 amendment of `2026-09-23-assets-core-amortization-method-set-adr` states.

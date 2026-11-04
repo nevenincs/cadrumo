@@ -36,6 +36,7 @@ import {
   SetupDriver,
   waitSetupSignal,
   concurrentSetupVerdict,
+  runConcurrentSetup,
   treeBytes,
 } from "./setup.mjs";
 import { FAIL, PASS, cspVerdict } from "./verdicts.mjs";
@@ -47,6 +48,9 @@ import {
   partSizesVerdict,
   localAiPartsVerdict,
   smallestLocalModels,
+  prepareSmallestModel,
+  addCustomLocalModel,
+  assertPlanSizes,
   settingsVerdict,
   removalVerdict,
 } from "./provisioning.mjs";
@@ -54,6 +58,151 @@ import { sedeMissingVerdict } from "./probes.mjs";
 import { TerminalObserver, OBSERVATION_LIMITS } from "./terminal-observer.mjs";
 import { ObservationWake, Session } from "./session.mjs";
 import { drainTerminalObservation } from "./browser.mjs";
+
+for (const [locale, bytes, shown] of [
+  ["en", 332691793, "317\u00a0MB"],
+  ["es", 1586229413, "1,5\u00a0GB"],
+  ["en", 1023, "1,023\u00a0B"],
+  ["es", 1024, "1\u00a0KB"],
+  ["en", 1048575, "1\u00a0MB"],
+  ["es", 1073741823, "1\u00a0GB"],
+  ["en", 10485760, "10\u00a0MB"],
+  ["es", null, "Size known when starting"],
+])
+  test(`plan-size oracle checks independent binary size ${bytes} in ${locale}`, async () => {
+    let rendered = [{ part: "program", text: `Program ${shown}` }];
+    const session = {
+      shell: async (_read, item) => (item === undefined ? locale : rendered),
+      page: { locator: () => ({ waitFor: async () => {} }) },
+    };
+    const snapshot = {
+      runs: [
+        {
+          item: "local_ai",
+          stage: "review",
+          review: {
+            entries: [
+              {
+                parts: [{ part: "program", download_bytes: bytes }],
+              },
+            ],
+          },
+        },
+      ],
+    };
+    assert.equal((await assertPlanSizes(session, snapshot)).verdict, PASS);
+    if (bytes !== null) {
+      rendered = [{ part: "program", text: "Program: wrong aggregate size" }];
+      assert.equal((await assertPlanSizes(session, snapshot)).verdict, FAIL);
+    }
+    rendered = [];
+    assert.equal((await assertPlanSizes(session, snapshot)).verdict, FAIL);
+  });
+
+for (const state of ["pending", "refused", "replaced", "settled", "gated"])
+  test(`concurrent setup failure settles only its owned run (${state}) and preserves the original error`, async () => {
+    const original = new Error("model row did not appear");
+    const operationId = "owned-browser-operation";
+    const calls = [];
+    const notes = [];
+    const events = [];
+    const review = { entries: [{ source_hosts: ["synthetic.invalid"] }] };
+    let run = {
+      item: "browser",
+      operation_id: operationId,
+      stage: "review",
+      review,
+    };
+    let localRun = {
+      item: "local_ai",
+      operation_id: "owned-local-operation",
+      stage: "review",
+      review,
+    };
+    const snapshot = () => ({
+      snapshot: { runs: state === "gated" ? [run, localRun] : [run] },
+    });
+    const model = {
+      first: () => model,
+      click: async () => {
+        if (state === "gated") return;
+        if (state === "replaced")
+          run = { ...run, operation_id: "another-operation" };
+        if (state === "settled") run = { ...run, stage: "settled" };
+        throw original;
+      },
+    };
+    const session = {
+      page: {
+        locator: (selector) =>
+          selector.includes("[data-model=")
+            ? model
+            : {
+                getAttribute: async () => "true",
+              },
+      },
+      shell: async (_read, args) => {
+        if (args?.wanted?.some((wanted) => wanted.stage === "settled"))
+          events.push("wait");
+        return snapshot();
+      },
+      call: async (command, args) => {
+        calls.push({ command, args });
+        events.push(args.operationId);
+        if (state === "refused") return { ok: false };
+        if (args.operationId === operationId)
+          run = { ...run, stage: "settled" };
+        else localRun = { ...localRun, stage: "settled" };
+        return { ok: true };
+      },
+    };
+    const driver = {
+      session,
+      proxy: { hold: () => ({ release: () => events.push("release") }) },
+      openComponents: async () => {},
+      click: async (_selector, what) => {
+        if (state === "gated" && what === "browser approval") throw original;
+      },
+      read: async () => snapshot(),
+      note: (event, data) => notes.push({ event, data }),
+    };
+    await assert.rejects(
+      runConcurrentSetup(driver, { lane: "local", model: "small" }),
+      (error) => error === original,
+    );
+    assert.deepEqual(
+      calls,
+      state === "gated"
+        ? [
+            { command: "desktop_setup_cancel", args: { operationId } },
+            {
+              command: "desktop_setup_cancel",
+              args: { operationId: localRun.operation_id },
+            },
+          ]
+        : state === "pending" || state === "refused"
+          ? [
+              {
+                command: "desktop_setup_cancel",
+                args: { operationId },
+              },
+            ]
+          : [],
+    );
+    assert.deepEqual(notes, [
+      {
+        event: "concurrent-setup-cleanup",
+        data: { settled: state !== "refused" },
+      },
+    ]);
+    if (state === "gated")
+      assert.deepEqual(events.slice(0, 4), [
+        operationId,
+        localRun.operation_id,
+        "release",
+        "wait",
+      ]);
+  });
 
 function rawDrainFixture(records) {
   const queue = [...records];
@@ -835,6 +984,164 @@ test("check 3 derives the smallest local model from agent sizes and refuses unkn
       settings,
     ),
   );
+});
+
+for (const action of ["select", "add"])
+  for (const outcome of [
+    "recovery",
+    "exhaustion",
+    "refused",
+    "exchange-failed",
+  ])
+    test(`local model ${action} collects only explicit settings busy: ${outcome}`, async () => {
+      const calls = [];
+      let settingsReads = 0;
+      const stoppedAtUi = new Error(
+        "metadata complete; stop before model mutation",
+      );
+      const deadline = new Error("bounded status read did not settle");
+      const exchangeFailure = new Error("status exchange outcome unknown");
+      const session = {
+        call: async (command) => {
+          calls.push(command);
+          if (command === "agent_provider_catalog")
+            return {
+              ok: true,
+              value: {
+                kind: "declared",
+                catalog: {
+                  providers: [
+                    {
+                      id: "synthetic_api",
+                      provider: "synthetic",
+                      models: [{ id: "small", size_bytes: 20 }],
+                    },
+                  ],
+                },
+              },
+            };
+          assert.equal(command, "provider_settings_status");
+          settingsReads += 1;
+          if (outcome === "exchange-failed") throw exchangeFailure;
+          if (outcome === "refused")
+            return { ok: false, error: { code: "not_signed_in" } };
+          if (outcome === "exhaustion" || settingsReads < 3)
+            return { ok: false, error: { code: "busy" } };
+          return {
+            ok: true,
+            value: { providers: [{ id: "synthetic_api", auth_kind: "none" }] },
+          };
+        },
+        page: {
+          locator: () => ({
+            getAttribute: async () => "true",
+            waitFor: async () => {},
+            first() {
+              return this;
+            },
+            nth: () => {
+              throw stoppedAtUi;
+            },
+          }),
+        },
+      };
+      const driver = {
+        session,
+        wait: async (read, options) => {
+          assert.equal(options.timeout, 30000);
+          for (let attempt = 0; attempt < 4; attempt += 1) {
+            const answer = await read();
+            if (answer !== null) return answer;
+          }
+          throw deadline;
+        },
+        openComponents: async () => {
+          if (action === "select") throw stoppedAtUi;
+        },
+      };
+      const read =
+        action === "select"
+          ? prepareSmallestModel({ session, driver })
+          : addCustomLocalModel({
+              session,
+              driver,
+              lane: "synthetic_api",
+              model: "small",
+            });
+      await assert.rejects(read, (error) =>
+        outcome === "recovery"
+          ? error === stoppedAtUi
+          : outcome === "exhaustion"
+            ? error === deadline
+            : outcome === "exchange-failed"
+              ? error === exchangeFailure
+              : error.message.includes("not_signed_in"),
+      );
+      assert.deepEqual(calls, [
+        "agent_provider_catalog",
+        ...Array(
+          outcome === "recovery" ? 3 : outcome === "exhaustion" ? 4 : 1,
+        ).fill("provider_settings_status"),
+      ]);
+    });
+
+test("model selection waits for catalog admission before reading provider settings", async () => {
+  const calls = [];
+  let admitted = false;
+  let releaseCatalog;
+  const catalog = new Promise((resolve) => {
+    releaseCatalog = resolve;
+  });
+  const uiBoundary = new Error("metadata admitted; stop before UI actions");
+  const pending = prepareSmallestModel({
+    session: {
+      call: async (command) => {
+        calls.push(command);
+        if (command === "agent_provider_catalog") return catalog;
+        assert.equal(command, "provider_settings_status");
+        return admitted
+          ? {
+              ok: true,
+              value: {
+                providers: [{ id: "synthetic_api", auth_kind: "none" }],
+              },
+            }
+          : {
+              ok: false,
+              error: { code: "read_failed", reason: "agent_admin_unavailable" },
+            };
+      },
+    },
+    driver: {
+      wait: async (read) => read(),
+      openComponents: async () => {
+        throw uiBoundary;
+      },
+    },
+  });
+  const beforeAdmission = [...calls];
+  admitted = true;
+  releaseCatalog({
+    ok: true,
+    value: {
+      kind: "declared",
+      catalog: {
+        providers: [
+          {
+            id: "synthetic_api",
+            provider: "synthetic",
+            models: [{ id: "small", size_bytes: 20 }],
+          },
+        ],
+      },
+    },
+  });
+  await assert.rejects(pending, (error) => error === uiBoundary);
+  assert.deepEqual(beforeAdmission, ["agent_provider_catalog"]);
+  assert.deepEqual(calls, [
+    "agent_provider_catalog",
+    "provider_settings_status",
+  ]);
 });
 
 test("check 6 rejects duplicate Settings sections, extra controls and a panel that did not open or close", () => {

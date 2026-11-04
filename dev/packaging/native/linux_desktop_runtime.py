@@ -72,8 +72,14 @@ DEPENDENCY_INPUTS = {
     # dev-dependency. The unix-target tokio "signal" feature adds no package and, per the
     # note above, tokio's process feature already enables its Unix signal dependencies.
     # This is declaration-level evidence; a Linux cargo tree was not rerun for it.
-    "native/desktop/src-tauri/Cargo.lock": "9d3a54b29eadb1891a27cb97a076478905791fe6467abececd32ddf154023182",
-    "native/desktop/src-tauri/Cargo.toml": "68e950d08aeabb86ab3da5ba5161499856b36c9d40acdd32cb45668f848b42a4",
+    # The optional native-automation feature adds the WebDriver plugin and its
+    # separate GLib/GIO graph to the lock. Locked offline default normal/build
+    # trees were checked for both Linux architectures: GTK/GDK 0.18, GLib/GIO
+    # 0.18, WebKit2GTK 2.0.2 and soup3 0.5 remain the distributed providers.
+    # This admits only the default distributed graph. The automation host's
+    # extra prerequisites and Linux artifact/minimum-host proof remain separate.
+    "native/desktop/src-tauri/Cargo.lock": "b7016974ca69e208c765da46de8e2719e23a93c633b7d6598ae95758c4c08bae",
+    "native/desktop/src-tauri/Cargo.toml": "f0e94c97e2a0ae18c39ecd59a16a7c1aa758d3cdfd42f71a6b715a6b212e705f",
     "native/application/Cargo.toml": "45b431600a5da6caa057865bdb39afc3aae4f9512d51d598f9d04e380cc03499",
     "native/platform/Cargo.toml": "7b47f615156cee781579b50b3d2ad66a3996a431ad84830ecd9150845ada6c12",
 }

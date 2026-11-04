@@ -503,7 +503,6 @@ export function providerSettingsFixture({
       if (!readable()) throw coded("not_signed_in");
       say("providerStatusResolved");
       return {
-        development: false,
         providers: [...records.values()],
         sign_in_providers: [...FIXTURE_SIGN_IN_PROVIDERS],
         sign_in_methods: Object.fromEntries(

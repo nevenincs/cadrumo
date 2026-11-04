@@ -16,7 +16,6 @@ import {
   ASSET_KEYS,
   bajaText,
   fieldWord,
-  openingRemedy,
   tokenWord,
   wordOfKey,
 } from "./assetsWords";
@@ -195,9 +194,7 @@ export function AssetDetail({
             </Fact>
             <Fact label={t(ASSET_KEYS.list.column.accumulated)}>
               {figureText(locale, row.accumulated) ?? (
-                <NotKnown
-                  why={openingRemedy(t, row.opening_remedy_field_key)}
-                />
+                <NotKnown why={row.opening_remedy_words ?? null} />
               )}
             </Fact>
             <Fact label={t(ASSET_KEYS.list.column.pending)}>
@@ -211,9 +208,7 @@ export function AssetDetail({
                 />
               ) : (
                 (figureText(locale, row.pending) ?? (
-                  <NotKnown
-                    why={openingRemedy(t, row.opening_remedy_field_key)}
-                  />
+                  <NotKnown why={row.opening_remedy_words ?? null} />
                 ))
               )}
             </Fact>

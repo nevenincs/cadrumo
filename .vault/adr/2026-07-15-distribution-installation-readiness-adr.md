@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-10-21'
-body_hash: 'sha256:2fd65712e5361d96128fbb53436c423fcbf4ee67dcd9a56bb310ecdd77099abf'
+modified: '2026-11-04'
+body_hash: 'sha256:1bec4576f0c9424ded5785dd4fe0f783dd4fcc575bbc55114724c0c13bce1ef2'
 related:
   - '[[2026-07-15-distribution-installation-readiness-research]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -136,7 +136,7 @@ Trusted Publishing. A single authority and evidence contract are required.
   for artifact-size limits; their individual claim is data integrity and namespace
   contribution, proved again by downstream cohort calculation.
 - Functional acceptance uses one non-tautological installed-artifact oracle grounded in
-  LIS Article 29 and the AEAT 2024 manual: a Modelo 200 2024 micro-enterprise taxable
+  LIS Article 29 and the AEAT Modelo 200 manual of the exercise under test: a Modelo 200 micro-enterprise taxable
   base of EUR 100,000 must produce `DP200014:00562 == 23000.00`. The installed-product commands/probes use isolated
   real encrypted storage and shipped registry data through public interfaces, never
   checkout product imports, internal storage seeding, or duplicated business logic. It requires

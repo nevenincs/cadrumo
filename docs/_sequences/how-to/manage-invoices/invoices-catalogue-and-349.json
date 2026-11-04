@@ -91,6 +91,7 @@
           "retention_amount": null,
           "retention_rate": null,
           "series": null,
+          "settlement_amount": "2000.00",
           "source_filename": null,
           "source_row_index": null,
           "source_sha256": null
@@ -188,6 +189,7 @@
           "retention_amount": null,
           "retention_rate": null,
           "series": null,
+          "settlement_amount": "2000.00",
           "source_filename": null,
           "source_row_index": null,
           "source_sha256": null
@@ -325,7 +327,7 @@
             "iva-349-declarante-numero-operadores": "1",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "e12294178bd2cf98e9a8398f310ae40dfd7b7ab4fe84b7dc85ea87828d98d580",
+          "calculation_revision_id": "fe6e54247067da5d2c778873bf80249f1b0f7760e943232c5dae27bf4bc94317",
           "casilla_values": {
             "decl.importe-operaciones": "2000.00",
             "decl.importe-rectificaciones": "0",
@@ -472,13 +474,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision e12294178bd2cf98e9a8398f310ae40dfd7b7ab4fe84b7dc85ea87828d98d580 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision fe6e54247067da5d2c778873bf80249f1b0f7760e943232c5dae27bf4bc94317 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:2b96092339e4d76c23148db61a715564d59ec3dff80540647213e353cca609c4",
+              "fingerprint": "sha256:70d4fca0a2315065798ff97e6ad25225606883a2644e96014110743453d5ff84",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",

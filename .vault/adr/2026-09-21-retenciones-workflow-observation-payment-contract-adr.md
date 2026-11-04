@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#retenciones-workflow'
 date: '2026-09-21'
-modified: '2026-09-27'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:d0fb4c23f6bd0f9e6b414b90f13467a5e4916cad8d5934b0df83efd063ddea8a'
+body_hash: 'sha256:df672c5aa4b505dc07353046cea272ec62a317033213fd620daa324f192c3ca8'
 related:
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-reference]]"
   - "[[2026-09-21-retenciones-recognition-property-authority-research]]"
@@ -86,7 +86,7 @@ residence, and every ungrounded regime/modelo branch refuse rather than inheriti
 Derived `recognized_on`, never invoice date, selects the periodic projection.
 
 Annual 180, 190, and scoped 193 are deterministic materializations over active recognition and
-settlement evidence. For 2025 Modelo 193 keys A, B, and D only, income recognized but unpaid
+settlement evidence. For Modelo 193 keys A, B, and D only, in the editions whose official design declares the pending field, income recognized but unpaid
 because the holder did not present for collection produces the official `PENDING` disclosure in
 the recognition year. Later collection produces `SETTLED_PRIOR_ACCRUAL` in the payment-year
 Modelo 193 with the original accrual year and actual recipient; it does not create a second
@@ -132,5 +132,5 @@ annual reconciliation, current-schema anti-tolerance, and all four frontend path
 
 Authorized by the operator's registry conformance rectification brief of 2026-09-27, recorded as the approval basis of `2026-09-27-registry-conformance-rectification-plan`, on the evidence in `2026-09-27-registry-conformance-rectification-research`. The accepted body above is preserved; where it differs, this section governs.
 
-- The recognition rules apply to every applicable year of the registry support envelope, floor 2022: each rule names the RIRPF provisions it rests on (arts. 78, 94 and 98), catalogued with their BOE text and required to be in force for the whole of every supported year. The filer cadence still refuses a year outside the envelope.
-- The Modelo 193 pending and settled-prior-accrual disclosure applies to every accrual year whose selected Modelo 193 edition declares the pending field, rather than to 2025 alone; every supported edition declares it. A settled-row contributor persisted without its accrual year is treated as settled in any supported year after the first grounded accrual year.
+- The recognition rules apply to every applicable year of the registry support envelope: each rule names the RIRPF provisions it rests on (arts. 78, 94 and 98), catalogued with their BOE text and required to be in force for the whole of every supported year. The filer cadence still refuses a year outside the envelope.
+- The Modelo 193 pending and settled-prior-accrual disclosure applies to every accrual year whose selected Modelo 193 edition declares the pending field, rather than to the first such edition alone; every supported edition declares it. A settled-row contributor persisted without its accrual year is treated as settled in any supported year after the first grounded accrual year.

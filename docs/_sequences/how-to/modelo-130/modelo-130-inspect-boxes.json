@@ -151,6 +151,30 @@
     {
       "argv": [
         "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--irpf-estimation-regime",
+        "directa_simplificada",
+        "--irpf-activity-income-imputation-criterion",
+        "cobros_y_pagos",
+        "--irpf-activity-income-imputation-year",
+        "2026",
+        "--no-irpf-codigo-comercio-accounting"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
         "--format",
         "json",
         "app",
@@ -232,8 +256,8 @@
           }
         ],
         "result": {
-          "authority_generation": "9e9eded53160b980e64be276abb7b7a306a89d61b92513d4da9e63d4b77f9c4c",
-          "binding_count": 6,
+          "authority_generation": "8bb9830ecce738ba046c5b00c3d261f6352c3ea528d4111eabd7bdbab217bd61",
+          "binding_count": 9,
           "bindings": [
             {
               "binding_id": "modelo-130-resultados-negativos-anteriores",
@@ -340,7 +364,10 @@
                 "rd-439-2007:art-110",
                 "orden-eha-672-2007:art-1",
                 "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-14",
+                "rd-439-2007:art-7",
+                "rd-439-2007:art-79"
               ],
               "modelo": "130",
               "period": "1T",
@@ -375,6 +402,73 @@
               "source": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-volumen-ingresos-agrario",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "data from your records",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "ledger_renta_income_aggregation",
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-retenciones-agrarias",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "data from your records",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "ledger_renta_income_aggregation",
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-estimacion-directa-modalidad",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "enum",
+              "legal_refs": [
+                "rd-439-2007:art-30",
+                "rd-439-2007:art-110"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "profile",
+              "source_refs": [
                 "aeat-modelo-130-instructions"
               ],
               "typed_enum": null
@@ -413,7 +507,7 @@
         "command": "modelo.casillas",
         "notices": [],
         "result": {
-          "casilla_count": 20,
+          "casilla_count": 23,
           "code": "130",
           "filing_period": null,
           "filing_year": null,
@@ -423,15 +517,18 @@
           "revision": "2019-y-siguientes",
           "rows": [
             {"binding":"modelo-130-actividad-economica-ingresos-cumulative","casilla_id":"01","data_type":"money","form_number":null,"formula":null,"help_text":"Total cumulative business income for the tax year.","input_kind":"bound","label":"Income","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-27","ley-35-2006:art-28"],"number":"01","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
-            {"binding":"modelo-130-actividad-economica-gastos-cumulative","casilla_id":"02","data_type":"money","form_number":null,"formula":null,"help_text":"Total cumulative business expenses for the tax year.","input_kind":"bound","label":"Expenses","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-28","ley-35-2006:art-30"],"number":"02","required":true,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
+            {"binding":null,"casilla_id":"02","data_type":"money","form_number":null,"formula":"modelo-130-gastos","help_text":"Cumulative deductible expenses and amortization of the economic activity. Under simplified direct estimation it also includes the deductible provisions and hard-to-justify expenses.","input_kind":"computed","label":"Expenses","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-28","ley-35-2006:art-30","rd-439-2007:art-30"],"number":"02","required":true,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
+            {"binding":"modelo-130-actividad-economica-gastos-cumulative","casilla_id":"gastos-deducibles-previos","data_type":"money","form_number":null,"formula":null,"help_text":"Deductible expenses and amortization from 1 January to the end of the quarter, without the deductible provisions and hard-to-justify expenses. Box 02 adds that provision to them.","input_kind":"bound","label":"Deductible expenses before the simplified-modality provision","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-28","ley-35-2006:art-30"],"number":"gastos-deducibles-previos","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
+            {"binding":null,"casilla_id":"provisiones-gastos-dificil-justificacion","data_type":"money","form_number":null,"formula":"modelo-130-provisiones-gastos-dificil-justificacion","help_text":"Simplified direct estimation only: the percentage set by article 30 of the IRPF Regulation on your cumulative income less your deductible expenses, up to its annual limit. It is zero when that difference is negative.","input_kind":"computed","label":"Deductible provisions and hard-to-justify expenses","legal_refs":["rd-439-2007:art-30","ley-35-2006:art-30","ley-35-2006:da-56","rd-439-2007:art-110"],"number":"provisiones-gastos-dificil-justificacion","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-modelo-130-instructions"]},
+            {"binding":null,"casilla_id":"rendimiento-neto-reducible-art-32-1","data_type":"money","form_number":null,"formula":null,"help_text":"The part of the cumulative net income generated over more than two years or notoriously irregular, imputed in a single period. Leave it out if your activity regularly obtains such income. Box 03 is calculated after reducing it by 30%, on at most 300,000 euros a year.","input_kind":"manual","label":"Net income qualifying for the art. 32.1 reduction","legal_refs":["ley-35-2006:art-32-2015"],"number":"rendimiento-neto-reducible-art-32-1","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"03","data_type":"money","form_number":null,"formula":"modelo-130-rendimiento-neto","help_text":"Net yield from direct-estimation economic activities, calculated as income minus expenses.","input_kind":"computed","label":"Net yield","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-28","ley-35-2006:art-30"],"number":"03","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"04","data_type":"money","form_number":null,"formula":"modelo-130-pago-fraccionado-directa","help_text":"Fractional payment amount for direct-estimation activities before prior payments and withholdings.","input_kind":"computed","label":"Fractional payment amount","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"04","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":"modelo-130-pagos-fraccionados-anteriores","casilla_id":"05","data_type":"money","form_number":null,"formula":null,"help_text":"Fractional payments already made earlier in the same tax year for direct-estimation activities.","input_kind":"bound","label":"Prior fractional payments","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"05","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"06","data_type":"money","form_number":null,"formula":null,"help_text":"Withholdings and payments on account borne during the period for direct-estimation activities.","input_kind":"manual","label":"Withholdings and payments on account","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"06","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"07","data_type":"money","form_number":null,"formula":"modelo-130-resultado-apartado-i","help_text":"Partial Section I result after subtracting prior payments and withholdings from the direct-estimation fractional payment.","input_kind":"computed","label":"Partial result of Section I","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"07","required":false,"section":["actividades_economicas_estimacion_directa"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
-            {"binding":null,"casilla_id":"08","data_type":"money","form_number":null,"formula":null,"help_text":"Income volume for the quarter from agricultural, livestock, forestry, or fishing activities.","input_kind":"manual","label":"Quarterly income volume","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"08","required":false,"section":["actividades_agricolas_ganaderas_forestales_pesqueras"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
+            {"binding":"modelo-130-volumen-ingresos-agrario","casilla_id":"08","data_type":"money","form_number":null,"formula":null,"help_text":"Income volume for the quarter from agricultural, livestock, forestry, or fishing activities.","input_kind":"bound","label":"Quarterly income volume","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"08","required":false,"section":["actividades_agricolas_ganaderas_forestales_pesqueras"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"09","data_type":"money","form_number":null,"formula":"modelo-130-pago-fraccionado-agrario","help_text":"Fractional payment amount for agricultural, livestock, forestry, or fishing activities.","input_kind":"computed","label":"Fractional payment amount","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"09","required":false,"section":["actividades_agricolas_ganaderas_forestales_pesqueras"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
-            {"binding":null,"casilla_id":"10","data_type":"money","form_number":null,"formula":null,"help_text":"Withholdings and payments on account borne during the period for agricultural, livestock, forestry, or fishing activities.","input_kind":"manual","label":"Withholdings and payments on account","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"10","required":false,"section":["actividades_agricolas_ganaderas_forestales_pesqueras"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
+            {"binding":"modelo-130-retenciones-agrarias","casilla_id":"10","data_type":"money","form_number":null,"formula":null,"help_text":"Withholdings and payments on account borne during the period for agricultural, livestock, forestry, or fishing activities.","input_kind":"bound","label":"Withholdings and payments on account","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"10","required":false,"section":["actividades_agricolas_ganaderas_forestales_pesqueras"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"11","data_type":"money","form_number":null,"formula":"modelo-130-resultado-apartado-ii","help_text":"Partial Section II result after subtracting withholdings from the agricultural, livestock, forestry, or fishing fractional payment.","input_kind":"computed","label":"Partial result of Section II","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"11","required":false,"section":["actividades_agricolas_ganaderas_forestales_pesqueras"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"12","data_type":"money","form_number":null,"formula":"modelo-130-suma-parciales","help_text":"Sum of the partial results from Sections I and II.","input_kind":"computed","label":"Sum of partial results","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"12","required":false,"section":["total_liquidacion_trimestral"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"13","data_type":"money","form_number":null,"formula":"modelo-130-minoracion-rendimientos-netos","help_text":"Reduction applied when net yields fall within the regulatory threshold for Modelo 130.","input_kind":"computed","label":"Reduction for net yields","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"13","required":false,"section":["total_liquidacion_trimestral"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
@@ -441,7 +538,7 @@
             {"binding":null,"casilla_id":"17","data_type":"money","form_number":null,"formula":"modelo-130-diferencia","help_text":"Difference after applying prior-quarter negative results and any main-residence deduction.","input_kind":"computed","label":"Difference","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"17","required":false,"section":["resultado_final"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"18","data_type":"money","form_number":null,"formula":null,"help_text":"Amount payable already reported in previous self-assessments for the same period and year.","input_kind":"manual","label":"Amount payable from previous self-assessments","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"18","required":false,"section":["resultado_final"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
             {"binding":null,"casilla_id":"19","data_type":"money","form_number":null,"formula":"modelo-130-resultado-final","help_text":"Final Modelo 130 amount payable after all deductions and prior self-assessments.","input_kind":"computed","label":"Final result","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"19","required":false,"section":["resultado_final"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]},
-            {"binding":null,"casilla_id":"saldo-negativo-fin-periodo","data_type":"money","form_number":null,"formula":"modelo-130-saldo-negativo-fin-periodo","help_text":"Computed carry-forward seed when box 17 is negative, used as deductible box 15 in a later quarter.","input_kind":"computed","label":"Negative balance transferable to later periods (max 0, -box 17)","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"saldo-negativo-fin-periodo","required":false,"section":["computed_carry_forward"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]}
+            {"binding":null,"casilla_id":"saldo-negativo-fin-periodo","data_type":"money","form_number":null,"formula":"modelo-130-saldo-negativo-fin-periodo","help_text":"Negative results of this return and earlier returns of the year still to deduct in box 15 of a later quarter.","input_kind":"computed","label":"Negative balance transferable to later periods","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"number":"saldo-negativo-fin-periodo","required":false,"section":["computed_carry_forward"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"]}
           ]
         },
         "schema_version": "2",

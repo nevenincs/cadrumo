@@ -8,13 +8,7 @@ import type {
   TimelineChange,
 } from "../../../shell/ledgerSetup";
 import type { Translate } from "../../../shell/strings";
-import {
-  ASSET_KEYS,
-  reasonText,
-  tokenWord,
-  unindexed,
-  wordOfKey,
-} from "./assetsWords";
+import { ASSET_KEYS, tokenWord, unindexed, wordOfKey } from "./assetsWords";
 
 // The words the plan and the timeline add to the tab's shared ones: the keys
 // only they name, the tone each state is drawn in, and how a value the
@@ -55,11 +49,6 @@ export const recordedMark = (
 ): "nothing_recorded" | "not_applicable" =>
   row.applies ? "nothing_recorded" : "not_applicable";
 
-/** The reason a minimum is missing because its method has no table minimum:
- * a year that adds nothing to the reduction, not a figure left unknown. */
-export const NO_TABLE_MINIMUM =
-  "ledger.actividad_asset.disposal_finding.method_has_no_minimum";
-
 /** Why a year has no span open to record, in the plan's own words: the reason
  * of its refusal, else the reason of its absence, else the generic word, with
  * the entry to fill in when that is the remedy. Null where a span is open. */
@@ -68,33 +57,23 @@ export function nothingOpen(
   row: Pick<
     PlanRow,
     | "claimable_intervals"
-    | "claimable_refusal_key"
-    | "claimable_refusal_facts"
-    | "absence_reason_key"
-    | "absence_reason_facts"
-    | "absence_remedy_field_key"
-    | "claimable_refusal_remedy_field_key"
+    | "claimable_refusal_words"
+    | "claimable_refusal_remedy_words"
+    | "absence_reason_words"
+    | "absence_remedy_words"
   >,
-): { why: string; remedyFieldKey: string | null } | null {
+): { why: string; remedyWords: string | null } | null {
   if (row.claimable_intervals.length > 0) return null;
-  const refusal = reasonText(
-    t,
-    row.claimable_refusal_key,
-    row.claimable_refusal_facts,
-  );
+  const refusal = row.claimable_refusal_words ?? null;
   if (refusal !== null)
     return {
       why: refusal,
-      remedyFieldKey: row.claimable_refusal_remedy_field_key,
+      remedyWords: row.claimable_refusal_remedy_words ?? null,
     };
-  const absence = reasonText(
-    t,
-    row.absence_reason_key,
-    row.absence_reason_facts,
-  );
+  const absence = row.absence_reason_words ?? null;
   if (absence !== null)
-    return { why: absence, remedyFieldKey: row.absence_remedy_field_key };
-  return { why: t(ASSET_KEYS.plan.claimable_none), remedyFieldKey: null };
+    return { why: absence, remedyWords: row.absence_remedy_words ?? null };
+  return { why: t(ASSET_KEYS.plan.claimable_none), remedyWords: null };
 }
 
 /** Whether the backend states this amount as a recorded zero. */
@@ -217,10 +196,5 @@ export function changeValueText(
 export function absentText(t: Translate, planned: PlanRow): string | null {
   if (planned.absence === null) return null;
   const word = tokenWord(t, "plan_absence", planned.absence);
-  const why = reasonText(
-    t,
-    planned.absence_reason_key,
-    planned.absence_reason_facts,
-  );
-  return facts(t, [word, why]);
+  return facts(t, [word, planned.absence_reason_words ?? null]);
 }

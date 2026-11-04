@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:37+0100\n"
+"POT-Creation-Date: 2026-11-03 20:04+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -164,18 +164,23 @@ msgid ""
 "`--casilla` works only on manual boxes. A `bound` box is filled "
 "automatically from its source, so `--casilla` refuses it with `cannot "
 "override bucket-derived source-bound casillas` (for example, Modelo 130 "
-"box `02` <span lang=\"es\">Gastos</span> is `bound`). Fix the source "
+"box `01` <span lang=\"es\">Ingresos</span> is `bound`). A `computed` box,"
+" such as Modelo 130 box `02` <span lang=\"es\">Gastos</span>, comes from "
+"a formula and cannot be supplied with `--casilla` either. Fix the source "
 "instead. See [Supply a missing field value](#supply-a-missing-field-"
 "value)."
 msgstr ""
 "`--casilla` només funciona en caselles manuals. Una casella `bound` "
 "s'emplena automàticament des del seu origen, de manera que `--casilla` la"
 " rebutja amb `cannot override bucket-derived source-bound casillas` (per "
-"exemple, la casella `02` <span lang=\"es\">Gastos</span> del Modelo 130 "
-"és `bound`). Corregeix l'origen en comptes d'això. Consulta [Aporta el "
-"valor d'un camp que falta](#supply-a-missing-field-value)."
+"exemple, la casella `01` <span lang=\"es\">Ingresos</span> del Modelo 130"
+" és `bound`). Una casella `computed`, com la casella `02` <span "
+"lang=\"es\">Gastos</span> del Modelo 130, prové d'una fórmula i tampoc no"
+" es pot aportar amb `--casilla`. Corregeix l'origen en comptes d'això. "
+"Consulta [Aporta el valor d'un camp que falta](#supply-a-missing-field-"
+"value)."
 
-#: ../../how-to/review-calculation-values.md:69
+#: ../../how-to/review-calculation-values.md:71
 msgid ""
 "A first-period filing also needs its prior-period values supplied (record"
 " them as `0` when you have no prior figure). Supply the manual box and "
@@ -190,7 +195,7 @@ msgstr ""
 "(Retenciones e ingresos a cuenta, una casella manual) i sembra els tres "
 "valors del primer període:"
 
-#: ../../how-to/review-calculation-values.md:77
+#: ../../how-to/review-calculation-values.md:79
 msgid ""
 "Do not enter a box value without checking the list first. Read the label "
 "so you know which field you are filling. If your value differs from the "
@@ -201,11 +206,11 @@ msgstr ""
 "valor difereix del que deriva Cadrumo, el càlcul t'avisa i conserva el "
 "teu valor."
 
-#: ../../how-to/review-calculation-values.md:82
+#: ../../how-to/review-calculation-values.md:84
 msgid "Supply a missing field value"
 msgstr "Aporta el valor d'un camp que falta"
 
-#: ../../how-to/review-calculation-values.md:84
+#: ../../how-to/review-calculation-values.md:86
 msgid ""
 "When Cadrumo cannot fill a field automatically, the field appears in the "
 "list of fields (`bindings list`). The `--missing` filter keeps the fields"
@@ -222,7 +227,7 @@ msgstr ""
 "veure quins camps necessiten la teva aportació i aporta després el valor "
 "durant el càlcul."
 
-#: ../../how-to/review-calculation-values.md:90
+#: ../../how-to/review-calculation-values.md:92
 msgid ""
 "List every field of the modelo, keep only the fields still owed, preview "
 "what a value would produce without saving, then supply the first-period "
@@ -232,11 +237,11 @@ msgstr ""
 "falten, previsualitza què produiria un valor sense desar-lo i, tot "
 "seguit, aporta els valors del primer període durant el càlcul:"
 
-#: ../../how-to/review-calculation-values.md:99
+#: ../../how-to/review-calculation-values.md:101
 msgid "Where a field's value comes from"
 msgstr "D'on prové el valor d'un camp"
 
-#: ../../how-to/review-calculation-values.md:101
+#: ../../how-to/review-calculation-values.md:103
 msgid ""
 "The `bindings list` output shows, for each field, a `source` and a "
 "`readiness` label. The `source` tells you who supplies the value; the "
@@ -251,7 +256,7 @@ msgstr ""
 "servir el `source` per decidir com aportar el valor. Les categories "
 "d'origen més habituals són:"
 
-#: ../../how-to/review-calculation-values.md:107
+#: ../../how-to/review-calculation-values.md:109
 msgid ""
 "**Profile fact** - Cadrumo fills it from your taxpayer profile, such as "
 "residence, declaration type, or family composition. Update your profile "
@@ -262,7 +267,7 @@ msgstr ""
 "composició familiar. Actualitza el teu perfil en lloc d'introduir el "
 "valor manualment."
 
-#: ../../how-to/review-calculation-values.md:110
+#: ../../how-to/review-calculation-values.md:112
 msgid ""
 "**Records** (labelled `ledger data`) - Cadrumo computes it by summing "
 "your classified transactions and invoices. You cannot override these; fix"
@@ -272,7 +277,7 @@ msgstr ""
 "els teus moviments i factures classificats. Aquests no els pots "
 "substituir; corregeix els teus registres en comptes d'això."
 
-#: ../../how-to/review-calculation-values.md:111
+#: ../../how-to/review-calculation-values.md:113
 msgid ""
 "**Earlier declaration** (labelled `prior filed declaration`) - carried "
 "forward from an earlier period you already recorded as filed in Cadrumo."
@@ -281,7 +286,7 @@ msgstr ""
 "arrossegat d'un període anterior que ja has registrat com a presentat a "
 "Cadrumo."
 
-#: ../../how-to/review-calculation-values.md:113
+#: ../../how-to/review-calculation-values.md:115
 msgid ""
 "**Relation input** - folded in from another modelo's earlier figures. "
 "Supply it with `--relation KEY=VALUE` only when the `bindings list` "
@@ -291,7 +296,7 @@ msgstr ""
 "altre model. Aporta'l amb `--relation KEY=VALUE` només quan la sortida de"
 " `bindings list` anomena la relació."
 
-#: ../../how-to/review-calculation-values.md:115
+#: ../../how-to/review-calculation-values.md:117
 msgid ""
 "**Manual input** - this kind always needs you to type a value, with "
 "`--binding KEY=VALUE`, or `--casilla` for a box."
@@ -299,7 +304,7 @@ msgstr ""
 "**Entrada manual** - aquest tipus sempre necessita que hi escriguis un "
 "valor, amb `--binding KEY=VALUE`, o `--casilla` per a una casella."
 
-#: ../../how-to/review-calculation-values.md:118
+#: ../../how-to/review-calculation-values.md:120
 msgid ""
 "This list, written for readers, is not the complete set of source kinds. "
 "Other modelos use additional kinds of source, including invoice, "
@@ -313,7 +318,7 @@ msgstr ""
 "la sortida de `bindings list` del model seleccionat en lloc de suposar "
 "que un origen no enumerat és manual."
 
-#: ../../how-to/review-calculation-values.md:123
+#: ../../how-to/review-calculation-values.md:125
 msgid ""
 "A manual field always needs a value you enter by hand. An **earlier "
 "declaration** field also needs one when there is no earlier filing yet to"
@@ -330,7 +335,7 @@ msgstr ""
 "presentació o requerir `--relation`, segons indiqui la sortida de "
 "`bindings list`."
 
-#: ../../how-to/review-calculation-values.md:127
+#: ../../how-to/review-calculation-values.md:129
 msgid ""
 "If you are filing for the first time and a field asks for a prior-period "
 "figure you do not have, record it as zero, for example `--binding <field-"
@@ -342,11 +347,11 @@ msgstr ""
 "<field-id>=0`. Introdueix una xifra anterior real només quan en tinguis "
 "una preparada fora de Cadrumo."
 
-#: ../../how-to/review-calculation-values.md:131
+#: ../../how-to/review-calculation-values.md:133
 msgid "Régimen de atribución de rentas (members)"
 msgstr "Règim d'atribució de rendes (socis)"
 
-#: ../../how-to/review-calculation-values.md:133
+#: ../../how-to/review-calculation-values.md:135
 msgid ""
 "If you are a <span lang=\"es\">socio</span>, <span "
 "lang=\"es\">comunero</span>, or <span lang=\"es\">partícipe</span> of an "
@@ -364,7 +369,7 @@ msgstr ""
 "Modelo 100 personal no llegeix entre perfils, així que introdueix la base"
 " atribuïda a mà."
 
-#: ../../how-to/review-calculation-values.md:138
+#: ../../how-to/review-calculation-values.md:140
 msgid ""
 "Record the received share on your profile as `attribution_received` facts"
 " (entity NIF, entity name, share percentage, attributed base, and filing "
@@ -386,11 +391,11 @@ msgstr ""
 "de manera que una transcripció oblidada mai no es presenta "
 "silenciosament."
 
-#: ../../how-to/review-calculation-values.md:145
+#: ../../how-to/review-calculation-values.md:147
 msgid "Handle offsets and carry-forwards"
 msgstr "Gestiona compensacions i arrossegaments"
 
-#: ../../how-to/review-calculation-values.md:147
+#: ../../how-to/review-calculation-values.md:149
 msgid ""
 "Some modelos need prior-period values, credits, or compensation amounts. "
 "Do not guess these from your current transactions."
@@ -398,7 +403,7 @@ msgstr ""
 "Alguns models necessiten valors del període anterior, crèdits o imports "
 "de compensació. No els endevinis a partir dels teus moviments actuals."
 
-#: ../../how-to/review-calculation-values.md:149
+#: ../../how-to/review-calculation-values.md:151
 msgid ""
 "For Modelo 303 VAT compensation, inspect the local wallet, seed a first-"
 "period opening balance, then correct it if you seeded the wrong amount:"
@@ -407,7 +412,7 @@ msgstr ""
 "declara un saldo inicial de primer període i corregeix-lo després si has "
 "declarat un import equivocat:"
 
-#: ../../how-to/review-calculation-values.md:156
+#: ../../how-to/review-calculation-values.md:158
 msgid ""
 "Use `--amount 0` only for a true first Modelo 303 period with no previous"
 " VAT compensation balance. Use a positive amount only when you have the "
@@ -420,7 +425,7 @@ msgstr ""
 "presentacions anteriors del Modelo 303 preparat fora d'aquest historial "
 "local."
 
-#: ../../how-to/review-calculation-values.md:161
+#: ../../how-to/review-calculation-values.md:163
 #, python-brace-format
 msgid ""
 "Seeding refuses if a record already exists for the period. The correction"
@@ -440,7 +445,7 @@ msgstr ""
 "(consulta {ref}`Corregeix una declaració ja registrada com a presentada "
 "<correct-an-already-filed-local-record>`)."
 
-#: ../../how-to/review-calculation-values.md:167
+#: ../../how-to/review-calculation-values.md:169
 msgid ""
 "If your carry-in comes from proof held outside Cadrumo, `aeat app modelo "
 "iva-wallet override` records it with a `--reason` and an `--evidence-"
@@ -452,7 +457,7 @@ msgstr ""
 " `--evidence-locator`. Només desbloqueja el càlcul i no compleix el "
 "requisit de prova oficial de la comprovació."
 
-#: ../../how-to/review-calculation-values.md:172
+#: ../../how-to/review-calculation-values.md:174
 msgid ""
 "For relation values, calculation accepts repeatable `--relation "
 "KEY=VALUE` inputs. Use them only when the `bindings list` output "
@@ -466,11 +471,11 @@ msgstr ""
 "rendiments del treball i una activitat en estimación directa simplificada"
 " abans de proporcionar els pagaments fraccionats del Modelo 130:"
 
-#: ../../how-to/review-calculation-values.md:182
+#: ../../how-to/review-calculation-values.md:184
 msgid "Add rows for list-based forms (184, 232, 349)"
 msgstr "Afegeix files per als models basats en llistes (184, 232, 349)"
 
-#: ../../how-to/review-calculation-values.md:184
+#: ../../how-to/review-calculation-values.md:186
 msgid ""
 "Some informational modelos report a list of records rather than one set "
 "of boxes: attribution members (Modelo 184), related-party operations "
@@ -482,7 +487,7 @@ msgstr ""
 "vinculades (Modelo 232) i operadors intracomunitaris (Modelo 349). Aporta"
 " cada registre amb una entrada `--row` repetible."
 
-#: ../../how-to/review-calculation-values.md:189
+#: ../../how-to/review-calculation-values.md:191
 msgid ""
 "Each `--row` starts with the record type, followed by its fields. A "
 "modelo applies only to its matching taxpayer type. The example first sets"
@@ -496,7 +501,7 @@ msgstr ""
 "profile edit --entity-type attribution_entity`. Sense això, `work create`"
 " es nega tret que afegeixis `--allow-not-applicable`:"
 
-#: ../../how-to/review-calculation-values.md:199
+#: ../../how-to/review-calculation-values.md:201
 msgid ""
 "Take the declaration id from the `work_unit_id` field that `work create` "
 "prints. For these multi-record modelos, pass the declaration id as the "
@@ -508,11 +513,11 @@ msgstr ""
 "declaració com a argument posicional en lloc de les opcions `--modelo / "
 "--year / --period` que es fan servir en altres punts d'aquesta pàgina."
 
-#: ../../how-to/review-calculation-values.md:202
+#: ../../how-to/review-calculation-values.md:204
 msgid "Use one of these record types:"
 msgstr "Fes servir un d'aquests tipus de registre:"
 
-#: ../../how-to/review-calculation-values.md:204
+#: ../../how-to/review-calculation-values.md:206
 msgid ""
 "`miembro` - an attribution member (Modelo 184). Each row names the income"
 " `clave` it attributes, such as `C` for <span lang=\"es\">rendimientos "
@@ -522,15 +527,15 @@ msgstr ""
 "`clave` de renda que atribueix, com ara `C` per a <span "
 "lang=\"es\">rendimientos del capital inmobiliario</span>."
 
-#: ../../how-to/review-calculation-values.md:206
+#: ../../how-to/review-calculation-values.md:208
 msgid "`vinculada` - a related-party operation (Modelo 232)."
 msgstr "`vinculada` - una operació vinculada (Modelo 232)."
 
-#: ../../how-to/review-calculation-values.md:207
+#: ../../how-to/review-calculation-values.md:209
 msgid "`operador` - an intra-community trader (Modelo 349)."
 msgstr "`operador` - un operador intracomunitari (Modelo 349)."
 
-#: ../../how-to/review-calculation-values.md:209
+#: ../../how-to/review-calculation-values.md:211
 msgid ""
 "Cadrumo validates each row against the modelo's rules and refuses an "
 "incomplete set:"
@@ -538,11 +543,11 @@ msgstr ""
 "Cadrumo valida cada fila amb les regles del model i rebutja un conjunt "
 "incomplet:"
 
-#: ../../how-to/review-calculation-values.md:212
+#: ../../how-to/review-calculation-values.md:214
 msgid "Modelo 184 - the members' `porcentaje` values must sum to 100."
 msgstr "Modelo 184 - els valors `porcentaje` dels membres han de sumar 100."
 
-#: ../../how-to/review-calculation-values.md:213
+#: ../../how-to/review-calculation-values.md:215
 msgid ""
 "Modelo 349 - the trader's intra-community NIF must match its country "
 "format."
@@ -550,7 +555,7 @@ msgstr ""
 "Modelo 349 - el NIF intracomunitari de l'operador ha de coincidir amb el "
 "format del seu país."
 
-#: ../../how-to/review-calculation-values.md:215
+#: ../../how-to/review-calculation-values.md:217
 msgid ""
 "The saved rows appear in the calculation output as `detail_row` lines. "
 "Check them to confirm what was recorded."
@@ -558,7 +563,7 @@ msgstr ""
 "Les files desades apareixen a la sortida del càlcul com a línies "
 "`detail_row`. Comprova-les per confirmar què s'ha registrat."
 
-#: ../../how-to/review-calculation-values.md:218
+#: ../../how-to/review-calculation-values.md:220
 msgid ""
 "Direct `--row` support is only one way repeating data can reach a "
 "calculation. Modelo 347 counterparty records come from the invoices you "
@@ -576,11 +581,11 @@ msgstr ""
 "confonguis l'absència d'una ordre de fila directa amb un origen que "
 "falta."
 
-#: ../../how-to/review-calculation-values.md:224
+#: ../../how-to/review-calculation-values.md:226
 msgid "Special calculation tools (IRPF comparison and exemptions)"
 msgstr "Eines de càlcul especials (comparació de l'IRPF i exempcions)"
 
-#: ../../how-to/review-calculation-values.md:226
+#: ../../how-to/review-calculation-values.md:228
 msgid ""
 "For specialized calculations, the CLI provides evaluation and comparison "
 "commands:"
@@ -588,7 +593,7 @@ msgstr ""
 "Per a càlculs especialitzats, la CLI ofereix ordres d'avaluació i "
 "comparació:"
 
-#: ../../how-to/review-calculation-values.md:228
+#: ../../how-to/review-calculation-values.md:230
 msgid ""
 "**Joint vs. individual Impuesto sobre la Renta de las Personas Físicas "
 "(IRPF) comparison (`compare-taxation`)**: Compare filing jointly as a "
@@ -607,7 +612,7 @@ msgstr ""
 " l'ordre es nega amb `No active work unit matches this modelo, year, and "
 "period`:"
 
-#: ../../how-to/review-calculation-values.md:244
+#: ../../how-to/review-calculation-values.md:246
 msgid ""
 "This check does not save a draft. It shows the tax difference and a "
 "recommendation. The individual figure reuses the family unit's combined "
@@ -624,7 +629,7 @@ msgstr ""
 "anterior que necessita, com ara l'arrossegament de la base negativa, i no"
 " accepta cap opció `--binding` per aportar-ne una."
 
-#: ../../how-to/review-calculation-values.md:251
+#: ../../how-to/review-calculation-values.md:253
 msgid ""
 "**Maritime worker exemption preview (`preview-maritime-exemption`)**: "
 "Preview the IRPF exemption for maritime workers (Art. 7.p LIRPF or the "
@@ -637,7 +642,7 @@ msgstr ""
 "del Registro Especial de Buques y Empresas Navieras de Canarias "
 "(REBECA)):"
 
-#: ../../how-to/review-calculation-values.md:259
+#: ../../how-to/review-calculation-values.md:261
 msgid ""
 "The command shows which tax boxes are affected by the exemption and the "
 "amounts, with references to the applicable law and the Régimen Especial "
@@ -650,11 +655,11 @@ msgstr ""
 "s'aplica només als treballadors marítims. La majoria de declarants poden "
 "saltar-se aquesta secció."
 
-#: ../../how-to/review-calculation-values.md:265
+#: ../../how-to/review-calculation-values.md:267
 msgid "Correct a declaration already recorded as filed"
 msgstr "Corregeix una declaració ja registrada com a presentada"
 
-#: ../../how-to/review-calculation-values.md:267
+#: ../../how-to/review-calculation-values.md:269
 msgid ""
 "If a filing was already made at AEAT and later needs correction, use the "
 "correction command. Do not recalculate the same period. That would not "
@@ -665,7 +670,7 @@ msgstr ""
 "mateix període. Això no crearia el registre de complementaria (declaració"
 " complementària) correcte:"
 
-#: ../../how-to/review-calculation-values.md:274
+#: ../../how-to/review-calculation-values.md:276
 #, python-brace-format
 msgid ""
 "The correction starts from a filing record that carries an imported AEAT "
@@ -683,30 +688,30 @@ msgstr ""
 "l'id a `--from-filing-record`. L'ordre de correcció no presenta res a "
 "l'AEAT."
 
-#: ../../how-to/review-calculation-values.md:280
+#: ../../how-to/review-calculation-values.md:282
 msgid "Where to go next"
 msgstr "On anar després"
 
-#: ../../how-to/review-calculation-values.md:282
+#: ../../how-to/review-calculation-values.md:284
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Inici ràpid: prepara la presentació d'un model](quickstart.md)"
 
-#: ../../how-to/review-calculation-values.md:283
+#: ../../how-to/review-calculation-values.md:285
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flux de treball de presentació](filing-spine.md)"
 
-#: ../../how-to/review-calculation-values.md:284
+#: ../../how-to/review-calculation-values.md:286
 msgid "[Prepare a Modelo 303 VAT filing](modelo-303.md)"
 msgstr "[Prepara una presentació d'IVA del Modelo 303](modelo-303.md)"
 
-#: ../../how-to/review-calculation-values.md:285
+#: ../../how-to/review-calculation-values.md:287
 msgid "[Prepare the annual Modelo 390 VAT summary](modelo-390.md)"
 msgstr "[Prepara el resum anual d'IVA del Modelo 390](modelo-390.md)"
 
-#: ../../how-to/review-calculation-values.md:286
+#: ../../how-to/review-calculation-values.md:288
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisa càlculs amb Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/review-calculation-values.md:287
+#: ../../how-to/review-calculation-values.md:289
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"

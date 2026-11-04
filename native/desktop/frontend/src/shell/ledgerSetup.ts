@@ -1182,6 +1182,10 @@ export type ActivityAssetRefusal = {
   accelerated_da18: JsonObject | null;
   reason_key: string | null;
   reason_facts: ReasonFact[];
+  /** The finished sentence for the refusal, said in
+   * `refusal_words_language`; null where the backend has none to say. */
+  refusal_words?: string | null;
+  refusal_words_language?: OutputLanguage | null;
 };
 /** An amount the backend states or does not. Null is unknown and never
  * zero; a recorded zero is `{ decimal: "0.00" }`. */
@@ -1309,6 +1313,10 @@ export type M130Projection = {
   unavailable_asset_ids: string[];
   free_gap_asset_ids: string[];
   agrarian_excluded_asset_ids: string[];
+  /** The sentence saying the amount leaves out the elements that could not
+   * be worked out; present exactly when some could not. */
+  partial_words?: string | null;
+  words_language?: OutputLanguage | null;
 };
 /** What can be said about an interval of the year no claim covers. */
 export type M100GapKind =
@@ -1325,6 +1333,21 @@ export type M100ClaimGap = {
    * end; `covered_until` is the exclusive boundary. */
   covered_through: string;
   accrued: PublicDecimal | null;
+  /** The interval said whole, by the name the register holds for the
+   * element; null where it cannot be said whole. */
+  words?: string | null;
+  words_language?: OutputLanguage | null;
+};
+/** What a reason leaves out of the Modelo 130 amounts. */
+export type M130LeftOutReason =
+  "free_gap" | "agrarian_excluded" | "unavailable";
+/** The elements one reason leaves out of the handoff's Modelo 130 amounts,
+ * said whole. */
+export type M130LeftOut = {
+  reason: M130LeftOutReason;
+  asset_ids: string[];
+  words: string;
+  words_language: OutputLanguage;
 };
 export type ActivityAssetFilingResult = ActivityAssetResultBase & {
   tax_year: number | null;
@@ -1338,6 +1361,9 @@ export type ActivityAssetFilingResult = ActivityAssetResultBase & {
     /** Both null when no quarter was asked. */
     material_m130: M130Projection | null;
     intangible_m130: M130Projection | null;
+    /** What the Modelo 130 amounts leave out, one entry per reason across
+     * both kinds of element. */
+    left_out: M130LeftOut[];
   } | null;
 };
 
@@ -1376,6 +1402,10 @@ export type AssetListRow = {
   pending_applies: boolean;
   /** What to fill in when the opening amount is unknown. */
   opening_remedy_field_key: string | null;
+  /** The sentence telling where to enter the unknown opening amount; present
+   * exactly when the field key is, said in `words_language`. */
+  opening_remedy_words?: string | null;
+  words_language?: OutputLanguage | null;
   findings: AssetCounts;
   /** The year a dotación form opens on; null where no year has anything left
    * to record. */
@@ -1451,6 +1481,12 @@ export type PlanRow = {
   /** The catalogue key of the sentence that says why `minimum_through` is
    * null. */
   minimum_reason_key: string | null;
+  /** The sentence for `minimum_reason_key`, said in `words_language`. */
+  minimum_reason_words?: string | null;
+  /** True when `minimum_through` is null because the method has no table
+   * minimum: a year that adds nothing to the reduction of cost, not a figure
+   * left unknown. */
+  minimum_has_no_table: boolean;
   minimum_complete: boolean;
   tax_year: number;
   method: string;
@@ -1461,9 +1497,14 @@ export type PlanRow = {
   absence: string | null;
   absence_reason_key: string | null;
   absence_reason_facts: ReasonFact[];
+  /** The sentence for the absence, filled in with its facts; null where it
+   * cannot be said whole. */
+  absence_reason_words?: string | null;
   /** The catalogue word of the entry that supplies what the absence lacks,
    * when filling it in is the remedy; null otherwise. */
   absence_remedy_field_key: string | null;
+  /** The sentence telling where to enter what the absence lacks. */
+  absence_remedy_words?: string | null;
   /** Whether the year has something to work out: false for a known state of
    * nothing to work out with no span open. */
   applies: boolean;
@@ -1472,8 +1513,13 @@ export type PlanRow = {
   claimable_intervals: ClaimableInterval[];
   claimable_refusal_key: string | null;
   claimable_refusal_facts: ReasonFact[];
+  /** The sentence for the refusal, filled in with its facts. */
+  claimable_refusal_words?: string | null;
   /** As `absence_remedy_field_key`, for the refusal. */
   claimable_refusal_remedy_field_key: string | null;
+  claimable_refusal_remedy_words?: string | null;
+  /** The language of every sentence this year carries. */
+  words_language?: OutputLanguage | null;
   edition: PlanEdition | null;
   service_days: number | null;
   calendar_days: number | null;
@@ -1503,11 +1549,20 @@ export type ElectionLimits = {
   not_table_bound: string | null;
   unavailable_reason_key: string | null;
   unavailable_reason_facts: ReasonFact[];
+  /** The sentence for why the limits are not available. */
+  unavailable_reason_words?: string | null;
+  words_language?: OutputLanguage | null;
 };
 
 /** A warning on the plan that changes no figure and refuses nothing; the
  * backend words it by the catalogue key it serves. */
-export type PlanAdvisory = { kind: string; label_key: string };
+export type PlanAdvisory = {
+  kind: string;
+  label_key: string;
+  /** The advisory said whole, in `words_language`. */
+  words?: string | null;
+  words_language?: OutputLanguage | null;
+};
 
 export type PlanResult = {
   asset_id: string | null;
@@ -1711,6 +1766,9 @@ export type DisposalFinding = {
   kind: string;
   /** The catalogue key that words the finding. */
   label_key: string;
+  /** The finding said whole, in `words_language`. */
+  words?: string | null;
+  words_language?: OutputLanguage | null;
   tax_year: number | null;
   effect_on_cost: Amount;
 };
@@ -1747,7 +1805,12 @@ export type DisposalCalculation = {
 // ---- The register's reads and the baja, in the shapes the tab sends ---------
 
 export type ActivityAssetListResult = ActivityAssetResultBase & AssetListResult;
-export type ActivityAssetPlanRequest = { asset_id: string };
+/** The language the sentences of a register read are said in. */
+export type ActivityAssetWordsRequest = { output_language?: OutputLanguage };
+export type ActivityAssetListRequest = ActivityAssetWordsRequest;
+export type ActivityAssetPlanRequest = ActivityAssetWordsRequest & {
+  asset_id: string;
+};
 export type ActivityAssetPlanResult = ActivityAssetResultBase & PlanResult;
 export type ActivityAssetTimelineRequest = { asset_id: string };
 export type ActivityAssetTimelineResult = ActivityAssetResultBase &
@@ -1769,11 +1832,12 @@ export type ActivityAssetDisposeRequest = {
   asset_id: string;
   disposal: DisposalFacts;
 };
-export type ActivityAssetDisposalCalculateRequest = {
-  asset_id: string;
-  /** Null reads the recorded baja; a stated one is a preview. */
-  disposal: DisposalFacts | null;
-};
+export type ActivityAssetDisposalCalculateRequest =
+  ActivityAssetWordsRequest & {
+    asset_id: string;
+    /** Null reads the recorded baja; a stated one is a preview. */
+    disposal: DisposalFacts | null;
+  };
 export type ActivityAssetDisposalCalculateResult = ActivityAssetResultBase & {
   asset_id: string | null;
   calculation: DisposalCalculation | null;

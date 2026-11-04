@@ -168,13 +168,18 @@ def main(*, native: bool = False, native_only: bool = False, configuration: str 
     results = [] if native_only else [run_gate(name, command) for name, command in GATES]
     if native or native_only:
         results.extend(native_gate_results(configuration))
+    name = "check-native-code" if native_only else "check-code" if native else "check-python"
+    return _report_results(name, results)
+
+
+def _report_results(name: str, results: list[GateResult]) -> int:
+    """Render every failure while retaining the first gate's actual exit status."""
     failed = [r for r in results if r.returncode != 0]
     passed = [r for r in results if r.returncode == 0]
 
     if not failed:
         return 0
 
-    name = "check-native-code" if native_only else "check-code" if native else "check-python"
     _emit(f"{name}: {len(failed)} of {len(results)} gates failed\n")
     _emit_failed_gates(failed)
     if passed:

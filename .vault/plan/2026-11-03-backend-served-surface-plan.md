@@ -10,7 +10,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:a1556d6e28213e26b878cfe8e87403a5fab2dbb0058d04fc7f1967f5917b0df4'
+body_hash: 'sha256:6ef34df8b61054e37332572797527d99a657a80f01c7faabc837b52eed7359fd'
 ---
 
 # `backend-served-surface` plan
@@ -61,7 +61,7 @@ The ledger reads serve the reporting currency, the annual period, readiness role
 
 The modelo workspace reads serve the credit-resolution door, a generic evidence question, a generic correction question, estimate groups, the comparison recommendation and workspace facts, and the window deletes its per-modelo branches.
 
-- [ ] `P03.S17` - Finish the in-flight credit-resolution door fields (refusal sentence, the acceptance answer sentence, the finding id with the answer a check line offers); then delete the window's joins that decide accept or revoke; `src/cadrumo/application/modelo/credit_resolution_contracts.py, native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx`.
+- [x] `P03.S17` - Finish the in-flight credit-resolution door fields (refusal sentence, the acceptance answer sentence, the finding id with the answer a check line offers); then delete the window's joins that decide accept or revoke; `src/cadrumo/application/modelo/credit_resolution_contracts.py, native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx`.
 - [ ] `P03.S18` - Serve a generic evidence-question list on the work form in place of the 303 and 390 attestation dialog; then delete calculationEvidence.ts and the dialog's modelo branch; `src/cadrumo/application/modelo/m303_attestation_operation.py, src/cadrumo/application/modelo/work_form.py, native/desktop/frontend/src/components/modelo/workspace/calculationEvidence.ts, native/desktop/frontend/src/components/modelo/workspace/CalculationEvidenceDialog.tsx, native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`.
 - [ ] `P03.S19` - Serve a generic correction question with its motive field from the amendment context; then delete the window's 303 rectificativa motive; `src/cadrumo/application/modelo/amendment_context_operation.py, native/desktop/frontend/src/components/modelo/workspace/CorrectionDialog.tsx, native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`.
 - [ ] `P03.S20` - Serve generic estimate groups from the projection read; then delete the window's m130_accumulated and m100_projection groups; `src/cadrumo/application/modelo/projection_operation.py, native/desktop/frontend/src/components/modelo/workspace/estimateRead.ts`.

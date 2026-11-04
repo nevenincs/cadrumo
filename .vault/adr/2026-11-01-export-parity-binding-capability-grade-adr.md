@@ -24,7 +24,7 @@ Accepted 2026-11-01 on the operator's rulings recorded below.
 
 On 2026-11-01 the operator ruled that an advisory value must block verify and export, and must not block calculation or preview. The operator also chose a typed per-binding grade, so that the grade is declared in the registry and not inferred from a fact name.
 
-Two values are advisory today. Both carry ledger invoice withholding whose year imputation is not grounded. RIRPF art. 79 imputes a retención to the period of its income. The ledger keys each row by its bank date (`src/cadrumo/application/aggregation/renta_income_ledger.py:933`), and that is correct only under the RIRPF art. 7.2 cash-criterion election. The first value is Modelo 130 casilla 06, from binding `modelo-130-actividad-economica-retenciones-cumulative` (`src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0001-declarations.toml:113`). The second is Modelo 100 casilla 0599, bound on side branch commit d5493eed10 to `renta-ledger-actividad-retenciones-0599` at the 2022 baseline.
+Two values are advisory today. Both carry ledger invoice withholding whose year imputation is not grounded. RIRPF art. 79 imputes a retención to the period of its income. The ledger keys each row by its bank date (`src/cadrumo/application/aggregation/renta_income_ledger.py:933`), and that is correct only under the RIRPF art. 7.2 cash-criterion election. The first value is Modelo 130 casilla 06, from binding `modelo-130-actividad-economica-retenciones-cumulative` (`src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0001-declarations.toml:113`). The second is Modelo 100 casilla 0599, bound on side branch commit d5493eed10 to `renta-ledger-actividad-retenciones-0599` at the storage baseline.
 
 The resolver expresses their grade only as the note `advisory_retencion_credit_grade`. It emits that note for any non-zero declared credit of the shared fact (`src/cadrumo/application/aggregation/modelo_bindings.py:553-565`). The note has CHECK attention (`src/cadrumo/application/modelo/calculation_notes.py:146`), it is not a durable source-issue reason (`src/cadrumo/application/modelo/calculation_bucket_actions.py:968`), and it has no locale entry. An exported file therefore carries the value.
 
@@ -115,7 +115,7 @@ The snapshot derives, from those same edges, a read-only map from each capped bi
 
 **Cross-domain dependencies.** The operator has ruled on the zero-cap and casilla 06 questions (Operator rulings 2026-11-01 below), so S14 is no longer waiting on them. Capping casilla 06 changes Modelo 130 goldens that other sessions own, and the shared screen stamp refuses every unstamped revision of every modelo at verify and export. Both are cross-domain effects that plan Step P01.S28 coordinates before S14 lands, and cross-domain coordination is authorized by the operator. This dependency adds no product scope to S14.
 
-P02.S05 rebases d5493eed10 onto that work and adds the same cap to `renta-ledger-actividad-retenciones-0599` at the 2022 baseline. It rewrites the binding comment so it no longer names the retired note, and adapts that commit's tests to assert that calculation succeeds while verify and export refuse. Oracle-checked tests with independent oracles prove that inferred and unknown rows still leave 0599 unchanged. Authority publication remains with the shared publication session.
+P02.S05 rebases d5493eed10 onto that work and adds the same cap to `renta-ledger-actividad-retenciones-0599` at the storage baseline. It rewrites the binding comment so it no longer names the retired note, and adapts that commit's tests to assert that calculation succeeds while verify and export refuse. Oracle-checked tests with independent oracles prove that inferred and unknown rows still leave 0599 unchanged. Authority publication remains with the shared publication session.
 
 ## Rationale
 
@@ -168,7 +168,7 @@ Basis: operator ruling 2026-11-02, relayed by the orchestrator as binding for pl
     - an unknown criterion or accrual date leaves the value unresolved;
     - withholding paid after the window's end is reported and left for the quarter it is paid in (RIRPF art. 110.3.a, "practicadas"; TEAC 00/03187/2011);
     - a rental activity's withholding is kept (RIRPF art. 110.3.a.2.º).
-- P05.S08, Modelo 100 casilla 0599. The cap is removed from `renta-ledger-actividad-retenciones-0599` at the `2022` baseline (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`), and the binding now cites LIRPF art. 14 and RIRPF arts. 7 and 79. The conditions that held at promotion:
+- P05.S08, Modelo 100 casilla 0599. The cap is removed from `renta-ledger-actividad-retenciones-0599` at the storage baseline (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`), and the binding now cites LIRPF art. 14 and RIRPF arts. 7 and 79. The conditions that held at promotion:
   - each row's retención follows its income into the ejercicio the criterion imputes it to, whenever it was paid (RIRPF art. 79);
   - only withholding on a linked, wholly paid invoice is credited;
   - accrued-but-unpaid withholding is reported, with a rectification finding when the payment follows a filed return;

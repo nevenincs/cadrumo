@@ -467,15 +467,31 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_source": "ledger_iva_aggregation",
+              "detail": "2 ledger row(s) were placed in this period on their bank movement date because no operation date is recorded: 71a5db2bb891, e3eeac5e306e. LIVA art. 75 fixes the devengo by the operation, not the collection, so a sale near a period end can belong to the previous one",
+              "level": "check",
+              "reason": "iva_row_placed_on_movement_date",
+              "remedy": "Record the operation date on each row. For a pago anticipado, art. 75.Dos dates the amount received at its collection, so record the collection date",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_kind": "ledger_iva_aggregation"
+            },
+            "message": "Some ledger rows have no operation date, so their bank date chose the IVA period. IVA falls due when the operation takes place, not when the money moves.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
               "box": "44",
               "casilla_id": "44",
-              "detail": "Casilla '44' was filed with the value you supplied (150.00), not the 0.00 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
-              "level": "check",
-              "reason": "operator_override_diverges_from_computed",
-              "remedy": "Confirm the supplied value is the one you intend to file; to file the derived figure instead, recalculate without setting this casilla.",
-              "source_kind": "operator_casilla_input"
+              "detail": "casilla '44': the caller value replaced a different value from backend",
+              "level": "blocks",
+              "reason": "precedence_tier_divergence",
+              "remedy": "Correct the source in error so both state the same value, or remove the higher tier's value, then calculate again.",
+              "resolver_id": "calculate_caller_relations_and_boxes",
+              "source_kind": "operator_input"
             },
-            "message": "The value in box 44 is the one you entered, not the one Cadrumo worked out.",
+            "message": "Two sources hold different values for a figure that reaches box 44, and Cadrumo used the one that takes precedence.",
             "severity": "warning"
           },
           {
@@ -541,7 +557,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c6fa79ab4ad3abd41ab8f6d8987b20c2a3673c1e5e839fcc76b350c170fd929c",
+          "calculation_revision_id": "f24be401b9d367f88f95ce15fbe576993319f41306d21adcaff8f146264a7b85",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1109,7 +1125,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision c6fa79ab4ad3abd41ab8f6d8987b20c2a3673c1e5e839fcc76b350c170fd929c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision f24be401b9d367f88f95ce15fbe576993319f41306d21adcaff8f146264a7b85 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1142,7 +1158,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "prorrata_regularizacion",
               "resolver_id": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+              "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             }
           ],
           "state": "borrador",

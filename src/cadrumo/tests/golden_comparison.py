@@ -43,7 +43,7 @@ nothing else in the envelope does.  Only ``modelo.export``'s
 ``result.file_sha256`` and ``result.bucket_event_id`` are masked; the byte
 size and every other leaf remain assertable.
 
-Two ledger read refusals expose an opaque invocation id, minted separately
+Registered read refusals expose an opaque invocation id, minted separately
 from the transaction or evidence identity. Only their exact registered
 command/code pairs' ``error.context.operation_id`` are masked, and only when
 the value has the canonical lower-case 64-hex shape. Receipt correlation is
@@ -93,6 +93,7 @@ _REFUSAL_OPERATION_ID_PAIRS: frozenset[tuple[str, str]] = frozenset(
     {
         ("ledger.view", "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX"),
         ("ledger.evidence.view", "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"),
+        ("config.google.status", "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"),
     },
 )
 
@@ -144,7 +145,7 @@ def mask_document(
 
 
 def _mask_refusal_operation_id(document: dict[str, object], command: str) -> None:
-    """Mask only a canonical invocation id on the two enrolled read refusals."""
+    """Mask only a canonical invocation id on the enrolled read refusals."""
     error = document.get("error")
     if not is_object_dict(error):
         return

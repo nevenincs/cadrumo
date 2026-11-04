@@ -491,6 +491,8 @@ html_css_files = [
     "cadrumo-casilla-reference.css",
     "cadrumo-legal-reference.css",
 ]
+if _DESKTOP_FLAVOR:
+    html_css_files.append("cadrumo-desktop.css")
 # The desktop bridge goes first, so its capture-phase key listener exists
 # before ``cadrumo-docs.js`` registers its own. The desktop window refuses to
 # turn a string into code, which Sphinx's ``doctools.js`` does to read a

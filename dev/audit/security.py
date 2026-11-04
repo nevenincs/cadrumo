@@ -10,7 +10,7 @@ deliberately no second semgrep invocation anywhere in the tree -- both
 
 semgrep runs through ``uvx`` (a pinned, ephemeral, network-touching tool
 resolution, the same risk profile as jscpd/npx), so this module carries the
-same three-state discipline ``duplication.py`` established: a scan that could
+same evidence discipline ``duplication.py`` established: a scan that could
 not run, or ran but proves nothing, is never reported as clean.
 
 Findings are parsed from ``--json`` output rather than the default text
@@ -100,9 +100,10 @@ def _semgrep_scanned_files(payload: dict[str, object]) -> int | SecurityResult:
 
 
 class SecurityOutcome(StrEnum):
-    """The three honest states a semgrep scan can land in."""
+    """Security findings, coverage, and scanner availability."""
 
     OBSERVED_ZERO = "observed_zero"
+    INCOMPLETE = "incomplete"
     FINDINGS = "findings"
     UNAVAILABLE = "unavailable"
 
@@ -123,7 +124,7 @@ class SecurityFinding:
 class SecurityResult:
     """A security scan's typed outcome.
 
-    Construct through :meth:`observed_zero`, :meth:`from_findings`, or
+    Construct through :meth:`observed_zero`, :meth:`incomplete`, :meth:`from_findings`, or
     :meth:`unavailable` rather than directly, so the invariants binding each
     outcome to its evidence hold by construction.
     """
@@ -141,8 +142,24 @@ class SecurityResult:
         if files_scanned <= 0:
             msg = "observed_zero requires a scan that demonstrably inspected files"
             raise ValueError(msg)
+        if parse_errors:
+            msg = "observed_zero requires a scan with no parse errors"
+            raise ValueError(msg)
         return cls(
             outcome=SecurityOutcome.OBSERVED_ZERO,
+            files_scanned=files_scanned,
+            parse_errors=parse_errors,
+            raw_json=raw_json,
+        )
+
+    @classmethod
+    def incomplete(cls, files_scanned: int, parse_errors: tuple[str, ...], raw_json: str) -> SecurityResult:
+        """No findings in scanned files, with incomplete coverage due to parse errors."""
+        if files_scanned <= 0 or not parse_errors:
+            msg = "incomplete requires inspected files and at least one parse error"
+            raise ValueError(msg)
+        return cls(
+            outcome=SecurityOutcome.INCOMPLETE,
             files_scanned=files_scanned,
             parse_errors=parse_errors,
             raw_json=raw_json,
@@ -179,9 +196,14 @@ class SecurityResult:
         """Whether this result honestly earns a GREEN verdict.
 
         Only a scan that demonstrably inspected files and found nothing
-        qualifies. An unavailable scan is never green.
+        qualifies, with no parse errors. An unavailable scan is never green.
         """
-        return self.outcome is SecurityOutcome.OBSERVED_ZERO
+        return (
+            self.outcome is SecurityOutcome.OBSERVED_ZERO
+            and self.files_scanned > 0
+            and not self.parse_errors
+            and not self.findings
+        )
 
     @property
     def count_by_severity(self) -> dict[str, int]:
@@ -203,6 +225,8 @@ class SecurityResult:
         if self.outcome is SecurityOutcome.UNAVAILABLE:
             return f"security signal unavailable this cycle: {self.reason}"
         error_note = f"; {len(self.parse_errors)} file(s) failed to parse" if self.parse_errors else ""
+        if self.outcome is SecurityOutcome.INCOMPLETE:
+            return f"incomplete coverage: no findings across {self.files_scanned} scanned file(s){error_note}"
         if self.outcome is SecurityOutcome.OBSERVED_ZERO:
             return f"no findings across {self.files_scanned} scanned file(s){error_note}"
         breakdown = ", ".join(f"{count} {sev}" for sev, count in self.count_by_severity.items())
@@ -236,8 +260,25 @@ def semgrep_command(uvx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS) -> l
     return command
 
 
+def _semgrep_findings(payload: dict[str, object]) -> tuple[SecurityFinding, ...] | SecurityResult:
+    """Validate and order result entries independently of scan coverage."""
+    raw_results = payload.get("results", [])
+    if not isinstance(raw_results, list):
+        return SecurityResult.unavailable("semgrep JSON results field was not an object list")
+
+    findings: list[SecurityFinding] = []
+    for entry in raw_results:
+        finding = _semgrep_result_entry(entry)
+        if isinstance(finding, SecurityResult):
+            return finding
+        findings.append(finding)
+
+    findings.sort(key=lambda f: (_SEVERITY_ORDER.index(f.severity) if f.severity in _SEVERITY_ORDER else 99, f.path))
+    return tuple(findings)
+
+
 def classify_semgrep_output(raw_stdout: str) -> SecurityResult:
-    """Classify semgrep's JSON stdout into the typed three-state result.
+    """Classify semgrep's JSON stdout into a typed coverage and findings result.
 
     A run is only trusted when its JSON parses AND ``paths.scanned`` proves
     files were actually inspected -- the same "files_analyzed" discipline
@@ -260,24 +301,18 @@ def classify_semgrep_output(raw_stdout: str) -> SecurityResult:
     if isinstance(parse_errors, SecurityResult):
         return parse_errors
 
-    raw_results = payload.get("results", [])
-    if not isinstance(raw_results, list):
-        return SecurityResult.unavailable("semgrep JSON results field was not an object list")
-
-    findings: list[SecurityFinding] = []
-    for entry in raw_results:
-        finding = _semgrep_result_entry(entry)
-        if isinstance(finding, SecurityResult):
-            return finding
-        findings.append(finding)
+    findings = _semgrep_findings(payload)
+    if isinstance(findings, SecurityResult):
+        return findings
 
     if not findings:
+        if parse_errors:
+            return SecurityResult.incomplete(files_scanned, parse_errors, raw_stdout)
         return SecurityResult.observed_zero(files_scanned, parse_errors, raw_stdout)
 
-    findings.sort(key=lambda f: (_SEVERITY_ORDER.index(f.severity) if f.severity in _SEVERITY_ORDER else 99, f.path))
     return SecurityResult.from_findings(
         files_scanned=files_scanned,
-        findings=tuple(findings),
+        findings=findings,
         parse_errors=parse_errors,
         raw_json=raw_stdout,
     )

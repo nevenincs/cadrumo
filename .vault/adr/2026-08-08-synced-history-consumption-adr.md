@@ -47,7 +47,7 @@ Four measured facts constrain any ruling, and none of them was available when th
 record was scaffolded.
 
 The 72 reachable carries are consumed TODAY, proven by execution rather than by
-reading a resolver: Modelo 100 for 2024, casilla 0604, is absent on a profile with
+reading a resolver: Modelo 100, casilla 0604, is absent on a profile with
 no history and holds 1416.00 on a profile with a pulled one, both poles driven
 through the live operator calculate over one law-resolved revision, with no
 refusal diagnostic on the pulled pole. A ruling that a channel must not consume

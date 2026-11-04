@@ -34,6 +34,7 @@ import {
   tauriConfig,
 } from "../../scripts/configuration.mjs";
 import { developmentServer } from "../../scripts/development-server.mjs";
+import { frozenHostSelection } from "./frozen-host.mjs";
 
 export const FEATURE = "webview2-remote-debugging";
 export const AUTOMATION_FEATURE = "native-automation";
@@ -86,6 +87,8 @@ export function packagedHost(variant = VARIANTS.embedded) {
  * Cargo directory is not. The lane's own stager builds the mirror.
  */
 export function installedHost(variant = VARIANTS.embedded) {
+  const frozen = frozenHostSelection(variant);
+  if (frozen) return frozen;
   const host = packagedHost(variant);
   const repository = fileURLToPath(new URL("../../../../", import.meta.url));
   const args = [

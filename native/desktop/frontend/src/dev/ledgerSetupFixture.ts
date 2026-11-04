@@ -14,6 +14,7 @@ import type {
   LedgerDefinitionId,
 } from "../shell/ledger";
 import servedEntryOptions from "./fixtures/ledgerEntryOptions.json" with { type: "json" };
+import servedWords from "./fixtures/ledgerServedWords.json" with { type: "json" };
 
 const entryWord = (family: string, value: string, word = value) => ({
   value,
@@ -234,6 +235,37 @@ type Book = {
 /** The scenario ledger's setup answers, held beside the movements. */
 export function setupOperations(ledger: FixtureLedger, tools: Tools) {
   const { profileId, today, hex64, events, now } = tools;
+  /** The sentence the backend serves for a refusal, in the window's language,
+   * filled from the refusal's facts; nothing where a fact it names is not
+   * held, as the backend then words the code alone. */
+  const served = (
+    family: keyof typeof servedWords,
+    reason: string,
+    facts: JsonObject = {},
+  ): JsonObject => {
+    const byLanguage = (
+      servedWords[family] as Record<string, Record<string, string>>
+    )[reason];
+    if (!byLanguage) return {};
+    const template = byLanguage[tools.language] ?? byLanguage.en;
+    if (template === undefined) return {};
+    let missing = false;
+    const words = template.replace(/\{(\w+)\}/g, (_, name: string) => {
+      const fact = facts[name];
+      if (fact === null || fact === undefined || typeof fact === "object") {
+        missing = true;
+        return "";
+      }
+      return String(fact);
+    });
+    if (missing) return {};
+    return {
+      refusal_words: words,
+      refusal_words_language: byLanguage[tools.language]
+        ? tools.language
+        : "en",
+    };
+  };
   const ratios = new Map<string, string>([["telefonia_fija", "0.5"]]);
   const counterparties = new Map<string, JsonObject>([
     [
@@ -930,6 +962,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         accepted_provenances: [],
         existing_provenance: null,
         ...extra,
+        ...served("prorrata", reason),
       },
     });
   };
@@ -1302,6 +1335,13 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
           missing: null,
           identifier,
           ...extra,
+          ...served(
+            "capital_goods",
+            reason === "disposal_incomplete"
+              ? `${reason}.${String(extra.missing)}`
+              : reason,
+            { identifier },
+          ),
         },
       });
     };
@@ -1431,6 +1471,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
           )
           .map(([key, fact]) => ({ key, value: String(fact) })),
         ...extra,
+        ...served("inventory", reason, extra),
       },
     });
   };

@@ -175,10 +175,7 @@ export async function docsUiChecks({
           if (!brand) throw new Error("the documentation home link is missing");
           return new URL(brand.getAttribute("href"), document.baseURI).href;
         });
-        await session
-          .docsFrame()
-          .locator("body")
-          .click({ position: { x: 4, y: 4 } });
+        await session.docsFrame().locator("h1").first().click();
         // Docs Home is the documentation's own chord; the rail toggles the pane.
         await page.keyboard.press("Alt+Home");
         await waitFor(() => session.docsFrame()?.url() === home, {

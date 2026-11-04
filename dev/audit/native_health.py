@@ -102,13 +102,34 @@ def scan(repo_root: Path, scope: LanguageScope) -> DuplicationResult:
 
 def classify(repo_root: Path, path: Path) -> InventoryEntry:
     """Classify an inventoried source by its owner and an explicit generated marker."""
-    with (repo_root / path).open(encoding="utf-8") as source:
+    return InventoryEntry(path, _source_role(path, _has_generated_header(repo_root / path)))
+
+
+def _has_generated_header(path: Path) -> bool:
+    with path.open(encoding="utf-8") as source:
         generated = False
         for line in islice(source, 12):
             stripped = line.lstrip()
             if stripped and not stripped.startswith(("//", "#", "/*", "*")):
                 break
             generated |= _GENERATED_HEADER.search(line) is not None
+    return generated
+
+
+def _is_test_source(parts: tuple[str, ...], name: str) -> bool:
+    return (
+        any(part in {"tests", "test", "benches"} for part in parts)
+        or name.endswith((".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx", "_test.rs", "_tests.rs"))
+        or (name.startswith("test_") and name.endswith(".rs"))
+        or name == "tests.rs"
+    )
+
+
+def _is_tooling_source(parts: tuple[str, ...], name: str) -> bool:
+    return "dev" in parts or ".storybook" in parts or name.endswith(".stories.tsx") or name == "build.rs"
+
+
+def _source_role(path: Path, generated: bool) -> str:
     parts = path.parts
     name = path.name.casefold()
     if "vendor" in parts or "vendored" in parts:
@@ -117,20 +138,15 @@ def classify(repo_root: Path, path: Path) -> InventoryEntry:
         role = "generated"
     elif any(part in {"fixtures", "fixture", "testdata", "_data"} for part in parts):
         role = "data"
-    elif (
-        any(part in {"tests", "test", "benches"} for part in parts)
-        or name.endswith((".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx", "_test.rs", "_tests.rs"))
-        or (name.startswith("test_") and name.endswith(".rs"))
-        or name == "tests.rs"
-    ):
+    elif _is_test_source(parts, name):
         role = "test"
-    elif "dev" in parts or ".storybook" in parts or name.endswith(".stories.tsx") or name == "build.rs":
+    elif _is_tooling_source(parts, name):
         role = "tooling"
     elif "src" in parts:
         role = "runtime"
     else:
         role = "tooling"
-    return InventoryEntry(path, role)
+    return role
 
 
 def census(repo_root: Path) -> tuple[InventoryEntry, ...]:

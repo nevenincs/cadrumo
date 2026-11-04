@@ -1,4 +1,6 @@
 :seed: autonomo-irpf-2026
+@step State the simplified direct estimation modality and the 2026 cobros y pagos election, without Codigo de Comercio accounting.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --irpf-estimation-regime directa_simplificada --irpf-activity-income-imputation-criterion cobros_y_pagos --irpf-activity-income-imputation-year 2026 --no-irpf-codigo-comercio-accounting
 @step Open the Modelo 130 draft for the first quarter.
 aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id

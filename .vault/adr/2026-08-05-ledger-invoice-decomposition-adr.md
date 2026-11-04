@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
-modified: '2026-08-06'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:19586f96c8844c2802e45d0f7ecc51df1151ac44541320aa039db1b9a5e9f067'
+body_hash: 'sha256:cbe265d36d07171179a7b82768e3b41d83111db1ce38184afc7189cf4536dd44'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
@@ -322,13 +322,13 @@ LLM-emitted. IVA rates continue to resolve through the existing registry rate lo
 (`2026-06-04-llm-ledger-classification-adr`). CORRECTED 2026-08-05 (coordinator
 measurement at HEAD): the rich-invoice `IvaRate` enum and the registry rate table
 ALREADY AGREE exactly — both declare {0, 4, 10, 21} for the served window
-(registry ES coverage starts 2024-01-01), and the transient 2022-2024 5% rate is
+(the registry rate rows start at their first published date), and the transient 5% rate is
 INTENTIONALLY absent from both sides per the enum's own docstring, to be added only
-in sync with a registry rate entry if pre-2025 ingestion ever lands. The ruling is
+in sync with a registry rate entry if ingestion of that earlier window ever lands. The ruling is
 therefore a PARITY GATE only (enum members ≡ registry-declared rate set for the
 served window, drift in either direction fails loudly), NOT a new member; adding
 `RATE_5` unilaterally would create a member the registry cannot resolve. Whether the
-registry's pre-2024 rate coverage window should be extended for historic ingestion
+registry's rate coverage window should be extended for historic ingestion
 is an operator scope question (see Consequences), not an enum reconciliation.
 
 **D6 — territory and the income measure (Site 2).** The per-family fact vocabularies
@@ -361,7 +361,7 @@ amount) is expressly out of scope.
 **D9 — canonical IVA rate mechanism (operator-raised, ruled 2026-08-05).** IVA rates
 are law-per-window DATA, never code constants: they depend on the item's tier, the
 member state, and the governing law effective at the operation date (transient
-windows exist — the 2022-2024 5% and 0% measures are the standing example). The
+windows exist — the temporary 5% and 0% reduced-rate measures are the standing example). The
 canonical mechanism ALREADY EXISTS and is hereby ratified as the sole one
 (MEASURED): the date-windowed registry rate table (`registry/aeat/iva/rates.toml`;
 rows keyed member_state + kind + pct + effective window, each row carrying
@@ -569,8 +569,8 @@ nothing checking it was eligible to be one.
     plan-level design, the prohibition on a second retención path is not.
 12. `IvaRate`-vs-registry parity GATE only (CORRECTED: the sets already agree at
     {0, 4, 10, 21}; the 5% "gap" premise was wrong — `RATE_5` stays deliberately
-    absent until a registry rate entry for pre-2025 ingestion exists; no enum
-    member is added and no pre-2024 rate history is backfilled under this item).
+    absent until a registry rate entry for that transient window exists; no enum
+    member is added and no earlier rate history is backfilled under this item).
     LANDED: `test_rate_parity.py`, commit stamped P02.S19.
 13. Per D9: converge invoice records (rich, slim, expense-evidence) on declaring
     tier kind + operation date with the percentage resolved via `lookup_rate` at
@@ -688,9 +688,11 @@ nothing checking it was eligible to be one.
      prohibition); the operator confirms whether counter-cases among their
      counterparties warrant "possible" rather than "not-expected" for the
      intra-community/export categories.
-  5. Registry IVA-rate coverage window: ES rate rows start 2024-01-01, so a
-     pre-2024 invoice resolves NO rate at all (not merely the transient 5%). Is
-     historic (pre-2024) ingestion in scope? If yes, the rate table — and, for
-     2022-2024 rows, the `IvaRate` enum in sync with it — must be extended
-     backward with live-verified figures; until then nothing backfills rate
-     history, and the parity gate (item 12) holds the two sides equal.
+  5. Registry IVA-rate coverage window: a document dated before the first
+     published ES rate row resolves to the nearest published rate, with the
+     projection visible in its provenance and no grade promotion (a rate always
+     resolves); it does not resolve the transient 5% measure. Is historic
+     ingestion of the transient windows in scope? If yes, the rate table — and,
+     for the transient rows, the `IvaRate` enum in sync with it — must be
+     extended backward with live-verified figures; until then nothing backfills
+     rate history, and the parity gate (item 12) holds the two sides equal.

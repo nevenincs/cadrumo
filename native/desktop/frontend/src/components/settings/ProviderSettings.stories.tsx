@@ -89,18 +89,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Installed: Story = {};
 
-export const EnvironmentKey: Story = {
-  name: "Key from the environment",
-  args: {
-    // A key found outside the profile reads as any other ready key.
-    providers: PROVIDERS.map((provider) =>
-      provider.mode === "unset" && provider.authKind !== "provider_sign_in_only"
-        ? { ...provider, readiness: "ready", source: "environment" }
-        : provider,
-    ),
-  },
-};
-
 export const Saving: Story = {
   args: { busyId: "alpha_api" },
 };

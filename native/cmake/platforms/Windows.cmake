@@ -228,14 +228,19 @@ foreach(target platform_static_consumer platform_dll_consumer)
   target_compile_options(${target} PRIVATE /UNDEBUG)
 endforeach()
 if(BUILD_TESTING)
-  add_test(NAME platform.static COMMAND platform_static_consumer)
-  add_test(NAME platform.dll COMMAND platform_dll_consumer)
-  set_tests_properties(platform.dll PROPERTIES WORKING_DIRECTORY "${platform_dir}")
+  foreach(linkage static dll)
+    set(consumer_arguments --build "${PROJECT_BINARY_DIR}" --consumer "$<TARGET_FILE:platform_${linkage}_consumer>")
+    if(linkage STREQUAL "dll")
+      list(APPEND consumer_arguments --dll "${platform_dir}/cadrumo_platform.dll")
+    endif()
+    add_test(NAME platform.${linkage} COMMAND ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" --
+      "${CADRUMO_DEV_PYTHON}" -B -m native.tests.platform_consumer ${consumer_arguments})
+    set_tests_properties(platform.${linkage} PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+  endforeach()
   add_test(NAME platform.rust COMMAND "${platform_dir}/platform-consumer.exe")
   # Replays the generated storage-root vectors and probes the live Known Folder.
   add_test(NAME platform.resolver
     COMMAND ${platform_cargo} test --locked --lib --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
       --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>")
   set_tests_properties(platform.resolver PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
-  set_tests_properties(platform.dll PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${platform_dir}")
 endif()

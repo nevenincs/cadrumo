@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { LedgerPort } from "../../../shell/ledger";
+import { inLanguage } from "../../../shell/ledgerLanguage";
 import type {
   ActivityAssetPlanResult,
   ActivityAssetTimelineResult,
@@ -15,7 +16,12 @@ export const readPlan = (
   port: LedgerPort,
   assetId: string,
 ): Promise<SetupCall<ActivityAssetPlanResult>> =>
-  setupCall(port, "ledger.actividad-asset.plan", { asset_id: assetId }, false);
+  setupCall(
+    port,
+    "ledger.actividad-asset.plan",
+    inLanguage({ asset_id: assetId }),
+    false,
+  );
 
 export const readTimeline = (
   port: LedgerPort,

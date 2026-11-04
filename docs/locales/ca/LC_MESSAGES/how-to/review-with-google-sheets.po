@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:37+0100\n"
+"POT-Creation-Date: 2026-11-03 19:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -139,16 +139,23 @@ msgstr ""
 
 #: ../../how-to/review-with-google-sheets.md:45
 msgid ""
-"Check the Google status and the folder created for the profile. These are"
-" local commands, so they run here. On a profile that has not signed in, "
-"the status shows `session_present` as false and no folder exists yet:"
+"Check the Google status and the folder created for the profile. These "
+"local commands run here. The documentation sandbox has no publisher "
+"Google sign-in configuration, so the status command reports Google sign-"
+"in as unavailable. Folder view still confirms that no Drive folder is "
+"configured. In an installation that includes Google sign-in, a profile "
+"that has not signed in reports `session_present` as false:"
 msgstr ""
-"Comprova l'estat de Google i la carpeta creada per al perfil. Són ordres "
-"locals, de manera que aquí s'executen. En un perfil que no ha iniciat la "
-"sessió, l'estat mostra `session_present` com a false i encara no hi ha "
-"cap carpeta:"
+"Consulta l'estat de Google i la carpeta creada per al perfil. Aquests "
+"comandaments locals s'executen aquí. L'entorn aïllat de la documentació "
+"no inclou la configuració d'accés a Google del distribuïdor, de manera "
+"que el comandament d'estat indica que l'accés a Google no està "
+"disponible. La vista de la carpeta confirma que no hi ha cap carpeta de "
+"Drive configurada. En una instal·lació que inclogui l'accés a Google, un "
+"perfil que encara no hagi iniciat sessió mostra `session_present` com a "
+"false:"
 
-#: ../../how-to/review-with-google-sheets.md:53
+#: ../../how-to/review-with-google-sheets.md:56
 msgid ""
 "A trashed or mismatched managed folder is refused. Signing in again does "
 "not search your Drive for a same-name replacement. An uncertain creation "
@@ -159,7 +166,7 @@ msgstr ""
 "amb el mateix nom. Una creació incerta s'ha de reconciliar abans d"
 "'intentar-ne una altra."
 
-#: ../../how-to/review-with-google-sheets.md:57
+#: ../../how-to/review-with-google-sheets.md:60
 msgid ""
 "Probe the connection once you have signed in. The probe reaches Google, "
 "so it is shown here without being run:"
@@ -167,7 +174,7 @@ msgstr ""
 "Prova la connexió un cop hagis iniciat la sessió. La prova accedeix a "
 "Google, de manera que aquí es mostra sense executar-se:"
 
-#: ../../how-to/review-with-google-sheets.md:63
+#: ../../how-to/review-with-google-sheets.md:66
 msgid ""
 "The Google integration is profile-scoped. Each profile signs in "
 "separately and gets its own folder."
@@ -175,11 +182,11 @@ msgstr ""
 "La integració de Google està limitada al perfil. Cada perfil inicia la "
 "sessió per separat i obté la seva pròpia carpeta."
 
-#: ../../how-to/review-with-google-sheets.md:65
+#: ../../how-to/review-with-google-sheets.md:68
 msgid "Publish a saved calculation"
 msgstr "Publica un càlcul desat"
 
-#: ../../how-to/review-with-google-sheets.md:67
+#: ../../how-to/review-with-google-sheets.md:70
 msgid ""
 "Copy the calculation revision ID returned by `app modelo work calculate`,"
 " then run:"
@@ -187,7 +194,7 @@ msgstr ""
 "Copia l'ID de la revisió de càlcul que retorna `app modelo work "
 "calculate` i executa:"
 
-#: ../../how-to/review-with-google-sheets.md:73
+#: ../../how-to/review-with-google-sheets.md:76
 msgid ""
 "The flag authorizes a readable copy of that revision and its captured "
 "ledger support in the profile's managed Google folder. Anyone with "
@@ -201,7 +208,7 @@ msgstr ""
 "Aquesta ordre no puja els bytes originals dels adjunts. El resultat "
 "inclou l'URL real del full de càlcul."
 
-#: ../../how-to/review-with-google-sheets.md:78
+#: ../../how-to/review-with-google-sheets.md:81
 msgid ""
 "Each publication creates a new document and preserves earlier review "
 "notes. The Sheet uses saved values without recalculating from today's "
@@ -216,7 +223,7 @@ msgstr ""
 "incompleta no és una declaració a punt per presentar ni completa a "
 "efectes d'auditoria."
 
-#: ../../how-to/review-with-google-sheets.md:83
+#: ../../how-to/review-with-google-sheets.md:86
 msgid ""
 "An optional `--publication-id UUID` identifies one publication across "
 "retries. Keep that identity after a timeout: a timeout does not prove "
@@ -230,11 +237,11 @@ msgstr ""
 "publicació conservada i completada pot retornar el seu URL existent sense"
 " reescriure'l; una publicació parcial o incerta requereix reconciliació."
 
-#: ../../how-to/review-with-google-sheets.md:89
+#: ../../how-to/review-with-google-sheets.md:92
 msgid "Export an offline workbook"
 msgstr "Exporta un llibre de treball fora de línia"
 
-#: ../../how-to/review-with-google-sheets.md:91
+#: ../../how-to/review-with-google-sheets.md:94
 msgid ""
 "To review without Google, write the same calculation surface to a local "
 "`.xlsx` workbook with live formulas. Nothing is uploaded:"
@@ -242,7 +249,7 @@ msgstr ""
 "Per revisar sense Google, escriu la mateixa superfície de càlcul en un "
 "llibre `.xlsx` local amb fórmules en directe. No es puja res:"
 
-#: ../../how-to/review-with-google-sheets.md:98
+#: ../../how-to/review-with-google-sheets.md:101
 msgid ""
 "The result prints the file path, size, SHA-256 checksum, and box count. "
 "The command refuses to overwrite an existing file unless you add "
@@ -256,7 +263,7 @@ msgstr ""
 "`--output` el directori pare del qual no existeix. El rebuig diu `The "
 "export output path is not valid` i en indica el motiu."
 
-#: ../../how-to/review-with-google-sheets.md:103
+#: ../../how-to/review-with-google-sheets.md:106
 msgid ""
 "The offline workbook is a review copy. Edits in it do not flow back into "
 "Cadrumo. It accepts `--prefill-relations` for values carried from related"
@@ -266,11 +273,11 @@ msgstr ""
 "facis no tornen a Cadrumo. Accepta `--prefill-relations` per als valors "
 "portats de presentacions relacionades."
 
-#: ../../how-to/review-with-google-sheets.md:107
+#: ../../how-to/review-with-google-sheets.md:110
 msgid "Back up your encrypted data to Drive"
 msgstr "Fes una còpia de seguretat de les teves dades xifrades a Drive"
 
-#: ../../how-to/review-with-google-sheets.md:109
+#: ../../how-to/review-with-google-sheets.md:112
 msgid ""
 "Keep an off-machine copy of your encrypted data by mirroring it to the "
 "configured Drive folder. Preview with `--dry-run` first; it reports what "
@@ -282,7 +289,7 @@ msgstr ""
 "amb `--dry-run`; informa de què es pujaria per àrea d'emmagatzematge "
 "sense canviar res. Limita una pujada gran amb `--namespace` o `--limit`:"
 
-#: ../../how-to/review-with-google-sheets.md:117
+#: ../../how-to/review-with-google-sheets.md:120
 msgid ""
 "Secure-object payloads are uploaded as their stored ciphertext, with "
 "length and SHA-256 checks before a complete namespace manifest is "
@@ -299,7 +306,7 @@ msgstr ""
 "recomptes de manifests fallits i degradats. Una pujada parcial conserva "
 "el text xifrat ja confirmat quan no es pot garantir una neteja segura."
 
-#: ../../how-to/review-with-google-sheets.md:124
+#: ../../how-to/review-with-google-sheets.md:127
 msgid ""
 "This is a one-way mirror with no remote restore command. Local `archive "
 "import` reads a portable archive, not these mirrored objects. Successful "
@@ -310,11 +317,11 @@ msgstr ""
 "replicats. Que la pujada i la verificació d'integritat tinguin èxit no "
 "demostra que les dades siguin recuperables."
 
-#: ../../how-to/review-with-google-sheets.md:128
+#: ../../how-to/review-with-google-sheets.md:131
 msgid "Sign out of Google"
 msgstr "Tanca la sessió de Google"
 
-#: ../../how-to/review-with-google-sheets.md:130
+#: ../../how-to/review-with-google-sheets.md:133
 msgid ""
 "Google logout removes local credentials; it does not revoke Google's "
 "grant. To stop access by copied credentials as well, follow [Remove "
@@ -325,7 +332,7 @@ msgstr ""
 "segueix [Treu l'accés de Google](protect-data-access.md#remove-google-"
 "access)."
 
-#: ../../how-to/review-with-google-sheets.md:134
+#: ../../how-to/review-with-google-sheets.md:137
 msgid ""
 "Clear the Google session for the active profile. Logout is a local "
 "command, so it runs here. If a session exists, it removes the saved "
@@ -340,11 +347,11 @@ msgstr ""
 "google login` posterior torna a iniciar la sessió i en valida la "
 "identitat registrada:"
 
-#: ../../how-to/review-with-google-sheets.md:143
+#: ../../how-to/review-with-google-sheets.md:146
 msgid "Upgrading from an earlier version"
 msgstr "Actualitzar des d'una versió anterior"
 
-#: ../../how-to/review-with-google-sheets.md:145
+#: ../../how-to/review-with-google-sheets.md:148
 msgid ""
 "Earlier versions asked you to create a Google Cloud project, register its"
 " client file, and point Cadrumo at a Drive folder of your own. This "
@@ -354,7 +361,7 @@ msgstr ""
 "registrar-ne el fitxer de client i indicar a Cadrumo una carpeta de Drive"
 " teva. Aquesta versió no fa res d'això. Després d'actualitzar:"
 
-#: ../../how-to/review-with-google-sheets.md:149
+#: ../../how-to/review-with-google-sheets.md:152
 msgid ""
 "Run `cadrumo-runtime config google login`. A sign-in from an earlier "
 "version is not reused; Cadrumo tells you to sign in again."
@@ -363,7 +370,7 @@ msgstr ""
 "versió anterior no es reutilitza; Cadrumo t'indica que tornis a iniciar "
 "la sessió."
 
-#: ../../how-to/review-with-google-sheets.md:151
+#: ../../how-to/review-with-google-sheets.md:154
 msgid ""
 "Keep earlier workbooks for review. Cadrumo does not adopt historical "
 "workbooks without receipts or search Drive to repair them. Use `publish` "
@@ -374,51 +381,51 @@ msgstr ""
 "`publish` per crear una còpia de revisió nova a partir d'una revisió de "
 "càlcul desada."
 
-#: ../../how-to/review-with-google-sheets.md:155
+#: ../../how-to/review-with-google-sheets.md:158
 msgid "These are no longer available:"
 msgstr "Això ja no està disponible:"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "Removed"
 msgstr "Eliminat"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "Use instead"
 msgstr "Fes servir en lloc seu"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "`config google register` and its client file"
 msgstr "`config google register` i el seu fitxer de client"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "Nothing. The application carries its own Google client."
 msgstr "Res. L'aplicació inclou el seu propi client de Google."
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "`config google credential-source` and service-account access"
 msgstr "`config google credential-source` i l'accés amb compte de servei"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "`cadrumo-runtime config google login`"
 msgstr "`cadrumo-runtime config google login`"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "`config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
 msgstr "`config google folder set` i `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "Nothing. Cadrumo creates its folder at sign-in."
 msgstr "Res. Cadrumo crea la seva carpeta en iniciar la sessió."
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "`config google login --refresh-only`"
 msgstr "`config google login --refresh-only`"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "`app ledger evidence pull` and `pull-all`"
 msgstr "`app ledger evidence pull` i `pull-all`"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid ""
 "Download the document, then `aeat app ledger evidence add`; see [Attach "
 "supporting documents](ledger-evidence.md)."
@@ -426,15 +433,15 @@ msgstr ""
 "Baixa el document i després fes servir `aeat app ledger evidence add`; "
 "consulta [Adjuntar justificants](ledger-evidence.md)."
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "`CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S`"
 msgstr "`CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S`"
 
-#: ../../how-to/review-with-google-sheets.md:139
+#: ../../how-to/review-with-google-sheets.md:142
 msgid "Nothing. It had no effect."
 msgstr "Res. No tenia cap efecte."
 
-#: ../../how-to/review-with-google-sheets.md:166
+#: ../../how-to/review-with-google-sheets.md:169
 msgid ""
 "Scripts that read command output should also note these changes. "
 "`cadrumo-runtime config google status` no longer reports "
@@ -458,11 +465,11 @@ msgstr ""
 "no té client de Google es rebutja amb "
 "`REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE`."
 
-#: ../../how-to/review-with-google-sheets.md:175
+#: ../../how-to/review-with-google-sheets.md:178
 msgid "Where this fits"
 msgstr "On encaixa això"
 
-#: ../../how-to/review-with-google-sheets.md:177
+#: ../../how-to/review-with-google-sheets.md:180
 msgid ""
 "Use this after transaction review and classification. Confirm the period "
 "is ready before you rely on the calculation workbook:"
@@ -471,7 +478,7 @@ msgstr ""
 "Confirma que el període està a punt abans de refiar-te del llibre de "
 "treball de càlcul:"
 
-#: ../../how-to/review-with-google-sheets.md:184
+#: ../../how-to/review-with-google-sheets.md:187
 msgid ""
 "If your records still have missing categories, VAT fields, currency, or "
 "proportionality references, finish those in [Classify transactions"
@@ -482,7 +489,7 @@ msgstr ""
 " moviments](classify-transactions.md) abans de refiar-te del llibre de "
 "treball de càlcul."
 
-#: ../../how-to/review-with-google-sheets.md:189
+#: ../../how-to/review-with-google-sheets.md:192
 msgid ""
 "For manual box values, the rules that fill each box, offsets, and earlier"
 " calculations, use [Review and supply calculation inputs](review-"
@@ -492,11 +499,11 @@ msgstr ""
 "els desplaçaments i els càlculs anteriors, fes servir [Revisa i aporta "
 "entrades de càlcul](review-calculation-values.md)."
 
-#: ../../how-to/review-with-google-sheets.md:193
+#: ../../how-to/review-with-google-sheets.md:196
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/review-with-google-sheets.md:195
+#: ../../how-to/review-with-google-sheets.md:198
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand why a Google Sheet is for review only, not "
@@ -506,18 +513,18 @@ msgstr ""
 "evidence.md) - entén per què un full de Google Sheets és només per "
 "revisar i no pas una prova de presentació ni la base oficial d'un càlcul."
 
-#: ../../how-to/review-with-google-sheets.md:198
+#: ../../how-to/review-with-google-sheets.md:201
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
-#: ../../how-to/review-with-google-sheets.md:199
+#: ../../how-to/review-with-google-sheets.md:202
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Classifica els moviments](classify-transactions.md)"
 
-#: ../../how-to/review-with-google-sheets.md:200
+#: ../../how-to/review-with-google-sheets.md:203
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/review-with-google-sheets.md:201
+#: ../../how-to/review-with-google-sheets.md:204
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"

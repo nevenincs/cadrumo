@@ -454,7 +454,7 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, tracked: &Tracked) -> Result<
                 if let Ok(document) = relay::result(relayed).await {
                     stopped.refusal_words = served_failure_words(&document);
                 }
-                unresolved.terminal_failure = Some(stopped);
+                unresolved.terminal_failure = Some(Box::new(stopped));
             }
             return Err(unresolved);
         }

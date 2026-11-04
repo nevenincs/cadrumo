@@ -14,3 +14,11 @@ export function holdLedgerLanguage(language: OutputLanguage | null): void {
 
 /** The language the page shows, or null where none is held. */
 export const ledgerLanguage = (): OutputLanguage | null => held;
+
+/** `request` asking for its sentences in the language the page shows; as it
+ * stands where none is held. */
+export function inLanguage<Request extends object>(
+  request: Request,
+): Request & { output_language?: OutputLanguage } {
+  return held === null ? request : { ...request, output_language: held };
+}

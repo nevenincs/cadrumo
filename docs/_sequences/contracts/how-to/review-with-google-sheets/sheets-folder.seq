@@ -1,5 +1,9 @@
 @step Check the Google connection status for the active profile.
 cadrumo-runtime --format json config google status
+@expect exit_code == 2
+@expect error.code == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"
+@expect error.action.failed_condition_id == "google.auth.client_metadata.available"
+@expect error.action.evidence.0.values.client_metadata_present == false
 @step Show the Drive folder created for the active profile.
 @result aeat --format json config google folder view
 @expect result.configured == false

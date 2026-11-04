@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:16+0100\n"
+"POT-Creation-Date: 2026-11-03 19:37+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -148,17 +148,20 @@ msgstr ""
 #: ../../how-to/modelo-130.md:50
 msgid ""
 "With the two entries above, calculate reports cumulative income (box "
-"`01`) of `1000.00`, net income (box `03`) of `500.00` - income base minus"
-" expense base - and a payment instalment (box `04`) of `100.00`, 20 "
-"percent of the net."
+"`01`) of `1000.00`. Under simplified direct estimation, the provision for"
+" difficult-to-justify expenses is `25.00`: five percent of `1000.00 - "
+"500.00`, within the annual `2000.00` cap. Deductible expenses (box `02`) "
+"are `525.00`, net income (box `03`) is `475.00`, and the payment "
+"instalment (box `04`) is `95.00`, 20 percent of the net."
 msgstr ""
-"A fenti két tétellel a számítás `1000.00` halmozott jövedelmet jelent (a "
-"`01` rovat), `500.00` nettó jövedelmet (<span lang=\"es\">rendimiento "
-"neto</span>; a `03` rovat), azaz a jövedelemalap mínusz a kiadásalap, és "
-"`100.00` IRPF-előleget (pago fraccionado; a `04` rovat), a nettó 20 "
-"százalékát."
+"A fenti két tétellel a számítás `1000.00` halmozott bevételt mutat (`01` "
+"rovat). Az egyszerűsített közvetlen becslés szerint nehezen igazolható "
+"költségként `25.00` számolható el: ez a `1000.00 - 500.00` öt százaléka, "
+"az éves `2000.00` korláton belül. A levonható kiadás (`02` rovat) "
+"`525.00`, a nettó hozam (`03` rovat) `475.00`, az előleg (`04` rovat) "
+"pedig `95.00`, a nettó 20 százaléka."
 
-#: ../../how-to/modelo-130.md:53
+#: ../../how-to/modelo-130.md:56
 msgid ""
 "`verify` reports `completeness complete` and `granted true`. `export` "
 "then writes the local fichero-BOE file and reports its checksum."
@@ -167,11 +170,11 @@ msgstr ""
 "Az `export` ezután kiírja a helyi fichero-BOE fájlt, és közli annak "
 "ellenőrzőösszegét."
 
-#: ../../how-to/modelo-130.md:56
+#: ../../how-to/modelo-130.md:59
 msgid "Before you create the draft"
 msgstr "A piszkozat létrehozása előtt"
 
-#: ../../how-to/modelo-130.md:58
+#: ../../how-to/modelo-130.md:61
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md). Modelo 130 applies to a"
 " profile with self-employed activity under estimación directa; check "
@@ -192,7 +195,7 @@ msgstr ""
 "rendelet 109. cikke). A mezőgazdasági és erdészeti tevékenységekre külön "
 "szabály vonatkozik."
 
-#: ../../how-to/modelo-130.md:65
+#: ../../how-to/modelo-130.md:68
 msgid ""
 "[Plan your filing calendar](filing-calendar.md). Modelo 130 uses "
 "quarterly periods `1T` through `4T` only."
@@ -200,7 +203,7 @@ msgstr ""
 "[Tervezd meg a benyújtási naptáradat](filing-calendar.md). A Modelo 130 "
 "kizárólag az `1T`-`4T` negyedéves időszakokat használja."
 
-#: ../../how-to/modelo-130.md:67
+#: ../../how-to/modelo-130.md:70
 msgid ""
 "[Import or add your transactions](import-bank-statements.md), then "
 "[classify them](classify-transactions.md). Modelo 130 reads classified "
@@ -211,11 +214,11 @@ msgstr ""
 "osztályozott üzleti bevételi és kiadási tételeket olvassa; a kiadásokhoz "
 "kategória szükséges."
 
-#: ../../how-to/modelo-130.md:71
+#: ../../how-to/modelo-130.md:74
 msgid "What Modelo 130 calculates"
 msgstr "Mit számít ki a Modelo 130"
 
-#: ../../how-to/modelo-130.md:73
+#: ../../how-to/modelo-130.md:76
 msgid ""
 "Modelo 130 calculates the quarter's IRPF payment on account from your "
 "activity's year-to-date figures: cumulative income (box `01`) minus "
@@ -238,7 +241,7 @@ msgstr ""
 "rovat pedig a végeredmény. A `17` rovat negatív egyenlege `saldo-"
 "negativo-fin-periodo` néven kerül áthozatra a későbbi negyedévekhez."
 
-#: ../../how-to/modelo-130.md:82
+#: ../../how-to/modelo-130.md:85
 msgid ""
 "Your records feed the cumulative income, expense, and withholding figures"
 " through the rules that fill each box; earlier filings feed the carries. "
@@ -256,11 +259,11 @@ msgstr ""
 "rovatok vannak kitöltve, melyek hiányoznak, és melyeket kell kézzel "
 "megadni:"
 
-#: ../../how-to/modelo-130.md:92
+#: ../../how-to/modelo-130.md:95
 msgid "Supply a manual box value"
 msgstr "Kézi rovatérték megadása"
 
-#: ../../how-to/modelo-130.md:94
+#: ../../how-to/modelo-130.md:97
 msgid ""
 "Box `06` (Retenciones e ingresos a cuenta) is a manual box: your records "
 "do not fill it, so you supply it by hand with `--casilla`. Pass it in the"
@@ -274,7 +277,7 @@ msgstr ""
 "hívásban, majd nézd át a mentett számítást, hogy ellenőrizd az érték "
 "bekerülését:"
 
-#: ../../how-to/modelo-130.md:103
+#: ../../how-to/modelo-130.md:106
 msgid ""
 "`--casilla` works only on `manual` boxes; a `bound` box filled from your "
 "records (like box `02`) refuses the override. Check a box's kind with "
@@ -289,11 +292,11 @@ msgstr ""
 "munkafolyamathoz pedig lásd: [Számítási bemenetek felülvizsgálata és "
 "megadása](review-calculation-values.md)."
 
-#: ../../how-to/modelo-130.md:109
+#: ../../how-to/modelo-130.md:112
 msgid "Each quarter is cumulative"
 msgstr "Minden negyedév halmozott"
 
-#: ../../how-to/modelo-130.md:111
+#: ../../how-to/modelo-130.md:114
 msgid ""
 "Modelo 130 is a year-to-date form, not a quarter-slice form. The second "
 "quarter's box `01` covers January through June, not April through June; "
@@ -306,7 +309,7 @@ msgstr ""
 "számítjuk, és a már befizetett részletek a `05` rovaton keresztül "
 "vonódnak le."
 
-#: ../../how-to/modelo-130.md:116
+#: ../../how-to/modelo-130.md:119
 msgid ""
 "Cadrumo does this by adding up your records from the start of the year "
 "(for `2T`, January 1 to June 30) and by reading your own earlier filed "
@@ -316,7 +319,7 @@ msgstr ""
 "elejétől (a `2T` esetén január 1-től június 30-ig), és beolvassa a saját,"
 " korábban benyújtott negyedéveidet (`previous_filing`):"
 
-#: ../../how-to/modelo-130.md:120
+#: ../../how-to/modelo-130.md:123
 msgid ""
 "`modelo-130-pagos-fraccionados-anteriores` - the instalments already paid"
 " this year, from your recorded `1T`..`3T` filings."
@@ -324,7 +327,7 @@ msgstr ""
 "`modelo-130-pagos-fraccionados-anteriores`: az idén már befizetett "
 "részletek a korábban rögzített `1T`..`3T` benyújtásaidból."
 
-#: ../../how-to/modelo-130.md:122
+#: ../../how-to/modelo-130.md:125
 msgid ""
 "`modelo-130-resultados-negativos-anteriores` - negative results carried "
 "from earlier quarters."
@@ -332,7 +335,7 @@ msgstr ""
 "`modelo-130-resultados-negativos-anteriores`: a korábbi negyedévekből "
 "áthozott negatív eredmények."
 
-#: ../../how-to/modelo-130.md:124
+#: ../../how-to/modelo-130.md:127
 msgid ""
 "`irpf.previous_year_economic_activity_net_income` - last year's net "
 "income, which decides the minoración tier."
@@ -340,7 +343,7 @@ msgstr ""
 "`irpf.previous_year_economic_activity_net_income`: a tavalyi nettó "
 "jövedelem, amely eldönti a minoración fokozatát."
 
-#: ../../how-to/modelo-130.md:127
+#: ../../how-to/modelo-130.md:130
 msgid ""
 "For a first period these have no history, which is why the first-quarter "
 "chain passes them as `--binding ...=0`. For later quarters do NOT pass "
@@ -359,11 +362,11 @@ msgstr ""
 " előbb rögzítsd vagy egyeztesd azt a korábbi benyújtást (lásd: [Egy "
 "benyújtott nyomtatvány egyeztetése az AEAT-igazolással](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:136
+#: ../../how-to/modelo-130.md:139
 msgid "Calculate, review, check, record filing"
 msgstr "Számítás, áttekintés, ellenőrzés, benyújtás rögzítése"
 
-#: ../../how-to/modelo-130.md:138
+#: ../../how-to/modelo-130.md:141
 msgid ""
 "The chain is the standard filing workflow - see [The filing workflow"
 "](filing-spine.md) for how declarations and earlier calculations behave. "
@@ -373,7 +376,7 @@ msgstr ""
 "munkafolyamat](filing-spine.md) arról, hogyan viselkednek a bevallások és"
 " a korábbi számítások. Röviden:"
 
-#: ../../how-to/modelo-130.md:146
+#: ../../how-to/modelo-130.md:149
 msgid ""
 "Once the draft passes the check, record the filing. The check refuses "
 "until every deductible-expense entry has its purchase invoice linked as a"
@@ -391,7 +394,7 @@ msgstr ""
 "ellenőrzés előtt csatold: a piszkozat az ellenőrzéskor gyűjti össze a "
 "bizonylatait, így az utólag csatolt számla nem kerül be a benyújtásba."
 
-#: ../../how-to/modelo-130.md:153
+#: ../../how-to/modelo-130.md:156
 msgid ""
 "The following example exports the checked draft, then records the filing."
 " Export refuses to overwrite an existing file unless you add `--replace`,"
@@ -402,7 +405,7 @@ msgstr ""
 " meg a `--replace` kapcsolót, és elutasít, ha a kimeneti mappa nem "
 "létezik."
 
-#: ../../how-to/modelo-130.md:161
+#: ../../how-to/modelo-130.md:164
 msgid ""
 "Recording the filing applies only while the obligation window is open. It"
 " is an internal note that you have already presented the figures at the "
@@ -412,7 +415,7 @@ msgstr ""
 " nyitva van. Belső megjegyzés arról, hogy már benyújtottad a számokat a "
 "portálon."
 
-#: ../../how-to/modelo-130.md:164
+#: ../../how-to/modelo-130.md:167
 msgid ""
 "Each computed box carries its formula, legal references, and source "
 "references; show them with the saved-calculation view or [review the "
@@ -427,7 +430,7 @@ msgstr ""
 "[Egy benyújtott nyomtatvány egyeztetése az AEAT-"
 "igazolással](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:170
+#: ../../how-to/modelo-130.md:173
 msgid ""
 "Modelo 130's quarterly results feed your annual Renta declaration: the "
 "four instalments are folded into Modelo 100 as payments on account. See "
@@ -437,28 +440,28 @@ msgstr ""
 "négy előleg előlegfizetésként olvad be a Modelo 100-ba. Lásd: [Az éves "
 "Modelo 100 Renta-bevallás előkészítése](modelo-100.md)."
 
-#: ../../how-to/modelo-130.md:174
+#: ../../how-to/modelo-130.md:177
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/modelo-130.md:176
+#: ../../how-to/modelo-130.md:179
 msgid "[The income-tax year (run-through)](irpf-lifecycle.md)"
 msgstr "[A jövedelemadó-év](irpf-lifecycle.md)"
 
-#: ../../how-to/modelo-130.md:177
+#: ../../how-to/modelo-130.md:180
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/modelo-130.md:178
+#: ../../how-to/modelo-130.md:181
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/modelo-130.md:179
+#: ../../how-to/modelo-130.md:182
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Nyújtsd be a nyomtatványodat az AEAT-portálon](file-at-aeat.md)"
 
-#: ../../how-to/modelo-130.md:180
+#: ../../how-to/modelo-130.md:183
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr "[Egy benyújtott nyomtatvány egyeztetése az AEAT-igazolással](reconcile.md)"

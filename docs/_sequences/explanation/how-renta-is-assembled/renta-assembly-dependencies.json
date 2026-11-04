@@ -247,17 +247,26 @@
                   ],
                   "origin": "previous_filing_binding",
                   "origin_ids": [
-                    "renta-base-liquidable-negativa-general-anterior"
+                    "renta-base-liquidable-negativa-general-anterior",
+                    "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+                    "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+                    "renta-base-liquidable-negativa-general-em4-pendiente-inicio"
                   ],
                   "period": {
                     "code": "0A",
                     "filing_year": 2024
                   },
                   "required_source_casilla_ids": [
+                    "1384",
+                    "1387",
+                    "1390",
                     "1391"
                   ],
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
+                    "1384",
+                    "1387",
+                    "1390",
                     "1391"
                   ],
                   "source_modelo": "100",

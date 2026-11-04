@@ -82,11 +82,15 @@ filing and reconcile, which close the quarter, follow as examples that are not r
 :verify: Confirm the first instalment passes the check and exports locally.
 ```
 
-The figures show the year so far: 1000 earned, 500 spent, and an instalment
-of 20 percent on the net. The net income in {term}`box <casilla>` `03` is 500.00,
-and the instalment in {term}`box <casilla>` `04` is 100.00. The low-income minoración
-in {term}`box <casilla>` `13` is 100.00 and absorbs the whole instalment, leaving
-a final result of 0.00 in {term}`box <casilla>` `19`.
+The figures show the year so far: 1000.00 earned and 500.00 spent. Under
+simplified direct estimation, the provision for difficult-to-justify expenses
+is 25.00: five percent of `1000.00 - 500.00`, within the annual 2000.00 cap.
+Deductible expenses in {term}`box <casilla>` `02` are 525.00, net income in
+{term}`box <casilla>` `03` is 475.00, and the instalment in
+{term}`box <casilla>` `04` is 95.00, twenty percent of the net. The low-income
+minoración in {term}`box <casilla>` `13` is 100.00, leaving -5.00 in boxes
+`14`, `17`, and `19`. No payment arises from this negative result; Cadrumo
+records 5.00 as `saldo-negativo-fin-periodo` for later quarters to deduct.
 
 The check reports `completeness_status complete` and
 `granted_verificado_completo true` (the sequence above asserts this). `export`

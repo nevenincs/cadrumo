@@ -24,7 +24,7 @@ export function OptionsRead({ call }: { call: SetupCall<unknown> | null }) {
       call={call}
       refusal={() =>
         call.kind === "refused"
-          ? (refusalWord(t, viewRefusal(call)) ?? t(ASSET_KEYS.write.refused))
+          ? (refusalWord(viewRefusal(call)) ?? t(ASSET_KEYS.write.refused))
           : null
       }
     />
@@ -33,7 +33,9 @@ export function OptionsRead({ call }: { call: SetupCall<unknown> | null }) {
 
 const viewRefusal = (call: SetupCall<unknown>) => {
   const view = viewOf(call, neverReused);
-  return view.kind === "refused" ? view : { reasonKey: null, reasonFacts: [] };
+  return view.kind === "refused"
+    ? view
+    : { reasonKey: null, reasonFacts: [], words: null };
 };
 
 // ---- How a write ended, in the form ---------------------------------------------
@@ -94,7 +96,7 @@ export function WriteLine({
         icon={<Icon name="refused" />}
         className="ledger-asset-refused"
       >
-        <span>{refusalWord(t, view) ?? t(ASSET_KEYS.write.refused)}</span>
+        <span>{refusalWord(view) ?? t(ASSET_KEYS.write.refused)}</span>
         <span className="text-sm text-muted-foreground">{kept}</span>
       </Alert>
     );

@@ -18,7 +18,7 @@ from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_RELAY = REPO_ROOT / "native" / "application" / "src" / "person_operations.rs"
+_PROTOCOL = REPO_ROOT / "native" / "application" / "src" / "person_operations" / "protocol.rs"
 _PINS = {
     "schema_id": re.compile(r'const ERROR_DETAIL_SCHEMA_ID: &str = "([^"]+)";'),
     "schema_version": re.compile(r"const ERROR_DETAIL_SCHEMA_VERSION: u64 = (\d+);"),
@@ -36,11 +36,11 @@ def _pinned(source: str) -> dict[str, object]:
 
 
 def test_the_relay_pins_the_published_error_detail_schema() -> None:
-    assert _pinned(_RELAY.read_text(encoding="utf-8")) == operation_error_detail_schema().model_dump(mode="json")
+    assert _pinned(_PROTOCOL.read_text(encoding="utf-8")) == operation_error_detail_schema().model_dump(mode="json")
 
 
 def test_a_pin_that_drifted_from_the_published_schema_is_told_apart() -> None:
-    source = _RELAY.read_text(encoding="utf-8")
+    source = _PROTOCOL.read_text(encoding="utf-8")
     published = operation_error_detail_schema().model_dump(mode="json")
     drifted = source.replace(str(published["schema_fingerprint"]), "0" * 64)
     assert drifted != source

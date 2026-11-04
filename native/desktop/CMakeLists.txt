@@ -347,6 +347,14 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
     list(APPEND host_fixture_check COMMAND "${CADRUMO_DEV_PYTHON}" -B
       "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/modelo/relay_contracts.py" --check)
   endif()
+  # Test code embeds freshly serialized canonical provider-status bytes.
+  # A failed producer stops this target before Cargo can use an old fixture.
+  list(APPEND host_fixture_check COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}"
+    "${CADRUMO_DEV_PYTHON}" -B -c
+    "__import__('runpy').run_path(__import__('sys').argv.pop(1), run_name='__main__')"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/provider_settings/status_contract_fixture.py"
+    --build-dir "${CMAKE_BINARY_DIR}"
+    --output "${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json")
   if(action STREQUAL "test" OR action STREQUAL "unit-test")
     set(host_summary "run the desktop host Rust tests")
   else()
@@ -361,6 +369,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
+      "CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE=${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
       "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action}
     DEPENDS ${host_dependencies}

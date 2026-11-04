@@ -6,13 +6,7 @@ import { useStrings } from "../../../shell/strings";
 import { CallLine, Reading } from "../setup/SetupParts";
 import { AmortizationLimits } from "./AmortizationLimits";
 import { AmortizationTable } from "./AmortizationTable";
-import {
-  ASSET_KEYS,
-  bajaText,
-  refusalText,
-  keyedText,
-  tokenWord,
-} from "./assetsWords";
+import { ASSET_KEYS, bajaText, refusalText, tokenWord } from "./assetsWords";
 import { readPlan, useAssetRead } from "./planRead";
 import { PLAN_KEYS } from "./planWords";
 
@@ -95,11 +89,7 @@ export function AmortizationPlan({
               icon={<Icon name="info" />}
               className="ledger-assets-advisory"
             >
-              {keyedText(
-                t,
-                advisory.label_key,
-                tokenWord(t, "plan_advisory", advisory.kind),
-              )}
+              {advisory.words ?? tokenWord(t, "plan_advisory", advisory.kind)}
             </Alert>
           ))}
           {estimated && (

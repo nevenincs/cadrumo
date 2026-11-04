@@ -1,8 +1,9 @@
 """The composed `audit-code` dashboard: aggregation, rendering, and persistence.
 
 In-process checks over constructed ``AdvisoryDimension`` fixtures (plain
-data, no mocking) cover overall-status precedence, JSON serialisation, text
-rendering, and the disk-persistence round trip. The dead-code dimension is
+data) cover overall-status precedence, JSON serialisation, text
+rendering, and the disk-persistence round trip. Mocked scanner results cover
+security coverage classification and advisory command exits. The dead-code dimension is
 exercised for real in ``test_advisory_dimensions_scan``; the full
 four-dimension `build_advisory_report` composition -- which includes a
 full-tree semgrep scan taking several minutes -- was verified manually
@@ -20,6 +21,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
+from .. import advisory
 from ..advisory import (
     AdvisoryDimension,
     _overall,
@@ -30,8 +32,68 @@ from ..advisory import (
     to_json,
 )
 from ..report import DimensionReport, Status
+from ..security import SecurityOutcome, SecurityResult, classify_semgrep_output
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize("error_count", (0, 1, 6))
+def test_security_coverage_mapping_preserves_all_parse_errors(
+    error_count: int, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    errors = [{"path": f"src/unparsed{i}.py", "message": "Syntax error"} for i in range(error_count)]
+    raw = json.dumps({"results": [], "errors": errors, "paths": {"scanned": ["src/parsed.py"]}})
+    result = classify_semgrep_output(raw)
+    monkeypatch.setattr(advisory, "run_security_scan", lambda _root: result)
+
+    dimension = advisory.audit_security(tmp_path)
+
+    assert dimension.report.status is (Status.AMBER if error_count else Status.GREEN)
+    assert dimension.report.available is True
+    assert dimension.report.details == [f"[unparsed] src/unparsed{i}.py: Syntax error" for i in range(error_count)]
+    assert dimension.raw_payload == raw
+    assert dimension.findings == ()
+    assert dimension.count_by_severity == {}
+
+
+def test_security_mapping_does_not_trust_a_malformed_observed_zero(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    result = SecurityResult(SecurityOutcome.OBSERVED_ZERO, files_scanned=1, parse_errors=("Syntax error",))
+    monkeypatch.setattr(advisory, "run_security_scan", lambda _root: result)
+
+    assert advisory.audit_security(tmp_path).report.status is Status.AMBER
+
+
+@pytest.mark.parametrize("state", ("clean", "incomplete", "ERROR", "WARNING", "INFO", "unavailable"))
+def test_aggregate_exit_distinguishes_coverage_from_availability(
+    state: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    has_findings = state in {"ERROR", "WARNING", "INFO"}
+    errors = [{"path": "src/unparsed.py", "message": "Syntax error"}] if state == "incomplete" or has_findings else []
+    findings = [{"path": "src/parsed.py", "extra": {"severity": state, "message": "finding"}}] if has_findings else []
+    result = classify_semgrep_output(
+        json.dumps({"results": findings, "errors": errors, "paths": {"scanned": ["src/parsed.py"]}})
+    )
+    if state == "unavailable":
+        result = SecurityResult.unavailable("scanner missing")
+    monkeypatch.setattr(advisory, "run_security_scan", lambda _root: result)
+    monkeypatch.setattr(advisory, "audit_complexity", lambda: DimensionReport("complexity", Status.GREEN, "clean"))
+    monkeypatch.setattr(
+        advisory, "audit_duplication", lambda _root: DimensionReport("duplication", Status.GREEN, "clean")
+    )
+    monkeypatch.setattr(advisory, "audit_dead_code", lambda _root: _dim("dead_code", Status.GREEN, "clean"))
+    monkeypatch.setattr(advisory, "test_log_root", lambda: tmp_path)
+    monkeypatch.setattr("sys.argv", ["audit-code", "--json"])
+
+    assert advisory.main() == (7 if state == "unavailable" else 0)
+    payload = json.loads(capsys.readouterr().out)
+    expected_status = "red" if state == "ERROR" else "green" if state == "clean" else "amber"
+    assert payload["overall"] == expected_status
+    security_dimension = next(dimension for dimension in payload["dimensions"] if dimension["name"] == "security")
+    assert security_dimension["available"] is (state != "unavailable")
+    assert security_dimension["total_findings"] == (1 if has_findings else 0)
+    assert security_dimension["details"][: len(errors)] == [f"[unparsed] {error}" for error in result.parse_errors]
 
 
 def test_allocate_run_dir_uses_logs_date_partition_and_unique_run_identity(tmp_path: Path) -> None:

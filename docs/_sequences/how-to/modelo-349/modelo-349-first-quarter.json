@@ -157,7 +157,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "153e0ce48d1e8d1e839e6000052820a8245df967856218fbf03770f8402d4935"
+          "value": "9cb3a8db63817007a1f81f2e53fae6bd5fea124552358dd0aebfef0616dd834e"
         }
       ],
       "envelope": {
@@ -180,7 +180,7 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "153e0ce48d1e8d1e839e6000052820a8245df967856218fbf03770f8402d4935",
+          "calculation_revision_id": "9cb3a8db63817007a1f81f2e53fae6bd5fea124552358dd0aebfef0616dd834e",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -331,13 +331,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 153e0ce48d1e8d1e839e6000052820a8245df967856218fbf03770f8402d4935 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 9cb3a8db63817007a1f81f2e53fae6bd5fea124552358dd0aebfef0616dd834e (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:d373c3393acc77a4d68c995c1e55d6baebcb20129143076cd1296cfa13859af4",
+              "fingerprint": "sha256:cf7d55b8a201b0c83145a741ddb2cd2137d270007f372a1427cc075221ab59e0",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
@@ -348,7 +348,7 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:dc60742da05b347039624e6de6c1b5de1b73d2a501c68c1a4eb8bf8325aeea91",
+              "fingerprint": "sha256:2be54cd14edcef8b8f878373c07e62cc87953d63aaadbce591005a40502f26f0",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
@@ -381,7 +381,7 @@
         "modelo",
         "work",
         "verify",
-        "153e0ce48d1e8d1e839e6000052820a8245df967856218fbf03770f8402d4935"
+        "9cb3a8db63817007a1f81f2e53fae6bd5fea124552358dd0aebfef0616dd834e"
       ],
       "captures": [],
       "envelope": {
@@ -397,7 +397,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "153e0ce48d1e8d1e839e6000052820a8245df967856218fbf03770f8402d4935",
+          "calculation_revision_id": "9cb3a8db63817007a1f81f2e53fae6bd5fea124552358dd0aebfef0616dd834e",
           "completeness_status": "complete",
           "findings": [],
           "granted_verificado_completo": true,
@@ -421,7 +421,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "9b95fccfb66e33b5907c21c592f0bb5c7abb668687c96e6916443fc1446fb13e",
+          "verification_report_id": "ee9de675e930a31e4ac07778eb4cc3645072a1312d7cd919620d96c9b33e64c0",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

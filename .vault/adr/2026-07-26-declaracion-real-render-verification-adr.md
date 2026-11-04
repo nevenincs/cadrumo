@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-10-03'
-body_hash: 'sha256:2d906f8e322fddb9c1a8529b242408b771c4cf7ee57b5b0739e3efebc7139e0b'
+modified: '2026-11-04'
+body_hash: 'sha256:189762237d5e62ac0644aeeffd1a95fce3fbff4620b4eaeb464ddac2ca7c022b'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-adr]]"
   - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
@@ -154,7 +154,7 @@ when its box is blank.
 
 They were not swept with the six because the obvious remedy is worse than the defect:
 failing closed on a bare integer would refuse real perceptor counts of 3, 2 and 5, an
-explicit printed `0` in a rectificaciones box, and an ejercicio year of 2024 — trading
+explicit printed `0` in a rectificaciones box, and a printed ejercicio year — trading
 a fabricated value for a fabricated refusal. The remedy is to populate `form_number`
 on nine further modelos' casillas, which is a separate pass and is tracked as one.
 

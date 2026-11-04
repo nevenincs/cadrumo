@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { formatDay } from "../../../shared/dateFormats";
 import { facts } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
+import { inLanguage } from "../../../shell/ledgerLanguage";
 import type {
   ActivityAssetDisposalCalculateResult,
   DisposalCalculation,
@@ -15,13 +16,7 @@ import { setupCall, type SetupCall } from "../setup/setupModel";
 import { callRefusal, NotKnown } from "./AssetList";
 import type { FormValues } from "./assetFormValues";
 import { disposalOf } from "./assetWrites";
-import {
-  ASSET_KEYS,
-  fieldWord,
-  keyedText,
-  refusalText,
-  tokenWord,
-} from "./assetsWords";
+import { ASSET_KEYS, fieldWord, refusalText, tokenWord } from "./assetsWords";
 import { figureText } from "./planWords";
 
 type Calculation = ActivityAssetDisposalCalculateResult;
@@ -118,7 +113,7 @@ function Figures({
               className="inline-flex flex-wrap items-center gap-x-1.5"
             >
               <Icon name="alert" size="xs" className="text-warning" />
-              {keyedText(t, finding.label_key, t(ASSET_KEYS.unrecognised))}
+              {finding.words ?? t(ASSET_KEYS.unrecognised)}
               {finding.tax_year !== null && (
                 <span className="tabular-nums">{finding.tax_year}</span>
               )}
@@ -169,7 +164,7 @@ export function DisposalFigures({
     const call = await setupCall(
       port,
       "ledger.actividad-asset.disposal-calculate",
-      { asset_id: assetId, disposal: stated },
+      inLanguage({ asset_id: assetId, disposal: stated }),
       false,
     );
     setAsked({ signature, call });

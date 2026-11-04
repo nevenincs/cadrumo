@@ -7,8 +7,8 @@ related:
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
   - "[[2026-06-30-convenio-doble-imposicion-adr]]"
 superseded_by: '2026-07-10-m210-irnr-phase-2-engine-adr'
-modified: '2026-10-22'
-body_hash: 'sha256:f82b21e9053555e67cb864739b8537f671823191b8ef2b0f6aab15f2e2d8b209'
+modified: '2026-11-04'
+body_hash: 'sha256:a8eacc8300d62457773a90d16dc347dc9b51353042b7e440a4fdb3677333b56f'
 ---
 # `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `superseded`)
 
@@ -35,8 +35,8 @@ executable slices.
   (`orden-hac-56-2024.html`, source `boe-modelo-210-2024-form-layout`), whose
   Articulo cuarto amends EHA/3316/2010 with the agrupacion rules, periodo `0A`,
   codigo 35, and the plazo table; Orden HAC/623/2026 / BOE-A-2026-13573
-  (`orden-hac-623-2026.html`, the 2027-onward M210 content change plus the 2026
-  domiciliacion-plazo update); the full consolidated TRLIRNR
+  (`orden-hac-623-2026.html`, the M210 content change that applies from its stated
+  date plus its domiciliacion-plazo update); the full consolidated TRLIRNR
   (`trlirnr-rdleg-5-2004.html`); the AEAT Sede M210 instructions
   (`modelo-210-instrucciones.html`, 116 KB); the imputed-real-estate guidance
   page; and four CDI article excerpts (AR-1992, DE-2011, GB-2013, MA-1978).
@@ -67,8 +67,8 @@ executable slices.
   already carries per-modelo windows.
 - **Revision-window discipline.** Each filing year must resolve to exactly one
   revision; the layout authorities are time-windowed (the HAC/56/2024 form
-  entry applies 2024-02-01 through 2026-12-31; HAC/623/2026 content applies
-  from 2027).
+  entry applies for its declared window; HAC/623/2026 content applies
+  from its own declared start).
 
 ## Considered options
 
@@ -112,10 +112,13 @@ executable slices.
   on the canonical period grammar, declare the HAC/56/2024 plazo windows in the
   deadline engine, and enforce the grouping-validity rules as registry
   verification predicates over the declared rows. Accepted.
-- **O9 revisions: retro-author a 2024 revision now.** Rejected: no persona or
-  campaign requires M210 filing year 2024; it duplicates the 2025 work without
-  a consumer. The window map stays: revision `2025` under the HAC/56/2024
-  layout; a `2027` revision is authored when HAC/623/2026 content applies.
+- **O9 revisions: retro-author an earlier revision now.** Rejected: no persona or
+  campaign requires an earlier M210 filing year, and a year without its own
+  edition is calculated from the nearest authored edition at calculation grade;
+  a new revision would duplicate the existing revision's work without a
+  consumer. The window map stays: the existing revision serves the
+  HAC/56/2024 layout; a further revision is authored when HAC/623/2026 content
+  applies.
 
 ## Constraints
 
@@ -134,7 +137,7 @@ executable slices.
   corpus text.
 - **BUNDLED-SUFFICIENT:** the tipo-de-renta official code list, the agrupacion
   rules and periodo `0A`, the plazo windows, the TRLIRNR rate/base law, and the
-  2027 dividend-refund content change are groundable from the shipped corpus
+  HAC/623/2026 dividend-refund content change are groundable from the shipped corpus
   today.
 - **Parent stability:** the Phase 1 engine, `ConvenioAuthority`, and the typed
   unresolved-outcome channel are landed and test-pinned; this ADR adds no
@@ -147,7 +150,7 @@ executable slices.
 Slices ordered by grounding availability; each is independently landable.
 
 **Slice A (bundled-groundable now) - official tipo-de-renta code axis.** Author
-the official code list as registry data on the 2025 revision (each code row
+the official code list as registry data on the existing M210 revision (each code row
 citing the bundled EHA/3316/2010 / instructions text), with the
 code-to-`TipoRentaIrnr` projection and a registry-build parity gate (every
 declared code maps; unmapped codes refuse at build). The CLI declares the code
@@ -163,7 +166,7 @@ text.
 
 **Slice C (fetch-gated) - full casilla schema.** Fetch NEEDS-FETCH 1, bundle it
 as a `layout_authority` source, then author the complete casilla set on the
-2025 revision with completeness manifest, extraction-profile targets, and
+existing M210 revision with completeness manifest, extraction-profile targets, and
 export parity per the official-structure export rule. Casilla count and
 numbering come from the fetched document.
 
@@ -174,10 +177,10 @@ fetch the named BOE convenio texts, author corpus + legal entries +
 proposal: FR, PT, US, NL, BE (high non-resident filer traffic); subsequent
 tranches enrol without framework change.
 
-**Slice E (2027, deferred until the filing year approaches) - HAC/623/2026
-revision.** Author revision `2027` carrying the bundled dividend-refund control
-fields; the 2026 domiciliacion plazo update folds into the Slice B deadline
-windows.
+**Slice E (deferred until the HAC/623/2026 content approaches its start) -
+HAC/623/2026 revision.** Author the revision that carries the bundled
+dividend-refund control fields; the domiciliacion plazo update folds into the
+Slice B deadline windows.
 
 ## Rationale
 

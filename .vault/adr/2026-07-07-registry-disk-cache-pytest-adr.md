@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#registry-disk-cache-pytest'
 date: '2026-07-07'
-modified: '2026-07-17'
-body_hash: 'sha256:da5a32ad579d7fb8f3703b89d4ec836cedff86ae963fd6b753b945e285ace96f'
+modified: '2026-11-04'
+body_hash: 'sha256:ff72214c6f3d80cb0d8883548a0248f2be89296a409e0204456aaa13088c2dda'
 related:
   - '[[2026-07-10-registry-disk-cache-pytest-research]]'
 ---
@@ -24,7 +24,7 @@ SHA-256 of `(schema_version, root, per-file path/size/mtime)` -- was shared
 across pytest-xdist worker processes, and a parallel `-n` run could serve a
 stale or transiently-inconsistent compiled registry from one worker to
 another when the underlying root was a synthetic `tmp_path` tree a test was
-actively mutating (the M303-2009 ledger flake). The `#44` fix closed the race
+actively mutating (the Modelo 303 ledger flake). The `#44` fix closed the race
 by disabling the disk pickle unconditionally under pytest (`"pytest" in
 sys.modules`, or any of the `PYTEST_CURRENT_TEST` / `PYTEST_XDIST_WORKER` /
 `PYTEST_VERSION` env markers).

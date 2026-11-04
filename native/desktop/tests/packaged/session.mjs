@@ -432,7 +432,16 @@ export class Session {
   }
 
   async showTab(kind) {
-    if (kind === "tui") return;
+    if (kind === "tui" || kind === "agent") {
+      const pane = this.page.locator(`.pane-${kind}`);
+      if (await pane.isVisible()) return;
+      const opener = this.page.locator(`.rail [data-rail="${kind}"]`);
+      if ((await opener.getAttribute("aria-pressed")) === "true")
+        await this.page.locator(`#tab-${kind}`).click();
+      else await opener.click();
+      await pane.waitFor({ state: "visible" });
+      return;
+    }
     const pane = this.page.locator(`#panel-${kind}`);
     if (await pane.isVisible()) return;
     const panel = this.page.locator('.rail [data-rail="panel"]');
@@ -485,6 +494,7 @@ export async function connect({
   blockExternal = true,
   timeout = 60000,
   documentObserver,
+  onFailure,
 }) {
   const browser = await (
     await chromium()
@@ -535,6 +545,11 @@ export async function connect({
     return session;
   } catch (error) {
     session?.stopObservation();
+    try {
+      await onFailure?.(browser);
+    } catch {
+      // Optional evidence must not replace the connection failure or cleanup.
+    }
     await browser.close().catch(() => {});
     throw error;
   }

@@ -151,6 +151,30 @@
     {
       "argv": [
         "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--irpf-estimation-regime",
+        "directa_simplificada",
+        "--irpf-activity-income-imputation-criterion",
+        "cobros_y_pagos",
+        "--irpf-activity-income-imputation-year",
+        "2026",
+        "--no-irpf-codigo-comercio-accounting"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
         "--format",
         "json",
         "app",
@@ -281,11 +305,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "b9a087a2a626e9fa874b969fa07eb29d9eb367ffb520125212d6bfcebe784964",
+          "bucket_event_id": "ee5d66fbb07bb80330d406d37467d4cb91508c0532aa0d32444892993076e6cd",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "ba208001196e2f2b8b63446f93c998fd42679cc6ac8de2203c0242bf186799da",
-          "file_sha256": "2f214c53d547645260dcf5747f4d57803e68cfeb3bf181e7312272deb70efe05",
+          "calculation_revision_id": "8a8aa2071b45b8197822f8290338ee8034476312fa54d8c4ed73457ee6c0d91e",
+          "file_sha256": "11865d95acd5eed9b4d35a6b945ef5d9eee77868c523efdb0fc4f934bd96f785",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": null,
@@ -305,7 +329,7 @@
             "election": "keep"
           },
           "refund_election": null,
-          "resolved_result_disposition": "N",
+          "resolved_result_disposition": "B",
           "software_identity_grade": "development_mock",
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
@@ -352,13 +376,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "ba208001196e2f2b8b63446f93c998fd42679cc6ac8de2203c0242bf186799da",
+          "calculation_revision_id": "8a8aa2071b45b8197822f8290338ee8034476312fa54d8c4ed73457ee6c0d91e",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "a8468175f09d506f79f8f8b3656c41908d124dadc4788c581266736cad55e5f5",
+          "filing_record_id": "7aba80f4e61dda980620055448754c1ae7d2747b8f79905da4842d74e1b7c406",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,

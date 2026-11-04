@@ -77,7 +77,7 @@ enum Item {
     },
     Field {
         section_key: String,
-        field: Field,
+        field: Box<Field>,
     },
     Missing {
         path: String,
@@ -302,7 +302,7 @@ impl Pages {
                     if field.masked && field.value.is_some() {
                         field.value = Some("••••••••".into());
                     }
-                    section.fields.push(field);
+                    section.fields.push(*field);
                 }
                 Item::Missing { path } if !self.overview.missing_required.contains(&path) => {
                     self.trailing = true;

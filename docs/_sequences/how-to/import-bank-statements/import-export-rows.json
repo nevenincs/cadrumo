@@ -49,12 +49,12 @@
         ],
         "result": {
           "bucket_event_ids": [
-            "01c8644810a7fb5d1c134f393f183a001634c1957335bef1038f1e88b71e5f97"
+            "e2f88aa6b03a556e8f0de0f284143b77842eb6a2926ee98d67a3c0abdc6074a9"
           ],
           "bucket_id": "<bucket-id>",
-          "byte_size": 963,
+          "byte_size": 995,
           "export_format": "csv",
-          "export_id": "5d21bae0092ca18055daf752043d453210b5141ec5f4cab28bd40e67ed9012f6",
+          "export_id": "219d875a4954abf84adbe0c5d5a1cce87e9abbf09ebbbfe4b3ff6f75da24f545",
           "fieldnames": [
             "bucket_id",
             "transaction_id",
@@ -62,6 +62,8 @@
             "invoice_id",
             "booked_date",
             "value_date",
+            "operation_date",
+            "accrual_date",
             "effective_date",
             "amount",
             "currency",
@@ -95,6 +97,7 @@
           "row_count": 2,
           "rows": [
             {
+              "accrual_date": "",
               "amount": "1210.00",
               "attachment_ids": "",
               "booked_date": "2026-02-10",
@@ -119,6 +122,7 @@
               "iva_rate": "",
               "lifecycle_state": "ACTIVE",
               "notes": "",
+              "operation_date": "",
               "prorrata_reference": "",
               "purchase_invoice_evidence_id": "",
               "source_jurisdiction": "",
@@ -129,6 +133,7 @@
               "value_in_eur": ""
             },
             {
+              "accrual_date": "",
               "amount": "605.00",
               "attachment_ids": "",
               "booked_date": "2026-02-11",
@@ -153,6 +158,7 @@
               "iva_rate": "",
               "lifecycle_state": "ACTIVE",
               "notes": "",
+              "operation_date": "",
               "prorrata_reference": "",
               "purchase_invoice_evidence_id": "",
               "source_jurisdiction": "",
@@ -163,7 +169,7 @@
               "value_in_eur": ""
             }
           ],
-          "sha256": "c9d6904d7dceedccb2b593b557ae33d29d9338d2bb36ac05a225f2a6ad7ced0b"
+          "sha256": "937917c208858f94cde1b85613d7d29d2d36ab7e78ade971f19abcbd03052186"
         },
         "schema_version": "2",
         "status": "warning"

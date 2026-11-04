@@ -126,6 +126,8 @@ export function instrument(config) {
   const sessions = {};
   const latest = {};
   const observation = [];
+  // Fixed-shape records and their scalar span metadata consume budget too.
+  const recordBytes = 64;
   const bounds = config.observationLimits ?? {
     bytes: 2 * 1024 * 1024,
     records: 4096,
@@ -140,6 +142,7 @@ export function instrument(config) {
     captured: 0,
     drained: 0,
     batches: 0,
+    coalesced: 0,
   };
   const logs = { batches: 0, records: [] };
   state.ipc = ipc;
@@ -208,23 +211,45 @@ export function instrument(config) {
     const channel = current(id);
     if (!channel || channel.observationLoss) return;
     const size = bytes?.length ?? 0;
+    const previous = observation.at(-1);
+    // A span owns [index, index + count) and the exact concatenated payload.
+    // No per-frame metadata grows behind the record cap; ACKs and controls break it.
+    const join =
+      record.type === "frame" &&
+      !record.end &&
+      bytes?.[0] === 0 &&
+      previous?.type === "frame" &&
+      !previous.end &&
+      previous.bytes?.[0] === 0 &&
+      previous.kind === channel.kind &&
+      previous.generation === channel.generation &&
+      Number.isSafeInteger(record.index) &&
+      record.index === previous.index + (previous.count ?? 1) &&
+      previous.bytes.length + size - 1 <= bounds.batchBytes;
+    const retained = join ? size - 1 : size + recordBytes;
     if (
-      captureStats.bytes + size > bounds.bytes ||
-      observation.length >= bounds.records
+      captureStats.bytes + retained > bounds.bytes ||
+      (!join && observation.length >= bounds.records)
     ) {
       lose(id, "TerminalObservationCaptureLimit");
       return;
     }
     const empty = observation.length === 0;
-    observation.push({
-      ...record,
-      kind: channel.kind,
-      generation: channel.generation,
-      ...(bytes ? { bytes: Array.from(bytes) } : {}),
-    });
-    captureStats.bytes += size;
+    if (join) {
+      for (let i = 1; i < size; i += 1) previous.bytes.push(bytes[i]);
+      previous.count = (previous.count ?? 1) + 1;
+      captureStats.coalesced += 1;
+    } else {
+      observation.push({
+        ...record,
+        kind: channel.kind,
+        generation: channel.generation,
+        ...(bytes ? { bytes: Array.from(bytes) } : {}),
+      });
+      captureStats.captured += 1;
+    }
+    captureStats.bytes += retained;
     captureStats.records = observation.length;
-    captureStats.captured += 1;
     captureStats.peakBytes = Math.max(
       captureStats.peakBytes,
       captureStats.bytes,
@@ -260,7 +285,7 @@ export function instrument(config) {
       size += bytes;
       if (size >= byteLimit) break;
     }
-    captureStats.bytes -= size;
+    captureStats.bytes -= size + records.length * recordBytes;
     captureStats.records = observation.length;
     captureStats.drained += records.length;
     captureStats.batches += 1;
@@ -321,6 +346,11 @@ export function instrument(config) {
         lose(id, "TerminalObservationCaptureLimit");
         return;
       }
+      for (const byte of message)
+        if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
+          lose(id, "TerminalObservationFrameInvalid");
+          return;
+        }
       bytes = Uint8Array.from(message);
     }
     if (!bytes || !bytes.length) {
@@ -375,6 +405,7 @@ export function instrument(config) {
       try {
         observe(id, data);
       } catch (error) {
+        lose(id, "TerminalObservationFrameInvalid");
         limit(state.console, 2000, {
           at: Date.now(),
           level: "harness",
@@ -488,7 +519,8 @@ export function instrument(config) {
         // Retiring a session discards only that kind's old observation records.
         for (let i = observation.length - 1; i >= 0; i -= 1) {
           if (observation[i].kind !== channel.kind) continue;
-          captureStats.bytes -= observation[i].bytes?.length ?? 0;
+          captureStats.bytes -=
+            (observation[i].bytes?.length ?? 0) + recordBytes;
           observation.splice(i, 1);
         }
         captureStats.records = observation.length;
@@ -607,6 +639,32 @@ export function instrument(config) {
         error: {
           code: text(error?.code ?? error, 60),
           operation: text(error?.operation ?? "", 40),
+          ...(typeof error?.reason === "string"
+            ? { reason: text(error.reason, 120) }
+            : {}),
+          ...(Array.isArray(error?.causes)
+            ? {
+                causes: error.causes.slice(0, 8).map((cause) => {
+                  const facts = {};
+                  // Native ApplicationError serializes only closed facts.
+                  // Retain those fields, never arbitrary messages or payloads.
+                  for (const key of [
+                    "kind",
+                    "code",
+                    "operation",
+                    "reason",
+                    "ioKind",
+                    "category",
+                  ])
+                    if (typeof cause?.[key] === "string")
+                      facts[key] = text(cause[key], 120);
+                  for (const key of ["osCode", "line", "column"])
+                    if (Number.isSafeInteger(cause?.[key]))
+                      facts[key] = cause[key];
+                  return facts;
+                }),
+              }
+            : {}),
         },
       };
     }

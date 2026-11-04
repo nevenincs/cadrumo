@@ -48,8 +48,11 @@ Load-bearing details for building this state yourself:
   them from your own earlier recorded filings instead - see [the cumulative
   behaviour](#each-quarter-is-cumulative) below.
 - With the two entries above, calculate reports cumulative income (box `01`) of
-  `1000.00`, net income (box `03`) of `500.00` - income base minus expense
-  base - and a payment instalment (box `04`) of `100.00`, 20 percent of the net.
+  `1000.00`. Under simplified direct estimation, the provision for
+  difficult-to-justify expenses is `25.00`: five percent of `1000.00 - 500.00`,
+  within the annual `2000.00` cap. Deductible expenses (box `02`) are `525.00`,
+  net income (box `03`) is `475.00`, and the payment instalment (box `04`) is
+  `95.00`, 20 percent of the net.
 - `verify` reports `completeness complete` and `granted true`. `export` then
   writes the local fichero-BOE file and reports its checksum.
 

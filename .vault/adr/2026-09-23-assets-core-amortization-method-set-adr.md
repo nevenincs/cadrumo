@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-10-30'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:55084abf93c38e6581a2f8e54899a449c10543a1d9a89e995b064d5a7266d954'
+body_hash: 'sha256:e34caa2e3e029c112dc2c2361574dc0726b6b8fdd717b48e2a3d565b9b25aaba'
 related:
   - "[[2026-09-23-assets-core-amortization-method-set-research]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
@@ -20,7 +20,7 @@ related:
 
 ## Problem Statement
 
-The 2025 activity-asset engine enrols only the linear table maximum and the
+The first activity-asset engine enrols only the linear table maximum and the
 EUR 300 election. `2026-09-23-assets-core-amortization-method-set-research`
 shows that the normal modality admits four further LIS art. 12.1 methods, the
 art. 12.2 intangible limits and several incentives, while the simplified
@@ -61,10 +61,10 @@ revisions.
 
 ## Constraints
 
-- Filing-grade support remains tax year 2025, common-regime direct
+- Filing-grade support remains the first grounded tax year, common-regime direct
   estimation, and material and intangible activity assets.
 - Each admission, coefficient, threshold, weighting and window is a Modelo 100
-  2025 registry parameter with legal references and AEAT manual citations.
+  registry parameter of the first grounded edition with legal references and AEAT manual citations.
   Absent registry rows mean unsupported. A row valued zero means excluded by
   law and refuses with its provision.
 - No caller-authored rate or amount is accepted except an elected coefficient
@@ -82,8 +82,8 @@ construction date for used buildings). The per-call authority selector is
 deleted. A forecast takes the asset, the covered interval and, for free
 methods only, the elected amount.
 
-The resolver reads the revision's election against the 2025 Modelo 100
-parameters. It checks method admission for the regime and asset kind, class
+The resolver reads the revision's election against the Modelo 100
+parameters of the selected edition. It checks method admission for the regime and asset kind, class
 admission for constant percentage and sum of digits, coefficient bounds
 (maximum coefficient, the coefficient implied by the maximum period, the
 multi-shift formula, the used-asset double maximum, ERD double maximum),
@@ -171,23 +171,23 @@ is preserved; where it differs, this section governs.
   the AEAT manuals read the stale art. 103.5 cross reference; the registry
   parameter carries that reading as its provenance.
 - Electric-vehicle free depreciation (LIS DA 18a.1) is admitted for new
-  annex-II vehicles entering service in 2024 or 2025, on a vehicle affectation
+  annex-II vehicles entering service inside the window the enacting law sets, on a vehicle affectation
   declaration that `2026-09-23-assets-core-vehicle-affectation-adr` admits.
 - The day-count proration of the lifecycle decision is the unit binding
   consulta V1978-24 states; the AEAT examples' month fractions are
   illustrations, so the recorded inconsistency is resolved without amending
   the lifecycle decision.
 - Job-creating ERD free depreciation (LIS art. 102) and renewable
-  self-consumption free depreciation (LIS DA 17a, 2025 entries only for the
-  2025 IRPF period) remain refused until the average-workforce profile fact
+  self-consumption free depreciation (LIS DA 17a, only the entries and
+  IRPF period the enacting law reaches) remain refused until the average-workforce profile fact
   lands; that fact is scheduled in the taxpayer profile schema version 7.
 
 ## Amendment 2026-09-27
 
 Authorized by the operator's registry conformance rectification brief of 2026-09-27, recorded as the approval basis of `2026-09-27-registry-conformance-rectification-plan`, on the evidence in `2026-09-27-registry-conformance-rectification-research`. The accepted body above is preserved; where it differs, this section governs.
 
-- Filing-grade support extends from tax year 2025 to every year of the registry support envelope, floor 2022. The amortization parameters are authored once at the first edition the law admits them and later editions key only their own manual evidence or a genuine change; the tables, thresholds and general methods are the same in every supported year.
-- Renewable self-consumption free depreciation (LIS DA 17a) is admitted from 2023, with entry into service in the tax year; 2022 admits it for no installation. Electric-vehicle and charging-point free depreciation (LIS DA 18) is admitted from 2024; the 2023 DA 18 regime is accelerated depreciation, which stays outside the method set. A year no authored edition covers admits no incentive whose enactment is annual.
+- Filing-grade support extends from the first grounded tax year to every year of the registry support envelope. The amortization parameters are authored once at the first edition the law admits them and later editions key only their own manual evidence or a genuine change; the tables, thresholds and general methods are the same in every supported year.
+- Renewable self-consumption free depreciation (LIS DA 17a) is admitted from the tax year its enacting law first applies, with entry into service in the tax year; earlier years admit it for no installation. Electric-vehicle and charging-point free depreciation (LIS DA 18) is admitted from the tax year its own enacting law first applies; the earlier DA 18 regime is accelerated depreciation, which stays outside the method set. A year no authored edition covers admits no incentive whose enactment is annual.
 - The resolver serves a year through the canonically selected Modelo 100 edition, projected where no edition is authored, and refuses only an edition that begins after the tax year.
 
 ## Amendment 2026-10-30
@@ -195,7 +195,7 @@ Authorized by the operator's registry conformance rectification brief of 2026-09
 Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes and a settled legal basis, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research`. The accepted body and earlier amendments are preserved; where they differ, this section governs.
 
 - Years and projection: `2026-08-27-registry-dated-validity-adr` keeps its exact-year refusal for the corpora it migrated and excludes Modelo revision directories, so it does not govern this resolver. The temporal-coverage gate of `2026-08-14-registry-temporal-coverage-adr` still governs a filing-grade Modelo 100 snapshot. A projected edition therefore serves an asset forecast and the Modelo 130 of that year, and it does not admit a Modelo 100 of a year without its own edition.
-- Incentive windows: each year admits only that year's entries into service, which reads the 2026-09-23 and 2026-09-27 wording as one rule. For IRPF 2025, LIS DA 17 rests on RDL 16/2025 with the AEAT note and remains an advisory gap, and LIS DA 18 rests on RDL 4/2024. RDL 7/2026 art. 37 reaches only periods not concluded at 22 March 2026, so it does not ground IRPF 2025. It grounds 2026 once a 2026 edition authors those parameters; until then a projected 2026 admits neither incentive.
+- Incentive windows: each year admits only that year's entries into service, which reads the 2026-09-23 and 2026-09-27 wording as one rule. For the IRPF period governed by RDL 16/2025, LIS DA 17 rests on RDL 16/2025 with the AEAT note and remains an advisory gap, and LIS DA 18 rests on RDL 4/2024. RDL 7/2026 art. 37 reaches only periods not concluded at 22 March 2026, so it does not ground a period that concluded earlier. It grounds the later year it reaches once an edition of that year authors those parameters; until then a projected year admits neither incentive.
 - Workforce methods: the refusal of job-creating and renewable free depreciation ended when the fact of `2026-09-24-assets-core-average-workforce-write-path-adr` landed. They are admitted under their registry conditions.
 - Regimes: this method set covers direct estimation. Estimación objetiva stays refused until it has its own table and destinations. It is a later slice, not a mode of these methods.
 - Proration: days of operation over days of the year for every method. The 2026-09-23 ground is withdrawn, because V1978-24 concerns a first-year quota in módulos and says nothing on direct estimation or quarters. The rule rests on RIS art. 4.1, which makes the table a corridor between the maximum coefficient and the one derived from the maximum period, and on the precedence of regulation over manual examples. The days figure is the maximum, and a month-based example below it is a lawful lower amount: 36,000 at 24% for December allows at most 733.81 and admits the manual's 720. That is reached through an elected coefficient inside the corridor, never through a caller-stated amount, and the oracle is tested as admissible rather than as the ceiling.

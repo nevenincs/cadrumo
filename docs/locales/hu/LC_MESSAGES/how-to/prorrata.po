@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-02 11:23+0100\n"
+"POT-Creation-Date: 2026-11-03 19:24+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -485,19 +485,16 @@ msgstr ""
 "nyilatkozatoddal; az eltérés megállapítássá válik."
 
 #: ../../how-to/prorrata.md:192
-msgid ""
-"Remove a declaration with `aeat app ledger prorrata remove-gross "
-"--ejercicio <year> --period 1T`, adding `--sector` for a sector entry."
+msgid "Remove a declaration for the period, adding `--sector` for a sector entry:"
 msgstr ""
-"Nyilatkozat törlése: `aeat app ledger prorrata remove-gross --ejercicio "
-"<year> --period 1T`, szektortételnél kiegészítve a `--sector` "
-"kapcsolóval."
+"Töröld az időszak nyilatkozatát; ágazati tételnél add meg a `--sector` "
+"kapcsolót:"
 
-#: ../../how-to/prorrata.md:195
+#: ../../how-to/prorrata.md:198
 msgid "Read the settlement advisories"
 msgstr "Olvasd el az elszámolási figyelmeztetéseket"
 
-#: ../../how-to/prorrata.md:197
+#: ../../how-to/prorrata.md:200
 msgid ""
 "When you calculate the year-end Modelo 303 for the 4th quarter "
 "settlement, the tool may surface an advisory that does not block filing:"
@@ -506,7 +503,7 @@ msgstr ""
 "elszámoláshoz, az eszköz olyan figyelmeztetést jeleníthet meg, amely nem "
 "akadályozza a benyújtást:"
 
-#: ../../how-to/prorrata.md:200
+#: ../../how-to/prorrata.md:203
 msgid ""
 "**Especial may be mandatory** - when the taxpayer computes under general "
 "prorrata and the deduction under general exceeds the deduction under "
@@ -524,13 +521,13 @@ msgstr ""
 "be őket. Az ellenőrzés nem fut le olyan nyilvántartásnál, amelyben "
 "szektorok vannak deklarálva."
 
-#: ../../how-to/prorrata.md:207
+#: ../../how-to/prorrata.md:210
 msgid "Two more warnings appear when you add a row, not at settlement:"
 msgstr ""
 "Két további figyelmeztetés a sor hozzáadásakor jelenik meg, nem az "
 "elszámoláskor:"
 
-#: ../../how-to/prorrata.md:209
+#: ../../how-to/prorrata.md:212
 msgid ""
 "**Inert classification** - an `--input-classification` tag set with no "
 "especial election for that year."
@@ -538,13 +535,13 @@ msgstr ""
 "**Hatástalan besorolás** - az `--input-classification` címke hatástalan, "
 "ha az adott évre nem választottál különleges arányosítást."
 
-#: ../../how-to/prorrata.md:211
+#: ../../how-to/prorrata.md:214
 msgid "**Unmatched sector** - a `--sector` tag naming a sector not yet declared."
 msgstr ""
 "**Párját nem lelő szektor**: egy `--sector` címke, amely egy még nem "
 "deklarált szektort nevez meg."
 
-#: ../../how-to/prorrata.md:213
+#: ../../how-to/prorrata.md:216
 msgid ""
 "These are notes, not refusals. Read them alongside the [calculation "
 "inputs](review-calculation-values.md) before you [check the filing"
@@ -554,11 +551,11 @@ msgstr ""
 "bemenetek](review-calculation-values.md) mellett, mielőtt ellenőrzöd a "
 "[benyújtást](verification-reports.md)."
 
-#: ../../how-to/prorrata.md:217
+#: ../../how-to/prorrata.md:220
 msgid "Review the register"
 msgstr "A nyilvántartás felülvizsgálata"
 
-#: ../../how-to/prorrata.md:219
+#: ../../how-to/prorrata.md:222
 msgid ""
 "List every election, declared sector and declared gross base on the "
 "active profile:"
@@ -566,7 +563,7 @@ msgstr ""
 "Listázd az aktív profil minden választását, deklarált szektorát és "
 "megadott bruttó alapját:"
 
-#: ../../how-to/prorrata.md:226
+#: ../../how-to/prorrata.md:229
 msgid ""
 "Each declared gross base shows its period, sector (if any), gross amount,"
 " provenance (`operator_declared`), evidence reference and declaration "
@@ -580,11 +577,11 @@ msgstr ""
 "nyilatkozatonként egy `gross` sort ír ki a tételek és a szektorok után. A"
 " `--format json` ugyanezeket a mezőket adja a `gross_declarations` alatt."
 
-#: ../../how-to/prorrata.md:231
+#: ../../how-to/prorrata.md:234
 msgid "Unresolved findings"
 msgstr "Feloldatlan megállapítások"
 
-#: ../../how-to/prorrata.md:233
+#: ../../how-to/prorrata.md:236
 msgid ""
 "The regularisation never fills a gap with a guess. When it cannot "
 "calculate casilla 44 it leaves the box unresolved and reports a finding. "
@@ -594,7 +591,7 @@ msgstr ""
 "kiszámítani a 44-es casillát, feloldatlanul hagyja, és megállapítást "
 "jelent. A leggyakoribbak jelentése:"
 
-#: ../../how-to/prorrata.md:237
+#: ../../how-to/prorrata.md:240
 msgid ""
 "**Annual volumes not declared** - declare the year's volumes of "
 "operations with and without the right to deduct, so the definitive "
@@ -604,7 +601,7 @@ msgstr ""
 "anélkül végzett ügyleteinek forgalmát, hogy a végleges százalék "
 "kiszámítható legyen."
 
-#: ../../how-to/prorrata.md:240
+#: ../../how-to/prorrata.md:243
 msgid ""
 "**Provisional percentage missing** - elect or seed a percentage, or file "
 "the prior year's settlement so it can be carried."
@@ -612,7 +609,7 @@ msgstr ""
 "**Hiányzik az ideiglenes százalék**: válassz vagy képezz egy százalékot, "
 "vagy nyújtsd be az előző év elszámolását, hogy átvihető legyen."
 
-#: ../../how-to/prorrata.md:242
+#: ../../how-to/prorrata.md:245
 msgid ""
 "**Earlier liquidations not filed** - the regularisation covers the year's"
 " earlier periods; each one must be filed in Cadrumo or have a declared "
@@ -622,7 +619,7 @@ msgstr ""
 "korábbi időszakait fedi le; mindegyiket be kell nyújtani a Cadrumóban, "
 "vagy bruttó alapot kell hozzá megadni."
 
-#: ../../how-to/prorrata.md:245
+#: ../../how-to/prorrata.md:248
 msgid ""
 "**Gross base unknown or disagreeing** - the ledger holds no deductible "
 "input for a period that declared some, or the ledger and your declaration"
@@ -633,7 +630,7 @@ msgstr ""
 "és a nyilatkozatod eltér. Rögzítsd a bejövő áfát, vagy add meg, illetve "
 "cseréld le a bruttó alapot."
 
-#: ../../how-to/prorrata.md:248
+#: ../../how-to/prorrata.md:251
 msgid ""
 "**Ledger and filed liquidation diverge** - the input VAT at the "
 "provisional percentage does not reproduce what the period filed. "
@@ -643,7 +640,7 @@ msgstr ""
 "számolt bejövő áfa nem adja vissza azt, amit az időszak benyújtott. "
 "Először egyeztesd őket."
 
-#: ../../how-to/prorrata.md:250
+#: ../../how-to/prorrata.md:253
 msgid ""
 "**Sector definitive percentage missing** - settle each sector with "
 "`prorrata settle-sector` before regularising."
@@ -651,7 +648,7 @@ msgstr ""
 "**Hiányzik a szektor végleges százaléka**: szabályosítás előtt számold el"
 " az egyes szektorokat a `prorrata settle-sector` paranccsal."
 
-#: ../../how-to/prorrata.md:253
+#: ../../how-to/prorrata.md:256
 msgid ""
 "Fix the named cause and recalculate. A finding that asks you to calculate"
 " the box yourself means the case is outside what the tool derives."
@@ -660,7 +657,7 @@ msgstr ""
 "arra kér, hogy a casillát magad számold ki, az az esetet az eszköz "
 "levezetésén kívül esőnek jelzi."
 
-#: ../../how-to/prorrata.md:256
+#: ../../how-to/prorrata.md:259
 msgid ""
 "Nothing here files or submits anything. The register, the percentages and"
 " the declared gross bases are stored locally with the profile, and the "
@@ -672,11 +669,11 @@ msgstr ""
 "tárolja, a számítás pedig csak a 44-es casillát tölti ki egy helyi "
 "vázlatban. A benyújtás és minden AEAT-felé történő beküldés nálad marad."
 
-#: ../../how-to/prorrata.md:261
+#: ../../how-to/prorrata.md:264
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/prorrata.md:263
+#: ../../how-to/prorrata.md:266
 msgid ""
 "[Classify transactions](classify-transactions.md) so each input carries "
 "the data prorrata needs."
@@ -684,7 +681,7 @@ msgstr ""
 "[Tranzakciók besorolása](classify-transactions.md), hogy minden "
 "beszerzési tétel tartalmazza az arányosításhoz szükséges adatokat."
 
-#: ../../how-to/prorrata.md:265
+#: ../../how-to/prorrata.md:268
 msgid ""
 "[Review calculation inputs](review-calculation-values.md) to see the "
 "deducted amounts."
@@ -692,7 +689,7 @@ msgstr ""
 "[Számítási bemenetek áttekintése](review-calculation-values.md) a levont "
 "összegek megtekintéséhez."
 
-#: ../../how-to/prorrata.md:267
+#: ../../how-to/prorrata.md:270
 msgid ""
 "[Prepare a Modelo 303 VAT filing](modelo-303.md) and [the annual Modelo "
 "390 summary](modelo-390.md)."

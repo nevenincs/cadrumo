@@ -142,9 +142,9 @@ def audit_security(repo_root: Path) -> AdvisoryDimension:
     """Classify the security dimension from the one semgrep runner.
 
     RED if any ERROR-severity finding -- semgrep's own worst severity tier.
-    AMBER on WARNING/INFO-only findings, or on an unavailable scan (never
+    AMBER on WARNING/INFO-only findings, incomplete coverage, or an unavailable scan (never
     GREEN: "could not measure" and "nothing to find" are different facts).
-    GREEN only on a scan that demonstrably inspected files and found nothing.
+    GREEN only on a scan that demonstrably inspected files without parse errors and found nothing.
 
     Carries the raw semgrep JSON payload on ``raw_payload`` for any run that
     demonstrably scanned files, so :func:`persist` can write it verbatim
@@ -171,7 +171,7 @@ def audit_security(repo_root: Path) -> AdvisoryDimension:
         return AdvisoryDimension(
             DimensionReport(name="security", status=Status.AMBER, headline=result.headline(), available=False),
         )
-    if result.outcome is SecurityOutcome.OBSERVED_ZERO:
+    if result.is_green:
         return AdvisoryDimension(
             DimensionReport(name="security", status=Status.GREEN, headline=result.headline(), details=details),
             raw_payload=result.raw_json,

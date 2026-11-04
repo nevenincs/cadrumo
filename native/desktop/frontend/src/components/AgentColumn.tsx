@@ -16,6 +16,11 @@ import { isCadrumoLink } from "../shell/navigation/links";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { failureCode } from "../errors";
+import {
+  CATALOG_BUSY_RETRIES,
+  CATALOG_BUSY_PAUSE_MS,
+  catalogReadBusy,
+} from "../shell/catalogReadPolicy";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
 import {
   catalogChoices,
@@ -134,9 +139,6 @@ function SettingsDisclosure({
 // What the composer is given while nothing serves it: nothing. Sending,
 // adding files and choosing a model each say they are not available yet.
 const NO_PROVIDERS: ProviderOption[] = [];
-/** How often, and after how long a first pause, a busy service is asked for its catalog again. */
-const CATALOG_BUSY_RETRIES = 3;
-const CATALOG_BUSY_PAUSE_MS = 2_000;
 const NO_MODELS: Record<string, ModelOption[]> = {};
 const NO_SELECTION: AgentSelection = {
   providerId: "",
@@ -572,9 +574,7 @@ export function AgentColumn({
   // bounded fallback when it publishes none. A session the runtime keeps
   // suspended is the same wait: it is not a sign-out and it comes back.
   const catalogBusy =
-    catalog.kind === "failed" &&
-    (catalog.code === "agent_service_busy" ||
-      catalog.code === "agent_reconnecting");
+    catalog.kind === "failed" && catalogReadBusy(catalog.code);
   const busyCatalogReads = useRef(0);
   const statusAtBusyRead = useRef(status);
   useEffect(() => {

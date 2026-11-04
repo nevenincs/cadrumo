@@ -248,7 +248,8 @@ class TransactionCatalogueRepository:
         if not index_ids:
             return TransactionCatalogue.from_transactions([])
         transaction_keys = {
-            transaction_id: transaction_object_key(self._bucket_id, transaction_id) for transaction_id in index_ids
+            transaction_id: transaction_object_key(self._bucket_id, transaction_id)
+            for transaction_id in sorted(index_ids)
         }
         # An ordinary read never upgrades: a row below the current schema is
         # refused before any payload is decrypted, and the explicit IVA

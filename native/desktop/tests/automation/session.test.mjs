@@ -31,7 +31,9 @@ test("readiness reports a signal exit that happened before subscription", async 
   await once(child, "exit");
   await assert.rejects(
     waitForWebDriver(child, 1, "/synthetic/run"),
-    /exit_signal=SIGKILL; inspect \/synthetic\/run/,
+    process.platform === "win32"
+      ? /exit_code=1; inspect \/synthetic\/run/
+      : /exit_signal=SIGKILL; inspect \/synthetic\/run/,
   );
 });
 
@@ -113,7 +115,7 @@ test("native exploration gets isolated storage and no inherited runtime authorit
     "/test/package",
     4445,
   );
-  assert.equal(env.CADRUMO_STORAGE_ROOT, "/synthetic/run/storage");
+  assert.equal(env.CADRUMO_STORAGE_ROOT, resolve("/synthetic/run", "storage"));
   assert.equal(env.CADRUMO_DESKTOP_PACKAGE_ROOT, "/test/package");
   assert.equal(env.TAURI_WEBDRIVER_PORT, "4445");
   assert.equal(env.CADRUMO_PROFILE, undefined);
@@ -169,7 +171,9 @@ test("picker open queues a confined file once with private mode and no temporary
       kind: "open",
       path: file,
     });
-    assert.equal(statSync(queue).mode & 0o777, 0o600);
+    // Windows reports emulated mode bits; they do not represent its ACLs.
+    if (process.platform !== "win32")
+      assert.equal(statSync(queue).mode & 0o777, 0o600);
     assert.deepEqual(readdirSync(resolve(run, "temporary")), [
       "native-picker-selection.json",
     ]);

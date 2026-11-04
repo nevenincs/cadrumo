@@ -42,9 +42,12 @@ Google, so it is shown here without being run:
 ```{cli-sequence} sheets-oauth
 ```
 
-Check the Google status and the folder created for the profile. These are
-local commands, so they run here. On a profile that has not signed in, the
-status shows `session_present` as false and no folder exists yet:
+Check the Google status and the folder created for the profile. These local
+commands run here. The documentation sandbox has no publisher Google sign-in
+configuration, so the status command reports Google sign-in as unavailable.
+Folder view still confirms that no Drive folder is configured. In an
+installation that includes Google sign-in, a profile that has not signed in
+reports `session_present` as false:
 
 ```{cli-sequence} sheets-folder
 :verify: Confirm that a profile which has not signed in has no Drive folder.

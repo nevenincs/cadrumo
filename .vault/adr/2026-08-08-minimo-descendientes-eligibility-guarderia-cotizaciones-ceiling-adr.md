@@ -30,8 +30,8 @@ unmeasured one.
 
 ## Considerations
 
-- The ceiling is normative rather than a parenthetical: it carries its own heading in all
-  six bundled renta manuals, 2020 through 2025, as "Especialidad: aplicación del
+- The ceiling is normative rather than a parenthetical: it carries its own heading in every
+  bundled renta manual, as "Especialidad: aplicación del
   incremento hasta que el hijo comience el segundo ciclo de educación infantil".
 - AEAT declines to fix the month. Every statement in every year is subjunctive — "aquel
   en el que PUEDA comenzar", "PUEDA iniciar" — because when the cycle may begin depends

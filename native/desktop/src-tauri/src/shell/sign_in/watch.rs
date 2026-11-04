@@ -343,6 +343,7 @@ fn run(inner: &Inner) -> Result<bool> {
         *owner = Some(opening.clone());
     }
     let connected = Endpoint::of(&native.storage_root).and_then(|endpoint| {
+        log::debug!("sign-in watch opening runtime connection");
         Connection::open_cancellable(&endpoint, &cohort, waiting.deadline(), opening.clone())
     });
     lock(&inner.opening).take();
@@ -362,6 +363,7 @@ fn run(inner: &Inner) -> Result<bool> {
         *owner = Some(connection.clone());
     }
     let events = connection.subscribe();
+    log::debug!("sign-in watch runtime connection opened");
     let forward = wake;
     let forwarding = thread::Builder::new()
         .name("sign-in-watch-events".into())
@@ -414,7 +416,10 @@ fn follow(
             return Ok(());
         }
         match observe(connection) {
-            Ok(observed) => publish(inner, Ok(observed)),
+            Ok(observed) => {
+                log::debug!("sign-in watch publishing observation");
+                publish(inner, Ok(observed));
+            }
             Err(refusal) => {
                 publish(inner, Ok(refused(&unavailable_code(&refusal))));
                 return Ok(());
@@ -437,7 +442,9 @@ fn observe(
     connection: &cadrumo_application::runtime_client::connection::Connection,
 ) -> std::result::Result<Observed, cadrumo_application::runtime_client::refusal::Refusal> {
     let deadline = cadrumo_application::runtime_client::timeout::TimeoutWait::new().deadline();
+    log::debug!("sign-in watch reading active profile");
     let active = connection.active_profile(true, deadline)?;
+    log::debug!("sign-in watch active profile read");
     let Some(profile_id) = active.selected_profile_id else {
         return Ok(Observed {
             sequence: 0,
@@ -453,10 +460,13 @@ fn observe(
             profiles: None,
         });
     };
+    log::debug!("sign-in watch reading login target");
     let label = connection
         .login_target(&profile_id, deadline)?
         .map(|(_, label)| label);
+    log::debug!("sign-in watch login target read");
     let status = connection.sign_in_status(&profile_id, true, deadline)?;
+    log::debug!("sign-in watch stored status read");
     Ok(Observed {
         sequence: 0,
         status: SignInStatus {

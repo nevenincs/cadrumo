@@ -1,0 +1,5 @@
+/* Cross-document snapshots in the documentation iframe can trigger a
+   WebView compositor failure during language navigation. */
+@view-transition {
+  navigation: none;
+}

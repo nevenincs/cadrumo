@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#profile-field-remap'
 date: '2026-10-27'
-modified: '2026-10-27'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ce48c7e3cbb0d3ff7ad69cac9686297181649a2570465d543edcb6c3aa38997'
+body_hash: 'sha256:fcc45ea7b7f5c0eb28aed3a29adafc50e30c75935a967413bf7a790a29c4bf80'
 related:
   - "[[2026-10-27-profile-field-remap-iva-home-office-suministros-research]]"
 ---
@@ -33,7 +33,7 @@ A MIXED ledger row carries one `business_pct`. The IVA ledger multiplies the inp
 - **A: an IVA treatment datum on each category variant, with its own citations, read by the IVA ledger through the category rule, plus a row share that means degree of use.** Chosen.
 - **B: only change the censo stamp to raw afectación.** Rejected on its own. It fixes suministros but leaves the mixed-use mobile row deducting, and it records the IVA rule nowhere a reader or a gate can check.
 - **Reuse `statutory_multiplier` or `iva_hint`.** Rejected. The multiplier is the IRPF factor, and `iva_hint` is a presentation token that cannot carry a share.
-- **Date the IVA share from 2023-07-19 or 2023-09-26, or mark 2022 and 2023 advisory.** Rejected; see Rationale.
+- **Date the IVA share from 2023-07-19 or 2023-09-26, or mark the earlier years advisory.** Rejected; see Rationale.
 
 ## Constraints
 
@@ -49,12 +49,12 @@ A MIXED ledger row carries one `business_pct`. The IVA ledger multiplies the inp
 
 We will add an IVA mixed-use treatment to the category proportionality rule and route the IVA ledger through it.
 
-- Registry: each 2022 to 2026 variant of every category in `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml` declares `iva_mixed_use_share` and `iva_citation.N.*` entries. The treatments are:
+- Registry: each variant of every category across the supported envelope in `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml` declares `iva_mixed_use_share` and `iva_citation.N.*` entries. The treatments are:
   - `degree_of_use`: the home-office suministros, `telefonia_fija`, `arrendamiento_local`, `arrendamiento_vivienda_afecto`, `suministros_local_afecto` and `reparaciones_conservacion`. They cite LIVA art. 95.Tres (the lease of a bien de inversión), 95.Tres.1.ª, and 95.Cuatro or 95.Cuatro.4.º, through the legal entries `ley-37-1992:art-95-3` and `ley-37-1992:art-95-4`.
   - `bien_inversion_degree_of_use`: `hardware_amortizable` and `mobiliario_amortizable`. A MIXED row deducts its share only when its EUR taxable base reaches the bien de inversión value of the governed fact `iva-bien-inversion-escaso-valor-threshold` (LIVA art. 108.Dos.5.º); below it the row deducts nothing. They cite 95.Tres.1.ª and `ley-37-1992:art-108`.
   - `vehicle_presumption` with `iva_presumed_share = 0.50`: `vehiculo_combustible`, `vehiculo_mantenimiento`, `vehiculo_peaje` and `vehiculo_parking`. They cite 95.Tres.2.ª, 95.Cuatro and 95.Tres.4.ª.
   - `not_deductible`: every other category. They cite `ley-37-1992:art-95` (Uno and Dos.2.º). For the exempt and non-subject categories the treatment is moot, since their rows carry no cuota.
-  - The `ley-37-1992:art-95` corpus excerpt holds the whole article. The suministros and fija variants of 2023, 2024 and 2025 also cite their own Manual práctico IVA edition, verified against the bundled text.
+  - The `ley-37-1992:art-95` corpus excerpt holds the whole article. The suministros and fija variants whose edition has its own Manual práctico IVA edition also cite it, verified against the bundled text.
 - Domain: `IvaMixedUseShare` and `IvaMixedUseRule` in `src/cadrumo/domain/categories/`, held as `ProportionalityRule.iva_mixed_use`. `IvaMixedUseRule.presumed_share` is required by `vehicle_presumption` and refused by every other treatment. The citation vocabulary gains `ley_iva` (statutory). `CategoryCitation` gains `source_ref` for a verified annual-edition citation.
 - IVA ledger: `iva_category_deductible_proportion` in `src/cadrumo/application/aggregation/iva_ledger.py` returns the share a received row deducts. A MIXED received row whose category grants nothing for its use is excluded under its own issue reason. A `degree_of_use` category keeps the row share. The new issue reason is a review advisory, not a readiness gap, and is not repeated as a source diagnostic.
 - Ledger add: the censo default stamps raw afectación.
@@ -66,7 +66,7 @@ We will add an IVA mixed-use treatment to the category proportionality rule and 
 
 Option A states the IVA rule where the category's IRPF rule already lives, with its own legal basis. The two cannot be confused again, and a gate can read both. It fixes both errors: the 70 per cent under-deduction on suministros and the over-deduction on mixed-use mobile rows.
 
-Dating: the share applies to every supported filing year from 2022. LIVA art. 95 has been unchanged since 1998-01-01. The TEAC criterion reads that existing law; it does not change it. It binds the administration for every period still open (LGT art. 242.4). A finer date axis would encode the publication date of an administrative reading as if it were a change in the law.
+Dating: the share applies to every supported filing year. LIVA art. 95 has been unchanged since 1998-01-01. The TEAC criterion reads that existing law; it does not change it. It binds the administration for every period still open (LGT art. 242.4). A finer date axis would encode the publication date of an administrative reading as if it were a change in the law.
 
 Telefonía fija: the category registry has no advisory or capability-grade mechanism at category level. `review_status` records who reviewed a variant. `RegistryAuthorityGrade` grades Modelo revisions, not category facts. The fija treatment therefore stays proportional to use. The reasoning: a fixed line is contracted for the dwelling and is a supply to the property, which is the ground on which V0796-25 separates it from a mobile line. Confidence is low, because no source names it.
 

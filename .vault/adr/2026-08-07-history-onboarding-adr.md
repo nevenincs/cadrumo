@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#history-onboarding'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:33e4345124199f1892c04dbec5629915aedcd2f3379586e9dc6c666e483fc126'
+body_hash: 'sha256:83a8dd1db4f22e5afb3d3b876e1eb990f64e6464ae1c02360f79e707bb86cd4a'
 related:
   - "[[2026-08-07-history-onboarding-reference]]"
   - "[[2026-08-07-declarations-register-pagination-adr]]"
@@ -166,11 +166,11 @@ MUST NOT be pushed into `capture_filed_data_bulk` itself, which stays the generi
 primitive every other capture caller also uses unchanged.
 
 **A live smoke test found a real multiplicity gap, verified against HEAD, and it is squarely this
-ADR's to own.** For modelo 303, filing year 2024, the AEAT register returned six rows for a
+ADR's to own.** For modelo 303, in one filing year, the AEAT register returned six rows for a
 naive four-quarter year: 1T, 2T, 3T, 4T, plus a second 3T and a second 4T presented months later
 under different `expediente_id`s — almost certainly originals plus complementarias.
 `select_declarations_for_capture` (`application/live/_filed_data.py:71-97`) already captures EVERY
-matching raw row for a period, not just one, so `filed pull --modelo 303 --year 2024 --period 3T`
+matching raw row for a period, not just one, so `filed pull --modelo 303 --year <year> --period 3T`
 persisted `captured_count=2` with two distinct raw observations and six artefacts. Nothing is lost:
 `select_latest_filed_observations_in_history_order` (`application/live/_filed_observation_persistence.py:130-159`,
 confirmed at HEAD) is a genuine latest-by-presentation SELECTION for the ONE calculation

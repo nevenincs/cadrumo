@@ -89,6 +89,7 @@
           "retention_amount": null,
           "retention_rate": null,
           "series": null,
+          "settlement_amount": "121.00",
           "source_filename": null,
           "source_row_index": null,
           "source_sha256": null
@@ -188,6 +189,7 @@
           "retention_amount": null,
           "retention_rate": null,
           "series": null,
+          "settlement_amount": "121.00",
           "source_filename": null,
           "source_row_index": null,
           "source_sha256": null

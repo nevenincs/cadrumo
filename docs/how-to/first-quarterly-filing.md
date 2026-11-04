@@ -92,8 +92,10 @@ Read the steps in order:
   `01` is the quarter's income, box `02` the deductible expenses, box `03` the net
   yield, and box `04` the instalment. Box 01 shows 1000.00, not the 1210.00 you
   collected: VAT is never part of your income, so the 210.00 of VAT is left out.
-  With the example records the net yield is `500.00` and the instalment is
-  `100.00`, twenty percent of the net. The three `--binding ...=0` values are the
+  Under simplified direct estimation, the example adds a `25.00` provision
+  for difficult-to-justify expenses: five percent of `1000.00 - 500.00`.
+  Deductible expenses in box `02` are therefore `525.00`, the net yield is
+  `475.00`, and the instalment is `95.00`, twenty percent of the net. The three `--binding ...=0` values are the
   prior-period carries a true first quarter does not have.
 - Check the draft. The result reads `granted_verificado_completo` true, so the
   draft is complete and ready to file.

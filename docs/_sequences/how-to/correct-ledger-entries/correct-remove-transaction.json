@@ -45,6 +45,7 @@
           "bucket_id": "<bucket-id>",
           "review_status": "pending",
           "transaction": {
+            "accrual_date": null,
             "amount": "60.5",
             "attachment_ids": [],
             "booked_date": "2026-03-15",
@@ -61,9 +62,11 @@
             "created_at": "2026-04-01T09:00:00+00:00",
             "currency": "EUR",
             "date": "2026-03-15",
+            "deduction_fact_kind": null,
             "description": "Wrong import",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
             "iva_amount": null,
@@ -73,6 +76,7 @@
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
+            "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
             "source_jurisdiction": "ES",
@@ -168,7 +172,7 @@
           "code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
           "context": {
             "effect": "none",
-            "operation_id": "ae7dd5b3fc411257811d2961335092a3d287e96eb951fd5f1c5d61b90ad44cbd",
+            "operation_id": "f52de2d289a121ffa327247e3f4fd7ef65819f068cff5684b1899c988194e4e5",
             "reason": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             "refusal_code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             "terminal_condition": "refused"

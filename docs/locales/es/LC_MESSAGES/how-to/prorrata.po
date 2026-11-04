@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-02 11:23+0100\n"
+"POT-Creation-Date: 2026-11-03 19:24+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -479,19 +479,16 @@ msgstr ""
 "hallazgo."
 
 #: ../../how-to/prorrata.md:192
-msgid ""
-"Remove a declaration with `aeat app ledger prorrata remove-gross "
-"--ejercicio <year> --period 1T`, adding `--sector` for a sector entry."
+msgid "Remove a declaration for the period, adding `--sector` for a sector entry:"
 msgstr ""
-"Elimina una declaración con `aeat app ledger prorrata remove-gross "
-"--ejercicio <year> --period 1T`, añadiendo `--sector` para el apunte de "
-"un sector."
+"Elimina la declaración del periodo y añade `--sector` si corresponde a un"
+" sector:"
 
-#: ../../how-to/prorrata.md:195
+#: ../../how-to/prorrata.md:198
 msgid "Read the settlement advisories"
 msgstr "Lee los avisos de la liquidación"
 
-#: ../../how-to/prorrata.md:197
+#: ../../how-to/prorrata.md:200
 msgid ""
 "When you calculate the year-end Modelo 303 for the 4th quarter "
 "settlement, the tool may surface an advisory that does not block filing:"
@@ -499,7 +496,7 @@ msgstr ""
 "Cuando calculas el Modelo 303 de fin de año para la liquidación del 4.º "
 "trimestre, la herramienta puede mostrar un aviso que no impide presentar:"
 
-#: ../../how-to/prorrata.md:200
+#: ../../how-to/prorrata.md:203
 msgid ""
 "**Especial may be mandatory** - when the taxpayer computes under general "
 "prorrata and the deduction under general exceeds the deduction under "
@@ -516,11 +513,11 @@ msgstr ""
 "te pide que los clasifiques. La comprobación no se ejecuta en un registro"
 " con sectores declarados."
 
-#: ../../how-to/prorrata.md:207
+#: ../../how-to/prorrata.md:210
 msgid "Two more warnings appear when you add a row, not at settlement:"
 msgstr "Al añadir una fila aparecen otros dos avisos, no en la liquidación:"
 
-#: ../../how-to/prorrata.md:209
+#: ../../how-to/prorrata.md:212
 msgid ""
 "**Inert classification** - an `--input-classification` tag set with no "
 "especial election for that year."
@@ -528,13 +525,13 @@ msgstr ""
 "**Clasificación inerte**: una etiqueta `--input-classification` "
 "establecida sin elección de la especial para ese año."
 
-#: ../../how-to/prorrata.md:211
+#: ../../how-to/prorrata.md:214
 msgid "**Unmatched sector** - a `--sector` tag naming a sector not yet declared."
 msgstr ""
 "**Sector sin correspondencia**: una etiqueta `--sector` que nombra un "
 "sector aún no declarado."
 
-#: ../../how-to/prorrata.md:213
+#: ../../how-to/prorrata.md:216
 msgid ""
 "These are notes, not refusals. Read them alongside the [calculation "
 "inputs](review-calculation-values.md) before you [check the filing"
@@ -544,11 +541,11 @@ msgstr ""
 "](review-calculation-values.md) antes de [comprobar la presentación"
 "](verification-reports.md)."
 
-#: ../../how-to/prorrata.md:217
+#: ../../how-to/prorrata.md:220
 msgid "Review the register"
 msgstr "Revisa el registro"
 
-#: ../../how-to/prorrata.md:219
+#: ../../how-to/prorrata.md:222
 msgid ""
 "List every election, declared sector and declared gross base on the "
 "active profile:"
@@ -556,7 +553,7 @@ msgstr ""
 "Lista todas las elecciones, los sectores declarados y las bases brutas "
 "declaradas del perfil activo:"
 
-#: ../../how-to/prorrata.md:226
+#: ../../how-to/prorrata.md:229
 msgid ""
 "Each declared gross base shows its period, sector (if any), gross amount,"
 " provenance (`operator_declared`), evidence reference and declaration "
@@ -570,11 +567,11 @@ msgstr ""
 "por declaración, después de los apuntes y los sectores. `--format json` "
 "incluye los mismos campos en `gross_declarations`."
 
-#: ../../how-to/prorrata.md:231
+#: ../../how-to/prorrata.md:234
 msgid "Unresolved findings"
 msgstr "Hallazgos sin resolver"
 
-#: ../../how-to/prorrata.md:233
+#: ../../how-to/prorrata.md:236
 msgid ""
 "The regularisation never fills a gap with a guess. When it cannot "
 "calculate casilla 44 it leaves the box unresolved and reports a finding. "
@@ -584,7 +581,7 @@ msgstr ""
 "puede calcular la casilla 44, deja la casilla sin resolver e informa de "
 "un hallazgo. Los más habituales significan:"
 
-#: ../../how-to/prorrata.md:237
+#: ../../how-to/prorrata.md:240
 msgid ""
 "**Annual volumes not declared** - declare the year's volumes of "
 "operations with and without the right to deduct, so the definitive "
@@ -594,7 +591,7 @@ msgstr ""
 " del año con y sin derecho a deducir, para poder calcular el porcentaje "
 "definitivo."
 
-#: ../../how-to/prorrata.md:240
+#: ../../how-to/prorrata.md:243
 msgid ""
 "**Provisional percentage missing** - elect or seed a percentage, or file "
 "the prior year's settlement so it can be carried."
@@ -602,7 +599,7 @@ msgstr ""
 "**Falta el porcentaje provisional**: elige o genera un porcentaje, o "
 "presenta la liquidación del año anterior para poder arrastrarlo."
 
-#: ../../how-to/prorrata.md:242
+#: ../../how-to/prorrata.md:245
 msgid ""
 "**Earlier liquidations not filed** - the regularisation covers the year's"
 " earlier periods; each one must be filed in Cadrumo or have a declared "
@@ -612,7 +609,7 @@ msgstr ""
 "periodos anteriores del año; cada uno debe estar presentado en Cadrumo o "
 "tener una base bruta declarada."
 
-#: ../../how-to/prorrata.md:245
+#: ../../how-to/prorrata.md:248
 msgid ""
 "**Gross base unknown or disagreeing** - the ledger holds no deductible "
 "input for a period that declared some, or the ledger and your declaration"
@@ -622,7 +619,7 @@ msgstr ""
 " deducible de un periodo que declaró alguno, o el libro y tu declaración "
 "difieren. Registra el IVA soportado, o declara o sustituye la base bruta."
 
-#: ../../how-to/prorrata.md:248
+#: ../../how-to/prorrata.md:251
 msgid ""
 "**Ledger and filed liquidation diverge** - the input VAT at the "
 "provisional percentage does not reproduce what the period filed. "
@@ -632,7 +629,7 @@ msgstr ""
 "porcentaje provisional no reproduce lo que presentó el periodo. "
 "Concílialos primero."
 
-#: ../../how-to/prorrata.md:250
+#: ../../how-to/prorrata.md:253
 msgid ""
 "**Sector definitive percentage missing** - settle each sector with "
 "`prorrata settle-sector` before regularising."
@@ -640,7 +637,7 @@ msgstr ""
 "**Falta el porcentaje definitivo del sector**: liquida cada sector con "
 "`prorrata settle-sector` antes de regularizar."
 
-#: ../../how-to/prorrata.md:253
+#: ../../how-to/prorrata.md:256
 msgid ""
 "Fix the named cause and recalculate. A finding that asks you to calculate"
 " the box yourself means the case is outside what the tool derives."
@@ -649,7 +646,7 @@ msgstr ""
 "calcular la casilla por tu cuenta significa que el caso queda fuera de lo"
 " que la herramienta deriva."
 
-#: ../../how-to/prorrata.md:256
+#: ../../how-to/prorrata.md:259
 msgid ""
 "Nothing here files or submits anything. The register, the percentages and"
 " the declared gross bases are stored locally with the profile, and the "
@@ -661,11 +658,11 @@ msgstr ""
 " solo rellena la casilla 44 en un borrador local. La presentación y "
 "cualquier envío a la AEAT siguen en tus manos."
 
-#: ../../how-to/prorrata.md:261
+#: ../../how-to/prorrata.md:264
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/prorrata.md:263
+#: ../../how-to/prorrata.md:266
 msgid ""
 "[Classify transactions](classify-transactions.md) so each input carries "
 "the data prorrata needs."
@@ -673,7 +670,7 @@ msgstr ""
 "[Clasificar movimientos](classify-transactions.md) para que cada IVA "
 "soportado lleve los datos que la prorrata necesita."
 
-#: ../../how-to/prorrata.md:265
+#: ../../how-to/prorrata.md:268
 msgid ""
 "[Review calculation inputs](review-calculation-values.md) to see the "
 "deducted amounts."
@@ -681,7 +678,7 @@ msgstr ""
 "[Revisar las entradas de cálculo](review-calculation-values.md) para ver "
 "los importes deducidos."
 
-#: ../../how-to/prorrata.md:267
+#: ../../how-to/prorrata.md:270
 msgid ""
 "[Prepare a Modelo 303 VAT filing](modelo-303.md) and [the annual Modelo "
 "390 summary](modelo-390.md)."

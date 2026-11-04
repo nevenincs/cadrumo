@@ -8,6 +8,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 import { after, describe, test } from "node:test";
+import "./packaged/clipboard.test.mjs";
+import "./packaged/context-menu-verdict.test.mjs";
 
 import { docsProbe, instrument, pasteInto } from "./packaged/browser.mjs";
 import {
@@ -942,8 +944,9 @@ async function openWindow(variant, options = {}) {
     if (failures.length)
       throw new AggregateError(failures, "stand-in releases failed");
   });
+  const endpoint = await devtoolsEndpoint(port);
   session = await connect({
-    endpoint: await devtoolsEndpoint(port),
+    endpoint,
     shellOrigins: [standin.shellOrigin],
     docsOrigin: standin.docsOrigin,
     ipcPrefix: `${standin.ipcOrigin}/`,
@@ -952,8 +955,75 @@ async function openWindow(variant, options = {}) {
     what: "the stand-in shell",
   });
   await session.waitDocs();
-  return { session, standin };
+  return { session, standin, endpoint };
 }
+
+test("connection failure captures live pages before teardown without replacing its error", async () => {
+  for (const failCapture of [false, true]) {
+    const { endpoint, standin } = await openWindow("refusing");
+    let captured = false;
+    await assert.rejects(
+      connect({
+        endpoint,
+        shellOrigins: ["http://absent-shell.invalid"],
+        docsOrigin: standin.docsOrigin,
+        ipcPrefix: `${standin.ipcOrigin}/`,
+        timeout: 200,
+        onFailure: async (browser) => {
+          const page = browser
+            .contexts()
+            .flatMap((context) => context.pages())
+            .find((candidate) => candidate.url() === standin.shellUrl);
+          assert(page, "the original page must remain available for capture");
+          assert.equal(await page.title(), "Stand-in shell");
+          captured = true;
+          if (failCapture) throw new Error("optional capture failed");
+        },
+      }),
+      /waiting for the shell document; pages seen:/,
+    );
+    assert(captured, "capture runs before the browser connection closes");
+  }
+});
+
+test("native failure evidence retains bounded cause facts and excludes arbitrary payloads", async () => {
+  const { session } = await openWindow("refusing");
+  const reply = await session.shell(async () => {
+    const original = window.__TAURI_INTERNALS__.invoke;
+    window.__TAURI_INTERNALS__.invoke = async () => {
+      throw {
+        code: "read_failed",
+        operation: "cli",
+        reason: "agent_admin_unavailable",
+        message: "private-payload-canary",
+        secret: "private-payload-canary",
+        causes: Array.from({ length: 10 }, () => ({
+          kind: "application",
+          code: "read_failed",
+          operation: "cli",
+          reason: "admin_status",
+          message: "private-payload-canary",
+          payload: "private-payload-canary",
+        })),
+      };
+    };
+    try {
+      return await window.__s10.call("provider_settings_status");
+    } finally {
+      window.__TAURI_INTERNALS__.invoke = original;
+    }
+  });
+  assert.equal(reply.ok, false);
+  assert.equal(reply.error.reason, "agent_admin_unavailable");
+  assert.equal(reply.error.causes.length, 8);
+  assert.deepEqual(reply.error.causes[0], {
+    kind: "application",
+    code: "read_failed",
+    operation: "cli",
+    reason: "admin_status",
+  });
+  assert(!JSON.stringify(reply).includes("private-payload-canary"));
+});
 
 /** Delivers one channel frame the way the host's interceptor evaluates it. */
 function deliver(session, frames) {
@@ -1138,22 +1208,42 @@ test("browser capture bounds bytes and records, draining an oversized frame alon
             return { first, second };
           }
           if (mode === "bytes") {
+            // Two retained records include 64 metadata bytes each. Fill the
+            // entire capture budget before the next frame must be refused.
             callback({
               index: 0,
-              message: new Uint8Array(bounds.bytes / 2).buffer,
+              message: new Uint8Array(bounds.bytes / 2 - 64).buffer,
             });
             callback({
               index: 1,
-              message: new Uint8Array(bounds.bytes / 2).buffer,
+              message: new Uint8Array(bounds.bytes / 2 - 64).buffer,
             });
             callback({ index: 2, message: new Uint8Array([0]).buffer });
-          } else
+          } else {
+            // Valid control frames separate the data frames into distinct
+            // retained records even when adjacent data capture is coalesced.
+            const control = new TextEncoder().encode('{"pid":42}');
             for (let index = 0; index <= bounds.records; index++)
-              callback({ index, message: new Uint8Array([0]).buffer });
+              callback({
+                index,
+                message: new Uint8Array(index % 2 ? [1, ...control] : [0])
+                  .buffer,
+              });
+          }
           const drained = window.__s10.drainVT();
+          let remaining = drained;
+          while (remaining.more) remaining = window.__s10.drainVT();
+          const beforeRetry = remaining.captureStats.captured;
+          callback({
+            index: mode === "bytes" ? 3 : bounds.records + 1,
+            message: new Uint8Array([0, 120]).buffer,
+          });
+          const afterLoss = window.__s10.drainVT();
           // Text is unavailable after loss. Keep stress-test evidence scalar.
           return {
             ...drained,
+            afterLoss,
+            beforeRetry,
             records: drained.records.map(({ bytes, ...record }) => ({
               ...record,
               byteLength: bytes?.length ?? 0,
@@ -1175,16 +1265,35 @@ test("browser capture bounds bytes and records, draining an oversized frame alon
       const started = performance.now();
       const result = await exercise(mode);
       assert.equal(result.losses[0].code, "TerminalObservationCaptureLimit");
+      assert.deepEqual(result.afterLoss.losses, result.losses);
+      assert.equal(result.afterLoss.records.length, 0);
+      assert.equal(result.afterLoss.more, false);
+      assert.equal(result.afterLoss.captureStats.bytes, 0);
+      assert.equal(result.afterLoss.captureStats.records, 0);
+      assert.equal(result.afterLoss.captureStats.captured, result.beforeRetry);
       assert(result.captureStats.peakBytes <= OBSERVATION_LIMITS.bytes);
       assert(result.captureStats.peakRecords <= OBSERVATION_LIMITS.records);
       assert(result.records.length <= OBSERVATION_LIMITS.batchRecords);
-      if (mode === "bytes")
+      if (mode === "bytes") {
         assert.equal(result.captureStats.peakBytes, OBSERVATION_LIMITS.bytes);
-      else
+        assert.equal(result.records.length, 1);
+        assert.equal(result.records[0].index, 0);
+        assert.equal(
+          result.records[0].byteLength,
+          OBSERVATION_LIMITS.bytes / 2 - 64,
+        );
+        assert.equal(result.captureStats.captured - result.beforeRetry, 0);
+      } else {
         assert.equal(
           result.captureStats.peakRecords,
           OBSERVATION_LIMITS.records,
         );
+        assert.equal(result.records.length, OBSERVATION_LIMITS.batchRecords);
+        assert.deepEqual(
+          result.records.map((record) => record.index),
+          Array.from({ length: OBSERVATION_LIMITS.batchRecords }, (_, i) => i),
+        );
+      }
       t.diagnostic(
         JSON.stringify({
           fixture: `capture-${mode}-limit`,
@@ -1246,6 +1355,53 @@ test("panel navigation opens lazy panes through the localized visible rail", asy
     "logs",
   ]);
 });
+
+for (const kind of ["tui", "agent"])
+  test(`${kind} navigation opens the lazy dock pane without hiding an already shown pane`, async () => {
+    const { session } = await openWindow("refusing", { panels: true });
+    await session.shell((kind) => {
+      const pane = document.createElement("section");
+      pane.className = `pane-${kind}`;
+      pane.hidden = true;
+      pane.textContent = kind;
+      const opener = document.createElement("button");
+      opener.dataset.rail = kind;
+      opener.setAttribute("aria-pressed", "false");
+      opener.textContent = "Terminal";
+      opener.addEventListener("click", () => {
+        window.standin.paneClicks += 1;
+        pane.hidden = !pane.hidden;
+        opener.setAttribute("aria-pressed", String(!pane.hidden));
+      });
+      const tab = document.createElement("button");
+      tab.id = `tab-${kind}`;
+      tab.textContent = kind;
+      tab.addEventListener("click", () => {
+        window.standin.paneTabClicks += 1;
+        pane.hidden = false;
+      });
+      window.standin.paneClicks = 0;
+      window.standin.paneTabClicks = 0;
+      document.querySelector(".rail").append(opener);
+      document.body.append(tab, pane);
+    }, kind);
+    await session.showTab(kind);
+    assert.equal(await session.page.locator(`.pane-${kind}`).isVisible(), true);
+    await session.showTab(kind);
+    assert.equal(await session.shell(() => window.standin.paneClicks), 1);
+    await session.shell((kind) => {
+      document.querySelector(`.pane-${kind}`).hidden = true;
+    }, kind);
+    await session.showTab(kind);
+    assert.equal(await session.page.locator(`.pane-${kind}`).isVisible(), true);
+    assert.deepEqual(
+      await session.shell(() => [
+        window.standin.paneClicks,
+        window.standin.paneTabClicks,
+      ]),
+      [1, 1],
+    );
+  });
 
 test("token verdict accepts only the exact documented public globals", () => {
   const observed = {
@@ -1842,3 +1998,278 @@ test(
     }
   },
 );
+
+// Pure filesystem policy tests: no browser, package launch or desktop input.
+import * as frozenFs from "node:fs";
+import { fileURLToPath as frozenFileURLToPath } from "node:url";
+import { resolve as frozenResolve, dirname as frozenDirname } from "node:path";
+import {
+  inventory as frozenInventory,
+  protectedFiles as frozenProtectedFiles,
+  frozenRoots,
+  fileDigest as frozenFileDigest,
+  validateFrozenRecord,
+} from "./packaged/frozen-host.mjs";
+
+function frozenFixture() {
+  const owner = frozenResolve(
+    frozenFileURLToPath(new URL("../../../", import.meta.url)),
+    "build/windows-x64/desktop/testing/frozen-image-runner",
+  );
+  frozenFs.mkdirSync(owner, { recursive: true });
+  const source = frozenFs.mkdtempSync(frozenResolve(owner, "policy-"));
+  const build = frozenResolve(source, "build/windows-x64");
+  const put = (path, bytes = "fixture") => {
+    frozenFs.mkdirSync(frozenDirname(path), { recursive: true });
+    frozenFs.writeFileSync(path, bytes);
+  };
+  put(
+    frozenResolve(source, "CMakePresets.json"),
+    JSON.stringify({ configurePresets: [{ name: "windows-x64" }] }),
+  );
+  const paths = {
+    stage: "stage",
+    desktop_testing: "desktop/testing",
+    generated: "generated",
+    desktop_frontend_generated: "desktop/frontend-generated",
+  };
+  put(
+    frozenResolve(build, "build-paths.json"),
+    JSON.stringify({ source, paths }),
+  );
+  put(
+    frozenResolve(build, "CMakeCache.txt"),
+    `CMAKE_HOME_DIRECTORY:INTERNAL=${source}\nCMAKE_CACHEFILE_DIR:INTERNAL=${build}\n`,
+  );
+  const roots = frozenRoots(build, source);
+  for (const name of ["record.mjs", "runner.mjs", "run.ps1"])
+    put(frozenResolve(source, `.tmp/2026-11-03-checks/frozen-image-${name}`));
+  for (const path of [
+    roots.stage,
+    roots.mirror,
+    frozenResolve(source, "native/desktop/scripts"),
+    frozenResolve(source, "native/desktop/tests/packaged"),
+    frozenResolve(
+      source,
+      "native/desktop/frontend/node_modules/playwright-core",
+    ),
+    frozenResolve(source, "native/desktop/frontend/node_modules/@xterm/xterm"),
+    frozenResolve(build, "desktop/testing/packaged/cargo/debug/.fingerprint"),
+  ])
+    frozenFs.mkdirSync(path, { recursive: true });
+  for (const path of [
+    roots.configuration,
+    frozenResolve(build, "generated/contract.json"),
+    frozenResolve(build, "desktop/frontend-generated/chrome-strings.json"),
+    frozenResolve(source, "native/desktop/tests/packaged.test.mjs"),
+    frozenResolve(source, "native/desktop/frontend/package.json"),
+    frozenResolve(source, "native/desktop/frontend/package-lock.json"),
+  ])
+    put(path);
+  const executable = frozenResolve(
+    build,
+    "desktop/testing/packaged/cargo/debug/cadrumo.exe",
+  );
+  put(executable);
+  put(frozenResolve(roots.mirror, "cadrumo.exe"));
+  const host = {
+    executable,
+    variant: "packaged",
+    shell: null,
+    features: ["native-automation", "webview2-remote-debugging"],
+    configuration: "Debug",
+    sha256: frozenFileDigest(executable),
+  };
+  put(roots.hostRecord, JSON.stringify(host));
+  const directory = frozenResolve(build, "desktop/testing/frozen-image-runner");
+  frozenFs.mkdirSync(directory, { recursive: true });
+  const path = frozenResolve(directory, "record.json");
+  const record = {
+    schema: 1,
+    build,
+    roots,
+    trees: Object.fromEntries(
+      [roots.stage, roots.mirror].map((p) => [p, frozenInventory(p)]),
+    ),
+    files: frozenProtectedFiles(build, source).map((p) => [
+      p,
+      frozenFileDigest(p),
+    ]),
+    applicationCohort: { built: "original" },
+    inputHelper: {},
+  };
+  const save = () => {
+    put(path, JSON.stringify(record));
+    return frozenFileDigest(path);
+  };
+  let hash = save();
+  return {
+    source,
+    build,
+    roots,
+    record,
+    path,
+    put,
+    save,
+    host,
+    validate: () => validateFrozenRecord(path, hash, { source }),
+    rehash: () => (hash = save()),
+    clean: () => frozenFs.rmSync(source, { recursive: true, force: true }),
+  };
+}
+
+test("frozen image accepts pinned old cohort and ignores Src-only drift", () => {
+  const f = frozenFixture();
+  try {
+    f.validate();
+    f.put(frozenResolve(f.source, "src/cadrumo/fixture.py"), "changed Src");
+    f.validate();
+  } finally {
+    f.clean();
+  }
+});
+for (const mutation of [
+  "tamper",
+  "extra",
+  "duplicate",
+  "wrong-root",
+  "escape",
+  "add",
+  "change",
+  "remove",
+  "harness",
+  "features",
+  "host",
+  "configuration",
+])
+  test(`frozen image rejects ${mutation}`, () => {
+    const f = frozenFixture();
+    try {
+      if (mutation === "tamper") frozenFs.appendFileSync(f.path, " ");
+      if (mutation === "extra") {
+        f.record.extra = true;
+        f.rehash();
+      }
+      if (mutation === "duplicate") {
+        f.record.files.push(f.record.files[0]);
+        f.rehash();
+      }
+      if (mutation === "wrong-root") {
+        f.record.roots.stage = f.roots.mirror;
+        f.rehash();
+      }
+      if (mutation === "escape") {
+        f.record.roots.mirror = frozenResolve(f.source, "src");
+        f.rehash();
+      }
+      if (mutation === "add") f.put(frozenResolve(f.roots.stage, "added"));
+      if (mutation === "change")
+        f.put(frozenResolve(f.roots.mirror, "cadrumo.exe"), "changed");
+      if (mutation === "remove")
+        frozenFs.unlinkSync(frozenResolve(f.roots.mirror, "cadrumo.exe"));
+      if (mutation === "harness")
+        f.put(
+          frozenResolve(f.source, "native/desktop/tests/packaged.test.mjs"),
+          "changed",
+        );
+      if (["features", "host", "configuration"].includes(mutation)) {
+        if (mutation === "features") f.host.features = [];
+        if (mutation === "host") f.host.sha256 = "0".repeat(64);
+        if (mutation === "configuration") f.host.configuration = "Release";
+        f.put(f.roots.hostRecord, JSON.stringify(f.host));
+        f.record.files = frozenProtectedFiles(f.build, f.source).map((p) => [
+          p,
+          frozenFileDigest(p),
+        ]);
+        f.rehash();
+      }
+      assert.throws(f.validate);
+    } finally {
+      f.clean();
+    }
+  });
+test("frozen image refuses links and multiply linked image files", () => {
+  const f = frozenFixture();
+  try {
+    const first = frozenResolve(f.roots.stage, "first");
+    f.put(first);
+    frozenFs.linkSync(first, frozenResolve(f.roots.stage, "second"));
+    assert.throws(() => frozenInventory(f.roots.stage), /Hardlinked/);
+  } finally {
+    f.clean();
+  }
+});
+
+import frozenChildProcess from "node:child_process";
+import { syncBuiltinESMExports as frozenSyncBuiltins } from "node:module";
+test("frozen image normal mode preserves staging through the process boundary", async () => {
+  const savedSpawn = frozenChildProcess.spawnSync;
+  const savedBuild = process.env.CADRUMO_CMAKE_BINARY_DIR;
+  const calls = [];
+  try {
+    process.env.CADRUMO_CMAKE_BINARY_DIR = frozenResolve(
+      frozenFileURLToPath(new URL("../../../", import.meta.url)),
+      "build/windows-x64",
+    );
+    frozenChildProcess.spawnSync = (command, args, options) => {
+      calls.push({ command, args, cwd: options.cwd });
+      return {
+        status: 0,
+        stdout: JSON.stringify({
+          package: "mock-prepared-package",
+          executable: "mock-prepared-host",
+        }),
+      };
+    };
+    frozenSyncBuiltins();
+    const { installedHost } = await import("./packaged/host.mjs");
+    assert.equal(installedHost().executable, "mock-prepared-host");
+    assert.equal(installedHost().package, "mock-prepared-package");
+    assert.equal(calls.length, 2);
+    assert(
+      calls.every(
+        (call) =>
+          call.command === "uv" &&
+          call.args.join(" ") ===
+            "run --no-sync python -m dev.desktop_agent_live.stage_host",
+      ),
+    );
+  } finally {
+    frozenChildProcess.spawnSync = savedSpawn;
+    frozenSyncBuiltins();
+    if (savedBuild === undefined) delete process.env.CADRUMO_CMAKE_BINARY_DIR;
+    else process.env.CADRUMO_CMAKE_BINARY_DIR = savedBuild;
+  }
+});
+
+test("frozen image rejects duplicate JSON keys, missing records and directory links", () => {
+  const f = frozenFixture();
+  try {
+    assert.throws(() =>
+      validateFrozenRecord(f.path + ".missing", "0".repeat(64), {
+        source: f.source,
+      }),
+    );
+    const bytes = frozenFs
+      .readFileSync(f.path, "utf8")
+      .replace('"schema":1', '"schema":1,"schema":1');
+    frozenFs.writeFileSync(f.path, bytes);
+    assert.throws(
+      () =>
+        validateFrozenRecord(f.path, frozenFileDigest(f.path), {
+          source: f.source,
+        }),
+      /duplicate/,
+    );
+    const target = frozenResolve(f.source, "outside-image");
+    frozenFs.mkdirSync(target);
+    frozenFs.symlinkSync(
+      target,
+      frozenResolve(f.roots.stage, "escape"),
+      "junction",
+    );
+    assert.throws(() => frozenInventory(f.roots.stage), /Linked/);
+  } finally {
+    f.clean();
+  }
+});

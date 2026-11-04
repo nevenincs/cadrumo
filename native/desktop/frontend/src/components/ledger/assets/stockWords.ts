@@ -1,4 +1,5 @@
 import { formatDay } from "../../../shared/dateFormats";
+import { servedRefusalWords } from "../../../shell/ledger";
 import { formatDecimal } from "../../../shared/numbers";
 import type {
   InventoryMovement,
@@ -25,33 +26,17 @@ export function refusalOf(
   return null;
 }
 
-/** The family every reason key the backend serves for a refused inventory
- * change belongs to. */
-const INVENTORY_REASON_FAMILY = "application.inventory.service.errors.";
-
-/** Words for a refused call: the sentence the backend's catalogue has for the
- * reason it gave, filled in with the facts it gave. A reason without a
- * sentence, or one a fact is missing from, is said plainly and never as its
- * key or a code. */
+/** Words for a refused call: the sentence the inventory operation served for
+ * its refusal, else said plainly and never as a key or a code. */
 export function refusalWords(t: Translate, call: SetupCall<unknown> | null) {
   return (): string | null => {
     const found = refusalOf(call);
     if (call?.kind !== "refused" && found === null) return null;
-    const plain = t("desktop.ledger.stock.refused");
-    const key = found?.reason_key ?? null;
-    if (
-      found === null ||
-      key === null ||
-      !key.startsWith(INVENTORY_REASON_FAMILY)
-    )
-      return plain;
-    const said = t(
-      key,
-      Object.fromEntries(
-        (found.reason_facts ?? []).map((fact) => [fact.key, fact.value]),
-      ),
+    return (
+      servedRefusalWords(found) ??
+      (call?.kind === "refused" ? servedRefusalWords(call.detail) : null) ??
+      t("desktop.ledger.stock.refused")
     );
-    return said === key || /\{\w+\}/.test(said) ? plain : said;
   };
 }
 

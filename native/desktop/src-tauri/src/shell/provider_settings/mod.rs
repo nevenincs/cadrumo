@@ -304,7 +304,7 @@ mod tests {
                 Ok(if calls < 3 {
                     json!({"kind":"refused","code":"busy"})
                 } else {
-                    json!({"development":false,"providers":[]})
+                    json!({"providers":[]})
                 })
             },
             Duration::ZERO,

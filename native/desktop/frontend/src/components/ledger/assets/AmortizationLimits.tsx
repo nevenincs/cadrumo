@@ -6,7 +6,7 @@ import { formatDecimal, formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
 import type { ElectionLimits, LegalCitation } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
-import { ASSET_KEYS, fieldWord, reasonText, tokenWord } from "./assetsWords";
+import { ASSET_KEYS, fieldWord, tokenWord } from "./assetsWords";
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -98,11 +98,7 @@ export function AmortizationLimits({
 }) {
   const t = useStrings();
   const text = ASSET_KEYS.plan.limits;
-  const why = reasonText(
-    t,
-    limits.unavailable_reason_key,
-    limits.unavailable_reason_facts,
-  );
+  const why = limits.unavailable_reason_words ?? null;
   return (
     <section
       aria-label={t(text.title)}

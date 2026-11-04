@@ -316,7 +316,9 @@ def hold_service_admission(state: HoldActionState, request_id: UUID, request: di
     reply = client.service_admission(
         UUID(cast("str", request["recipient_connection_id"])), cast("str", request["service_id"]), request_id=request_id
     )
-    _emit(reply.model_dump(mode="json"))
+    # The completed admission may name its last wire poll, but this reply
+    # answers the parent's original holder command.
+    _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
     return None
 
 

@@ -105,7 +105,13 @@
         "--casilla",
         "0003=24000",
         "--binding",
-        "renta-base-liquidable-negativa-general-anterior=0"
+        "renta-base-liquidable-negativa-general-anterior=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0"
       ],
       "captures": [],
       "envelope": null,
@@ -161,37 +167,109 @@
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.export",
         "notices": [
-          {"action":null,"code":"modelo.export.local_export_not_official_evidence","context":{"evidence_status":"local_export_not_official_aeat_filing_evidence","filing_year":"2025","modelo":"100","period":"0A"},"message":"The exported file is not an AEAT filing receipt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0186: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0192: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0199: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0203: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0171: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0599: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0183: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0191: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0193: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0194: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0195: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0200: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0202: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0206: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"modelo.calculation_note","context":{"level":"blocks","reason":"advisory_binding_value"},"message":"Box 0217: the zero stands, because nothing in the period carries a figure whose period could be in doubt.","severity":"warning"},
-          {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
+          {
+            "action": null,
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2025",
+              "modelo": "100",
+              "period": "0A"
+            },
+            "message": "The exported file is not an AEAT filing receipt.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0596: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0597: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0153: there is nothing in the payer certificates to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the payer certificates to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0599: there is nothing in the return you filed to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.calculation_note",
+            "context": {
+              "level": "check",
+              "reason": "credit_cross_check_absent"
+            },
+            "message": "Box 0603: there is nothing in the AEAT borrador to compare, so this figure is not cross-checked.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
         ],
         "result": {
-          "bucket_event_id": "fae18026dd355a9f9caeae68168a1ae9d19cac331b8e3fd55523600c1966ee86",
+          "bucket_event_id": "a50f53d42267f10549d87c610b8a987ac6df3b651067b3a5e8d503c93dfd1f70",
           "bucket_id": "<bucket-id>",
-          "byte_size": 2282,
-          "calculation_revision_id": "3569c802c40e7c23601afb144d6788ac0fbaec2d33642b1b0d94f7e4e5fc7880",
-          "file_sha256": "2662f83e48beacb501c2dabd38e202af97e70b316af8a02ae490645eb8e0d49c",
+          "byte_size": 2538,
+          "calculation_revision_id": "1eb73c3b37442cbee3f8dbc339c94095ab89e5060fa2cef67fddbe46e5fb6bde",
+          "file_sha256": "d1677e462f17e2d9ae22856f8ef095d425f5706a37d7ae81702f2f098ca4d9a9",
           "filing_year": 2025,
           "format": "xml-dictionary",
           "iva_wallet_decision_provenance": null,
           "modelo": "100",
           "operation": "modelo.export",
           "output_path": "<sandbox-workdir>/modelo-100.boe",
-          "payment_election": null,
+          "payment_election": "ingreso",
           "period": {
             "code": "0A",
             "filing_year": 2025
@@ -204,7 +282,7 @@
             "election": "keep"
           },
           "refund_election": null,
-          "resolved_result_disposition": null,
+          "resolved_result_disposition": "I",
           "software_identity_grade": null,
           "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },

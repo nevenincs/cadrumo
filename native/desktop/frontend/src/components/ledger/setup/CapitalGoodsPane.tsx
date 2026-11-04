@@ -17,7 +17,7 @@ import type {
   CapitalGood,
   CapitalGoodDeclareResult,
 } from "../../../shell/ledgerSetup";
-import type { LedgerRow } from "../../../shell/ledger";
+import { servedRefusalWords, type LedgerRow } from "../../../shell/ledger";
 import { takesCapitalGoodAcquisition } from "../../../shell/ledgerContract";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
 import { vocabularyEmpty } from "../movements/movementWords";
@@ -195,8 +195,11 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
   const refusal = () => {
     const last = write.last;
     if (last?.kind !== "refused") return null;
-    const found = (last.detail as CapitalGoodDeclareResult | null)?.refusal;
-    return found ? t(`desktop.ledger.capital.refusal.${found.reason}`) : null;
+    return (
+      servedRefusalWords(
+        (last.detail as CapitalGoodDeclareResult | null)?.refusal,
+      ) ?? servedRefusalWords(last.detail)
+    );
   };
 
   const columns: Column<CapitalGood>[] = [

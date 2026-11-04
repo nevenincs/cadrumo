@@ -94,7 +94,6 @@ pub enum Mode {
 #[serde(rename_all = "snake_case")]
 pub enum Source {
     Profile,
-    Environment,
     None,
 }
 
@@ -168,7 +167,6 @@ pub struct Entry {
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Status {
-    pub development: bool,
     pub providers: Vec<Entry>,
     #[serde(default)]
     pub sign_in_providers: Vec<String>,
@@ -453,18 +451,15 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
             seen_sign_in.contains(provider)
                 && !methods.is_empty()
                 && methods.len() <= 3
-                && methods.iter().enumerate().all(|(index, method)| !methods[..index].contains(method))
+                && methods
+                    .iter()
+                    .enumerate()
+                    .all(|(index, method)| !methods[..index].contains(method))
         })
         && status
             .providers
             .iter()
-            .all(|entry| seen.insert(entry.id.clone()))
-        // The environment is a source in a development build only.
-        && (status.development
-            || status
-                .providers
-                .iter()
-                .all(|entry| entry.source != Source::Environment));
+            .all(|entry| seen.insert(entry.id.clone()));
     if !coherent {
         return Err(protocol().into());
     }
@@ -474,7 +469,6 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
         .map(Entry::checked)
         .collect::<Result<_, _>>()?;
     Ok(Status {
-        development: status.development,
         providers,
         sign_in_providers: status.sign_in_providers,
         sign_in_methods: status.sign_in_methods,
@@ -584,7 +578,7 @@ mod tests {
     }
 
     fn envelope(entries: &[Value]) -> Value {
-        json!({"development": false, "providers": entries})
+        json!({"providers": entries})
     }
 
     fn failed(result: Result<impl std::fmt::Debug, CommandFailure>) -> Value {
@@ -638,7 +632,12 @@ mod tests {
     #[test]
     fn a_status_read_parses_into_the_closed_shapes_and_serializes_as_the_window_reads_it() {
         let status = status(success(envelope(&[api(), cli()]))).unwrap();
-        assert!(!status.development);
+        assert!(
+            serde_json::to_value(&status)
+                .unwrap()
+                .get("development")
+                .is_none()
+        );
         assert_eq!(status.providers.len(), 2);
         assert!(status.sign_in_providers.is_empty());
         assert_eq!(status.providers[0].mode, Mode::Key);
@@ -664,6 +663,46 @@ mod tests {
         assert_eq!(status.providers[1].revision, "absent");
         // A listing with nothing in it is a listing.
         assert!(status_of(&[]).providers.is_empty());
+    }
+
+    #[test]
+    fn canonical_python_status_is_admitted_without_a_development_flag() {
+        let produced: Value = serde_json::from_str(include_str!(env!(
+            "CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE"
+        )))
+        .unwrap();
+        let document = produced["status"].clone();
+        assert!(document.get("development").is_none());
+        let parsed = status(success(document.clone())).unwrap();
+        assert_eq!(parsed.providers.len(), 3);
+        assert!(parsed.permits_agent("local", "api"));
+        assert!(!parsed.permits_agent("alpha", "api"));
+        assert!(!parsed.permits_agent("beta", "cli"));
+        assert_eq!(parsed.providers[0].auth_kind, AuthKind::Keyless);
+        assert_eq!(parsed.providers[0].readiness, Readiness::NotVerified);
+        assert!(!parsed.providers[0].credential_saved);
+        assert_eq!(parsed.providers[1].readiness, Readiness::Missing);
+        assert_eq!(parsed.providers[2].readiness, Readiness::SignInRequired);
+        assert!(
+            serde_json::to_value(parsed)
+                .unwrap()
+                .get("development")
+                .is_none()
+        );
+
+        // Corrupt real serialized producer bytes at the consumer boundary.
+        for (field, value) in [
+            ("available", json!("true")),
+            ("credential_saved", json!(1)),
+            ("consumers", json!("assistant")),
+            ("source", json!("environment")),
+        ] {
+            let mut invalid = document.clone();
+            invalid["providers"][0][field] = value;
+            assert_eq!(failed(status(success(invalid)))["code"], "read_failed");
+        }
+        let refused = super::super::outcome(produced["refusal"].clone());
+        assert_eq!(failed(status(refused))["code"], "profile_locked");
     }
 
     fn status_of(entries: &[Value]) -> Status {
@@ -767,8 +806,14 @@ mod tests {
             let failure = failed(status(success(envelope(&[entry]))));
             assert_eq!(failure["code"], "read_failed", "{field} missing");
         }
-        // The flag is required, and every row must be an object.
-        assert!(status(success(json!({"providers": []}))).is_err());
+        // The provider collection is required and every row must be an object.
+        for malformed in [
+            json!({}),
+            json!({"providers": null}),
+            json!({"providers": {}}),
+        ] {
+            assert!(status(success(malformed)).is_err());
+        }
         assert!(status(success(envelope(&[json!("alpha_api")]))).is_err());
     }
 
@@ -804,14 +849,11 @@ mod tests {
     }
 
     #[test]
-    fn the_environment_is_a_source_only_in_a_development_build_and_ids_are_unique() {
+    fn environment_credentials_are_refused_and_ids_are_unique() {
         let mut from_environment = api();
         from_environment["source"] = json!("environment");
         let read = json!({"development": true, "providers": [from_environment.clone()]});
-        assert_eq!(
-            status(success(read)).unwrap().providers[0].source,
-            Source::Environment
-        );
+        assert!(status(success(read)).is_err());
         assert!(status(success(envelope(&[from_environment]))).is_err());
         assert!(status(success(envelope(&[api(), api()]))).is_err());
         let many: Vec<Value> = (0..=PROVIDER_LIMIT)

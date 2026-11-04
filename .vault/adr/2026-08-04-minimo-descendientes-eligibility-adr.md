@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-15'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9eba1d805535cc0bbcf1f9e342fc32a4b5750f3cab9150271358202445feb29e'
+body_hash: 'sha256:c88240f6d48cf6e47fefd1a3cdefdd1f07aa850081dde3b873a1e3cea3693365'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-research]]"
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
@@ -76,7 +76,7 @@ the ordering that converts a correctable defect into a locked-in one.
 - Expected values for any calculation test must come from an external authority per
   `no-tautological-calculation-tests`; the bundled AEAT Renta manual worked examples and
   the consolidated LIRPF text are the available oracles.
-- Revisions 2020-2025 share the predicate. Whether each revision's parameter set can carry
+- The Modelo 100 revisions share the predicate. Whether each revision's parameter set can carry
   the new thresholds is expected but unverified, and is a first implementation check.
 
 ## Implementation

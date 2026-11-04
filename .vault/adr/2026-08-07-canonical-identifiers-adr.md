@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-10-29'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:5d97ac017592aef923841cf85ce8ce61db8895cd64b4c874b6ba34959ee15b71'
+body_hash: 'sha256:84e43b5377c77215acdb9a2f33930e81728e6b41fe1d4bc2e82aed0512911790'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -644,7 +644,7 @@ written; it was never consulted.
 ### The measurement, re-derived independently for this amendment
 
 **Real AEAT-issued values.** Three, captured from live Sede sessions against
-one taxpayer's IRPF filings for 2021, 2022 and 2023 and byte-identical
+one taxpayer's IRPF filings for three successive years and byte-identical
 across two independent capture rounds (`2026-04-25-aeat-verify-research`,
 `2026-04-26-aeat-verify-audit`): `FNBB57PE9KZ5TN4R`, `MZRSYDRL5JMPJPRT`,
 `TUD4V9XAUV7QJ8QV`. Each is exactly sixteen uppercase alphanumeric

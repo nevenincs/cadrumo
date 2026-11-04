@@ -1,4 +1,5 @@
 :seed: autonomo-irpf-2026
+@setup aeat config profile edit docs-sequence-sandbox --quiet --irpf-estimation-regime directa_simplificada --irpf-activity-income-imputation-criterion cobros_y_pagos --irpf-activity-income-imputation-year 2026 --no-irpf-codigo-comercio-accounting
 @setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
 @step List every field the modelo binds, with its source and readiness label.
 aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
@@ -9,4 +10,9 @@ aeat app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding 
 @step Supply the first-period inputs during calculation.
 @result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
 @expect result.saved == true
+@expect result.casilla_values.01 == "1000"
+@expect result.casilla_values.02 == "525.00"
+@expect result.casilla_values["provisiones-gastos-dificil-justificacion"] == "25.00"
+@expect result.casilla_values.03 == "475.00"
+@expect result.casilla_values.04 == "95.00"
 @expect exit_code == 0

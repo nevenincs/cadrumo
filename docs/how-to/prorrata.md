@@ -171,8 +171,8 @@ deductible input VAT in the ledger. The tool then cannot re-derive its gross
 base. Declare it yourself, per period and, where you declared sectors, per
 sector:
 
-```console
-aeat app ledger prorrata declare-gross --ejercicio <year> --period 1T --amount 400.00 --evidence <your-document-reference>
+```{cli-sequence} prorrata-declare-gross
+:verify: Confirm the period's gross base and its evidence reference are recorded.
 ```
 
 - `--amount` is the gross deductible input VAT of that period before prorrata,
@@ -189,8 +189,11 @@ only for a period whose ledger holds no deductible input. Where the ledger does
 hold input, the ledger wins and must agree with your declaration; a
 disagreement becomes a finding.
 
-Remove a declaration with `aeat app ledger prorrata remove-gross --ejercicio
-<year> --period 1T`, adding `--sector` for a sector entry.
+Remove a declaration for the period, adding `--sector` for a sector entry:
+
+```{cli-sequence} prorrata-remove-gross
+:verify: Confirm the period's gross declaration is removed from the register.
+```
 
 ## Read the settlement advisories
 

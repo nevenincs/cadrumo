@@ -1,4 +1,6 @@
 :seed: autonomo-irpf-2026
+@step State the simplified direct estimation modality and the 2026 cobros y pagos election, without Codigo de Comercio accounting.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --irpf-estimation-regime directa_simplificada --irpf-activity-income-imputation-criterion cobros_y_pagos --irpf-activity-income-imputation-year 2026 --no-irpf-codigo-comercio-accounting
 @step Register the invoice for a second office-supplies purchase as encrypted supporting document.
 @setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0099 --invoice-date 2026-03-10 --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
 @capture second_purchase_evidence_id result.evidence_id
@@ -11,7 +13,7 @@ aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
 aeat --format json app modelo work calculate {work_unit_id} --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
 @capture calculation_revision_id result.calculation_revision_id
 @expect result.casilla_values.01 == "1000"
-@expect result.casilla_values.02 == "1500"
+@expect result.casilla_values.02 == "1500.00"
 @expect result.casilla_values.03 == "-500.00"
 @expect result.casilla_values.04 == "0.00"
 @expect result.casilla_values.07 == "0.00"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:16+0100\n"
+"POT-Creation-Date: 2026-11-03 19:37+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -321,18 +321,25 @@ msgid ""
 "first filing they are all zero, supplied by you so the calculation has no"
 " missing inputs. The tool fills the boxes from your records: box `01` is "
 "the quarter's income (`1000`, the taxable base, since VAT is never part "
-"of your income), box `03` the net yield (`500.00`), and box `04` the "
-"instalment (`100.00`, twenty percent of the net)."
+"of your income), box `02` the deductible expenses (`525.00`, including "
+"the simplified modality's `25.00` provision for difficult-to-justify "
+"expenses), box `03` the net yield (`475.00`), and box `04` the instalment"
+" (`95.00`, twenty percent of the net). The provision is five percent of "
+"`1000.00 - 500.00`, within the annual `2000.00` cap."
 msgstr ""
 "Számítsd ki az értékeket. A Modelo 130-nak három korábbi időszakból "
 "származó adatra van szüksége; az első benyújtásnál ezek mind nullák, "
 "amelyeket neked kell megadnod, hogy a számításnak ne legyen hiányzó "
 "bemenete. Az eszköz a nyilvántartásaidból tölti ki a rovatokat: a `01` "
-"rovat a negyedév jövedelme (`1000`, az adóalap, mivel az IVA soha nem "
-"része a jövedelmednek), a `03` rovat a nettó hozam (`500.00`), a `04` "
-"rovat pedig a részlet (`100.00`, a nettó húsz százaléka)."
+"rovat a negyedév bevétele (`1000`, az adóalap, mivel az IVA soha nem "
+"része a bevételednek), a `02` rovat a levonható kiadások (`525.00`, "
+"beleértve az egyszerűsített módszer szerint nehezen igazolható "
+"költségként elszámolható `25.00` összeget), a `03` rovat a nettó hozam "
+"(`475.00`), a `04` rovat pedig az előleg (`95.00`, a nettó húsz "
+"százaléka). A nehezen igazolható költségként elszámolható összeg a "
+"`1000.00 - 500.00` öt százaléka, az éves `2000.00` korláton belül."
 
-#: ../../how-to/quickstart.md:155
+#: ../../how-to/quickstart.md:158
 msgid ""
 "Check the draft. The check is local. It does not send anything to AEAT. "
 "When the draft is complete the report reads `completeness_status "
@@ -349,11 +356,11 @@ msgstr ""
 "tevékenységed 2026-ban kezdődött. A másik azt jelzi, hogy a bevételi "
 "sorhoz nincs bizonylat."
 
-#: ../../how-to/quickstart.md:157
+#: ../../how-to/quickstart.md:160
 msgid "Review every saved box with:"
 msgstr "Az összes mentett rovatot megnézheted ezzel:"
 
-#: ../../how-to/quickstart.md:163
+#: ../../how-to/quickstart.md:166
 msgid ""
 "If a value is missing or a modelo needs a value you must enter by hand, "
 "see [Review and supply calculation inputs](review-calculation-values.md)."
@@ -368,15 +375,15 @@ msgstr ""
 " szervezi az eszköz a háttérben a benyújtási munkát, lásd: [A benyújtási "
 "munkafolyamat](filing-spine.md)."
 
-#: ../../how-to/quickstart.md:170
+#: ../../how-to/quickstart.md:173
 msgid "5. Export the checked draft"
 msgstr "5. Exportáld az ellenőrzött piszkozatot"
 
-#: ../../how-to/quickstart.md:172
+#: ../../how-to/quickstart.md:175
 msgid "Export the checked Modelo 130 fichero-BOE file:"
 msgstr "Exportáld az ellenőrzött Modelo 130 fichero-BOE fájlt:"
 
-#: ../../how-to/quickstart.md:178
+#: ../../how-to/quickstart.md:181
 msgid ""
 "The exported file is a local file, not proof that AEAT accepted the "
 "return. Present it through the AEAT portal, as step 7 describes. Export "
@@ -389,7 +396,7 @@ msgstr ""
 "kapcsolót. Akkor is elutasítja a futást, ha a kimeneti könyvtár nem "
 "létezik."
 
-#: ../../how-to/quickstart.md:180
+#: ../../how-to/quickstart.md:183
 msgid ""
 "Step 2 linked the purchase invoice before you calculated. The check "
 "refuses a deducted VAT row that carries no invoice (the message reads "
@@ -400,7 +407,7 @@ msgstr ""
 "számla (az üzenet: `Deductible IVA ledger rows require linked purchase "
 "invoice evidence`)."
 
-#: ../../how-to/quickstart.md:182
+#: ../../how-to/quickstart.md:185
 msgid ""
 "A draft collects its supporting documents when you check it, so an "
 "invoice attached afterwards does not reach a draft that is already "
@@ -414,11 +421,11 @@ msgstr ""
 "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md) oldal végigvezeti "
 "a bizonylatkezelésen az elejétől a végéig."
 
-#: ../../how-to/quickstart.md:184
+#: ../../how-to/quickstart.md:187
 msgid "6. Check what else is due (optional)"
 msgstr "6. Ellenőrizd, mi más esedékes (opcionális)"
 
-#: ../../how-to/quickstart.md:186
+#: ../../how-to/quickstart.md:189
 msgid ""
 "Use the local calendar to see what may be due for the active profile. On "
 "a fresh profile, first declare that your income comes from an economic "
@@ -433,7 +440,7 @@ msgstr ""
 "azelőtt lefusson, hogy minden profiladatot kitöltenél. Az utolsó parancs "
 "megmagyarázza, miért vonatkozik rád a Modelo 130:"
 
-#: ../../how-to/quickstart.md:196
+#: ../../how-to/quickstart.md:199
 msgid ""
 "The calendar uses profile facts and local filing context. It does not "
 "replace AEAT's official portal. For the full calendar flow, see [Plan "
@@ -444,23 +451,23 @@ msgstr ""
 "munkafolyamathoz lásd: [Tervezd meg a benyújtási naptáradat](filing-"
 "calendar.md)."
 
-#: ../../how-to/quickstart.md:200
+#: ../../how-to/quickstart.md:203
 msgid "7. File manually through AEAT"
 msgstr "7. Nyújtsd be kézzel az AEAT-nál"
 
-#: ../../how-to/quickstart.md:202
+#: ../../how-to/quickstart.md:205
 msgid "The final filing step is outside `aeat`:"
 msgstr "A végső benyújtási lépés az `aeat`-on kívül történik:"
 
-#: ../../how-to/quickstart.md:204
+#: ../../how-to/quickstart.md:207
 msgid "Log in to the official AEAT electronic filing portal."
 msgstr "Jelentkezz be az AEAT hivatalos elektronikus benyújtási portáljára."
 
-#: ../../how-to/quickstart.md:205
+#: ../../how-to/quickstart.md:208
 msgid "Open the Modelo 130 form for the relevant year and period."
 msgstr "Nyisd meg a Modelo 130 nyomtatványt a megfelelő évre és időszakra."
 
-#: ../../how-to/quickstart.md:206
+#: ../../how-to/quickstart.md:209
 msgid ""
 "Enter the box values the calculation produced. The step below reads them "
 "back before it records the filing."
@@ -468,7 +475,7 @@ msgstr ""
 "Add meg a számítás által előállított rovatértékeket. Az alábbi lépés a "
 "benyújtás rögzítése előtt visszaolvassa őket."
 
-#: ../../how-to/quickstart.md:207
+#: ../../how-to/quickstart.md:210
 msgid ""
 "Review, sign, and keep the AEAT receipt (justificante) that AEAT issues "
 "after filing."
@@ -476,7 +483,7 @@ msgstr ""
 "Nézd át és írd alá a benyújtás után az AEAT által kiadott igazolást "
 "(justificante), majd őrizd meg."
 
-#: ../../how-to/quickstart.md:210
+#: ../../how-to/quickstart.md:213
 msgid ""
 "The full handoff checklist is in [File your modelo at the AEAT portal"
 "](file-at-aeat.md)."
@@ -484,11 +491,11 @@ msgstr ""
 "A teljes átadási ellenőrzőlista a [Nyújtsd be a nyomtatványodat az AEAT-"
 "portálon](file-at-aeat.md) oldalon található."
 
-#: ../../how-to/quickstart.md:213
+#: ../../how-to/quickstart.md:216
 msgid "After a real filing, record it as filed:"
 msgstr "Valódi benyújtás után rögzítsd benyújtottként:"
 
-#: ../../how-to/quickstart.md:219
+#: ../../how-to/quickstart.md:222
 msgid ""
 "`work file` refuses a deducted VAT row whose invoice is not linked "
 "(`Deductible IVA ledger rows require linked purchase invoice evidence`). "
@@ -500,7 +507,7 @@ msgstr ""
 " invoice evidence`). A 4. lépésben ellenőrzött piszkozat már tartalmazza "
 "a számláját, ezért a benyújtás rögzítésre kerül."
 
-#: ../../how-to/quickstart.md:221
+#: ../../how-to/quickstart.md:224
 msgid ""
 "This only records the action on your own computer. It does not contact "
 "AEAT. To compare your local record with the AEAT receipt, see [Reconcile "
@@ -511,11 +518,11 @@ msgstr ""
 "[Egy benyújtott nyomtatvány egyeztetése az AEAT-"
 "igazolással](reconcile.md)."
 
-#: ../../how-to/quickstart.md:224
+#: ../../how-to/quickstart.md:227
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/quickstart.md:226
+#: ../../how-to/quickstart.md:229
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) if profile facts are "
 "still incomplete."
@@ -523,7 +530,7 @@ msgstr ""
 "[Állítsd be az adózói profilodat](profile-setup.md), ha a profiladatok "
 "még hiányosak."
 
-#: ../../how-to/quickstart.md:228
+#: ../../how-to/quickstart.md:231
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) when your "
 "records are not ready yet."
@@ -531,7 +538,7 @@ msgstr ""
 "[Tranzakciók importálása és kezelése](import-bank-statements.md), amikor "
 "a nyilvántartásaid még nem állnak készen."
 
-#: ../../how-to/quickstart.md:230
+#: ../../how-to/quickstart.md:233
 msgid ""
 "[Classify transactions](classify-transactions.md) before calculating from"
 " imported rows."
@@ -539,7 +546,7 @@ msgstr ""
 "[Tranzakciók besorolása](classify-transactions.md), mielőtt importált "
 "sorokból számítana."
 
-#: ../../how-to/quickstart.md:232
+#: ../../how-to/quickstart.md:235
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md): understand the transaction-to-box pipeline."
@@ -548,7 +555,7 @@ msgstr ""
 "records-to-figures.md): értsd meg a tranzakcióktól a rovatokig vezető "
 "folyamatot."
 
-#: ../../how-to/quickstart.md:235
+#: ../../how-to/quickstart.md:238
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) when"
 " a modelo needs manual values, offsets, or a review of calculated values."
@@ -557,7 +564,7 @@ msgstr ""
 "values.md), amikor egy modelónak kézi értékekre, ellentételezésekre vagy "
 "a számított értékek felülvizsgálatára van szüksége."
 
-#: ../../how-to/quickstart.md:237
+#: ../../how-to/quickstart.md:240
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) if a command "
 "stops or the local state looks wrong."

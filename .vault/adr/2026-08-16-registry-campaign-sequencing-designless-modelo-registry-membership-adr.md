@@ -112,7 +112,7 @@ The decision needed is not an exemption. It is what registry membership *means*.
   is a registry-tree deletion plus an enum mapping entry plus a parity-gate
   re-run, landed together.
 - Modelo 179 is a different case that must not be folded in: it was legally
-  abolished for ejercicio 2024 onwards, which is the `Modelo.M037` shape, and its
+  abolished for every later ejercicio, which is the `Modelo.M037` shape, and its
   open-ended revision span is a factual error independent of this decision.
 
 ## Implementation
@@ -135,12 +135,12 @@ joining its M290 FATCA twin), M379 (CESOP, payment service providers), M592
 Each gets a Spanish-language reason line in the existing style, the registry
 definition is deleted, and the enum mapping carries the obligation forward.
 
-**Group S — retire (one).** M179, abolished for 2024 onwards and replaced by
+**Group S — retire (one).** M179, abolished for every later ejercicio and replaced by
 M238. This is the `Modelo.M037` treatment: the form ceased to exist in law, so
 the registry definition is deleted and the enum records the suppression and its
 successor. Bounding its `2021-y-siguientes` span is therefore moot and is not
 done — that fix would only apply had the modelo stayed in the registry, and
-recording it as a live-through-2023 revision the application still cannot file
+recording it as a revision live up to its abolition that the application still cannot file
 would reintroduce the exact state this record removes.
 
 **Group W — resolved at the time, and it split in two.** The eight modelos then
@@ -203,7 +203,7 @@ task and is not folded into this decision. Recorded here so the guarantee is not
 read as stronger than it is.
 
 The predicate is deliberately read at MODELO scope, across every revision, not
-at revision scope. M185 forced that: its 2026 design is bundled while its
+at revision scope. M185 forced that: its newest design is bundled while its
 `2003-2025` revision cites none, and a per-revision reading quietly excused that
 epoch — which is an ACQUISITION gap, the exact shape the refusal exists to
 surface. Modelo scope keeps it red. A `form_spec` does not count either: M721
@@ -238,18 +238,18 @@ distinct, and consumers must import the one resulting predicate rather than
 maintaining local qualifying-source sets.
 
 For Modelo 721, S97 must acquire two distinct contract-package inventories:
-one for exercise 2023 and one for exercise 2024. Each inventory must list every
+one per distinct evidence era of the contract package. Each inventory must list every
 authoritative package member and its exact digest, pin the package digest, and
 declare its own exercise, period, and legal applicability bounds. The
 law-selected filing context must choose the exact inventory through the selected
 revision's source scope; the open-ended `2023-y-siguientes` revision must not
-turn one current Sede download, a revision id alone, or the 2023 package into
-authority for 2024 or later. Neither inventory exists in the shipped registry at
+turn one current Sede download, a revision id alone, or the package of one era into
+authority for a later era. Neither inventory exists in the shipped registry at
 this decision's acceptance.
 
 Modelo 721 is therefore an authorable filing gap, not a terminal absence. AEAT
-publishes a SOAP 1.1 document/literal technical channel in distinct 2023 and
-2024 evidence eras, but neither era is currently source-catalogued or
+publishes a SOAP 1.1 document/literal technical channel in distinct
+evidence eras, but neither era is currently source-catalogued or
 hash-pinned as a filing contract. Filing grade remains refused until the
 law-selected revision cites its exact enrolled contract, the complete message
 field and producer surface is grounded, and local export and proof both pass.
