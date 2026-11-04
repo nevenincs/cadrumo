@@ -4,13 +4,14 @@ tags:
   - '#docs-cli-sequences'
 date: '2026-07-13'
 modified: '2026-11-04'
-body_hash: 'sha256:ba8220c3f4fceda42883e19c4c217cc6904d0bafc3fef0f07769b35f6b14a840'
+body_hash: 'sha256:9dd5440c18b105144e4e00d242a5551f461a6767605f70371a8be5b111bea114'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
   - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
+  - '[[2026-11-04-fixture-canonicalization-canonical-test-personas-adr]]'
 ---
 
 # `docs-cli-sequences` adr: `interactive executed CLI sequence docs` | (**status:** `accepted`)
@@ -77,6 +78,10 @@ It keeps every byte on the pages, adds an indirection to every review diff, and
 git packs already delta-compress identical content. Also rejected: truncating
 displayed output in the renderer, which would show readers something other than
 what the command prints.
+
+## Persona seed amendment (2026-11-04)
+
+Operator approval recorded 2026-11-04 (fixture-canonicalization design session). Seed recipes under `docs/_sequences/seeds/` and the sandbox profile facts are generated from the canonical persona catalogue under `dev/fixtures/personas/` (`2026-11-04-fixture-canonicalization-canonical-test-personas-adr`) and checked for drift; they remain executed CLI steps. Goldens stay committed and keep their D2 role as the reviewed record of CLI behaviour. The sandbox no longer restates profile facts inline.
 
 ## Problem Statement
 

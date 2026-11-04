@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-modelo-workspace'
 date: '2026-10-23'
-modified: '2026-10-25'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f79268a04fd269d2f037aa2ca9d61066009f7a5a4fa51c623ed0c8764e153c1'
+body_hash: 'sha256:b747c172d923994f7b7149992337ae94cc77a3447eec045b027bebded89b2227'
 related:
   - "[[2026-10-23-desktop-ledger-editor-adr]]"
   - "[[2026-09-30-modelo-editor-workbench-adr]]"
@@ -14,11 +14,16 @@ related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
   - "[[2026-10-23-desktop-modelo-workspace-research]]"
+  - '[[2026-11-04-fixture-canonicalization-generated-fixture-projections-adr]]'
 ---
 
 # `desktop-modelo-workspace` adr: `The desktop Modelo workspace renders the form read model and submits the modelo family over the held person relay` | (**status:** `accepted`)
 
 Accepted 2026-10-23 on the owner's instruction that day (session CADRUMO-UX-MODELO): the desktop gets a designed, polished workspace to list, create, fill, check, export, record and correct declarations, with each modelo's editor generated from data; the behaviour is settled by the CLI and the TUI, and the owner asked that no further decision be put to them.
+
+## Fixture projection amendment (2026-11-04)
+
+Operator approval recorded 2026-11-04 (fixture-canonicalization design session). Scenario envelopes produced by the real builder are no longer committed under `native/desktop/frontend/src/dev/fixtures/modelo/`. They are generated from canonical personas into the build tree by the fixture seeding recipes and verified by digest (`2026-11-04-fixture-canonicalization-generated-fixture-projections-adr`). Stories, specs and Rust tests read them from there; hand copies of an envelope, including extracted baselines, are not kept.
 
 ## Problem Statement
 
