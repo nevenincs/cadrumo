@@ -1012,6 +1012,13 @@ export type LedgerEntryClassification = {
   /** A movement so classified carries a business share, and the ledger
    * refuses one that does not. */
   takes_business_share: boolean;
+  /** A movement so classified carries a usage ratio. */
+  takes_usage_ratio: boolean;
+  /** A movement so classified carries business figures: a taxable base and
+   * the like. */
+  carries_business_figures: boolean;
+  /** A movement so classified keeps the spending category it names. */
+  keeps_category: boolean;
   /** A rule deciding it may name a spending category, and the ledger
    * refuses a category on any other rule. */
   rule_may_name_category: boolean;

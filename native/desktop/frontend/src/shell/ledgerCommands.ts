@@ -5,12 +5,12 @@
 // stages the cells it returns and says what it staged. Nothing here writes.
 
 import type { LedgerRow } from "./ledger";
-import { takesBusinessShare } from "./ledgerClassifications";
 import {
-  isBusinessBearing,
-  takesChanges,
-  takesClassification,
-} from "./ledgerContract";
+  keepsCategory,
+  takesBusinessShare,
+  takesUsageRatio,
+} from "./ledgerClassifications";
+import { takesChanges, takesClassification } from "./ledgerContract";
 import { parsePercent, type GrammarRefusal } from "./ledgerGrammar";
 import type { StagedCheck } from "./ledgerStagedCheck";
 import {
@@ -36,9 +36,15 @@ export const classifyAsksShare = (kind: ClassifyKind): boolean =>
   takesBusinessShare(CLASSIFICATION_OF[kind]) === true;
 
 /** Whether classifying as `kind` names a spending category where a movement
- * takes one: the classifications that carry business figures do. */
+ * takes one, as the backend serves it for the classification the command
+ * sets; false where that is not served. */
 export const classifyAsksCategory = (kind: ClassifyKind): boolean =>
-  isBusinessBearing(CLASSIFICATION_OF[kind]);
+  keepsCategory(CLASSIFICATION_OF[kind]) === true;
+
+/** Whether classifying as `kind` names a usage ratio with the category, as
+ * the backend serves it; false where that is not served. */
+export const classifyTakesUsageRatio = (kind: ClassifyKind): boolean =>
+  takesUsageRatio(CLASSIFICATION_OF[kind]) === true;
 
 /** The classify command that sets a stored classification; Personal for any
  * other, which no control offers. */
@@ -275,7 +281,7 @@ export function classifyCells(
         stored: storedFieldValue(row, "category_id"),
       });
       if (
-        request.kind === "mixed" &&
+        classifyTakesUsageRatio(request.kind) &&
         request.ratios?.get(yearOf(row))?.has(category)
       )
         cells.push({

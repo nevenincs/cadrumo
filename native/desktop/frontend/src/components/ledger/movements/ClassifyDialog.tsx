@@ -16,6 +16,7 @@ import { facts } from "@/shell/compose";
 import {
   classifyAsksCategory,
   classifyAsksShare,
+  classifyTakesUsageRatio,
   type ClassifyKind,
   type RatioCoverage,
 } from "../../../shell/ledgerCommands";
@@ -91,10 +92,11 @@ export function ClassifyDialog({
   const form = useRef<HTMLFormElement>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [share, setShare] = useState(typedPoints(initialShare));
-  const mixed = kind === "mixed";
   // Drawn again once the backend has served what each classification takes.
   useLedgerClassifications();
   const asksShare = kind !== "category" && classifyAsksShare(kind);
+  // Whether the classification names a usage ratio with the category.
+  const takesRatio = kind !== "category" && classifyTakesUsageRatio(kind);
   const vocabulary = useVocabulary();
   const options = useMemo<ComboboxOption[]>(
     () =>
@@ -241,7 +243,7 @@ export function ClassifyDialog({
               </Combobox>
             </div>
           )}
-          {mixed && category !== null && ratioOf && (
+          {takesRatio && category !== null && ratioOf && (
             <RatioLine
               category={categoryLabel(t, category)}
               coverage={ratioOf(category)}

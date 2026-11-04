@@ -22,11 +22,9 @@ import type {
   LedgerRow,
   LedgerSplitCheckResult,
 } from "../../../shell/ledger";
+import { DECIDED_CLASSIFICATIONS } from "../../../shell/ledgerContract";
 import {
-  DECIDED_CLASSIFICATIONS,
-  isBusinessBearing,
-} from "../../../shell/ledgerContract";
-import {
+  keepsCategory,
   splitPartAdvisedCategory,
   takesBusinessShare,
   useLedgerClassifications,
@@ -206,7 +204,7 @@ export function SplitDialog({
       }
       classes.push({
         classification: part.classification,
-        ...(part.category && isBusinessBearing(part.classification)
+        ...(part.category && keepsCategory(part.classification) === true
           ? { category_id: part.category }
           : {}),
         ...(share ? { business_pct: share } : {}),
@@ -353,7 +351,7 @@ export function SplitDialog({
                       ))}
                     </NativeSelect>
                   </label>
-                  {isBusinessBearing(part.classification) && (
+                  {keepsCategory(part.classification) === true && (
                     <Combobox
                       label={t("desktop.ledger.inspector.split.part_category", {
                         part: at + 1,

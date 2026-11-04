@@ -18,7 +18,7 @@ import { chordMatches, type ChordKeys } from "@/shared/chords";
 import { REDO_CHORDS, REVIEW_CHORDS, UNDO_CHORD } from "../ledgerChords";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import { classifyKindOf } from "../../../shell/ledgerCommands";
-import { isBusinessBearing } from "../../../shell/ledgerContract";
+import { carriesBusinessFigures } from "../../../shell/ledgerClassifications";
 import { percentOf, copyAmount } from "../../../shell/ledgerGrammar";
 import { planApply } from "../../../shell/ledgerPlan";
 import {
@@ -621,7 +621,7 @@ export function useMovementEditing(input: MovementEditingInput) {
       if (!field) return;
       if (
         field === "business_classification" &&
-        isBusinessBearing(value.value) &&
+        carriesBusinessFigures(value.value) === true &&
         value.share === undefined
       ) {
         input.askDraft(

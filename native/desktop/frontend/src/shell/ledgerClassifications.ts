@@ -43,6 +43,31 @@ export const classificationRule = (
 export const takesBusinessShare = (id: string): boolean | null =>
   classificationRule(id)?.takes_business_share ?? null;
 
+/** Whether a movement so classified carries a usage ratio; null where it is
+ * not served. */
+export const takesUsageRatio = (id: string): boolean | null =>
+  classificationRule(id)?.takes_usage_ratio ?? null;
+
+/** Whether a movement so classified carries business figures; null where it
+ * is not served. */
+export const carriesBusinessFigures = (id: string): boolean | null =>
+  classificationRule(id)?.carries_business_figures ?? null;
+
+/** Whether a movement so classified keeps the spending category it names;
+ * null where it is not served. */
+export const keepsCategory = (id: string): boolean | null =>
+  classificationRule(id)?.keeps_category ?? null;
+
+/** The classifications served as carrying business figures, in the
+ * backend's order; null where none are served. */
+export const classificationsCarryingBusinessFigures = ():
+  readonly string[] | null =>
+  held === null
+    ? null
+    : held
+        .filter((row) => row.carries_business_figures)
+        .map((row) => row.classification);
+
 /** Whether a rule deciding it may name a spending category; null where it is
  * not served. */
 export const ruleMayNameCategory = (id: string): boolean | null =>

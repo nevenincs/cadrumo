@@ -10,6 +10,7 @@ import type {
   LedgerRow,
   LedgerSortField,
 } from "../../../shell/ledger";
+import { classificationsCarryingBusinessFigures } from "../../../shell/ledgerClassifications";
 import { compareDecimal, sameDecimal } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
 import type { StagedContent } from "../../../shell/ledgerStage";
@@ -17,11 +18,7 @@ import {
   categoryFamily,
   type ServedVocabulary,
 } from "../../../shell/ledgerServedVocabulary";
-import {
-  BUSINESS_BEARING_CLASSIFICATIONS,
-  awaitsInvoice,
-  type ImportIssue,
-} from "../../../shell/ledgerContract";
+import { awaitsInvoice, type ImportIssue } from "../../../shell/ledgerContract";
 import type {
   LedgerWindowScope,
   ReadinessSnapshot,
@@ -623,16 +620,17 @@ export const SAVED_VIEWS: Record<
   to_fix: { filters: { readiness: "issues" } },
   to_match: { filters: { toMatch: true } },
   foreign: { filters: { foreignOnly: true } },
-  business_expenses: {
-    filters: {
-      classification: [...BUSINESS_BEARING_CLASSIFICATIONS],
-      direction: ["OUTGOING"],
-    },
-  },
+  business_expenses: { filters: { direction: ["OUTGOING"] } },
 };
+/** The filters a saved view sets. Business expenses are the outgoing
+ * movements of the classifications the backend serves as carrying business
+ * figures; where none are served the classification is not narrowed. */
 export const viewFilters = (view: SavedViewId): MovementFilters => ({
   ...NO_FILTERS,
   ...SAVED_VIEWS[view].filters,
+  ...(view === "business_expenses"
+    ? { classification: [...(classificationsCarryingBusinessFigures() ?? [])] }
+    : {}),
 });
 
 // ---- Search ------------------------------------------------------------------
