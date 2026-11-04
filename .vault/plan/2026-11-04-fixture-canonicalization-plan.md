@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:132b118774cbd2fd12c95d24e8c74e29e2ee00b4a17ba12df9da4a50ea30da98'
+body_hash: 'sha256:e2c497420229ad0eb7a36ffd2d38f2208eb5f4e9618387767daef94eee7b85c2'
 ---
 
 # `fixture-canonicalization` plan
@@ -30,10 +30,10 @@ Work runs in the worktree `.claude/worktrees/fixture-canonicalization` on branch
 
 Make existing generators deterministic and remove known stale or orphan fixture data before anything builds on them.
 
-- [ ] `P01.S01` - Thread one scenario as-of instant through the Modelo envelope generator so admitted baselines and observations are byte-identical across runs; `native/desktop/frontend/scripts/modelo_fixtures.py`.
-- [ ] `P01.S02` - Delete the hand-copied Modelo 303 admitted baseline and read the baseline from its generated envelope; `native/application/tests/data and native/application/src/runtime_client/live_tests.rs`.
-- [ ] `P01.S03` - Add recorders for the five writerless ledger fixtures and a reader for the invoice preview fixture; `native/desktop/frontend/src/dev/fixtures ledger JSON and src/cadrumo/application/ledger/tests`.
-- [ ] `P01.S04` - Review possibly real identifiers and evidence for private data and replace any non-synthetic value; `native/desktop/frontend/src/dev/fixtures, src/cadrumo/tests/fixtures/aeat-sede, the ledger evidence corpus and native/manager/tests`.
+- [x] `P01.S01` - Thread one scenario as-of instant through the Modelo envelope generator so admitted baselines and observations are byte-identical across runs; `native/desktop/frontend/scripts/modelo_fixtures.py`.
+- [x] `P01.S02` - Delete the hand-copied Modelo 303 admitted baseline and read the baseline from its generated envelope; `native/application/tests/data and native/application/src/runtime_client/live_tests.rs`.
+- [x] `P01.S03` - Add recorders for the five writerless ledger fixtures and a reader for the invoice preview fixture; `native/desktop/frontend/src/dev/fixtures ledger JSON and src/cadrumo/application/ledger/tests`.
+- [x] `P01.S04` - Review possibly real identifiers and evidence for private data and replace any non-synthetic value; `native/desktop/frontend/src/dev/fixtures, src/cadrumo/tests/fixtures/aeat-sede, the ledger evidence corpus and native/manager/tests`.
 
 ### Phase `P02` - Seeding and test controls
 
@@ -46,11 +46,12 @@ Separate fixture seeding from testing in the justfile and CI with digest-based f
 
 Define every canonical taxpayer and flow once and seed it through production operations into every consumer.
 
-- [ ] `P03.S07` - Author the identity catalogue and the canonical personas with ledger rows, document references and expected obligations; `dev/fixtures/personas`.
-- [ ] `P03.S08` - Add the persona reader and the materialiser that replays a persona through the profile patch, ledger import and evidence operations; `src/cadrumo/tests and src/cadrumo/entrypoints/tests`.
+- [x] `P03.S07` - Author the identity catalogue and the canonical personas with ledger rows, document references and expected obligations; `dev/fixtures/personas`.
+- [x] `P03.S08` - Add the persona reader and the materialiser that replays a persona through the profile patch, ledger import and evidence operations; `src/cadrumo/tests and src/cadrumo/entrypoints/tests`.
 - [ ] `P03.S09` - Generate the window envelopes and desktop fixtures from personas; `native/desktop/frontend/scripts and dev desktop fixture producers`.
 - [ ] `P03.S10` - Generate docs seed recipes and sandbox facts from personas and refresh the goldens; `dev/docs/sequences and docs/_sequences`.
 - [ ] `P03.S11` - Seed the TUI harness from personas; `dev/tui/harness`.
+- [ ] `P03.S21` - Close the persona expressiveness gaps: fix the reverse-charge category missing from the self-assessed projection, express recargo and withholding certificates through their operations, and adjust catalogue rows that use categories or counterparties the operations refuse; `registry category projection, ledger classification and invoice operations, dev/fixtures/personas`.
 
 ### Phase `P04` - Projections out of git
 
@@ -67,6 +68,7 @@ Move the backend test profile builders onto the persona catalogue and remove res
 - [ ] `P05.S15` - Migrate the shared profile builders and their consumers onto personas and remove the duplicate ready-profile seeder and string boolean placeholders; `src/cadrumo user_profile, profile_persistence and profile persistence test support`.
 - [ ] `P05.S16` - Migrate private profile helpers package by package onto personas; `src and dev test packages`.
 - [ ] `P05.S17` - Stop seeding personas through direct test storage writes; `src test support`.
+- [ ] `P05.S20` - Extend the identity gate's blocking scope to tests and fixtures by checking every match against the catalogue convention, and replace the remaining random-looking identifiers; `dev/identity and test and fixture identifiers`.
 
 ### Phase `P06` - Obligation simulation
 
