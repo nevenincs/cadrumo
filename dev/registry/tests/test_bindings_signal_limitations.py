@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+
 from ..binding_signal.consumer_audit import python_binding_references
 from ..binding_signal.sources import collect_raw_inventory
 from ..bindings import audit, main
@@ -99,7 +101,7 @@ def test_an_unloadable_registry_is_a_processing_error_not_a_raw_fallback(
         encoding="utf-8",
     )
 
-    with pytest.raises(Exception, match=r"."):
+    with pytest.raises(RegistryLoadError, match="orphan modelo directory"):
         audit(tmp_path)
 
     monkeypatch.setattr(sys, "argv", ["bindings", "--root", str(tmp_path), "--output", str(tmp_path / "out.json")])

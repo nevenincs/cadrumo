@@ -95,9 +95,14 @@ def test_empty_profile_overview_uses_fewer_bounded_reads(tmp_path: Path) -> None
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register()
         with bundled_indexed_authority().operation() as authority:
-            previous = _collection(profile_id, authority, limit=32)
+            previous = _collection(profile_id, authority, limit=8)
             current = _collection(profile_id, authority)
     assert len(current.pages) < len(previous.pages)
+    # Fewest reads under the byte budget: every page but the last has no room for the next page's first item.
+    for page, following in zip(current.pages, current.pages[1:], strict=False):
+        assert len(page.model_dump_json().encode("utf-8")) + len(
+            following.items[0].model_dump_json().encode("utf-8")
+        ) + 1 > (PROFILE_VIEW_MAX_RESULT_BYTES)
     assert tuple(item for page in current.pages for item in page.items) == tuple(
         item for page in previous.pages for item in page.items
     )
