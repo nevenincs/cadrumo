@@ -30,6 +30,7 @@ from cadrumo.entrypoints.tests.modelo_operator_work_storage import SeededOperato
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from ...application.modelo.calculation_note_gate import ModeloCalculationBlockedError, blocking_calculation_issues
 from ...application.modelo.calculation_notes import CALCULATION_NOTES
 from ...application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -337,15 +338,29 @@ def test_the_form_asks_for_exactly_what_the_real_verification_finds_missing(tmp_
     assert verified.deadline.days_remaining == (verified.deadline.closes_on - _REFERENCE_DAY).days
 
 
-def test_a_form_with_unsatisfied_prior_renta_keeps_unknown_result_and_incomplete_verification(tmp_path: Path) -> None:
+def test_a_form_with_unsatisfied_prior_renta_keeps_unknown_result_and_refuses_verification(tmp_path: Path) -> None:
+    """Box 13 waits on last year's Modelo 100, which is not recorded, so nothing can be verified yet.
+
+    Verification refuses through the blocking-note gate on the prior-filing note, and the form keeps
+    the quarter's result unknown rather than presenting a figure.
+    """
     with seeded_operator_work(tmp_path) as work:
-        work.recalculate()
-        outcome = _verify(work)
+        head = work.recalculate()
+        with pytest.raises(ModeloCalculationBlockedError) as refused:
+            _verify(work)
         form = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
 
-    assert not outcome.granted_verificado_completo
-    assert outcome.finding_count > 0
-    assert form.verification is not None
+    context = refused.value.context or {}
+    assert context["reason"] == "unresolved_binding"
+    assert context["box"] == "13"
+    (note,) = (
+        issue
+        for issue in blocking_calculation_issues(head)
+        if issue.fact is not None and issue.fact.sentence is CalculationNoteSentence.PRIOR_FILING_UNRECORDED
+    )
+    assert note.casilla_id == "13"
+    assert note.fact is not None
+    assert dict(note.fact.values) == {"box": "13", "modelo": "100", "year": str(_REFERENCE_DAY.year - 1)}
     assert form.result is not None
     assert form.result.box == "19"
     assert _field(form, "19").origin is ModeloFormOrigin.CALCULATION_FAILED
