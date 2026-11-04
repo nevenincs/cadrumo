@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-24'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:16631b9c5d74a8252de0dcddb215afdde89058a2a55e3261e5c8016138e3f26c'
+body_hash: 'sha256:917816508a2bab35c2008425516333c25b7ced0cb751439fc5b40687da442304'
 related:
   - '[[2026-08-14-registry-campaign-sequencing-adr]]'
   - '[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]'

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-evidence-window-axes'
 date: '2026-08-19'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:bbdbe13dd609ed707a16e755bdec7e5cf9b4ed5551cfef14d32b2e695652605d'
+body_hash: 'sha256:0e5a58ded13ff902e02c84fbb3f3770ffd353c3a37a845dac7986a5dd7be7889'
 related:
   - "[[2026-08-19-registry-evidence-window-axes-research]]"
 ---

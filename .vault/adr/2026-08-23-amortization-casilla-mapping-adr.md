@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#amortization-casilla-mapping'
 date: '2026-08-23'
-modified: '2026-10-31'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:16c3314e38a57395fda94b347a5005d6c1112e62c157b553cc484392a79e22a7'
+body_hash: 'sha256:645008a8c43f654e84bb3ed77e23997f0e3ad5add672fdff8fe3694a075838bd'
 related:
   - "[[2026-08-23-amortization-casilla-grounding-research]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"

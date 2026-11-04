@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:af0cc69fc28870d1f33c4f57450aee280aa079b42893f7f0daa7a3643533c371'
+body_hash: 'sha256:9ce8d1d5e843f920c01c0dce2f8043a38c7734b02dafe3393e0295a4e82ba928'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"

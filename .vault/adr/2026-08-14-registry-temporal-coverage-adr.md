@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-10-30'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f28fad86a7b4ad11dcb233b1e0af04abdf40b7602933fd8b659462c46e7dd7d'
+body_hash: 'sha256:1d6273329e0574d857c05b999633915912079474d8f52852ae002c62003c9d26'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-corpus-structure-hardening-reference]]"

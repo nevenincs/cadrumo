@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#inventory-casilla-mapping'
 date: '2026-08-23'
-modified: '2026-10-30'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ce9d785e876cdeaa853eb430a0769ab8656c6792953af62eb6c88300dadbd12'
+body_hash: 'sha256:d9372b5e17ffa02e8710a16d8c29ee36e05f84a696af9ce3221cf44a6ff298e8'
 related:
   - "[[2026-08-23-inventory-casilla-grounding-research]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
