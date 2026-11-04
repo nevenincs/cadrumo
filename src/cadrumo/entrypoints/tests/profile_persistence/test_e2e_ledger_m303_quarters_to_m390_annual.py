@@ -161,7 +161,7 @@ def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_retur
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Cliente de prueba SL",
-        counterparty_tax_id="B00000034",
+        counterparty_tax_id="B00000281",
         counterparty_country="ES",
         invoice_number="EMI-2026-1T",
         issued_at=date(2026, 2, 10),

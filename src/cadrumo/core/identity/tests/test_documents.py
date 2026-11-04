@@ -40,7 +40,7 @@ def test_valid_identity_document_variants_round_trip() -> None:
             "nie",
             (
                 "X1234567L",
-                "Y0000000Z",
+                "Y0000002Q",
                 "Z0000000M",
                 "x1234567L",
             ),

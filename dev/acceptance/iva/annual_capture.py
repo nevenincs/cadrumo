@@ -28,7 +28,7 @@ def _add_issued_invoice(
             _invoice_add_args(
                 kind="issued",
                 counterparty_name="Synthetic annual-foundation client SL",
-                counterparty_nif="B00000034",
+                counterparty_nif="B00000281",
                 invoice_number=f"IVA-ISS-ANNUAL-FOUNDATION-{journey_year.year}-1T",
                 invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",

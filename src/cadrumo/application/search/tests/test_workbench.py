@@ -205,12 +205,12 @@ def test_provider_authored_labels_hashes_and_stable_ids_are_not_fields() -> None
 def test_nif_iban_label_raw_hex_identity_and_search_terms_fail_closed() -> None:
     base = _document().model_dump()
     attacks = (
-        {"label": "Y0000000Z · ES91 2100 0418 4502 0005 1332"},
+        {"label": "Y0000002Q · ES91 2100 0418 4502 0005 1332"},
         {"stable_id": "1" * 64},
         # `search_terms` is no longer prohibited by NAME -- `content_terms`
         # carries the operator's own words -- but an UNDECLARED field of any
         # name is still refused, which is what this line now proves.
-        {"search_terms": ("Y0000000Z",)},
+        {"search_terms": ("Y0000002Q",)},
         {"token_digests": (hashlib.sha256(b"y0000000z").hexdigest(),)},
     )
     for attack in attacks:

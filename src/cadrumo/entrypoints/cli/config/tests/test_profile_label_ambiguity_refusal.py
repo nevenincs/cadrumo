@@ -68,7 +68,7 @@ def _provision_casefold_collision() -> None:
     # profile reusing the first tax id. Control letters per AEAT mod-23 table:
     # 0 -> "T", 1 -> "R".
     alpha = _create_profile("ambig-alpha", "00000000T")
-    beta = _create_profile("ambig-beta", "00000001R")
+    beta = _create_profile("ambig-beta", "00000024R")
 
     # "Ambig" and "ambig" compare equal under ``str.casefold`` but are
     # distinct strings, which is the ambiguity the reader must refuse.

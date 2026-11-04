@@ -398,7 +398,7 @@ def _capture_negative_purchase(
                 "--counterparty-name",
                 "Synthetic supplier SL",
                 "--counterparty-nif",
-                "B00000034",
+                "B00000281",
                 "--invoice-number",
                 f"IVA-REC-NEGATIVE-{year}-4T",
                 "--invoice-date",

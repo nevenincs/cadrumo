@@ -311,7 +311,7 @@ def _supplier_and_customer_invoices(bucket_id: str) -> tuple[Invoice, Invoice]:
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-PROVEEDOR-2026-001",
         issued_at=date(2026, 6, 1),
-        counterparty_tax_id="B00000034",
+        counterparty_tax_id="B00000281",
         counterparty_name="Proveedor Mayorista SA",
         base_total=Decimal("5000.00"),
         iva_total=Decimal("1050.00"),

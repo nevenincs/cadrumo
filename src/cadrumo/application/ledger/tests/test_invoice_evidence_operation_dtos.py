@@ -62,7 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 def _draft() -> InvoiceDraft:
     draft = InvoiceDraft(
-        supplier_tax_id="B00000034",
+        supplier_tax_id="B00000281",
         supplier_name="Papeleria Sol SL",
         customer_tax_id="B12345674",
         customer_name="Cliente Ejemplo SL",
@@ -118,8 +118,8 @@ def _draft() -> InvoiceDraft:
                 field="supplier_tax_id",
                 origin=FieldOrigin.EXACT_STRUCTURED,
                 grounding=FieldGroundingOutcome.ANCHORED,
-                anchor="B00000034",
-                role_evidence="Proveedor B00000034",
+                anchor="B00000281",
+                role_evidence="Proveedor B00000281",
             ),
             FieldProvenance(
                 field="taxable_base",
@@ -229,7 +229,7 @@ def _invoice():
         bucket_id="20202020-2020-4202-8202-202020202020",
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
-        counterparty_tax_id="B00000034",
+        counterparty_tax_id="B00000281",
         counterparty_country="ES",
         invoice_number="F-2026-0142",
         issued_at=date(2026, 3, 10),
@@ -256,7 +256,7 @@ def test_invoice_draft_projection_carries_all_fields_and_private_facturae_class(
     assert projected.discrepancies[0].expected == PublicDecimal(decimal="166.07")
     assert projected.discrepancies[0].observed == PublicDecimal(decimal="166.08")
     assert projected.provenance[1].derived_from == ("lines.taxable_base",)
-    assert projected.provenance[0].role_evidence == "Proveedor B00000034"
+    assert projected.provenance[0].role_evidence == "Proveedor B00000281"
 
 
 @pytest.mark.parametrize("cause", list(LabelReadingFallbackCause))

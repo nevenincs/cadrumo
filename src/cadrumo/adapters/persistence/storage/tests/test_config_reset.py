@@ -358,7 +358,7 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
             cold_default_bytes = b"cold-default-database-is-not-a-profile-bucket"
             cold_default_database.write_bytes(cold_default_bytes)
             _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-            _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+            _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000024R")
             _delete_profile_through_custody(_PROFILE_B_ID, root=root)
 
             certificate_path = tmp_path / "operator.p12"
@@ -530,7 +530,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000024R")
         _persist_filing(_PROFILE_B_ID, filing_year=2025, seed="a")
         _write_active_pointer(root, _PROFILE_A_ID)
         pointer_before = pointer_path(root).read_bytes()
@@ -596,7 +596,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000024R")
         _persist_filing(_PROFILE_B_ID, filing_year=2025, seed="a")
         _write_active_pointer(root, _PROFILE_A_ID)
 

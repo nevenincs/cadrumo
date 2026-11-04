@@ -383,7 +383,7 @@ def test_secure_generation_refuses_a_census_capture_changed_during_read(
     )
 
     observation = CensalObservation(
-        identity=CensalObservationIdentity(nif="00000001R"),
+        identity=CensalObservationIdentity(nif="00000024R"),
         domicilio_fiscal=CensalObservationAddress(),
         domicilio_notificacion=CensalObservationAddress(),
         captured_at=_NOW,

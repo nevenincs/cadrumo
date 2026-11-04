@@ -121,7 +121,7 @@ __all__ = [
 # Synthetic CIFs whose control digit is hand-derived: with every digit before it zero but the last, the
 # odd-position doubling leaves 2 * d7 (digit-summed), so the control is (10 - 2 * d7) mod 10 -- 8 for 1, 6 for 2.
 PAYER_A = "B00000018"
-PAYER_B = "B00000026"
+PAYER_B = "B00000299"
 REFUND_IBAN = "ES9121000418450200051332"
 
 #: The activity key an exported direct-estimation block requires and the operator states.

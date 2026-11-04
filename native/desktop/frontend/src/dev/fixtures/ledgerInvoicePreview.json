@@ -115,7 +115,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -146,7 +146,7 @@
         ]
       },
       "result": {
-        "input_digest": "6efba2ef9e6d3757fd7afe34e11ca184cd8e95c59619c6418c72748c85ed3e61",
+        "input_digest": "5bb00c7a04fcbff37fb35c972aa7225d09d8e2df95de87b4e7fa5a0697fcc57f",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -294,7 +294,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "45431b8748c74cb644b39c8655976e4ba2e76eec50c2f62b49af9ce33554afc3",
+        "invoice_id": "7818eaeb6d0adff93167c3952007f1072829a7dcd035d0c5b61271c6d9afd88b",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -303,7 +303,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -340,7 +340,7 @@
         }
       },
       "result": {
-        "input_digest": "944ffa8f57f4669520a880ac72d66da5560489a542245c549de278e692ed440b",
+        "input_digest": "19303d1a6d074301254bf398ad36b79f6e25b2f1d1ef1da11793d7f54e01943e",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -494,7 +494,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "45431b8748c74cb644b39c8655976e4ba2e76eec50c2f62b49af9ce33554afc3",
+        "invoice_id": "7818eaeb6d0adff93167c3952007f1072829a7dcd035d0c5b61271c6d9afd88b",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -503,7 +503,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -537,7 +537,7 @@
         }
       },
       "result": {
-        "input_digest": "130d718f1006c15e7034e645b7eea71d194a1cc575bb12215faef84ad80da970",
+        "input_digest": "7cdfc257a0204005e692f397821af4693cee703130fbeca00554bc32cc14d85e",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -705,7 +705,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -742,7 +742,7 @@
         }
       },
       "result": {
-        "input_digest": "7a613e7b4cc6a16c9be2354959a105e5a81910395aaec3bf4d3911e59d53f341",
+        "input_digest": "a7cfcc0ab17bb6834bb3eb93a82761efcad0ffbd155d14cb36e9fa435e845832",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -946,7 +946,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -983,7 +983,7 @@
         }
       },
       "result": {
-        "input_digest": "d5d36c5cb0c6b13cf5eb501e22f76e249ba82f2732e65a1d97cc68dc5fb68a85",
+        "input_digest": "7a2f03aad7e17f59961357401b6b302fdffe53f0ab42e1e4eb0695bd5c90a8fb",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -1166,7 +1166,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -1200,7 +1200,7 @@
         }
       },
       "result": {
-        "input_digest": "9161aeaa9cb8cd633829ea5bf5fe8887b4b57d17c64694ce34157b269e12aa3b",
+        "input_digest": "2bc1aeffee78272c21d30793a7c054e5c5ad2e1273e3b2a623231c36e5f02cde",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -1370,7 +1370,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "45431b8748c74cb644b39c8655976e4ba2e76eec50c2f62b49af9ce33554afc3",
+        "invoice_id": "7818eaeb6d0adff93167c3952007f1072829a7dcd035d0c5b61271c6d9afd88b",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -1379,7 +1379,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -1413,7 +1413,7 @@
         }
       },
       "result": {
-        "input_digest": "5e3825fe2beb32c443bcf9abd3a02555b113d3277787012b405fef9d354ba62e",
+        "input_digest": "9ac6e9f0b3054a13474836f4b337aa09bbd254d943ec863504ba3d9915b5c591",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -1561,7 +1561,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "45431b8748c74cb644b39c8655976e4ba2e76eec50c2f62b49af9ce33554afc3",
+        "invoice_id": "7818eaeb6d0adff93167c3952007f1072829a7dcd035d0c5b61271c6d9afd88b",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -1570,7 +1570,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -1604,7 +1604,7 @@
         }
       },
       "result": {
-        "input_digest": "78e5d57080f102fa1e9731dc4023885b582d212a66b141bbdee05d019c00817c",
+        "input_digest": "24b050d8b18e48e711828024bf7c3eeb96c494d89e8894154e55ccb069a9b2c4",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -1785,7 +1785,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -1819,7 +1819,7 @@
         ]
       },
       "result": {
-        "input_digest": "75153a5d9c97babc6c231c5a452f2a75e787858f2e36db6aa577a177a776fe75",
+        "input_digest": "7cb61e78515883672bb53eed6a92771656f69a87c834cc694bea8caf89fb382a",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -1969,7 +1969,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "72e2bfbaaf664eb36a576c50f32b97e5082de58a13d04b91c15ab053e62a2581",
+        "invoice_id": "86d394ef99536a15d54735257f8abbc607268c65443bb5064dbf44c065ef43c1",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -1978,7 +1978,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -2012,7 +2012,7 @@
         ]
       },
       "result": {
-        "input_digest": "6ed53034f4dc94e09000619eb9451d56f8f8bcdd923dcf981daecbcefb70011d",
+        "input_digest": "6bfb09feabc4385b9c3809756a66e9186ef0d0127baec3514bd02f400592d1ec",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -2185,7 +2185,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -2219,7 +2219,7 @@
         ]
       },
       "result": {
-        "input_digest": "1854f62c74fba7e4116a881a92367edc65103dbfe560d4aa1bcd4c6d541332f0",
+        "input_digest": "6e8bb23523405f18fe8291ea422389bae4d884e8c61e72dd5917d9ea0424f1df",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -2369,7 +2369,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "72e2bfbaaf664eb36a576c50f32b97e5082de58a13d04b91c15ab053e62a2581",
+        "invoice_id": "86d394ef99536a15d54735257f8abbc607268c65443bb5064dbf44c065ef43c1",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -2378,7 +2378,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -2412,7 +2412,7 @@
         ]
       },
       "result": {
-        "input_digest": "55fcf4f0e243954e9c1dc767bf9168e077c741a61e3ab16e32491fede4f5da2f",
+        "input_digest": "d67b03d22ed9250f8d0c0efea01c3f330f840e107da6c6edc8020342ef3b125e",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -2579,7 +2579,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -2610,7 +2610,7 @@
         ]
       },
       "result": {
-        "input_digest": "38b5e7a3b1b83edbaf27d23496f9455576f76493df6f829e64f894bbd6fa86b7",
+        "input_digest": "3bdab09429c64b03a051ccf1ad3bbdf31b2bb1352c71f70ae46e91bee589263d",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -2775,7 +2775,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -2796,7 +2796,7 @@
         ]
       },
       "result": {
-        "input_digest": "d2918fe8b168510355a70836f986d02f70d820cd518e21983cf8559858c76135",
+        "input_digest": "4c5cf65e9a71a145d686c25d609d8da4fc07a198c223d89ea71a8074a4acd823",
         "on_date": "2023-03-01",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -2923,7 +2923,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "cad556db5aa0eeedec111b65307679cf6236d9f419615eea6d9b1d61e1dfa8c5",
+        "invoice_id": "232f86ef4c9496b550ae34c5c37d60ed67a147c0b1f2e1df5a445f4b779d7fb7",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -2932,7 +2932,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -2963,7 +2963,7 @@
         ]
       },
       "result": {
-        "input_digest": "449619b7c42c59b1cf4e7995e39dba70e8951cecb762a265c80f367ce196c33a",
+        "input_digest": "1f873625fb0954c40d7f69655d09776af5b998b70803eac7e3ee6cbfd3fda7c7",
         "on_date": "2020-12-31",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -3129,7 +3129,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "68087b0a0f8d994e41ccd90ac45f29380bd58355bed12254a88299c5d6bb8986",
+        "invoice_id": "4339e4768c5eefcc793c8c963c764dbcb949b3cceb28f5bfdf52c8410a5a5728",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -3335,7 +3335,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": null,
         "invoice_number": "F-2026-021",
@@ -3366,7 +3366,7 @@
         ]
       },
       "result": {
-        "input_digest": "dc1e6169ed7d1e9f682656634a321535782f8148084af7a2a9dcc6a735e3bea4",
+        "input_digest": "4312fe5accc58f59f73964e833d7c33abb51f573a6a693d4fd67ec84a659442c",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -3540,7 +3540,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -3561,7 +3561,7 @@
         ]
       },
       "result": {
-        "input_digest": "4d8b2c01942335c94057a7ff64c73dd524c104043f2b05b1a7e1464da7eb3cfb",
+        "input_digest": "77f0e59b39a05b60838764e561009a37a6d97a6cf5dce803315cc0c5eedf5b85",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -3686,7 +3686,7 @@
         "missing_fields": [],
         "verdict": "would_accept",
         "refusal_code": null,
-        "invoice_id": "9fe680da3c9a24871c35544442d0b2c91f03c7d6f3857be382fbb121afd250cd",
+        "invoice_id": "c3ee5bfa4cc179257c2a8001e43a72b0e610d5e163c6262d705f2b1426a9f568",
         "rule_findings": [],
         "verdict_scope": "whole_draft"
       }
@@ -3697,7 +3697,7 @@
         "invoice_class": "ORDINARIA",
         "series": "F",
         "rectifies_invoice_number": null,
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "issued_at": "2026-03-02",
         "operation_date": null,
@@ -3719,7 +3719,7 @@
         }
       },
       "result": {
-        "input_digest": "809263c46f41517759fab7193993f5b40412bc4e3cc4f1296e9355f50c529559",
+        "input_digest": "e64763a5af9b5fc54f8d987ead1b71444aea058cc9be62f60d25577711f6fb4f",
         "on_date": "2026-03-02",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -3835,7 +3835,7 @@
         "invoice_class": "ORDINARIA",
         "series": "F",
         "rectifies_invoice_number": null,
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "issued_at": "2026-03-02",
         "operation_date": null,
@@ -3857,7 +3857,7 @@
         }
       },
       "result": {
-        "input_digest": "dac2c2eac17d5b6594854b71dcebf754f55aa9e3e927a83ed8437ae46dd3c314",
+        "input_digest": "e3bf50c967bf489cfbba5d50f793be8c214d2ad8fb09de0094b0a713e622c0a4",
         "on_date": "2026-03-02",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -4189,7 +4189,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000035",
+        "counterparty_tax_id": "B00000282",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -4220,7 +4220,7 @@
         ]
       },
       "result": {
-        "input_digest": "d5822f77b8a25754c8e315141b42e9a3786f601d8ecbda2b9e7827c66f730a1f",
+        "input_digest": "b8ac2847b7dc468b2068422c5f5c83b0719d8d10e50184e95a5fa0695c084372",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -4386,7 +4386,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -4421,7 +4421,7 @@
         }
       },
       "result": {
-        "input_digest": "d914e3dba0cc5983c20c5dc37ec70917ebcb4d3d27863afe0d48ba574c621540",
+        "input_digest": "2ad9ed591d6cdf99937b9fa5ee934ae9dd695be355cae290b2f4e6ea510986c5",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -4592,7 +4592,7 @@
       "request": {
         "kind": "issued",
         "counterparty_name": "Norte Digital S. Coop.",
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
@@ -4627,7 +4627,7 @@
         }
       },
       "result": {
-        "input_digest": "ae0e38ac335b66b94afbd54d03a37dbf810a77c0a739cd20270d82ebe60e2cb0",
+        "input_digest": "e1f7148b4d22c645821c4e15d31ad91ed3252c85a966fb43598d3d8a23d0c475",
         "on_date": "2026-10-23",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -4795,7 +4795,7 @@
         "invoice_class": "ORDINARIA",
         "series": "F",
         "rectifies_invoice_number": null,
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "issued_at": "2026-03-02",
         "operation_date": null,
@@ -4813,7 +4813,7 @@
         }
       },
       "result": {
-        "input_digest": "829513f8623a55c2d5a0fc1144eb216a6a655eccbbb3480f411b4881fa11e36b",
+        "input_digest": "571a6d0cb914d523599198f7399b9c28a1b5f38a99bdeaca7fdfd1c7e5202ca1",
         "on_date": "2026-03-02",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -4923,7 +4923,7 @@
         "invoice_class": "RECTIFICATIVA",
         "series": null,
         "rectifies_invoice_number": null,
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "issued_at": "2026-03-02",
         "operation_date": null,
@@ -4941,7 +4941,7 @@
         }
       },
       "result": {
-        "input_digest": "5b0f493772eeecd05e70180e4d0699f74efe42cdebd979cd0d0da975140bd7f8",
+        "input_digest": "7d14ec52dcc7ca28ef1738aaa6cc1312f7a7f231eb455cba4fa4f91e317395b0",
         "on_date": "2026-03-02",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -5068,7 +5068,7 @@
         "invoice_class": "ORDINARIA",
         "series": "F",
         "rectifies_invoice_number": null,
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "issued_at": "2026-03-02",
         "operation_date": null,
@@ -5086,7 +5086,7 @@
         }
       },
       "result": {
-        "input_digest": "96ebad46a7badac3f717552594e98662aa5727e4866b01cb6f6bf38c76251852",
+        "input_digest": "c1125e38b7bde27b5cbb4505d07062c2e163fef64feb282095970b0bd79701d1",
         "on_date": "2026-03-02",
         "on_date_source": "issued_at",
         "rate_slots": [
@@ -5205,7 +5205,7 @@
         "invoice_class": "ORDINARIA",
         "series": "F",
         "rectifies_invoice_number": null,
-        "counterparty_tax_id": "B00000034",
+        "counterparty_tax_id": "B00000281",
         "counterparty_country": "ES",
         "issued_at": "2026-03-02",
         "operation_date": "2026-03-01",
@@ -5223,7 +5223,7 @@
         }
       },
       "result": {
-        "input_digest": "c18393dbbf27a6e805eefc9da20c03c06abe88b28fa298d5b635a402b79fa839",
+        "input_digest": "d90f3490b132ee8c12a59f0278712cef41e74faccc621974f9d87e86d5f9e72e",
         "on_date": "2026-03-01",
         "on_date_source": "operation_date",
         "rate_slots": [

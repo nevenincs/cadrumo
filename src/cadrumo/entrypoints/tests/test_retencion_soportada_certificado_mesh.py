@@ -73,7 +73,7 @@ _TAXPAYER = "00000000T"
 # Synthetic CIFs whose control digit is hand-derived: with every digit before it zero but the last, the
 # odd-position doubling leaves 2 * d7 (digit-summed), so the control is (10 - 2 * d7) mod 10 -- 0, 8, 6.
 _PAYER_A = "B00000018"
-_PAYER_B = "B00000026"
+_PAYER_B = "B00000299"
 _PAYER_WRONG_CONTROL = "B00000001"
 _EJERCICIO = 2025
 _BINDING = "renta-retencion-soportada-trabajo"

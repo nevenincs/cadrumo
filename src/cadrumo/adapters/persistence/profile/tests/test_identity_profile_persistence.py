@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 _BUCKET_ID = "5a5a5a5a-5a5a-4a5a-8a5a-5a5a5a5a5a5a"
 _PROFILE_LABEL = "divergence-operator"
 _TAX_ID = "12345678Z"
-_OTHER_TAX_ID = "00000001R"
+_OTHER_TAX_ID = "00000024R"
 _TAX_ID_PATH = "identity.tax_id"
 _DNI_NIE_PATH = "auth.dni_nie"
 

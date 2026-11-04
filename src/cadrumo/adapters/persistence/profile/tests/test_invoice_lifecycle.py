@@ -55,7 +55,7 @@ def _authority_operation() -> Iterator[None]:
 
 
 _BUCKET_ID = "20202020-2020-4202-8202-202020202020"
-_COUNTERPARTY_CIF = "B00000034"
+_COUNTERPARTY_CIF = "B00000281"
 
 
 def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
@@ -193,7 +193,7 @@ def _linked_invoice(bucket_id: str):
     kind = InvoiceKind.RECEIVED
     number = "UPD-2026-001"
     issued = _date(2026, 6, 1)
-    tax_id = "B00000034"
+    tax_id = "B00000281"
     return Invoice(
         invoice_id=derive_invoice_id(
             kind=kind,

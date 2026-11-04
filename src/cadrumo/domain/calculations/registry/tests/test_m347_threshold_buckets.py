@@ -214,11 +214,11 @@ def test_the_floor_must_be_exceeded_not_reached() -> None:
     """A bucket landing exactly on the floor is not declared; one cent above it is."""
     floor = _general_floor()
     declarable = m347_declarable_party_buckets(
-        {("B00000034", "B"): floor, ("B12345674", "B"): floor + Decimal("0.01")},
+        {("B00000281", "B"): floor, ("B12345674", "B"): floor + Decimal("0.01")},
         effective_date=_FILING_2025,
     )
 
-    assert not declarable.admits("B00000034", "B")
+    assert not declarable.admits("B00000281", "B")
     assert declarable.admits("B12345674", "B")
 
 

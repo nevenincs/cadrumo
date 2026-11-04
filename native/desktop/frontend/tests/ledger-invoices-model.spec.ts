@@ -127,7 +127,7 @@ function filled(
     number: "F-2026-021",
     issuedAt: "2026-10-23",
     counterpartyName: "Norte Digital S. Coop.",
-    taxId: "B00000034",
+    taxId: "B00000281",
     country: "es",
     currency: "eur",
     lines: [
@@ -317,7 +317,7 @@ test("an add carries the answer's figures, and only with an answer to this very 
   expect(check.request).toEqual({
     kind: "issued",
     counterparty_name: "Norte Digital S. Coop.",
-    counterparty_tax_id: "B00000034",
+    counterparty_tax_id: "B00000281",
     counterparty_country: "ES",
     series: "F",
     invoice_number: "F-2026-021",
@@ -504,7 +504,7 @@ test("a category that mandates the tax id, a bad checksum and the lease rules co
   expect(
     code(
       "tax_id_bad_checksum",
-      filled({ taxId: "B00000035" }),
+      filled({ taxId: "B00000282" }),
       "counterparty_tax_id",
     ),
   ).toBe("counterparty_tax_id_invalid");
@@ -842,7 +842,7 @@ test("a stored date, series and rectified number take the ledger's verdict", () 
 
 test("a correction is asked about with the stored invoice it restates, and its answer says what is left to pay", () => {
   const stored = invoice({
-    counterparty_tax_id: "B00000034",
+    counterparty_tax_id: "B00000281",
     base_total: { decimal: "1000" },
   });
   expect(
@@ -869,7 +869,7 @@ test("a correction is asked about with the stored invoice it restates, and its a
 
 test("a changed retención waits for the ledger's answer and takes its verdict", () => {
   const stored = invoice({
-    counterparty_tax_id: "B00000034",
+    counterparty_tax_id: "B00000281",
     base_total: { decimal: "1000" },
     retention_rate: { decimal: "0.15" },
     retention_amount: { decimal: "150" },

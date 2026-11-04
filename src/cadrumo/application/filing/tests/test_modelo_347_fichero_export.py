@@ -157,7 +157,7 @@ def _profile(
 def _ordinary_invoices() -> tuple[Invoice, ...]:
     return (
         _domestic("V-1", InvoiceKind.ISSUED, "B12345674", "CLIENTE NACIONAL SL", "8000.00"),
-        _domestic("C-1", InvoiceKind.RECEIVED, "B00000034", "PROVEEDOR NACIONAL SA", "5000.00"),
+        _domestic("C-1", InvoiceKind.RECEIVED, "A00000315", "PROVEEDOR NACIONAL SA", "5000.00"),
         _domestic("V-2", InvoiceKind.ISSUED, "C3333333G", "CLIENTE PEQUENO SL", "1000.00"),
     )
 

@@ -32,7 +32,7 @@ from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "20202020-2020-4202-8202-202020202020"
-_COUNTERPARTY_CIF = "B00000034"
+_COUNTERPARTY_CIF = "B00000281"
 
 
 class _FailOnUseTransactionCatalogueReader:

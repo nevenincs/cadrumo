@@ -72,7 +72,7 @@ guarantee: no official reserved NIF/NIE/CIF range exists.
 | kind | pattern |
 | --- | --- |
 | `nif` | `12345678Z` (the single primary taxpayer identity), otherwise an eight-digit zero counter `00000000T`, `00000001R`, ... with the NIF control letter |
-| `nie` | `X0000000T`, `Y0000000Z`, `Z0000000M` (counter zero per prefix) |
+| `nie` | `Y0000000Z`, `Z0000000M` (counter zero) and `X0000001R` (counter one, because `X0000000T` is the registry's development mock developer identity) |
 | `cif` | letter + seven-digit counter from `0000001` + control: digit for A, B, E, H; letter for P, Q, R, S, N, W; C, D, F, G, J, U, V take either and this catalogue uses the digit (`B00000018`, `H00000018`, `Q0000001H`) |
 | `vat_eu` | member-state prefix + zeros + counter digit, shaped to that state's structure (`DE000000001`, `FR00000000001`, `IE0000001A`); never validated against VIES |
 

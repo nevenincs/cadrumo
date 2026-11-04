@@ -426,5 +426,5 @@ def test_an_absent_country_does_not_verify_a_foreign_identifier_as_spanish(opera
     # Positive controls: an absent country must not break the two cases that
     # can answer for themselves, or the assertion above would hold for a helper
     # that simply verifies nothing.
-    assert canonical_identity_token("B00000034", country_code=None, operation=operation) == "B00000034"
+    assert canonical_identity_token("B00000281", country_code=None, operation=operation) == "B00000281"
     assert canonical_identity_token("DE811907980", country_code=None, operation=operation) == "DE811907980"

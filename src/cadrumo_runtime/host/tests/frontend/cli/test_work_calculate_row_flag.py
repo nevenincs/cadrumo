@@ -385,7 +385,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--row",
                 "miembro nif=00000019L porcentaje=60 importe=10000 clave=D",
                 "--row",
-                "miembro nif=00000001R porcentaje=40 importe=5000 clave=D",
+                "miembro nif=00000024R porcentaje=40 importe=5000 clave=D",
             ],
         )
         assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"

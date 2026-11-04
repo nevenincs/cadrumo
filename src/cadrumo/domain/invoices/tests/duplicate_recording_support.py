@@ -3,41 +3,32 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
-from typing import cast
+from decimal import ROUND_HALF_UP, Decimal
 
 from ...iva.schema import InvoiceKind
 from ..duplicates import likely_duplicate_invoice
 from ..models import Invoice
+from .payment_matching_support import build_invoice
 
-
-@dataclass(frozen=True)
-class StoredInvoiceFacts:
-    """The facts the rule reads, so its cases need no full invoice around them."""
-
-    invoice_id: str
-    kind: InvoiceKind
-    invoice_number: str
-    counterparty_tax_id: str | None
-    issued_at: date
-    grand_total: Decimal
+_CENT = Decimal("0.01")
+_GENERAL_RATE_DIVISOR = Decimal("1.21")
 
 
 def stored_invoice(entry: Mapping[str, str]) -> Invoice:
-    """The stored invoice ``entry`` states, as far as the rule reads one."""
-    return cast(
-        Invoice,
-        StoredInvoiceFacts(
-            invoice_id=entry["invoice_id"],
-            kind=InvoiceKind(entry["kind"]),
-            invoice_number=entry["invoice_number"],
-            counterparty_tax_id=entry["counterparty_tax_id"] or None,
-            issued_at=date.fromisoformat(entry["issued_at"]),
-            grand_total=Decimal(entry["grand_total"]),
-        ),
+    """The stored invoice ``entry`` states, with a general-rate cuota inside its stated total."""
+    grand_total = Decimal(entry["grand_total"])
+    base = (grand_total / _GENERAL_RATE_DIVISOR).quantize(_CENT, rounding=ROUND_HALF_UP)
+    invoice = build_invoice(
+        entry["invoice_number"],
+        kind=entry["kind"],
+        issued=entry["issued_at"],
+        tax_id=entry["counterparty_tax_id"] or None,
+        base=str(base),
     )
+    if invoice.grand_total != grand_total:
+        raise ValueError(f"{entry['invoice_id']}: {grand_total} is not a base plus 21 % cuota")
+    return invoice
 
 
 def recorded_duplicate_answer(
@@ -48,12 +39,18 @@ def recorded_duplicate_answer(
     number = question["invoice_number"]
     invoice_date = question["invoice_date"]
     grand_total = question["grand_total"]
+    labels: dict[str, str] = {}
+    stored: list[Invoice] = []
+    for entry in invoices:
+        invoice = stored_invoice(entry)
+        labels[invoice.invoice_id] = entry["invoice_id"]
+        stored.append(invoice)
     found = likely_duplicate_invoice(
-        (stored_invoice(stored) for stored in invoices),
+        stored,
         kind=InvoiceKind(kind),
         invoice_number=number,
         counterparty_tax_id=question["counterparty_tax_id"],
         invoice_date=None if invoice_date is None else date.fromisoformat(invoice_date),
         grand_total=None if grand_total is None else Decimal(grand_total),
     )
-    return {"invoice_id": found.invoice_id if found else None, "basis": found.basis if found else None}
+    return {"invoice_id": labels[found.invoice_id] if found else None, "basis": found.basis if found else None}

@@ -33,7 +33,7 @@ _NIF = "12345678Z"
 # computes, and a same-shaped reference that does not (an invoice number
 # ``F1234567B`` is exactly the CIF shape).
 _CIF = "B12345674"
-_CIF_OTHER = "B00000034"
+_CIF_OTHER = "B00000281"
 _CIF_LOOKALIKE = "F1234567B"
 # Bank accounts across countries -- foreign accounts are declarable, so the
 # arm is not ES-only. ``_IBAN_BAD_CHECKSUM`` carries the IBAN shape with

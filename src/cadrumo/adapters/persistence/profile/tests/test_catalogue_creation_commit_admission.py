@@ -126,7 +126,7 @@ def test_admission_starts_after_both_cas_reads_and_event_preparation_and_ends_af
             bucket_id=_PROFILE,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Synthetic supplier",
-            counterparty_tax_id="B00000034",
+            counterparty_tax_id="B00000281",
             counterparty_country="ES",
             invoice_number="PREPARED-1",
             issued_at=date(2026, 5, 1),

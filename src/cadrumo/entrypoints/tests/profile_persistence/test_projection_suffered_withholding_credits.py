@@ -71,7 +71,7 @@ def test_two_payer_records_sum_into_the_work_credit_and_total_pagos_a_cuenta(
         profile_facts=_NOT_A_RENTAL,
         income_categories=_ACTIVITY_AND_WORK,
         payer_records=(
-            PayerRecord("B00000026", RetencionSoportadaClase.TRABAJO, Decimal("1200.00")),
+            PayerRecord("B00000299", RetencionSoportadaClase.TRABAJO, Decimal("1200.00")),
             PayerRecord("B00000018", RetencionSoportadaClase.TRABAJO, Decimal("750.00")),
         ),
     )

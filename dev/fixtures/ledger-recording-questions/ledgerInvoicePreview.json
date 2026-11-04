@@ -5,7 +5,7 @@
   "two_lines": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -38,7 +38,7 @@
   "retention_15": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -77,7 +77,7 @@
   "retention_rate_alone": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -113,7 +113,7 @@
   "retention_above_base": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -152,7 +152,7 @@
   "retention_differs": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -191,7 +191,7 @@
   "printed_differs": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -227,7 +227,7 @@
   "printed_matches": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -263,7 +263,7 @@
   "recargo_above_iva": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -299,7 +299,7 @@
   "stated_iva_within": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -335,7 +335,7 @@
   "stated_iva_refused": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -371,7 +371,7 @@
   "stated_subtotal_within": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -407,7 +407,7 @@
   "stated_subtotal_refused": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -443,7 +443,7 @@
   "rate_not_in_force": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -476,7 +476,7 @@
   "rate_in_force_2023": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -499,7 +499,7 @@
   "before_registry": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -565,7 +565,7 @@
   "rectificativa_incomplete": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": null,
     "invoice_number": "F-2026-021",
@@ -598,7 +598,7 @@
   "story_brand_design": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -623,7 +623,7 @@
     "invoice_class": "ORDINARIA",
     "series": "F",
     "rectifies_invoice_number": null,
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "issued_at": "2026-03-02",
     "operation_date": null,
@@ -649,7 +649,7 @@
     "invoice_class": "ORDINARIA",
     "series": "F",
     "rectifies_invoice_number": null,
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "issued_at": "2026-03-02",
     "operation_date": null,
@@ -707,7 +707,7 @@
   "tax_id_bad_checksum": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000035",
+    "counterparty_tax_id": "B00000282",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -740,7 +740,7 @@
   "lease_reference_too_long": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -777,7 +777,7 @@
   "lease_reference_abroad": {
     "kind": "issued",
     "counterparty_name": "Norte Digital S. Coop.",
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "series": "F",
     "invoice_number": "F-2026-021",
@@ -816,7 +816,7 @@
     "invoice_class": "ORDINARIA",
     "series": "F",
     "rectifies_invoice_number": null,
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "issued_at": "2026-03-02",
     "operation_date": null,
@@ -838,7 +838,7 @@
     "invoice_class": "RECTIFICATIVA",
     "series": null,
     "rectifies_invoice_number": null,
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "issued_at": "2026-03-02",
     "operation_date": null,
@@ -860,7 +860,7 @@
     "invoice_class": "ORDINARIA",
     "series": "F",
     "rectifies_invoice_number": null,
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "issued_at": "2026-03-02",
     "operation_date": null,
@@ -882,7 +882,7 @@
     "invoice_class": "ORDINARIA",
     "series": "F",
     "rectifies_invoice_number": null,
-    "counterparty_tax_id": "B00000034",
+    "counterparty_tax_id": "B00000281",
     "counterparty_country": "ES",
     "issued_at": "2026-03-02",
     "operation_date": "2026-03-01",

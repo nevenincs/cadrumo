@@ -212,8 +212,8 @@ def test_a_document_naming_the_filer_as_both_parties_settles_nothing(*, operatio
 
 def test_a_document_naming_neither_party_as_the_filer_settles_nothing(*, operation: PinnedAuthorityOperation) -> None:
     """The negative control. A derivation that answered here would answer anything."""
-    page = _ISSUED_PAGE.replace(f"NIF {_FILER}", "NIF B00000034")
-    draft = _grounded(page=page, supplier="B00000034", customer=_OTHER, operation=operation)
+    page = _ISSUED_PAGE.replace(f"NIF {_FILER}", "NIF B00000281")
+    draft = _grounded(page=page, supplier="B00000281", customer=_OTHER, operation=operation)
 
     assert draft.suggested_kind is None
 

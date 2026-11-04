@@ -1420,7 +1420,7 @@ const withholdingForm = (target: Page) =>
   target.locator(".ledger-withholding-form");
 
 /** A made-up payer tax ID, which no real taxpayer holds. */
-const PAYER_TAX_ID = "B00000034";
+const PAYER_TAX_ID = "B00000281";
 
 test("the withholding register lists a payer's certificate under its class and reads an empty year as empty", async ({
   page: target,

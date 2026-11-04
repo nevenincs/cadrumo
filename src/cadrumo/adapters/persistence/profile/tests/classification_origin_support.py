@@ -169,7 +169,7 @@ def synthetic_invoice(number: str) -> Invoice:
             "invoice_number": number,
             "issued_at": NOW_DATE,
             "counterparty_name": "Synthetic Supplier",
-            "counterparty_tax_id": "B00000034",
+            "counterparty_tax_id": "B00000281",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),

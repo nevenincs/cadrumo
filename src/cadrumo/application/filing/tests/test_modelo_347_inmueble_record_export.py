@@ -86,7 +86,7 @@ def _resolved_inputs(
     revision = operation.revision_with_export_layouts("347", edition.revision)
     observations = (
         _observation("inv-cliente", "B12345674", "CLIENTE NACIONAL SL", edition.year, "B"),
-        _observation("inv-proveedor", "B00000034", "PROVEEDOR NACIONAL SA", edition.year, "A"),
+        _observation("inv-proveedor", "A00000315", "PROVEEDOR NACIONAL SA", edition.year, "A"),
         *leases,
     )
     effective_date = date(edition.year, 12, 31)
