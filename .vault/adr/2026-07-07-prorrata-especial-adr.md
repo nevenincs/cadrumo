@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#prorrata-especial'
 date: '2026-07-07'
-modified: '2026-11-01'
-body_hash: 'sha256:e844413b271f43549981bde9fc2322c59d0aae9f29fb8899619678225b24e0cf'
+modified: '2026-11-04'
+body_hash: 'sha256:d0789a951ed17c5a4740e98e73586742747189f801c5ac44ca4df31af9005d42'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -123,9 +123,9 @@ in two ways this record now corrects. The provision has TWO redactions: the
 original, in force 1 January 1993, requiring the general total to exceed the
 especial total "en un 20 por 100" with no inclusive wording, and the current one
 introduced by Ley 28/2014, in force 1 January 2015, requiring it to exceed "en un
-10 por ciento o mas". The M303 revision serving this substrate opens at filing
-year 2009 with no minimum-supported-year floor above it, so the served window
-straddles the cutover. The shipped predicate was a hybrid — the new figure with
+10 por ciento o mas". The M303 revision serving this substrate opens at the modelo's
+declared inception, before the cutover, so the served window
+straddles it. The shipped predicate was a hybrid — the new figure with
 the old exclusive comparison — and therefore wrong for every year in the window.
 
 - **A year-resolved rule (CHOSEN).** The predicate takes the filing year and
@@ -134,7 +134,7 @@ the old exclusive comparison — and therefore wrong for every year in the windo
   so the operator prose and the behaviour cannot disagree and the notice context
   names which redaction produced the obligation.
 - Correcting only the comparison operator (REJECTED). It satisfies the literal
-  defect but leaves the predicate wrong by a whole factor for 2009 through 2014,
+  defect but leaves the predicate wrong by a whole factor for every year before the cutover,
   while making its own claim to implement the provision true for only part of its
   range.
 - Refusing for pre-2015 years (REJECTED). It converts a wrong answer into a

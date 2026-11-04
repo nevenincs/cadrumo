@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#autonomic-deduccion-framework'
 date: '2026-07-04'
-modified: '2026-08-15'
-body_hash: 'sha256:8d24bdf3dc5e56bf9226972d7993f3015ce337ad82ba68f5f656b334fbc37237'
+modified: '2026-11-04'
+body_hash: 'sha256:d9ca8b733c0a9e29f8c1e8f4beab1d0228189403b50709e2de2d621259aeec3b'
 related:
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]"
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-research]]"
@@ -53,7 +53,7 @@ Re-running the Madrid slice's design once per comunidad -- a bespoke Python meth
 - Grounding cost does not shrink with the framework: each of the ~100+ candidate enrollments still needs its own per-CCAA legal citation (comunidad ley/decreto establishing the amount), its own bundled-manual cross-check (`legal-grounding-verifies-bundled-authoritative-corpus`), and its own `reviewed_by` provenance chain before shipping as filing-grade. The framework bounds mechanism cost, not grounding cost; a plan built on this ADR must budget per-enrollment legal research as its own line item, not assume it is amortized away.
 - The unidad_familiar_income_aggregate axis inherits the Madrid slice's open F9 finding: whether the app persists a spouse's base imponible anywhere retrievable. Every enrollment declaring this axis is fail-closed (advisory-only) until that data-availability question is resolved; this ADR does not resolve F9, it generalizes the fail-closed default so a future resolution of F9 benefits every enrollment simultaneously rather than requiring a re-fix per CCAA.
 - Not every one of the 25+ nacimiento/adopcion-shaped casillas shares Madrid's exact predicate (double income-limit, 3-year window, split-in-two prorrateo). Enrolling a new CCAA against this framework requires per-casilla verification of its actual regulatory shape against its own comunidad's law and the bundled manual -- the framework's axis vocabulary must stay small and composable (Considerations) rather than assuming uniformity; forcing a mismatched casilla onto the wrong axis is a correctness risk, not a mechanical one.
-- The registry formula/parameter per-enrollment additions are per-filing-year (`revision-resolution-is-law-determined`); a comunidad enrollment authored against the 2025 revision does not automatically apply to 2024/2026 -- each year's revision needs its own parameter values (and, where the law changed, its own eligibility predicate), consistent with how the Madrid 600/721,70-euro split is already modelled.
+- The registry formula/parameter per-enrollment additions are per-filing-year (`revision-resolution-is-law-determined`); a comunidad enrollment authored against one revision does not automatically apply to other editions -- each year's revision needs its own parameter values (and, where the law changed, its own eligibility predicate), consistent with how the Madrid 600/721,70-euro split is already modelled.
 - Parent stability: this ADR depends on the Madrid slice's runtime surfaces (`_profile_binding.py`, `_autonomic_deduccion_advisory.py`, `_semantic_role_resolution.py`) remaining the enrolled mesh entry points -- all already merged and test-covered at HEAD (`aa51249a9a`, `8ea7ef3a78`). No frontier dependency; this is a generalization of shipped, tested code.
 - CCAA scope is bounded to the 15 ordinary common-regime comunidades already in the CCAA enum; the foral regimes (Pais Vasco, Navarra) and the autonomous cities (Ceuta, Melilla) are explicitly out of scope for this framework, consistent with `2026-04-28-ccaa-in-profile-adr`'s existing exclusion (they raise a ForalRegimeError / are not modelled by this profile axis at all).
 

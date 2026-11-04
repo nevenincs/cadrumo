@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#fichero-boe-golden-sha-contract-shape'
 date: '2026-06-03'
-modified: '2026-10-03'
-body_hash: 'sha256:64db33f266ca02cf6541ec21985879e0d96e7cd214af86d8c67cfd242d7f0dc1'
+modified: '2026-11-04'
+body_hash: 'sha256:d55d60b0a33d1664b5813db7d4d28f9a6097694923e833ea5e6adce1ae2d784c'
 related:
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"
@@ -140,8 +140,8 @@ better contract. Rejected because:
    gate that catches "structurally valid but unintended" drift.
 
 2. **The "DR303 conformance only" approach drifts when AEAT changes
-   the spec.** A conformance parser pinned to the 2024 revision
-   passes against a 2026 revision that adds a new optional field
+   the spec.** A conformance parser pinned to one design revision
+   passes against a later revision that adds a new optional field
    — the bytes-with-new-field conform to the new spec, the parser
    updates to match, and no gate ever flagged the spec change.
    Golden SHA forces the developer to consciously re-ground at

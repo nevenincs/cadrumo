@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-multiyear-renta-income'
 date: '2026-06-02'
-modified: '2026-10-03'
-body_hash: 'sha256:4cbfb251e49ad6f2ada7281bb7ca4a00abdf942b632e775279b8101993453859'
+modified: '2026-11-04'
+body_hash: 'sha256:5fedecd661010e8fbee0161ca58ef72dd089a03fad766b9f3afb1399077178b1'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-income-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
@@ -142,7 +142,7 @@ profile flag, never a hard refusal.
 
 **Modelo 100 — base-liquidable-general-negativa carryforward (as delivered).** The casilla
 identifiers in the original draft of this paragraph (`0462→0393`, `0465→0396`, `1390→1391`)
-were stale against the live 2025 Modelo 100 revision and never landed; the delivered
+were stale against the live Modelo 100 revision and never landed; the delivered
 enrollment grounds against the real Anexo-C casillas. The cross-renta hook is a single
 `previous_filing` binding on the base-liquidable-**general**-negativa carryforward: the
 *opening* pending balance for the immediately-prior origin ejercicio — casilla **1388**
@@ -150,9 +150,8 @@ enrollment grounds against the real Anexo-C casillas. The cross-renta hook is a 
 of the prior filing's *generated* saldo — casilla **1391**
 (`irpf_anexo_c_base_liq_neg_generado`): selector `{ source_modelo = "100",
 filing_year_delta = -1, period = "0A", source_output = "1391" }`. The carry is
-origin-year-matched in both the 2024 and 2025 revisions (each revision's 1388 is the
-immediately-prior origin year — 2024-rev 1388 = ejercicio 2023, 2025-rev 1388 = ejercicio
-2024), never a same-number copy.
+origin-year-matched in every authored revision (each revision's 1388 is the
+immediately-prior origin year of that revision's own ejercicio), never a same-number copy.
 
 **Grounding correction (art.48, not art.49).** The general-base negativa carry is established
 by Ley 35/2006 **art. 48** ("Integración y compensación de rentas en la base imponible
@@ -192,15 +191,15 @@ instalment key.
 both layers — domain (`test_modelo_130_registry.py` family) and application
 (`test_modelo_130_carry_forward_continuity.py`) — driving the real registry engine across two
 distinct filing years so the gate's recorder observes >=2 distinct renta years. M200 seeds a
-2023 BIN loss into `00671`, calculates 2024 profit and asserts the bound opening stock equals
+prior-year BIN loss into `00671`, calculates the following year's profit and asserts the bound opening stock equals
 the prior pending balance. Assert the separate computed maximum, and prove that a partial
 manual `DP200014:00547` remains the elected amount while the computed base consumes it.
 For stock verification, independently cover absent, zero, negative, insufficient and
 sufficient stock, including equality, and retain the unchanged positive/zero public-profile
 regression against an authorized pinned publication. Do not require the election to equal
-its maximum or describe the now-computed `DP200014:00552` as an elective input. M100 asserts the 2025 carryforward casilla equals the
-2024 generated saldo and that integración reduces the 2025 savings base (wiring/provenance
-oracle only). M202 seeds an M200/2023 cuota, asserts the M202/2024 1/P `01` equals that cuota
+its maximum or describe the now-computed `DP200014:00552` as an elective input. M100 asserts the carryforward casilla equals the
+prior year's generated saldo and that integración reduces the savings base (wiring/provenance
+oracle only). M202 seeds an M200 cuota of the prior year, asserts the following year's M202 1/P `01` equals that cuota
 with the `-2` offset (and a 2/P/3/P case with `-1`), and that `03` recomputes as
 `percent(01, 18) − 02` and the same-year 202→200 roll-up still reconciles.
 
@@ -212,7 +211,7 @@ semantics without new resolver or CLI infrastructure — consistent with the fou
 gate ADR's "registry-authoring, not new infra" posture. The dated stock amendment adds one
 closed verification operator within existing ownership; it does not add a second runtime. Grounding each binding in a reviewed legal_ref
 (`ley-27-2014:art-26`, `ley-35-2006:art-49`, `ley-27-2014:art-40`) keeps the calculation
-non-tautological: the M200 cap is checkable against the AEAT 2024 manual, and the M100 and
+non-tautological: the M200 cap is checkable against the AEAT manual, and the M100 and
 M202 hooks assert wiring and reconciliation where no per-casilla numeric oracle exists, per
 the no-tautological-calculation-tests rule. Recording the two grounding gaps as constraints
 rather than silently shipping past them follows the no-silent-under-declaration discipline.

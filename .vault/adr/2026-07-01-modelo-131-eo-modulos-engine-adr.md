@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-131-eo-modulos-engine'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:cdc92b246c156a61c96aabcae17f0293eca194e2226366dd5f240f7cd799192c'
+modified: '2026-11-04'
+body_hash: 'sha256:be93dac947adf0c5cf911f6b6d468ff8340b0642c37b74c770a3e7a5ca7a20dc'
 related:
   - '[[2026-07-10-modelo-131-eo-modulos-engine-research]]'
 ---
@@ -170,7 +170,7 @@ coefficient registry, the engine keeps manual rendimiento entry behind a visible
 "activity not yet table-driven" advisory — never a silent zero.
 
 **Recommended first slice.** The highest-prevalence estimación-objetiva IAE activities
-for the most recent completed year (2024 or 2025), grounded and tested against the AEAT
+for the most recent completed year with a published Orden de módulos, grounded and tested against the AEAT
 manual worked examples: peluquería (972.1), café-bar / restaurante (671/672), comercio
 al por menor (several 64x/65x epígrafes), transporte de mercancías por carretera (722),
 and transporte por autotaxi (721.2). These cover the persona set the audit names

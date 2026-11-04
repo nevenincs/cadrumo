@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-100-minimo-descendientes-engine'
 date: '2026-07-01'
-modified: '2026-10-03'
-body_hash: 'sha256:8cec007040d33e7309a0a32433a4525f5b782e64a63661300a899319784f10bf'
+modified: '2026-11-04'
+body_hash: 'sha256:f49d66e7a8f09451dad90999f392fd9530d3305078de1c888fb3aa67c49d29aa'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
@@ -16,8 +16,8 @@ related:
 ## Problem Statement
 
 Modelo 100 casillas `0513` (minimo por descendientes, parte estatal) and `0514`
-(parte autonomica) carry no `input_kind` and no `binding` in every revision 2020
-through 2025, so the loader defaults them to a bare MANUAL input: the operator
+(parte autonomica) carry no `input_kind` and no `binding` in every authored
+revision, so the loader defaults them to a bare MANUAL input: the operator
 types the euro figure by hand. The minimo personal y familiar total `0519` is a
 computed `sum(0511, 0513, 0515, 0517)`, but only `0511` (minimo del
 contribuyente) is engine-derived; `0513`, `0515`, and `0517` are hand-entered.
@@ -119,7 +119,7 @@ inventing a new one.
   params, the dangling aggregate binding, and the stranded custodia axis. Pro:
   actually computes the minimo, closes #515, removes the hand-entry mis-tax. Con:
   changes tax for every filer with descendientes; depends on complete
-  descendientes profile data; multi-revision (2020-2025); needs the Art. 58.4
+  descendientes profile data; multi-revision; needs the Art. 58.4
   grounding resolved first.
 
 - **Option B, bounded advisory interim (does NOT close #515).** Surface the
@@ -164,7 +164,7 @@ computation is grounded and its fallback verified.
   `family.descendientes_minimos_aggregate_YYYY`. Option A implements that property
   (or replaces the binding with a formula over the params); it is not left
   dangling.
-- **Multi-revision surface.** 2020 through 2025 each carry their own param set and
+- **Multi-revision surface.** Each authored revision carries their own param set and
   their own `0513`/`0514`/`0519` casilla files (registry index differs from
   official number per year); the rebind is per-revision, not a single edit.
 - **No-legacy / no-shim.** The rebind deletes the manual-input assumption for
@@ -268,7 +268,7 @@ minimo advisory + fix dangling descendientes selector (#515)`):
   profile carries at least one Art. 58.1-eligible descendant flagged
   `custodia_compartida=true`. A companion advisory fires when eligible
   descendientes are present but casilla 0513 (parte estatal, located by its
-  stable `semantic_role` across every revision year) resolved to zero.
+  stable `semantic_role` across every revision) resolved to zero.
 - The dangling `renta-2024-profile-descendientes-minimos-aggregate` binding
   (selector `family.descendientes_minimos_aggregate_2024`, never implemented,
   never consumed) was deleted per `no-dormant-source-resolvers`. The sibling
@@ -315,7 +315,7 @@ proceed without further grounding blockers on this axis).
 
 ## Implementation status (2026-07-02, Option A landed)
 
-**Option A landed** across all six revisions (2020-2025). Ruling (b) above is
+**Option A landed** across every authored revision. Ruling (b) above is
 confirmed: the bundled AEAT Renta manuals contain no within-year temporal
 prorrateo for descendientes, so `RentaFamilyProfile.minimo_descendientes_estatal`
 applies the full annual birth-order amount regardless of the descendant's entry
@@ -339,7 +339,7 @@ date within the ejercicio.
   no prior manual `0513`/`0514` data to protect (`no-legacy-compatibility`).
 - Casillas 0513/0514 are `input_kind = "computed"` with a dedicated formula
   (`renta-{year}-minimo-descendientes-estatal` /
-  `-autonomico`) in every revision 2020-2025, projecting the binding's
+  `-autonomico`) in every authored revision, projecting the binding's
   aggregate via a trivial `{ op = "copy", args = [{ binding = ... }] }`
   expression.
 - The interim Option B advisory module

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m303-carry-reconciliation'
 date: '2026-06-21'
-modified: '2026-10-04'
-body_hash: 'sha256:97d7c9bddfb9c807933d1b936a4f0a05a4342d3102e2954945eaf5e4b98b6d4d'
+modified: '2026-11-04'
+body_hash: 'sha256:a293bed524fd0846b619f04b590225e259e5cacab14d812560ad569d0c21fb62'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
@@ -214,15 +214,15 @@ present, not merely non-zero. X disables only the Nota-3-added requirement; it n
 suppresses DID independently required by current U or a refund disposition.
 
 The registry layout must split. The current 2023-y-siguientes page-3 snapshot is bounded
-through 2025 and retains the 2025 authority (marker offset 406, casilla 111 offset 424). A
-2026-y-siguientes snapshot is grounded separately to the 2026 design (marker 440, casilla 111
+to the editions before the page-3 redesign and retains that design's authority (marker offset 406, casilla 111 offset 424). A
+2026-y-siguientes snapshot is grounded separately to the redesigned page (marker 440, casilla 111
 441, including all adjacent moved page-3 positions). Both revisions use the truthful header
 semantic `prior_domiciliation_action`; `tipo_rectificacion` is removed.
 
 The typed election is threaded through export, quickfile, file action/API, CLI, verification
 wrappers, receipt/event, and filing observation with safe semantic and baseline provenance,
-never IBAN. The Nota-3-only DID uses the existing `RefundAccount`. The statutory 2025 and
-2026 forms describe casilla 111 as money credited by bank transfer to the taxpayer's indicated
+never IBAN. The Nota-3-only DID uses the existing `RefundAccount`. The statutory forms of both
+designs describe casilla 111 as money credited by bank transfer to the taxpayer's indicated
 account; it is a refund destination, not a debit mandate. Current U continues to use
 `ChargeAccount`. Missing `RefundAccount` refuses before output or event, and distinct
 charge/refund specimens must prove the correct source. Casilla 111 requires a negative

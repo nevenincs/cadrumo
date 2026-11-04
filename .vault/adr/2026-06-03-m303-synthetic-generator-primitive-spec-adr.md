@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-06-03'
-modified: '2026-10-25'
-body_hash: 'sha256:320bbf549b598c5ab2a81aab56c7cd79fcee650c5271d37654d206dbfe40109b'
+modified: '2026-11-04'
+body_hash: 'sha256:a513068334403004d6adc936799843d6ebb32ffdb8c1c21fbc6adb991ce6f886'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
@@ -366,7 +366,7 @@ repercutido_general: Decimal  # iva.repercutido.general
 repercutido_reducido: Decimal  # iva.repercutido.reducido
 repercutido_super_reducido: Decimal  # iva.repercutido.super-reducido
 autorepercutido_intra: Decimal  # iva.autorepercutido.intracomunitaria
-autoconsumo_promotor_base: Decimal  # iva.autoconsumo.promotor.base (2023+ only)
+autoconsumo_promotor_base: Decimal  # iva.autoconsumo.promotor.base (editions whose design declares it)
 soportado_interiores: Decimal  # iva.soportado.interiores
 ```
 
@@ -406,7 +406,7 @@ Per ADR §"Decision: single-rate filer pattern", the engine recomputed
 totals must equal the fixture's existing `c27` and `c29` for every
 fixture. Under the corrected encoding:
 
-- **devengada-total** = `repercutido.general + repercutido.reducido + repercutido.super-reducido + autorepercutido.intracomunitaria` (+ `autoconsumo.promotor.cuota` in 2023+). Setting `repercutido.general = c27` and the other repercutido + autorepercutido leaves to zero (and autoconsumo.promotor.base = 0, so its computed cuota = 0) yields engine c27 = fixture c27. ✓
+- **devengada-total** = `repercutido.general + repercutido.reducido + repercutido.super-reducido + autorepercutido.intracomunitaria` (+ `autoconsumo.promotor.cuota` in editions that declare it). Setting `repercutido.general = c27` and the other repercutido + autorepercutido leaves to zero (and autoconsumo.promotor.base = 0, so its computed cuota = 0) yields engine c27 = fixture c27. ✓
 - **deducible-total** = `soportado.interiores + autorepercutido.intracomunitaria`. Setting `soportado.interiores = c29` and `autorepercutido.intracomunitaria = 0` yields engine c45 derived as c29; existing fixtures already set fixture c45 = c29, so the chain holds. ✓
 
 The original ADR's c46/c64/c66/c69/c71 closure preservation is
@@ -420,7 +420,7 @@ implementable against the actual registry. Rather than land a
 half-fix that invents `.base`/`.cuota` casillas or routes through
 a `computed` leaf, this coder is stopping and surfacing the
 findings per the team-lead's escalation gate. The corrected encoding
-is straightforward (6 cuota-only fields for 2023+, 5 for legacy), and
+is straightforward (6 cuota-only fields on editions that declare the promotor autoconsumo, 5 for legacy), and
 the extraction-profile patch becomes correspondingly smaller; a fresh
 coder pickup with this Findings section + the corrected primitive
 list can land in one atomic commit per the original commit-shape

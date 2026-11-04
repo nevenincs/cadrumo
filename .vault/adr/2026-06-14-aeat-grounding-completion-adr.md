@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#aeat-grounding-completion'
 date: '2026-06-14'
-modified: '2026-07-17'
-body_hash: 'sha256:03837f90bf66efbcbc3bed7949afe7c3dc3ff60f6939770247c44a6085852489'
+modified: '2026-11-04'
+body_hash: 'sha256:f969b43e003dcd1d623f56d2b46d05632f1ad77eead5831e93b8e49b0c06458a'
 related:
   - '[[2026-06-14-aeat-grounding-completion-research]]'
   - "[[2026-06-14-legal-grounding-centralization-audit]]"
@@ -60,7 +60,7 @@ plus an advisory gate that surfaces a `Notice` when a declared volume exceeds a 
 24%(2025)/23%(2026)/22%(2027)/21%(2028) as a registry parameter distinct from the
 mis-named micro-empresa "erd" scalar, and land the deferred bracket-based casilla-00558
 rate echo so the displayed micro-empresa rate reflects the two-tranche scale for
-2025/2026 instead of the stale flat 23%. Each wave is its own grounded, tested landing.
+every year it applies instead of the stale flat 23%. Each wave is its own grounded, tested landing.
 
 Current-state note 2026-06-29: W01 and W02 have landed in the current tree. The
 objective-estimation advisory consumes structured profile volume fields and the

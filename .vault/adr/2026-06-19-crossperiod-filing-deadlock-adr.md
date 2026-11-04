@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-19'
-modified: '2026-10-03'
-body_hash: 'sha256:dec60769448fbd3fb4899b43ba0a82240e46b6c745bd8da13bb22ede3956315b'
+modified: '2026-11-04'
+body_hash: 'sha256:ad912a085428ab6a261dbd8ea192cf0bc2bb5ad381b5bc6f4a9f321748ddda54'
 related:
   - '[[2026-06-19-crossperiod-filing-deadlock-research]]'
 ---
@@ -48,7 +48,7 @@ The fix is two coordinated changes, one per gate, plus their tests. It keeps the
 
 ### Decision A — recognise a historical obligation and allow late local `work file`
 
-In the FILE workflow's deadline stage (`_stage_computing_deadlines`, the former source file), when an explicit `(target_modelo, target_period)` is present, resolve the obligation schedule for the target period's filing year rather than `today.year`. This is the precise correction of the `compute_obligation_schedule` year-derivation bug: a 2024 1T obligation is then found in the 2024 schedule, classified OVERDUE, and carries its registry-grounded `Recovery` payload.
+In the FILE workflow's deadline stage (`_stage_computing_deadlines`, the former source file), when an explicit `(target_modelo, target_period)` is present, resolve the obligation schedule for the target period's filing year rather than `today.year`. This is the precise correction of the `compute_obligation_schedule` year-derivation bug: an earlier-year 1T obligation is then found in its own year's schedule, classified OVERDUE, and carries its registry-grounded `Recovery` payload.
 
 With the historical obligation now visible, split the two abort reasons by their true meaning:
 
@@ -111,7 +111,7 @@ Bounded vs. broad: this is a bounded change — two functions and their clean-st
 
 Real-behaviour, real-adapter, no mocks / skips / xfail; values derived from the testimonials' worked arithmetic (engine-computed, not hand-recomputed from the registry formula under test).
 
-- **M130 1T to 4T full local chain (the flagship).** Extend the existing the former source file — which today bypasses the deadlock by calling `persist_filed_revision_observation` directly — with a sibling that drives the REAL `file_modelo_revision` (`work file`) path under a 2026 clock against 2024 periods. Assert: (1) `work file` for each overdue quarter SUCCEEDS and records the extemporaneo / recargo marker; (2) each subsequent quarter's `calculate` auto-carries casilla 05 (0, 900, 1900, 2900) with no `--binding`; (3) each dependent quarter VERIFIES with a non-blocking non-official-local-chain advisory and EXPORTS a `.boe`; (4) M100 0604 folds in the four engine-computed casilla-19 values (900+1000+1000+1000). All four quarters plus the annual produce `.boe` (5 of 5, versus 1 of 5 today).
+- **M130 1T to 4T full local chain (the flagship).** Extend the existing the former source file — which today bypasses the deadlock by calling `persist_filed_revision_observation` directly — with a sibling that drives the REAL `file_modelo_revision` (`work file`) path under a present-day clock against periods of an earlier year. Assert: (1) `work file` for each overdue quarter SUCCEEDS and records the extemporaneo / recargo marker; (2) each subsequent quarter's `calculate` auto-carries casilla 05 (0, 900, 1900, 2900) with no `--binding`; (3) each dependent quarter VERIFIES with a non-blocking non-official-local-chain advisory and EXPORTS a `.boe`; (4) M100 0604 folds in the four engine-computed casilla-19 values (900+1000+1000+1000). All four quarters plus the annual produce `.boe` (5 of 5, versus 1 of 5 today).
 - **M303 1T to 2T compensacion carry.** Extend the former source file with the real `work file` path: 1T (a compensar -420), then `work file`, then 2T `calculate` reads casilla 110 = 420, 2T resultado = 525 (not 945), 2T verifies with the advisory and exports. Apply the C1 jurisdiction_scope=100 and C2 prorrata-equal-volumes workarounds, or sequence after their fixes.
 - **Refusal still fires for a never-existing obligation.** Assert `work file` for a `(modelo, period)` with no obligation in the target-year schedule still aborts `NO_PENDING_OBLIGATION`.
 - **Gate-B boundary pins (safety).** Assert that a dependent period whose prior carries `OBSERVATION_REVISION_VALUE_DIVERGENCE`, `REGISTRY_REVISION_DIVERGENCE`, `OPERATOR_MANUAL_SOURCE`, `MISSING_OBSERVATION`, or `MISSING_CURRENT_FILING_RECORD` STILL BLOCKS (is not admitted as locally clean). Assert the official-evidence blockers remain BLOCKING on any path that asserts AEAT acceptance, and that `app_filing` is still absent from `_OFFICIAL_SOURCE_KINDS`.
@@ -126,7 +126,7 @@ Real-behaviour, real-adapter, no mocks / skips / xfail; values derived from the 
 
 A grounded re-review via `vaultspec-rag search ... --type code` surfaced an existing test surface that this ADR MUST reconcile, and that sharpens the safety argument:
 
-- **the former source file** already proves the *carry value* works (`test_local_file_then_next_period_calculate_carries_previous_filing_value`) — but only because its fixtures file under a present-day clock (`_T2`/`_T3`/`_T4`) against same-year (2026) periods, so the window is open and Gate A never fires. This is precisely why the engine arithmetic passes in tests while the real CLI deadlocks for a 2024 period at the 2026 clock. The new flagship e2e (a 2024-period chain under a 2026 clock through the REAL `file_modelo_revision`) is the missing coverage and should reuse these `_file_revision` / `_seed_130` helpers with a past-period setup.
+- **the former source file** already proves the *carry value* works (`test_local_file_then_next_period_calculate_carries_previous_filing_value`) — but only because its fixtures file under a present-day clock (`_T2`/`_T3`/`_T4`) against same-year periods, so the window is open and Gate A never fires. This is precisely why the engine arithmetic passes in tests while the real CLI deadlocks for an earlier-year period at the present clock. The new flagship e2e (an earlier-year period chain under a present-day clock through the REAL `file_modelo_revision`) is the missing coverage and should reuse these `_file_revision` / `_seed_130` helpers with a past-period setup.
 
 - **`test_locally_filed_upstream_does_not_satisfy_filing_clean_state` (line 215) deliberately encodes the behaviour Decision B changes.** It asserts (a) the 2T verdict carries `LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`, and (b) `file_modelo_revision` for 2T RAISES `ModeloCrossPeriodCleanStateError`, with the docstring "filing a dependent period requires real external evidence… the single decision that keeps the carry from laundering an unevidenced chain past the filing gate." Decision B refines exactly this. The four-quarter M130 chain REQUIRES each dependent quarter to `work file` successfully (each seeds the next quarter's carry observation), so the file-refused assertion in (b) cannot stand unchanged.
 

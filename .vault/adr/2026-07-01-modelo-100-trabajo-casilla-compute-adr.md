@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-100-trabajo-casilla-compute'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:5ff371de4036ba74a02d891d8712670d5a3e63f8572abe59f0a50b7982924815'
+modified: '2026-11-04'
+body_hash: 'sha256:a3709d74e4ff1ad420dfe498d4491ee136c4f4dffdd95983429635b967e14c11'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-research]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
@@ -20,7 +20,7 @@ leaves a box blank or over-enters a value is mis-taxed with zero operator signal
 (no-silent-under-declaration):
 
 - Casilla 0019, the art. 19.2.f LIRPF automatic EUR 2.000 "otros gastos" deduction, is a
-  bare MANUAL input in every revision 2021-2025. A blank 0019 OVER-taxes by omitting a
+  bare MANUAL input in every revision that carries it. A blank 0019 OVER-taxes by omitting a
   determinable EUR 2.000 deduction (issue #568).
 - The net-trabajo formula 0022 = sum(0018, -0019, -0020, -0021) has no max(0,...) clamp,
   and the art. 19.2.f letter-f cap (the sum of 0019/0020/0021 limited to the rendimiento
@@ -144,7 +144,7 @@ grounded on arts. 19.2.f / 52, never inline literals.
   the base case is min(2.000, rendimiento).)
 - Wrap the 0022 formula in max(0, ...): 0022 = max(0, 0018 - 0019 - 0020 - 0021), which
   enforces both the missing clamp and the art. 19.2.f letter-f joint cap in one expression,
-  grounded ley-35-2006:art-19. Applied across revisions 2021-2025.
+  grounded ley-35-2006:art-19. Applied across every revision that carries it.
 
 **Phase 2b (compute - the data-gated piece, Gap C).** Once the individual/employer
 contribution split is modelled (distinguishing individual aportaciones from the
@@ -231,9 +231,9 @@ máxima de reducción por aplicación de los incrementos previstos en los númer
 anteriores será de 8.500 euros anuales"). A purely-0499-backed filer was therefore silently
 granted up to EUR 8.500 of increment capacity when only EUR 4.250 is legally available — an
 over-reduction / under-tax. The formula was corrected to split the two sub-tiers
-(`min(0426+0427+0438, 8500)` plus `min(0499, 4250)`, jointly re-capped at `8500`) in both the
-2024 and 2025 revisions, and the `_art52_reduccion_advisory_finding` defense-in-depth advisory
-(2021-2023, where 0468 stays MANUAL) was extended to resolve casilla 0499 so it no longer
+(`min(0426+0427+0438, 8500)` plus `min(0499, 4250)`, jointly re-capped at `8500`) in every revision
+that computes it, and the `_art52_reduccion_advisory_finding` defense-in-depth advisory
+(the older editions, where 0468 stays MANUAL) was extended to resolve casilla 0499 so it no longer
 false-positives on a legitimate 0499-only reducción above EUR 1.500.
 
 Both fixes are grounded in the bundled `ley-35-2006` art. 52 corpus text (arts. 52.1.b, 52.1.1.º,

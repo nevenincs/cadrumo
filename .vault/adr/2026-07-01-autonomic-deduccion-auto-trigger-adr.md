@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:671814ddb07f5f7e99e16ca8ac7b983529febc00e82f00ffff81f0a99d1ddde2'
+modified: '2026-11-04'
+body_hash: 'sha256:71f0844e0822559c4140ba1418c32790c3b8156beed6c44e7d205e65f69858ff'
 related:
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-research]]"
   - "[[2026-06-19-m100-dependent-modelo-applicability-adr]]"
@@ -56,7 +56,7 @@ Three layers, all reusing canonical surfaces.
 
 2. **Python derived-fact injection (decision D2 shared primitives).** A new `_inject_derived_autonomic_deduccion_facts(fact_index, filing_year)` in `_profile_binding.py`, companion to the marriage and menores-3 injectors, backed by a `RentaFamilyProfile.madrid_nacimiento_adopcion_count(filing_year)` helper. It counts descendants whose entry year (`_entry_date().year`) satisfies `entry_year <= filing_year <= entry_year + 2` and who cohabit, and computes the unidad-familiar base aggregate where the data exists. These become synthetic Decimal facts (`renta_family.madrid_nacimiento_adopcion_eligible_count`, and the unidad-familiar base term) consumed through the Decimal channel. The reusable primitives — a per-descendant multi-year applicability-window helper and a unidad-familiar base-aggregation helper — are the framework that later CCAA/deducción enrollments reuse.
 
-3. **Registry formula + CCAA-scoped parameters (decision D3 bounded slice).** Casilla `1039` flips from manual to computed by gaining a formula (`target_casilla_id = "1039"`) that expresses the double income-limit gate over casillas `0435`+`0460` (contribuyente limit dispatched by declaration-type: 30.930 individual / 37.322,20 conjunta) and the unidad-familiar 61.860 limit, times the eligible count times the per-child parameter (721,70, a CCAA-scoped registry `parameter`; a 600 pre-2023 variant gated on entry year), divided by the prorrateo factor. Amount and limits are registry parameters grounded to `ley-35-2006:art-77` plus the Madrid DL 1/2010 provision defined in the legal catalogue with a resolving `corpus_ref`. Only casilla `1039`, filing year `2025`, is in the first slice; the international box `1040` (+50 %) and other CCAA/deducciones enroll later under the same framework.
+3. **Registry formula + CCAA-scoped parameters (decision D3 bounded slice).** Casilla `1039` flips from manual to computed by gaining a formula (`target_casilla_id = "1039"`) that expresses the double income-limit gate over casillas `0435`+`0460` (contribuyente limit dispatched by declaration-type: 30.930 individual / 37.322,20 conjunta) and the unidad-familiar 61.860 limit, times the eligible count times the per-child parameter (721,70, a CCAA-scoped registry `parameter`; a 600 pre-2023 variant gated on entry year), divided by the prorrateo factor. Amount and limits are registry parameters grounded to `ley-35-2006:art-77` plus the Madrid DL 1/2010 provision defined in the legal catalogue with a resolving `corpus_ref`. Only casilla `1039`, on the one authored edition, is in the first slice; the international box `1040` (+50 %) and other CCAA/deducciones enroll later under the same framework.
 
 4. **Surface (decision D4).** The computed value rides `engine_result.values` as a grounded `CasillaObservation` and is surfaced through the typed `Notice` advisory channel (`cli-notices-are-the-only-diagnostic-channel`); the casilla auto-populates only when every input is unambiguous, otherwise the Notice states eligibility and the amount and leaves the operator to confirm. The value is identical on the calculate and Sheets-pull paths because the injector runs on both (`one-aggregation-path-pull-equals-calculate`).
 

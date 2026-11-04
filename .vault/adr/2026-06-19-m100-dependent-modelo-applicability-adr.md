@@ -6,8 +6,8 @@ date: '2026-06-19'
 related:
   - "[[2026-06-19-m100-dependent-modelo-applicability-research]]"
 superseded_by: '2026-09-27-export-parity-renta-withholding-sources-adr'
-modified: '2026-10-03'
-body_hash: 'sha256:363236bd125eebff7697de8143b38f97bc3189ca66d20986b2aa04ad16b6b9ed'
+modified: '2026-11-04'
+body_hash: 'sha256:58ae9e4b413ece89425930842af2863c9c639f917e8a5c58d2c4687271ee0d3a'
 ---
 # `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `superseded`)
 
@@ -92,7 +92,7 @@ This is ADR-execution-scale (new input model + casilla re-sourcing + classificat
 The correct fix landed in commit `fd14bdf01`. Rather than the schedule heuristic (Option 1, reverted) or a value re-sourcing (Update 2's worst case), RAG grounding showed the operator value-override already works (`--casilla`/`--relation`, the `_lift_previous_filing` pattern), so the fix is the grounded payee/payer distinction the registry classifications were missing:
 
 - **Schema:** `taxpayer_files_source: bool = True` on `DependencyClassificationDefinition` — True for modelos the taxpayer is the obligor of (130/131 pagos fraccionados), False for retenciones the taxpayer SUFFERS but the PAYER files (111/115/123/193, LIRPF art. 99).
-- **Registry:** `taxpayer_files_source = false` on the M100 suffered classifications (111/115/123/193) across revisions 2020–2025.
+- **Registry:** `taxpayer_files_source = false` on the M100 suffered classifications (111/115/123/193) across every authored Modelo 100 revision.
 - **Clean-state gate:** `evaluate_cross_period_clean_state` reads the snapshot's OWN `dependency_classifications` (never the obligation schedule) to scope a not-filed-source dependency out as not-applicable (clean, `modelo_not_applicable_advisory`), surfaced by a non-blocking operator advisory (no-silent-under-declaration).
 
 Why this succeeds where Option 1 failed: the classification is per-modelo registry authority, so suppression is scoped to exactly the suffered set — self-filed 130/131 stay enforced, and the different-target enforcement contract (180/190/193/200/202) is untouched. Proven: enforcement suite 50 green (Option 1 regressed 5), retenciones-fold/e2e/carry/contract/registry 53 green, and `test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced` asserts the suffered set scopes out while 130/131 do not.

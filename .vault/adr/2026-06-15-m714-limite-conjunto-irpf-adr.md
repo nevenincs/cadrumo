@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m714-limite-conjunto-irpf'
 date: '2026-06-15'
-modified: '2026-07-17'
-body_hash: 'sha256:f494858e7a1ed2c1996977568892175ef343e9b7e95b16f084d02d8678f6954e'
+modified: '2026-11-04'
+body_hash: 'sha256:5de7c88dba79c75002d2f999c8a6e9713e3d39d84ec98ed6e40bdd59c19d9a79'
 related:
   - '[[2026-06-15-m714-limite-conjunto-irpf-research]]'
 ---
@@ -97,7 +97,7 @@ the exclusion is load-bearing, not optional.
 
 The original authoring-time relation-runtime blocker is obsolete for this gap: current
 registry schemas support same-year `cross_model_output` relations. The blocker is now legal
-source granularity. The bundled M100 2024/2025 registry exposes broad IRPF bases and cuotas,
+source granularity. The bundled M100 registry editions expose broad IRPF bases and cuotas,
 but not the art. 31 exclusion slices required by Ley 19/1991: the qualifying long-term
 patrimonial gains/losses in the savings base, the corresponding IRPF quota part, and the IP
 quota part for non-income-producing assets. Therefore the current safe state is:
