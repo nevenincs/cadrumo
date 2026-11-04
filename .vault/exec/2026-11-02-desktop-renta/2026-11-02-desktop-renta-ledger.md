@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0963c62aded107e12411fca8caec47fb5b33d668fb85384ed7658d0283f2d15'
+body_hash: 'sha256:6aa097da04ba34e22676f2488fa5ca6275bcb555989b52bfaf51b6d462b38fe1'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -1260,6 +1260,271 @@ related:
 - `S45` `verify:` `ruff check/format` -> `pass`
 - `S45` `verify:` `modelo-fixtures.mjs --check` -> `pass`
 - `S45` `verify:` `pytest test_modelo_100_art_50_3_compensation_verification` -> `fail`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/accept-130-1T-applied.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/amend-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/amendment-context-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/apply-130-1T-exported.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/calculate-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/export-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/export-165-unverified.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/file-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/metadata-130-receipt.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-instalment-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-stale.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-review-06set-from-130-1T-exported.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-again-stale.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-stale.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-stale.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebased-review-06clear-16set-18set-from-130-1T-rebase.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebased-review-16set-18set-from-130-1T-rebased.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-receipt-correction-refused.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-receipt-correction.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-renewed-review-06set-from-130-1T-expiring.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-review-06set-from-130-1T.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-review-06set-from-130-3T-prerequisite.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-ca.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-en.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-es.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-hu.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-review-42set-from-303-1T.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/reconcile-130.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-expiring.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-moving.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-rebase.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T.json`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo/revoke-130-1T-accepted.json`
+- `S45` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S45` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S45` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S45` `verify:` `playwright modelo*.spec.ts` -> `pass`
+- `S45` `verify:` `pytest test_modelo_100_art_50_3_compensation_verification` -> `pass`
+- `S45` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S45` `verify:` `tsc/eslint/prettier` -> `pass`
+- `S45` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S51` `verify:` `playwright modelo-workspace.spec.ts:172` -> `pass`
 
 ## Notes
 
@@ -1326,3 +1591,5 @@ related:
 - `S54` Commit b3a41c4296 (backend-served-surface P01.S03 window half). Three window classification sets deleted; served rows held in ledgerClassifications.ts. tsc errors are S51's uncommitted modeloFixture.ts. Not served yet: a 'carries business figures' flag (window still uses generated isBusinessBearing) and the mixed usage-ratio lookup. Committed via a temporary index around a held index.lock; history verified linear.
 - `S51` Commits 9f34651a2e, 16c59d4e91, 4be1830c46. 9f34651a2e also carried another worker's aggregation served locale hunks. modelo-workspace.spec.ts:156 still fails: the Modelo 130 income form's `unresolved_binding` note names no box or profile fact (missing estimation regime); handed to the backend owner. storybook:build was not run during the CHECKS hold.
 - `S45` 63401f110a: Renta test years derived from `authored_editions;` `RENTA_YEAR` = `newest_authored_edition.` Ruling: art. 50.3 findings cases run over authored years only, because a projected year refuses the filing claim first (covered by `test_modelo_100_projected_year_verification);` the calculation-only case keeps the projected year. The art. 50.3 file fails on another worker's uncommitted `prepare_calculation(usage_ratio_profile_loader)` edit, so it must be rerun once that settles. Open: servedRentaYears.ts projected still derived in the window (backend projected field requested); fixture re-record awaits the box 13 note and the M303 gate-order change.
+- `S45` 3351124e4a: one full modelo re-record after d97c70d771, 632e5e81ad and 455c215cd3 (457 envelopes). The main and checked or filed profiles now record `irpf.estimation_regime=directa_normal,` and the income scenario keeps none, so box 02 blocks. The main profile check refuses on box 13 (no prior Modelo 100 recorded). Ledger scenarios pass 316/316 on the deduplicated lock. Gap: no served form holds a box-less calculation note, so its rendering is untested. S45 stays open until renta serves the projected-year field and servedRentaYears.ts stops comparing revision to year.
+- `S51` The former :156 failure is resolved by renta's served box notes plus 3351124e4a: the note is drawn beside box 13 at its level, with the original assertion kept.
