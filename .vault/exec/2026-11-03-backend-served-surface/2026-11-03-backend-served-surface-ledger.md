@@ -5,7 +5,7 @@ tags:
 date: '2026-11-03'
 modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:20e99ae3996afd3de58bad6f9a55fddb0c09fd4ff241238b90a794fcfa5af806'
+body_hash: 'sha256:a5a99f0e78639d354d86fd3c2d741ec0b898e7cec5c955bc7d6ef51d53be2618'
 related:
   - "[[2026-11-03-backend-served-surface-plan]]"
 ---
@@ -223,6 +223,11 @@ related:
 - `S02` `verify:` `storybook:build` -> `pass`
 - `S02` `verify:` `playwright ledger scenarios` -> `fail`
 - `S02` `by:` `vaultspec-standard-executor`
+- `S01` `M` `native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx`
+- `S01` `M` `native/desktop/frontend/src/components/modelo/workspace/IvaWalletDialog.tsx`
+- `S01` `verify:` `tsc --noEmit` -> `pass`
+- `S01` `verify:` `eslint/prettier --check` -> `pass`
+- `S01` `verify:` `test_window_holds_no_tax_data` -> `pass`
 
 ## Notes
 
@@ -237,3 +242,4 @@ related:
 - `S17` round 3 2c85394de5: state, current, revocable and lead words; locale hunks landed in another session's commit; agent ran a repo-wide ruff --fix around 16:30
 - `S01` Window half in 15552776ca. Kept parsePeriodCode, isPeriodCode and `LEDGER_PERIOD_SPANS` until the modelo IVA wallet and credits callers migrate. Unserved periods read as unknown. 8 ledger scenario failures (combobox/popover/pointer interception) are unclassified; evidence is with CHECKS. desktop-frontend-chrome was not rebuilt during the CHECKS hold.
 - `S02` Window half in 15552776ca. Kept parsePeriodCode, isPeriodCode and `LEDGER_PERIOD_SPANS` until the modelo IVA wallet and credits callers migrate. Unserved periods read as unknown. 8 ledger scenario failures (combobox/popover/pointer interception) are unclassified; evidence is with CHECKS. desktop-frontend-chrome was not rebuilt during the CHECKS hold.
+- `S01` fa183e95b1 moves the modelo wallet callers to the served periods store. Playwright and Storybook were not run (CHECKS source-only release). parsePeriodCode, isPeriodCode and `LEDGER_PERIOD_SPANS` remain until ledger-grammar.spec, ledgerPeriods.ts and ledgerMovementReads.ts stop using them and the contract regen is released.
