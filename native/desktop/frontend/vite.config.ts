@@ -117,7 +117,21 @@ export default defineConfig(({ command, mode }) => {
       port: listening.preview,
       strictPort: true,
     },
-    resolve: { alias: { "@": source } },
+    resolve: {
+      alias: { "@": source },
+      // Each Radix primitive keeps its layer stack, focus-scope stack and
+      // portal state in module scope, so a dialog, a popover and a menu
+      // nested in one another only agree on who is on top when they all
+      // load one copy of these. The package manager may nest older copies
+      // beside a newer hoisted one; this makes the window load the one.
+      dedupe: [
+        "@radix-ui/react-dismissable-layer",
+        "@radix-ui/react-focus-guards",
+        "@radix-ui/react-focus-scope",
+        "@radix-ui/react-portal",
+        "@radix-ui/react-presence",
+      ],
+    },
     plugins: [
       {
         name: "desktop-server-ports",
