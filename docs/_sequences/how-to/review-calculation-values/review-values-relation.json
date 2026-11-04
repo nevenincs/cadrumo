@@ -415,7 +415,7 @@
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "9737ee62a778b050823fa6098e0caddc44f91bc09d7afbe3275b92b5d8e71e02",
+          "calculation_revision_id": "f3ac96a7712e290818ddbdb5cfbf82e9b6479db0aa19fd0ce7dcf17831961be8",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4238,7 +4238,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 9737ee62a778b050823fa6098e0caddc44f91bc09d7afbe3275b92b5d8e71e02 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision f3ac96a7712e290818ddbdb5cfbf82e9b6479db0aa19fd0ce7dcf17831961be8 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "retencion_soportada",

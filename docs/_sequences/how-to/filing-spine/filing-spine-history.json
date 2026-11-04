@@ -279,9 +279,9 @@
             },
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "4dfad50768ea1aef536042f360b4c7683219418feddd9b43cee553a0fae8bc87",
+              "event_id": "2f7f02809719d4284087daed2c403ca9c9e70785c9579f80ec3cd0ffbe520912",
               "event_type": "modelo.calculation.created",
-              "object_id": "382dc82c76a29f355e5e18fd1d8c6d42346c9140f0d108cb58b84f6ccf433ddf",
+              "object_id": "e198e2f25b0d5ea8c25afa5bb76e52ac06d48d409a6905a1c1ec2c3566111e8d",
               "object_type": "calculation_revision",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -289,7 +289,7 @@
                 "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "borrador_participated": "false",
                 "borrador_snapshot_id": "",
-                "calculation_revision_id": "382dc82c76a29f355e5e18fd1d8c6d42346c9140f0d108cb58b84f6ccf433ddf",
+                "calculation_revision_id": "e198e2f25b0d5ea8c25afa5bb76e52ac06d48d409a6905a1c1ec2c3566111e8d",
                 "casilla_count": "167",
                 "filing_year": "2026",
                 "formula_count": "40",
