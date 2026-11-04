@@ -15,12 +15,17 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.tests.installed_process_ports import InstalledProcessWorld
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo.tests.subprocess_cli import run_subprocess_cli_harness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+with bundled_indexed_authority().operation() as _operation:
+    _FILING_YEAR = _operation.supported_filing_years().horizon
+_PRIOR_YEAR = _FILING_YEAR - 1
 
 _CLI_HARNESS = """
 from __future__ import annotations
@@ -68,6 +73,78 @@ with composed_profile_persistence_ports(), bundled_indexed_authority().operation
 report = catalogue.get(sys.argv[2])
 assert report is not None
 print(json.dumps({"report": report.model_dump(mode="json"), "report_count": len(catalogue)}, sort_keys=True))
+"""
+
+
+# The activity of the profile began before the quarter, so Modelo 130 box 13 reads the
+# prior year's net activity income (art. 110.3.c RIRPF). The prior Modelo 100 is recorded
+# above the highest ceiling the box 13 formula tests, so the minoracion is a proven zero.
+_PRIOR_YEAR_RENTA_HARNESS = """
+from __future__ import annotations
+
+import os
+import sys
+from datetime import UTC, datetime
+from decimal import Decimal
+
+os.environ["CADRUMO_STORAGE_ROOT"] = sys.argv[1]
+
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
+from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
+
+modelo, filing_year, period = sys.argv[2], int(sys.argv[3]), sys.argv[4]
+binding_id = "irpf.previous_year_economic_activity_net_income"
+bucket_id = resolve_active_bucket_id()
+assert bucket_id is not None
+with composed_profile_persistence_ports(), bundled_indexed_authority().operation() as operation:
+    authenticate_profile_for_invocation(
+        name="operator",
+        passphrase_callback=lambda: "s423-selected-language-secret",
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    snapshot = operation.snapshot(modelo, filing_year=filing_year, period=period)
+    (formula,) = (item for item in snapshot.revision.formulas if item.target_casilla_id == "13")
+    ceilings = []
+
+    def collect(expression):
+        if expression.op == "less_equal" and any(arg.binding == binding_id for arg in expression.args):
+            ceilings.extend(arg.literal for arg in expression.args if arg.literal is not None)
+        for arg in expression.args:
+            collect(arg)
+
+    collect(formula.expression)
+    (binding,) = (item for item in snapshot.revision.bindings if item.id == binding_id)
+    source_casillas = binding.provider.source_casilla_ids
+    values = dict.fromkeys((validated_casilla_id(box) for box in source_casillas[1:]), Decimal("0.00"))
+    values[validated_casilla_id(source_casillas[0])] = max(ceilings) + Decimal("1000.00")
+    observation = RegistryModeloObservation(
+        modelo="100",
+        filing_year=filing_year - 1,
+        period="0A",
+        observations=registry_grounded_observations(
+            modelo="100", filing_year=filing_year - 1, period="0A", casilla_values=values
+        ),
+    )
+    repository = CalculationObservationRepository(bucket_id=bucket_id)
+    repository.save(
+        repository.prepare_observation_envelope(
+            observation,
+            source_kind="app_filing",
+            captured_at=datetime(filing_year, 1, 15, 12, 0, tzinfo=UTC),
+            result_disposition=None,
+            filing_kind=None,
+            stamped_revision_id=revision_id_for_observation(observation),
+        )
+    )
 """
 
 
@@ -191,6 +268,7 @@ def _create_modelo_revision(
     year: str,
     period: str,
     activity_start_date: str,
+    record_prior_year_renta: bool = False,
     installed_process_world: InstalledProcessWorld,
 ) -> str:
     profile = _run_cli(
@@ -234,6 +312,15 @@ def _create_modelo_revision(
         installed_process_world=installed_process_world,
     )
     assert profile.returncode == 0, _combined_output(profile)
+    if record_prior_year_renta:
+        recorded = run_subprocess_cli_harness(
+            textwrap.dedent(_PRIOR_YEAR_RENTA_HARNESS),
+            [str(storage_root), modelo, year, period],
+            env_strip_prefixes=("AEAT_",),
+            cwd=Path.cwd(),
+            timeout=None,
+        )
+        assert recorded.returncode == 0, _combined_output(recorded)
     created = _run_cli(
         storage_root,
         [
@@ -299,7 +386,7 @@ def test_selected_languages_render_parser_refusals_without_keychain(
     root = ["--language", language]
     missing = _run_cli(
         storage_root,
-        [*root, "app", "modelo", "work", "create", "--year", "2026", "--period", "1T"],
+        [*root, "app", "modelo", "work", "create", "--year", str(_FILING_YEAR), "--period", "1T"],
         installed_process_world=installed_process_world,
     )
     invalid = _run_cli(
@@ -329,7 +416,7 @@ def test_selected_languages_render_parser_refusals_without_keychain(
             "Valor no vàlid per a '--year': 'abc' no és un enter vàlid.",
             "Esborrany",
             ("resta(", "màxim(", "percentatge(", "condicional(", "mínim("),
-            "El model 100 de 2025, període 0A, no es fa servir aquí",
+            f"El model 100 de {_PRIOR_YEAR}, període 0A, no es fa servir aquí",
             "ja està comprovat",
         ),
         (
@@ -338,7 +425,7 @@ def test_selected_languages_render_parser_refusals_without_keychain(
             "Érvénytelen érték ehhez: '--year': 'abc' nem érvényes egész szám.",
             "Piszkozat",
             ("kivonás(", "maximum(", "százalék(", "feltételes(", "minimum("),
-            "A Modelo 100 (2025, 0A időszak) itt nincs felhasználva",
+            f"A Modelo 100 ({_PRIOR_YEAR}, 0A időszak) itt nincs felhasználva",
             "már ellenőrzött",
         ),
     ],
@@ -362,7 +449,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     # Parser refusals need no profile, so they are proven before the expensive setup.
     missing = _run_cli(
         storage_root,
-        [*root, "app", "modelo", "work", "create", "--year", "2026", "--period", "1T"],
+        [*root, "app", "modelo", "work", "create", "--year", str(_FILING_YEAR), "--period", "1T"],
         installed_process_world=installed_process_world,
     )
     missing_output = _combined_output(missing)
@@ -432,7 +519,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
             "--irpf-estimation-regime",
             "directa_simplificada",
             "--activity-start-date",
-            "2026-01-01",
+            f"{_FILING_YEAR}-01-01",
         ],
         installed_process_world=installed_process_world,
     )
@@ -449,7 +536,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
             "--modelo",
             "130",
             "--year",
-            "2026",
+            str(_FILING_YEAR),
             "--period",
             "1T",
         ],
@@ -468,7 +555,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
             "--modelo",
             "130",
             "--year",
-            "2026",
+            str(_FILING_YEAR),
             "--period",
             "1T",
         ],
@@ -526,9 +613,9 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
         storage_root,
         "ca",
         modelo="130",
-        year="2026",
+        year=str(_FILING_YEAR),
         period="1T",
-        activity_start_date="2026-01-01",
+        activity_start_date=f"{_FILING_YEAR}-01-01",
         installed_process_world=installed_process_world,
     )
 
@@ -557,8 +644,8 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
     )
     hungarian_output = _combined_output(hungarian)
     assert hungarian.returncode == 0, hungarian_output
-    assert "El model 100 de 2025, període 0A, no es fa servir aquí" in catalan_output, catalan_output
-    assert "A Modelo 100 (2025, 0A időszak) itt nincs felhasználva" in hungarian_output, hungarian_output
+    assert f"El model 100 de {_PRIOR_YEAR}, període 0A, no es fa servir aquí" in catalan_output, catalan_output
+    assert f"A Modelo 100 ({_PRIOR_YEAR}, 0A időszak) itt nincs felhasználva" in hungarian_output, hungarian_output
     assert "cross-period dependency scoped out" not in catalan_output
     assert "cross-period dependency scoped out" not in hungarian_output
 
@@ -593,10 +680,10 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
     finding = findings[0]
     assert finding["message_facts"] == {
         "source_modelo": "100",
-        "source_filing_year": 2025,
+        "source_filing_year": _PRIOR_YEAR,
         "source_period": "0A",
         "origin_code": "previous_filing_binding",
-        "activity_start_date": "2026-01-01",
+        "activity_start_date": f"{_FILING_YEAR}-01-01",
     }
     assert "message" not in finding
     assert "next_action" not in finding
@@ -615,9 +702,10 @@ def test_cross_locale_non_granted_verify_reuses_one_report_for_one_draft(
         storage_root,
         "ca",
         modelo="130",
-        year="2026",
+        year=str(_FILING_YEAR),
         period="1T",
         activity_start_date="2020-01-01",
+        record_prior_year_renta=True,
         installed_process_world=installed_process_world,
     )
 
@@ -637,9 +725,13 @@ def test_cross_locale_non_granted_verify_reuses_one_report_for_one_draft(
     assert hungarian.returncode == 1, hungarian_output
     assert "granted_verificado_completo\tfalse" in catalan_output
     assert "granted_verificado_completo\tfalse" in hungarian_output
-    assert "Aquesta declaració fa servir dades del model 100 de 2025, període 0A" in catalan_output, catalan_output
+    assert f"Aquesta declaració fa servir dades del model 100 de {_PRIOR_YEAR}, període 0A" in catalan_output, (
+        catalan_output
+    )
     assert "Resol-les allà primer." in catalan_output, catalan_output
-    assert "Ez a bevallás a Modelo 100 (2025, 0A időszak) adatait használja" in hungarian_output, hungarian_output
+    assert f"Ez a bevallás a Modelo 100 ({_PRIOR_YEAR}, 0A időszak) adatait használja" in hungarian_output, (
+        hungarian_output
+    )
     assert "Előbb ott oldd meg őket." in hungarian_output, hungarian_output
     assert "cross-period dependency is not clean" not in catalan_output
     assert "cross-period dependency is not clean" not in hungarian_output
