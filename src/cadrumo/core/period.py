@@ -300,6 +300,19 @@ _QUARTER_ORDINALS: dict[StandardPeriodCode, int] = {
     StandardPeriodCode.Q4: 4,
 }
 
+
+def quarter_code(ordinal: int) -> StandardPeriodCode:
+    """Return the standard quarterly token whose ordinal is ``ordinal`` (1 through 4).
+
+    Raises:
+        PeriodError: When ``ordinal`` names no standard quarter.
+    """
+    for code, known in _QUARTER_ORDINALS.items():
+        if known == ordinal:
+            return code
+    raise PeriodError(f"{ordinal} is not the ordinal of a standard quarter")
+
+
 _MONTHS_PER_YEAR: Final = 12
 _MONTHS_PER_QUARTER: Final = 3
 _QUARTERS_PER_YEAR: Final = 4
@@ -576,7 +589,7 @@ class Period(BaseModel):
             case PeriodKind.ANNUAL:
                 code = StandardPeriodCode.ANNUAL.value
             case PeriodKind.QUARTERLY:
-                code = f"{(day.month - 1) // _MONTHS_PER_QUARTER + 1}T"
+                code = quarter_code((day.month - 1) // _MONTHS_PER_QUARTER + 1).value
             case PeriodKind.MONTHLY:
                 code = f"{day.month:02d}"
             case _:
@@ -618,7 +631,7 @@ class Period(BaseModel):
             case PeriodKind.QUARTERLY:
                 ordinal = self.filing_year * _QUARTERS_PER_YEAR + int(self.code[0]) - 1 + steps
                 year, index = divmod(ordinal, _QUARTERS_PER_YEAR)
-                code = f"{index + 1}T"
+                code = quarter_code(index + 1).value
             case PeriodKind.MONTHLY:
                 ordinal = self.filing_year * _MONTHS_PER_YEAR + int(self.code) - 1 + steps
                 year, index = divmod(ordinal, _MONTHS_PER_YEAR)
