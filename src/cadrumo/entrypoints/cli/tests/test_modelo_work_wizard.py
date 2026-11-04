@@ -82,10 +82,11 @@ _GASTOS = Decimal("600.00")
 _RENDIMIENTO_NETO = _INGRESOS - _GASTOS
 _PAGO_FRACCIONADO = (_RENDIMIENTO_NETO * Decimal("20") / Decimal("100")).quantize(Decimal("0.01"))
 
-# The M130 1T manual-input surface (registry ``input_kind = "manual"``) is
-# casillas 06/08/10/16/18 (see ``_MANUAL_CASILLAS``), all zero for this oracle
-# (no withholdings, not an agrarian activity, no vivienda deduction, first
-# filing of the ejercicio).
+# The M130 1T manual-input surface (registry casillas with no ``input_kind``) is
+# casillas 06, 16 and 18 plus the art. 32.1 reducible-yield working figure (see
+# ``_MANUAL_CASILLAS``), all zero for this oracle (no withholdings, no vivienda
+# deduction, first filing of the ejercicio, no reducible yield); boxes 08 and 10
+# are bound to the declared-activity split.
 #
 # The one ``previous_filing`` binding whose selector has no local prior M100
 # filing to auto-resolve at 1T with a blank bucket. It is not absent-by-design
@@ -94,7 +95,7 @@ _PAGO_FRACCIONADO = (_RENDIMIENTO_NETO * Decimal("20") / Decimal("100")).quantiz
 _PREV_YEAR_INCOME_ANSWER = "13000"
 
 
-_MANUAL_CASILLAS = ["06", "08", "10", "16", "18"]
+_MANUAL_CASILLAS = ["06", "16", "18", "rendimiento-neto-reducible-art-32-1"]
 _PREV_YEAR_BINDING_KEY = "irpf.previous_year_economic_activity_net_income"
 
 
@@ -407,7 +408,7 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
     _seed_m130_ledger("wizard-cli-source-provenance", fixture=wizard_profile, operation=operation)
     work_unit_id = _create_m130_work_unit(wizard_profile)
 
-    # Five registry-discovered manual casillas, then submit from review.
+    # Four registry-discovered manual casillas, then submit from review.
     keystrokes = "0\r" * len(_MANUAL_CASILLAS) + "\r"
     with create_pipe_input() as pipe:
         pipe.send_text(keystrokes)
@@ -431,7 +432,7 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
     document = json.loads(result.output)
     assert document["command"] == "modelo.work.wizard"
     payload = _payload(result.output)
-    assert {row["key"] for row in payload["prompted_casillas"]} == {"06", "08", "10", "16", "18"}
+    assert {row["key"] for row in payload["prompted_casillas"]} == set(_MANUAL_CASILLAS)
     provenance = payload["source_provenance"]
     assert provenance, "the wizard CLI JSON must retain the calculated ledger source trace"
     ledger_rows = {

@@ -8,7 +8,7 @@ import pytest
 
 from ..period import CALENDAR_PERIOD_KINDS, Period, PeriodError, PeriodKind
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_a_year_lists_only_the_periods_that_are_spans_of_days() -> None:
@@ -46,7 +46,7 @@ def test_a_filing_event_cannot_be_stepped(code: str) -> None:
     ("year", "code", "steps", "expected"),
     [
         (2026, "1T", -5, (2024, "4T")),
-        (2026, "4T", 9, (2028, "1T")),
+        (2026, "4T", 9, (2029, "1T")),
         (2026, "03", -15, (2024, "12")),
         (2026, "03", 22, (2028, "01")),
         (2026, "0A", 0, (2026, "0A")),
