@@ -46,7 +46,7 @@ COORDINATES: Final[tuple[tuple[str, str], ...]] = (
 _LADDER: Final = tuple(RegistryAuthorityGrade)
 
 
-def _box_numbers(record_type: type) -> tuple[str, ...]:
+def _box_numbers(record_type: type[Modelo303Quarter] | type[Modelo390Year]) -> tuple[str, ...]:
     return tuple(field.name.removeprefix("box_") for field in fields(record_type) if field.name.startswith("box_"))
 
 
