@@ -223,6 +223,12 @@ except that `iva_amount` is left out for reverse-charge categories, where the
 recipient self-assesses and pays only the base. Net payroll and pension rows
 carry no base; the gross figures come from `[[withholding_certificates]]`.
 
+A business cost that is no IVA operation at all carries `operacion_no_sujeta`
+with `iva_rate` and `iva_amount` 0 and the cost as its base. The fontanero's
+RETA contributions (`FON-RETA-*`) are the instance: a Seguridad Social
+contribution is not subject to IVA (LIVA art. 7.8.º) and is deductible only
+for IRPF.
+
 ## documents.toml
 
 | key | meaning |
