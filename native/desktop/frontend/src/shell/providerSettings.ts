@@ -6,7 +6,6 @@ import type {
 } from "@/components/settings/types";
 import { failureCode } from "../errors";
 import { useCachedRead, type AgentRead } from "./agentViews";
-import type { RetryPlan } from "./hostCall";
 
 // The model providers of the signed-in profile, as a host serves them: the
 // masked status of each lane (a provider's API, or its command-line app),
@@ -111,7 +110,7 @@ export type ProviderSettingsRefusal =
   | "unknown";
 
 export interface ProviderSettings {
-  status(retry?: RetryPlan): Promise<ProviderSettingsAnswer>;
+  status(): Promise<ProviderSettingsAnswer>;
   /** Attended GUI sign-in is absent unless this host implements it. */
   readonly signIn?: ProviderSignIn;
   /** Saves a key or token. The secret is handed on once and never kept.

@@ -23,7 +23,7 @@ import {
 import type { AgentViews } from "./agentViews";
 import type { AeatSignInStage } from "./aeatSyncPrepare";
 import type { Host } from "./host";
-import type { HostCall, RetryPlan } from "./hostCall";
+import type { HostCall } from "./hostCall";
 import { hostCall, observedInvoke } from "./hostCall";
 import type {
   ProviderSignInSnapshot,
@@ -453,20 +453,13 @@ function tauriProviderSettings(
   const command = <Result>(
     name: string,
     args: Record<string, string>,
-    retry?: RetryPlan,
   ): Promise<Result> =>
     token
-      ? observedInvoke<Result>(
-          token,
-          name,
-          { ...args, token },
-          undefined,
-          retry,
-        )
+      ? observedInvoke<Result>(token, name, { ...args, token })
       : unavailable();
   return {
-    status: (retry) =>
-      command<ProviderSettingsAnswer>("provider_settings_status", {}, retry),
+    status: () =>
+      command<ProviderSettingsAnswer>("provider_settings_status", {}),
     async set({ provider, revision, secret, base_url }) {
       if (!token) return unavailable();
       // An empty address is the catalogue's default; absent keeps the stored one.
