@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-04'
 body_schema: body-v2
-body_hash: 'sha256:000537359a494055b2f020ae483151b8cd654618b3088e4b16b85a405339a03c'
+body_hash: 'sha256:08528b6db3dfd17f54a201c96ea46462fb18ebaf304cd434f70db1232e460ef4'
 ---
 
 # `fixture-canonicalization` plan
@@ -33,7 +33,7 @@ Make existing generators deterministic and remove known stale or orphan fixture 
 - [x] `P01.S01` - Thread one scenario as-of instant through the Modelo envelope generator so admitted baselines and observations are byte-identical across runs; `native/desktop/frontend/scripts/modelo_fixtures.py`.
 - [x] `P01.S02` - Delete the hand-copied Modelo 303 admitted baseline and read the baseline from its generated envelope; `native/application/tests/data and native/application/src/runtime_client/live_tests.rs`.
 - [x] `P01.S03` - Add recorders for the five writerless ledger fixtures and a reader for the invoice preview fixture; `native/desktop/frontend/src/dev/fixtures ledger JSON and src/cadrumo/application/ledger/tests`.
-- [x] `P01.S04` - Review possibly real identifiers and evidence for private data and replace any non-synthetic value; `native/desktop/frontend/src/dev/fixtures, src/cadrumo/tests/fixtures/aeat-sede, the ledger evidence corpus and native/manager/tests`.
+- [ ] `P01.S04` - Review possibly real identifiers and evidence for private data, replace any non-synthetic value with unbound convention identities, and keep catalogue role identities out of unrelated uses; `native/desktop/frontend/src/dev/fixtures, src/cadrumo/tests/fixtures/aeat-sede, the ledger evidence corpus and native/manager/tests`.
 
 ### Phase `P02` - Seeding and test controls
 
@@ -59,7 +59,7 @@ Define every canonical taxpayer and flow once and seed it through production ope
 Generate window and Rust fixture projections into the build tree and stop committing them.
 
 - [ ] `P04.S12` - Generate projections into the build tree and resolve them through a Vite and TypeScript alias; `native/desktop/frontend and CMakeLists.txt`.
-- [ ] `P04.S13` - Pass projection paths to Rust tests through CMake environment variables instead of include_str; `native/desktop/src-tauri/src/modelo/tests.rs and CMakeLists.txt`.
+- [ ] `P04.S13` - Pass projection paths to Rust tests through CMake environment variables instead of include_str; `native/desktop/src-tauri/src/shell/modelo/tests.rs, native/desktop/src-tauri/src/agent/person/native.rs, native/application/src/runtime_client/live_tests.rs and CMakeLists.txt`.
 - [ ] `P04.S14` - Ignore and delete the tracked projections; `.gitignore and native/desktop/frontend/src/dev/fixtures`.
 
 ### Phase `P05` - Python builder migration
@@ -69,7 +69,7 @@ Move the backend test profile builders onto the persona catalogue and remove res
 - [ ] `P05.S15` - Migrate the shared profile builders and their consumers onto personas and remove the duplicate ready-profile seeder and string boolean placeholders; `src/cadrumo user_profile, profile_persistence and profile persistence test support`.
 - [ ] `P05.S16` - Migrate private profile helpers package by package onto personas; `src and dev test packages`.
 - [ ] `P05.S17` - Stop seeding personas through direct test storage writes; `src test support`.
-- [ ] `P05.S20` - Extend the identity gate's blocking scope to tests and fixtures by checking every match against the catalogue convention, and replace the remaining random-looking identifiers; `dev/identity and test and fixture identifiers`.
+- [ ] `P05.S20` - Extend the identity gate's blocking scope to tests and fixtures, accept a match only by the catalogue convention, flag any catalogue value used outside its bound persona role, and replace the remaining hand-made identifiers; `dev/identity and test and fixture identifiers`.
 
 ### Phase `P06` - Obligation simulation
 
