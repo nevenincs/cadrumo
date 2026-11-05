@@ -9,13 +9,14 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { after, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
   allowlistProblems,
   compileLineFormat,
+  gatedLogFiles,
   loadAllowlist,
   normalizeMessage,
   parseDiagnosticLog,
@@ -289,6 +290,90 @@ describe("verdict over fixtures", () => {
           "failure code=setup_failed reason=setup_browser_failed causes=blocked_by_network",
         ),
       ),
+    );
+  });
+});
+
+describe("startup outcomes", () => {
+  test("normal ends are read as a source and raise nothing", () => {
+    const verdict = runCase("startup-handed-off");
+    assert.equal(verdict.verdict, PASS, verdict.detail);
+    assert.equal(unexpected(verdict).length, 0);
+    assert(verdict.data.sources.includes("cadrumo-startup-outcomes.jsonl"));
+  });
+
+  test("a refused and a timed out launch each fail", () => {
+    const verdict = runCase("startup-refused");
+    assert.equal(verdict.verdict, FAIL);
+    assert.deepEqual(
+      unexpected(verdict)
+        .filter((group) => group.logger === "desktop.startup_outcome")
+        .map((group) => group.template)
+        .sort(),
+      [
+        "startup outcome=refused reason=not_admitted stage=admission",
+        "startup outcome=timed_out reason=timed_out stage=instance",
+      ],
+    );
+  });
+
+  test("a non-JSON line and an unknown outcome are malformed", () => {
+    const verdict = runCase("startup-malformed");
+    assert.equal(verdict.verdict, FAIL);
+    const malformed = unexpected(verdict).filter(
+      (group) => group.logger === "product-log.malformed",
+    );
+    assert.equal(malformed.length, 1);
+    assert.match(
+      malformed[0].template,
+      /^2 line\(s\) of cadrumo-startup-outcomes\.jsonl /,
+    );
+  });
+
+  test("a failure only in a rotated file fails", () => {
+    const verdict = runCase("startup-rotated");
+    assert.equal(verdict.verdict, FAIL);
+    assert(verdict.data.sources.includes("cadrumo-startup-outcomes.jsonl.1"));
+    assert(
+      unexpected(verdict).some(
+        (group) => group.logger === "desktop.startup_outcome",
+      ),
+    );
+  });
+});
+
+describe("evidence coverage", () => {
+  test("the sources the gate reads are exactly the files gatedLogFiles lists", () => {
+    const storage = materializeStorage("all-sources");
+    const listed = gatedLogFiles(storage, defaults).map((file) =>
+      basename(file),
+    );
+    assert.deepEqual([...listed].sort(), [
+      "cadrumo-manager.log",
+      "cadrumo-manager.log.1",
+      "cadrumo-native.jsonl",
+      "cadrumo-startup-outcomes.jsonl",
+      "cadrumo-startup-outcomes.jsonl.1",
+      "cadrumo.log",
+      "cadrumo.log.1",
+      "profile-worker-stall-7.txt",
+    ]);
+    const verdict = productLogVerdict({
+      storage,
+      defaults,
+      checks: [],
+      allowlist,
+      run: "setup",
+    });
+    assert.equal(verdict.verdict, PASS, verdict.detail);
+    assert.deepEqual([...verdict.data.sources].sort(), [...listed].sort());
+  });
+
+  test("a file the gate does not read is not listed", () => {
+    const storage = materializeStorage("clean");
+    assert.deepEqual(
+      gatedLogFiles(storage, defaults).map((file) => basename(file)),
+      ["cadrumo.log"],
     );
   });
 });

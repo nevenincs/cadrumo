@@ -5,7 +5,7 @@
 import { realpathSync, statSync } from "node:fs";
 import { basename, isAbsolute, relative, resolve } from "node:path";
 
-import { agentLogGroups } from "./product-log.mjs";
+import { agentLogGroups, gatedLogFiles } from "./product-log.mjs";
 
 /** An evidence-name part: no separators, no characters outside a safe set. */
 export function sanitizeEvidencePart(text) {
@@ -53,4 +53,22 @@ export function captureAgentLogs({ results, storage, prefix }) {
     // Keep cleanup and the original failing check authoritative.
   }
   return captures;
+}
+
+/**
+ * Captures every non-agent log file the gate reads as `<prefix>-<file>`; a
+ * file that is absent is not listed, so it is not captured.
+ * Never throws: evidence collection does not own the cleanup outcome.
+ */
+export function captureGatedLogs({ results, storage, defaults, prefix }) {
+  try {
+    return gatedLogFiles(storage, defaults).map((file) =>
+      results.logEvidence(
+        `${prefix}-${sanitizeEvidencePart(basename(file))}`,
+        file,
+      ),
+    );
+  } catch {
+    return [];
+  }
 }

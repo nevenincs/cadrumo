@@ -43,7 +43,10 @@ import {
   recordedChecks,
 } from "./packaged/product-log.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
-import { captureAgentLogs } from "./packaged/agent-log-evidence.mjs";
+import {
+  captureAgentLogs,
+  captureGatedLogs,
+} from "./packaged/agent-log-evidence.mjs";
 import {
   observeProvisioning,
   startupObservation,
@@ -280,17 +283,19 @@ const PRODUCT_LOG_ALLOWLIST = fileURLToPath(
   new URL("./packaged/product-log-allowlist.json", import.meta.url),
 );
 
+function desktopDefaults() {
+  return JSON.parse(readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"))
+    .desktop_defaults;
+}
+
 /**
  * The product-log gate over the storage root the run used: the check verdict,
  * with the full grouped findings kept as evidence beside it.
  */
 function productLogGate({ results, storage, run, signIn }) {
-  const contract = JSON.parse(
-    readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"),
-  );
   const verdict = productLogVerdict({
     storage,
-    defaults: contract.desktop_defaults,
+    defaults: desktopDefaults(),
     checks: recordedChecks(results.checks, {
       "canonical-sign-in": phaseWindowsOf(signIn?.timingStats()),
     }),
@@ -2056,11 +2061,12 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       );
     if (projected) {
       const captures = [
-        results.logEvidence("storage-cadrumo.log", projected.logFile),
-        results.logEvidence(
-          "storage-cadrumo-native.jsonl",
-          resolve(projected.logs, "cadrumo-native.jsonl"),
-        ),
+        ...captureGatedLogs({
+          results,
+          storage: projected.storage,
+          defaults: desktopDefaults(),
+          prefix: "storage",
+        }),
         ...captureAgentLogs({
           results,
           storage: projected.storage,
@@ -2868,12 +2874,13 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
           };
         },
       );
-      const defaults = contract.desktop_defaults;
       const logCaptures = [
-        results.logEvidence(
-          "setup-storage-cadrumo.log",
-          resolve(layout.storage, defaults.logs, basename(defaults.log_file)),
-        ),
+        ...captureGatedLogs({
+          results,
+          storage: layout.storage,
+          defaults: contract.desktop_defaults,
+          prefix: "setup-storage",
+        }),
         ...captureAgentLogs({
           results,
           storage: layout.storage,

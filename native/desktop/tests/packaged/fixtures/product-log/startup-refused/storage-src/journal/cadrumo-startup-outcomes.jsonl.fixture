@@ -1,0 +1,2 @@
+{"schema":1,"event":"startup_outcome","outcome":"refused","reason":"not_admitted","stage":"admission","pid":1234,"timestampMs":1793817640000,"rootIdentity":"synthetic-root-0001"}
+{"schema":1,"event":"startup_outcome","outcome":"timed_out","reason":"timed_out","stage":"instance","pid":1235,"timestampMs":1793817641000,"rootIdentity":"synthetic-root-0001"}

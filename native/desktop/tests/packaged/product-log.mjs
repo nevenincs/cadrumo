@@ -22,6 +22,13 @@ export const GATED_WARNING_PREFIXES = [
 ];
 
 const AGENT_SCHEMA = "cadrumo-agent.log/1";
+const STARTUP_OUTCOMES_LOG = "cadrumo-startup-outcomes.jsonl";
+const MANAGER_LOG = "cadrumo-manager.log";
+const NATIVE_LOG = "cadrumo-native.jsonl";
+const STALL_DUMP = /^profile-worker-stall-.+\.txt$/;
+// These two sets mirror the host's startup Outcome enum (startup_outcome.rs).
+export const STARTUP_NORMAL_OUTCOMES = ["handed_off", "open_in_other_session"];
+export const STARTUP_FAILURE_OUTCOMES = ["timed_out", "refused"];
 const WINDOW_GRACE_MS = 2000;
 const GROUP_LIMIT = 200;
 const DETAIL_GROUPS = 5;
@@ -147,6 +154,24 @@ function rotations(directory, base) {
   return listFiles(directory, (name) => pattern.test(name));
 }
 
+/**
+ * Every concrete file of the storage root's log directory that the gate reads
+ * outside the agent tree: the primary log, the startup outcomes and the
+ * manager log with their rotations, the native record and the stall dumps.
+ * The gate and the evidence capture share this one listing.
+ */
+export function gatedLogFiles(storage, defaults) {
+  const logs = resolve(storage, defaults.logs);
+  const native = resolve(logs, NATIVE_LOG);
+  return [
+    ...rotations(logs, basename(defaults.log_file)),
+    ...rotations(logs, STARTUP_OUTCOMES_LOG),
+    ...rotations(logs, MANAGER_LOG),
+    ...(existsSync(native) ? [native] : []),
+    ...listFiles(logs, (name) => STALL_DUMP.test(name)),
+  ];
+}
+
 function agentRecord(source, line) {
   let value;
   try {
@@ -207,8 +232,7 @@ export function readProductLogs({ storage, defaults }) {
 
   const pythonFiles = [
     ...rotations(logs, primary),
-    ...rotations(logs, "cadrumo-startup-outcomes.jsonl"),
-    ...rotations(logs, "cadrumo-manager.log"),
+    ...rotations(logs, MANAGER_LOG),
   ];
   if (!existsSync(resolve(logs, primary)))
     problems.push({
@@ -286,7 +310,48 @@ export function readProductLogs({ storage, defaults }) {
     }
   }
 
-  const native = resolve(logs, "cadrumo-native.jsonl");
+  for (const file of rotations(logs, STARTUP_OUTCOMES_LOG)) {
+    sources.push(basename(file));
+    let malformed = 0;
+    for (const line of readText(file).split(/\r?\n/)) {
+      if (line.trim() === "") continue;
+      let value;
+      try {
+        value = JSON.parse(line);
+      } catch {
+        malformed += 1;
+        continue;
+      }
+      const known = [...STARTUP_NORMAL_OUTCOMES, ...STARTUP_FAILURE_OUTCOMES];
+      if (
+        !value ||
+        value.schema !== 1 ||
+        value.event !== "startup_outcome" ||
+        !known.includes(value.outcome)
+      ) {
+        malformed += 1;
+        continue;
+      }
+      if (STARTUP_FAILURE_OUTCOMES.includes(value.outcome))
+        problems.push({
+          level: "ERROR",
+          source: "native",
+          logger: "desktop.startup_outcome",
+          template: `startup outcome=${value.outcome} reason=${value.reason ?? "-"} stage=${value.stage}`,
+          timeMs: value.timestampMs,
+        });
+    }
+    if (malformed)
+      problems.push({
+        level: "ERROR",
+        source: "native",
+        logger: "product-log.malformed",
+        template: `${malformed} line(s) of ${basename(file)} are not startup_outcome records`,
+        timeMs: null,
+      });
+  }
+
+  const native = resolve(logs, NATIVE_LOG);
   if (existsSync(native)) {
     sources.push(basename(native));
     let malformed = 0;
@@ -337,9 +402,8 @@ export function readProductLogs({ storage, defaults }) {
       });
   }
 
-  for (const dump of listFiles(logs, (name) =>
-    /^profile-worker-stall-.+\.txt$/.test(name),
-  )) {
+  for (const dump of listFiles(logs, (name) => STALL_DUMP.test(name))) {
+    sources.push(basename(dump));
     if (statSync(dump).size > 0)
       problems.push({
         level: "ERROR",
