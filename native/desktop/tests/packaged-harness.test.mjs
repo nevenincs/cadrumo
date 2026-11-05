@@ -13,6 +13,7 @@ import "./packaged/context-menu-verdict.test.mjs";
 import "./packaged/product-log.test.mjs";
 import "./packaged/agent-log-evidence.test.mjs";
 import "./packaged/failure-capture.test.mjs";
+import "./packaged/override-refusal.test.mjs";
 
 import { docsProbe, instrument, pasteInto } from "./packaged/browser.mjs";
 import {

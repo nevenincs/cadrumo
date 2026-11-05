@@ -22,6 +22,7 @@ import "./packaged/setup.test.mjs";
 import "./packaged/product-log.test.mjs";
 import "./packaged/agent-log-evidence.test.mjs";
 import "./packaged/failure-capture.test.mjs";
+import "./packaged/override-refusal.test.mjs";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "../scripts/build-paths.mjs";
@@ -35,6 +36,7 @@ import {
   runSedeMissingAcceptance,
 } from "./packaged/probes.mjs";
 import { installedHost, packagedHostPaths } from "./packaged/host.mjs";
+import { overrideRefusalProblems } from "./packaged/override-refusal.mjs";
 import { SignInFixture } from "./packaged/sign-in.mjs";
 import {
   loadAllowlist,
@@ -46,6 +48,7 @@ import { docsUiChecks } from "./packaged/docs-ui.mjs";
 import {
   captureAgentLogs,
   captureGatedLogs,
+  resolvesInside,
 } from "./packaged/agent-log-evidence.mjs";
 import {
   observeProvisioning,
@@ -381,6 +384,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
   let session = null;
   let host = null;
   let hostPid = null;
+  const refusedPids = [];
   let projected = null;
   let webviewPids = [];
   let signIn = null;
@@ -479,8 +483,21 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
           },
         ];
         const outcomes = [];
+        const logs = desktopDefaults().logs;
         for (const [index, extra] of cases.entries()) {
-          const { env } = hostEnvironment(config, extra);
+          // A refusal is expected to write an ERROR record, so it gets its own
+          // storage root rather than the window run's gated one.
+          const root = resolve(config.run, `override-refused-${index}`);
+          mkdirSync(root, { recursive: true });
+          if (!resolvesInside(config.run, root) || readdirSync(root).length)
+            return {
+              verdict: FAIL,
+              detail: `override-refused-${index} is not an empty root inside the run directory`,
+            };
+          const { env } = hostEnvironment(config, {
+            ...extra,
+            [config.storageVariable]: root,
+          });
           const out = resolve(config.run, `refused-${index}.out`);
           const err = resolve(config.run, `refused-${index}.err`);
           const started = launch(testHost.executable, ["--gui"], {
@@ -498,15 +515,36 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
           } catch {
             code = stderr.slice(0, 120);
           }
+          const nativeLog = resolve(root, logs, "cadrumo-native.jsonl");
+          let record;
+          if (resolvesInside(root, nativeLog)) {
+            record = readFileSync(nativeLog, "utf8");
+            results.logEvidence(
+              `override-refused-${index}-cadrumo-native.jsonl`,
+              nativeLog,
+            );
+          }
+          const judged = overrideRefusalProblems(record, {
+            excludedPids: [
+              process.pid,
+              ...outcomes.map((outcome) => outcome.hostPid),
+            ],
+          });
+          refusedPids.push(judged.pid);
           outcomes.push({
             variables: Object.keys(extra),
             exit: done?.code ?? "running",
             code,
+            hostPid: judged.pid,
+            recordProblems: judged.problems,
           });
         }
         evidence("override-refused.json", outcomes);
         const bad = outcomes.filter(
-          (o) => o.exit !== 1 || o.code !== "environment_failed",
+          (o) =>
+            o.exit !== 1 ||
+            o.code !== "environment_failed" ||
+            o.recordProblems.length,
         );
         return bad.length
           ? {
@@ -536,6 +574,17 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       err: resolve(config.results, "host-stderr.txt"),
     });
     hostPid = host.child.pid;
+    await check(
+      "override-refused-isolated",
+      "the refused hosts were other processes than the window host",
+      async () =>
+        refusedPids.includes(hostPid)
+          ? {
+              verdict: FAIL,
+              detail: `the window host pid ${hostPid} is a refused host's`,
+            }
+          : { verdict: PASS, detail: "distinct host pids" },
+    );
     const launched = await check(
       "launch",
       "the window opens with the DevTools endpoint",
