@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import shutil
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import closing
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -28,6 +28,7 @@ from cadrumo.core.storage_materialization import ensure_storage_tree
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.core.time.clock import frozen_clock, today_madrid
+from cadrumo.domain.calculations.registry import snapshot_proof as snapshot_proof_module
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority_store import (
     AUTHORITY_DATABASE_FORMAT,
@@ -235,6 +236,44 @@ def test_a_validator_digest_mismatch_runs_every_cross_check(tmp_path: Path, monk
 
     assert _build(changed, cell) == proven
     assert all(count == 1 for count in counts), counts
+
+
+def test_the_validator_sources_are_read_only_when_a_recorded_cell_would_skip_the_cross_checks(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    descriptor_path = _publish(tmp_path / "published")
+    cell = _proven_cells(descriptor_path)[0]
+    modelo_id, filing_year, period, grade = cell
+    unproven = _republished_copy(
+        descriptor_path,
+        tmp_path / "unproven-cell",
+        (
+            (
+                "DELETE FROM snapshot_proofs WHERE modelo_id = ? AND filing_year = ? AND period = ? AND grade = ?",
+                (modelo_id, filing_year, period, grade.value),
+            ),
+        ),
+    )
+    identity_checks: list[int] = []
+    sources_match = snapshot_proof_module._sources_match
+
+    def counted_sources_match(sources: Sequence[ValidatorSource]) -> bool:
+        identity_checks.append(len(sources))
+        return sources_match(sources)
+
+    monkeypatch.setattr(snapshot_proof_module, "_validator_matches", {})
+    monkeypatch.setattr(snapshot_proof_module, "_sources_match", counted_sources_match)
+    counts = count_cross_checks(monkeypatch)
+
+    full = _build(unproven, cell)
+    assert identity_checks == []
+    assert all(count == 1 for count in counts), counts
+    counts[:] = [0] * len(counts)
+    proven = _build(descriptor_path, cell)
+
+    assert identity_checks == [len(snapshot_validator_closure())]
+    assert counts == [0] * len(counts)
+    assert proven == full
 
 
 def test_a_date_outside_the_fact_window_runs_every_cross_check(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

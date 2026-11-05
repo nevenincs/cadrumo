@@ -815,6 +815,10 @@ class PinnedAuthorityOperation:
         additionally needs this process to run the validator that proved it,
         today's Madrid date inside the window its wall-clock fact lookups hold
         for, and a recorded cell whose revision is the one just selected.
+
+        The validator identity is checked last, once a recorded cell would
+        otherwise be used: it re-reads every source module of the validator, and
+        a request publication did not prove takes full validation without it.
         """
         from .snapshot_proof import runtime_validator_matches, snapshot_proof_key
 
@@ -822,12 +826,12 @@ class PinnedAuthorityOperation:
         if not isinstance(reader, SQLiteAuthorityReader):
             return None
         contract = reader.snapshot_proof_contract()
-        if contract is None or not contract.admits_date(today_madrid()) or not runtime_validator_matches(contract):
+        if contract is None or not contract.admits_date(today_madrid()):
             return None
         proof = reader.snapshot_proof(
             snapshot_proof_key(selected, modelo_id=normalized, filing_year=filing_year, period=period, grade=grade)
         )
-        if proof is None or proof.revision_id != selected.id:
+        if proof is None or proof.revision_id != selected.id or not runtime_validator_matches(contract):
             return None
         return proof
 
