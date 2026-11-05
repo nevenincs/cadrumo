@@ -119,13 +119,18 @@ def _is_ignored(relative: str, *, is_directory: bool, rules: Sequence[_ScopedRul
     return ignored
 
 
-def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tuple[str, ...]:
+def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = (), must_exist: bool = False) -> tuple[str, ...]:
     """Return every repository file below ``root``, as sorted POSIX-relative paths.
 
     ``under`` narrows the result to the named files or directories, given
     relative to ``root``. An ignored directory is never entered, so a file
     inside one stays out even if a rule would re-include it by name, exactly
-    as git treats it.
+    as git treats it. A named path that does not exist contributes nothing,
+    unless ``must_exist`` is set: then it is refused, so a mistyped path
+    cannot pass for an empty one.
+
+    Raises:
+        FileNotFoundError: When ``must_exist`` is set and a path in ``under`` does not exist.
     """
     root = root.resolve()
     found: list[str] = []
@@ -134,6 +139,10 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
     if not prefixes:
         _visit_repository_directory(root, "", (), found)
         return tuple(sorted(found))
+    if must_exist:
+        absent = [prefix for prefix in prefixes if not (root / prefix).exists() and not (root / prefix).is_symlink()]
+        if absent:
+            raise FileNotFoundError(f"named repository paths do not exist: {', '.join(absent)}")
     for prefix in prefixes:
         # Only the named subtree is walked, but every ancestor's rules still
         # apply to it, and an ignored ancestor excludes it outright.
