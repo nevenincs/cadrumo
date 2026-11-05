@@ -213,6 +213,9 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
         UserProfileFact(path="activities.description", value="professional services"),
         UserProfileFact(path="iva.oss_enrolled", value=False),
         UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+        # The regime holds in every ejercicio, the prior year's net income included; the dated cash election
+        # below states the same regime for 2026 only.
+        UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
         # The operator declares the cobros y pagos criterion for the quarters this module calculates,
         # under the normal modality: the expected carry assumes no art. 30.2.4.a provision in box 02.
         *cash_criterion_facts(2026, estimation_regime="directa_normal"),

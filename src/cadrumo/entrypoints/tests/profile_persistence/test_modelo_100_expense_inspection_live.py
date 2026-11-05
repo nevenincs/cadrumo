@@ -129,10 +129,7 @@ def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
                 UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
                 *cash_criterion_facts(_YEAR),
-            ),
-            # The dated cash election states its own regime and accounting for the ejercicio; the
-            # persona's undated ones would stand beside them and leave the regime ambiguous.
-            without={fact.path for fact in cash_criterion_facts(_YEAR)},
+            )
         ),
         created_at=_T0,
         updated_at=_T0,

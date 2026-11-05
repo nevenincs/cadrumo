@@ -97,20 +97,22 @@ def persona_facts_beneath(
     without: Collection[str] = (),
     persona_id: str = DIRECTA_NORMAL_PERSONA,
 ) -> tuple[UserProfileFact, ...]:
-    """Return the persona's facts, then ``stated``, which replaces the persona's value for a path.
+    """Return the persona's facts, then ``stated``, which replaces the persona's facts at every path it states.
+
+    A stated fact replaces the persona's at its path whether it is dated or not, so a dated fact leaves the
+    path undeclared outside its window rather than standing beside the persona's undated value.
 
     ``persona_id`` names the persona; it defaults to the canonical estimación directa normal one.
 
     A suite that states an ``activities.`` path the persona does not state
     states its own activity rows, so the persona's rows are left out. ``without`` names the paths, or
-    the ``section.`` prefixes, of a variant that omits what the persona states.
+    the ``section.`` prefixes, of a variant that omits what the persona states and the caller does not restate.
     """
     stated = tuple(stated)
-    paths = {fact.path for fact in stated if fact.valid_from is None and fact.valid_to is None}
-    all_paths = {fact.path for fact in stated}
+    paths = {fact.path for fact in stated}
     base = _persona_facts(persona_id)
     persona_paths = {fact.path for fact in base}
-    own_activity_rows = any(path.startswith(_ACTIVITY_ROWS) and path not in persona_paths for path in all_paths)
+    own_activity_rows = any(path.startswith(_ACTIVITY_ROWS) and path not in persona_paths for path in paths)
     kept = tuple(
         fact
         for fact in base

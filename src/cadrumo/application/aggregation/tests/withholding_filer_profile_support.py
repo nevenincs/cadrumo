@@ -114,7 +114,7 @@ def published_work_profile_declaring_activities(
         record = create_user_profile_record(
             context=operation.profile_create_context(),
             profile_id=WITHHOLDING_FILER_PROFILE_ID,
-            facts=(*persona_facts_beneath(facts, without={fact.path for fact in facts}), *rows),
+            facts=(*persona_facts_beneath(facts), *rows),
             setup_state=ProfileSetupState.COMPLETE,
             created_at=_CLOCK,
             updated_at=_CLOCK,
