@@ -750,7 +750,7 @@ def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     assert "modelo.export.development_software_identity" in {notice["code"] for notice in envelope["notices"]}
     written = out.read_bytes()
     assert written[92:96] == b"0000"
-    assert written[100:109] == b"X0000000T"
+    assert written[100:109] == b"X0001003Z"
 
 
 def _export_through_the_operation(

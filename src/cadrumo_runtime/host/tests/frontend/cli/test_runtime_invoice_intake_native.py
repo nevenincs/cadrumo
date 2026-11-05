@@ -32,7 +32,7 @@ _PROFILE_FACTS = {
     "censo.activity_start_date": "2025-01-01",
     "contact.postcode": "28013",
 }
-_SUPPLIER_CIF = "B00000281"
+_SUPPLIER_CIF = "B00010157"
 
 
 def _tax_id_token(value: str) -> str:

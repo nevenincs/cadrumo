@@ -338,7 +338,7 @@ def test_config_profile_view_emits_active_profile_facts(_isolated_backend: Path)
 @pytest.mark.windows_only
 def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_backend: Path) -> None:
     # A named target is authenticated independently of ambient selection.
-    register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000024R"})
+    register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00001005Q"})
     register_cli_profile(log_in=False, label="spouse", facts={"identity.tax_id": "00000000T"})
     result = invoke_protected_profile("spouse", "view", "spouse")
     assert result.exit_code == 0, result.output
@@ -348,7 +348,7 @@ def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_ba
     # fingerprint at the rendering boundary; raw value must not leak.
     assert "identity.tax_id\tsha256:" in result.output
     assert "00000000T" not in result.output
-    assert "00000024R" not in result.output
+    assert "00001005Q" not in result.output
     assert "iva.regime\tGENERAL" in result.output
     assert "tax_residence.ccaa\tmadrid" in result.output
 

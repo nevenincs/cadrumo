@@ -79,7 +79,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(
             label="operator",
-            facts={**_CALENDAR_GATING_FACT_OVERRIDES, "identity.tax_id": "00000022E"},
+            facts={**_CALENDAR_GATING_FACT_OVERRIDES, "identity.tax_id": "00001003Z"},
         )
         from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
@@ -526,7 +526,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
             ),
             captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
             source_url="declarations:modelo=303:ejercicio=2025",
-            authenticated_identity="00000022E",
+            authenticated_identity="00001003Z",
         ),
     )
     NotificationsService(ports=compose_notifications_ports(settings=load_settings())).capture(
@@ -537,9 +537,9 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
                     certificado_id="2596230606502",
                     tipo="notificacion",
                     concepto="Requerimiento censal",
-                    titular_nif="00000022E",
+                    titular_nif="00001003Z",
                     titular_nombre="Test S.L.",
-                    destinatario_nif="00000022E",
+                    destinatario_nif="00001003Z",
                     destinatario_nombre="Test S.L.",
                     fecha_emision=date(2025, 4, 14),
                     fecha_notificacion=None,
@@ -610,7 +610,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
             ),
             captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
             source_url="declarations:modelo=303:ejercicio=2025",
-            authenticated_identity="00000022E",
+            authenticated_identity="00001003Z",
         ),
     )
 
@@ -683,7 +683,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
             ),
             captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
             source_url="declarations:modelo=303:ejercicio=2025",
-            authenticated_identity="00000022E",
+            authenticated_identity="00001003Z",
         ),
     )
 
@@ -774,7 +774,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
             ),
             captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
             source_url="declarations:modelo=303:ejercicio=2025",
-            authenticated_identity="00000022E",
+            authenticated_identity="00001003Z",
         ),
     )
 
@@ -901,7 +901,7 @@ def test_calendar_text_output_names_verified_aeat_evidence() -> None:
     with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
-        JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="00000022E"))
+        JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="00001003Z"))
 
     result = _invoke(
         [

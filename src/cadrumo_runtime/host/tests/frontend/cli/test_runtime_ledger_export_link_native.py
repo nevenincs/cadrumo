@@ -56,7 +56,7 @@ _PROFILE_OPERATIONS = frozenset(
 )
 _PROFILE_VALUE_OPERATIONS = frozenset({LEDGER_EXPORT_OPERATION_DEFINITION_ID, LEDGER_LINK_OPERATION_DEFINITION_ID})
 _PROFILE_FACTS = native_general_iva_facts()
-_SUPPLIER_CIF = "B00000281"
+_SUPPLIER_CIF = "B00010157"
 
 
 def _invoke(session: NativeApiCliSession[None], *command: str, output_format: str = "json") -> Result:

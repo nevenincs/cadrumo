@@ -129,7 +129,7 @@ def _prepare_m100_profile(
         operation=authority_operation,
         taxpayer_tax_id="12345678Z",
         ejercicio=_REVIEWED_EDITION,
-        payer_tax_id="B00000000",
+        payer_tax_id="B00010082",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=_CERTIFIED_RETENCION,
         importe_integro_dinerario=Decimal("32000"),

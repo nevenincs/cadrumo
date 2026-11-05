@@ -81,8 +81,8 @@ def _two_profiles() -> tuple[str, str]:
     Registration selects the profile it creates, so the SECOND registration
     leaves the first one unselected and the second one active.
     """
-    _register("doomed", "00000024R")
-    _register("survivor", "00000002W")
+    _register("doomed", "00001005Q")
+    _register("survivor", "00001000B")
     return "doomed", "survivor"
 
 

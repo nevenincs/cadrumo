@@ -97,7 +97,7 @@ _ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 _ABSENT_CODE = "modelo.aggregate.calculation_rows_absent"
 
 _LANDLORD_A = "B12345674"
-_LANDLORD_B = "A00000067"
+_LANDLORD_B = "A00010066"
 _LANDLORD_OTHER_YEAR = "B00000011"
 _LANDLORD_OWN_WINDOW = "B00000022"
 _EMPLOYEE = "11111111H"
