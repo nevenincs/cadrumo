@@ -278,7 +278,7 @@ def test_guardian_forwards_only_the_storage_root_and_scratch_to_the_contained_wo
     monkeypatch.setattr(linux_worker_guardian, "sys", SimpleNamespace(executable="/python"))
     monkeypatch.setattr(linux_worker_guardian, "subprocess", SimpleNamespace(Popen=launch, DEVNULL=-3))
 
-    assert linux_worker_guardian._launch_worker(_DEFAULT) is sentinel
+    assert linux_worker_guardian.launch_worker(_DEFAULT) is sentinel
     expected = _ENVIRONMENT | {
         name: value
         for name, value in inherited.items()

@@ -79,7 +79,8 @@ def _is_same_parent(options: argparse.Namespace, parent: Path, watcher: _ParentP
         return False
 
 
-def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes] | None:
+def launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes] | None:
+    """Start the contained worker under the clean environment, or return None when it cannot start."""
     from ..adapters.worker_environment import worker_path_environment_names
 
     environment = {
@@ -144,7 +145,7 @@ def _run_linux_guardian(options: argparse.Namespace) -> int:
         # Recheck identity while holding the exact kernel process handle.
         if not _is_same_parent(options, parent, watcher):
             return 2
-        worker = _launch_worker(worker_arguments)
+        worker = launch_worker(worker_arguments)
         return 2 if worker is None else _watch_worker(watcher, descriptor, worker)
     finally:
         os.close(descriptor)
