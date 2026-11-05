@@ -270,7 +270,11 @@ def _expectations_with(*, obligation: dict[str, object] | None = None, value: di
 
 def test_a_stated_refusal_names_the_error_code_and_its_reason() -> None:
     expectations = _expectations_with(
-        value={"refusal": "ERROR_MODELO_WORK_INPUT_REQUIRED", "reason": "Casilla pendiente de un dato manual"}
+        value={
+            "refusal": "ERROR_MODELO_WORK_INPUT_REQUIRED",
+            "reason": "Casilla pendiente de un dato manual",
+            "not_sourced": {},
+        }
     )
     assert expectations.values[0].refusal == "ERROR_MODELO_WORK_INPUT_REQUIRED"
 
@@ -285,6 +289,41 @@ def test_a_stated_refusal_names_the_error_code_and_its_reason() -> None:
 def test_a_malformed_refusal_is_refused(value: dict[str, object], message: str) -> None:
     document = copy.deepcopy(_document("expectations.toml"))
     document["values"][0].pop("reason", None)
+    with pytest.raises(PersonaCatalogueError, match=message):
+        parse_persona(
+            _PERSONA,
+            persona_document=_document("persona.toml"),
+            ledger_text=(PERSONAS_ROOT / _PERSONA / "ledger.csv").read_text(encoding="utf-8"),
+            documents_document=_document("documents.toml"),
+            expectations_document={**document, "values": [{**document["values"][0], **value}]},
+            catalogue=identity_catalogue(),
+            envelope=_ENVELOPE,
+        )
+
+
+def test_a_not_sourced_casilla_states_the_law_figure_and_the_missing_source() -> None:
+    expectations = _expectations_with(
+        value={"not_sourced": {"0013": "2332.80"}, "reason": "Ningún origen registra la cotización del certificado"}
+    )
+    assert expectations.values[0].not_sourced == (("0013", "2332.80"),)
+
+
+@pytest.mark.parametrize(
+    ("value", "message"),
+    [
+        ({"not_sourced": {"0013": "2332.80"}}, "says in its reason what source is missing"),
+        (
+            {"not_sourced": {"0013": "2332.80"}, "refusal": "ERROR_MODELO_WORK_INPUT_REQUIRED", "reason": "Pendiente"},
+            "states none as not sourced",
+        ),
+        ({"not_sourced": {"0596": "5412.00"}, "reason": "Pendiente"}, "either compared or stated as not sourced"),
+    ],
+)
+def test_a_malformed_not_sourced_casilla_is_refused(value: dict[str, object], message: str) -> None:
+    document = copy.deepcopy(_document("expectations.toml"))
+    document["values"][0].pop("reason", None)
+    document["values"][0].pop("not_sourced", None)
+    document["values"][0]["casillas"] = {"0596": "5412.00"}
     with pytest.raises(PersonaCatalogueError, match=message):
         parse_persona(
             _PERSONA,

@@ -7,6 +7,12 @@ construction: number, issue date, parties, taxable base, IVA rate and cuota,
 and any IRPF retención. The text is deterministic, so a consumer may commit it
 and check it for drift.
 
+A row that self-assesses its cuota under inversión del sujeto pasivo (LIVA
+art. 84.Uno.2.º) evidences a supplier invoice that repercutes none: the invoice
+states the base at a zero rate and the legal literal, and the row's cuota stays
+the recipient's own. A seller identified by an EU VAT number is resident in
+another Member State and is stated by that number as it stands.
+
 The persona states no postal addresses, so the parties carry none: the document
 holds only what the persona states. The output is read back by the product's own
 Facturae reader in the tests that guard this module.
@@ -25,7 +31,8 @@ _CENT = Decimal("0.01")
 _FACTURAE_NAMESPACE = "http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml"
 _IVA_TAX_TYPE = "01"
 _IRPF_TAX_TYPE = "04"
-_LEGAL_ENTITY_KINDS = frozenset({"cif"})
+_LEGAL_ENTITY_KINDS = frozenset({"cif", "vat_eu"})
+_REVERSE_CHARGE_LITERAL = "Inversión del sujeto pasivo, art. 84.Uno.2.º LIVA"
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,14 +53,19 @@ def _percentage(fraction: Decimal) -> str:
     return str((fraction * 100).quantize(_CENT))
 
 
+def _tax_identification(identity: Identity) -> str:
+    """The identifier as Facturae states it: an EU VAT number as it stands, a Spanish one behind ``ES``."""
+    return identity.value if identity.kind == "vat_eu" else f"ES{identity.value}"
+
+
 def _party(identity: Identity, role_tag: str) -> list[str]:
     legal_entity = identity.kind in _LEGAL_ENTITY_KINDS
     lines = [
         f"    <{role_tag}>",
         "      <TaxIdentification>",
         f"        <PersonTypeCode>{'J' if legal_entity else 'F'}</PersonTypeCode>",
-        "        <ResidenceTypeCode>R</ResidenceTypeCode>",
-        f"        <TaxIdentificationNumber>ES{escape(identity.value)}</TaxIdentificationNumber>",
+        f"        <ResidenceTypeCode>{'U' if identity.kind == 'vat_eu' else 'R'}</ResidenceTypeCode>",
+        f"        <TaxIdentificationNumber>{escape(_tax_identification(identity))}</TaxIdentificationNumber>",
         "      </TaxIdentification>",
     ]
     if legal_entity:
@@ -102,6 +114,7 @@ class _InvoiceFacts:
     cuota: Decimal
     retencion_rate: Decimal | None
     retencion: Decimal | None
+    reverse_charge: bool
 
 
 def _facts(row: LedgerRow, envelope: YearEnvelope, where: str) -> _InvoiceFacts:
@@ -115,7 +128,8 @@ def _facts(row: LedgerRow, envelope: YearEnvelope, where: str) -> _InvoiceFacts:
         raise PersonaCatalogueError(f"{where}: a recargo de equivalencia invoice is not generated")
     if (row.retencion_rate is None) != (row.retencion_amount is None):
         raise PersonaCatalogueError(f"{where}: the row states a retención rate without its amount, or the reverse")
-    total = row.taxable_base + row.iva_amount - (row.retencion_amount or Decimal(0))
+    cuota = Decimal(0) if row.reverse_charge else row.iva_amount
+    total = row.taxable_base + cuota - (row.retencion_amount or Decimal(0))
     if total != abs(row.amount):
         raise PersonaCatalogueError(f"{where}: base + cuota - retención {total} differs from the movement")
     return _InvoiceFacts(
@@ -125,10 +139,11 @@ def _facts(row: LedgerRow, envelope: YearEnvelope, where: str) -> _InvoiceFacts:
         currency=row.currency,
         description=row.description,
         base=row.taxable_base,
-        rate=row.iva_rate,
-        cuota=row.iva_amount,
+        rate=Decimal(0) if row.reverse_charge else row.iva_rate,
+        cuota=cuota,
         retencion_rate=row.retencion_rate,
         retencion=row.retencion_amount,
+        reverse_charge=row.reverse_charge,
     )
 
 
@@ -158,7 +173,7 @@ def render_facturae(persona: Persona, document: PersonaDocument, envelope: YearE
         "    <Modality>I</Modality>",
         "    <InvoiceIssuerType>EM</InvoiceIssuerType>",
         "    <Batch>",
-        f"      <BatchIdentifier>ES{escape(seller.value)}{escape(facts.number)}</BatchIdentifier>",
+        f"      <BatchIdentifier>{escape(_tax_identification(seller))}{escape(facts.number)}</BatchIdentifier>",
         "      <InvoicesCount>1</InvoicesCount>",
         "      <TotalInvoicesAmount>",
         f"        <TotalAmount>{_money(invoice_total)}</TotalAmount>",
@@ -224,6 +239,18 @@ def render_facturae(persona: Persona, document: PersonaDocument, envelope: YearE
             "          </TaxesOutputs>",
             "        </InvoiceLine>",
             "      </Items>",
+        )
+    )
+    if facts.reverse_charge:
+        lines.extend(
+            (
+                "      <LegalLiterals>",
+                f"        <LegalReference>{escape(_REVERSE_CHARGE_LITERAL)}</LegalReference>",
+                "      </LegalLiterals>",
+            )
+        )
+    lines.extend(
+        (
             "    </Invoice>",
             "  </Invoices>",
             "</fe:Facturae>",

@@ -21,9 +21,10 @@ def _with_generated_documents(envelope: YearEnvelope) -> list[Persona]:
     return [persona for persona in personas if any(document.generator for document in persona.documents)]
 
 
-def _tax_id(stated: str | None) -> str | None:
-    """The identifier without the ISO prefix Facturae states it with."""
-    return stated.removeprefix("ES") if stated is not None else None
+def _stated_tax_id(persona: Persona, role: str) -> str:
+    """The identifier as Facturae states it: an EU VAT number as it stands, a Spanish one behind ``ES``."""
+    identity = persona.identities.role(role)
+    return identity.value if identity.kind == "vat_eu" else f"ES{identity.value}"
 
 
 def test_every_generated_invoice_reads_back_as_its_row(operation: PinnedAuthorityOperation) -> None:
@@ -40,14 +41,16 @@ def test_every_generated_invoice_reads_back_as_its_row(operation: PinnedAuthorit
             assert row.taxable_base is not None and row.iva_rate is not None and row.iva_amount is not None
             parsed = parse_einvoice_document(generated.text.encode("utf-8"))
             where = f"{persona.id} {generated.document_id}"
-            assert _tax_id(parsed.supplier_tax_id) == persona.identity(row.counterparty), where
-            assert _tax_id(parsed.customer_tax_id) == persona.identity(persona.taxpayer), where
+            assert parsed.supplier_tax_id == _stated_tax_id(persona, row.counterparty), where
+            assert parsed.customer_tax_id == _stated_tax_id(persona, persona.taxpayer), where
             assert parsed.invoice_number == row.invoice_number, where
             assert parsed.invoice_date == row.operation_date(envelope).isoformat(), where
             assert parsed.currency == row.currency, where
             assert parsed.taxable_base == row.taxable_base, where
-            assert parsed.iva_amount == row.iva_amount, where
-            assert parsed.iva_breakdown == [(row.iva_rate * 100, row.taxable_base, row.iva_amount)], where
+            # Under reverse charge the supplier repercutes nothing; the row's cuota is the recipient's own.
+            rate, cuota = (Decimal(0), Decimal("0.00")) if row.reverse_charge else (row.iva_rate, row.iva_amount)
+            assert parsed.iva_amount == cuota, where
+            assert parsed.iva_breakdown == [(rate * 100, row.taxable_base, cuota)], where
             # Facturae always states TotalTaxesWithheld, so a row withholding nothing reads as a stated zero.
             assert parsed.retencion_amount == (row.retencion_amount or Decimal("0.00")), where
             expected_rate = None if row.retencion_rate is None else row.retencion_rate * 100
@@ -63,6 +66,20 @@ def test_the_rent_invoice_states_the_retencion_the_row_withholds(operation: Pinn
     # 600.00 base, 21 % IVA 126.00, 19 % IRPF 114.00: the tenant pays 612.00.
     assert (parsed.taxable_base, parsed.iva_amount) == (Decimal("600.00"), Decimal("126.00"))
     assert (parsed.retencion_rate, parsed.retencion_amount) == (Decimal("19.00"), Decimal("114.00"))
+
+
+def test_a_reverse_charge_invoice_repercutes_no_cuota(operation: PinnedAuthorityOperation) -> None:
+    envelope = year_envelope(operation)
+    persona = read_persona("intracomunitario-desarrollador", envelope=envelope)
+    document = next(document for document in persona.documents if document.attach_to == ("DEV-NUBE-02",))
+    rendered = render_facturae(persona, document, envelope).text
+    parsed = parse_einvoice_document(rendered.encode("utf-8"))
+
+    # 80.00 base from an Irish supplier: the invoice states no cuota; the 16.80 is self-assessed.
+    assert parsed.supplier_tax_id == "IE0000001A"
+    assert (parsed.taxable_base, parsed.iva_amount) == (Decimal("80.00"), Decimal("0.00"))
+    assert "<ResidenceTypeCode>U</ResidenceTypeCode>" in rendered
+    assert "Inversión del sujeto pasivo" in rendered
 
 
 def test_a_row_whose_figures_miss_the_movement_is_refused(operation: PinnedAuthorityOperation) -> None:

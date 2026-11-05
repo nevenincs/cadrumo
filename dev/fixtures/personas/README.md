@@ -321,7 +321,7 @@ for IRPF.
 | --- | --- |
 | `id` | referenced from `ledger.csv` `document` |
 | `path` | repository path of an existing specimen; files are referenced, never copied |
-| `generator` | instead of `path`: `facturae` renders the document from its single `attach_to` row and the identity catalogue (`cadrumo.tests.persona_invoices`), so its number, date, parties, base, rate, cuota and retención are the row's; the row's `document` column names it |
+| `generator` | instead of `path`: `facturae` renders the document from its single `attach_to` row and the identity catalogue (`cadrumo.tests.persona_invoices`), so its number, date, parties, base, rate, cuota and retención are the row's; the row's `document` column names it. A reverse-charge row (`iva_category` ending `_reverse_charge`) renders an invoice at a zero rate with no cuota and the inversión del sujeto pasivo literal, since its cuota is the recipient's own (LIVA art. 84.Uno.2.º); a seller identified by an EU VAT number is stated by that number as resident in the Union |
 | `media_type` | MIME type |
 | `attach_to` | ledger refs; the replay attaches the document to each as its purchase-invoice evidence, so only received-invoice rows are named, and an issued-invoice specimen names none (`[]`) |
 | `relation` | `specimen`: the document exercises the evidence path but its printed facts are not the row's facts and must not be confirmed into it; `source`: the document is the row's source and its facts match |
@@ -362,6 +362,13 @@ saying why: a refusal by design, or an application defect named for its fix.
 The test asserts that refusal instead of the casillas, which keep recording
 what the law gives, so the expectation fails once the application calculates
 the period and its casillas can be asserted again.
+
+A value may state `not_sourced` (casilla id → the amount the law gives) for
+casillas the calculation leaves unresolved, and then needs a `reason` naming the
+missing source: an application gap, or an input the persona cannot hold. Those casillas appear in neither `casillas` nor alongside a
+`refusal`. The test asserts that the application does not carry the law's
+figure, so the expectation fails once the source lands and the casilla moves
+back into `casillas`.
 
 `legal_ref` entries are legal-source keys of the registry legal catalogue
 (`ley-35-2006:art-58`, `rd-1065-2007:art-33.2.i`); each must exist there.

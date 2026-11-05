@@ -377,6 +377,11 @@ class LedgerRow:
         """Return the movement's calendar date under ``envelope``."""
         return date(self.year.resolve(envelope), self.month, self.day)
 
+    @property
+    def reverse_charge(self) -> bool:
+        """Whether the row self-assesses its cuota, which the supplier's invoice therefore leaves out."""
+        return self.iva_category is not None and self.iva_category.endswith(_REVERSE_CHARGE_SUFFIX)
+
 
 @dataclass(frozen=True, slots=True)
 class PersonaDocument:
@@ -444,6 +449,9 @@ class ExpectedValue:
     #: The error code the application refuses this period's calculation with; ``reason``
     #: states why. The casillas then record what the law gives, and are not compared.
     refusal: str | None = None
+    #: Casillas with the figure the law gives that the calculation leaves unresolved;
+    #: ``reason`` states the gap. They are asserted not to carry that figure.
+    not_sourced: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -1089,8 +1097,7 @@ def _check_invoice_arithmetic(row: LedgerRow, where: str) -> None:
     """``|amount| = base + iva + recargo - retencion``, with IVA left out under reverse charge."""
     if row.taxable_base is None:
         return
-    reverse_charge = row.iva_category is not None and row.iva_category.endswith(_REVERSE_CHARGE_SUFFIX)
-    iva = Decimal(0) if reverse_charge or row.iva_amount is None else row.iva_amount
+    iva = Decimal(0) if row.reverse_charge or row.iva_amount is None else row.iva_amount
     total = row.taxable_base + iva + (row.recargo_amount or 0) - (row.retencion_amount or 0)
     if abs(row.amount) != total:
         raise _fail(where, f"amount {row.amount} differs from its invoice figures {total}")
@@ -1224,7 +1231,16 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
             here,
             required=frozenset({"modelo", "period", "year", "legal_ref", "grounding"}),
             optional=frozenset(
-                {"counterparty", "casillas", "concepts", "parameters", "derivation", "reason", "refusal"}
+                {
+                    "counterparty",
+                    "casillas",
+                    "concepts",
+                    "parameters",
+                    "derivation",
+                    "reason",
+                    "refusal",
+                    "not_sourced",
+                }
             ),
         )
         grounding = _choice(_string(table, "grounding", here), _GROUNDING, here)
@@ -1237,13 +1253,22 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 raise _fail(here, "a refusal names the application error code")
             if reason is None:
                 raise _fail(here, "a refusal says in its reason why the application refuses")
+        casillas = _string_map(table, "casillas", here)
+        not_sourced = _string_map(table, "not_sourced", here)
+        if not_sourced:
+            if reason is None:
+                raise _fail(here, "a not-sourced casilla says in its reason what source is missing")
+            if refusal is not None:
+                raise _fail(here, "a refused period sources no casilla, so it states none as not sourced")
+            if {casilla for casilla, _amount in not_sourced} & {casilla for casilla, _amount in casillas}:
+                raise _fail(here, "a casilla is either compared or stated as not sourced")
         values.append(
             ExpectedValue(
                 modelo=_string(table, "modelo", here),
                 period=_string(table, "period", here),
                 year=YearToken.parse(table["year"], where=f"{here}.year"),
                 counterparty=roles(table["counterparty"], here) if "counterparty" in table else None,
-                casillas=_string_map(table, "casillas", here),
+                casillas=casillas,
                 concepts=_string_map(table, "concepts", here),
                 parameters=_string_map(table, "parameters", here),
                 derivation=_optional_string(table, "derivation", here),
@@ -1251,6 +1276,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 grounding=grounding,
                 reason=reason,
                 refusal=refusal,
+                not_sourced=not_sourced,
             )
         )
     return Expectations(obligations=tuple(obligations), deadlines=tuple(deadlines), values=tuple(values))

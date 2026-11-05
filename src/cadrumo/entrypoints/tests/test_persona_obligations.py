@@ -11,9 +11,10 @@ copied: nothing here edits an expected value to agree with a run.
 An expectation grounded ``unverified`` is a known gap and is not asserted. A
 value stated only as named concepts, or per counterparty, carries no registry
 casilla and is not re-derived here. A value that states a ``refusal`` asserts
-that the application refuses the period with that error code; an obligation that
-states a ``calendar_advice`` asserts that the calendar advises it instead of
-showing a window row.
+that the application refuses the period with that error code; a casilla stated
+``not_sourced`` asserts that the application does not yet carry the figure the
+law gives; an obligation that states a ``calendar_advice`` asserts that the
+calendar advises it instead of showing a window row.
 """
 
 from __future__ import annotations
@@ -128,7 +129,7 @@ def _value_years(persona: Persona) -> set[int]:
     return {
         value.year.resolve(envelope)
         for value in persona.expectations.values
-        if (value.casillas or value.refusal is not None) and value.grounding != "unverified"
+        if (value.casillas or value.not_sourced or value.refusal is not None) and value.grounding != "unverified"
     }
 
 
@@ -354,7 +355,7 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
     stated = [
         value
         for value in persona.expectations.values
-        if (value.casillas or value.refusal is not None)
+        if (value.casillas or value.not_sourced or value.refusal is not None)
         and value.grounding != "unverified"
         and value.year.resolve(envelope) == case.year
     ]
@@ -364,6 +365,10 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
     }
     legal_refs = {(value.modelo, value.period): value.legal_ref for value in stated}
     refusals = {(value.modelo, value.period): value.refusal for value in stated if value.refusal is not None}
+    not_sourced = {
+        (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.not_sourced}
+        for value in stated
+    }
 
     problems: list[str] = []
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
@@ -384,5 +389,10 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
                 f"{where} casilla {casilla}: expected {amount}, got {actual}"
                 for casilla, amount in casillas.items()
                 if (actual := _decimal(calculated[casilla]) if casilla in calculated else None) != amount
+            )
+            problems.extend(
+                f"{where} casilla {casilla}: now carries the law's {amount}; compare it instead of stating it not sourced"
+                for casilla, amount in not_sourced[modelo, period].items()
+                if casilla in calculated and _decimal(calculated[casilla]) == amount
             )
     assert not problems, "\n".join(problems)
