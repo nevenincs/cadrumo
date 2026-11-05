@@ -1,5 +1,5 @@
 {
-  "note": "What the activity-asset register said for each reason with its facts, remedy, handoff interval and left-out reason the scenario fixtures ask about, in each language, keyed by exactly what was asked. Written and held equal to the register's own words by test_served_words_recording.py.",
+  "note": "What the activity-asset register said for each reason with its facts, remedy, handoff interval and left-out reason the scenario fixtures ask about, in each language, keyed by exactly what was asked. Written by scripts/assets_served_words.py from dev/fixtures/assets-served-words-questions.",
   "entries": {
     "{\"kind\":\"gap\",\"gap_kind\":\"accrued\",\"name\":\"Compresor de taller\",\"covered_from\":\"2027-01-01\",\"covered_through\":\"2027-12-31\",\"accrued\":\"360.00\"}": {
       "es": "Modelo 100: Compresor de taller no tiene dotación registrada del 1 ene 2027 al 31 dic 2027. Los 360,00 € que se devengaron en ese tiempo no están en los importes de arriba.",

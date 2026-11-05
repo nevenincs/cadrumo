@@ -42,6 +42,7 @@ class FixtureState(enum.StrEnum):
 
     FRESH = "fresh"
     STALE = "stale"
+    UNSTAMPED = "unstamped"
     MISSING = "missing"
     CHECK_ONLY = "check-only"
 
@@ -64,11 +65,15 @@ class InputDigests:
         self._groups: dict[tuple[str, ...], dict[str, str]] = {}
 
     def group(self, paths: Sequence[str]) -> dict[str, str]:
-        """Return each repository file under ``paths`` with the digest of its normalised content."""
+        """Return each repository file under ``paths`` with the digest of its normalised content.
+
+        Raises:
+            FileNotFoundError: When a path in ``paths`` does not exist.
+        """
         key = tuple(paths)
         cached = self._groups.get(key)
         if cached is None:
-            files = repository_files(self._root, under=paths)
+            files = repository_files(self._root, under=paths, must_exist=True)
             cached = {
                 relative: hashlib.sha256(content).hexdigest()
                 for relative, content in normalised_contents(self._root, files)
@@ -172,14 +177,16 @@ def family_status(
     outputs = output_digests(family, root)
     if not outputs:
         return FamilyStatus(family.name, FixtureState.MISSING, ("no outputs",))
+    # Outputs with no usable stamp exist but are of unknown provenance: not
+    # missing, and not fresh until a seed produces or adopts them.
     try:
         stamp = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        return FamilyStatus(family.name, FixtureState.MISSING, ("no stamp",))
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, ("no stamp",))
     except (OSError, ValueError) as exc:
-        return FamilyStatus(family.name, FixtureState.MISSING, (f"unreadable stamp: {type(exc).__name__}",))
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, (f"unreadable stamp: {type(exc).__name__}",))
     if not isinstance(stamp, dict) or stamp.get("format") != STAMP_FORMAT or stamp.get("family") != family.name:
-        return FamilyStatus(family.name, FixtureState.MISSING, ("stamp of another format or family",))
+        return FamilyStatus(family.name, FixtureState.UNSTAMPED, ("stamp of another format or family",))
     reasons: list[str] = []
     if stamp.get("producer_version") != declaration_digest(family):
         reasons.append("declaration changed")

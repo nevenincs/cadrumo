@@ -14,6 +14,9 @@ import {
   type PlanContext,
 } from "../../src/shell/ledgerPlan";
 
+// Each line captured here has the form of a line in
+// dev/fixtures/ledger-staged-check-questions/questions.jsonl, the questions
+// scripts/ledger_staged_check.py answers into the recording.
 const capture = process.env.CADRUMO_STAGED_CHECK_UNRECORDED;
 if (capture)
   (
@@ -34,7 +37,7 @@ export function recordedCheck(
   const result = answerStagedCheck(request, (id) => rows.get(id), "p");
   if (!result)
     throw new Error(
-      "The staged check recording does not hold this question; record it with the Python recording test.",
+      "The staged check recording does not hold this question; capture it with CADRUMO_STAGED_CHECK_UNRECORDED, append the captured line to dev/fixtures/ledger-staged-check-questions/questions.jsonl and run `just fixtures-seed ledger-staged-check` (scripts/ledger_staged_check.py).",
     );
   return indexCheck(result);
 }

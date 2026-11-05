@@ -14,11 +14,12 @@ new question; run after changing a question or a rule:
 
 from __future__ import annotations
 
-import argparse
 import json
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
+
+from dev.fixture_projections.producer_output import emit, producer_arguments
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
@@ -159,24 +160,14 @@ def render_fixtures() -> dict[str, str]:
 
 
 def main() -> None:
-    """Write or verify the checked-in browser fixtures."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true")
-    args = parser.parse_args()
+    """Write, verify or redirect the checked-in browser fixtures."""
+    arguments = producer_arguments(__doc__)
     rendered = render_fixtures()
-    stale = []
-    for name, text in rendered.items():
-        target = FIXTURES / f"{name}.json"
-        if args.check:
-            if not target.is_file() or json.loads(target.read_text(encoding="utf-8")) != json.loads(text):
-                stale.append(name)
-        else:
-            target.write_text(text, encoding="utf-8", newline="\n")
-    if stale:
-        raise SystemExit(
-            f"The Ledger recordings {', '.join(stale)} are stale; run "
-            "uv run --no-sync python native/desktop/frontend/scripts/ledger_recordings.py"
-        )
+    emit(
+        {FIXTURES / f"{name}.json": text for name, text in rendered.items()},
+        arguments,
+        remedy="uv run --no-sync python native/desktop/frontend/scripts/ledger_recordings.py",
+    )
 
 
 if __name__ == "__main__":

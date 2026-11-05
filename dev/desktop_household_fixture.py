@@ -18,7 +18,6 @@ a changed profile schema, wizard wording, design or persona.
 
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import tempfile
@@ -28,6 +27,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from dev.fixture_projections.producer_output import emit, producer_arguments
 from dev.prettier_json import dump_json
 from dev.temporary_output import prepare_temp_root
 
@@ -366,18 +366,12 @@ def render_fixture(root: Path) -> str:
 
 
 def main() -> None:
-    """Write or verify the checked-in, synthetic browser fixture."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true")
-    args = parser.parse_args()
+    """Write, verify or redirect the checked-in, synthetic browser fixture."""
+    arguments = producer_arguments(__doc__)
     target = Path(__file__).resolve().parents[1] / "native/desktop/frontend/src/dev/fixtures/household.json"
     with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp:
         rendered = render_fixture(Path(tmp))
-    if args.check:
-        if target.read_text(encoding="utf-8") != rendered:
-            raise SystemExit("Household demo is stale; run uv run --no-sync python -m dev.desktop_household_fixture")
-    else:
-        target.write_text(rendered, encoding="utf-8", newline="\n")
+    emit({target: rendered}, arguments, remedy="uv run --no-sync python -m dev.desktop_household_fixture")
 
 
 if __name__ == "__main__":

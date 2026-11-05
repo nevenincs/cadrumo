@@ -1,66 +1,118 @@
 """The persona catalogue check that runs before any producer is trusted.
 
-Until the persona reader exists, this is a structural parse: every TOML file
-loads and every ledger is a CSV with a header and rows. When the reader lands,
-:func:`persona_catalogue_findings` is the one hook to route through it, so the
-check validates personas by the same contract the materialiser reads.
+Every persona is read through the catalogue reader, ``cadrumo.tests.personas``,
+under the published authority's supported filing-year envelope, so the check
+holds each persona to the contract every consumer reads it by: the catalogue
+format, identity roles, ledger rows and year tokens. Its wizard answers then go
+through the profile patch judge the materialiser submits them to, so an unknown
+question id or a value the wizard refuses is found here, and its schema fields
+and activity columns are looked up in the pinned profile schema.
 """
 
 from __future__ import annotations
 
-import csv
 import tomllib
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
-PERSONA_FILES: Final[tuple[str, ...]] = ("persona.toml", "documents.toml", "expectations.toml")
-LEDGER_FILE: Final[str] = "ledger.csv"
+from cadrumo.application.user_profile.section_rows import section_row_facts
+from cadrumo.application.wizard.catalogue import build_setup_flow
+from cadrumo.application.wizard.patch_edit import validate_profile_patch
+from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.user_profile.values import ProfileSetupState
+from cadrumo.entrypoints.tests.persona_materialisation import (
+    PersonaMaterialisationError,
+    patch_answers,
+    year_envelope,
+)
+from cadrumo.tests.personas import (
+    IdentityCatalogue,
+    Persona,
+    PersonaCatalogueError,
+    YearEnvelope,
+    parse_identity_catalogue,
+    parse_persona,
+)
+
 IDENTITIES_FILE: Final[str] = "identities.toml"
+ACTIVITY_SECTION: Final[str] = "activities"
 
 
-def _toml_finding(path: Path) -> str | None:
+def _toml(path: Path) -> dict[str, Any]:
+    return tomllib.loads(path.read_text(encoding="utf-8"))
+
+
+def _read(directory: Path, identities: IdentityCatalogue, envelope: YearEnvelope) -> Persona:
+    return parse_persona(
+        directory.name,
+        persona_document=_toml(directory / "persona.toml"),
+        ledger_text=(directory / "ledger.csv").read_text(encoding="utf-8"),
+        documents_document=_toml(directory / "documents.toml"),
+        expectations_document=_toml(directory / "expectations.toml"),
+        catalogue=identities,
+        envelope=envelope,
+    )
+
+
+def _profile_findings(persona: Persona, envelope: YearEnvelope, operation: PinnedAuthorityOperation) -> list[str]:
+    findings: list[str] = []
     try:
-        tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
-        return f"{path.name}: {exc}"
-    return None
+        validate_profile_patch(
+            flow=build_setup_flow(operation),
+            current_values={},
+            setup_state=ProfileSetupState.INCOMPLETE,
+            supplied=dict(patch_answers(persona, envelope)),
+            colegio_concertado=None,
+            operation=operation,
+        )
+    except (CadrumoError, PersonaMaterialisationError, ValueError) as exc:
+        findings.append(f"{persona.id}: the wizard refuses its answers: {exc}")
+    schema = operation.profile_decode_context().schema
+    known_paths = set(schema.field_paths)
+    findings.extend(
+        f"{persona.id}: [fields] names {field.path!r}, which the profile schema does not declare"
+        for field in persona.fields
+        if field.path not in known_paths
+    )
+    section = schema.section(ACTIVITY_SECTION)
+    columns = {field.key for field in section.fields}
+    for index, activity in enumerate(persona.activities):
+        unknown = sorted(key for key, _ in activity.values if key not in columns)
+        if unknown:
+            findings.append(f"{persona.id}: activities[{index}] names unknown columns {unknown}")
+            continue
+        try:
+            section_row_facts(section, row_index=index, values=dict(activity.values))
+        except (CadrumoError, ValueError) as exc:
+            findings.append(f"{persona.id}: activities[{index}] is refused: {exc}")
+    return findings
 
 
-def _ledger_finding(path: Path) -> str | None:
+def persona_findings(catalogue: Path, operation: PinnedAuthorityOperation) -> tuple[str, ...]:
+    """Every reason a persona under ``catalogue`` departs from the contract, read under ``operation``."""
+    if not catalogue.is_dir():
+        return (f"no persona catalogue at {catalogue}",)
     try:
-        rows = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))
-    except (OSError, UnicodeDecodeError, csv.Error) as exc:
-        return f"{path.name}: {exc}"
-    if len(rows) < 2:
-        return f"{path.name}: no header and rows"
-    width = len(rows[0])
-    ragged = [number for number, row in enumerate(rows[1:], start=2) if row and len(row) != width]
-    if ragged:
-        return f"{path.name}: rows {ragged} do not have the header's {width} columns"
-    return None
+        identities = parse_identity_catalogue(_toml(catalogue / IDENTITIES_FILE))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, PersonaCatalogueError) as exc:
+        return (f"{IDENTITIES_FILE}: {exc}",)
+    envelope = year_envelope(operation)
+    directories = sorted(path for path in catalogue.iterdir() if path.is_dir())
+    if not directories:
+        return ("no personas",)
+    findings: list[str] = []
+    for directory in directories:
+        try:
+            persona = _read(directory, identities, envelope)
+        except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, PersonaCatalogueError) as exc:
+            findings.append(f"{directory.name}: {exc}")
+            continue
+        findings.extend(_profile_findings(persona, envelope, operation))
+    return tuple(findings)
 
 
 def persona_catalogue_findings(catalogue: Path) -> tuple[str, ...]:
-    """Every reason the catalogue at ``catalogue`` cannot be read; empty when it can."""
-    if not catalogue.is_dir():
-        return (f"no persona catalogue at {catalogue}",)
-    findings: list[str] = []
-    identities = catalogue / IDENTITIES_FILE
-    if not identities.is_file():
-        findings.append(f"{IDENTITIES_FILE}: absent")
-    elif (finding := _toml_finding(identities)) is not None:
-        findings.append(finding)
-    personas = sorted(path for path in catalogue.iterdir() if path.is_dir())
-    if not personas:
-        findings.append("no personas")
-    for persona in personas:
-        for name in PERSONA_FILES:
-            path = persona / name
-            finding = _toml_finding(path) if path.is_file() else f"{name}: absent"
-            if finding is not None:
-                findings.append(f"{persona.name}/{finding}")
-        ledger = persona / LEDGER_FILE
-        finding = _ledger_finding(ledger) if ledger.is_file() else f"{LEDGER_FILE}: absent"
-        if finding is not None:
-            findings.append(f"{persona.name}/{finding}")
-    return tuple(findings)
+    """Every reason the catalogue at ``catalogue`` cannot be read, under the published authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return persona_findings(catalogue, operation)

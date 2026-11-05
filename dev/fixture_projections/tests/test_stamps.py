@@ -48,15 +48,34 @@ def _stamp(root: Path, cache: Path, *, committed: bool = True) -> Path:
     return write_stamp(family, root, family_inputs(family, InputDigests(root), _AUTHORITY), cache_directory=cache)
 
 
-def test_a_family_with_no_stamp_is_missing(tmp_path: Path) -> None:
+def test_outputs_with_no_stamp_are_unstamped_not_missing(tmp_path: Path) -> None:
     root = tmp_path / "repo"
     root.mkdir()
     _tree(root)
 
     result = _status(root, tmp_path / "cache")
 
-    assert result.state is FixtureState.MISSING
+    assert result.state is FixtureState.UNSTAMPED
     assert result.reasons == ("no stamp",)
+
+
+def test_an_unreadable_stamp_leaves_existing_outputs_unstamped(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    _tree(root)
+    _stamp(root, tmp_path / "cache").write_text("not json", encoding="utf-8")
+
+    assert _status(root, tmp_path / "cache").state is FixtureState.UNSTAMPED
+
+
+def test_a_declared_input_that_does_not_exist_is_refused_not_hashed_as_empty(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    _tree(root)
+    (root / "tools" / "produce.py").unlink()
+
+    with pytest.raises(FileNotFoundError, match=r"tools/produce.py"):
+        _status(root, tmp_path / "cache")
 
 
 def test_a_family_with_no_outputs_is_missing_even_when_stamped(tmp_path: Path) -> None:

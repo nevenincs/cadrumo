@@ -1,5 +1,5 @@
 {
-  "note": "What ledger.staged.check answered for each stored movement and staged request the fixtures ask about, keyed by exactly what was asked. Written and held equal to the live answers by test_staged_check_recording.py.",
+  "note": "What ledger.staged.check answered for each stored movement and staged request the fixtures ask about, keyed by exactly what was asked. Written by scripts/ledger_staged_check.py from dev/fixtures/ledger-staged-check-questions.",
   "absent": {
     "found": false,
     "classified": false,

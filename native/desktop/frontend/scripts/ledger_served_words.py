@@ -12,13 +12,13 @@ the fixture fills from the refusal it builds. Run after changing a served catalo
 
 from __future__ import annotations
 
-import argparse
 import json
 import re
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import cast, get_args
 
+from dev.fixture_projections.producer_output import emit, producer_arguments
 from pydantic import TypeAdapter
 
 LANGUAGES = ("en", "es", "ca", "hu")
@@ -157,20 +157,12 @@ def render_fixture() -> str:
 
 
 def main() -> None:
-    """Write or verify the checked-in browser fixture."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true")
-    args = parser.parse_args()
-    rendered = render_fixture()
-    if args.check:
-        current = TARGET.read_text(encoding="utf-8") if TARGET.is_file() else None
-        if current is None or _WORDS.validate_json(current) != _WORDS.validate_json(rendered):
-            raise SystemExit(
-                "The Ledger's served words are stale; run "
-                "uv run --no-sync python native/desktop/frontend/scripts/ledger_served_words.py"
-            )
-    else:
-        TARGET.write_text(rendered, encoding="utf-8", newline="\n")
+    """Write, verify or redirect the checked-in browser fixture."""
+    emit(
+        {TARGET: render_fixture()},
+        producer_arguments(__doc__),
+        remedy="uv run --no-sync python native/desktop/frontend/scripts/ledger_served_words.py",
+    )
 
 
 if __name__ == "__main__":

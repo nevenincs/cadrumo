@@ -20,10 +20,22 @@ from ..first_party_source import PRODUCT_SOURCE_ROOTS
 PYTHON: Final[str] = "{python}"
 OUTPUT: Final[str] = "{output}"
 
+#: Environment switches that once made a test write a recording. No command
+#: reads them now, and every command runs without them, so a switch left set in
+#: a shell can never turn a check into a writer.
+RECORDING_SWITCHES: Final[tuple[str, ...]] = (
+    "CADRUMO_STAGED_CHECK_UNRECORDED",
+    "CADRUMO_ASSET_WORDS_UNRECORDED",
+    "CADRUMO_RECORD_ENTRY_OPTION_PERIODS",
+)
+
 
 @dataclass(frozen=True, slots=True)
 class InputGroup:
-    """A named set of repository files or directories, given relative to the repository root."""
+    """A named set of repository files or directories, given relative to the repository root.
+
+    Every named path must exist: a mistyped path is refused, never digested as empty.
+    """
 
     label: str
     paths: tuple[str, ...]
@@ -51,6 +63,11 @@ class FixtureFamily:
 
     A family with no producer is check-only: its outputs are committed
     assertions, so it is neither seeded nor stamped, only checked.
+
+    ``check_proves_outputs`` says the check renders every output afresh and
+    compares its text with the stored one. Only such a family's unstamped
+    outputs may be adopted by stamping them after a passing check, without
+    producing them again.
     """
 
     name: str
@@ -63,19 +80,26 @@ class FixtureFamily:
     committed: bool = True
     determinism: Command | None = None
     prerequisites: tuple[Prerequisite, ...] = ()
+    check_proves_outputs: bool = False
 
 
 FRONTEND: Final[str] = "native/desktop/frontend"
 FIXTURE_ROOT: Final[str] = f"{FRONTEND}/src/dev/fixtures"
 PERSONA_ROOT: Final[str] = "dev/fixtures/personas"
 
+_SCRIPTS: Final[str] = f"{FRONTEND}/scripts"
 _PERSONAS: Final = InputGroup("personas", (PERSONA_ROOT,))
 _PRODUCT: Final = InputGroup("product-source", PRODUCT_SOURCE_ROOTS)
 _LOCK: Final = InputGroup("lockfile", ("uv.lock",))
 _FRONTEND_LOCK: Final = InputGroup("frontend-lockfile", (f"{FRONTEND}/package-lock.json",))
 _FRONTEND_PACKAGES: Final = Prerequisite(f"{FRONTEND}/node_modules", "just setup-desktop-frontend")
-#: The development modules every producer imports for its paths and scratch directories.
-_TOOLING: Final = ("dev/_paths.py", "dev/prettier_json.py", "dev/temporary_output.py")
+#: The development modules every producer imports for its paths, output and scratch directories.
+_TOOLING: Final = (
+    "dev/_paths.py",
+    "dev/prettier_json.py",
+    "dev/temporary_output.py",
+    "dev/fixture_projections/producer_output.py",
+)
 
 
 def _python_script(path: str, *arguments: str) -> tuple[str, ...]:
@@ -94,42 +118,69 @@ def _common(*producer: str) -> tuple[InputGroup, ...]:
     return (InputGroup("producer", (*producer, *_TOOLING)), _PERSONAS, _PRODUCT, _LOCK)
 
 
-def _desktop_fixture(name: str, module: str, output: str, summary: str) -> FixtureFamily:
-    source = f"dev/{module}.py"
-    return FixtureFamily(
-        name=name,
-        summary=summary,
-        inputs=_common(source),
-        producer=Command(_python_module(f"dev.{module}")),
-        check=(Command(_python_module(f"dev.{module}", "--check")),),
-        output_root=FIXTURE_ROOT,
-        outputs=(output,),
-    )
-
-
-def _recorded_by_test(
-    name: str, test_module: str, record_test: str, switch: tuple[str, str], output: str, summary: str
+def _python_producer(
+    name: str,
+    entry: tuple[str, ...],
+    sources: tuple[str, ...],
+    outputs: tuple[str, ...],
+    summary: str,
+    *,
+    questions: str | None = None,
+    extra_checks: tuple[Command, ...] = (),
 ) -> FixtureFamily:
+    """A Python producer: it writes in place, checks the stored text with ``--check``, redirects with ``--output``."""
+    inputs = _common(*sources)
+    if questions is not None:
+        inputs = (*inputs, InputGroup("questions", (questions,)))
     return FixtureFamily(
         name=name,
         summary=summary,
-        inputs=_common(test_module),
-        producer=Command(_pytest(f"{test_module}::{record_test}"), environment=(switch,)),
-        check=(Command(_pytest(test_module)),),
+        inputs=inputs,
+        producer=Command(entry),
+        check=(Command((*entry, "--check")), *extra_checks),
         output_root=FIXTURE_ROOT,
-        outputs=(output,),
+        outputs=outputs,
+        determinism=Command((*entry, "--output", OUTPUT)),
+        check_proves_outputs=True,
     )
 
 
-_MODELO_PRODUCER: Final = f"{FRONTEND}/scripts/modelo_fixtures.py"
+def _desktop_fixture(name: str, module: str, output: str, summary: str) -> FixtureFamily:
+    return _python_producer(name, _python_module(f"dev.{module}"), (f"dev/{module}.py",), (output,), summary)
+
+
+def _script(
+    name: str,
+    script: str,
+    outputs: tuple[str, ...],
+    summary: str,
+    *,
+    questions: str | None = None,
+    support: tuple[str, ...] = (),
+    extra_checks: tuple[Command, ...] = (),
+) -> FixtureFamily:
+    path = f"{_SCRIPTS}/{script}"
+    return _python_producer(
+        name,
+        _python_script(path),
+        (path, *support),
+        outputs,
+        summary,
+        questions=questions,
+        extra_checks=extra_checks,
+    )
+
+
+_MODELO_PRODUCER: Final = f"{_SCRIPTS}/modelo_fixtures.py"
 _LEDGER_TESTS: Final = "src/cadrumo/application/ledger/tests"
+_ASSET_TESTS: Final = "src/cadrumo/application/actividad_asset/tests"
 
 FAMILIES: Final[tuple[FixtureFamily, ...]] = (
     FixtureFamily(
         name="modelo-envelopes",
-        summary="The window's Modelo scenario envelopes, read through the application's read path.",
+        summary="The window's Modelo wire types, relay bounds and scenario envelopes, read through the application.",
         inputs=(
-            *_common(_MODELO_PRODUCER, f"{FRONTEND}/scripts/modelo-fixtures.mjs"),
+            *_common(_MODELO_PRODUCER, f"{_SCRIPTS}/modelo-fixtures.mjs"),
             InputGroup(
                 "host-source",
                 (
@@ -142,39 +193,33 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
             ),
             _FRONTEND_LOCK,
         ),
-        producer=Command(("node", f"{FRONTEND}/scripts/modelo-fixtures.mjs")),
-        check=(Command(("node", f"{FRONTEND}/scripts/modelo-fixtures.mjs", "--check")),),
-        output_root=f"{FIXTURE_ROOT}/modelo",
-        outputs=("*.json",),
+        producer=Command(("node", f"{_SCRIPTS}/modelo-fixtures.mjs")),
+        # Its check renders the wire types and bounds afresh but only validates
+        # the stored envelopes against their models, so it does not prove their bytes.
+        check=(Command(("node", f"{_SCRIPTS}/modelo-fixtures.mjs", "--check")),),
+        output_root=f"{FRONTEND}/src",
+        outputs=("dev/fixtures/modelo/*.json", "shell/modeloContract.ts", "shell/relayBounds.ts"),
         determinism=Command(_python_script(_MODELO_PRODUCER, "envelopes", OUTPUT)),
         prerequisites=(_FRONTEND_PACKAGES,),
     ),
-    FixtureFamily(
-        name="ledger-served-words",
-        summary="The sentences the Ledger operations serve with each refusal, in every language.",
-        inputs=_common(f"{FRONTEND}/scripts/ledger_served_words.py"),
-        producer=Command(_python_script(f"{FRONTEND}/scripts/ledger_served_words.py")),
-        check=(Command(_python_script(f"{FRONTEND}/scripts/ledger_served_words.py", "--check")),),
-        output_root=FIXTURE_ROOT,
-        outputs=("ledgerServedWords.json",),
+    _script(
+        "ledger-served-words",
+        "ledger_served_words.py",
+        ("ledgerServedWords.json",),
+        "The sentences the Ledger operations serve with each refusal, in every language.",
     ),
-    FixtureFamily(
-        name="ledger-recordings",
-        summary="What the Ledger's pure reads answer for each recorded question.",
-        inputs=(
-            *_common(f"{FRONTEND}/scripts/ledger_recordings.py"),
-            InputGroup("questions", ("dev/fixtures/ledger-recording-questions",)),
-        ),
-        producer=Command(_python_script(f"{FRONTEND}/scripts/ledger_recordings.py")),
-        check=(Command(_python_script(f"{FRONTEND}/scripts/ledger_recordings.py", "--check")),),
-        output_root=FIXTURE_ROOT,
-        outputs=(
+    _script(
+        "ledger-recordings",
+        "ledger_recordings.py",
+        (
             "ledgerInvoicePreview.json",
             "ledgerInvoiceMatch.json",
             "ledgerInvoiceDuplicate.json",
             "ledgerRuleTrial.json",
             "ledgerSplitCheck.json",
         ),
+        "What the Ledger's pure reads answer for each recorded question.",
+        questions="dev/fixtures/ledger-recording-questions",
     ),
     _desktop_fixture(
         "desktop-profile",
@@ -200,63 +245,52 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         "ledgerWithholdingRefusalWords.json",
         "The withholding refusal sentences the backend serves, in every language.",
     ),
-    _recorded_by_test(
+    _script(
         "ledger-staged-check",
-        f"{_LEDGER_TESTS}/test_staged_check_recording.py",
-        "test_record_the_questions_the_fixtures_could_not_answer",
-        ("CADRUMO_STAGED_CHECK_UNRECORDED", "all"),
-        "ledgerStagedCheck.json",
-        "The staged-check answers for every question the recording holds.",
+        "ledger_staged_check.py",
+        ("ledgerStagedCheck.json",),
+        "The staged-check answers for every committed question.",
+        questions="dev/fixtures/ledger-staged-check-questions",
+        support=(f"{_LEDGER_TESTS}/staged_check_recording_support.py",),
     ),
-    _recorded_by_test(
+    _script(
         "assets-served-words",
-        "src/cadrumo/application/actividad_asset/tests/test_served_words_recording.py",
-        "test_record_the_questions_the_fixtures_could_not_answer",
-        ("CADRUMO_ASSET_WORDS_UNRECORDED", "all"),
-        "assetsServedWords.json",
-        "The register's sentences for every question the recording holds.",
+        "assets_served_words.py",
+        ("assetsServedWords.json",),
+        "The register's sentences for every committed question.",
+        questions="dev/fixtures/assets-served-words-questions",
+        support=(f"{_ASSET_TESTS}/served_words_recording_support.py",),
+    ),
+    _script(
+        "ledger-entry-options",
+        "ledger_entry_options.py",
+        ("ledgerEntryOptions.json",),
+        "The periods the ledger's period read answers, recorded into the entry options.",
+        questions="dev/fixtures/ledger-entry-option-questions",
+        support=(f"{_LEDGER_TESTS}/entry_option_periods_recording_support.py",),
+        # The producer writes only the periods; these read-only tests hold the
+        # fixture's other sections to what the backend serves.
+        extra_checks=(
+            Command(_pytest(f"{_LEDGER_TESTS}/test_entry_options.py", f"{_LEDGER_TESTS}/test_entry_limits.py")),
+        ),
     ),
     FixtureFamily(
-        name="ledger-entry-options",
-        summary="The periods the ledger's period read answers, recorded into the entry options.",
-        inputs=_common(
-            f"{_LEDGER_TESTS}/test_entry_options_period_recording.py",
-            f"{_LEDGER_TESTS}/test_entry_options.py",
-            f"{_LEDGER_TESTS}/test_entry_limits.py",
-        ),
-        producer=Command(
-            _pytest(f"{_LEDGER_TESTS}/test_entry_options_period_recording.py::test_record_the_periods"),
-            environment=(("CADRUMO_RECORD_ENTRY_OPTION_PERIODS", "1"),),
-        ),
-        check=(
-            Command(
-                _pytest(
-                    f"{_LEDGER_TESTS}/test_entry_options_period_recording.py",
-                    f"{_LEDGER_TESTS}/test_entry_options.py",
-                    f"{_LEDGER_TESTS}/test_entry_limits.py",
-                )
-            ),
-        ),
-        output_root=FIXTURE_ROOT,
-        outputs=("ledgerEntryOptions.json",),
-    ),
-    FixtureFamily(
-        name="docs-sequences",
-        summary="The committed documentation sequence goldens, executed against the real CLI.",
+        name="docs-sequence-seeds",
+        summary="The persona-derived profile frames of the documentation seed recipes.",
         inputs=(),
-        check=(Command(_python_module("dev.docs.sequences", "check")),),
+        check=(Command(_python_module("dev.docs.sequences", "seeds", "--check")),),
     ),
 )
 
 
-def family_named(name: str) -> FixtureFamily:
+def family_named(name: str, families: tuple[FixtureFamily, ...] = FAMILIES) -> FixtureFamily:
     """Return the family called ``name``.
 
     Raises:
         KeyError: When no family has that name; the message lists the known names.
     """
-    for family in FAMILIES:
+    for family in families:
         if family.name == name:
             return family
-    known = ", ".join(family.name for family in FAMILIES)
+    known = ", ".join(family.name for family in families)
     raise KeyError(f"No fixture family {name!r}; known families: {known}")

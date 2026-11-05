@@ -9,10 +9,10 @@ text of its own. Run after changing the served refusal catalogue keys or the rea
 
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from dev.fixture_projections.producer_output import emit, producer_arguments
 from dev.prettier_json import dump_json
 
 if TYPE_CHECKING:
@@ -92,23 +92,17 @@ def render_fixture() -> str:
 
 
 def main() -> None:
-    """Write or verify the checked-in browser fixture."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true")
-    args = parser.parse_args()
+    """Write, verify or redirect the checked-in browser fixture."""
+    arguments = producer_arguments(__doc__)
     target = (
         Path(__file__).resolve().parents[1]
         / "native/desktop/frontend/src/dev/fixtures/ledgerWithholdingRefusalWords.json"
     )
-    rendered = render_fixture()
-    if args.check:
-        if not target.is_file() or target.read_text(encoding="utf-8") != rendered:
-            raise SystemExit(
-                "Withholding refusal words are stale; run "
-                "uv run --no-sync python -m dev.desktop_withholding_refusal_words_fixture"
-            )
-    else:
-        target.write_text(rendered, encoding="utf-8", newline="\n")
+    emit(
+        {target: render_fixture()},
+        arguments,
+        remedy="uv run --no-sync python -m dev.desktop_withholding_refusal_words_fixture",
+    )
 
 
 if __name__ == "__main__":
