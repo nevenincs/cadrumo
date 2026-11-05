@@ -153,10 +153,10 @@ Modelo 390 reconciles from Modelo 303:
 
 If a 303 return was filed outside Cadrumo, read or reconcile the official AEAT data before you rely on local values, with the `live filed pull-sources` or `reconcile import` commands shown under [What each Modelo 303 quarter needs](#what-each-modelo-303-quarter-needs-before-you-verify) above. Reading filed declarations from AEAT is read-only; reconciliation reads the AEAT receipt or declaration file you supply. Modelo 390 calculation does not require a fresh check against what AEAT holds before it runs.
 
-For VAT compensation history, use the VAT wallet commands; they support the compensation carry-forward review but are not a general Modelo 390 reconciliation gate. Inspect the balance with the `iva-wallet balance` step in the inspection example. Seed an opening balance, fix a wrong seed, or review the AEAT-side history with the following commands. The seed runs. Correcting a seed is refused once a 303 recorded as filed has consumed it, and the history read reaches AEAT, so those two are examples that are not run:
+For VAT compensation history, use the VAT wallet commands; they support the compensation carry-forward review but are not a general Modelo 390 reconciliation gate. Inspect the balance with the `iva-wallet balance` step in the inspection example. Read the balance, seed an opening balance, fix a wrong seed, or review the AEAT-side history with the following commands. The balance read runs. Seeding and correcting a seed are refused once a 303 recorded as filed has consumed the opening balance, as the 2025 quarters here have, and the history read reaches AEAT, so those three are examples that are not run:
 
 ```{cli-sequence} modelo-390-wallet
-:verify: Confirm the opening compensation balance seeds.
+:verify: Confirm the compensation balance reads.
 ```
 
 `pull-history` requires both `--from-year` and `--to-year`; it reads filed
