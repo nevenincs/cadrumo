@@ -873,7 +873,9 @@ _ADDRESS_REQUIRED: Final = frozenset(
         "house_number",
     }
 )
-_ADDRESS_OPTIONAL: Final = frozenset({"number_qualifier", "block", "portal", "staircase", "floor", "door", "complement"})
+_ADDRESS_OPTIONAL: Final = frozenset(
+    {"number_qualifier", "block", "portal", "staircase", "floor", "door", "complement"}
+)
 
 _CADASTRAL_WEIGHTS: Final = (13, 15, 12, 5, 4, 17, 9, 21, 3, 7, 1)
 _CADASTRAL_CONTROL_LETTERS: Final = "MQWERTYUIOPASDFGHJKLBZX"
@@ -1385,13 +1387,13 @@ __all__ = [
     "LEDGER_COLUMNS",
     "PERSONAS_ROOT",
     "ActivityRow",
+    "CalculatedReturns",
     "Election",
     "Expectations",
     "ExpectedDeadline",
     "ExpectedObligation",
     "ExpectedValue",
     "FieldValue",
-    "CalculatedReturns",
     "FiledReturns",
     "HouseholdMember",
     "Identity",

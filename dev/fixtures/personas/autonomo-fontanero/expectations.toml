@@ -324,6 +324,9 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = """
 01 = 8840.00 + 640 + 2950 + 3900 = 16330.00. Gastos = 4982.00 + 1800.00 + 1980.00 + 150.00 + 882.00 = 9794.00.
 Provisión = 5 % of 6536.00 = 326.80; 02 = 10120.80; 03 = 6209.20; 04 = 1241.84; 05 = previous positive 07 = 733.02; 07 = 508.82.
+The history replay does not reach 2T to 4T: casilla 05 reads casilla 07 of the earlier quarters' filed returns
+(RIRPF art. 110), 1T stays calculated and unfiled because its casilla 13 rests on a local observation, so the
+calculation of 2T refuses for that missing input. These figures are what a filed 1T would carry forward.
 """
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"

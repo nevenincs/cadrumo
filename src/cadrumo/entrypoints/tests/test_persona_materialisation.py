@@ -14,11 +14,19 @@ from ...application.modelo.filing_record_list_contracts import (
     ModeloFilingRecordListRequest,
 )
 from ...application.modelo.filing_record_list_operation import MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID
+from ...application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from ...application.modelo.revision_selection_operation import (
     MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
     ModeloWorkRevisionProjection,
     ModeloWorkRevisionRequest,
 )
+from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
+from ...application.modelo.work_create_operation import (
+    MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+    ModeloWorkCreateRequest,
+    ModeloWorkCreateSuccess,
+)
+from ...application.operations.public_period import PublicPeriod
 from ...application.retencion_soportada_certificado.contracts import RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID
 from ...application.retencion_soportada_certificado.requests import RetencionSoportadaListRequest
 from ...application.retencion_soportada_certificado.results import RetencionSoportadaListProjection
@@ -37,7 +45,9 @@ from ...domain.user_profile.values import ProfileSetupState
 from ...tests.personas import persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
 from .persona_materialisation import (
+    PERSONA_ACTOR,
     MaterialisedPersona,
+    PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
     filing_key,
@@ -297,6 +307,27 @@ def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_co
             ).calculation_state
             for key, revision_id in (*materialised.filings.items(), *materialised.calculations.items())
         }
+        # Casilla 05 of a later Modelo 130 quarter reads casilla 07 of the earlier quarters' filed returns; the
+        # first quarter is calculated but unfiled, so the next quarter's calculation refuses for that input.
+        created = settle_operation(
+            world,
+            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+            ModeloWorkCreateRequest(
+                profile_id=world.profile_id,
+                modelo="130",
+                period=PublicPeriod(filing_year=persona.fiscal_year.resolve(world.envelope), code="2T"),
+                actor=PERSONA_ACTOR,
+            ),
+        )
+        outcome = getattr(created, "outcome", None)
+        assert isinstance(outcome, ModeloWorkCreateSuccess)
+        with pytest.raises(PersonaMaterialisationError, match="ERROR_MODELO_WORK_INPUT_REQUIRED"):
+            settle_operation(
+                world,
+                MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+                ModeloWorkCalculateRequest(work_unit_id=outcome.unit.work_unit_id, actor=PERSONA_ACTOR),
+                subject=outcome.unit.work_unit_id,
+            )
     declared_filed = {
         filing_key(filed.modelo, filed.year.resolve(world.envelope), period)
         for filed in persona.filed_returns

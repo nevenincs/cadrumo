@@ -139,12 +139,15 @@ modelo = "180"
 year = "horizon-1"
 periods = ["0A"]
 
-# His Modelo 130 returns are calculated but not filed by the replay. Casilla
-# 13 depends on the prior year's Renta, which he knows only from his own copy:
-# a local observation that the product keeps at calculation grade, so the
-# cross-period check refuses to verify a return that reads it. Only AEAT
-# evidence of that Renta would clear it, and the persona holds none.
+# His first Modelo 130 return is calculated but not filed by the replay.
+# Casilla 13 depends on the prior year's Renta, which he knows only from his
+# own copy: a local observation that the product keeps at calculation grade,
+# so the cross-period check refuses to verify a return that reads it. Only
+# AEAT evidence of that Renta would clear it, and the persona holds none. The
+# later quarters are not calculated either: their casilla 05 reads casilla 07
+# of the earlier quarters' filed returns, and with 1T unfiled the calculation
+# refuses for that missing input.
 [[calculated_returns]]
 modelo = "130"
 year = "horizon-1"
-periods = ["1T", "2T", "3T", "4T"]
+periods = ["1T"]

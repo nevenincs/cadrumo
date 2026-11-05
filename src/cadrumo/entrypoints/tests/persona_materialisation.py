@@ -52,11 +52,6 @@ from ...adapters.persistence.profile.tests.sealed_profile_world import (
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ...adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
-from ...application.invoices.catalogue_add_contracts import (
-    INVOICE_ADD_OPERATION_DEFINITION_ID,
-    InvoiceAddRequest,
-    InvoiceAddResult,
-)
 from ...application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ...application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
 from ...application.aggregation.service import PerModeloAggregationCommand
@@ -64,6 +59,11 @@ from ...application.aggregation.withholding_recognition import (
     WithholdingIncomeKind,
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
+)
+from ...application.invoices.catalogue_add_contracts import (
+    INVOICE_ADD_OPERATION_DEFINITION_ID,
+    InvoiceAddRequest,
+    InvoiceAddResult,
 )
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.actions_import import LedgerProviderID
@@ -115,7 +115,7 @@ from ...application.modelo.operation_shared import (
 )
 from ...application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from ...application.modelo.work_create_operation import (
@@ -1026,6 +1026,13 @@ def _capture_rent_withholding(
                 )
 
 
+def _unresolved(calculated: ModeloWorkCalculatePublicResultV3) -> str:
+    """The bindings and boxes a calculation left without a value, named for a refusal message; empty when none."""
+    names = [f"binding {row.binding_id}" for row in calculated.unresolved_bindings]
+    names += [f"casilla {row.casilla_id} ({row.reason})" for row in calculated.unresolved_casillas]
+    return ", ".join(names)
+
+
 def _replay_history(
     persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
 ) -> tuple[dict[str, str], dict[str, str]]:
@@ -1066,17 +1073,23 @@ def _replay_history(
             if filed.modelo == "303"
             else None
         )
-        calculated = run_operation(
-            world,
-            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-            ModeloWorkCalculateRequest(
-                work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
-            ),
-            ModeloWorkCalculatePublicResultV2,
-            subject=work_unit_id,
-        )
+        try:
+            calculated = run_operation(
+                world,
+                MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+                ModeloWorkCalculateRequest(
+                    work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
+                ),
+                ModeloWorkCalculatePublicResultV3,
+                subject=work_unit_id,
+            )
+        except PersonaMaterialisationError as error:
+            raise PersonaMaterialisationError(f"{where}: {error}") from error
         revision_id = calculated.calculation_revision_id
+        unresolved = _unresolved(calculated)
         if isinstance(filed, CalculatedReturns):
+            if unresolved:
+                raise PersonaMaterialisationError(f"{where}: the calculation left {unresolved} without a value")
             calculations[filing_key(filed.modelo, year, period)] = revision_id
             continue
         verified = run_operation(
@@ -1090,7 +1103,7 @@ def _replay_history(
             raise PersonaMaterialisationError(
                 f"{where}: verification did not complete ({verified.completeness_status}, "
                 f"{verified.finding_count} findings, "
-                f"{verified.missing_required_casilla_count} required casillas missing)"
+                f"{verified.missing_required_casilla_count} required casillas missing; unresolved: {unresolved or 'none'})"
             )
         run_operation(
             world,
