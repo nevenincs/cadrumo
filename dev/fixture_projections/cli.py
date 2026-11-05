@@ -16,7 +16,6 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
-import subprocess
 import sys
 import time
 import uuid
@@ -25,6 +24,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .._paths import REPO_ROOT, TEMP_ROOT
+from ..packaging.command_execution import run_command
 from ..temporary_output import prepare_temp_root
 from .personas import persona_catalogue_findings
 from .registry import FAMILIES, OUTPUT, PERSONA_ROOT, PYTHON, Command, FixtureFamily, family_named
@@ -91,7 +91,7 @@ def _run(command: Command, *, output: Path | None = None) -> int:
     if executable is None:
         print(f"  cannot run {argv[0]!r}: not on PATH", file=sys.stderr)
         return 127
-    return subprocess.run([executable, *argv[1:]], cwd=REPO_ROOT, env=environment, check=False).returncode
+    return run_command([executable, *argv[1:]], cwd=REPO_ROOT, environment=environment, inherit_output=True).returncode
 
 
 def _unmet_prerequisites(family: FixtureFamily) -> tuple[str, ...]:
