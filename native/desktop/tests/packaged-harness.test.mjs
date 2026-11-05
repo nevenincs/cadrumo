@@ -14,6 +14,7 @@ import "./packaged/product-log.test.mjs";
 import "./packaged/agent-log-evidence.test.mjs";
 import "./packaged/failure-capture.test.mjs";
 import "./packaged/override-refusal.test.mjs";
+import "./packaged/terminal-probe-attribution.test.mjs";
 
 import { docsProbe, instrument, pasteInto } from "./packaged/browser.mjs";
 import {

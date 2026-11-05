@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, resolve } from "node:path";
 
+import { attributeTerminalProbe } from "./terminal-probe-attribution.mjs";
 import { FAIL, PASS } from "./verdicts.mjs";
 
 export const LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"];
@@ -379,6 +380,7 @@ export function readProductLogs({ storage, defaults }) {
             reason: String(value.failure?.reason),
             cause_reason: causes.join(","),
           },
+          record: value,
           timeMs: value.timestampMs,
         });
       } else if (value.desktopDiagnostic?.level === "ERROR") {
@@ -621,6 +623,9 @@ function iso(timeMs) {
  * The gate: reads the storage root's logs, classifies each record and fails
  * when any group is unexpected. `checks` are the run's recorded checks as
  * `{id, startedAt, elapsedMs, phases?: [{phase, startedAt, elapsedMs}]}`.
+ * `ipcTrace` and `windowHostPid` are the window run's harness IPC trace and
+ * host pid; a native record they causally tie to the authored terminal probe
+ * is "attributed", and without them nothing is.
  */
 export function productLogVerdict({
   storage,
@@ -628,6 +633,8 @@ export function productLogVerdict({
   checks,
   allowlist,
   run = "setup",
+  ipcTrace = null,
+  windowHostPid = null,
 }) {
   let read;
   try {
@@ -643,8 +650,16 @@ export function productLogVerdict({
     entries.map((entry) => [entry.id, faultWindow(entry, checks)]),
   );
   const used = new Map(entries.map((entry) => [entry.id, 0]));
+  const attributions = attributeTerminalProbe({
+    records: read.problems
+      .filter((problem) => problem.record)
+      .map((problem) => problem.record),
+    trace: ipcTrace,
+    checks,
+    windowHostPid,
+  });
   const groups = new Map();
-  const add = (disposition, item, template, entryId) => {
+  const add = (disposition, item, template, entryId, attribution) => {
     const key = [
       disposition,
       item.source,
@@ -652,6 +667,7 @@ export function productLogVerdict({
       item.logger,
       template,
       entryId ?? "",
+      attribution ? JSON.stringify(attribution) : "",
     ].join("\u0000");
     const group = groups.get(key) ?? {
       disposition,
@@ -660,6 +676,7 @@ export function productLogVerdict({
       logger: item.logger,
       template,
       ...(entryId && { entry: entryId }),
+      ...(attribution && { attribution }),
       count: 0,
       first: null,
       last: null,
@@ -672,6 +689,11 @@ export function productLogVerdict({
   };
 
   for (const problem of read.problems) {
+    const attribution = problem.record && attributions.get(problem.record);
+    if (attribution) {
+      add("attributed", problem, problem.template, undefined, attribution);
+      continue;
+    }
     const match = problem.native
       ? entries.find(
           (entry) =>
@@ -754,9 +776,12 @@ export function productLogVerdict({
   const allowed = ordered.filter(
     (group) => group.disposition === "allowed",
   ).length;
+  const attributed = ordered.filter(
+    (group) => group.disposition === "attributed",
+  ).length;
   return {
     verdict: PASS,
-    detail: `${read.sources.length} log file(s) read, no unexplained ERROR, CRITICAL or gated WARNING; ${allowed} allowed group(s), ${observed} observed warning group(s)`,
+    detail: `${read.sources.length} log file(s) read, no unexplained ERROR, CRITICAL or gated WARNING; ${allowed} allowed group(s), ${attributed} attributed group(s), ${observed} observed warning group(s)`,
     data,
   };
 }

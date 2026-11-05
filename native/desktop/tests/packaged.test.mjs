@@ -293,9 +293,19 @@ function desktopDefaults() {
 
 /**
  * The product-log gate over the storage root the run used: the check verdict,
- * with the full grouped findings kept as evidence beside it.
+ * with the full grouped findings kept as evidence beside it. The window run
+ * passes its in-memory harness IPC trace and its host pid so the authored
+ * terminal probe's refusal can be causally attributed; the setup run has no
+ * such probe and passes neither.
  */
-function productLogGate({ results, storage, run, signIn }) {
+function productLogGate({
+  results,
+  storage,
+  run,
+  signIn,
+  ipcTrace = null,
+  windowHostPid = null,
+}) {
   const verdict = productLogVerdict({
     storage,
     defaults: desktopDefaults(),
@@ -304,6 +314,8 @@ function productLogGate({ results, storage, run, signIn }) {
     }),
     allowlist: loadAllowlist(PRODUCT_LOG_ALLOWLIST),
     run,
+    ipcTrace,
+    windowHostPid,
   });
   results.evidence("product-log-findings.json", verdict);
   return { verdict: verdict.verdict, detail: verdict.detail };
@@ -384,6 +396,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
   let session = null;
   let host = null;
   let hostPid = null;
+  let ipcTrace = null;
   const refusedPids = [];
   let projected = null;
   let webviewPids = [];
@@ -1902,7 +1915,8 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     );
 
     // Evidence before the window closes ---------------------------------------------
-    evidence("ipc-trace.json", await session.shell(() => window.__s10.ipc));
+    ipcTrace = await session.shell(() => window.__s10.ipc);
+    evidence("ipc-trace.json", ipcTrace);
     evidence("frames.json", await session.frames());
     evidence("playwright-console.json", session.console);
     evidence(
@@ -2136,6 +2150,8 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
             storage: projected.storage,
             run: "window",
             signIn,
+            ipcTrace,
+            windowHostPid: hostPid,
           }),
       );
     }
