@@ -47,7 +47,7 @@ _LABEL = "Native modelo create operator"
 
 
 def _facts() -> dict[str, str]:
-    return native_general_iva_facts(surnames="Create", description="consulting")
+    return native_general_iva_facts()
 
 
 def _invoke(fixture: NativeCliProfileFixture, *arguments: str) -> Result:

@@ -13,6 +13,7 @@ from click.testing import Result
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from ._profile_cli_support import invoke_native_profile
 
 pytestmark = [
@@ -24,19 +25,12 @@ pytestmark = [
 ]
 
 _PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
+    **native_general_iva_facts(),
     "identity.name": "Native",
     "identity.surnames": "Invoice Intake",
     "activities.description": "design",
     "censo.activity_start_date": "2025-01-01",
     "contact.postcode": "28013",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
 }
 _SUPPLIER_CIF = "B00000281"
 

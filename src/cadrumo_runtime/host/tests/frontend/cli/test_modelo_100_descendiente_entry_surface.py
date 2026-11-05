@@ -44,6 +44,7 @@ from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_unbound_cli
 
 pytestmark = [
@@ -110,23 +111,16 @@ def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> No
     runtime_profile.register(
         label=_PROFILE_LABEL,
         facts={
+            **native_general_iva_facts(),
             "identity.name": "Ana",
             "identity.surnames": "Perez",
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
             "renta_family.minor_children_in_unit": "false",
             "renta_taxpayer.marriage_full_year": "false",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "activities.description": "economic activity",
             "tax_residence.ccaa": "madrid",
-            "tax_residence.jurisdiction_scope": "common_regime",
             "provenance.source": "manual_cli",
             "renta_taxpayer.birth_date": "1985-06-15",
             "renta_filing.declaration_type": "1",

@@ -55,7 +55,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Attachment", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 _PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 _SEED_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
 

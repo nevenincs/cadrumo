@@ -9,6 +9,8 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.core.config import override_settings
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
+from ...native_profile_facts import native_general_iva_facts
+
 
 @contextmanager
 def isolated_cli_surface_backend(tmp_path: Path) -> Generator[None]:
@@ -39,18 +41,11 @@ def create_cli_surface_profile(label: str = "operator", *, log_in: bool = True) 
         label=label,
         log_in=log_in,
         facts={
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Operator",
             "identity.surnames": "Example",
             "activities.description": "Test",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

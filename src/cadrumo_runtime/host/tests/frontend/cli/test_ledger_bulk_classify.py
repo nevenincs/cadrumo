@@ -22,6 +22,7 @@ from cadrumo.entrypoints.cli.ledger_rule_results import (
 )
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -32,18 +33,11 @@ _IMPORTED: ContextVar[tuple[str, str]] = ContextVar("bulk_classify_imported")
 _ACTIVE_PROFILE: ContextVar[NativeCliProfileFixture | None] = ContextVar("bulk_classify_active_profile", default=None)
 _PROFILE_LABEL = "bulk-classify-cli-test"
 _PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
+    **native_general_iva_facts(),
     "identity.name": "Bulk",
     "identity.surnames": "Classify",
     "activities.description": "design",
     "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
 }
 
 

@@ -100,7 +100,7 @@ def _scope(
     )
 
 
-_LEDGER_ADD_PROFILE_FACTS = native_general_iva_facts(surnames="Add", description="design")
+_LEDGER_ADD_PROFILE_FACTS = native_general_iva_facts()
 
 
 def _prepare_profile(

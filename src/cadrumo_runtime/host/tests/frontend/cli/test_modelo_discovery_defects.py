@@ -35,6 +35,7 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m303_work
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
@@ -44,7 +45,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _OPERATOR_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
+    **native_general_iva_facts(),
     "identity.tax_id": "12345678Z",
     "identity.name": "Operator",
     "identity.surnames": "Operator",
@@ -52,13 +53,6 @@ _OPERATOR_FACTS = {
     "censo.activity_start_date": "2024-01-01",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
     "tax_residence.ccaa": "madrid",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     # Modelo 111 readiness requires the colegio concertado answer.
     "withholding.colegio_concertado": "false",
 }

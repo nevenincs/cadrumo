@@ -72,7 +72,7 @@ _MISSING_ID = "b" * 16
 
 
 def _facts() -> dict[str, str]:
-    return native_general_iva_facts(surnames="Workflow", description="consulting")
+    return native_general_iva_facts()
 
 
 def _run(run_id: str, *, period: Period | None) -> WorkflowResult:

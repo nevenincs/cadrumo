@@ -83,7 +83,7 @@ _PROFILE_LABEL = "Native resume operator"
 
 
 def _profile_facts() -> dict[str, str]:
-    return native_general_iva_facts(surnames="Resume", description="consulting")
+    return native_general_iva_facts()
 
 
 @pytest.fixture(autouse=True)

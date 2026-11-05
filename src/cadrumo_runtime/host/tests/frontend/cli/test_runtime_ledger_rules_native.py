@@ -54,7 +54,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Rule Journey", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 _ACTOR = "native-rule-journey"
 _CATEGORY = "material_oficina"
 

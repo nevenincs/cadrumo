@@ -29,7 +29,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Preview", description="synthetic invoice preview profile")
+_PROFILE_FACTS = native_general_iva_facts()
 
 _COMPLETE_DRAFT = (
     "--kind",

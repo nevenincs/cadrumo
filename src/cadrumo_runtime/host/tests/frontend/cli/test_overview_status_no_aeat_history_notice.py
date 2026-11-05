@@ -25,6 +25,7 @@ from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from ._overview_native_support import invoke_native_overview
 
 pytestmark = [
@@ -53,13 +54,7 @@ _NOTICE_CODE = "overview.no_aeat_history"
 # rather than passed as create flags. The notice, not the seeding, is the
 # subject of every test below.
 _M303_READY_FACTS = {
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    **native_general_iva_facts(),
     "activities.description": "consultoria informatica",
 }
 _LEGAL_ENTITY_FACTS = {
@@ -94,7 +89,7 @@ def test_a_fresh_natural_person_profile_gets_the_history_notice_with_the_sweep_a
         _native_scope,
         "freelancer",
         **_M303_READY_FACTS,
-        **{"taxpayer_type.entity_type": "natural_person", "identity.tax_id": "12345678Z"},
+        **{"identity.tax_id": "12345678Z"},
     )
 
     notice = _history_notice(_status_notices(_native_scope))
@@ -113,7 +108,7 @@ def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action(
     taxpayer and zero calculation observations: the notice fires (the gap is
     real) but carries no action (the whole-history sweep is not a fix for it).
     """
-    _seed_profile(_native_scope, "webco", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
+    _seed_profile(_native_scope, "webco", **{**_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS})
 
     notice = _history_notice(_status_notices(_native_scope))
     assert notice["severity"] == "info"
@@ -129,7 +124,7 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
     from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-    _seed_profile(_native_scope, "webco-with-history", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
+    _seed_profile(_native_scope, "webco-with-history", **{**_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS})
 
     pointer = read_profile_bucket("webco-with-history")
     assert pointer is not None

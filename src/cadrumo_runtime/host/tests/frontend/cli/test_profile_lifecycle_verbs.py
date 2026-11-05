@@ -57,6 +57,7 @@ from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.entrypoints.cli.tests.profile_lifecycle_support import seed
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
+from ...native_profile_facts import native_general_iva_facts
 from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
 
@@ -156,34 +157,20 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
         log_in=False,
         label="alpha",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.name": "Alpha",
             "identity.surnames": "Operator",
             "activities.description": "alpha-design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     register_cli_profile(
         log_in=False,
         label="beta",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.name": "Beta",
             "identity.surnames": "Operator",
             "activities.description": "beta-consulting",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

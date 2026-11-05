@@ -49,6 +49,7 @@ from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo.tests.privacy_helpers import assert_public_profile_id_not_leaked
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -76,16 +77,9 @@ def _create_profile(name: str, *, tax_id: str) -> str:
     return register_cli_profile(
         label=name,
         facts={
+            **native_general_iva_facts(),
             "identity.tax_id": tax_id,
             "activities.description": "design",
-            "taxpayer_type.entity_type": "natural_person",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "identity.name": "Archive",
             "identity.surnames": "Roundtrip",
         },

@@ -55,7 +55,7 @@ _PROFILE_OPERATIONS = frozenset(
     }
 )
 _PROFILE_VALUE_OPERATIONS = frozenset({LEDGER_EXPORT_OPERATION_DEFINITION_ID, LEDGER_LINK_OPERATION_DEFINITION_ID})
-_PROFILE_FACTS = native_general_iva_facts(surnames="Export Link", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 _SUPPLIER_CIF = "B00000281"
 
 

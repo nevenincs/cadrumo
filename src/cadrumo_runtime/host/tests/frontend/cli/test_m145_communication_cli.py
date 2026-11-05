@@ -38,7 +38,7 @@ from .cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="M145 CLI", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 _CREATE_ARGS = [
     "app",
     "modelo",

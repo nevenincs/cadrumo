@@ -35,6 +35,7 @@ from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixtu
 
 # This module already owns a native server. An authentication refusal must not
 # join a second portable server over the same anchored installation.
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_unbound_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -325,18 +326,11 @@ def test_deleted_profile_name_is_reusable_by_create(
         log_in=False,
         label="operator",
         facts={
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

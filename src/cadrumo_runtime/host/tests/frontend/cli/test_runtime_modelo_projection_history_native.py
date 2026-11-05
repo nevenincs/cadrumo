@@ -34,6 +34,7 @@ from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -62,19 +63,12 @@ def test_native_modelo_history_project_compare_reuse_real_stored_revisions(
         profile.register(
             label="native-modelo-history-project-compare",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.name": "Native",
                 "identity.surnames": "Projection",
                 "activities.description": "consulting",
                 "censo.activity_start_date": "2025-01-01",
-                "tax_residence.jurisdiction_scope": "common_regime",
                 "tax_residence.ccaa": "madrid",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
         assert profile.label is not None

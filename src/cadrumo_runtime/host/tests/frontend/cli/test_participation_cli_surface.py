@@ -31,6 +31,7 @@ from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
@@ -139,18 +140,11 @@ def test_participation_rebuild_dispatches_not_swallowed_as_id(tmp_path: Path) ->
     success exit (the typed rebuild counts), never the hex-validation failure.
     """
     facts = {
-        "taxpayer_type.entity_type": "natural_person",
+        **native_general_iva_facts(),
         "identity.name": "Participation",
         "identity.surnames": "Rebuilder",
         "activities.description": "design",
         "censo.activity_start_date": "2025-01-01",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-participation-rebuild", facts=facts)
@@ -173,18 +167,11 @@ def test_participation_lookup_still_works_for_transaction_id(tmp_path: Path) -> 
     genuine lookup ids.
     """
     facts = {
-        "taxpayer_type.entity_type": "natural_person",
+        **native_general_iva_facts(),
         "identity.name": "Participation",
         "identity.surnames": "Lookup",
         "activities.description": "design",
         "censo.activity_start_date": "2025-01-01",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-participation-lookup", facts=facts)
