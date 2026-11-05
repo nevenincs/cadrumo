@@ -64,6 +64,19 @@ def _stated(persona: Persona, answer_id: str) -> UserProfileFactValue:
     raise TypeError(f"persona answer {answer_id} is not a plain profile value")
 
 
+_IDENTITY_ANSWER_IDS = frozenset({"tax-id", "name", "surnames"})
+
+
+def ready_profile_fact_values() -> dict[str, str | bool]:
+    """The ready profile's taxpayer facts keyed by profile path, without the persona's identity answers."""
+    persona, paths = _persona_and_paths()
+    return {
+        paths[answer_id]: _stated(persona, answer_id)
+        for answer_id in _ANSWER_IDS
+        if answer_id not in _IDENTITY_ANSWER_IDS
+    }
+
+
 def _ready_profile_facts() -> tuple[UserProfileFact, ...]:
     persona, paths = _persona_and_paths()
     return (
