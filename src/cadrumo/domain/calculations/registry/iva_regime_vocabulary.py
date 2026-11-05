@@ -35,10 +35,9 @@ _REGIME_REAGP_KEY = "iva_regime.reagp_token"
 
 _REGIME_EXENTO_KEY = "iva_regime.exento_token"
 
-_REGIME_PREFIX = "iva_regime."
+_REGIME_RECARGO_EQUIVALENCIA_KEY = "iva_regime.recargo_equivalencia_token"
 
-#: Declared by the regime order; the vocabulary names no semantic key for it.
-_REGIME_RECARGO_EQUIVALENCIA = "RECARGO_EQUIVALENCIA"
+_REGIME_PREFIX = "iva_regime."
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,7 +133,12 @@ def resolve_iva_regime_catalogue(
         raise RegistryValidationError("IVA NO_APLICA regime is not declared in the regime order")
     if not catalogue.self_assessment_tokens.issubset(catalogue.all_regimes):
         raise RegistryValidationError("IVA self-assessment regimes must be declared in the regime order")
-    for semantic_key in (_REGIME_SIMPLIFICADO_KEY, _REGIME_REAGP_KEY, _REGIME_EXENTO_KEY):
+    for semantic_key in (
+        _REGIME_SIMPLIFICADO_KEY,
+        _REGIME_REAGP_KEY,
+        _REGIME_EXENTO_KEY,
+        _REGIME_RECARGO_EQUIVALENCIA_KEY,
+    ):
         semantic_token = IVARegime(required_mapping_entry(entries, semantic_key, subject=SCHEMA_VOCABULARY_SUBJECT))
         if semantic_token not in catalogue.all_regimes:
             raise RegistryValidationError(f"IVA regime semantic token {semantic_key!r} is not declared")
@@ -223,8 +227,8 @@ def iva_regime_recargo_equivalencia_token(
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
     """Return the recargo de equivalencia regime token, refusing a vocabulary that lacks it."""
-    return require_iva_regime(
-        _REGIME_RECARGO_EQUIVALENCIA,
+    return _iva_regime_semantic_token(
+        _REGIME_RECARGO_EQUIVALENCIA_KEY,
         effective_date=effective_date,
         authority=authority,
     )
