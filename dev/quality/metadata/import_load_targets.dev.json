@@ -489,6 +489,7 @@
         "dev.identity",
         "dev.identity.__main__",
         "dev.identity._tree_scan",
+        "dev.identity.catalogue_gate",
         "dev.identity.tax_id_respelling_census",
         "dev.ingest_harness",
         "dev.ingest_harness._caveats",
