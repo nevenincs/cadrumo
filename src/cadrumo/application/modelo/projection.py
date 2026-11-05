@@ -879,6 +879,12 @@ def unresolved_binding_rows(
     Shared by the projection and the calculation: both name a source gap the
     same way, from the ids a source resolution left unresolved and the
     diagnostics it raised for them.
+
+    Args:
+        unresolved_binding_ids: The bindings the source resolution left unresolved.
+        diagnostics: The diagnostics that resolution raised.
+        revision: The pinned :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            whose bindings name the box each unresolved binding feeds.
     """
     bindings_by_id = revision_bindings_by_id(revision)
     by_binding = {
@@ -922,6 +928,11 @@ def unresolved_casilla_rows(
     reports a typed outcome for one it could not evaluate; every other formula
     target carries an observation. A target in neither is therefore omitted for
     an unresolved operand.
+
+    Args:
+        engine_result: The engine's observations and unresolved outcomes.
+        revision: The pinned :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            whose formulas name every target.
     """
     observed = {observation.casilla_id for observation in engine_result.observations}
     outcomes = {outcome.casilla_id: outcome for outcome in engine_result.unresolved_outcomes}

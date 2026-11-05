@@ -411,15 +411,14 @@ def _unrouted_observation_diagnostics(
             resolver_id=resolver_id,
             source_ref=f"transaction:{observation.ledger_id}",
             message=(
-                f"declarable OSS observation {observation.ledger_id!r} "
+                f"This calculation omits base/cuota for OSS line {observation.ledger_id!r} "
                 f"(regime={observation.regime.value!r}, "
                 f"destination={observation.destination_member_state.value!r}, "
                 f"rate_kind={observation.rate_kind.value!r}, "
                 f"invoice_direction={observation.invoice_direction.value!r}, "
-                f"transaction_kind={observation.transaction_kind.value!r}) has no detail table "
-                f"on revision {revision_id!r}: a Union goods line needs its state of "
-                "dispatch, which the invoice does not record, and a line of another regime "
-                "belongs to that regime's revision; its base/cuota is not declared on this calculation"
+                f"transaction_kind={observation.transaction_kind.value!r}). "
+                f"No detail table on {revision_id!r}; Union goods need a state of dispatch "
+                "absent from the invoice, and other regimes need their own revision."
             ),
         )
         for observation in unrouted

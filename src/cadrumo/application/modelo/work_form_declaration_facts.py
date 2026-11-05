@@ -4,6 +4,8 @@ Where the latest calculation noticed something, whether it replayed AEAT tax
 data, the last day to file, the settled result and its direction, whether the
 declaration is recorded as filed, the latest exported file, and why nothing may
 be edited. Each is classified from declared facts so a frontend only renders it.
+Whether the filing year is carried across from another edition is read from the
+pinned :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations
@@ -103,7 +105,12 @@ class ModeloFormYearProjection(ModeloFormBase):
 
 
 def year_projection(snapshot: RegistrySnapshot) -> ModeloFormYearProjection:
-    """The projection the pinned snapshot's registry resolution states for its filing year."""
+    """The projection the pinned snapshot's registry resolution states for its filing year.
+
+    Args:
+        snapshot: The pinned :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+            whose temporal resolution and reachable grade the projection carries.
+    """
     return ModeloFormYearProjection(
         direction=snapshot.revision_projection_direction,
         authored_filing_year=snapshot.edition_filing_year,
