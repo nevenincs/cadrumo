@@ -47,6 +47,13 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "does-intracomunitario" = false
 "third-party-transactions-above-347-threshold" = true
 
+# Domiciled in Valladolid with a turnover far below 12 million euros, the
+# company falls under neither the Concierto Económico (Ley 12/2002 art. 15) nor
+# the Convenio Económico (Ley 28/1990 art. 19): the State levies its whole
+# Impuesto sobre Sociedades.
+[fields]
+"taxpayer_type.tributacion_estado_porcentaje" = "100"
+
 [[activities]]
 description = "Desarrollo y mantenimiento de aplicaciones y plataformas web"
 iae_epigraph = "845"

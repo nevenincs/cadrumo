@@ -590,8 +590,9 @@ def _replay_profile(persona: Persona, world: PersonaWorld) -> None:
 
 
 def _replay_household(persona: Persona, world: PersonaWorld) -> None:
+    """Replace each household family the persona states; a family it states as empty declares it has none."""
     envelope = world.envelope
-    if persona.descendants:
+    if "descendants" in persona.household_families:
         record = load_profile_record(world)
         settle_operation(
             world,
@@ -611,7 +612,7 @@ def _replay_household(persona: Persona, world: PersonaWorld) -> None:
                 ),
             ),
         )
-    if persona.ascendants:
+    if "ascendants" in persona.household_families:
         record = load_profile_record(world)
         settle_operation(
             world,

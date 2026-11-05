@@ -113,6 +113,16 @@ def test_a_persona_replays_through_production_operations(
             for key, value in household_leaves(persona, member, world.envelope)
         }
         assert {path: values.get(path) for path in expected} == expected
+    # A household family the persona states, an empty one included, is declared with its member count.
+    assert {
+        family: values.get(f"renta_family.{count}")
+        for family, count in (("descendants", "descendientes_count"), ("ascendants", "ascendientes_count"))
+        if family in persona.household_families
+    } == {
+        family: str(len(members))
+        for family, members in (("descendants", persona.descendants), ("ascendants", persona.ascendants))
+        if family in persona.household_families
+    }
     assert len(stored.transactions) == len(persona.ledger)
     assert set(materialised.transactions) == {row.ref for row in persona.ledger}
     assert {

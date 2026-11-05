@@ -162,6 +162,12 @@ the question and its dated year companion (for
 
 ### Household rows
 
+`[household]` holds the `descendants` and `ascendants` families. A family the
+persona lists, even as an empty array (`descendants = []`), is stated: the
+materialiser replaces it through its operation, which records the member count,
+so an empty family declares that the taxpayer has none. A family left out is
+unstated.
+
 Descendant keys are the canonical descendant leaves: `birth_date`, `relacion`,
 `inscripcion_registro_civil`, `acogimiento_resolucion`, `fallecimiento`,
 `discapacidad`, `convivencia`, `dependencia_economica`, `custodia_compartida`,

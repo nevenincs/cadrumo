@@ -379,6 +379,12 @@ class Persona:
     elections: tuple[Election, ...]
     descendants: tuple[HouseholdMember, ...]
     ascendants: tuple[HouseholdMember, ...]
+    household_families: tuple[str, ...]
+    """The household families (``descendants``, ``ascendants``) the persona states, an empty one included.
+
+    A family the persona lists as empty is a declaration that it has no member;
+    a family it leaves out is unstated.
+    """
     withholding_certificates: tuple[WithholdingCertificate, ...]
     rental_properties: tuple[RentalProperty, ...]
     officers: tuple[Officer, ...]
@@ -1021,6 +1027,7 @@ def parse_persona(
         elections=tuple(elections),
         descendants=_household(household.get("descendants"), f"{where} descendants", _DESCENDANT_LEAVES, roles),
         ascendants=_household(household.get("ascendants"), f"{where} ascendants", _ASCENDANT_LEAVES, roles),
+        household_families=tuple(family for family in ("descendants", "ascendants") if family in household),
         withholding_certificates=tuple(
             _withholding(table, f"{where} withholding_certificates[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("withholding_certificates"), where))

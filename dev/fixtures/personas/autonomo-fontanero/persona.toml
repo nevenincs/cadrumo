@@ -8,7 +8,8 @@ Javier Montero instala y repara fontanería y calefacción en Madrid. Factura a
 empresas al 21 % y repara instalaciones de viviendas de una comunidad de
 propietarios al 10 %. Alquila un taller a un particular, que le factura con IVA
 y sobre cuyo alquiler practica la retención del 19 %. No tiene empleados ni paga
-a profesionales sujetos a retención.
+a profesionales sujetos a retención. Es soltero y vive solo, sin descendientes ni
+ascendientes a su cargo, y declara la renta de forma individual.
 """
 taxpayer = "fontanero.titular"
 fiscal_year = "horizon-1"
@@ -43,6 +44,8 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "taxpayer-marital-status" = "1"
 "situacion-familiar" = "soltero"
 "taxpayer-birth-date" = { year = "horizon-44", month = 4, day = 17 }
+"family-minor-children-in-unit" = false
+"family-descendants-eu-eea-deduction" = false
 "has-employees" = false
 "pays-professionals-with-retencion" = false
 "pays-rent-with-retencion" = true
@@ -53,6 +56,12 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "does-intracomunitario" = false
 "third-party-transactions-above-347-threshold" = true
 
+# The cap term of the art. 81 LIRPF deduction for a mother of a child under
+# three. He has no child, so no contribution counts towards it: a stated zero,
+# not an unknown.
+[fields]
+"renta_family.cotizaciones_ss_madre_2024" = "0"
+
 [[activities]]
 description = "Instalaciones de fontanería, calefacción y aire acondicionado"
 iae_epigraph = "504.2"
@@ -61,3 +70,9 @@ iae_epigraph = "504.2"
 question = "irpf-activity-income-imputation-criterion"
 value = "devengo"
 year = "horizon-1"
+
+# Single, with no descendants and no ascendants in his care: both families are
+# declared empty, so the household reads as stated rather than unknown.
+[household]
+descendants = []
+ascendants = []

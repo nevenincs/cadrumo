@@ -170,3 +170,17 @@ officer costs) the ledger does not hold, so no Modelo 200 casilla is asserted.
 legal_ref = ["ley-27-2014:art-124"]
 grounding = "unverified"
 reason = "The accounting result is outside the bank ledger; asserting a Modelo 200 casilla would record an unproven figure."
+
+[[values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+concepts = { tributacion_estado_porcentaje = "100" }
+derivation = """
+The company's domicilio fiscal is in Valladolid and its incn of the prior twelve months is 28500.00.
+The foral administrations levy the tax of an entity domiciled in their territory with a prior-year volume of
+operations up to 12 million euros, and share it by volume only above that figure (Ley 12/2002 art. 15,
+Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625).
+"""
+legal_ref = ["ley-12-2002:art-15", "ley-28-1990:art-19"]
+grounding = "verified"
