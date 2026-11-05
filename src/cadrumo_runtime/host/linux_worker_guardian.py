@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Protocol
 
 from cadrumo.core.package_interpreter import interpreter_command
+from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ..adapters.linux_pidfd import open_linux_pidfd
@@ -85,7 +86,7 @@ def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes]
         "PATH": "/usr/bin:/bin",
         "LANG": "C",
         "LC_ALL": "C",
-        "PYDANTIC_DISABLE_PLUGINS": "__all__",
+        PYDANTIC_PLUGINS_VARIABLE: PYDANTIC_PLUGINS_DISABLED,
     }
     path_names = worker_path_environment_names()
     environment.update({name: value for name, value in os.environ.items() if name in path_names})

@@ -9,14 +9,9 @@ if __name__ == "__main__":
         sys.stderr.write("error: start the TUI with python -I -m cadrumo_runtime.host.frontend.tui\n")
         raise SystemExit(2)
 
-    import os
+    from cadrumo.core.pydantic_plugins import disable_pydantic_plugins
 
-    # Before the first import that builds a pydantic model: pydantic otherwise
-    # scans every installed distribution's entry points on that build, which
-    # costs about a tenth of a second per process. Cadrumo declares no pydantic
-    # plugin, and a third-party one would observe taxpayer models it has no
-    # business seeing. ``setdefault`` leaves an operator's explicit value alone.
-    os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    disable_pydantic_plugins()
 
     from cadrumo.core.async_cleanup import AsyncResourceCleanupError
     from cadrumo.core.terminal_encoding import encode_terminal_text
