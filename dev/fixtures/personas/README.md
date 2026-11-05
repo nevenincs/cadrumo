@@ -125,6 +125,10 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[[withholding_certificates]]` | array | retenciones soportadas declared by a payer |
 | `[[rental_properties]]` | array | declarative facts for a let dwelling |
 | `[[officers]]` | array | company officers (`identity`, `role`, `remunerated`) |
+| `[[filed_returns]]` | array | returns the taxpayer has already filed: `modelo`, `year` (token), `periods` |
+| `[[calculated_returns]]` | array | returns the history replay calculates without filing: `modelo`, `year`, `periods` |
+| `[[local_observations]]` | array | casilla values of a return the taxpayer knows from his own copy |
+| `[[leased_premises]]` | array | premises the taxpayer rents and on whose rent he withholds |
 
 ### `[profile]` answers
 
@@ -192,6 +196,45 @@ default (`custodia_compartida = false`, ordinary `relacion`).
 | `origin` | `payer_certificate` (the certificate's bytes back the record, so the persona must reference a certificate document) or `operator_declaration` (the taxpayer transcribes the figures; what the catalogue uses) |
 | `importe_integro`, `retencion` | amounts |
 | `cotizaciones_seguridad_social` | optional; employee contributions shown on the certificate. No operation records them, so the materialiser reports them as not materialised |
+
+### Return history
+
+Only the opt-in `HISTORY` replay scope reads these blocks; the `FULL` scope
+ignores them.
+
+`[[filed_returns]]` names the periods of one modelo and year that the taxpayer
+has already filed at the scenario instant. `periods` lists distinct codes
+(`1T` to `4T`, `0A`) in calendar order. A Modelo 303 block may state
+`iva_compensation_carried_in`, the compensation balance pending before its
+first period, which the materialiser seeds into the IVA wallet. The block
+carries no figures: the replay creates, calculates, verifies and files each
+period locally through the work lifecycle operations, so every figure comes
+from the persona's own data. Each filing is a PRESENTADO revision whose AEAT
+confirmation stays pending; no receipt is made. A period that does not verify
+from the persona's data stops the replay with the operation's reason, so list
+only periods the data can file.
+
+`[[calculated_returns]]` has the same keys and names periods the replay only
+creates and calculates. Use it for a period the product cannot take to filing
+grade from what the taxpayer holds locally, and state why in a comment. A
+period appears in at most one of the two blocks.
+
+`[[local_observations]]` records the casilla values of a return the taxpayer
+knows only from his own copy (`modelo`, `year`, `period`, `casillas` as a
+table of casilla to amount, and a Spanish `reason`) through the local
+observation operation. The product keeps such a value at calculation grade:
+it feeds a later calculation and never clears the cross-period check that
+verification applies, which needs AEAT evidence.
+
+`[[leased_premises]]` describes premises the taxpayer rents for the activity:
+`key`, the `landlord` identity role, the landlord's `landlord_tax_status`,
+`landlord_tax_regime` and `landlord_province`, the Modelo 180 `situation`,
+`modality` and optional `cadastral_reference`, and an `address` table with the
+Modelo 180 structured address fields. Every received ledger row from the
+landlord that carries a retención is a rent payment: the replay captures its
+withholding as Modelo 115 evidence, with the row's transaction as the payment
+event. The reader checks the two Catastro control letters of the cadastral
+reference.
 
 ### Declarative blocks without an operation
 

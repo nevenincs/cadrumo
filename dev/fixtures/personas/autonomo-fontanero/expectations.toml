@@ -301,14 +301,16 @@ grounding = "cited"
 modelo = "130"
 period = "1T"
 year = "horizon-1"
-casillas = { "01" = "8840.00", "02" = "5174.90", "03" = "3665.10", "04" = "733.02", "05" = "0.00", "06" = "0.00", "07" = "733.02" }
+casillas = { "01" = "8840.00", "02" = "5174.90", "03" = "3665.10", "04" = "733.02", "05" = "0.00", "06" = "0.00", "07" = "733.02", "13" = "0.00" }
 parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
 derivation = """
 Cumulative from 1 January. 01 = issued bases 1180.00 + 4300.00 + 2600.00 + 760.00 = 8840.00.
 Gastos = alquiler 3 x 600 + material 2150 + gestoría 150 + RETA 3 x 294 = 4982.00 (IVA soportado deducible excluded).
 Provisión gastos de difícil justificación = 5 % of (8840.00 - 4982.00) = 192.90, under the 2000.00 cap. 02 = 4982.00 + 192.90 = 5174.90.
 03 = 01 - 02 = 3665.10; 04 = 20 % of 03 = 733.02; 05 = 0 (first quarter); 06 = 0 (no withheld income); 07 = 04 - 05 - 06.
-The art. 110.3.c minoración (casilla 13) depends on the prior-year return and is not asserted.
+13 = 0.00: the prior year's rendimiento neto in estimación directa, Modelo 100 casilla 0224 = 12846.30 (the
+persona's local observation of his own copy), exceeds 12000.00, so RIRPF art. 110.3.c gives no minoración. The
+same holds for every quarter of the year. The figure is known only in the history replay, which records it.
 """
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
@@ -317,7 +319,7 @@ grounding = "verified"
 modelo = "130"
 period = "2T"
 year = "horizon-1"
-casillas = { "01" = "16330.00", "02" = "10120.80", "03" = "6209.20", "04" = "1241.84", "05" = "733.02", "06" = "0.00", "07" = "508.82" }
+casillas = { "01" = "16330.00", "02" = "10120.80", "03" = "6209.20", "04" = "1241.84", "05" = "733.02", "06" = "0.00", "07" = "508.82", "13" = "0.00" }
 parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
 derivation = """
 01 = 8840.00 + 640 + 2950 + 3900 = 16330.00. Gastos = 4982.00 + 1800.00 + 1980.00 + 150.00 + 882.00 = 9794.00.
@@ -330,7 +332,7 @@ grounding = "verified"
 modelo = "130"
 period = "3T"
 year = "horizon-1"
-casillas = { "01" = "22350.00", "02" = "15240.20", "03" = "7109.80", "04" = "1421.96", "05" = "1241.84", "06" = "0.00", "07" = "180.12" }
+casillas = { "01" = "22350.00", "02" = "15240.20", "03" = "7109.80", "04" = "1421.96", "05" = "1241.84", "06" = "0.00", "07" = "180.12", "13" = "0.00" }
 parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
 derivation = """
 01 = 16330.00 + 1850 + 1420 + 2750 = 22350.00. Gastos = 9794.00 + 1800 + 2240 + 150 + 882 = 14866.00.
@@ -343,7 +345,7 @@ grounding = "verified"
 modelo = "130"
 period = "4T"
 year = "horizon-1"
-casillas = { "01" = "30000.00", "02" = "20650.10", "03" = "9349.90", "04" = "1869.98", "05" = "1421.96", "06" = "0.00", "07" = "448.02" }
+casillas = { "01" = "30000.00", "02" = "20650.10", "03" = "9349.90", "04" = "1869.98", "05" = "1421.96", "06" = "0.00", "07" = "448.02", "13" = "0.00" }
 parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
 derivation = """
 01 = 22350.00 + 3350 + 1700 + 2600 = 30000.00. Gastos = 14866.00 + 1800 + 2460 + 150 + 882 = 20158.00.
@@ -392,10 +394,15 @@ grounding = "verified"
 modelo = "180"
 period = "0A"
 year = "horizon-1"
-concepts = { perceptores = "1", base_retenciones = "7200.00", retenciones = "1368.00" }
+concepts = { perceptores = "1", base_retenciones = "7200.00", retenciones = "1368.00", porcentaje_retencion = "19.00", situacion_inmueble = "1", referencia_catastral = "0000001VK0000N0001PH", modalidad = "1" }
 counterparty = "fontanero.arrendador-taller"
-derivation = "Twelve monthly rents of 600.00 = 7200.00; 19 % = 1368.00, equal to the sum of the four 115 casillas 03."
-legal_ref = ["rd-439-2007:art-100", "rd-439-2007:art-108"]
+derivation = """
+Twelve monthly rents of 600.00 = 7200.00; 19 % = 1368.00, equal to the sum of the four 115 casillas 03.
+The 19 % is the RIRPF art. 101.8 rate on rent from urban property. One perceptor and one property: the leased
+workshop, situation 1 (cadastral reference outside the País Vasco and Navarra), rent paid in money (modality 1),
+every payment accrued in the fiscal year.
+"""
+legal_ref = ["rd-439-2007:art-100", "rd-439-2007:art-101", "rd-439-2007:art-108"]
 grounding = "cited"
 
 [[values]]

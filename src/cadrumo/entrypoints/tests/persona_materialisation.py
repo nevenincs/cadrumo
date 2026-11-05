@@ -4,7 +4,11 @@ A persona (``dev/fixtures/personas``, read by :mod:`cadrumo.tests.personas`)
 reaches its profile the way an operator's input does: the registered wizard
 patch, field and repeatable-row mutations, the household replacements, the
 suffered-withholding record, the statement import, single classification,
-invoice recording and linking, and evidence intake and attachment, each
+invoice recording and linking, evidence intake and attachment, and, in the
+history scope, the local observations of returns the taxpayer holds, the
+withholding capture of every rent payment on leased premises, and the work
+create, calculate, verify and local file of every return the persona has
+already filed (create and calculate only for a calculated return), each
 submitted to the production registry's supervisor and settled. Nothing is
 written to storage by any other route. A persona block that no operation can
 record is returned in :attr:`MaterialisedPersona.not_loaded` with its reason,
@@ -53,6 +57,14 @@ from ...application.invoices.catalogue_add_contracts import (
     InvoiceAddRequest,
     InvoiceAddResult,
 )
+from ...application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from ...application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
+from ...application.aggregation.service import PerModeloAggregationCommand
+from ...application.aggregation.withholding_recognition import (
+    WithholdingIncomeKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
+)
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.actions_import import LedgerProviderID
 from ...application.ledger.attachment_mutation_operation import (
@@ -76,6 +88,47 @@ from ...application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from ...application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID, LedgerLinkRequest
+from ...application.modelo.invoice_withholding_capture_contracts import (
+    MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
+    ModeloInvoiceWithholdingCaptureProjection,
+    ModeloInvoiceWithholdingCaptureRequest,
+)
+from ...application.modelo.iva_wallet_seed_operation import (
+    MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
+    ModeloIvaWalletSeedRequest,
+)
+from ...application.modelo.local_observation_contracts import (
+    MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,
+    ModeloLocalObservationCasillaValue,
+    ModeloLocalObservationMutationProjection,
+    ModeloLocalObservationMutationRequest,
+)
+from ...application.modelo.m303_attestation_operation import (
+    MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
+    ModeloWorkM303AttestationPublicResultV2,
+    ModeloWorkM303AttestationRequest,
+)
+from ...application.modelo.operation_shared import (
+    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+)
+from ...application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
+    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculateRequest,
+)
+from ...application.modelo.work_create_operation import (
+    MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+    ModeloWorkCreateRequest,
+    ModeloWorkCreateSuccess,
+)
+from ...application.modelo.work_filing_contracts import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+)
+from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.composition import OperationComposedServices, compose_operation_services
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.frontend_requests import (
@@ -85,6 +138,7 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
+from ...application.operations.public_period import PublicPeriod
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.operations.registry import OperationRegistry
 from ...application.retencion_soportada_certificado.contracts import (
@@ -115,21 +169,27 @@ from ...application.user_profile.profile_record_repository import ProfileRecordR
 from ...application.user_profile.registration import create_registered_profile
 from ...application.user_profile.validation import reject_invalid_profile_facts
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
+from ...core.aggregation import RetencionScheme
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.period import Period
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.time.clock import frozen_clock, now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva.schema import InvoiceKind
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ...tests.persona_invoices import render_facturae
 from ...tests.personas import (
+    CalculatedReturns,
+    FiledReturns,
     HouseholdMember,
     IdentityRef,
+    LeasedPremises,
     LedgerRow,
     Persona,
     PersonaDate,
@@ -137,6 +197,7 @@ from ...tests.personas import (
     ProfileValue,
     WithholdingCertificate,
     YearEnvelope,
+    filed_period_order,
     persona_inputs_digest,
     read_persona,
 )
@@ -166,6 +227,15 @@ class ReplayScope(StrEnum):
     """The profile scope and the descendant and ascendant replacements."""
     FULL = "full"
     """The household scope, the declared withholding, the statement import, invoices and evidence."""
+    HISTORY = "history"
+    """The full scope, then the persona's return history.
+
+    The local observations are recorded and every rent payment on leased
+    premises is captured as withholding; then every filed return is created,
+    calculated, verified and filed locally, and every calculated return is
+    created and calculated. Opt-in: a consumer that walks those periods itself
+    replays the full scope.
+    """
 
     def includes(self, other: ReplayScope) -> bool:
         """Whether replaying ``self`` records everything ``other`` does."""
@@ -210,6 +280,10 @@ class MaterialisedPersona:
     """Document id to the stored evidence id."""
     not_loaded: tuple[NotLoaded, ...]
     """What no operation recorded, and ``setup`` when completing the setup was asked and the persona's answers refuse it."""
+    filings: Mapping[str, str]
+    """:func:`filing_key` of each return the history scope filed locally, to its filed calculation revision id."""
+    calculations: Mapping[str, str]
+    """:func:`filing_key` of each return the history scope calculated without filing, to its revision id."""
 
 
 def year_envelope(operation: PinnedAuthorityOperation) -> YearEnvelope:
@@ -327,15 +401,20 @@ def persona_world(tmp_path: Path, persona: Persona, *, as_of: datetime) -> Gener
 # -- one settled operation -----------------------------------------------------------------------------------------
 
 
-def settle_operation(world: PersonaWorld, definition_id: str, payload: BaseModel) -> BaseModel | None:
-    """Submit one registered operation, settle it, refuse anything but success, and return its public result."""
+def settle_operation(
+    world: PersonaWorld, definition_id: str, payload: BaseModel, *, subject: str | None = None
+) -> BaseModel | None:
+    """Submit one registered operation, settle it, refuse anything but success, and return its public result.
+
+    The operation addresses the profile unless ``subject`` names another subject, such as a work unit.
+    """
 
     async def settle() -> OperationPublicProjectionV1:
         services = world.services
         submitted = await services.submission.submit(
             OperationRequest(
                 definition_id=definition_id,
-                subject_ref=profile_operation_subject(str(world.profile_id)),
+                subject_ref=subject or profile_operation_subject(str(world.profile_id)),
                 payload=payload,
             ),
             actor_ref=PERSONA_ACTOR,
@@ -361,10 +440,15 @@ def settle_operation(world: PersonaWorld, definition_id: str, payload: BaseModel
 
 
 def run_operation[Projection: BaseModel](
-    world: PersonaWorld, definition_id: str, payload: BaseModel, projection: type[Projection]
+    world: PersonaWorld,
+    definition_id: str,
+    payload: BaseModel,
+    projection: type[Projection],
+    *,
+    subject: str | None = None,
 ) -> Projection:
     """Settle one registered operation and return its public result as ``projection``."""
-    result = settle_operation(world, definition_id, payload)
+    result = settle_operation(world, definition_id, payload, subject=subject)
     if not isinstance(result, projection):
         raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
     return result
@@ -773,6 +857,258 @@ def _replay_documents(persona: Persona, world: PersonaWorld, transactions: Mappi
     return evidence
 
 
+def filing_key(modelo: str, year: int, period: str) -> str:
+    """The key :attr:`MaterialisedPersona.filings` and :attr:`MaterialisedPersona.calculations` name one return by."""
+    return f"{modelo}:{year}:{period}"
+
+
+def _history_periods(
+    persona: Persona, envelope: YearEnvelope
+) -> list[tuple[int, str, FiledReturns | CalculatedReturns]]:
+    """Every filed and calculated return of the persona, in the order the windows of their periods close."""
+    blocks: tuple[FiledReturns | CalculatedReturns, ...] = (*persona.filed_returns, *persona.calculated_returns)
+    found = [(block.year.resolve(envelope), period, block) for block in blocks for period in block.periods]
+    return sorted(found, key=lambda item: (item[0], filed_period_order(item[1])))
+
+
+def _preceding_quarter(year: int, period: str) -> PublicPeriod:
+    """The quarter before ``period``, whose compensation balance a Modelo 303 period starts from."""
+    quarter = int(period[0])
+    if quarter == 1:
+        return PublicPeriod(filing_year=year - 1, code="4T")
+    return PublicPeriod(filing_year=year, code=f"{quarter - 1}T")
+
+
+def _m303_evidence(
+    world: PersonaWorld, *, work_unit_id: str, year: int, period: str, last_period: str
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+    """The ordinary Modelo 303 filing facts: no joint return, and the Modelo 390 attestation in the year's last period."""
+    if period != "4T" or period != last_period:
+        return ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=False)
+    attestation = ModeloWorkM303AttestationRequest(
+        profile_id=world.profile_id,
+        work_unit_id=work_unit_id,
+        observed_at=datetime(year, 12, 31, 12, tzinfo=UTC),
+        actor=PERSONA_ACTOR,
+    )
+    attested = run_operation(
+        world,
+        MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
+        attestation,
+        ModeloWorkM303AttestationPublicResultV2,
+        subject=attestation.subject_ref,
+    )
+    return ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+        joint_return_elected=False,
+        m303_exonerado_390_attachment_id=attested.attachment_id,
+        m303_exonerado_390_sha256=attested.sha256,
+    )
+
+
+def _seed_compensation_carried_in(persona: Persona, world: PersonaWorld) -> None:
+    """Declare the Modelo 303 compensation balance each filed block starts from, where the persona states one."""
+    for filed in persona.filed_returns:
+        if filed.iva_compensation_carried_in is None:
+            continue
+        settle_operation(
+            world,
+            MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
+            ModeloIvaWalletSeedRequest(
+                profile_id=world.profile_id,
+                period=_preceding_quarter(filed.year.resolve(world.envelope), filed.periods[0]),
+                amount=_decimal_text(filed.iva_compensation_carried_in.normalize()),
+            ),
+        )
+
+
+def _record_local_observations(persona: Persona, world: PersonaWorld) -> None:
+    """Record the casilla values of each return the taxpayer knows from his own copy, as a local observation."""
+    for observation in persona.local_observations:
+        run_operation(
+            world,
+            MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,
+            ModeloLocalObservationMutationRequest(
+                profile_id=world.profile_id,
+                action="record",
+                modelo=observation.modelo,
+                period=PublicPeriod(filing_year=observation.year.resolve(world.envelope), code=observation.period),
+                casilla_values=tuple(
+                    ModeloLocalObservationCasillaValue(casilla_id=casilla, value=value)
+                    for casilla, value in observation.casillas
+                ),
+                actor=PERSONA_ACTOR,
+                reason=observation.reason,
+            ),
+            ModeloLocalObservationMutationProjection,
+        )
+
+
+_RENT_WITHHOLDING_MODELO = "115"
+_URBAN_RENT_SCHEME = RetencionScheme("arrendamiento_urbano")
+_PERCENT = Decimal("100")
+_CENTS = Decimal("0.01")
+
+
+def _rent_payments(persona: Persona, premises: LeasedPremises) -> list[LedgerRow]:
+    """The received ledger rows from the premises' landlord that carry a retención: one per rent payment."""
+    return [
+        row
+        for row in persona.ledger
+        if row.counterparty == premises.landlord
+        and row.invoice_kind == "received"
+        and row.retencion_amount is not None
+        and row.retencion_amount > 0
+    ]
+
+
+def _rent_capture(
+    persona: Persona,
+    world: PersonaWorld,
+    premises: LeasedPremises,
+    row: LedgerRow,
+    *,
+    transactions: Mapping[str, str],
+    invoices: Mapping[str, str],
+) -> ModeloInvoiceWithholdingCaptureRequest:
+    """The withholding capture of one rent payment: its invoice, its bank movement and the premises it pays for."""
+    if row.taxable_base is None or row.retencion_amount is None or row.retencion_rate is None:
+        raise PersonaMaterialisationError(f"{persona.id} {row.ref}: a rent payment states its base and retención")
+    paid_on = row.operation_date(world.envelope)
+    with validating_governed_facts(world.operation):
+        evidence = InvoiceWithholdingEvidenceRequest(
+            invoice_id=invoices[row.ref],
+            income_kind=WithholdingIncomeKind.URBAN_RENT,
+            scheme=_URBAN_RENT_SCHEME,
+            recipient_tax_status=WithholdingRecipientTaxStatus(premises.landlord_tax_status),
+            recipient_tax_regime=WithholdingRecipientTaxRegime(premises.landlord_tax_regime),
+            payment_event_id=transactions[row.ref],
+            payment_occurred_on=paid_on,
+            allocation_id=row.ref,
+            allocated_base=row.taxable_base,
+            allocated_withholding=row.retencion_amount,
+            allocated_settlement=abs(row.amount),
+            idempotency_key=f"{persona.id}:{row.ref}",
+            modelo_180_property=Modelo180PropertyEvidence(
+                property_key=premises.key,
+                situation=premises.situation,
+                cadastral_reference=premises.cadastral_reference,
+                address=Modelo180StructuredAddress.model_validate(dict(premises.address)),
+                recipient_province_code=premises.landlord_province,
+                modality=premises.modality,
+                accrual_year=paid_on.year,
+                withholding_percentage=(row.retencion_rate * _PERCENT).quantize(_CENTS),
+            ),
+        )
+    quarter = Period.from_year_and_code(paid_on.year, f"{(paid_on.month - 1) // 3 + 1}T")
+    return ModeloInvoiceWithholdingCaptureRequest.from_inputs(
+        profile_id=world.profile_id,
+        command=PerModeloAggregationCommand(modelo=_RENT_WITHHOLDING_MODELO, period=quarter),
+        evidence=evidence,
+    )
+
+
+def _capture_rent_withholding(
+    persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
+) -> None:
+    """Capture the retención the taxpayer withheld on every rent payment for leased premises, as Modelo 115 evidence."""
+    for premises in persona.leased_premises:
+        for row in _rent_payments(persona, premises):
+            captured = run_operation(
+                world,
+                MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
+                _rent_capture(persona, world, premises, row, transactions=transactions, invoices=invoices),
+                ModeloInvoiceWithholdingCaptureProjection,
+            )
+            if captured.outcome != "captured":
+                raise PersonaMaterialisationError(
+                    f"{persona.id} {row.ref}: rent withholding refused ({captured.refusal_reason}, "
+                    f"{captured.refusal_defects})"
+                )
+
+
+def _replay_history(
+    persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Replay the persona's return history; returns the filed and the calculated returns, key to revision id.
+
+    The local observations and rent withholding are recorded first. Then each
+    filed return is created, calculated, verified and filed locally, and each
+    calculated return created and calculated, in the order their windows close.
+    Each figure comes from the persona's replayed ledger, profile and recorded
+    observations; nothing is entered at calculation. A filed return that
+    cannot verify or file from that data is refused with the operation's own
+    reason, never overridden. Local filing records a PRESENTADO revision whose
+    AEAT status stays pending; no receipt is made.
+    """
+    _seed_compensation_carried_in(persona, world)
+    _record_local_observations(persona, world)
+    _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
+    filings: dict[str, str] = {}
+    calculations: dict[str, str] = {}
+    for year, period, filed in _history_periods(persona, world.envelope):
+        where = f"{persona.id} Modelo {filed.modelo} {year} {period}"
+        created = settle_operation(
+            world,
+            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+            ModeloWorkCreateRequest(
+                profile_id=world.profile_id,
+                modelo=filed.modelo,
+                period=PublicPeriod(filing_year=year, code=period),
+                actor=PERSONA_ACTOR,
+            ),
+        )
+        outcome = getattr(created, "outcome", None)
+        if not isinstance(outcome, ModeloWorkCreateSuccess):
+            raise PersonaMaterialisationError(f"{where}: work creation refused: {outcome}")
+        work_unit_id = outcome.unit.work_unit_id
+        evidence = (
+            _m303_evidence(world, work_unit_id=work_unit_id, year=year, period=period, last_period=filed.periods[-1])
+            if filed.modelo == "303"
+            else None
+        )
+        calculated = run_operation(
+            world,
+            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            ModeloWorkCalculateRequest(
+                work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
+            ),
+            ModeloWorkCalculatePublicResultV2,
+            subject=work_unit_id,
+        )
+        revision_id = calculated.calculation_revision_id
+        if isinstance(filed, CalculatedReturns):
+            calculations[filing_key(filed.modelo, year, period)] = revision_id
+            continue
+        verified = run_operation(
+            world,
+            MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+            ModeloWorkVerifyRequest(calculation_revision_id=revision_id, actor=PERSONA_ACTOR),
+            ModeloWorkVerifyPublicResultV2,
+            subject=work_unit_id,
+        )
+        if not verified.granted_verificado_completo:
+            raise PersonaMaterialisationError(
+                f"{where}: verification did not complete ({verified.completeness_status}, "
+                f"{verified.finding_count} findings, "
+                f"{verified.missing_required_casilla_count} required casillas missing)"
+            )
+        run_operation(
+            world,
+            MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+            ModeloWorkFileRequest(
+                approval=ModeloWorkFileApproval(
+                    calculation_revision_id=revision_id,
+                    verification_report_id=verified.verification_report_id,
+                ),
+                actor=PERSONA_ACTOR,
+            ),
+            ModeloWorkFilePublicResultV2,
+            subject=work_unit_id,
+        )
+        filings[filing_key(filed.modelo, year, period)] = revision_id
+    return filings, calculations
+
+
 def _complete_setup(world: PersonaWorld) -> bool:
     """Declare the replayed profile's setup complete through the production operation; whether it now is.
 
@@ -870,6 +1206,8 @@ def materialise_persona(
     transactions: dict[str, str] = {}
     invoices: dict[str, str] = {}
     evidence: dict[str, str] = {}
+    filings: dict[str, str] = {}
+    calculations: dict[str, str] = {}
     with frozen_clock(world.as_of):
         _replay_profile(persona, world)
         if scope.includes(ReplayScope.HOUSEHOLD):
@@ -880,6 +1218,10 @@ def materialise_persona(
             invoices = _replay_ledger(persona, world, transactions)
             evidence = _replay_documents(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None
+        if scope.includes(ReplayScope.HISTORY) and (persona.filed_returns or persona.calculated_returns):
+            if setup_complete is not True:
+                raise PersonaMaterialisationError(f"{persona.id}: replaying its returns needs a completed setup")
+            filings, calculations = _replay_history(persona, world, transactions=transactions, invoices=invoices)
     return MaterialisedPersona(
         persona=persona,
         world=world,
@@ -888,6 +1230,8 @@ def materialise_persona(
         invoices=invoices,
         evidence=evidence,
         not_loaded=_not_loaded(persona, scope, setup_complete=setup_complete),
+        filings=filings,
+        calculations=calculations,
     )
 
 
@@ -919,6 +1263,8 @@ def _sealed_replay(
             "transactions": replayed.transactions,
             "invoices": replayed.invoices,
             "evidence": replayed.evidence,
+            "filings": replayed.filings,
+            "calculations": replayed.calculations,
             "setup_complete": (all(item.block != "setup" for item in replayed.not_loaded) if complete_setup else None),
         }
         (root.parent / _REPLAYED_IDS).write_text(json.dumps(ids, sort_keys=True), encoding="utf-8")
@@ -964,6 +1310,8 @@ def _reused_persona_world(
                         invoices=ids["invoices"],
                         evidence=ids["evidence"],
                         not_loaded=_not_loaded(persona, scope, setup_complete=ids["setup_complete"]),
+                        filings=ids["filings"],
+                        calculations=ids["calculations"],
                     )
             finally:
                 reset_test_profile_session()
@@ -1013,6 +1361,7 @@ __all__ = [
     "PersonaMaterialisationError",
     "PersonaWorld",
     "ReplayScope",
+    "filing_key",
     "household_leaves",
     "load_profile_record",
     "materialise_persona",

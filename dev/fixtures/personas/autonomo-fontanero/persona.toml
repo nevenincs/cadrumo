@@ -76,3 +76,75 @@ year = "horizon-1"
 [household]
 descendants = []
 ascendants = []
+
+# The workshop he rents from Tomás Lozano, a resident individual who lives in
+# Madrid. Each monthly rent invoice carries the 19 % retención he withholds
+# (RIRPF arts. 100 and 101), so each ALQ row is one rent payment for these
+# premises: Modelo 115 each quarter and the Modelo 180 summary (RIRPF art. 108)
+# read them. Situation 1 is a property with a cadastral reference outside the
+# País Vasco and Navarra; modality 1 is a rent paid in money. The cadastral
+# reference is synthetic: a counter parcel and map sheet with the two control
+# letters the Catastro algorithm gives them.
+[[leased_premises]]
+key = "taller"
+landlord = "fontanero.arrendador-taller"
+landlord_tax_status = "resident"
+landlord_tax_regime = "irpf"
+landlord_province = "28"
+situation = "1"
+cadastral_reference = "0000001VK0000N0001PH"
+modality = "1"
+
+[leased_premises.address]
+province_code = "28"
+municipality_code = "28079"
+municipality = "Madrid"
+locality = "Madrid"
+postal_code = "28021"
+street_type = "CL"
+street_name = "Ejemplo"
+number_type = "NUM"
+house_number = "12"
+complement = "Nave 3"
+
+# His own copy of the prior year's Renta: rendimiento neto of his activity in
+# estimación directa (casilla 0224) of 12846.30, a better year than the fiscal
+# year's 9349.90. Modelo 130 casilla 13 reads it (RIRPF art. 110.3.c): above
+# 12000.00, so no minoración applies. The product keeps a figure the taxpayer
+# types from his copy at calculation grade.
+[[local_observations]]
+modelo = "100"
+year = "horizon-2"
+period = "0A"
+casillas = { "0224" = "12846.30" }
+reason = "Rendimiento neto de la actividad en la declaración de la renta del ejercicio anterior"
+
+# At the clock every quarterly return of the fiscal year is past its window,
+# so he has filed each one. His quarterly IVA results were all to pay, so no
+# compensation was pending before the first quarter. The Modelo 115 returns
+# and the Modelo 180 summary are filed from the captured rent withholding.
+[[filed_returns]]
+modelo = "303"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+iva_compensation_carried_in = "0.00"
+
+[[filed_returns]]
+modelo = "115"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+
+[[filed_returns]]
+modelo = "180"
+year = "horizon-1"
+periods = ["0A"]
+
+# His Modelo 130 returns are calculated but not filed by the replay. Casilla
+# 13 depends on the prior year's Renta, which he knows only from his own copy:
+# a local observation that the product keeps at calculation grade, so the
+# cross-period check refuses to verify a return that reads it. Only AEAT
+# evidence of that Renta would clear it, and the persona holds none.
+[[calculated_returns]]
+modelo = "130"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]

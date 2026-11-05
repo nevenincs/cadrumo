@@ -12,6 +12,7 @@ from .personas import (
     PERSONAS_ROOT,
     PersonaCatalogueError,
     YearEnvelope,
+    cadastral_control_characters,
     identity_catalogue,
     parse_identity_catalogue,
     parse_persona,
@@ -95,3 +96,105 @@ def test_a_year_outside_the_envelope_is_refused(path: tuple[str, ...], token: ob
 def test_a_literal_year_is_refused() -> None:
     with pytest.raises(PersonaCatalogueError, match="is not a year token"):
         _parse(_changed(("persona", "fiscal_year"), str(_ENVELOPE.horizon)))
+
+
+def _with_filed_returns(*blocks: dict[str, object]) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["filed_returns"] = list(blocks)
+    return document
+
+
+def test_a_filed_returns_block_is_admitted() -> None:
+    _parse(
+        _with_filed_returns(
+            {"modelo": "303", "year": "horizon-1", "periods": ["1T", "2T"], "iva_compensation_carried_in": "0.00"},
+            {"modelo": "130", "year": "horizon-1", "periods": ["3T"]},
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    ("block", "message"),
+    [
+        ({"modelo": "303", "year": "horizon-1", "periods": ["2T", "1T"]}, "distinct and in calendar order"),
+        ({"modelo": "303", "year": "horizon-1", "periods": ["1T", "1T"]}, "distinct and in calendar order"),
+        ({"modelo": "303", "year": "horizon-1", "periods": ["5T"]}, "is not one of"),
+        (
+            {"modelo": "130", "year": "horizon-1", "periods": ["1T"], "iva_compensation_carried_in": "0.00"},
+            "only a Modelo 303 block",
+        ),
+        ({"modelo": "303", "year": "horizon+1", "periods": ["1T"]}, "outside the supported envelope"),
+        ({"modelo": "303", "periods": ["1T"]}, "missing"),
+    ],
+)
+def test_a_malformed_filed_returns_block_is_refused(block: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_filed_returns(block))
+
+
+def test_a_period_both_filed_and_calculated_is_refused() -> None:
+    document = _with_filed_returns({"modelo": "130", "year": "horizon-1", "periods": ["1T", "2T"]})
+    document["calculated_returns"] = [{"modelo": "130", "year": "horizon-1", "periods": ["2T"]}]
+    with pytest.raises(PersonaCatalogueError, match="is listed twice"):
+        _parse(document)
+
+
+def test_the_cadastral_control_letters_follow_the_catastro_algorithm() -> None:
+    # Catastro's own published example of an urban reference and its control letters.
+    assert cadastral_control_characters("9872023VH5797S0001") == "WX"
+
+
+def _with_leased_premises(**changes: object) -> dict[str, Any]:
+    premises: dict[str, object] = {
+        "key": "local",
+        "landlord": "asalariada.empleador",
+        "landlord_tax_status": "resident",
+        "landlord_tax_regime": "irpf",
+        "landlord_province": "28",
+        "situation": "1",
+        "cadastral_reference": "9872023VH5797S0001WX",
+        "modality": "1",
+        "address": {
+            "province_code": "28",
+            "municipality_code": "28079",
+            "municipality": "Madrid",
+            "locality": "Madrid",
+            "postal_code": "28001",
+            "street_type": "CL",
+            "street_name": "Ejemplo",
+            "number_type": "NUM",
+            "house_number": "1",
+        },
+    }
+    premises.update(changes)
+    document = copy.deepcopy(_document("persona.toml"))
+    document["leased_premises"] = [premises]
+    return document
+
+
+def test_leased_premises_with_a_valid_cadastral_reference_are_admitted() -> None:
+    _parse(_with_leased_premises())
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"cadastral_reference": "9872023VH5797S0001WY"}, "do not match the Catastro algorithm"),
+        ({"cadastral_reference": "9872023VH5797S0001"}, "20-character urban cadastral reference"),
+        ({"landlord": "asalariada.desconocida"}, "unknown identity role"),
+        ({"address": {"province_code": "28"}}, "missing fields"),
+    ],
+)
+def test_malformed_leased_premises_are_refused(changes: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_leased_premises(**changes))
+
+
+def test_a_local_observation_needs_canonical_casilla_amounts() -> None:
+    document = copy.deepcopy(_document("persona.toml"))
+    observation = {"modelo": "100", "year": "horizon-2", "period": "0A", "reason": "Copia propia"}
+    document["local_observations"] = [{**observation, "casillas": {"0224": "12846.30"}}]
+    _parse(document)
+    document["local_observations"] = [{**observation, "casillas": {"0224": "12.846,30"}}]
+    with pytest.raises(PersonaCatalogueError):
+        _parse(document)

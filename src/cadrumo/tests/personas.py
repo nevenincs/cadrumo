@@ -22,7 +22,7 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import Literal, cast, override
+from typing import Final, Literal, cast, override
 
 from ..core.decimal.grammar import try_parse_canonical_decimal
 from .inventory import REPO_ROOT
@@ -260,6 +260,71 @@ class Officer:
 
 
 @dataclass(frozen=True, slots=True)
+class FiledReturns:
+    """Periods of one modelo and year the taxpayer has already filed, each produced from the persona's own data.
+
+    ``iva_compensation_carried_in`` is the Modelo 303 compensation balance
+    pending from the period before the first one listed; only a 303 block
+    states it.
+    """
+
+    modelo: str
+    year: YearToken
+    periods: tuple[str, ...]
+    iva_compensation_carried_in: Decimal | None
+
+
+@dataclass(frozen=True, slots=True)
+class CalculatedReturns:
+    """Periods of one modelo and year the replay calculates from the persona's own data without filing them.
+
+    A period belongs here, not in :class:`FiledReturns`, when the product
+    cannot take it to filing grade from what the taxpayer holds locally; the
+    persona's comment states why.
+    """
+
+    modelo: str
+    year: YearToken
+    periods: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class LocalObservation:
+    """Casilla values of one return the taxpayer knows from his own copy, recorded as a local observation.
+
+    The product keeps such a value at calculation grade: it feeds a later
+    period's calculation and never establishes filing-grade readiness.
+    """
+
+    modelo: str
+    year: YearToken
+    period: str
+    casillas: tuple[tuple[str, str], ...]
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class LeasedPremises:
+    """Premises the taxpayer rents for the activity from a landlord on whose rent he withholds.
+
+    Every received ledger row from ``landlord`` that carries a retención is a
+    rent payment for these premises. ``address`` holds the Modelo 180 structured
+    address fields; the reader checks the two Catastro control characters of
+    ``cadastral_reference``.
+    """
+
+    key: str
+    landlord: str
+    landlord_tax_status: str
+    landlord_tax_regime: str
+    landlord_province: str
+    situation: str
+    cadastral_reference: str | None
+    modality: str
+    address: tuple[tuple[str, str], ...]
+
+
+@dataclass(frozen=True, slots=True)
 class LedgerRow:
     """One bank movement with the invoice and classification facts behind it."""
 
@@ -388,6 +453,10 @@ class Persona:
     withholding_certificates: tuple[WithholdingCertificate, ...]
     rental_properties: tuple[RentalProperty, ...]
     officers: tuple[Officer, ...]
+    filed_returns: tuple[FiledReturns, ...]
+    calculated_returns: tuple[CalculatedReturns, ...]
+    local_observations: tuple[LocalObservation, ...]
+    leased_premises: tuple[LeasedPremises, ...]
     ledger: tuple[LedgerRow, ...]
     documents: tuple[PersonaDocument, ...]
     expectations: Expectations
@@ -585,6 +654,10 @@ _PERSONA_TABLES = frozenset(
         "withholding_certificates",
         "rental_properties",
         "officers",
+        "filed_returns",
+        "calculated_returns",
+        "local_observations",
+        "leased_premises",
     }
 )
 _DESCENDANT_LEAVES = frozenset(
@@ -722,6 +795,166 @@ def _officer(table: _Table, where: str, roles: _Roles) -> Officer:
         role=_string(table, "role", where),
         remunerated=_bool(table, "remunerated", where),
     )
+
+
+_FILED_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T", "0A")
+"""The period codes a filed return may name, in the order their windows close within a year."""
+_IVA_COMPENSATION_MODELO: Final[str] = "303"
+
+
+def _filed_returns(table: _Table, where: str) -> FiledReturns:
+    _keys(
+        table,
+        where,
+        required=frozenset({"modelo", "year", "periods"}),
+        optional=frozenset({"iva_compensation_carried_in"}),
+    )
+    modelo = _string(table, "modelo", where)
+    periods = _return_periods(table, where)
+    carried = table.get("iva_compensation_carried_in")
+    if carried is not None and modelo != _IVA_COMPENSATION_MODELO:
+        raise _fail(where, f"only a Modelo {_IVA_COMPENSATION_MODELO} block states iva_compensation_carried_in")
+    return FiledReturns(
+        modelo=modelo,
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        periods=periods,
+        iva_compensation_carried_in=None
+        if carried is None
+        else _amount(carried, f"{where}.iva_compensation_carried_in"),
+    )
+
+
+def _return_periods(table: _Table, where: str) -> tuple[str, ...]:
+    periods = _strings(table, "periods", where)
+    for period in periods:
+        _choice(period, _FILED_PERIODS, where)
+    if list(periods) != sorted(set(periods), key=_FILED_PERIODS.index):
+        raise _fail(where, "periods must be distinct and in calendar order")
+    return periods
+
+
+def _calculated_returns(table: _Table, where: str) -> CalculatedReturns:
+    _keys(table, where, required=frozenset({"modelo", "year", "periods"}))
+    return CalculatedReturns(
+        modelo=_string(table, "modelo", where),
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        periods=_return_periods(table, where),
+    )
+
+
+def _local_observation(table: _Table, where: str) -> LocalObservation:
+    _keys(table, where, required=frozenset({"modelo", "year", "period", "casillas", "reason"}))
+    casillas = _table(table["casillas"], f"{where}.casillas")
+    if not casillas:
+        raise _fail(where, "casillas must name at least one casilla")
+    values: list[tuple[str, str]] = []
+    for casilla, value in sorted(casillas.items()):
+        _amount(value, f"{where}.casillas.{casilla}")
+        values.append((casilla, cast(str, value)))
+    return LocalObservation(
+        modelo=_string(table, "modelo", where),
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        period=_choice(_string(table, "period", where), _FILED_PERIODS, where),
+        casillas=tuple(values),
+        reason=_string(table, "reason", where),
+    )
+
+
+_ADDRESS_REQUIRED: Final = frozenset(
+    {
+        "province_code",
+        "municipality_code",
+        "municipality",
+        "locality",
+        "postal_code",
+        "street_type",
+        "street_name",
+        "number_type",
+        "house_number",
+    }
+)
+_ADDRESS_OPTIONAL: Final = frozenset({"number_qualifier", "block", "portal", "staircase", "floor", "door", "complement"})
+
+_CADASTRAL_WEIGHTS: Final = (13, 15, 12, 5, 4, 17, 9, 21, 3, 7, 1)
+_CADASTRAL_CONTROL_LETTERS: Final = "MQWERTYUIOPASDFGHJKLBZX"
+_CADASTRAL_REFERENCE: Final = re.compile(r"[0-9A-Z]{14}[0-9]{4}[A-Z]{2}")
+
+
+def _cadastral_character_value(character: str) -> int:
+    if character.isdigit():
+        return int(character)
+    # Catastro numbers the alphabet with Ñ after N, so every letter after N moves up by one.
+    return ord(character) - ord("A") + (1 if character <= "N" else 2)
+
+
+def cadastral_control_characters(reference: str) -> str:
+    """Return the two Catastro control letters of an 18-character urban cadastral reference.
+
+    The first letter checks the parcel (characters 1-7), the second the map
+    sheet (characters 8-14), each followed by the four-digit property number:
+    the weighted sum of those eleven characters, modulo 23, indexes the
+    control alphabet.
+    """
+    controls = ""
+    for part in (reference[0:7], reference[7:14]):
+        characters = part + reference[14:18]
+        total = sum(
+            weight * _cadastral_character_value(character)
+            for weight, character in zip(_CADASTRAL_WEIGHTS, characters, strict=True)
+        )
+        controls += _CADASTRAL_CONTROL_LETTERS[total % len(_CADASTRAL_CONTROL_LETTERS)]
+    return controls
+
+
+def _cadastral_reference(value: object, where: str) -> str:
+    if not isinstance(value, str) or _CADASTRAL_REFERENCE.fullmatch(value) is None:
+        raise _fail(where, "cadastral_reference must be a 20-character urban cadastral reference")
+    if cadastral_control_characters(value[:18]) != value[18:]:
+        raise _fail(where, "cadastral_reference control characters do not match the Catastro algorithm")
+    return value
+
+
+def _leased_premises(table: _Table, where: str, roles: _Roles) -> LeasedPremises:
+    _keys(
+        table,
+        where,
+        required=frozenset(
+            {
+                "key",
+                "landlord",
+                "landlord_tax_status",
+                "landlord_tax_regime",
+                "landlord_province",
+                "situation",
+                "modality",
+                "address",
+            }
+        ),
+        optional=frozenset({"cadastral_reference"}),
+    )
+    address = _table(table["address"], f"{where}.address")
+    _keys(address, f"{where}.address", required=_ADDRESS_REQUIRED, optional=_ADDRESS_OPTIONAL)
+    if not all(isinstance(value, str) for value in address.values()):
+        raise _fail(f"{where}.address", "address values must be strings")
+    reference = table.get("cadastral_reference")
+    return LeasedPremises(
+        key=_string(table, "key", where),
+        landlord=roles(table["landlord"], f"{where}.landlord"),
+        landlord_tax_status=_string(table, "landlord_tax_status", where),
+        landlord_tax_regime=_string(table, "landlord_tax_regime", where),
+        landlord_province=_string(table, "landlord_province", where),
+        situation=_string(table, "situation", where),
+        cadastral_reference=None
+        if reference is None
+        else _cadastral_reference(reference, f"{where}.cadastral_reference"),
+        modality=_string(table, "modality", where),
+        address=tuple((key, cast(str, value)) for key, value in address.items()),
+    )
+
+
+def filed_period_order(period: str) -> int:
+    """The calendar position of a filed period code within its year."""
+    return _FILED_PERIODS.index(period)
 
 
 # -- ledger.csv ----------------------------------------------------------------------------------------------------
@@ -1040,6 +1273,22 @@ def parse_persona(
             _officer(table, f"{where} officers[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("officers"), where))
         ),
+        filed_returns=tuple(
+            _filed_returns(table, f"{where} filed_returns[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("filed_returns"), where))
+        ),
+        calculated_returns=tuple(
+            _calculated_returns(table, f"{where} calculated_returns[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("calculated_returns"), where))
+        ),
+        local_observations=tuple(
+            _local_observation(table, f"{where} local_observations[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("local_observations"), where))
+        ),
+        leased_premises=tuple(
+            _leased_premises(table, f"{where} leased_premises[{index}]", roles)
+            for index, table in enumerate(_tables(persona_document.get("leased_premises"), where))
+        ),
         ledger=ledger,
         documents=_documents(
             documents_document, f"{persona_id}/documents.toml", persona_id, frozenset(row.ref for row in ledger)
@@ -1054,8 +1303,20 @@ def parse_persona(
     for document in persona.documents:
         if document.generator is not None and any(named[ref] != document.id for ref in document.attach_to):
             raise _fail(f"{persona_id}/documents.toml", f"{document.id}: its row does not name it in ledger.csv")
+    _check_returns(persona)
     _check_years(persona, envelope)
     return persona
+
+
+def _check_returns(persona: Persona) -> None:
+    """Refuse a modelo period listed twice across the filed and calculated blocks."""
+    seen: set[tuple[str, str, str]] = set()
+    for block in (*persona.filed_returns, *persona.calculated_returns):
+        for period in block.periods:
+            key = (block.modelo, str(block.year), period)
+            if key in seen:
+                raise _fail(persona.id, f"Modelo {block.modelo} {block.year} {period} is listed twice")
+            seen.add(key)
 
 
 def _dates(persona: Persona) -> list[PersonaDate]:
@@ -1074,6 +1335,9 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         persona.fiscal_year,
         *(election.year for election in persona.elections),
         *(certificate.ejercicio for certificate in persona.withholding_certificates),
+        *(filed.year for filed in persona.filed_returns),
+        *(calculated.year for calculated in persona.calculated_returns),
+        *(observation.year for observation in persona.local_observations),
         *(row.year for row in persona.ledger),
         *(item.year for item in persona.expectations.obligations),
         *(item.year for item in persona.expectations.deadlines),
@@ -1127,12 +1391,16 @@ __all__ = [
     "ExpectedObligation",
     "ExpectedValue",
     "FieldValue",
+    "CalculatedReturns",
+    "FiledReturns",
     "HouseholdMember",
     "Identity",
     "IdentityCatalogue",
     "IdentityRef",
     "IdentityRefusal",
+    "LeasedPremises",
     "LedgerRow",
+    "LocalObservation",
     "Officer",
     "Persona",
     "PersonaCatalogueError",
@@ -1144,6 +1412,8 @@ __all__ = [
     "WithholdingCertificate",
     "YearEnvelope",
     "YearToken",
+    "cadastral_control_characters",
+    "filed_period_order",
     "identity_catalogue",
     "parse_identity_catalogue",
     "parse_persona",

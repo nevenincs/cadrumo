@@ -9,6 +9,16 @@ from pathlib import Path
 
 import pytest
 
+from ...application.modelo.filing_record_list_contracts import (
+    ModeloFilingRecordListProjection,
+    ModeloFilingRecordListRequest,
+)
+from ...application.modelo.filing_record_list_operation import MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID
+from ...application.modelo.revision_selection_operation import (
+    MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+    ModeloWorkRevisionProjection,
+    ModeloWorkRevisionRequest,
+)
 from ...application.retencion_soportada_certificado.contracts import RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID
 from ...application.retencion_soportada_certificado.requests import RetencionSoportadaListRequest
 from ...application.retencion_soportada_certificado.results import RetencionSoportadaListProjection
@@ -21,6 +31,8 @@ from ...application.user_profile.projections import record_to_path_values
 from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
 from ...domain.user_profile.values import ProfileSetupState
 from ...tests.personas import persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -28,6 +40,7 @@ from .persona_materialisation import (
     MaterialisedPersona,
     PersonaWorld,
     ReplayScope,
+    filing_key,
     household_leaves,
     load_profile_record,
     materialised_persona,
@@ -261,3 +274,54 @@ def test_a_reused_replay_gives_each_consumer_an_isolated_profile(tmp_path: Path)
     assert set(second.transactions) == {row.ref for row in persona.ledger}
     assert first.world.profile_id == second.world.profile_id == persona_profile_id(persona.id)
     assert set(second.invoices) == {row.ref for row in persona.ledger if row.invoice_kind is not None}
+    assert first.filings == second.filings == first.calculations == second.calculations == {}
+
+
+def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_confirmation_pending(
+    tmp_path: Path,
+) -> None:
+    with materialised_persona("autonomo-fontanero", tmp_path, ReplayScope.HISTORY) as materialised:
+        persona, world = materialised.persona, materialised.world
+        records = run_operation(
+            world,
+            MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID,
+            ModeloFilingRecordListRequest(profile_id=world.profile_id),
+            ModeloFilingRecordListProjection,
+        ).records
+        states = {
+            key: run_operation(
+                world,
+                MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+                ModeloWorkRevisionRequest(profile_id=world.profile_id, calculation_revision_id=revision_id),
+                ModeloWorkRevisionProjection,
+            ).calculation_state
+            for key, revision_id in (*materialised.filings.items(), *materialised.calculations.items())
+        }
+    declared_filed = {
+        filing_key(filed.modelo, filed.year.resolve(world.envelope), period)
+        for filed in persona.filed_returns
+        for period in filed.periods
+    }
+    declared_calculated = {
+        filing_key(calculated.modelo, calculated.year.resolve(world.envelope), period)
+        for calculated in persona.calculated_returns
+        for period in calculated.periods
+    }
+
+    assert persona.filed_returns
+    assert persona.calculated_returns
+    assert persona.leased_premises
+    assert persona.local_observations
+    assert materialised.scope is ReplayScope.HISTORY
+    assert set(materialised.filings) == declared_filed
+    assert set(materialised.calculations) == declared_calculated
+    assert {
+        filing_key(record.modelo, record.filing_year, record.period): record.calculation_revision_id
+        for record in records
+    } == materialised.filings
+    assert {states[key] for key in materialised.filings} == {CalculationRevisionState.PRESENTADO}
+    assert {states[key] for key in materialised.calculations} == {CalculationRevisionState.BORRADOR}
+    assert {
+        (record.confirmation, record.status, record.aeat_register, record.aeat_accepted, record.live_submission)
+        for record in records
+    } == {(AeatConfirmationState.PENDIENTE, ModeloRecordStatus.VIGENTE, None, False, False)}
