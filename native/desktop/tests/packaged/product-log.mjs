@@ -650,14 +650,18 @@ export function productLogVerdict({
     entries.map((entry) => [entry.id, faultWindow(entry, checks)]),
   );
   const used = new Map(entries.map((entry) => [entry.id, 0]));
-  const attributions = attributeTerminalProbe({
-    records: read.problems
-      .filter((problem) => problem.record)
-      .map((problem) => problem.record),
-    trace: ipcTrace,
-    checks,
-    windowHostPid,
-  });
+  // The authored terminal probe runs only in the window run.
+  const attributions =
+    run === "window"
+      ? attributeTerminalProbe({
+          records: read.problems
+            .filter((problem) => problem.record)
+            .map((problem) => problem.record),
+          trace: ipcTrace,
+          checks,
+          windowHostPid,
+        })
+      : new Map();
   const groups = new Map();
   const add = (disposition, item, template, entryId, attribution) => {
     const key = [

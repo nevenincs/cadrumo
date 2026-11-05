@@ -294,4 +294,14 @@ describe("terminal probe attribution in the product-log gate", () => {
     assert.equal(verdict.verdict, FAIL);
     assert.equal(disposition(verdict, "attributed").length, 0);
   });
+
+  // The probe belongs to the window run alone: evidence that would excuse the
+  // record there excuses nothing in any other run.
+  for (const run of ["setup", "unknown"])
+    test(`the ${run} run attributes nothing even with a valid trace, host and check`, () => {
+      const verdict = gate([failure(66)], { run });
+      assert.equal(verdict.verdict, FAIL);
+      assert.equal(disposition(verdict, "attributed").length, 0);
+      assert.equal(disposition(verdict, "unexpected").length, 1);
+    });
 });
