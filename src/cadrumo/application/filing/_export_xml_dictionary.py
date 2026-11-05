@@ -45,6 +45,7 @@ from ...domain.calculations.registry.export_xml_dictionary import (
     xml_dictionary_entries,
 )
 from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.inventory_bindings import TAXPAYER_YEAR_ACTIVITY_GRAIN
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
@@ -125,6 +126,7 @@ def _write_xml_dictionary_entries(
     element_order: dict[str, tuple[str, ...]],
     repeated_rows: tuple[XmlDictionaryRepeatedRows, ...] = (),
 ) -> None:
+    boxes: dict[str, dict[str, str]] = {}
     for entry in entries:
         if entry.path in unfiled_paths:
             continue
@@ -142,10 +144,12 @@ def _write_xml_dictionary_entries(
         rows = next((item for item in repeated_rows if item.holds(entry.path)), None)
         if rows is None:
             _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
+        elif rows.takes_box(entry.path) and not _is_zero_token(rendered):
+            boxes.setdefault(rows.element_path, {})[entry.path] = rendered
         else:
             _require_value_stated_by_rows(entry, rendered, rows)
     for rows in repeated_rows:
-        _append_repeated_rows(root, rows, element_order=element_order)
+        _append_repeated_rows(root, rows.with_boxes(boxes.get(rows.element_path, {})), element_order=element_order)
 
 
 def _finish_xml_dictionary_root(
@@ -855,10 +859,43 @@ class XmlDictionaryRepeatedRows:
     occurrences: tuple[Mapping[str, str], ...]
     """Each occurrence's rendered tokens, by the absolute path of the dictionary row."""
     casilla_by_path: Mapping[str, CasillaId]
+    activity_grained: bool
+    """Whether every binding filling these rows declares one row per activity of the taxpayer's year."""
 
     def holds(self, path: str) -> bool:
         """Say whether a dictionary row sits inside the repeating element."""
         return path.startswith(f"{self.element_path}/")
+
+    def takes_box(self, path: str) -> bool:
+        """Say whether a box held for the whole element belongs to its sole occurrence.
+
+        Only rows declared one per activity qualify: their one occurrence is the return's
+        one activity, which its source establishes before any row exists. Rows of any
+        other grain say nothing about whose box it is. With several occurrences, or one
+        that already states the box, writing it would pick an occurrence the box may not
+        describe.
+        """
+        return (
+            self.activity_grained
+            and self.holds(path)
+            and len(self.occurrences) == 1
+            and path not in self.occurrences[0]
+        )
+
+    def with_boxes(self, tokens: Mapping[str, str]) -> XmlDictionaryRepeatedRows:
+        """Return the rows with ``tokens`` written into their sole occurrence."""
+        if not tokens:
+            return self
+        if not all(self.takes_box(path) for path in tokens):
+            raise FilingExportValidationError(
+                f"boxes {sorted(tokens)} have no single occurrence of {self.element_path} to take them"
+            )
+        return XmlDictionaryRepeatedRows(
+            element_path=self.element_path,
+            occurrences=(MappingProxyType({**self.occurrences[0], **tokens}),),
+            casilla_by_path=self.casilla_by_path,
+            activity_grained=self.activity_grained,
+        )
 
 
 def _nearest_repeating_path(path: str, repeating: Mapping[str, int | None]) -> str | None:
@@ -938,9 +975,11 @@ def xml_dictionary_repeated_rows(
     value_schema = xml_dictionary_value_schema(layout, schema_provider=schema_provider)
     occurrences: dict[str, dict[int, dict[str, str]]] = {}
     casillas: dict[str, dict[str, CasillaId]] = {}
+    grains: dict[str, set[object]] = {}
     for value in values:
         binding = bindings[value.binding_id]
         element, entry = _row_column_entry(binding, entries, repeating)
+        grains.setdefault(element, set()).add(selector_as_dict(binding).get("projection_grain"))
         row = occurrences.setdefault(element, {}).setdefault(value.row_index or 0, {})
         row[entry.path] = canonical_xml_text(
             value_schema, entry.path, _render_bound_row_value(binding, entry, value.value)
@@ -948,7 +987,13 @@ def xml_dictionary_repeated_rows(
         if entry.casilla_id is not None:
             casillas.setdefault(element, {})[entry.path] = entry.casilla_id
     return tuple(
-        _bounded_repeated_rows(element, rows, casillas.get(element, {}), limit=repeating[element])
+        _bounded_repeated_rows(
+            element,
+            rows,
+            casillas.get(element, {}),
+            limit=repeating[element],
+            activity_grained=grains[element] == {TAXPAYER_YEAR_ACTIVITY_GRAIN},
+        )
         for element, rows in occurrences.items()
     )
 
@@ -969,6 +1014,7 @@ def _bounded_repeated_rows(
     casilla_by_path: Mapping[str, CasillaId],
     *,
     limit: int | None,
+    activity_grained: bool,
 ) -> XmlDictionaryRepeatedRows:
     if limit is not None and len(rows) > limit:
         raise FilingExportValidationError(
@@ -978,6 +1024,7 @@ def _bounded_repeated_rows(
         element_path=element,
         occurrences=tuple(rows[index] for index in sorted(rows)),
         casilla_by_path=casilla_by_path,
+        activity_grained=activity_grained,
     )
 
 

@@ -17,7 +17,7 @@ destination is what the operation means, not a value the law re-sets per year.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Final, Literal
 
 from pydantic import AfterValidator, BaseModel
 
@@ -30,6 +30,11 @@ from .form_codes import form_role_validator, resolve_form_codes
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition
+
+type InventoryProjectionGrain = Literal["taxpayer_year_activity"]
+
+#: One row per economic activity of the taxpayer's year: a row of this grain is an activity.
+TAXPAYER_YEAR_ACTIVITY_GRAIN: Final[InventoryProjectionGrain] = "taxpayer_year_activity"
 
 type InventoryProjectionOperation = Literal[
     "complete_acquisition_cost",
@@ -59,7 +64,7 @@ class InventoryProvider(BaseModel):
     # together with the registry's ``m100.inventory`` row codes, which still pin
     # each operation to the exact destination casilla of its own revision.
     temporal: BindingTemporalSelector = SameTargetContext()
-    projection_grain: Literal["taxpayer_year_activity"]
+    projection_grain: InventoryProjectionGrain
     fact: Literal["row_field"]
     record: Literal["inventory_activity"]
     grouping: Literal["per_inventory_activity"]
@@ -92,6 +97,8 @@ def validate_inventory_binding(binding: BindingDefinition) -> list[str]:
 
 
 __all__ = [
+    "TAXPAYER_YEAR_ACTIVITY_GRAIN",
+    "InventoryProjectionGrain",
     "InventoryProjectionOperation",
     "InventoryProvider",
     "validate_inventory_binding",

@@ -26,12 +26,14 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_value_contract import BindingValueContract
+from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
+from ....domain.calculations.registry.binding_value_contract import BindingValueChannel, BindingValueContract
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.calculations.registry.schema import BindingDefinition
+from ....domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ....domain.filing.errors import ModeloBuilderError
-from ..draft_construction import _binding_input
+from ..draft_construction import _binding_input, _bound_casilla_binding_ids, _draft_input_channels
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -148,3 +150,51 @@ class TestCalendarDateBindings:
         with pytest.raises(ModeloBuilderError) as excinfo:
             _binding_input("b", value, _binding("date"))
         assert excinfo.value.translated_message == "application.filing.build_draft.errors.date_binding_not_iso"
+
+
+def _edition_binding_a_row_set_and_a_decimal_to_casillas(
+    operation: PinnedAuthorityOperation,
+) -> tuple[RegistrySnapshot, str, str]:
+    """The first supported annual Modelo 100 edition binding both a row-set money value and a decimal to casillas."""
+    for year in operation.supported_filing_years().years:
+        snapshot = operation.snapshot("100", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+        bindings = revision_bindings_by_id(snapshot.revision)
+        bound = sorted(_bound_casilla_binding_ids(snapshot))
+        row_set = [
+            binding
+            for binding in bound
+            if bindings[binding].value.channel is BindingValueChannel.ROW_SET
+            and bindings[binding].value.data_type == "money"
+        ]
+        decimal = [binding for binding in bound if bindings[binding].value.channel is BindingValueChannel.DECIMAL]
+        if row_set and decimal:
+            return snapshot, row_set[0], decimal[0]
+    raise AssertionError("no supported annual Modelo 100 edition binds a row-set value to a casilla")
+
+
+class TestReplayedBoundCasillaChannels:
+    """A replayed bound casilla reaches the channel its binding declares, never one its value happens to fit."""
+
+    def test_a_row_set_binding_replayed_as_rows_stays_out_of_the_decimal_channel(
+        self, operation: PinnedAuthorityOperation
+    ) -> None:
+        snapshot, row_set_binding, _ = _edition_binding_a_row_set_and_a_decimal_to_casillas(operation)
+
+        for replayed, expected in (
+            ({"1": "0"}, [(1, Decimal("0"))]),
+            ({"1": "125.40", "2": "0"}, [(1, Decimal("125.40")), (2, Decimal("0"))]),
+        ):
+            channels = _draft_input_channels(snapshot, {row_set_binding: replayed})
+
+            assert row_set_binding not in channels.binding_inputs
+            rows = [value for value in channels.filing_binding_values if value.binding_id == row_set_binding]
+            assert [(value.row_index, value.value) for value in rows] == expected
+
+    def test_a_decimal_binding_replayed_as_a_scalar_still_reaches_the_decimal_channel(
+        self, operation: PinnedAuthorityOperation
+    ) -> None:
+        snapshot, _, decimal_binding = _edition_binding_a_row_set_and_a_decimal_to_casillas(operation)
+
+        channels = _draft_input_channels(snapshot, {decimal_binding: "12.50"})
+
+        assert channels.binding_inputs[decimal_binding] == Decimal("12.50")

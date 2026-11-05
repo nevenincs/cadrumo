@@ -92,6 +92,36 @@ def quarterly_filer_cadence(filing_year: int) -> WithholdingFilerCadence:
     return published_filer_cadence(filing_year)
 
 
+def published_work_profile_declaring_activities(
+    activities: int,
+    *,
+    facts: tuple[UserProfileFact, ...] = (),
+) -> ModeloWorkProfile:
+    """Return the ready work profile with ``activities`` economic activities declared, undated.
+
+    The ready baseline declares one activity as the setup wizard writes it, unindexed; each
+    further activity takes the next indexed row. ``facts`` replace the baseline at their paths
+    and are all kept, so one path may hold several dated windows.
+    """
+    if activities < 1:
+        raise ValueError("a work profile declares at least the activity its readiness baseline holds")
+    stated = {fact.path for fact in facts}
+    rows = tuple(
+        UserProfileFact(path=f"activities.{row}.description", value=f"Synthetic activity {row}")
+        for row in range(1, activities)
+    )
+    with bundled_indexed_authority().operation() as operation:
+        record = create_user_profile_record(
+            context=operation.profile_create_context(),
+            profile_id=WITHHOLDING_FILER_PROFILE_ID,
+            facts=(*(fact for fact in MODELO_READY_PROFILE_FACTS if fact.path not in stated), *rows, *facts),
+            setup_state=ProfileSetupState.COMPLETE,
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        )
+        return ModeloWorkProfile(record=record, profile_decode_context=operation.profile_decode_context())
+
+
 def published_pending_disclosure_years() -> frozenset[int]:
     """Return the accrual years whose published Modelo 193 edition grounds the pending disclosure."""
     with bundled_indexed_authority().operation() as operation:
@@ -112,6 +142,7 @@ __all__ = [
     "WITHHOLDING_FILER_PROFILE_ID",
     "published_filer_cadence",
     "published_pending_disclosure_years",
+    "published_work_profile_declaring_activities",
     "quarterly_filer_cadence",
     "quarterly_filer_cadence_for",
     "withholding_filer_cadence",

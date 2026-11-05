@@ -487,7 +487,7 @@ def _mismatched_xml_dictionary_casilla_ids(
             continue
         checked.append(casilla_id)
         entry = _signed_dictionary_entry(entries, parsed.field_id)
-        if any(rows.holds(entry.path) for rows in repeated_rows):
+        if any(rows.holds(entry.path) and not rows.takes_box(entry.path) for rows in repeated_rows):
             continue
         expected = values.get(casilla_id)
         expected_wire = _verification_wire_value(

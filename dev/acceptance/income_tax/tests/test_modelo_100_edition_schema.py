@@ -26,13 +26,18 @@ from cadrumo.application.filing.runtime import (
     build_runtime_schema_provider,
 )
 from cadrumo.application.filing.tests.export_support import filer_with_nothing_else, m151_producer_snapshot
+from cadrumo.core.aggregation import BindingAggregationOp
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from cadrumo.domain.calculations.registry.tests.authored_editions import supported_authored_exercises
+from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.protocols import ModeloInputValue
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -226,3 +231,93 @@ def test_the_base_liquidable_general_is_exported_before_the_compensation_of_earl
     assert Decimal(block.findtext("BLGGRAV") or "") == base - pending
     order = [child.tag for child in block]
     assert order.index("BLGRAL") < order.index("JCOMPE") < order.index("BLGGRAV")
+
+
+def _activity_row_columns(provider: RegistrySchemaAccessor) -> tuple[tuple[str, XmlDictionaryEntry], ...]:
+    """Each row binding of the edition whose column sits in the activity block, with that column's row."""
+    entries = xml_dictionary_entries(
+        provider.get_snapshot("100").revision.export_layouts[0],
+        sources=provider.sources,
+        source_payloads=provider.source_payloads,
+    )
+    columns: list[tuple[str, XmlDictionaryEntry]] = []
+    for binding_id, binding in sorted(revision_bindings_by_id(provider.get_snapshot("100").revision).items()):
+        target = selector_as_dict(binding).get("target_casilla_id")
+        if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS or target is None:
+            continue
+        columns.extend(
+            (binding_id, entry)
+            for entry in entries
+            if entry.casilla_id == target and entry.path.startswith(f"/{_ACTIVITY_BLOCK}/")
+        )
+    return tuple(columns)
+
+
+def _editions_with_activity_rows(
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[int, RegistrySchemaAccessor, str, XmlDictionaryEntry], ...]:
+    editions = tuple(
+        (year, provider, *columns[0])
+        for year in sorted(_XSD_BY_YEAR)
+        if operation.supported_filing_years().admits_coordinate(year)
+        and (columns := _activity_row_columns(provider := _open_provider(operation, year)))
+    )
+    # The first edition with a per-activity row book must reach these tests, or they prove nothing.
+    assert editions
+    return editions
+
+
+def _rows_draft(provider: RegistrySchemaAccessor, year: int, binding_id: str, rows: dict[str, str]) -> ModeloDraft:
+    return _draft(provider, year, {**_activity_key_inputs(provider, key="A05"), binding_id: rows})
+
+
+def test_the_activity_key_goes_into_the_one_activity_the_row_book_opens(
+    operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """A box held for the whole activity block fills its only occurrence, beside the row the book states."""
+    for year, provider, binding_id, column in _editions_with_activity_rows(operation):
+        folder = tmp_path / str(year)
+        folder.mkdir()
+
+        payload = _render(provider, _rows_draft(provider, year, binding_id, {"1": "125.00"}), folder)
+
+        assert record_design_schema_violations(payload, xsd=_XSD_BY_YEAR[year]) == ()
+        blocks = etree.fromstring(payload).findall(_ACTIVITY_BLOCK)
+        assert len(blocks) == 1
+        assert blocks[0].findtext(_ACTIVITY_KEY_FIELD) == "A05"
+        assert Decimal(blocks[0].findtext(column.path.removeprefix(f"/{_ACTIVITY_BLOCK}/")) or "") == Decimal("125.00")
+
+
+def test_a_box_for_the_whole_block_refuses_when_the_row_book_opens_two_activities(
+    operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """With two occurrences the activity key could describe either, so neither is chosen."""
+    for year, provider, binding_id, _ in _editions_with_activity_rows(operation):
+        folder = tmp_path / str(year)
+        folder.mkdir()
+        draft = _rows_draft(provider, year, binding_id, {"1": "125.00", "2": "75.00"})
+
+        with pytest.raises(FilingExportValidationError) as refused:
+            _render(provider, draft, folder)
+
+        assert f"box {_row(provider, _ACTIVITY_KEY_FIELD).casilla_id} holds A05" in str(refused.value)
+
+
+def test_a_box_whose_activity_already_states_another_value_refuses(
+    operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """The one occurrence states the column, so a different box value for it is never written over the row."""
+    for year, provider, binding_id, column in _editions_with_activity_rows(operation):
+        folder = tmp_path / str(year)
+        folder.mkdir()
+        draft = _rows_draft(provider, year, binding_id, {"1": "125.00"})
+        values = tuple(
+            value.model_copy(update={"value": Decimal("130.00")}) if value.casilla_id == column.casilla_id else value
+            for value in draft.values
+        )
+        assert any(value.casilla_id == column.casilla_id for value in values)
+
+        with pytest.raises(FilingExportValidationError) as refused:
+            _render(provider, draft.model_copy(update={"values": values}), folder)
+
+        assert f"box {column.casilla_id} holds 130.00" in str(refused.value)

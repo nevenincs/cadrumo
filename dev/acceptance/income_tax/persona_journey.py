@@ -12,13 +12,19 @@ import argparse
 import hashlib
 import json
 import secrets
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import AbstractContextManager, ExitStack
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
+from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
+from cadrumo.domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from dev.acceptance.installed_cli import InstalledCli, profile_create_args
 
 from .cli_journey import (
@@ -39,20 +45,29 @@ from .personas import (
     EmployerCertificate,
     build_autonomo_oracle,
     build_employee_oracle,
+    build_payer_oracle,
     build_payer_side,
 )
 from .scenario import money
 
 _ACTOR: Final[str] = "persona-acceptance"
+_M100_ANNUAL_PERIOD: Final[str] = "0A"
 _NORMAL_MODALITY_BINDING: Final[str] = "renta-modelo-100-estimacion-directa-es-normal"
-# The 2024 return states the mother's social-security contributions behind the maternity deduction as an operator
-# figure; later revisions retired the ceiling that needed it. These taxpayers have no such deduction, so the
-# journey states the zero a 2024 filer without children declares, and the calculation must then take it as given.
-_LAST_YEAR_NEEDING_COTIZACIONES: Final[int] = 2024
+# An edition whose maternity-deduction ceiling rests on the mother's social-security contributions asks for them
+# as an operator figure. These taxpayers have no such deduction, so where the selected edition declares the
+# figure the journey states the zero a filer without children declares, and the calculation must take it as given.
 _COTIZACIONES_BINDING: Final[str] = "renta-profile-cotizaciones-ss-madre"
 _ACTIVITY_CHAIN_CASILLAS: Final[tuple[str, ...]] = ("0171", "0180", "0218", "0220", "0224")
 _CREDIT_CASILLAS: Final[tuple[str, ...]] = ("0596", "0597", "0598", "0599", "0603", "0604", "0609")
 _ACTIVITY_INVENTORY: Final[str] = "actividad-servicios"
+#: Last year's return: an activity yield above the 130 minoracion and no negative bases left to carry.
+_PRIOR_RETURN_ROWS: Final[Mapping[str, Decimal]] = {
+    "0224": Decimal("50000.00"),
+    "1384": Decimal(),
+    "1387": Decimal(),
+    "1390": Decimal(),
+    "1391": Decimal(),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +86,84 @@ class PersonaEvidence:
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-safe representation."""
         return dict[str, object](asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
+class JourneyEdition:
+    """What the pinned authority says about the persona's filing year, read once before the journey starts."""
+
+    prior_year_supported: bool
+    """Whether the year before is inside the support envelope, so that its return can be imported at all."""
+    m100_binding_sources: Mapping[str, BindingSourceKind]
+    """Each binding the selected annual Modelo 100 revision declares, with the kind of source it reads."""
+    m100_prior_return_casillas: Mapping[str, str]
+    """The ``previous_filing`` bindings that read last year's Modelo 100, each with the casilla it reads."""
+
+    def declared_bindings(self, *assignments: tuple[str, str]) -> tuple[str, ...]:
+        """Return ``--binding`` options for the assignments this edition declares, dropping the rest."""
+        return _binding_options(
+            (binding, value) for binding, value in assignments if binding in self.m100_binding_sources
+        )
+
+    def manual_bindings(self, *assignments: tuple[str, str]) -> tuple[str, ...]:
+        """Return ``--binding`` options only for assignments this edition takes as the operator's own input.
+
+        A binding the edition derives from another source, such as the profile, is not the operator's to state.
+        """
+        return _binding_options(
+            (binding, value)
+            for binding, value in assignments
+            if self.m100_binding_sources.get(binding) is BindingSourceKind.MANUAL_INPUT
+        )
+
+    def prior_return_bindings(self, rows: Mapping[str, Decimal]) -> tuple[str, ...]:
+        """State last year's figures directly when no earlier return can be held.
+
+        At the envelope's floor the product cannot hold last year's return, so the bindings that would read it
+        stay unresolved until the operator states them. The journey states the same figures it imports in
+        every other year, and refuses an edition that reads a casilla it has no figure for.
+        """
+        if self.prior_year_supported:
+            return ()
+        unknown = sorted(set(self.m100_prior_return_casillas.values()) - set(rows))
+        if unknown:
+            raise JourneyError(f"the edition reads last year's casillas {unknown}, which the persona does not state")
+        return _binding_options(
+            (binding, f"{rows[casilla]:.2f}") for binding, casilla in sorted(self.m100_prior_return_casillas.items())
+        )
+
+
+def _binding_options(assignments: Iterable[tuple[str, str]]) -> tuple[str, ...]:
+    return tuple(item for binding, value in assignments for item in ("--binding", f"{binding}={value}"))
+
+
+def read_journey_edition(authority_root: Path, *, year: int) -> JourneyEdition:
+    """Read the envelope and the selected Modelo 100 revision for ``year`` from the installed authority."""
+    authority = IndexedRegistryAuthority(authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME)
+    try:
+        with authority.operation() as operation:
+            # The binding set is a calculation input, so a year projected from another edition answers too.
+            revision = operation.snapshot(
+                "100", filing_year=year, period=_M100_ANNUAL_PERIOD, grade=RegistryAuthorityGrade.CALCULATION
+            ).revision
+            bindings = revision_bindings_by_id(revision)
+            return JourneyEdition(
+                prior_year_supported=operation.supported_filing_years().admits_filing_year(year - 1),
+                m100_binding_sources={binding_id: binding.source for binding_id, binding in bindings.items()},
+                m100_prior_return_casillas={
+                    binding_id: str(casilla)
+                    for binding_id, binding in bindings.items()
+                    if isinstance(binding.provider, PreviousFilingProvider)
+                    and str(binding.provider.source_modelo) == "100"
+                    for casilla in (
+                        (binding.provider.source_casilla_id,)
+                        if binding.provider.source_casilla_id is not None
+                        else binding.provider.source_casilla_ids
+                    )
+                },
+            )
+    finally:
+        authority.close()
 
 
 def _create_profile(
@@ -155,21 +248,16 @@ def _import_official_return(
         )
 
 
-def _carry_prior_year(cli: InstalledCli, *, directory: Path, year: int) -> None:
-    """Bring in last year's return: no negative bases to carry and an activity yield above the 130 minoracion."""
+def _carry_prior_year(cli: InstalledCli, *, directory: Path, year: int, edition: JourneyEdition) -> None:
+    """Bring in last year's return: no negative bases to carry and an activity yield above the 130 minoracion.
+
+    A year below the support envelope is refused at every grade, so at the envelope's floor there is no
+    earlier return the product can hold; the calculation then takes the same figures as stated bindings.
+    """
+    if not edition.prior_year_supported:
+        return
     _import_official_return(
-        cli,
-        directory=directory,
-        modelo="100",
-        year=year - 1,
-        period="0A",
-        rows=(
-            ("0224", Decimal("50000.00")),
-            ("1384", Decimal()),
-            ("1387", Decimal()),
-            ("1390", Decimal()),
-            ("1391", Decimal()),
-        ),
+        cli, directory=directory, modelo="100", year=year - 1, period="0A", rows=tuple(_PRIOR_RETURN_ROWS.items())
     )
 
 
@@ -349,7 +437,7 @@ def _verify_and_export(
     return True, output.read_bytes()
 
 
-def run_employee(cli: InstalledCli, *, year: int, directory: Path) -> PersonaEvidence:
+def run_employee(cli: InstalledCli, *, year: int, directory: Path, edition: JourneyEdition) -> PersonaEvidence:
     """The employee: certified work withholding, an attested movable-capital class, verified and exported."""
     oracle = build_employee_oracle()
     _create_profile(
@@ -357,10 +445,10 @@ def run_employee(cli: InstalledCli, *, year: int, directory: Path) -> PersonaEvi
         year=year,
         categories="trabajo,capital_mobiliario",
         regime="directa_normal",
-        activity_start="2020-01-01",
+        activity_start=f"{year - 2}-01-01",
         criterion=False,
     )
-    _carry_prior_year(cli, directory=directory, year=year)
+    _carry_prior_year(cli, directory=directory, year=year, edition=edition)
     for certificate in oracle.certificates:
         _record_certificate(cli, directory=directory, year=year, certificate=certificate, income_class="trabajo")
     attest_no_withholding(cli, year=year, income_class="capital_mobiliario")
@@ -368,9 +456,14 @@ def run_employee(cli: InstalledCli, *, year: int, directory: Path) -> PersonaEvi
         cli,
         year=year,
         inputs=("--casilla", WORK_HOLDER_INPUT, *_casilla_inputs(oracle)),
-        extra=("--binding", f"{_NORMAL_MODALITY_BINDING}=1", *_zero_relations(), *_cotizaciones_bindings(year)),
+        extra=(
+            *_zero_relations(),
+            *edition.manual_bindings((_NORMAL_MODALITY_BINDING, "1")),
+            *edition.declared_bindings((_COTIZACIONES_BINDING, "0")),
+            *edition.prior_return_bindings(_PRIOR_RETURN_ROWS),
+        ),
     )
-    _require_no_maternity_deduction(annual["calculation"], year)
+    _require_no_maternity_deduction(annual["calculation"])
     credits = _require_credits(
         annual["calculation"],
         {
@@ -396,17 +489,8 @@ def _casilla_inputs(oracle: EmployeeOracle) -> tuple[str, ...]:
     return tuple(item for code, value in oracle.salary_casillas for item in ("--casilla", f"{code}={value:.2f}"))
 
 
-def _cotizaciones_bindings(year: int) -> tuple[str, ...]:
-    """The zero maternity-contributions figure the 2024 return asks for, and nothing for later returns."""
-    if year <= _LAST_YEAR_NEEDING_COTIZACIONES:
-        return ("--binding", f"{_COTIZACIONES_BINDING}=0")
-    return ()
-
-
-def _require_no_maternity_deduction(calculation: dict[str, Any], year: int) -> None:
-    """A 2024 return given zero contributions must leave the maternity deduction at zero."""
-    if year > _LAST_YEAR_NEEDING_COTIZACIONES:
-        return
+def _require_no_maternity_deduction(calculation: dict[str, Any]) -> None:
+    """A taxpayer without children has no maternity deduction, whatever figures the edition asked for."""
     values = calculation.get("casilla_values")
     if not isinstance(values, dict):
         raise JourneyError("Modelo 100 returned no casilla map")
@@ -465,10 +549,10 @@ def _quarters(cli: InstalledCli, *, year: int, directory: Path, oracle: Autonomo
 
 
 def run_employee_autonomo(
-    cli: InstalledCli, *, year: int, directory: Path, payer_side: bool = False
+    cli: InstalledCli, *, year: int, directory: Path, edition: JourneyEdition, payer_side: bool = False
 ) -> PersonaEvidence:
     """The employee-autonomo, and with ``payer_side`` the same taxpayer also paying a freelancer."""
-    oracle = build_autonomo_oracle(year)
+    oracle = build_payer_oracle(year) if payer_side else build_autonomo_oracle(year)
     _create_profile(
         cli,
         year=year,
@@ -478,7 +562,7 @@ def run_employee_autonomo(
         criterion=True,
     )
     attest_no_withholding(cli, year=year, income_class="arrendamiento_inmueble_urbano_actividad")
-    _carry_prior_year(cli, directory=directory, year=year)
+    _carry_prior_year(cli, directory=directory, year=year, edition=edition)
     _record_no_existencias(cli, directory=directory, year=year)
     ingest_income_fixture(cli, year=year, income=oracle.income, expenses=oracle.expenses)
     _record_certificate(cli, directory=directory, year=year, certificate=oracle.employer, income_class="trabajo")
@@ -498,9 +582,13 @@ def run_employee_autonomo(
             "--casilla",
             ACTIVITY_KEY_INPUT,
         ),
-        extra=("--binding", f"{_NORMAL_MODALITY_BINDING}=0", *_cotizaciones_bindings(year)),
+        extra=(
+            *edition.manual_bindings((_NORMAL_MODALITY_BINDING, "0")),
+            *edition.declared_bindings((_COTIZACIONES_BINDING, "0")),
+            *edition.prior_return_bindings(_PRIOR_RETURN_ROWS),
+        ),
     )
-    _require_no_maternity_deduction(annual["calculation"], year)
+    _require_no_maternity_deduction(annual["calculation"])
     credits = _require_credits(
         annual["calculation"],
         {
@@ -707,6 +795,7 @@ def run_persona(
         raise JourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
+    edition = read_journey_edition(authority_root, year=year)
     with ExitStack() as resources:
         if runtime_scope is not None:
             resources.enter_context(runtime_scope)
@@ -714,8 +803,10 @@ def run_persona(
             executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
         )
         if persona == "employee":
-            return run_employee(cli, year=year, directory=output_dir)
-        return run_employee_autonomo(cli, year=year, directory=output_dir, payer_side=persona == "payer")
+            return run_employee(cli, year=year, directory=output_dir, edition=edition)
+        return run_employee_autonomo(
+            cli, year=year, directory=output_dir, edition=edition, payer_side=persona == "payer"
+        )
 
 
 def main(argv: Sequence[str] | None = None) -> int:

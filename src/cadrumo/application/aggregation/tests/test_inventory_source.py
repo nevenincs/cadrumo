@@ -15,8 +15,17 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
+    published_work_profile_declaring_activities,
+)
+from cadrumo.domain.calculations.registry.irpf_regimes import (
+    irpf_estimation_regime_directa_normal_token,
+    irpf_estimation_regime_directa_simplificada_token,
+    irpf_estimation_regime_objetiva_token,
+)
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, projected_exercise
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.user_profile.values import UserProfileFact
 
 from ....core.aggregation import (
     BindingAggregation,
@@ -65,6 +74,8 @@ from ....domain.filing_evidence import FilingEvidenceReference
 from ..inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from ..source_mesh import CalculationSourceContext
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
+
+_ESTIMATION_REGIME = "irpf.estimation_regime"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -243,13 +254,25 @@ def _revision(*, inventory: bool) -> ModeloRevision:
     return base.model_copy(update={"bindings": bindings})
 
 
-def _context(revision: ModeloRevision, *, year: int = 2025) -> CalculationSourceContext:
+def _context(
+    revision: ModeloRevision,
+    *,
+    year: int | None = None,
+    activities: int = 1,
+    facts: tuple[UserProfileFact, ...] = (),
+) -> CalculationSourceContext:
+    """The calculation context of a filer whose profile declares ``activities`` economic activities.
+
+    The year is the newest authored Modelo 100 edition unless one is given, the year the books are kept for.
+    """
+    year = newest_authored_edition("100") if year is None else year
     return CalculationSourceContext(
         bucket_id="operator",
         modelo="100",
         filing_year=year,
         period=Period.from_year_and_code(year, "0A"),
         revision=revision,
+        profile=published_work_profile_declaring_activities(activities, facts=facts),
     )
 
 
@@ -284,7 +307,9 @@ def test_inventory_row_templates_expand_complete_activities_in_canonical_rows() 
     zeta = inventory_ledger("zeta")
     repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(zeta, alpha)))
 
-    result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), activities=2)
+    )
 
     assert repository.loads == 1
     assert result.binding_values == {}
@@ -331,6 +356,141 @@ def test_resale_stock_acquisition_projects_to_anexo_d_not_the_amortization_casil
     assert result.diagnostics == ()
 
 
+def test_one_book_among_two_declared_activities_projects_no_row() -> None:
+    """The return holds one activity block, so one book can be its row only when it is the one activity.
+
+    With a second activity declared and no book of its own, the lone book's row would read as the
+    block's activity, whichever activity the book belongs to.
+    """
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), activities=2)
+    )
+
+    assert result.row_binding_values == {}
+    assert set(result.unresolved_binding_ids) == {"inventory-0177", "inventory-0181", "inventory-0182"}
+    assert [diagnostic.reason for diagnostic in result.diagnostics] == ["source_domain_not_ready"]
+    assert "activity_books_do_not_match_activities" in result.diagnostics[0].message
+
+
+def test_one_book_for_an_activity_whose_identity_changes_within_the_year_projects_no_row() -> None:
+    """A row that is one activity until June and another from July holds two activities in the year.
+
+    One book can be only one of them, and the block's figures would describe both.
+    """
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
+    year = newest_authored_edition("100")
+    renamed = (
+        UserProfileFact(path="activities.description", value="Synthetic shop", valid_to=date(year, 6, 30)),
+        UserProfileFact(path="activities.description", value="Synthetic workshop", valid_from=date(year, 7, 1)),
+    )
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), facts=renamed)
+    )
+
+    assert result.row_binding_values == {}
+    assert "declares 2 activities in estimacion directa" in result.diagnostics[0].message
+
+
+def test_an_activity_whose_identity_changes_outside_the_year_still_projects_its_row() -> None:
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
+    year = newest_authored_edition("100")
+    renamed = (
+        UserProfileFact(path="activities.description", value="Synthetic shop", valid_to=date(year - 1, 12, 31)),
+        UserProfileFact(path="activities.description", value="Synthetic workshop", valid_from=date(year, 1, 1)),
+    )
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), facts=renamed)
+    )
+
+    assert result.row_binding_values[("inventory-0181", 1)] == Decimal("100.00")
+
+
+def test_an_activity_in_estimacion_objetiva_is_not_one_the_book_can_belong_to() -> None:
+    """The Anexo D rows sit in the direct-estimation activity block, which a modulos activity is not in."""
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
+    objetiva = (UserProfileFact(path=_ESTIMATION_REGIME, value=str(irpf_estimation_regime_objetiva_token())),)
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), facts=objetiva)
+    )
+
+    assert result.row_binding_values == {}
+    assert "declares 0 activities in estimacion directa" in result.diagnostics[0].message
+
+
+def test_an_activity_counts_on_the_days_the_regime_is_direct_estimation() -> None:
+    """Modulos until June and directa from July: the one activity is in the block, once, for its book."""
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
+    year = newest_authored_edition("100")
+    regimes = (
+        UserProfileFact(
+            path=_ESTIMATION_REGIME, value=str(irpf_estimation_regime_objetiva_token()), valid_to=date(year, 6, 30)
+        ),
+        UserProfileFact(
+            path=_ESTIMATION_REGIME,
+            value=str(irpf_estimation_regime_directa_simplificada_token()),
+            valid_from=date(year, 7, 1),
+        ),
+    )
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), facts=regimes)
+    )
+
+    assert result.row_binding_values[("inventory-0181", 1)] == Decimal("100.00")
+    assert result.diagnostics == ()
+
+
+def test_an_activity_with_no_stated_estimation_regime_asks_for_the_regime_not_its_book() -> None:
+    """Without a regime the block's activities are unknown, which is a missing regime, not a missing book."""
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
+    undeclared = (UserProfileFact(path=_ESTIMATION_REGIME, value=""),)
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), facts=undeclared)
+    )
+
+    assert result.row_binding_values == {}
+    assert set(result.unresolved_binding_ids) == {"inventory-0177", "inventory-0181", "inventory-0182"}
+    assert [diagnostic.reason for diagnostic in result.diagnostics] == ["source_domain_not_ready"]
+    assert "estimation_regime_undeclared" in result.diagnostics[0].message
+    assert "activity_books_do_not_match_activities" not in result.diagnostics[0].message
+    assert "estimation regime" in (result.diagnostics[0].remedy or "")
+
+
+def test_a_regime_stated_for_only_part_of_an_activitys_year_asks_for_the_regime() -> None:
+    year = newest_authored_edition("100")
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
+    partial = (
+        UserProfileFact(
+            path=_ESTIMATION_REGIME,
+            value=str(irpf_estimation_regime_directa_normal_token()),
+            valid_from=date(year, 7, 1),
+        ),
+    )
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), facts=partial)
+    )
+
+    assert result.row_binding_values == {}
+    assert "estimation_regime_undeclared" in result.diagnostics[0].message
+
+
+def test_a_book_without_a_profile_to_count_activities_against_projects_no_row() -> None:
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))
+    context = _context(_revision(inventory=True)).model_copy(update={"profile": None})
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(context)
+
+    assert result.row_binding_values == {}
+    assert "activity_books_do_not_match_activities" in result.diagnostics[0].message
+
+
 def test_resale_stock_document_refuses_duplicate_activity_year_collision() -> None:
     """One stock ledger is authoritative for an activity/year coordinate."""
     stock = inventory_ledger("retail")
@@ -344,15 +504,15 @@ def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_cha
     zeta = inventory_ledger("zeta")
     forward = InventorySourceResolver(
         inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(alpha, zeta)))
-    ).resolve(_context(_revision(inventory=True)))
+    ).resolve(_context(_revision(inventory=True), activities=2))
     reverse = InventorySourceResolver(
         inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(zeta, alpha)))
-    ).resolve(_context(_revision(inventory=True)))
+    ).resolve(_context(_revision(inventory=True), activities=2))
     changed_movement = alpha.period_movements[0].model_copy(update={"movement_date": date(2025, 3, 1)})
     changed = InventoryLedger.model_validate(alpha.model_copy(update={"period_movements": (changed_movement,)}))
     mutated = InventorySourceResolver(
         inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(changed, zeta)))
-    ).resolve(_context(_revision(inventory=True)))
+    ).resolve(_context(_revision(inventory=True), activities=2))
 
     assert forward.row_binding_values == reverse.row_binding_values == mutated.row_binding_values
     assert forward.row_source_identities == reverse.row_source_identities
@@ -616,7 +776,7 @@ def test_inventory_rows_carry_a_primary_detail_record_node_the_terminal_audit_ad
         InventoryLedgerDocument(ledgers=(inventory_ledger("zeta"), inventory_ledger("alpha"))),
     )
 
-    result = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+    result = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
 
     assert len(result.row_binding_values) == 6
     # One activity record stands behind the three operation values it produced.

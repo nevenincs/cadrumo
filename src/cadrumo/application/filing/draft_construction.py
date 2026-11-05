@@ -198,10 +198,21 @@ def _draft_input_channels(
     boolean_binding_ids = {
         binding_id for binding_id, binding in bindings.items() if binding.value.channel is _BindingValueChannel.BOOLEAN
     }
+    # A binding the revision declares on the row-set channel holds one value per
+    # row; its replayed rows reach the fichero through ``filing_binding_values``
+    # and never stand for one scalar answer.
+    row_set_binding_ids = {
+        binding_id for binding_id, binding in bindings.items() if binding.value.channel is _BindingValueChannel.ROW_SET
+    }
     # Date, truth-value and relation ids ride dedicated engine channels; never
     # coerce their values through the Decimal binding channel.
     decimal_binding_ids = (
-        calculation_binding_ids - enum_binding_ids - date_binding_ids - relation_ids - boolean_binding_ids
+        calculation_binding_ids
+        - enum_binding_ids
+        - date_binding_ids
+        - relation_ids
+        - boolean_binding_ids
+        - row_set_binding_ids
     )
     _validate_filing_input_keys(
         inputs,
