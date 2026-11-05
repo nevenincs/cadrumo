@@ -295,33 +295,28 @@ def test_m347_excludes_a_received_invoice_whose_withholding_the_filer_declares_a
     assert declared.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4235.00")
 
 
-def test_m347_declares_an_issued_invoice_withheld_by_the_customer_and_discloses_it(
+def test_m347_excludes_an_issued_invoice_withheld_by_the_customer(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """The withheld party has no withholding summary of its own, so its side stays declared and disclosed.
+    """Art. 33.2.i excludes the operation, so the withheld party's side leaves the declaration too.
 
-    The advisory must not tell a landlord of business premises that the lease may
-    drop out: art. 34.1.d has the landlord relate it. This invoice records no
-    lease, so the advisory names it and points at the lease fact that would
-    take it out of the unsettled set.
+    The customer reports the operation in its withholding summary (RIRPF art.
+    108.2) and the text excludes every operation so reported, not one party's
+    side of it. The same issued invoice without the withholding is declared, so
+    what excludes it is the withholding alone, and no advisory is left open.
     """
     withheld = _withheld_invoice(
         secure_profile.bucket_id, kind=InvoiceKind.ISSUED, invoice_number="M347-RETENIDA-EMI-2026-001"
     )
+    unwithheld = withheld.model_copy(update={"retention_rate": None, "retention_amount": None})
+    context = _m347_2026_context(secure_profile.bucket_id)
 
-    resolution = _public_resolution((withheld,), context=_m347_2026_context(secure_profile.bucket_id))
+    excluded = _public_resolution((withheld,), context=context)
+    declared = _public_resolution((unwithheld,), context=context)
 
-    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
-    assert _unsettled_reading_refs(resolution) == ["m347-exclusion:withheld-issued-invoice"]
-    advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
-    assert advisory.asserted_legal_refs == (
-        "rd-1065-2007:art-33.2.i",
-        "rd-1065-2007:art-34.1.d",
-        "rd-439-2007:art-108",
-    )
-    assert "None of them records a business-premises lease" in advisory.message
-    assert advisory.remedy is not None
-    assert "lease of a local de negocio" in advisory.remedy
+    assert excluded.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
+    assert _unsettled_reading_refs(excluded) == []
+    assert declared.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
 
 
 def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not(

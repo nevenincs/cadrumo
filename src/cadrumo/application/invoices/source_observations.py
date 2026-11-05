@@ -420,13 +420,14 @@ def _m347_invoice_observation(
       goods exports and imports drop out while services with a non-resident
       stay declared; a category the catalogue marks unsettled stays declared
       and is disclosed by :func:`m347_exclusion_reading_advisories`;
-    - art. 33.2.i) again for a RECEIVED invoice carrying a withholding: the
-      payer declares it in the "declaración anual de las retenciones e
-      ingresos a cuenta efectuados" of RIRPF art. 108.2, a periodic
-      information duty of coincident content. The withheld party's own side
-      has no such declaration of its own, so an ISSUED invoice with a
-      withholding stays declared and is disclosed instead.
-
+    - art. 33.2.i) again for an invoice carrying a withholding, whichever side
+      files it: the operation is already reported in the "declaración anual de
+      las retenciones e ingresos a cuenta" of RIRPF art. 108.2 (the payer's
+      Modelo 190/180), a periodic information duty of coincident content, and
+      the text excludes "todas aquellas operaciones" so reported, not one
+      party's side of them. The one operation art. 34.1.d still has the
+      landlord relate is the lease of a business premises, withheld or not, so
+      an ISSUED invoice that records one stays declared;
     Letters c, e, f and h turn on facts the invoice does not carry (a
     gratuitous title, stamps or postage, the social entity's exempt sector,
     a shipment to or from Canarias, Ceuta or Melilla), so nothing here
@@ -484,12 +485,19 @@ def _m347_invoice_observation(
     )
 
 
+def _m347_reported_in_withholding_summary(invoice: Invoice) -> bool:
+    """Whether art. 33.2.i leaves the invoice out because its withholding is reported elsewhere."""
+    if not carries_withholding(invoice):
+        return False
+    return not (invoice.kind is InvoiceKind.ISSUED and invoice.business_premises_lease is not None)
+
+
 def _m347_invoice_included(invoice: Invoice, *, m347_filer: M347Filer, effective_date: date) -> bool:
     if intracommunity_clave(invoice) is not None:
         return False
     if m347_category_exclusion(invoice, effective_date=effective_date) is IvaCategoryExclusion.EXCLUDED:
         return False
-    if invoice.kind is InvoiceKind.RECEIVED and carries_withholding(invoice):
+    if _m347_reported_in_withholding_summary(invoice):
         return False
     if not m347_filer.relates(invoice.kind):
         return False

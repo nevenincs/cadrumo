@@ -701,8 +701,8 @@ def test_m347_raises_no_inmueble_advisory_for_a_complete_lease_or_without_leases
     assert without_lease.binding_values["modelo-347-declarante-numero-inmuebles"] == Decimal("0")
 
 
-def test_m347_a_withheld_lease_is_declared_without_the_withholding_advisory() -> None:
-    """Art. 34.1.d settles that the landlord relates a lease, withheld or not, so only other withheld sales are named."""
+def test_m347_a_withheld_lease_stays_declared_because_art_34_1_d_has_the_landlord_relate_it() -> None:
+    """Art. 34.1.d has the landlord relate a lease, withheld or not, so the withholding does not exclude it."""
     lease = _lease("ALQ-1", "B12345674", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
     withheld_lease = Invoice.model_validate(
         {**lease.model_dump(), "retention_rate": Decimal("0.19"), "retention_amount": Decimal("760.00")},

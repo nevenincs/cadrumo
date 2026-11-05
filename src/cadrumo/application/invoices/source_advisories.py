@@ -36,7 +36,6 @@ from ..aggregation.source_mesh import (
 from .source_observations import (
     M347Filer,
     ObservedInvoice,
-    carries_withholding,
     filing_period_date,
     invoice_observation,
     invoice_source_kind,
@@ -119,13 +118,6 @@ _M347_NET_TOTAL_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-33", "rd-1065-2
 
 
 _M347_NETTING_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-34.4", "rd-1065-2007:art-35")
-
-
-_M347_WITHHELD_ISSUED_LEGAL_REFS: tuple[str, ...] = (
-    "rd-1065-2007:art-33.2.i",
-    "rd-1065-2007:art-34.1.d",
-    "rd-439-2007:art-108",
-)
 
 
 def _m347_observed_items(observed_items: Sequence[ObservedInvoice]) -> tuple[ObservedInvoice, ...]:
@@ -621,21 +613,6 @@ def _m347_unsettled_exclusion_invoice_numbers(declared: Sequence[Invoice], *, ef
     )
 
 
-def _m347_withheld_issued_invoice_numbers(declared: Sequence[Invoice]) -> list[str]:
-    """The issued invoices with a withholding whose place on the declaration no text settles.
-
-    A business-premises lease is not among them: art. 34.1.d has the landlord
-    relate it, withheld or not, and the invoice records that it is one.
-    """
-    return sorted(
-        invoice.invoice_number
-        for invoice in declared
-        if invoice.kind is InvoiceKind.ISSUED
-        and carries_withholding(invoice)
-        and invoice.business_premises_lease is None
-    )
-
-
 def m347_exclusion_reading_advisories(
     observed_items: Sequence[ObservedInvoice],
     *,
@@ -647,20 +624,14 @@ def m347_exclusion_reading_advisories(
     The counterpart of the exclusions :func:`_m347_invoice_observation`
     applies: what the text settles is excluded there; what it leaves open is
     declared and named here, one advisory per case rather than one per
-    invoice. The two open cases are an IVA category the catalogue marks
+    invoice. The open case is an IVA category the catalogue marks
     ``unsettled`` for Modelo 347 (an operation assimilated to an export, goods
-    or services by its facts), and an ISSUED invoice on which the customer
-    practised a withholding, which the customer reports but whose exclusion
-    from the withheld party's own declaration no text in the corpus states.
-    A landlord of business premises is the exception the text does settle:
-    art. 34.1.d has it relate the lease, withheld or not, so an invoice that
-    records the lease is declared without an advisory.
+    or services by its facts).
     """
     if context.modelo != form_for_role("third_party.annual_operations"):
         return ()
     declared = tuple(invoice for invoice, observation in observed_items if observation.operation_clave is not None)
     unsettled = _m347_unsettled_exclusion_invoice_numbers(declared, effective_date=filing_period_date(context))
-    withheld = _m347_withheld_issued_invoice_numbers(declared)
     diagnostics: list[CalculationSourceDiagnostic] = []
     if unsettled:
         diagnostics.append(
@@ -680,29 +651,6 @@ def m347_exclusion_reading_advisories(
                     "export or import category on the invoice so Modelo 347 leaves them out."
                 ),
                 asserted_legal_refs=_M347_GOODS_EXCLUSION_LEGAL_REFS,
-            ),
-        )
-    if withheld:
-        diagnostics.append(
-            CalculationSourceDiagnostic(
-                reason="unsettled_legal_reading",
-                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
-                resolver_id=resolver_id,
-                source_ref="m347-exclusion:withheld-issued-invoice",
-                message=(
-                    f"Modelo 347 declares the issued invoices {', '.join(withheld)}, on which the customer "
-                    "practised a withholding, for ejercicio "
-                    f"{context.filing_year}. RD 1065/2007 art. 33.2.i excludes what the customer reports in "
-                    "its withholding summary (RIRPF art. 108.2), but no text settles whether that reaches "
-                    "your side. None of them records a business-premises lease, which art. 34.1.d would "
-                    "have you relate all the same."
-                ),
-                remedy=(
-                    "Mark any of these invoices that documents the lease of a local de negocio as such; for "
-                    "the rest, check current AEAT guidance before filing. The declarado records shown include "
-                    "them all."
-                ),
-                asserted_legal_refs=_M347_WITHHELD_ISSUED_LEGAL_REFS,
             ),
         )
     return tuple(diagnostics)
