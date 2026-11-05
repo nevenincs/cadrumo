@@ -50,5 +50,5 @@ All 18 assigned files are represented and linked below.
 - `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_payloads.py`
 - `src/cadrumo/entrypoints/cli/modelo_work_calculate_cli.py`
 - `src/cadrumo/entrypoints/cli/modelo_work_lifecycle_cli.py`
-- `src/cadrumo/entrypoints/cli/_modelo_work_m303_attestation_cli.py`
+- `src/cadrumo/entrypoints/cli/modelo_work_m303_attestation_cli.py`
 <!-- /preserved:article -->

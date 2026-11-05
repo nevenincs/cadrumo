@@ -275,7 +275,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "attest-m303-exonerado-390",
-        "._modelo_work_m303_attestation_cli",
+        ".modelo_work_m303_attestation_cli",
         (
             o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
             o("period", "--period", required=True),
@@ -351,7 +351,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "select",
-        "._modelo_work_select_cli",
+        ".modelo_work_select_cli",
         (o("bucket_id", "--bucket-id"), o("include_discarded", "--include-discarded", FLAG_VALUE, flag=True), _LANG),
         _MODEL_READ,
         ".modelo_results",
@@ -383,7 +383,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "report",
-        "._modelo_work_report_cli",
+        ".modelo_work_report_cli",
         (
             # ``--output`` leads because it is the one required parameter: the
             # generated handler signature lists parameters in this order, and a
@@ -417,7 +417,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "report-verify",
-        "._modelo_work_report_cli",
+        ".modelo_work_report_cli",
         (
             ArgumentSpec(
                 "path",
@@ -438,7 +438,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "revisions",
-        "._modelo_work_revision_cli",
+        ".modelo_work_revision_cli",
         (a("work_unit_id"), *ADDRESS, _LANG),
         _MODEL_READ,
         ".modelo_results",
@@ -446,7 +446,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "revision",
-        "._modelo_work_revision_cli",
+        ".modelo_work_revision_cli",
         (
             a("calculation_revision_id"),
             *_REVISION_ADDRESS,
@@ -459,7 +459,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "observations",
-        "._modelo_work_revision_cli",
+        ".modelo_work_revision_cli",
         (a("calculation_revision_id"), *_REVISION_ADDRESS, _LANG),
         _MODEL_READ,
         ".modelo_work_revision_payloads",
@@ -523,7 +523,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "accept-disagreement",
-        "._modelo_work_disagreement_cli",
+        ".modelo_work_disagreement_cli",
         (
             a("finding_id", help_name="disagreement_finding_id", required=True),
             o("calculation_revision_id", "--calculation-revision-id"),
@@ -539,7 +539,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "revoke-disagreement",
-        "._modelo_work_disagreement_cli",
+        ".modelo_work_disagreement_cli",
         (
             a("finding_id", help_name="disagreement_finding_id", required=True),
             o("calculation_revision_id", "--calculation-revision-id"),
@@ -555,7 +555,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "disagreements",
-        "._modelo_work_disagreement_cli",
+        ".modelo_work_disagreement_cli",
         (
             o("calculation_revision_id", "--calculation-revision-id"),
             *ADDRESS[:4],
