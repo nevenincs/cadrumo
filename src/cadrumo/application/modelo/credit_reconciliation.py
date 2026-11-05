@@ -28,7 +28,8 @@ source's figure restated on that basis, row by row.
 
 A credit casilla whose own value is unresolved is not compared: its missing value
 is already reported, and no cross-check can stand in for it. No modelo name or
-casilla number is read here; everything comes from the revision's declarations.
+casilla number is read here; everything comes from the revision's declarations;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations
@@ -197,7 +198,10 @@ def load_credit_cross_check_sources(
     payment_year_binding_values: Mapping[BindingId, Decimal],
     instalment_basis_binding_values: Mapping[BindingId, Decimal],
 ) -> CreditCrossCheckSources:
-    """Read every cross-check source the revision's credit reconciliation names, and nothing else."""
+    """Read every cross-check source the revision's credit reconciliation names, and nothing else.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     borrador_values: dict[BindingId, Decimal] = {}
     if borrador_snapshot_id is not None and _declares_cross_check(snapshot, CreditCrossCheckKind.BORRADOR):
         borrador_values = borrador_cross_check_values(
@@ -408,6 +412,8 @@ def credit_reconciliation_issues(
 
     Amounts are compared exactly: a credit is money already rounded to the
     cent, so any difference is a disagreement and none is tolerated.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     issues: list[CalculationSourceIssue] = []
     for entry in snapshot.revision.credit_reconciliation:

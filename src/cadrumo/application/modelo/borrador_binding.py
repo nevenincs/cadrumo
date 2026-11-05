@@ -312,6 +312,8 @@ def borrador_cross_check_values(
     These are the values the borrador states for credits it may only compare:
     they never enter a calculation. Empty when no snapshot is selected, which a
     credit reconciliation reads as a cross-check with nothing to compare.
+
+    ``registry_snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     snapshot_id = command.borrador_snapshot_id
     if snapshot_id is None:

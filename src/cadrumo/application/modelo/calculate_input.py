@@ -126,6 +126,7 @@ from .work_selection import (
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
+    from .projection import ModeloProjectionUnresolvedBinding, ModeloProjectionUnresolvedCasilla
 
 
 # Registry authority: selected calculate-input declarations are consumed through
@@ -309,6 +310,10 @@ class ModeloWorkCalculationServiceResult:
     these rows keeps omitted or degraded source evidence operator-visible
     (no-silent-under-declaration). Each diagnostic's ``message`` carries the
     evidence needed by the CLI renderer.
+
+    ``unresolved_bindings`` and ``unresolved_casillas`` name, as the Modelo 100
+    projection does, the source-owned bindings and computed boxes this run left
+    without a value; a box in either has no value in the revision.
     """
 
     revision: CalculationRevision
@@ -317,6 +322,8 @@ class ModeloWorkCalculationServiceResult:
     modality: Modelo202ModalitySummary | None = None
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
+    unresolved_bindings: tuple[ModeloProjectionUnresolvedBinding, ...] = ()
+    unresolved_casillas: tuple[ModeloProjectionUnresolvedCasilla, ...] = ()
 
 
 def calculate_modelo_work_revision(
@@ -385,6 +392,8 @@ def calculate_modelo_work_revision(
         modality=modelo_202_modality_for_record(work_unit, calculation.profile.record, operation=ports.operation),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
         plazo_resolutions=plazo_resolutions,
+        unresolved_bindings=calculation.unresolved_bindings,
+        unresolved_casillas=calculation.unresolved_casillas,
     )
 
 

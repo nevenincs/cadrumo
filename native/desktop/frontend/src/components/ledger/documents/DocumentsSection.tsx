@@ -290,7 +290,9 @@ export function DocumentsSection({
                   })}
                   title={facts(
                     t,
-                    (row.reasons ?? []).map((reason) => reasonLabel(t, reason)),
+                    (row.reasons ?? []).map((_, at) =>
+                      reasonLabel(t, row.reason_words?.[at]),
+                    ),
                   )}
                 >
                   <Icon name="alert" size="xs" />

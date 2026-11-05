@@ -1,7 +1,9 @@
 """Invoice source source observations responsibilities.
 
 Core types:
-:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue.
 """
 
 from __future__ import annotations
@@ -156,7 +158,10 @@ def invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset
 
 
 def invoice_sources_declared(revision: ModeloRevision) -> frozenset[BindingSourceKind]:
-    """Return invoice source families a registry revision declares."""
+    """Return invoice source families a registry revision declares.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     declared_sources = frozenset(binding.source for binding in revision.bindings if binding.source in OWNED_SOURCES)
     if declared_sources & COMBINED_DIRECTION_SOURCES:
         # A combined-direction binding reads both invoice directions, so both feed it.
@@ -535,6 +540,8 @@ def rectified_invoices(rectificativa: Invoice, invoices: InvoiceCatalogue) -> tu
     A correction records the number it names and not that invoice's series, its own being the
     separate one RD 1619/2012 art. 6.1.a gives corrections, so more than one answer stays
     unresolved and each caller refuses it.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     return tuple(
         invoice

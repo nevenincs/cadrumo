@@ -474,7 +474,10 @@ class PrecedenceScreenContext:
 def precedence_screen_context(
     work_unit: WorkUnit, snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation
 ) -> PrecedenceScreenContext:
-    """Bind the precedence screen to ``work_unit`` and the filing-bound set of ``snapshot``'s revision."""
+    """Bind the precedence screen to ``work_unit`` and the filing-bound set of ``snapshot``'s revision.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     revision = snapshot.revision
     return PrecedenceScreenContext(
         modelo=str(work_unit.modelo),

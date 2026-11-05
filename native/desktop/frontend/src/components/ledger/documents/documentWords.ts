@@ -4,7 +4,6 @@
 
 import type {
   AttachmentSource,
-  ConfirmationBlockReason,
   EvidenceBatchItemStatus,
   FieldGrounding,
   FieldOrigin,
@@ -86,19 +85,10 @@ export const doubtful = (found: FieldProvenance | null) =>
     found.grounding === "contradicted" ||
     found.grounding === "unanchored");
 
-const REASONS: readonly ConfirmationBlockReason[] = [
-  "closure_discrepancy",
-  "ambiguous_identity",
-  "unresolved_direction",
-  "contradicted_regime",
-  "undetermined_establishment",
-  "unmodelled_invoice_class",
-  "contradicted_invoice_class",
-];
-export const reasonLabel = (t: Translate, reason: string) =>
-  (REASONS as readonly string[]).includes(reason)
-    ? t(`desktop.ledger.documents.reason.${reason}`)
-    : reason;
+/** A finding's reason in words: the sentence the backend served for it, else
+ * the generic line for a question to answer. */
+export const reasonLabel = (t: Translate, served: string | null | undefined) =>
+  served || t("desktop.ledger.documents.findings");
 
 const STATUSES: readonly EvidenceBatchItemStatus[] = [
   "ingested",

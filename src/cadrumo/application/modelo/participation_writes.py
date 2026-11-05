@@ -1,4 +1,7 @@
-"""Co-emitted participation-index writes for one finalized calculation revision."""
+"""Co-emitted participation-index writes for one finalized calculation revision.
+
+This module uses :class:`CalculationRevision`, the saved calculation revision.
+"""
 
 from __future__ import annotations
 
@@ -22,6 +25,8 @@ def build_participation_writes(
     Each transaction's participation for this revision is upserted, so the filed
     entry replaces the verified one in place. A revision with no contributing
     transactions yields no writes.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     writes: list[SecureObjectWrite] = []
     for transaction_id in revision.source_transaction_ids:

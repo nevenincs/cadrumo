@@ -527,15 +527,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "operator",
             "derived",
         ),
-        "desktop.ledger.documents.reason.": (
-            "closure_discrepancy",
-            "ambiguous_identity",
-            "unresolved_direction",
-            "contradicted_regime",
-            "undetermined_establishment",
-            "unmodelled_invoice_class",
-            "contradicted_invoice_class",
-        ),
         "desktop.ledger.documents.hold.": (
             "choose_kind",
             "country",

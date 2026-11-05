@@ -2,7 +2,8 @@
 
 The application serves the periods; this module only gives them the strict
 output shapes the CLI contract requires: sequences as lists and days as
-``YYYY-MM-DD`` text.
+``YYYY-MM-DD`` text;
+:class:`OutputSchema`, the declared output contract.
 """
 
 from __future__ import annotations

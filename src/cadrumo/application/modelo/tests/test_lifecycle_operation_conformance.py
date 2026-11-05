@@ -18,7 +18,7 @@ import pytest
 from pydantic import BaseModel, Field, ValidationError
 
 from cadrumo.application.modelo.work_calculation_contracts import (
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 
@@ -263,8 +263,8 @@ def test_calculate_request_v4_and_result_v2_bind_the_full_writer_contract() -> N
     result_schema = registration.contract.result_schema
     assert result_schema is not None
     assert result_schema.schema_id == "modelo.work.calculate.result"
-    assert result_schema.schema_version == 2
-    assert definition.result_type is ModeloWorkCalculatePublicResultV2
+    assert result_schema.schema_version == 3
+    assert definition.result_type is ModeloWorkCalculatePublicResultV3
 
 
 def _pending_superseded_invocation(

@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
 import {
   agentColumn as column,
+  offeredModels,
   openHistory,
+  openModelPicker,
+  pickWay,
   scenarioOnly,
 } from "../support/agent";
 import { label } from "../support/strings";
@@ -119,4 +122,44 @@ test("a catalog the busy service cannot answer yet is read again once the agent'
   expect(
     calls.filter((call) => call === "agentProviderCatalogResolved").length,
   ).toBeGreaterThanOrEqual(1);
+});
+
+test("the stored model lists are not asked for while the agent starts, and are read and applied once it runs", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready&catalog=declared",
+  );
+  await expect(
+    column(target).getByText(label("desktop.agent.service_starting")),
+  ).toBeVisible();
+  const localModelReads = () =>
+    target.evaluate(
+      () =>
+        (window.__scenarioHostCalls ?? []).filter(
+          (call) => call === "agentLocalModels",
+        ).length,
+    );
+  // The catalog is asked for while starting, with its own retry; the lists
+  // have none, and the host refuses them until the service has a connection.
+  await expect
+    .poll(() =>
+      target.evaluate(() =>
+        (window.__scenarioHostCalls ?? []).includes("agentProviderCatalog"),
+      ),
+    )
+    .toBe(true);
+  await target.waitForTimeout(600);
+  expect(await localModelReads()).toBe(0);
+  await target.evaluate(() => window.__scenarioAgentPublishStatus?.());
+  await expect.poll(localModelReads).toBeGreaterThanOrEqual(1);
+  // The lists read at ready are applied: the local lane serves a model nobody
+  // put on its list, and the picker leaves it out. Lists left unread would
+  // offer it.
+  const picker = await openModelPicker(target);
+  await pickWay(target, picker, "local/api");
+  expect(await offeredModels(picker)).toEqual([
+    "synthetic-text:1",
+    "synthetic-vision:1",
+  ]);
 });

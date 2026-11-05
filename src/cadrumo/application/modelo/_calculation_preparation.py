@@ -374,6 +374,8 @@ def raise_if_ledger_preflight_blocks_calculation(
     The bucket calculation runs it before resolving the source mesh, so a row the
     readiness check refuses is named as the row rather than as the aggregate that
     could not be built from it.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     ledger_preflight_sources = frozenset(
         str(binding.source) for binding in revision.bindings if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES

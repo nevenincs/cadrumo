@@ -1,4 +1,7 @@
-"""Typed JSON payloads for the suffered-withholding absence attestation CLI."""
+"""Typed JSON payloads for the suffered-withholding absence attestation CLI.
+
+This module uses :class:`OutputSchema`, the declared output contract.
+"""
 
 from __future__ import annotations
 

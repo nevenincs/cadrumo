@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, TimeoutDeadline
-from ..contracts.extension_records import ExtensionRecordReply, ExtensionRecordRequest
+from ..contracts.extension_records import ExtensionRecordRefusal, ExtensionRecordReply, ExtensionRecordRequest
 from ..contracts.model_runs import (
     ModelRunCompleted,
     ModelRunCompleteRequest,
@@ -154,10 +154,30 @@ class InstalledServiceClient:
         self, capability: str, object_key: str, *, timeout_deadline: TimeoutDeadline | None = None
     ) -> tuple[ExtensionRecordReply, bytearray]:
         """Read one extension record under the current service lease."""
-        reply, material = self.connection.extension_record(
-            self._request("extension_record_read", capability, object_key=object_key),
-            deadline=self._deadline(timeout_deadline),
+        return self._read_record(
+            "extension_record_read", capability, object_key=object_key, timeout_deadline=timeout_deadline
         )
+
+    def _read_record(
+        self,
+        action: Literal["extension_record_read", "extension_record_generation"],
+        capability: str,
+        *,
+        object_key: str | None = None,
+        timeout_deadline: TimeoutDeadline | None = None,
+    ) -> tuple[ExtensionRecordReply, bytearray]:
+        """Revalidate an inactive child once through runtime, within the original read budget."""
+        deadline = self._deadline(timeout_deadline)
+        reply, material = self.connection.extension_record(
+            self._request(action, capability, object_key=object_key), deadline=deadline
+        )
+        if isinstance(reply, ExtensionRecordReply) and reply.refusal is ExtensionRecordRefusal.LEASE_INACTIVE:
+            # A refusal grants nothing; only a fresh runtime claim can authorize the reread.
+            material[:] = bytes(len(material))
+            if self.claim(timeout_deadline=TimeoutDeadline(deadline)) is not None:
+                reply, material = self.connection.extension_record(
+                    self._request(action, capability, object_key=object_key), deadline=deadline
+                )
         if isinstance(reply, AccessRefusal):
             raise FrontendRefusedError(reply.code.value)
         return reply, material
@@ -200,11 +220,7 @@ class InstalledServiceClient:
         self, capability: str, *, timeout_deadline: TimeoutDeadline | None = None
     ) -> ExtensionRecordReply:
         """Read the current generation for one service-owned record namespace."""
-        reply, _ = self.connection.extension_record(
-            self._request("extension_record_generation", capability), deadline=self._deadline(timeout_deadline)
-        )
-        if isinstance(reply, AccessRefusal):
-            raise FrontendRefusedError(reply.code.value)
+        reply, _ = self._read_record("extension_record_generation", capability, timeout_deadline=timeout_deadline)
         return reply
 
     def status(self):

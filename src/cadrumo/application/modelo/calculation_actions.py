@@ -312,6 +312,7 @@ class TrustedMeshCalculation:
     """
 
     publication: CalculationRevisionPublication
+    engine_result: RegistryCalculationResult
     precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...]
     profile_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """The profile's unanswered bindings; the ones that name a printed box are among the revision's source issues."""
@@ -496,6 +497,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     )
     return TrustedMeshCalculation(
         publication=publication,
+        engine_result=evaluation.engine_result,
         precedence_diagnostics=(
             *channels.precedence_diagnostics,
             *credit_resolution_degradation_diagnostics(resolution_lookup),

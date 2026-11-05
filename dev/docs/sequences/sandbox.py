@@ -45,7 +45,7 @@ from cadrumo.core.pid_liveness import pid_is_alive
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from dev._paths import REPO_ROOT
-from dev.temporary_output import prepare_temp_root
+from dev.test_runs.paths import scratch_base
 
 from .errors import SequenceExecutionError
 from .persona_profile import sandbox_profile_facts
@@ -283,7 +283,7 @@ def owned_scratch_directory(prefix: str) -> Generator[Path]:
     Yields:
         The empty directory, which this scope owns.
     """
-    root = prepare_temp_root()
+    root = scratch_base()
     _reap_orphaned_scratch(root, prefix)
     directory = Path(tempfile.mkdtemp(prefix=f"{prefix}{os.getpid()}-", dir=root))
     try:
@@ -328,7 +328,7 @@ def _sandbox_template() -> Path:
     # operator password must never enter the template identity or its custody.
     with _neutralized_ambient_env():
         password_digest = sha256_hex(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
-    temporary_root = prepare_temp_root().resolve()
+    temporary_root = scratch_base().resolve()
 
     def provision(template: Path) -> None:
         dispose_engine()

@@ -5,7 +5,7 @@
 // never holds the payer's tax identifier, which is dropped once it has named
 // the payer's reference. Everything it answers is synthetic.
 
-import served from "./fixtures/ledgerWithholdingRefusalWords.json";
+import served from "./fixtures/ledgerWithholdingRefusalWords.json" with { type: "json" };
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,

@@ -33,7 +33,7 @@ from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OP
 from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -132,7 +132,7 @@ def _execute(
     operation: PinnedAuthorityOperation,
     store: AttachmentStore,
     inputs: ModeloCalculationInputFieldsV1 | None = None,
-) -> tuple[ModeloWorkCalculatePublicResultV2, _Events]:
+) -> tuple[ModeloWorkCalculatePublicResultV3, _Events]:
     context = _Context(operation)
     executor = ModeloWorkCalculateExecutor(
         calculation_action_ports_factory=build_calculation_action_ports,
@@ -150,10 +150,10 @@ def _execute(
         ),
     )
 
-    async def run() -> ModeloWorkCalculatePublicResultV2:
+    async def run() -> ModeloWorkCalculatePublicResultV3:
         reference = await executor.execute(request, cast(OperationExecutorContext, context))
         assert reference is not None
-        return await context.operands.resolve(reference, ModeloWorkCalculatePublicResultV2)
+        return await context.operands.resolve(reference, ModeloWorkCalculatePublicResultV3)
 
     return asyncio.run(run()), context.events
 

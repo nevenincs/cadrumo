@@ -22,8 +22,8 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_shared_catalogues
+from .authored_edition_support import reachable_grade_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -165,7 +165,7 @@ def _printed_simplified() -> Pairs:
 
 
 def _revision(year: int) -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A").revision
+    return reachable_grade_snapshot("100", year).revision
 
 
 def test_the_printed_tables_are_read_in_full() -> None:

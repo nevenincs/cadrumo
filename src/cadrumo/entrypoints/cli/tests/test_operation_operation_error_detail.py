@@ -39,7 +39,7 @@ from cadrumo.application.modelo.operation_shared import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.work_calculation_contracts import (
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from cadrumo.application.modelo.work_filing_contracts import ModeloWorkFileApproval, ModeloWorkFileRequest
@@ -311,9 +311,9 @@ def _calculate(wire: _SettlingWire, *, settlement_timeout: float | None = None) 
         ModeloWorkCalculateRequest(work_unit_id=_WORK_UNIT, actor="operator"),
         definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=_WORK_UNIT,
-        result_type=ModeloWorkCalculatePublicResultV2,
+        result_type=ModeloWorkCalculatePublicResultV3,
         request_version=4,
-        result_version=2,
+        result_version=3,
         timeout=1,
         settlement_timeout=settlement_timeout,
         pending_check_command=f"aeat app modelo work revisions {_WORK_UNIT}",

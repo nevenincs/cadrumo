@@ -452,12 +452,12 @@ impl Session {
             && self.finisher.as_ref().is_some_and(|f| !f.is_finished())
     }
 
-    pub fn record<T>(&self, outcome: Result<T>) -> Result<T> {
+    pub fn record<T>(&self, session: u64, outcome: Result<T>) -> Result<T> {
         if let Err(error) = &outcome
             && error.code != ErrorCode::QueueFull
         {
             self.diagnostics
-                .failure_for(self.shared.process, error.clone());
+                .failure_for_terminal(self.shared.process, session, error.clone());
         }
         outcome
     }

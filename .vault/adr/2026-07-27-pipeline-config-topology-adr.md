@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#pipeline-config-topology'
 date: '2026-07-27'
-modified: '2026-10-21'
-body_hash: 'sha256:81b6961bcf81b164045ecbe70a1f89421b41a237b40d05b94450f4affb7961d7'
+modified: '2026-11-04'
+body_hash: 'sha256:d9e5f58fc203ed30c8d4de4e865ca564a541170a7438cb817b6ab94492a04642'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-publication-lane-consolidation-adr]]'
@@ -57,11 +57,10 @@ and `2026-07-27-publication-lane-consolidation-adr` (publication leg).
   though no credential exists. The registered names today: `release` (Gate
   3), and `pypi` / `pypi-data-manuals` / `pypi-data-official` (the retiring
   lane; deleted with it under issue #618).
-- The docs stack resolves its own identifiers at runtime: the deploy tooling
-  reads the bucket name and distribution id from CloudFormation stack
-  outputs, derives the bucket from the authenticated account id, and looks up
-  the certificate by domain — only the stack name, region, and canonical
-  domain are repository content, and those are product-scoped facts.
+- The docs deployment resolves its own identifiers at runtime: the deploy
+  tooling derives the bucket from the authenticated account id and looks up
+  the certificate by domain — only the region and canonical domain are
+  repository content, and those are product-scoped facts.
 - An AWS role ARN embeds the AWS account id: account infrastructure identity,
   not product config. It can reach a workflow as an environment-scoped
   variable without ever being repository content.

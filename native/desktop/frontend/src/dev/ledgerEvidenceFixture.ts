@@ -30,6 +30,7 @@ import type {
   FixtureMovement,
 } from "./fixtures/ledger";
 import { DOCUMENT_PAGE } from "./fixtures/documentPage";
+import servedWords from "./fixtures/ledgerServedWords.json" with { type: "json" };
 import { InvoiceRequestInvalid, InvoiceStopped } from "./ledgerInvoiceFixture";
 
 declare global {
@@ -65,6 +66,8 @@ type Tools = {
   seed: boolean;
   /** Whether the local AI is missing on this computer. */
   readerMissing: boolean;
+  /** The language the backend words a reason in. */
+  language: string;
 };
 
 type Reading = {
@@ -599,6 +602,15 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
   // documents are confirmed or kept as evidence, and have no reading.
   const settled = new Set(ledger.evidence.map((record) => record.evidence_id));
 
+  /** The sentence the backend serves for a confirmation block, in the
+   * window's language, or English where none is recorded. */
+  const blockWords = (reason: ConfirmationBlocker["reason"]) => {
+    const byLanguage: Record<string, string> =
+      servedWords.confirmation_block[reason];
+    const language = byLanguage[tools.language] ? tools.language : "en";
+    return { words: byLanguage[language]!, language };
+  };
+
   function specReading(spec: Spec): Reading {
     return {
       draft: {
@@ -622,6 +634,8 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       },
       blockers: (spec.blockers ?? []).map((blocker) => ({
         blocker_id: blockerId(blocker),
+        reason_words: blockWords(blocker.reason).words,
+        reason_words_language: blockWords(blocker.reason).language,
         ...blocker,
       })),
       fallback: null,
@@ -1020,6 +1034,15 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       drafted_at: reading.drafted_at,
       blocking_count: reading.blockers.length,
       reasons: reading.blockers.map((blocker) => blocker.reason),
+      ...(reading.blockers.length > 0
+        ? {
+            reason_words: reading.blockers.map(
+              (blocker) => blockWords(blocker.reason).words,
+            ),
+            reason_words_language: blockWords(reading.blockers[0]!.reason)
+              .language,
+          }
+        : {}),
       advisory_count: 0,
       advisories: [],
     };

@@ -16,7 +16,8 @@ See Also:
         Source resolver that combines these totals with the definitive
         percentages.
     :func:`~application.aggregation.iva_ledger_apportionment.resolve_iva_deducible_cuota_partitions`
-        Ledger partitions per differentiated sector and prorrata especial slice.
+        Ledger partitions per differentiated sector and prorrata especial slice;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations

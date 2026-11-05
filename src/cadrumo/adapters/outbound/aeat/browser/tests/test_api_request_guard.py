@@ -22,6 +22,11 @@ from ......core.config import Settings
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from ......domain.calculations.registry.schema_base import EvidenceTier
+from ......tests.aeat_literal_fixtures import (
+    API_GUARD_OTHER_READ_PATH_FIXTURE,
+    API_GUARD_READ_PATH_FIXTURE,
+    API_GUARD_WRITE_PATH_CANARY,
+)
 from ..._playwright import PlaywrightError
 from ..api_request_guard import GuardedApiRequests
 from .real_http_boundary import EXTERNAL, LocalHttpBoundary, open_real_browser_session, opened_http_boundary
@@ -34,8 +39,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 _AEAT_ROOT = Path(__file__).resolve().parents[2]
 _GUARD_MODULE = _AEAT_ROOT / "browser" / "api_request_guard.py"
 _HOST = EXTERNAL.aeat.domains.www12
-_READ_URL = f"{_HOST}/wlpl/SYNT-TEST/ConsultaDocumento"
-_WRITE_URL = f"{_HOST}/wlpl/SYNT-TEST/PresentarDeclaracion"
+_READ_URL = f"{_HOST}{API_GUARD_READ_PATH_FIXTURE}"
+_WRITE_URL = f"{_HOST}{API_GUARD_WRITE_PATH_CANARY}"
 _QUERY_VALUE = "synthetic-query-value"
 _POLICY = RemoteStateGuardPolicy(
     id="synthetic-read",
@@ -46,7 +51,9 @@ _POLICY = RemoteStateGuardPolicy(
     requires_authentication=True,
     requires_aeat_authorization=True,
 )
-_NARROW_POLICY = _POLICY.model_copy(update={"id": "synthetic-narrow", "allowed_read_paths": ("/wlpl/SYNT-TEST/Otro",)})
+_NARROW_POLICY = _POLICY.model_copy(
+    update={"id": "synthetic-narrow", "allowed_read_paths": (API_GUARD_OTHER_READ_PATH_FIXTURE,)}
+)
 _STATIC_POLICY = _POLICY.model_copy(update={"id": "synthetic-static", "classification": "static_official_only"})
 
 
@@ -104,7 +111,7 @@ async def test_guard_refuses_what_the_bare_context_would_have_sent(caplog: pytes
     refusals = [record.getMessage() for record in caplog.records if "api request refused" in record.getMessage()]
     assert [refusal.split("method=")[1].split()[0] for refusal in refusals] == ["GET", "POST"]
     for refusal in refusals:
-        assert "/wlpl/SYNT-TEST/PresentarDeclaracion" in refusal
+        assert API_GUARD_WRITE_PATH_CANARY in refusal
         assert "synthetic-read" in refusal
         assert _QUERY_VALUE not in refusal
 

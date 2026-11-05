@@ -13,7 +13,8 @@ there being none to find, nor as there being none to honour.
 
 Core types:
 :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`,
-:class:`~cadrumo.domain.modelos.credit_resolution.CreditResolutionRecord`.
+:class:`~cadrumo.domain.modelos.credit_resolution.CreditResolutionRecord`;
+:class:`SensitivityClass`, the sensitivity classification of stored objects.
 """
 
 from __future__ import annotations

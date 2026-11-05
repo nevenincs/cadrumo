@@ -76,6 +76,7 @@ from .work_form_declaration_facts import (
     ModeloFormExport,
     ModeloFormFiling,
     ModeloFormResult,
+    ModeloFormYearProjection,
 )
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_scalar_values import comparable_entry, holds_zero
@@ -997,6 +998,8 @@ class ModeloWorkForm(ModeloFormBase):
     filing_year: int
     period: Period
     registry_revision_id: RevisionId
+    #: Whether the filing year is carried across from another edition, and the authority it reaches.
+    year_projection: ModeloFormYearProjection
     work_unit_id: str
     calculation_revision_id: str | None
     language: OutputLanguage

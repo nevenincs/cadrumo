@@ -94,6 +94,9 @@ pub struct Event {
     pub host_pid: u32,
     pub kind: EventKind,
     pub process: Option<u64>,
+    /// The terminal session a terminal failure concerns; omitted otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub terminal_session: Option<u64>,
     pub failure: Option<ApplicationError>,
     pub status: Option<ProcessStatus>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -144,6 +147,7 @@ struct Replay {
 }
 #[derive(Default)]
 struct Context {
+    terminal_session: Option<u64>,
     stage: Option<HostStage>,
     role: Option<ProcessRole>,
     outcome: Option<HostOutcome>,
@@ -258,6 +262,7 @@ impl Diagnostics {
             host_pid: std::process::id(),
             kind,
             process,
+            terminal_session: context.terminal_session,
             failure,
             role: context
                 .role
@@ -298,6 +303,7 @@ impl Diagnostics {
             host_pid: std::process::id(),
             kind: EventKind::Panic,
             process: None,
+            terminal_session: None,
             failure: None,
             status: None,
             stage: None,
@@ -396,6 +402,17 @@ impl Diagnostics {
     }
     pub fn failure_for(&self, process: u64, error: ApplicationError) {
         self.event(EventKind::Failure, Some(process), Some(error));
+    }
+    pub fn failure_for_terminal(&self, process: u64, session: u64, error: ApplicationError) {
+        self.record(
+            EventKind::Failure,
+            Some(process),
+            Some(error),
+            Context {
+                terminal_session: Some(session),
+                ..Context::default()
+            },
+        );
     }
     pub fn spawn_failure(&self, role: ProcessRole, error: ApplicationError) {
         self.record(

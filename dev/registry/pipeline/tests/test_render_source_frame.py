@@ -9,9 +9,17 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ...compiler.authority import compiled_bundled_authority
+from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
+from ...maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
+from ..export_fragment_provenance import load_export_fragment_provenance_manifest
 from ..render_check import (
     GeneratedExportBootstrapTransport,
+    RenderComparison,
     _render_transport,
     _select_record_design_source,
     compare_revision_against_committed,
@@ -275,3 +283,70 @@ def test_stable_layout_bootstrap_requires_exact_declared_supersession_and_source
                 selected_source_ref=source,
                 bootstrap_transport=bad,
             )
+
+
+def _exactly_reproduced(comparison: RenderComparison) -> bool:
+    return not (comparison.differing or comparison.only_committed or comparison.only_rendered)
+
+
+@pytest.mark.parametrize("modelo", ("126", "128"))
+def test_a_revision_spanning_the_floor_renders_the_design_its_supported_years_file_with(modelo: str) -> None:
+    """The default frame starts at the supported floor, so the committed tree reproduces byte for byte."""
+    authority = compiled_bundled_authority()
+    floor = coverage_assessment_floor(authority.catalogues)
+    revision = "2019-y-siguientes"
+    selected = authority.modelo(modelo).revisions[revision]
+    assert selected.valid_from.year < floor
+    assert selected.valid_to is None or selected.valid_to.year >= floor
+
+    (year, period), *_later = revision_selection_coordinates(
+        selected, assessment_horizon=coverage_assessment_horizon(authority.catalogues), assessment_floor=floor
+    )
+    assert year == floor
+
+    default = compare_revision_against_committed(authority, modelo=modelo, revision=revision)
+    explicit = compare_revision_against_committed(
+        authority, modelo=modelo, revision=revision, filing_year=year, period=str(period)
+    )
+    assert default == explicit
+    assert _exactly_reproduced(default)
+
+    export_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
+    committed = load_export_fragment_provenance_manifest(
+        (export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).read_bytes()
+    )
+    supported, _epoch = _select_record_design_source(
+        selected,
+        authority.catalogues.sources,
+        modelo=modelo,
+        revision=revision,
+        source_ref=None,
+        filing_year=year,
+        period=str(period),
+    )
+    assert str(committed.source_ref) == str(supported)
+
+
+@pytest.mark.parametrize("modelo", ("126", "128"))
+def test_an_explicit_historical_coordinate_keeps_its_strict_refusal(modelo: str) -> None:
+    """A caller naming a year below the floor gets that year's design, refused here for want of its inputs."""
+    authority = compiled_bundled_authority()
+    revision = "2019-y-siguientes"
+    selected = authority.modelo(modelo).revisions[revision]
+    first_year = selected.valid_from.year
+    assert first_year < coverage_assessment_floor(authority.catalogues)
+    first_period = selected.period_selector.periods_for_year(first_year)[0]
+    with pytest.raises(ValueError, match="has no authored inputs"):
+        compare_revision_against_committed(
+            authority, modelo=modelo, revision=revision, filing_year=first_year, period=str(first_period)
+        )
+
+
+def test_a_revision_wholly_below_the_floor_is_still_inspected_at_its_own_years() -> None:
+    """Historical storage keeps a frame of its own instead of losing every coordinate to the floor."""
+    authority = compiled_bundled_authority()
+    modelo, revision = "341", "2005-2015"
+    selected = authority.modelo(modelo).revisions[revision]
+    assert selected.valid_to is not None
+    assert selected.valid_to.year < coverage_assessment_floor(authority.catalogues)
+    assert _exactly_reproduced(compare_revision_against_committed(authority, modelo=modelo, revision=revision))

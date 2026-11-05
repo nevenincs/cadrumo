@@ -124,7 +124,6 @@ SWEPT_ROOTS: tuple[str, ...] = (
     "docs",
     "engine",
     "frontend",
-    "infra",
     "packaging",
     "schemas",
     "scripts",

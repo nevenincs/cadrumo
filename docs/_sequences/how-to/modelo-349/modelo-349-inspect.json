@@ -3,25 +3,6 @@
     {
       "argv": [
         "aeat",
-        "config",
-        "profile",
-        "edit",
-        "docs-sequence-sandbox",
-        "--quiet",
-        "--iva-roi-enrolled",
-        "--does-intracomunitario"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
         "app",
         "ledger",
         "invoice",
@@ -29,9 +10,9 @@
         "--kind",
         "issued",
         "--counterparty-nif",
-        "DE000000001",
+        "DE811569869",
         "--counterparty-name",
-        "Nordlicht Plattformen GmbH",
+        "Muenchner Handels GmbH",
         "--invoice-number",
         "F-2026-IC-01",
         "--invoice-date",
@@ -63,9 +44,9 @@
         "--kind",
         "issued",
         "--counterparty-nif",
-        "FR00000000001",
+        "FR40123456824",
         "--counterparty-name",
-        "Atelier Numérique Garonne SARL",
+        "Lyon Services SARL",
         "--invoice-number",
         "F-2026-IC-02",
         "--invoice-date",
@@ -156,7 +137,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\tcb0c13a2caf931f415859958b5e5a053f284427f4c2487e02476323c165b5ef8\nmodelo_filter\t349\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t17\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-operadores\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-operaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-base\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-ejercicio\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-periodo\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-rectificada\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-anterior\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\tccefc805386a4f39971ca10ab267597ee3237c133f56618fd4e4937a1f22a1a4\nmodelo_filter\t349\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t17\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-operadores\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-operaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-base\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-ejercicio\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-periodo\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-rectificada\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-anterior\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -194,7 +175,7 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "1c66eef55e76cf96c68d8ee2e61c779de9e2c23db4ebc6dd9e10d093b9fc283d",
+          "calculation_revision_id": "833bd2cf4340de8ceb848992184a3d8c371dde89f0f6040f6077e161faa783a6",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -208,8 +189,8 @@
                 "clave_operacion": "E",
                 "codigo_pais": "DE",
                 "importe": "5000.00",
-                "nif_comunitario": "sha256:7509d350",
-                "razon_social": "Nordlicht Plattformen GmbH"
+                "nif_comunitario": "sha256:6b01ecdf",
+                "razon_social": "Muenchner Handels GmbH"
               },
               "index": 1,
               "row_type": "operador"
@@ -219,8 +200,8 @@
                 "clave_operacion": "S",
                 "codigo_pais": "FR",
                 "importe": "3000.00",
-                "nif_comunitario": "sha256:fc252fd0",
-                "razon_social": "Atelier Numérique Garonne SARL"
+                "nif_comunitario": "sha256:61b42bb2",
+                "razon_social": "Lyon Services SARL"
               },
               "index": 2,
               "row_type": "operador"
@@ -341,23 +322,23 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:03ac4e6ae473c44a503cca52fc13863b554cab27b0652b69b8dd22752b719be3",
+              "fingerprint": "sha256:cf7d55b8a201b0c83145a741ddb2cd2137d270007f372a1427cc075221ab59e0",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
-              "source_ref": "collectible_invoice:c96ab1e8dc03abdef2d8825aa7782984dd0498175918d53f9bb7fcbcfc8c759f"
+              "source_ref": "collectible_invoice:86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b"
             },
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:60fc27cecb98d8fb03b8e247250b5db4396755ce99f45ee28f628bece4cf9c9f",
+              "fingerprint": "sha256:2be54cd14edcef8b8f878373c07e62cc87953d63aaadbce591005a40502f26f0",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
-              "source_ref": "collectible_invoice:8c7859a9bfaf30e4634a31ee3e47cca977449a28580d385ab9d2076d044b13a9"
+              "source_ref": "collectible_invoice:0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209"
             }
           ],
           "state": "borrador",

@@ -92,6 +92,9 @@ export function useSedeView({
   useEffect(() => {
     if (!sized) return;
     let cancelled = false;
+    // The host said the view is over, possibly before it answered the open:
+    // nothing is sent to a view that has ended.
+    let ended = false;
     let timer = 0;
     let resizeTimer = 0;
     let resizing = false;
@@ -102,13 +105,14 @@ export function useSedeView({
 
     const scheduleResize = (delay = RESIZE_SETTLE_MS) => {
       window.clearTimeout(resizeTimer);
-      if (!cancelled)
+      if (!cancelled && !ended)
         resizeTimer = window.setTimeout(() => void sendSize(), delay);
     };
     const sendSize = async () => {
       const desired = latest.current.size;
       if (
         cancelled ||
+        ended ||
         !opened ||
         resizing ||
         !desired ||
@@ -134,6 +138,7 @@ export function useSedeView({
         resizing = false;
         if (
           !cancelled &&
+          !ended &&
           !sameSize(sent.current, latest.current.size) &&
           (failures < RESIZE_ATTEMPTS ||
             !sameSize(failedSize, latest.current.size))
@@ -145,13 +150,24 @@ export function useSedeView({
     resize.current = scheduleResize;
 
     const credit = () => {
-      if (cancelled) return;
+      if (cancelled || ended) return;
       owed.current += 1;
       settle();
     };
     const onEvent = (event: SedeViewEvent) => {
       if (cancelled) return;
+      if (event.kind === "ended") {
+        ended = true;
+        window.clearTimeout(resizeTimer);
+        owed.current = 0;
+        opened = null;
+        session.current = null;
+        sent.current = null;
+        dispatch({ type: "event", event });
+        return;
+      }
       if (event.kind === "image") {
+        if (ended) return;
         void latest.current.draw(event).catch(nothing).then(credit);
         return;
       }
@@ -167,6 +183,8 @@ export function useSedeView({
             void view.close().catch(nothing);
             return;
           }
+          // An end that arrived first left no view to resize or credit.
+          if (ended) return;
           opened = view;
           session.current = view;
           sent.current = first;

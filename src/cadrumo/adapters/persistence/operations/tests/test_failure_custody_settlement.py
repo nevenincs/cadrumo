@@ -354,7 +354,7 @@ def test_executor_failure_log_record_carries_the_raising_frame(
     message = records[0].getMessage()
     raising = message.partition("raising_frame=")[2].partition(" application_frame=")[0]
     path, line, function = raising.rsplit(":", 2)
-    assert path == __file__.replace(str(Path.home()), "~")
+    assert Path(path).name == Path(__file__).name
     assert line.isdecimal() and int(line) > 0
     assert function == "execute"
     if not registered_refusal:

@@ -5,6 +5,7 @@ import type {
   ProviderStatus,
 } from "@/components/settings/types";
 import { failureCode } from "../errors";
+import type { CallPlan } from "./hostCall";
 import { useCachedRead, type AgentRead } from "./agentViews";
 
 // The model providers of the signed-in profile, as a host serves them: the
@@ -110,7 +111,7 @@ export type ProviderSettingsRefusal =
   | "unknown";
 
 export interface ProviderSettings {
-  status(): Promise<ProviderSettingsAnswer>;
+  status(plan?: CallPlan): Promise<ProviderSettingsAnswer>;
   /** Attended GUI sign-in is absent unless this host implements it. */
   readonly signIn?: ProviderSignIn;
   /** Saves a key or token. The secret is handed on once and never kept.

@@ -16,13 +16,18 @@ import {
   statSync,
   statfsSync,
 } from "node:fs";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { test } from "node:test";
 import "./packaged/setup.test.mjs";
+import "./packaged/product-log.test.mjs";
+import "./packaged/agent-log-evidence.test.mjs";
+import "./packaged/failure-capture.test.mjs";
+import "./packaged/override-refusal.test.mjs";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "../scripts/build-paths.mjs";
 import { docsOrigin as docsOriginOf } from "../scripts/configuration.mjs";
+import { captureProvisioningFailure } from "./packaged/failure-capture.mjs";
 import { docsProbe, pagefindSearch, pasteInto } from "./packaged/browser.mjs";
 import {
   hostRefusals,
@@ -31,8 +36,20 @@ import {
   runSedeMissingAcceptance,
 } from "./packaged/probes.mjs";
 import { installedHost, packagedHostPaths } from "./packaged/host.mjs";
+import { overrideRefusalProblems } from "./packaged/override-refusal.mjs";
 import { SignInFixture } from "./packaged/sign-in.mjs";
+import {
+  loadAllowlist,
+  phaseWindowsOf,
+  productLogVerdict,
+  recordedChecks,
+} from "./packaged/product-log.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
+import {
+  captureAgentLogs,
+  captureGatedLogs,
+  resolvesInside,
+} from "./packaged/agent-log-evidence.mjs";
 import {
   observeProvisioning,
   startupObservation,
@@ -265,6 +282,45 @@ function projection(config, env) {
   };
 }
 
+const PRODUCT_LOG_ALLOWLIST = fileURLToPath(
+  new URL("./packaged/product-log-allowlist.json", import.meta.url),
+);
+
+function desktopDefaults() {
+  return JSON.parse(readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"))
+    .desktop_defaults;
+}
+
+/**
+ * The product-log gate over the storage root the run used: the check verdict,
+ * with the full grouped findings kept as evidence beside it. The window run
+ * passes its in-memory harness IPC trace and its host pid so the authored
+ * terminal probe's refusal can be causally attributed; the setup run has no
+ * such probe and passes neither.
+ */
+function productLogGate({
+  results,
+  storage,
+  run,
+  signIn,
+  ipcTrace = null,
+  windowHostPid = null,
+}) {
+  const verdict = productLogVerdict({
+    storage,
+    defaults: desktopDefaults(),
+    checks: recordedChecks(results.checks, {
+      "canonical-sign-in": phaseWindowsOf(signIn?.timingStats()),
+    }),
+    allowlist: loadAllowlist(PRODUCT_LOG_ALLOWLIST),
+    run,
+    ipcTrace,
+    windowHostPid,
+  });
+  results.evidence("product-log-findings.json", verdict);
+  return { verdict: verdict.verdict, detail: verdict.detail };
+}
+
 function sha256(text) {
   return createHash("sha256").update(text).digest("hex");
 }
@@ -284,49 +340,6 @@ function launch(executable, args, { env, cwd, out, err }) {
 
 async function exited(exit, ms) {
   return Promise.race([exit, sleep(ms).then(() => null)]);
-}
-
-async function captureProvisioningFailure(session, results, id) {
-  if (!session) return;
-  results.evidence(
-    `${id}-ui.json`,
-    await session.shell(() => ({
-      language: document.documentElement.lang,
-      surfaces: [
-        ...document.querySelectorAll(
-          '.setup-dialog, .pane-tui, [data-slot="local-models"], [data-slot="local-models-signed-out"], .profile-status',
-        ),
-      ].map((node) => ({
-        slot: node.getAttribute("data-slot"),
-        className: node.className,
-        text: node.textContent.trim().slice(0, 12000),
-      })),
-      setup: window.__s10.setupLatest,
-      documentation: window.__s14DocsFailure ?? null,
-      commands: window.__s10.ipc
-        .slice(-80)
-        .map(({ cmd, ok, code }) => ({ cmd, ok, code })),
-    })),
-  );
-  results.evidence(
-    `${id}-diagnostics.json`,
-    await session.call("diagnostics_snapshot", { after: 0 }),
-  );
-  if (/^(palette|localized|settings-docs)/.test(id))
-    results.evidence(
-      `${id}-docs.json`,
-      await session.docs(() => ({
-        href: location.href,
-        language: document.documentElement.lang,
-        messages: window.__s10.messages.slice(-30),
-        keys: window.__s10.keys.slice(-10),
-      })),
-    );
-  if (id.startsWith("provisioning-3"))
-    results.evidence(
-      `${id}-models.json`,
-      await session.call("agent_local_models"),
-    );
 }
 
 /** Records one check or experiment as a result line and as a subtest. */
@@ -383,6 +396,8 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
   let session = null;
   let host = null;
   let hostPid = null;
+  let ipcTrace = null;
+  const refusedPids = [];
   let projected = null;
   let webviewPids = [];
   let signIn = null;
@@ -481,8 +496,21 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
           },
         ];
         const outcomes = [];
+        const logs = desktopDefaults().logs;
         for (const [index, extra] of cases.entries()) {
-          const { env } = hostEnvironment(config, extra);
+          // A refusal is expected to write an ERROR record, so it gets its own
+          // storage root rather than the window run's gated one.
+          const root = resolve(config.run, `override-refused-${index}`);
+          mkdirSync(root, { recursive: true });
+          if (!resolvesInside(config.run, root) || readdirSync(root).length)
+            return {
+              verdict: FAIL,
+              detail: `override-refused-${index} is not an empty root inside the run directory`,
+            };
+          const { env } = hostEnvironment(config, {
+            ...extra,
+            [config.storageVariable]: root,
+          });
           const out = resolve(config.run, `refused-${index}.out`);
           const err = resolve(config.run, `refused-${index}.err`);
           const started = launch(testHost.executable, ["--gui"], {
@@ -500,15 +528,36 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
           } catch {
             code = stderr.slice(0, 120);
           }
+          const nativeLog = resolve(root, logs, "cadrumo-native.jsonl");
+          let record;
+          if (resolvesInside(root, nativeLog)) {
+            record = readFileSync(nativeLog, "utf8");
+            results.logEvidence(
+              `override-refused-${index}-cadrumo-native.jsonl`,
+              nativeLog,
+            );
+          }
+          const judged = overrideRefusalProblems(record, {
+            excludedPids: [
+              process.pid,
+              ...outcomes.map((outcome) => outcome.hostPid),
+            ],
+          });
+          refusedPids.push(judged.pid);
           outcomes.push({
             variables: Object.keys(extra),
             exit: done?.code ?? "running",
             code,
+            hostPid: judged.pid,
+            recordProblems: judged.problems,
           });
         }
         evidence("override-refused.json", outcomes);
         const bad = outcomes.filter(
-          (o) => o.exit !== 1 || o.code !== "environment_failed",
+          (o) =>
+            o.exit !== 1 ||
+            o.code !== "environment_failed" ||
+            o.recordProblems.length,
         );
         return bad.length
           ? {
@@ -538,6 +587,17 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       err: resolve(config.results, "host-stderr.txt"),
     });
     hostPid = host.child.pid;
+    await check(
+      "override-refused-isolated",
+      "the refused hosts were other processes than the window host",
+      async () =>
+        refusedPids.includes(hostPid)
+          ? {
+              verdict: FAIL,
+              detail: `the window host pid ${hostPid} is a refused host's`,
+            }
+          : { verdict: PASS, detail: "distinct host pids" },
+    );
     const launched = await check(
       "launch",
       "the window opens with the DevTools endpoint",
@@ -1855,7 +1915,8 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     );
 
     // Evidence before the window closes ---------------------------------------------
-    evidence("ipc-trace.json", await session.shell(() => window.__s10.ipc));
+    ipcTrace = await session.shell(() => window.__s10.ipc);
+    evidence("ipc-trace.json", ipcTrace);
     evidence("frames.json", await session.frames());
     evidence("playwright-console.json", session.console);
     evidence(
@@ -2063,17 +2124,36 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       );
     if (projected) {
       const captures = [
-        results.logEvidence("storage-cadrumo.log", projected.logFile),
-        results.logEvidence(
-          "storage-cadrumo-native.jsonl",
-          resolve(projected.logs, "cadrumo-native.jsonl"),
-        ),
+        ...captureGatedLogs({
+          results,
+          storage: projected.storage,
+          defaults: desktopDefaults(),
+          prefix: "storage",
+        }),
+        ...captureAgentLogs({
+          results,
+          storage: projected.storage,
+          prefix: "window",
+        }),
       ];
       try {
         evidence("final-log-capture.json", captures);
       } catch {
         // Keep cleanup and the original failing check authoritative.
       }
+      await check(
+        "product-log",
+        "the product wrote no ERROR, CRITICAL or gated WARNING that a fault test does not explain",
+        async () =>
+          productLogGate({
+            results,
+            storage: projected.storage,
+            run: "window",
+            signIn,
+            ipcTrace,
+            windowHostPid: hostPid,
+          }),
+      );
     }
     input.close();
     if (clipboardCleanup)
@@ -2858,6 +2938,35 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
             data,
           };
         },
+      );
+      const logCaptures = [
+        ...captureGatedLogs({
+          results,
+          storage: layout.storage,
+          defaults: contract.desktop_defaults,
+          prefix: "setup-storage",
+        }),
+        ...captureAgentLogs({
+          results,
+          storage: layout.storage,
+          prefix: "setup",
+        }),
+      ];
+      try {
+        evidence("setup-final-log-capture.json", logCaptures);
+      } catch {
+        // Keep cleanup and the original failing check authoritative.
+      }
+      await check(
+        "setup-product-log",
+        "the product wrote no ERROR, CRITICAL or gated WARNING that a fault test does not explain",
+        async () =>
+          productLogGate({
+            results,
+            storage: layout.storage,
+            run: "setup",
+            signIn,
+          }),
       );
       await check(
         "setup-scratch-removed",

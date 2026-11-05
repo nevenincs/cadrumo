@@ -307,6 +307,8 @@ def refuse_incomplete_xml_dictionary_payload(
     Raises:
         ModeloApplicationError: Required content is absent, or a family minimum the
             file claims identifies nobody.
+
+    ``draft`` is the :class:`ModeloDraft`, the local modelo draft.
     """
     document = DefusedElementTree.fromstring(payload)
     source = _xml_dictionary_xsd_source(layout, schema_provider.sources)

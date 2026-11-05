@@ -531,6 +531,8 @@ export type DiagnosticsEvent = {
   kind: DiagnosticsEventKind;
   /** The `ProcessStatus.id` the event concerns. */
   process: number | null;
+  /** The terminal session a terminal failure concerns; omitted otherwise. */
+  terminalSession?: number;
   failure: HostFailure | null;
   status: ProcessStatus | null;
   stage?: "admission" | "environment" | "manager" | "window" | "shutdown";

@@ -12,7 +12,8 @@ is :data:`TOTAL_PAGOS_A_CUENTA_ROLE`. A ``pago_a_cuenta`` binding outside that
 set is refused.
 
 The family is the perceptor's side only. Its provider carries no source modelo,
-so no withholding-agent return can be named as its source.
+so no withholding-agent return can be named as its source;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -139,7 +140,10 @@ def validate_retencion_soportada_binding(binding: BindingDefinition) -> list[str
 def retencion_soportada_bindings(
     revision: ModeloRevision,
 ) -> tuple[tuple[BindingDefinition, RetencionSoportadaProvider], ...]:
-    """Return every family binding of ``revision`` beside its typed provider, in declaration order."""
+    """Return every family binding of ``revision`` beside its typed provider, in declaration order.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return tuple(
         (binding, provider_member(binding, RetencionSoportadaProvider))
         for binding in revision.bindings
@@ -152,6 +156,8 @@ def revision_declares_retencion_soportada(revision: ModeloRevision) -> bool:
 
     A revision that declares none reads nothing from the family's store, which
     is a different fact from reading the store and finding it empty.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     return any(binding.source is BindingSourceKind.RETENCION_SOPORTADA for binding in revision.bindings)
 
@@ -162,6 +168,8 @@ def credit_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     Empty when the revision has no casilla with :data:`TOTAL_PAGOS_A_CUENTA_ROLE`
     or no formula targeting it, so a credit binding there is refused rather
     than admitted by default.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     totals = frozenset(
         casilla.id for casilla in revision.casillas if casilla.semantic_role == TOTAL_PAGOS_A_CUENTA_ROLE
@@ -252,6 +260,8 @@ def retencion_soportada_revision_failures(revision: ModeloRevision) -> tuple[str
     per-binding validator does not see: the target's semantic role must be one
     the income class admits, a credit must land in the derived credit set, and
     a computed casilla takes a family value only through its formula.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     family = retencion_soportada_bindings(revision)
     if not family:
@@ -271,6 +281,8 @@ def credit_borrador_participation_failures(revision: ModeloRevision) -> tuple[st
     credit set, bound directly or as a formula operand, may therefore be held
     by a borrador snapshot only as ``cross_check_only``, so the snapshot
     corroborates the evidenced value and never stands in for a missing one.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     credit_set = credit_casilla_ids(revision)
     if not credit_set:

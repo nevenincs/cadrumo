@@ -25,6 +25,32 @@ use cadrumo_application::diagnostics::delivery_wait::delivered;
 const HANG: Duration = Duration::from_secs(60);
 
 #[test]
+fn terminal_failures_keep_session_and_process_identity_without_changing_other_events() {
+    let diagnostics = Diagnostics::default();
+    let process = diagnostics.start(123, ProcessRole::Console);
+    diagnostics.count(process, Stream::Terminal, 4096);
+    let error = ApplicationError::new(ErrorCode::InvalidArguments, Operation::Terminal);
+    diagnostics.failure_for_terminal(process, 37, error.clone());
+    diagnostics.failure_for(process, error);
+    let snapshot = diagnostics.snapshot(0);
+    let failures: Vec<_> = snapshot
+        .events
+        .iter()
+        .filter(|event| event.failure.is_some())
+        .collect();
+    assert_eq!(failures.len(), 2);
+    let terminal = serde_json::to_value(failures[0]).unwrap();
+    assert_eq!(terminal["terminalSession"], 37);
+    assert_eq!(terminal["process"], process);
+    assert_eq!(terminal["status"]["terminalBytes"], 4096);
+    assert_eq!(terminal["failure"]["code"], "invalid_arguments");
+    let ordinary = serde_json::to_value(failures[1]).unwrap();
+    assert!(ordinary.get("terminalSession").is_none());
+    assert_eq!(ordinary["process"], process);
+    assert_eq!(ordinary["failure"], terminal["failure"]);
+}
+
+#[test]
 fn terminal_traffic_is_measured_without_retaining_screen_contents() {
     let diagnostics = Diagnostics::default();
     let id = diagnostics.start(123, ProcessRole::Tui);
@@ -133,6 +159,7 @@ fn rotation_bounds_files_and_capture_reports_discarded_bytes() {
             host_pid: 42,
             kind: EventKind::HostStarted,
             process: None,
+            terminal_session: None,
             failure: None,
             status: None,
             stage: None,

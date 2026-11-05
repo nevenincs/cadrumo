@@ -22,7 +22,8 @@ aggregation can attach purchase-invoice evidence to transaction rows before
 producing the shared :class:`~.source_mesh.CalculationSourceResolution`.
 
 Declarable observations that no registry binding consumes are reported as
-source diagnostics rather than silently blanking the filed calculation.
+source diagnostics rather than silently blanking the filed calculation;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue.
 """
 
 from __future__ import annotations
@@ -242,7 +243,9 @@ def _rental_activity_screen(
         codes=tipo_actividad_code_set(
             _M100_RENTAL_ACTIVITY_SELECTOR, effective_date=period.end_date, authority=operation
         ),
-        declared=arrendamiento_actividad_applicability(declared_activity_epigraphs(context))
+        declared=arrendamiento_actividad_applicability(
+            declared_activity_epigraphs(context), effective_date=period.end_date, authority=operation
+        )
         is RetencionSoportadaApplicability.DECLARED,
     )
 

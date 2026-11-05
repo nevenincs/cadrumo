@@ -5,7 +5,8 @@ years, prefers verified revisions over drafts, and grounds each delta row in the
 compared :class:`ModeloRevision` casilla metadata or the revision's recorded
 observation provenance. It shares :class:`ModeloProjectionError` with the
 projection service but touches none of its engine, profile or withholding
-channels.
+channels;
+:class:`CasillaObservation`, an observed casilla value.
 """
 
 from __future__ import annotations

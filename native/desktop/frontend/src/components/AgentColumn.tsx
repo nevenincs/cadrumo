@@ -20,6 +20,7 @@ import {
   CATALOG_BUSY_RETRIES,
   CATALOG_BUSY_PAUSE_MS,
   catalogReadBusy,
+  catalogReadRetry,
 } from "../shell/catalogReadPolicy";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
 import {
@@ -361,7 +362,6 @@ export function AgentColumn({
   const readable = agent !== undefined && reader !== null && shown;
   const status = useAgentStatus(session, reader, readable);
   const ready = status?.state === "ready";
-  const serviceAvailable = ready || status?.state === "starting";
   const unsupported =
     status?.state === "refused" && status.code === "agent_platform_unsupported";
   // A signed-in profile can precede its agent service. Reopening this gate
@@ -481,10 +481,12 @@ export function AgentColumn({
     [openModelPicker],
   );
   // The models the person added to the local lanes' lists, where the host
-  // offers reading and changing them.
+  // offers reading and changing them. The service has no connection to the
+  // host while the agent starts and refuses every list read then, so the
+  // lists are offered only once the agent runs.
   const localModelHost = useMemo((): LocalModelHost | null => {
     if (
-      !serviceAvailable ||
+      !ready ||
       !session?.localModels ||
       !session.addLocalModel ||
       !session.removeLocalModel ||
@@ -505,16 +507,19 @@ export function AgentColumn({
       remove: (lane, model, revision) => changed(remove(lane, model, revision)),
       reset: (revision) => changed(reset(revision)),
     };
-  }, [session, serviceAvailable]);
+  }, [session, ready]);
   // Changes made to the lists in the settings, which the picker reads again.
   const [listChanges, setListChanges] = useState(0);
+  // Read like the lists above: nothing is asked while the agent starts, and
+  // the host changing to a readable one at ready is what reads them.
   const readingHost = useMemo((): ReadingModelHost | null => {
-    if (!session?.localModels || !session.chooseReadingModel) return null;
+    if (!ready || !session?.localModels || !session.chooseReadingModel)
+      return null;
     return {
       read: session.localModels.bind(session),
       choose: session.chooseReadingModel.bind(session),
     };
-  }, [session]);
+  }, [session, ready]);
   // The agent's settings belong to the signed-in profile, and are read only
   // while they are open: the first time behind one loader, and after that
   // again behind what was read last, each time they open.
@@ -546,7 +551,12 @@ export function AgentColumn({
   const readCatalog = useMemo(() => {
     const { reader, ready, starting, session } = catalogRequest;
     return reader !== null && (ready || starting) && session
-      ? () => session.providerCatalog()
+      ? () =>
+          session.providerCatalog(
+            catalogReadRetry(
+              () => busyCatalogReads.current < CATALOG_BUSY_RETRIES,
+            ),
+          )
       : null;
   }, [catalogRequest]);
   // Setup and provider settings invalidate the catalog independently.

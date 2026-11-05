@@ -24,6 +24,7 @@ from .work_form_declaration_facts import (
     ModeloFormEditClosure,
     ModeloFormFiling,
     ModeloFormResult,
+    year_projection,
 )
 from .work_form_field_projection import project_casilla_field
 from .work_form_field_state import casilla_field_role
@@ -147,6 +148,7 @@ def build_inspection_only_form(
         filing_year=review.filing_year,
         period=review.period,
         registry_revision_id=snapshot.revision.id,
+        year_projection=year_projection(snapshot),
         work_unit_id=review.work_unit_id,
         calculation_revision_id=review.calculation_revision_id,
         language=context.language,

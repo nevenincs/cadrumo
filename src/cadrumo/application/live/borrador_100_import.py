@@ -1,4 +1,8 @@
-"""Prepare one local PDF capture before entering snapshot lifecycle persistence."""
+"""Prepare one local PDF capture before entering snapshot lifecycle persistence.
+
+This module uses :class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
+"""
 
 from __future__ import annotations
 
@@ -117,6 +121,8 @@ def borrador_pdf_extraction_profile(snapshot: RegistrySnapshot) -> ExtractionPro
     ``None`` when the revision declares none, or more than one, so no draft
     can be read for it: an import refuses, and a comparison has nothing to
     compare.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     profiles = tuple(
         profile

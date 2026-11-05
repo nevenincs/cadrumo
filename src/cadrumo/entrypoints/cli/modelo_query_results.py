@@ -77,7 +77,13 @@ from .modelo_aux_payloads import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from ...application.modelo.export_contracts import ModeloExportResult as _AppModeloExportResult
+    from ...application.modelo.projection_operation import (
+        ProjectUnresolvedBindingProjection,
+        ProjectUnresolvedCasillaProjection,
+    )
 
 
 class DataInventoryCasillaPayload(OutputSchema):
@@ -332,6 +338,19 @@ class UnresolvedBindingPayload(OutputSchema):
     source_words: str | None
     words: NonEmptyStr
 
+    @classmethod
+    def from_projection(cls, row: ProjectUnresolvedBindingProjection) -> UnresolvedBindingPayload:
+        """Carry one public unresolved binding onto the CLI wire shape."""
+        return cls(
+            binding_id=row.binding_id,
+            casilla_id=row.casilla_id,
+            source_kind=row.source_kind,
+            reason=row.reason,
+            note=row.note,
+            source_words=row.source_words,
+            words=row.words,
+        )
+
 
 class UnresolvedCasillaPayload(OutputSchema):
     """One computed box a projection could not give a value, with its formula's grounding.
@@ -345,6 +364,56 @@ class UnresolvedCasillaPayload(OutputSchema):
     formula_id: FormulaId
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @classmethod
+    def from_projection(cls, row: ProjectUnresolvedCasillaProjection) -> UnresolvedCasillaPayload:
+        """Carry one public unresolved box onto the CLI wire shape."""
+        return cls(
+            casilla_id=row.casilla_id,
+            reason=row.reason,
+            reason_words=row.reason_words,
+            formula_id=row.formula_id,
+            legal_refs=tuple(row.legal_refs),
+            source_refs=tuple(row.source_refs),
+        )
+
+
+class UnresolvedFindingsFields(OutputSchema):
+    """The boxes a result left without a value, as ``modelo.project`` names them.
+
+    A box in ``unresolved_casillas`` or bound by a binding in
+    ``unresolved_bindings`` is absent from the result's values. The words of
+    both lists are in ``words_language``.
+    """
+
+    unresolved_bindings: list[UnresolvedBindingPayload]
+    unresolved_casillas: list[UnresolvedCasillaPayload]
+    words_language: OutputLanguage
+
+
+def unresolved_findings_payload(
+    bindings: Iterable[ProjectUnresolvedBindingProjection],
+    casillas: Iterable[ProjectUnresolvedCasillaProjection],
+    *,
+    words_language: OutputLanguage,
+) -> dict[str, object]:
+    """Build the :class:`UnresolvedFindingsFields` values of a result from the public rows."""
+    return {
+        "unresolved_bindings": [UnresolvedBindingPayload.from_projection(row) for row in bindings],
+        "unresolved_casillas": [UnresolvedCasillaPayload.from_projection(row) for row in casillas],
+        "words_language": words_language,
+    }
+
+
+def unresolved_findings_lines(
+    bindings: Iterable[ProjectUnresolvedBindingProjection],
+    casillas: Iterable[ProjectUnresolvedCasillaProjection],
+) -> list[str]:
+    """Render the tab-separated text line of each unresolved binding and box."""
+    return [
+        *(f"unresolved	{row.casilla_id or '-'}	{row.binding_id}	{row.words}" for row in bindings),
+        *(f"unresolved	{row.casilla_id}	{row.formula_id}	{row.reason_words}" for row in casillas),
+    ]
 
 
 class M130AccumulatedPayload(OutputSchema):

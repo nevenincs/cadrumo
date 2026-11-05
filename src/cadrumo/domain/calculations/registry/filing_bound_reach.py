@@ -23,7 +23,9 @@ the XML dictionary alike; the dictionary's casilla mapping is read from the
 published source bytes it cites. An ``internal_only`` casilla on the way
 carries reach through like any other; it never ends it. A binding read only
 by verification predicates, or by casillas that reach no exported box, is not
-filing-bound, and nothing of a revision declared below the filing rung is.
+filing-bound, and nothing of a revision declared below the filing rung is;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations
@@ -115,6 +117,8 @@ def official_export_casilla_ids(
     their payloads, since the dictionary's casilla mapping lives in those bytes;
     without them the classification refuses rather than reading the
     dictionary's casillas as unexported.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     classified = clasificar_casillas_oficiales(revision, sources=sources, source_payloads=source_payloads)
     return frozenset(
@@ -164,6 +168,8 @@ def filing_bound_reach(revision: ModeloRevision, *, exported: Set[CasillaId]) ->
     declared ``authority_grade``, not the rung an operation pins: a calculation
     pins the calculation rung while the revision it persists feeds check and
     export.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     if revision.authority_grade is not RegistryAuthorityGrade.FILING:
         return _empty_reach()
@@ -203,6 +209,8 @@ def snapshot_filing_bound_reach(snapshot: RegistrySnapshot, *, operation: Pinned
     The XML dictionary payloads the classification needs are loaded from the
     pinned generation's published source evidence, and nothing is loaded for a
     revision below the filing rung.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     revision = snapshot.revision
     if revision.authority_grade is not RegistryAuthorityGrade.FILING:

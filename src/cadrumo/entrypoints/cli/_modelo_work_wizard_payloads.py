@@ -17,6 +17,7 @@ from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields
+from .modelo_query_results import UnresolvedFindingsFields
 
 #: Closed set of CLI input channels a wizard step resolves to: a direct
 #: ``--casilla`` override, a registry ``--binding`` override, or a
@@ -46,7 +47,7 @@ class WizardPromptedCasillaPayload(OutputSchema):
     help_text: str | None = None
 
 
-class WorkWizardResult(CalculationRevisionProjectionFields):
+class WorkWizardResult(CalculationRevisionProjectionFields, UnresolvedFindingsFields):
     """Successful ``aeat app modelo work wizard`` result payload.
 
     Mirrors the shape of :class:`~entrypoints.cli.modelo_results.WorkCalculateResult`

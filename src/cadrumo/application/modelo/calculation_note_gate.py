@@ -17,7 +17,8 @@ left to their own check step or to the export
 
 See Also:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
-        The stored calculation head carrying values, provenance and lifecycle facts.
+        The stored calculation head carrying values, provenance and lifecycle facts;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations
@@ -272,6 +273,8 @@ def saved_calculation_screen_outdated(
     revision. A revision not yet recorded as filed whose snapshot cannot be
     selected is reported stale: nothing shows it current. A filed revision is
     never stale.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     try:
         return calculation_screen_outdated(
@@ -340,6 +343,8 @@ def saved_calculation_filed_before_grade_cap(
     It is the condition :func:`calculation_filed_before_grade_cap` finds, read
     for review. A filed revision without a screen stamp whose snapshot cannot be
     selected is reported so: nothing shows its figures were screened.
+
+    ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     if revision.state not in _FILED_STATES or revision.screen_stamp is not None:
         return False

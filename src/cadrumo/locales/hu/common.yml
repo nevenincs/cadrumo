@@ -2354,14 +2354,6 @@ desktop:
       readings: Olvasatok
       reads_as: 'A dokumentum alapján: {kind}'
       ready_to_confirm: Megerősíthető
-      reason:
-        ambiguous_identity: Két lehetséges azonosító
-        closure_discrepancy: Az összegek nem egyeznek
-        contradicted_invoice_class: A számlatípus ellentmondásos
-        contradicted_regime: Az adózási rend ellentmondásos
-        undetermined_establishment: Telephely nem ismert
-        unmodelled_invoice_class: Nem támogatott számlatípus
-        unresolved_direction: Nem egyértelmű, hogy kapott vagy kiállított
       record:
         invoice_date: Számla kelte
         invoice_number: Számlaszám
@@ -9629,6 +9621,8 @@ workspace:
       operator_entries_unknown: Ezt a bevallást legutóbb ezen a képernyőn kívül számították
         ki, ezért a Cadrumo nem tudja, mely értékeket írtad be. Az újraszámítás csak
         az itt megadott értékeket tartja meg.
+      unresolved:
+        inputs: Érték nélküli adatok
     correction:
       confirm: A helyesbítés előkészítése
       kind: Hogy kiegészítő vagy helyesbítő bevallásként nyújtod-e be, az a modelótól

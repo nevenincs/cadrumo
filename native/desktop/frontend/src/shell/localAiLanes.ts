@@ -13,6 +13,7 @@ import {
   CATALOG_BUSY_RETRIES,
   CATALOG_BUSY_PAUSE_MS,
   catalogReadBusy,
+  catalogReadRetry,
 } from "./catalogReadPolicy";
 import { useAgentStatus } from "./agentLive";
 import { catalogLanes, type CatalogLane } from "./localModelLanes";
@@ -53,7 +54,11 @@ export function useLocalAiLanes(
   const providerSettings = source?.providerSettings ?? null;
   const reader = source?.reader ?? null;
   const status = useAgentStatus(session ?? undefined, reader, active);
-  const available = status?.state === "ready" || status?.state === "starting";
+  // The service answers reads only once it runs; while it starts the host has
+  // no connection to it and refuses them, so nothing is asked and the lanes
+  // stay loading.
+  const available = status?.state === "ready";
+  const starting = status?.state === "starting";
   const [retries, setRetries] = useState(0);
   const request = useMemo(
     () => ({
@@ -68,6 +73,12 @@ export function useLocalAiLanes(
     [session, providerSettings, reader, active, available, again, retries],
   );
   const generation = useRef(0);
+  // The work of the commit now reading, so the window's learning that the
+  // session ended can be told to the reads it has in flight.
+  const work = useRef<{ ended: boolean } | null>(null);
+  useLayoutEffect(() => {
+    if (reader === null && work.current) work.current.ended = true;
+  }, [reader]);
   const wake = useRef<(() => void) | null>(null);
   const published = useRef(status);
   useLayoutEffect(() => {
@@ -97,6 +108,8 @@ export function useLocalAiLanes(
     )
       return;
     const mine = generation.current;
+    const mineWork = { ended: false };
+    work.current = mineWork;
     let alive = true;
     let attempts = 0;
     let timer: number | undefined;
@@ -133,7 +146,9 @@ export function useLocalAiLanes(
       window.clearTimeout(timer);
       const atRead = published.current;
       try {
-        const settings = await providerSettings.status();
+        const settings = await providerSettings.status({
+          sessionEnded: () => mineWork.ended,
+        });
         const keyless = new Set(
           settings.providers
             .filter((lane) => lane.auth_kind === "none")
@@ -159,7 +174,9 @@ export function useLocalAiLanes(
       const atRead = published.current;
       let catalog;
       try {
-        catalog = await session.providerCatalog();
+        catalog = await session.providerCatalog(
+          catalogReadRetry(() => current() && attempts < CATALOG_BUSY_RETRIES),
+        );
       } catch (error) {
         const code = failureCode(error);
         retryBusy(code, catalogReadBusy(code), atRead, collect);
@@ -172,6 +189,7 @@ export function useLocalAiLanes(
     put({ kind: "loading" });
     void collect();
     return () => {
+      if (work.current === mineWork) work.current = null;
       alive = false;
       window.clearTimeout(timer);
       wake.current = null;
@@ -185,7 +203,9 @@ export function useLocalAiLanes(
       ? state.read
       : {
           kind:
-            active && available && reader !== null ? "loading" : "unavailable",
+            active && (available || starting) && reader !== null
+              ? "loading"
+              : "unavailable",
         };
   const retry = useCallback(() => setRetries((count) => count + 1), []);
   const host = useMemo((): LocalModelHost | null => {

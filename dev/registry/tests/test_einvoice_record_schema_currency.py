@@ -31,7 +31,7 @@ from typing import cast
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.toml import parse_toml
+from dev.registry.tests.profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,24 +73,8 @@ def _asserted_through() -> int:
 
 
 def _master_supported_filing_years() -> tuple[int, ...]:
-    """Return the authored filing years the one writable master declaration spans.
-
-    The declaration is written as bounds: ``floor`` through ``horizon`` is the
-    authored span, and a year above the horizon is only carried forward.
-    """
-    path = bundled_path("registry", "aeat", "legal", "supported-filing-years.toml")
-    payload = parse_toml(path.read_text(encoding="utf-8"))
-    declaration = payload.get("supported_filing_years")
-    assert isinstance(declaration, dict), (
-        "the bundled registry declares no supported_filing_years catalogue; "
-        "this gate has no master window to measure against"
-    )
-    floor = declaration.get("floor")
-    horizon = declaration.get("horizon")
-    assert isinstance(floor, int) and isinstance(horizon, int) and floor <= horizon, (
-        "supported_filing_years must declare integer floor <= horizon bounds"
-    )
-    return tuple(range(floor, horizon + 1))
+    """Return the filing years the registry's one support envelope spans, floor through horizon."""
+    return tuple(committed_supported_filing_years().years)
 
 
 def test_the_snapshot_is_asserted_current_through_the_whole_filing_window() -> None:

@@ -326,14 +326,22 @@ test("a renewal answers the application's renewal of the form's baseline", async
   }
 });
 
-test("the later shapes read the first quarter's 130 after its check and after recording it", async () => {
+test("the later shapes read the first quarter's 130 after its refused check and after recording it", async () => {
   const unit = (await formOf("130")).work_unit_id;
   const checked = await scenario("checked").port.form(unit, "en");
   expect(checked.work_unit_id).toBe(unit);
-  expect(checked.form.form.verification).not.toBeNull();
-  expect(checked.form.form.issues.map((issue) => issue.attention)).toContain(
-    "blocks",
-  );
+  // The check was refused on the blocking note the calculation left at a box,
+  // so no verification was recorded and the verdict reads as unchecked.
+  expect(checked.form.form.verification).toBeNull();
+  expect(checked.verdict.status).toBeNull();
+  expect(
+    checked.issue_lines.some(
+      (line) =>
+        line.level === "blocks" &&
+        line.from_calculation &&
+        line.address?.kind === "casilla",
+    ),
+  ).toBe(true);
   expect(checked.form.form.edit_closure).toBeNull();
   const filed = await scenario("filed").port.form(unit, "es");
   expect(filed.work_unit_id).toBe(unit);

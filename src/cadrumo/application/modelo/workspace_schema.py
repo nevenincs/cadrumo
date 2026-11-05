@@ -1,4 +1,7 @@
-"""Static Modelo Workspace schema inspection and pagination."""
+"""Static Modelo Workspace schema inspection and pagination.
+
+This module uses :class:`RegistrySnapshot`, the pinned registry snapshot.
+"""
 
 from __future__ import annotations
 
@@ -272,6 +275,8 @@ def workspace_schema_identity(
 
     Both admissions reduce to bare id sets, so their fingerprints are comparable in kind
     whichever authority object the sets were read from.
+
+    ``authority`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     field_manifest_capture = ModeloWorkspaceFieldManifestPortV1(authority=authority).capture_projection_with_epoch()
     return ModeloWorkspaceSchemaIdentityV1(

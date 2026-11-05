@@ -12,6 +12,7 @@ from contextlib import contextmanager, nullcontext
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from ...first_party_source import is_test_source
 from ...source_tree import repository_files
 from .build_timing import BuildTimings
 from .build_toolchain import sysroot_inventory
@@ -106,9 +107,9 @@ def _excludes_product(name: str) -> bool:
     """Mirror ``cadrumo_product_inputs``' exclusions for one repository-relative POSIX name."""
     path = PurePosixPath(name)
     return (
-        any(part in {"__pycache__", ".git", "tests"} for part in path.parts)
+        any(part in {"__pycache__", ".git"} for part in path.parts)
         or path.suffix in {".pyc", ".lock"}
-        or path.name == "conftest.py"
+        or is_test_source(path)
         or any(part.startswith(_EXPORT_TRANSACTION_PREFIXES) for part in path.parts)
     )
 
@@ -120,7 +121,7 @@ def _excludes_docs(name: str) -> bool:
         any(part in {"__pycache__", ".git"} for part in path.parts)
         or path.suffix in {".pyc", ".lock"}
         or "/docs/_build/" in f"/{name}"
-        or (name.startswith("dev/docs/") and "tests" in path.parts[:-1])
+        or (name.startswith("dev/docs/") and is_test_source(path))
         or any(part.startswith(_EXPORT_TRANSACTION_PREFIXES) for part in path.parts)
     )
 

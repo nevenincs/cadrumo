@@ -15,7 +15,9 @@ writes the value to casilla 06, so no casilla names the binding at all.
 The registry must not import those peer domains. A domain declares its redirect
 by registering a reader here, and the module that registers it is installed by
 import before the first redirect query, the same arrangement the cross-domain
-snapshot checks use.
+snapshot checks use;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`RegistrySnapshot`, the pinned registry snapshot.
 """
 
 from __future__ import annotations
@@ -80,6 +82,8 @@ def snapshot_reach_date(snapshot: RegistrySnapshot) -> date:
     A snapshot without a filing period, such as a communication with no
     period, or with one that spans no calendar dates, such as an instalment
     clave, is read at the close of its filing year.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     period = snapshot.filing_period
     if period is None or not period.has_date_span():
@@ -95,6 +99,8 @@ def binding_output_redirects(
     ``authority`` is the generation-pinned fact source; ``None`` reads the facts
     of the registry validation in progress. ``effective_date`` is the
     filing-period date the governed facts are selected for.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     _install_redirect_modules()
     redirected: dict[BindingId, list[CasillaId]] = {}
@@ -114,6 +120,8 @@ def capped_binding_reach(
     governed fact. A capped binding that reaches nothing keeps an empty
     ``casilla_ids``: registry build refuses it, and a consumer reading a map
     built outside build validation still sees it rather than losing it.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     caps = {binding.id: binding.grade_cap for binding in revision.bindings if binding.grade_cap is not None}
     if not caps:

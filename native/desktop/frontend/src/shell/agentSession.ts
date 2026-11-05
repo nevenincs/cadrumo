@@ -1,3 +1,4 @@
+import type { CallPlan } from "./hostCall";
 import type { AgentLocalModels } from "../ipc/contract";
 import type {
   AgentSkillDetail,
@@ -570,7 +571,7 @@ export interface AgentSession {
   ): Promise<() => void>;
   /** cadrumo-agent's provider catalog, as it serves it, or its declared
    * catalog while no agent is ready. */
-  providerCatalog(): Promise<AgentCatalogAnswer>;
+  providerCatalog(retry?: CallPlan): Promise<AgentCatalogAnswer>;
   /** The models the person added to the local lanes' lists and the model
    * documents are read with. Absent where the host offers none. */
   localModels?(): Promise<AgentLocalModels>;

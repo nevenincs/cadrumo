@@ -51,6 +51,22 @@ def _observer(subject: AdministrationSubject) -> AutomationControlStore:
     return AutomationControlStore(root=subject.store.root, binding=subject.store.binding, secrets_store=subject.native)
 
 
+def _settle(observer: AutomationControlStore, reads: list[str], pause: float) -> None:
+    """Check until one round passes without reading custody.
+
+    Windows reports a directory entry's change late when the change happened in a subdirectory, so the setup's
+    own writes can signal a watched parent after the observation was held. That costs one extra read, never
+    more; a store that read on every check never settles and fails here.
+    """
+    for _ in range(10):
+        time.sleep(pause)
+        reads.clear()
+        observer.observed_access_state()
+        if not reads:
+            return
+    pytest.fail("the observation never settled: every check read custody again")
+
+
 def test_an_unchanged_custody_is_answered_without_reading_it_again(
     subject: AdministrationSubject, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -60,6 +76,7 @@ def test_an_unchanged_custody_is_answered_without_reading_it_again(
     first = observer.observed_access_state()
     reads: list[str] = []
     monkeypatch.setattr(observer, "profile_lock_state", lambda: reads.append("lock") or first[0])
+    _settle(observer, reads, 0.1)
     assert [observer.observed_access_state() for _ in range(3)] == [first, first, first]
     assert reads == []
 
@@ -73,7 +90,8 @@ def test_a_native_control_anchor_is_probed_once_the_observation_ages(
     reads: list[str] = []
     read = observer.enrollment_state
     monkeypatch.setattr(observer, "enrollment_state", lambda: reads.append("enrollment") or read())
-    time.sleep(MAXIMUM_OBSERVATION_AGE_SECONDS + 0.1)
+    # Each round outlives the observation's age, so an unchanged native store must keep it rather than read.
+    _settle(observer, reads, MAXIMUM_OBSERVATION_AGE_SECONDS + 0.1)
     assert observer.observed_access_state() == first
     assert reads == [], "an unchanged native store keeps the aged observation"
     # The native store announces nothing; an anchor written outside custody is seen once the observation ages.

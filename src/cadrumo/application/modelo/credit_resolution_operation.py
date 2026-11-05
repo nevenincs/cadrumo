@@ -12,7 +12,8 @@ since been replaced, is refused with a typed reason before anything is stored: a
 operator who believes a figure was accepted when it was not would file on it.
 Every refusal is decided from persisted facts before anything is written, and
 settles with effect ``NONE`` after the ``UNKNOWN`` declared on entry to the
-irreversible section.
+irreversible section;
+:class:`CalculationRevision`, the saved calculation revision.
 """
 
 from __future__ import annotations

@@ -39,13 +39,14 @@ fn record<T>(diagnostics: &Diagnostics, outcome: Result<T>) -> Result<T> {
 }
 
 /// Runs registry work off the async executor: settlement can block for its
-/// full bound while it holds the registry.
+/// full bound while it holds the registry. Registry admission and session work
+/// record their own failures, retaining the session's process identity.
 async fn blocking<T: Send + 'static>(
     state: &State<'_, Arc<TerminalState>>,
     work: impl FnOnce(&TerminalState) -> Result<T> + Send + 'static,
 ) -> Result<T> {
     let state = state.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || record(&state.launch.diagnostics, work(&state)))
+    tauri::async_runtime::spawn_blocking(move || work(&state))
         .await
         .map_err(|_| failure(ErrorCode::Panic))?
 }

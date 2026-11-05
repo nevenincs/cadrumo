@@ -22,7 +22,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -62,7 +62,11 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
-from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ..aggregation.source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceResolution,
+)
 from ..operations.next_step import OperationNextStepErrorMixin
 from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.projections import fact_value
@@ -865,20 +869,32 @@ def _suffered_withholding_resolution(
     return add_expected_missing_binding_diagnostics(m100_snapshot.revision, resolver.resolve(context))
 
 
-def _unresolved_bindings(
-    resolution: CalculationSourceResolution,
+def unresolved_binding_rows(
+    unresolved_binding_ids: Iterable[BindingId],
+    diagnostics: Iterable[CalculationSourceDiagnostic],
     revision: ModeloRevision,
 ) -> tuple[ModeloProjectionUnresolvedBinding, ...]:
-    """Report each unresolved binding once, by the diagnostic that names its box."""
+    """Report each unresolved binding once, by the diagnostic that names its box.
+
+    Shared by the projection and the calculation: both name a source gap the
+    same way, from the ids a source resolution left unresolved and the
+    diagnostics it raised for them.
+
+    Args:
+        unresolved_binding_ids: The bindings the source resolution left unresolved.
+        diagnostics: The diagnostics that resolution raised.
+        revision: The pinned :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            whose bindings name the box each unresolved binding feeds.
+    """
     bindings_by_id = revision_bindings_by_id(revision)
-    diagnostics = {
+    by_binding = {
         diagnostic.binding_id: diagnostic
-        for diagnostic in resolution.diagnostics
+        for diagnostic in diagnostics
         if diagnostic.reason == "unresolved_binding" and diagnostic.binding_id is not None
     }
     rows: list[ModeloProjectionUnresolvedBinding] = []
-    for binding_id in resolution.unresolved_binding_ids:
-        diagnostic = diagnostics.get(binding_id)
+    for binding_id in unresolved_binding_ids:
+        diagnostic = by_binding.get(binding_id)
         if diagnostic is None:
             rows.append(
                 ModeloProjectionUnresolvedBinding(
@@ -902,7 +918,7 @@ def _unresolved_bindings(
     return tuple(rows)
 
 
-def _unresolved_casillas(
+def unresolved_casilla_rows(
     engine_result: RegistryCalculationResult,
     revision: ModeloRevision,
 ) -> tuple[ModeloProjectionUnresolvedCasilla, ...]:
@@ -912,6 +928,11 @@ def _unresolved_casillas(
     reports a typed outcome for one it could not evaluate; every other formula
     target carries an observation. A target in neither is therefore omitted for
     an unresolved operand.
+
+    Args:
+        engine_result: The engine's observations and unresolved outcomes.
+        revision: The pinned :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            whose formulas name every target.
     """
     observed = {observation.casilla_id for observation in engine_result.observations}
     outcomes = {outcome.casilla_id: outcome for outcome in engine_result.unresolved_outcomes}
@@ -1066,8 +1087,8 @@ def _projection_service_result(
             source_casilla_ids=_source_resolved_casilla_ids(credits, revision),
         ),
         m100_projection=_m100_projection_result(engine_result.values, declaration=declaration),
-        unresolved_bindings=_unresolved_bindings(credits, revision),
-        unresolved_casillas=_unresolved_casillas(engine_result, revision),
+        unresolved_bindings=unresolved_binding_rows(credits.unresolved_binding_ids, credits.diagnostics, revision),
+        unresolved_casillas=unresolved_casilla_rows(engine_result, revision),
     )
 
 

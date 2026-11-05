@@ -874,6 +874,53 @@ export function useLiveConversation({
   };
 }
 
+/** One host watch of the agent's status for every surface that reads it. The
+ * host keeps a single listener, so a second surface subscribing would take the
+ * notices from the first; the window therefore subscribes once for a session
+ * and hands each change, and the last one at once, to every surface. */
+type StatusWatch = {
+  listeners: Set<(status: AgentServiceStatus) => void>;
+  last: AgentServiceStatus | null;
+  stop: Promise<() => void>;
+};
+const statusWatches = new WeakMap<AgentSession, StatusWatch>();
+
+export function watchStatus(
+  session: AgentSession,
+  listener: (status: AgentServiceStatus) => void,
+): Promise<() => void> {
+  let watch = statusWatches.get(session);
+  if (!watch) {
+    const made: StatusWatch = {
+      listeners: new Set(),
+      last: null,
+      stop: Promise.resolve(() => undefined),
+    };
+    made.stop = session.observeStatus((status) => {
+      made.last = status;
+      for (const heard of [...made.listeners]) heard(status);
+    });
+    // A watch the host refused is dropped, so the next surface asks again.
+    made.stop.catch(() => {
+      if (statusWatches.get(session) === made) statusWatches.delete(session);
+    });
+    statusWatches.set(session, made);
+    watch = made;
+  }
+  const held = watch;
+  held.listeners.add(listener);
+  if (held.last) listener(held.last);
+  return Promise.resolve(() => {
+    held.listeners.delete(listener);
+    if (held.listeners.size > 0 || statusWatches.get(session) !== held) return;
+    statusWatches.delete(session);
+    held.stop.then(
+      (unsubscribe) => unsubscribe(),
+      () => undefined,
+    );
+  });
+}
+
 /** Where the agent service is, as the host reports it while `enabled`, or
  * null until it has said. */
 export function useAgentStatus(
@@ -908,7 +955,7 @@ export function useAgentStatus(
       if (alive && mine === generation.current)
         setState({ for: owner, status });
     };
-    session.observeStatus(hear).then(
+    watchStatus(session, hear).then(
       (unsubscribe) => {
         if (alive) stop = unsubscribe;
         else unsubscribe();

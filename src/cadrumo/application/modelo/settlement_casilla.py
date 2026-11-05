@@ -203,6 +203,8 @@ def declaration_settlement_casilla_id(modelo: str, revision: ModeloRevision) -> 
     Raises:
         AmbiguousDeclarationResultError: Two computed casillas of the revision
             claim the settlement role.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     role = settlement_casilla_role(modelo)
     computed = None if role is None else _computed_settlement_casilla(role, revision)
@@ -227,6 +229,8 @@ def declaration_settlement_remainder_casilla_ids(modelo: str, revision: ModeloRe
     Raises:
         AmbiguousDeclarationResultError: Two computed casillas of the revision
             claim the settlement role.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     role = settlement_casilla_role(modelo)
     if role is not None and _computed_settlement_casilla(role, revision) is not None:

@@ -1,0 +1,1 @@
+{"sequence":453,"source":"desktop","timestampMs":1793817668066,"hostPid":24944,"kind":"failure","process":null,"failure":{"code":"setup_failed","operation":"cli","message":"The component setup could not be completed","reason":"setup_browser_failed","causes":[{"kind":"application","code":"setup_failed","operation":"cli","reason":"timed_out"}]},"status":null}

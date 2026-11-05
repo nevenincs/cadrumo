@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language
 from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
@@ -43,10 +45,11 @@ from .calculation_projection import ModeloCalculationSnapshot
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
 from .metadata_projection import ModeloWorkMetadataSnapshot
+from .projection_operation import ProjectUnresolvedBindingProjection, ProjectUnresolvedCasillaProjection
 from .work_calculation_contracts import (
     ModeloOperatorEntriesCarry,
     ModeloWorkCalculateCallerContext,
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateReplacedHead,
     ModeloWorkCalculateRequest,
 )
@@ -73,9 +76,10 @@ def calculation_public_result(
     *,
     operation: PinnedAuthorityOperation,
     replaced_head: ModeloWorkCalculateReplacedHead | None = None,
-) -> ModeloWorkCalculatePublicResultV2:
+) -> ModeloWorkCalculatePublicResultV3:
     """Project the exact canonical return without post-publication catalogue reads."""
-    return ModeloWorkCalculatePublicResultV2(
+    language = OutputLanguage(output_language())
+    return ModeloWorkCalculatePublicResultV3(
         work_unit_id=result.work_unit.work_unit_id,
         calculation_revision_id=result.revision.calculation_revision_id,
         calculation=ModeloCalculationSnapshot.from_revision(
@@ -84,6 +88,15 @@ def calculation_public_result(
         advisories=ModeloCalculationAdvisories.from_result(result, operation=operation),
         unit=ModeloWorkMetadataSnapshot.from_work_unit(result.work_unit),
         revision_published=result.revision_published,
+        unresolved_bindings=tuple(
+            ProjectUnresolvedBindingProjection.from_service(row, language=language)
+            for row in result.unresolved_bindings
+        ),
+        unresolved_casillas=tuple(
+            ProjectUnresolvedCasillaProjection.from_service(row, language=language)
+            for row in result.unresolved_casillas
+        ),
+        words_language=language,
         replaced_head=replaced_head,
     )
 
@@ -375,7 +388,7 @@ def build_modelo_work_calculate_definition(
         definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkCalculateRequest,
         subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
-        result_type=ModeloWorkCalculatePublicResultV2,
+        result_type=ModeloWorkCalculatePublicResultV3,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkCalculateRequest,
             executor_type=ModeloWorkCalculateExecutor,
@@ -404,8 +417,8 @@ def build_modelo_work_calculate_registration(
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.work.calculate.result",
-            schema_version=2,
-            model_type=ModeloWorkCalculatePublicResultV2,
+            schema_version=3,
+            model_type=ModeloWorkCalculatePublicResultV3,
         ),
         workspace_refresh_target_schema=modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,

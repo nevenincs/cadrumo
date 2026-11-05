@@ -3,7 +3,11 @@
 Activity income and expense follow accrual (LIRPF art. 14.1.b) unless the
 taxpayer elected cash (RIRPF art. 7.2). A box that sums bank rows can read zero
 while an invoice accrued inside its window was collected outside it, so a zero
-is proven only when neither a row nor an accruing invoice exists.
+is proven only when neither a row nor an accruing invoice exists;
+:class:`TransactionCatalogue`, the profile's transaction catalogue;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue;
+:class:`UserProfileRecord`, the stored taxpayer profile record.
 """
 
 from __future__ import annotations
@@ -166,6 +170,8 @@ def revision_reads_imputation_criterion(revision: ModeloRevision) -> bool:
 
     The answer follows the revision's own bindings, never the modelo's number, so a revision
     that stops reading the election stops asking for it.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     return any(binding.source in IMPUTATION_CRITERION_SOURCES for binding in revision.bindings)
 
@@ -340,7 +346,10 @@ class ImputationCriteria:
 def declared_imputation_criteria(
     record: UserProfileRecord | None, filings: ImputationFilingHistory | None = None
 ) -> ImputationCriteria:
-    """Read the dated imputation facts of the bucket's profile; no record states no year."""
+    """Read the dated imputation facts of the bucket's profile; no record states no year.
+
+    ``record`` is the :class:`UserProfileRecord`, the stored taxpayer profile record.
+    """
     return ImputationCriteria(
         facts=() if record is None else tuple(record.facts),
         filings=filings if filings is not None else ImputationFilingHistory(),
@@ -542,6 +551,8 @@ def expense_incurred_date(row: Transaction, invoices: InvoiceCatalogue | None) -
     day the bank settled them or the imputation criterion places them. A row whose invoice
     and statement disagree never reaches a limit under a criterion, and without one the
     payment is the only date left.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     invoice_id = row.purchase_invoice_evidence_id
     invoice = None if invoices is None or invoice_id is None else invoices.get(invoice_id)
@@ -577,6 +588,10 @@ def rows_touching_window(
     the window, so other years' rows raise no refusal here. Every row of a kept row's
     invoice stays, including one banked in another year, because what the rows settle
     together decides what each of them computes.
+
+    ``transactions`` is the :class:`TransactionCatalogue`, the profile's transaction catalogue.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
 
     def carried_in(accrual: date | None) -> bool:
@@ -602,7 +617,10 @@ def rows_touching_window(
 def rows_left_out_summary(
     transactions: TransactionCatalogue, kept: TransactionCatalogue
 ) -> OutOfWindowTransactionSummary | None:
-    """Count the rows ``rows_touching_window`` left out, so the return still says some were."""
+    """Count the rows ``rows_touching_window`` left out, so the return still says some were.
+
+    ``transactions`` and ``kept`` are the :class:`TransactionCatalogue`, the profile's transaction catalogue.
+    """
     left_out = tuple(
         row.raw.value_date or row.raw.booked_date
         for row in transactions.values()
@@ -631,6 +649,8 @@ def imputation_blocking_diagnostics(
     An unset criterion picks no year, so any activity in the window keeps the
     boxes from check, export and recording; the calculation still shows them.
     A year with no activity has nothing to place and raises nothing.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     undeclared = activity_present and criteria.usable(year) is None
     if not undeclared and not unresolved_details:

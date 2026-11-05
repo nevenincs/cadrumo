@@ -40,7 +40,7 @@ from cadrumo.domain.calculations.registry.static_inspection import GeneratedArti
 from dev.temporary_output import prepare_temp_root
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 from ._export_tree import render_complete_export_tree
 from .export_tree_models import ExportTreeTransportProfile
 from .export_tree_serialization import SERIALIZER_CONVENTION
@@ -655,12 +655,16 @@ def _declared_render_frame(
 ) -> tuple[int, str]:
     """Select the first source-covered declared coordinate for static reproduction.
 
-    Historical storage can be inspected below the runtime support floor. Explicit
+    A revision reaching the supported floor is reproduced at its first supported
+    coordinate, so a revision spanning two record designs renders the design the
+    product files with rather than one only its unsupported years used. Historical
+    storage lying wholly below the floor can still be inspected there. Explicit
     caller coordinates bypass this selection and retain their strict refusal.
     """
+    horizon = coverage_assessment_horizon(catalogues)
     coordinates = revision_selection_coordinates(
-        selected, assessment_horizon=coverage_assessment_horizon(catalogues), assessment_floor=2000
-    )
+        selected, assessment_horizon=horizon, assessment_floor=coverage_assessment_floor(catalogues)
+    ) or revision_selection_coordinates(selected, assessment_horizon=horizon, assessment_floor=2000)
     refusals: list[str] = []
     for year, declared_period in coordinates:
         try:

@@ -66,6 +66,7 @@ impl HostEvents {
                 notice.status = None;
                 notice.role = None;
                 notice.process = None;
+                notice.terminal_session = None;
                 notice.stage = None;
                 notice.lifecycle = None;
                 notice.service = None;
@@ -130,6 +131,9 @@ pub(super) fn entry(event: &Event) -> Entry {
         ("process_id".to_owned(), Value::from(process.pid)),
         ("process_role".to_owned(), Value::from(process.role.clone())),
     ]);
+    if let Some(session) = event.terminal_session {
+        context.insert("terminal_session".into(), Value::from(session));
+    }
     if let Some(stage) = event.stage {
         context.insert("stage".into(), Value::from(token(stage)));
     }
@@ -515,6 +519,41 @@ fn utc(epoch_ms: u64) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn terminal_identity_reaches_the_view_but_not_a_log_failure_notice() {
+        use super::HostEvents;
+        use cadrumo_application::{
+            diagnostics::Diagnostics,
+            error::application::{ApplicationError, ErrorCode, Operation},
+            process::status::ProcessRole,
+        };
+        let diagnostics = Diagnostics::default();
+        let process = diagnostics.start(123, ProcessRole::Console);
+        diagnostics.failure(ApplicationError::new(
+            ErrorCode::LogUnavailable,
+            Operation::Logging,
+        ));
+        diagnostics.failure_for_terminal(
+            process,
+            37,
+            ApplicationError::new(ErrorCode::InvalidArguments, Operation::Terminal),
+        );
+        let records = HostEvents::default().poll(&diagnostics);
+        let terminal = records
+            .iter()
+            .find(|record| {
+                record
+                    .context
+                    .get("reason_code")
+                    .is_some_and(|code| code == "invalid_arguments")
+            })
+            .unwrap();
+        assert_eq!(terminal.context["terminal_session"], 37);
+        let notice = records.last().unwrap();
+        assert_eq!(notice.context["reason_code"], "log_unavailable");
+        assert!(!notice.context.contains_key("terminal_session"));
+    }
+
     #[test]
     fn frontend_severities_and_command_context_reach_the_normal_log_view() {
         use super::{HostEvents, Level};

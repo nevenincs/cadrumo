@@ -20,7 +20,7 @@ from ...application.modelo.m303_filing_evidence import m303_filing_evidence_fail
 from ...application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from ...core.bucket_pointer import resolve_active_bucket_id
@@ -46,6 +46,7 @@ from ._modelo_rendering import (
     work_plazo_lines_from_posture,
 )
 from .common import emit_envelope, no_active_profile_refusal
+from .modelo_query_results import unresolved_findings_lines, unresolved_findings_payload
 from .modelo_results import WorkCalculateResult
 from .modelo_revision_rendering import calculation_revision_state_label
 from .operation_modelo_calculation import (
@@ -199,12 +200,12 @@ def _run_work_calculate(
         raise CliOutboundPayloadBoundaryError(exc, record=ModeloWorkCalculateRequest) from exc
     completed = run_modelo_work_calculation(client, request)
     projection = completed.projection
-    if not isinstance(projection, ModeloWorkCalculatePublicResultV2):
+    if not isinstance(projection, ModeloWorkCalculatePublicResultV3):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     _emit_work_calculation(ctx, projection)
 
 
-def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePublicResultV2) -> None:
+def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePublicResultV3) -> None:
     snapshot = projection.calculation
     advisories = projection.advisories
     language = OutputLanguage(current_output_language())
@@ -240,6 +241,11 @@ def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePu
                 "saved_confirmation": saved_confirmation,
                 **calculation_snapshot_payload(snapshot, language=language).model_dump(mode="python"),
                 **modality_payload,
+                **unresolved_findings_payload(
+                    projection.unresolved_bindings,
+                    projection.unresolved_casillas,
+                    words_language=projection.words_language,
+                ),
                 "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
             }
         )
@@ -253,6 +259,7 @@ def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePu
             "operation\tmodelo.work.calculate",
             *calculation_snapshot_lines(snapshot, language=language),
             *modality_lines,
+            *unresolved_findings_lines(projection.unresolved_bindings, projection.unresolved_casillas),
             *work_plazo_lines_from_posture(posture),
             *source_advisory_lines,
             saved_confirmation,

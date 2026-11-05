@@ -9,17 +9,19 @@ export layout and claims no filing grade; the previous edition is unchanged.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from functools import cache
 
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
+from cadrumo.domain.deadlines.festivos import is_business_day, load_holiday_calendar
 
 from ..compiler.authority import compiled_bundled_authority
 from ..conformance.registry_schema_support import committed_modelo
@@ -100,9 +102,17 @@ def test_the_window_follows_the_statutory_plazo_of_the_following_january() -> No
     words = legal_text_match(
         "orden-eha-3111-2009:art-8", r"en los ([a-z ]+?) primeros dias naturales del mes de enero siguiente"
     ).group(1)
+    nominal_close = date(year + 1, 1, _DAYS[words])
     (window,) = _selected(year).deadline_windows
     assert window.filing_year == year
-    assert (window.opens_on, window.closes_on) == (date(year + 1, 1, 1), date(year + 1, 1, _DAYS[words]))
+    assert window.opens_on == date(year + 1, 1, 1)
+    # A nominal close that falls on a national inhabil moves to the next dia habil (Ley 39/2015 art. 30.5).
+    with bundled_indexed_authority().operation() as operation:
+        calendar = load_holiday_calendar(year + 1, operation=operation)
+    assert window.closes_on >= nominal_close
+    assert is_business_day(window.closes_on, calendar=calendar, ccaa_code=None)
+    skipped = (nominal_close + timedelta(days=offset) for offset in range((window.closes_on - nominal_close).days))
+    assert not any(is_business_day(day, calendar=calendar, ccaa_code=None) for day in skipped)
 
 
 def test_filing_grade_is_refused_for_the_new_form_and_kept_for_the_previous_year() -> None:

@@ -1962,6 +1962,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     issuesFor: (period) => issues(ledger, period),
     seed: shape === "documents" || shape === "reader_missing",
     readerMissing: shape === "reader_missing",
+    language: options.language ?? "en",
   });
   const reads: Partial<
     Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>

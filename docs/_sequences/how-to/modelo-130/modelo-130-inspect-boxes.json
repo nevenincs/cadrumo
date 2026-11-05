@@ -8,6 +8,7 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
+        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -22,154 +23,13 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "ledger",
-        "add",
-        "--date",
-        "2026-02-10",
-        "--amount",
-        "1210.00",
-        "--direction",
-        "INCOMING",
-        "--description",
-        "Cobro factura limpieza de oficinas enero",
-        "--currency",
-        "EUR",
-        "--counterparty",
-        "Asesores Inmobiliarios Chamberí, S.L.",
-        "--classification",
-        "BUSINESS",
-        "--iva-category",
-        "domestic_general",
-        "--taxable-base",
-        "1000.00",
-        "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "210.00",
-        "--idempotency-key",
-        "ALT-VTA-01"
-      ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "alt_vta_01",
-          "value": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "add",
-        "--date",
-        "2026-02-11",
-        "--amount",
-        "605.00",
-        "--direction",
-        "OUTGOING",
-        "--description",
-        "Compra de material de oficina",
-        "--currency",
-        "EUR",
-        "--counterparty",
-        "Papelería Central, S.L.",
-        "--classification",
-        "BUSINESS",
-        "--category-id",
-        "material_oficina",
-        "--iva-category",
-        "domestic_general",
-        "--taxable-base",
-        "500.00",
-        "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "105.00",
-        "--deduction-kind",
-        "domestic_current",
-        "--idempotency-key",
-        "ALT-MAT-01"
-      ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "alt_mat_01",
-          "value": "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "invoice",
-        "add",
-        "--kind",
-        "issued",
-        "--counterparty-name",
-        "Asesores Inmobiliarios Chamberí, S.L.",
-        "--counterparty-nif",
-        "B00000141",
-        "--country-code",
-        "ES",
-        "--invoice-number",
-        "F-0001",
-        "--invoice-date",
-        "2026-02-10",
-        "--currency",
-        "EUR",
-        "--taxable-base",
-        "1000.00",
-        "--iva-rate",
-        "21",
-        "--iva-category",
-        "domestic_general"
-      ],
-      "captures": [
-        {
-          "json_path": "result.invoice_id",
-          "name": "alt_vta_01_invoice",
-          "value": "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "app",
-        "ledger",
-        "link",
-        "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
-        "--invoice-id",
-        "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73"
+        "import",
+        "--file",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
       ],
       "captures": [],
       "envelope": null,
@@ -182,40 +42,20 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "ledger",
-        "invoice",
-        "add",
-        "--kind",
-        "received",
-        "--counterparty-name",
-        "Papelería Central, S.L.",
-        "--counterparty-nif",
-        "B00000158",
-        "--country-code",
-        "ES",
-        "--invoice-number",
-        "C-0087",
-        "--invoice-date",
-        "2026-02-11",
-        "--currency",
-        "EUR",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
         "--taxable-base",
-        "500.00",
+        "1000",
         "--iva-rate",
-        "21",
-        "--iva-category",
-        "domestic_general"
+        "0.21",
+        "--iva-amount",
+        "210"
       ],
-      "captures": [
-        {
-          "json_path": "result.invoice_id",
-          "name": "alt_mat_01_invoice",
-          "value": "f6888ddbf0e289edbcd4c0b6f0559c75c4a216c35ca50334379da698b18a52fd"
-        }
-      ],
+      "captures": [],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -228,10 +68,20 @@
         "aeat",
         "app",
         "ledger",
-        "link",
-        "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
-        "--invoice-id",
-        "f6888ddbf0e289edbcd4c0b6f0559c75c4a216c35ca50334379da698b18a52fd"
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--deduction-kind",
+        "domestic_current"
       ],
       "captures": [],
       "envelope": null,
@@ -250,15 +100,27 @@
         "ledger",
         "evidence",
         "add",
-        "fixtures/personas/autonomo-alta-reciente/factura-alt-mat-01.xml",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "21",
+        "--iva-amount",
+        "105",
         "--idempotency-key",
-        "persona-autonomo-alta-reciente-factura-alt-mat-01"
+        "fq-factura"
       ],
       "captures": [
         {
           "json_path": "result.evidence_id",
-          "name": "factura_alt_mat_01_evidence",
-          "value": "0021fb5b1e7a777c"
+          "name": "evidence_id",
+          "value": "02f887c6ff8a69c5"
         }
       ],
       "envelope": null,
@@ -274,9 +136,9 @@
         "app",
         "ledger",
         "attach",
-        "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
+        "e3eeac5e",
         "--purchase-invoice-evidence-id",
-        "0021fb5b1e7a777c"
+        "02f887c6ff8a69c5"
       ],
       "captures": [],
       "envelope": null,
@@ -394,7 +256,7 @@
           }
         ],
         "result": {
-          "authority_generation": "cb0c13a2caf931f415859958b5e5a053f284427f4c2487e02476323c165b5ef8",
+          "authority_generation": "ccefc805386a4f39971ca10ab267597ee3237c133f56618fd4e4937a1f22a1a4",
           "binding_count": 9,
           "bindings": [
             {

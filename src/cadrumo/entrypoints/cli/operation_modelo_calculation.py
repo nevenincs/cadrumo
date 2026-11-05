@@ -22,7 +22,7 @@ from ...application.modelo.calculation_projection import (
 from ...application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.work_calculation_contracts import (
-    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculatePublicResultV3,
     ModeloWorkCalculateRequest,
 )
 from ...application.operations.public_scalar import PublicDecimal, PublicNamedScalar
@@ -114,23 +114,23 @@ def run_modelo_work_calculation(
     *,
     timeout: float = 120,
     settlement_timeout: float = _CALCULATION_SETTLEMENT_SECONDS,
-) -> RegisteredOperationCompletion[ModeloWorkCalculatePublicResultV2]:
+) -> RegisteredOperationCompletion[ModeloWorkCalculatePublicResultV3]:
     """Run the canonical calculation and validate its writer-returned public facts."""
     completed = run_registered_operation(
         client,
         request,
         definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=request.work_unit_id,
-        result_type=ModeloWorkCalculatePublicResultV2,
+        result_type=ModeloWorkCalculatePublicResultV3,
         request_version=4,
-        result_version=2,
+        result_version=3,
         timeout=timeout,
         settlement_timeout=settlement_timeout,
         pending_check_command=f"aeat app modelo work revisions {request.work_unit_id}",
     )
     result = completed.projection
     if (
-        not isinstance(result, ModeloWorkCalculatePublicResultV2)
+        not isinstance(result, ModeloWorkCalculatePublicResultV3)
         or result.unit.bucket_id != str(client.profile_id)
         or result.work_unit_id != request.work_unit_id
         or (

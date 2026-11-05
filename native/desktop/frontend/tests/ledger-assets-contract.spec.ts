@@ -285,7 +285,19 @@ test("the list states the backend's fields, and the years on offer span the regi
     SEED_ELEMENTS.map((seed) => seed.id).sort(),
   );
   for (const row of rows) {
-    expect(Object.keys(row).sort(), row.asset_id).toEqual(
+    // The remedy sentence and its language are served together, and only for a row with a remedy to word.
+    const served = Object.keys(row).filter(
+      (key) => key === "opening_remedy_words" || key === "words_language",
+    );
+    expect(served.length === 0 || served.length === 2, row.asset_id).toBe(true);
+    expect(
+      Object.keys(row)
+        .filter(
+          (key) => key !== "opening_remedy_words" && key !== "words_language",
+        )
+        .sort(),
+      row.asset_id,
+    ).toEqual(
       [
         "accumulated",
         "asset_id",
@@ -1041,6 +1053,8 @@ test("an originating price is stated only for a used element on the linear metho
       kind: "used_element_group_limit",
       label_key:
         "ledger.actividad_asset.plan_advisory.used_element_group_limit",
+      words: null,
+      words_language: "es",
     },
   ]);
   const seeded = await settled<LedgerResult<typeof PLAN>>(
@@ -2117,12 +2131,14 @@ test("a refusal is read by its reason key and facts, and what is still to fill i
     code: INCOMPLETE,
     reasonKey: "ledger.actividad_asset.errors.table_class_required",
     reasonFacts: [{ key: "method", value: "linear", kind: "text" }],
+    words: null,
     missing: ["name", "basis_amount"],
   });
   expect(refusalOf(null)).toEqual({
     code: null,
     reasonKey: null,
     reasonFacts: [],
+    words: null,
     missing: [],
   });
   const view = viewOf({ kind: "done", result: body }, () => false);

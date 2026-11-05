@@ -112,6 +112,8 @@ def cuota_disagreeing_documents(
     as it stands now. A row that is gone or no longer disagrees keeps the general
     finding, since its persisted evidence failure is not erased by editing it.
     Rows named in ``excluded_transaction_ids`` have their own finding already.
+
+    ``target`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     transaction_ids = selected_scope_transaction_ids(target) - set(excluded_transaction_ids)
     if not transaction_ids:

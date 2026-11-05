@@ -31,7 +31,8 @@ A split in two instalments takes the first instalment's share from the
 registry; the cent it rounds to is Cadrumo's own, as no official source states
 one, and an amount whose second instalment would round to nothing is not split.
 
-Account numbers pass through here in memory only, into the exported file.
+Account numbers pass through here in memory only, into the exported file;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -138,6 +139,8 @@ def declared_settlement(
         revision: The registry revision the values belong to.
         casilla_values: The declaration's values by casilla id; an absent box holds no value.
         disposition: The disposition derived from the result, before any filing election.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     casilla_id = declaration_settlement_casilla_id(modelo, revision)
     amount = None if casilla_id is None else _decimal(casilla_values.get(casilla_id))

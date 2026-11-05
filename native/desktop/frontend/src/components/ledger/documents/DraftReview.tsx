@@ -241,7 +241,7 @@ function shownValue(locale: string, field: ReadingField, value: string | null) {
 }
 
 /** The finding that asks about a field, and how to go to it. */
-type Question = { reason: string; go(): void };
+type Question = { words: string | null; go(): void };
 
 /**
  * Where a value came from, as a glyph: its words are the tooltip and what a
@@ -306,7 +306,7 @@ function Provenance({
         className="ledger-provenance ledger-provenance-question text-warning"
         label={words}
         hint={t("desktop.ledger.documents.go_to_question", {
-          reason: reasonLabel(t, question.reason),
+          reason: reasonLabel(t, question.words),
         })}
         side="right"
         onClick={question.go}
@@ -371,7 +371,9 @@ function Finding({
             size="sm"
             className={answered ? "text-success" : "text-warning"}
           />
-          <span className="font-medium">{reasonLabel(t, blocker.reason)}</span>
+          <span className="font-medium">
+            {reasonLabel(t, blocker.reason_words)}
+          </span>
           {blocker.field && <Badge>{fieldLabel(t, blocker.field)}</Badge>}
         </div>
         <p className="ledger-finding-worked text-sm">
@@ -407,7 +409,9 @@ function Finding({
           size="sm"
           className={answered ? "text-success" : "text-warning"}
         />
-        <span className="font-medium">{reasonLabel(t, blocker.reason)}</span>
+        <span className="font-medium">
+          {reasonLabel(t, blocker.reason_words)}
+        </span>
         {blocker.field && <Badge>{fieldLabel(t, blocker.field)}</Badge>}
       </div>
       {blocker.detail && <p className="text-sm">{blocker.detail}</p>}
@@ -1138,7 +1142,7 @@ export function DraftReview({
     const at = blockers.findIndex((blocker) => blocker.field === field);
     if (at < 0) return null;
     return {
-      reason: blockers[at]!.reason,
+      words: blockers[at]!.reason_words ?? null,
       go: () => {
         const finding = document.getElementById(findingId(at));
         finding?.scrollIntoView({ block: "nearest" });

@@ -15,11 +15,15 @@ secure-object repository, whose freshness check is the reader that refuses.
 
 from __future__ import annotations
 
+import contextvars
 import sys
+import threading
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace, TracebackType
+from typing import Self, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -35,6 +39,7 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...bucket.errors import BucketLockedError
@@ -44,15 +49,19 @@ from ...profile_persistence_composition import composed_profile_persistence_port
 from ...runtime_repository import secure_object_repository_for_active_bucket
 from ...tests.profile_capsule_runtime import derive_test_bucket_key, publish_test_profile_capsule
 from ...tests.secure_sql import isolated_profile_storage_root
-from .. import profile_worker_custody
-from ..active_session import current_active_bucket_session, get_active_master_key
+from .. import bucket_session, idle_timeout, profile_worker_custody
+from ..active_session import bind_active_bucket_session, current_active_bucket_session, get_active_master_key
 from ..bucket_session import BucketSession
+from ..idle_timeout import IdleEvaluation
 from ..profile_worker_custody import ProfileWorkerCustody
 from .profile_worker_identity_support import published_capsule_identity, worker_lease
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _MODULE = "cadrumo.adapters.persistence.storage.master_key.tests.test_profile_worker_custody_lease_window"
+
+_STALL_DEADLINE_SECONDS = 10.0
+"""How long a stalled step waits for its counterpart; only a broken interleaving ever reaches it."""
 
 
 class _Clock:
@@ -126,6 +135,89 @@ def _read_storage() -> None:
     secure_object_repository_for_active_bucket().list_namespaces()
 
 
+def _read_while(between: Callable[[], object]) -> None:
+    """Read storage with ``between`` run after the reader resolved the key session and before it judges it.
+
+    This is the interleaving a sibling lease's runtime control produces on
+    another worker thread while an operation of a surviving lease reads.
+    """
+    evaluate = idle_timeout.evaluate_idle
+    pending = [between]
+
+    def interleaved(*, session: BucketSession, now: datetime, **options: int) -> IdleEvaluation:
+        while pending:
+            pending.pop()()
+        return evaluate(session=session, now=now, **options)
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(idle_timeout, "evaluate_idle", interleaved)
+        _read_storage()
+    assert not pending, "the read never judged the key session it resolved"
+
+
+class _ContendedLock:
+    """A real lock that reports each time an acquirer finds it already held."""
+
+    def __init__(self, contended: threading.Event) -> None:
+        self._lock = threading.Lock()
+        self._contended = contended
+
+    def __enter__(self) -> bool:
+        if not self._lock.acquire(blocking=False):
+            self._contended.set()
+            self._lock.acquire()
+        return True
+
+    def __exit__(
+        self, kind: type[BaseException] | None, error: BaseException | None, trace: TracebackType | None
+    ) -> None:
+        self._lock.release()
+
+
+class _StalledInstant(datetime):
+    """An instant whose first addition stops until released, so an idle update stalls after reading its window."""
+
+    entered: threading.Event
+    release: threading.Event
+
+    @classmethod
+    def at(cls, instant: datetime) -> Self:
+        stalled = cls.combine(instant.date(), instant.time(), tzinfo=instant.tzinfo)
+        stalled.entered, stalled.release = threading.Event(), threading.Event()
+        return stalled
+
+    @override
+    def __add__(self, value: timedelta, /) -> Self:
+        if not self.entered.is_set():
+            self.entered.set()
+            assert self.release.wait(_STALL_DEADLINE_SECONDS), "the stalled idle update was never released"
+        added = datetime.combine(self.date(), self.time(), tzinfo=self.tzinfo) + value
+        # The sum is an ordinary instant that never stalls again.
+        result = type(self).at(added)
+        result.entered.set()
+        return result
+
+
+def _in_thread(
+    step: Callable[[], object], failures: list[BaseException], finished: threading.Event | None = None
+) -> threading.Thread:
+    """Run ``step`` on its own thread in a copy of this context, so it reads the same frozen clock."""
+    context = contextvars.copy_context()
+
+    def run() -> None:
+        try:
+            context.run(step)
+        except BaseException as error:
+            failures.append(error)
+        finally:
+            if finished is not None:
+                finished.set()
+
+    thread = threading.Thread(target=run)
+    thread.start()
+    return thread
+
+
 def _sign_in_lease(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
     with clock.at(minutes=0):
         human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
@@ -167,7 +259,8 @@ def _api_key_lease(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> 
         refreshed = _reissued(first, clock, minutes=5)
         custody.refresh(refreshed)
         session = _key_session()
-        assert session is not opened and opened.sealed
+        # The same key carries the refreshed window; nothing was sealed under a reader.
+        assert session is opened and not opened.sealed
         assert session.idle_deadline == session.absolute_deadline == refreshed.expires_at
     with clock.at(minutes=8):
         assert custody.require(refreshed.session_id) == refreshed
@@ -201,7 +294,8 @@ def _mixed_leases(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> N
         _assert_retired(custody, human.session_id)
         assert custody.require(api_key.session_id) == api_key
         remaining = _key_session()
-        assert remaining is not shared and shared.sealed
+        # The surviving lease keeps the same key session, narrowed to its own expiry.
+        assert remaining is shared and not shared.sealed
         assert remaining.idle_deadline == remaining.absolute_deadline == api_key.expires_at
     with clock.at(minutes=4):
         repository = secure_object_repository_for_active_bucket()
@@ -343,6 +437,129 @@ def _expiry_deadline(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -
         assert custody.seconds_until_expiry() is None
 
 
+def _read_across_a_sibling_retirement(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    with clock.at(minutes=0):
+        api_key = _lease(custody.identity, clock, SessionKind.API_KEY, minutes=5)
+        human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        custody.install(api_key, bytearray(key))
+        custody.install(human, bytearray(key))
+        session = _key_session()
+        assert session.absolute_deadline == human.expires_at
+    with clock.at(minutes=1):
+        # The longer lease ends while the shorter one's read is in flight.
+        _read_while(lambda: custody.retire(human.session_id))
+        _assert_retired(custody, human.session_id)
+        assert custody.require(api_key.session_id) == api_key
+        assert _key_session() is session and not session.sealed
+        assert session.idle_deadline == session.absolute_deadline == api_key.expires_at
+        repository = secure_object_repository_for_active_bucket()
+    with clock.at(minutes=5):
+        # The narrowed session ends with the surviving lease, not with the retired one.
+        with pytest.raises(SessionExpiredError):
+            repository.list_namespaces()
+        assert custody.live_sessions() == ()
+        assert session.sealed and current_active_bucket_session() is None
+
+
+def _read_across_a_sibling_sign_in(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    with clock.at(minutes=0):
+        api_key = _lease(custody.identity, clock, SessionKind.API_KEY, minutes=5)
+        custody.install(api_key, bytearray(key))
+        session = _key_session()
+    with clock.at(minutes=1):
+        human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        # A longer lease signs in while the shorter one's read is in flight.
+        _read_while(lambda: custody.install(human, bytearray(key)))
+        assert _key_session() is session and not session.sealed
+        assert session.idle_deadline == session.absolute_deadline == human.expires_at
+    with clock.at(minutes=6):
+        _assert_expired(custody, api_key.session_id)
+        assert custody.require(human.session_id) == human
+        repository = secure_object_repository_for_active_bucket()
+        repository.list_namespaces()
+    with clock.at(minutes=16):
+        with pytest.raises(SessionExpiredError):
+            repository.list_namespaces()
+        assert custody.live_sessions() == ()
+        assert session.sealed and current_active_bucket_session() is None
+
+
+def _retained_session_routes_to_the_custody_root(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    root = custody.root.resolve()
+    with clock.at(minutes=0):
+        api_key = _lease(custody.identity, clock, SessionKind.API_KEY, minutes=5)
+        human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        custody.install(api_key, bytearray(key))
+        custody.install(human, bytearray(key))
+        session = _key_session()
+    with clock.at(minutes=1):
+        _read_while(lambda: custody.retire(human.session_id))
+        assert _key_session() is session and session.storage_root == root
+        database = Path(secure_object_repository_for_active_bucket().engine.url.database or "")
+        assert database.resolve().is_relative_to(root), "the retained session read another root's database"
+        # A session for the same profile and key under another root is never adopted or published.
+        foreign_root = root.parent / f"{root.name}-foreign"
+        foreign_root.mkdir()
+        foreign = BucketSession.open_resumed(
+            bucket_id=session.bucket_id,
+            dek=key,
+            idle_minutes=15,
+            opened_at=now(),
+            idle_deadline=now() + timedelta(minutes=15),
+            absolute_deadline=now() + timedelta(minutes=15),
+            storage_root=foreign_root,
+        )
+        try:
+            with pytest.raises(AutomationCustodyError):
+                bind_active_bucket_session(foreign)
+        finally:
+            foreign.close()
+        second = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        custody.install(second, bytearray(key))
+        assert _key_session() is session and session.storage_root == root
+        repository = secure_object_repository_for_active_bucket()
+        assert Path(repository.engine.url.database or "").resolve().is_relative_to(root)
+        repository.list_namespaces()
+        assert not any(foreign_root.iterdir()), "storage wrote under a root this custody does not own"
+
+
+def _touch_across_a_widened_window(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    contended = threading.Event()
+    with pytest.MonkeyPatch.context() as patch:
+        # The session built now guards its window with a real lock that says when it was contended.
+        patch.setattr(bucket_session, "threading", SimpleNamespace(Lock=lambda: _ContendedLock(contended)))
+        with clock.at(minutes=0):
+            api_key = _lease(custody.identity, clock, SessionKind.API_KEY, minutes=5)
+            custody.install(api_key, bytearray(key))
+            session = _key_session()
+    with clock.at(minutes=1):
+        human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        stalled = _StalledInstant.at(now())
+        failures: list[BaseException] = []
+        # A read's idle update has read the shorter lease's window and is about to write it back.
+        touching = _in_thread(lambda: session.touch(stalled), failures)
+        assert stalled.entered.wait(_STALL_DEADLINE_SECONDS)
+        # A longer lease signs in meanwhile: it waits for that update or, unguarded, finishes first.
+        widening = _in_thread(lambda: custody.install(human, bytearray(key)), failures, finished=contended)
+        assert contended.wait(_STALL_DEADLINE_SECONDS)
+        stalled.release.set()
+        touching.join()
+        widening.join()
+        assert failures == []
+        assert _key_session() is session and not session.sealed
+        assert session.absolute_deadline == human.expires_at
+        assert session.idle_deadline == human.expires_at, "a stale idle update undid the widened window"
+        repository = secure_object_repository_for_active_bucket()
+    with clock.at(minutes=7):
+        _assert_expired(custody, api_key.session_id)
+        repository.list_namespaces()
+    with clock.at(minutes=16):
+        with pytest.raises(SessionExpiredError):
+            repository.list_namespaces()
+        assert custody.live_sessions() == ()
+        assert session.sealed and current_active_bucket_session() is None
+
+
 _CASES: dict[str, Callable[[ProfileWorkerCustody, _Clock, bytes], None]] = {
     "expiry_deadline": _expiry_deadline,
     "binding_proof_follows_the_capsule": _binding_proof_follows_the_capsule,
@@ -352,6 +569,10 @@ _CASES: dict[str, Callable[[ProfileWorkerCustody, _Clock, bytes], None]] = {
     "api_key_lease": _api_key_lease,
     "mixed_leases": _mixed_leases,
     "latest_lease_expiry": _latest_lease_expiry,
+    "read_across_a_sibling_retirement": _read_across_a_sibling_retirement,
+    "read_across_a_sibling_sign_in": _read_across_a_sibling_sign_in,
+    "retained_session_routes_to_the_custody_root": _retained_session_routes_to_the_custody_root,
+    "touch_across_a_widened_window": _touch_across_a_widened_window,
 }
 
 

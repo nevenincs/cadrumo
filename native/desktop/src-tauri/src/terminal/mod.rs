@@ -342,14 +342,21 @@ impl TerminalState {
         id: u64,
         action: impl FnOnce(&mut Session) -> Result<T>,
     ) -> Result<T> {
-        let mut registry = self.registry()?;
-        let session = registry.session(id)?;
+        let mut registry = self.admitted(self.registry())?;
+        let session = self.admitted(registry.session(id))?;
         let outcome = action(session);
-        session.record(outcome)
+        session.record(id, outcome)
     }
 
     pub fn close(&self, id: u64) -> Result<()> {
-        self.registry()?.close(id)
+        let mut registry = self.admitted(self.registry())?;
+        self.admitted(registry.session(id))?;
+        // Settlement failures are recorded by the session that owns the child.
+        registry.close(id)
+    }
+
+    fn admitted<T>(&self, outcome: Result<T>) -> Result<T> {
+        outcome.inspect_err(|error| self.launch.diagnostics.failure(error.clone()))
     }
 
     /// Settles every session for a page reload, allowing the new page to open.

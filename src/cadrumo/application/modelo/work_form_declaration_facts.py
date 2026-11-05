@@ -4,6 +4,8 @@ Where the latest calculation noticed something, whether it replayed AEAT tax
 data, the last day to file, the settled result and its direction, whether the
 declaration is recorded as filed, the latest exported file, and why nothing may
 be edited. Each is classified from declared facts so a frontend only renders it.
+Whether the filing year is carried across from another edition is read from the
+pinned :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations
@@ -14,11 +16,14 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_references import TemporalProjectionDirection
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.modelos.calculation_revision_sources import CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT, CalculationNoteFact
 from .work_form_findings import ModeloFormAttention
@@ -82,6 +87,35 @@ class ModeloFormAeatData(ModeloFormBase):
     snapshot_id: str = Field(min_length=1)
     imported_at: datetime | None = None
     binding_ids: tuple[BindingId, ...] = ()
+
+
+class ModeloFormYearProjection(ModeloFormBase):
+    """Whether the declaration's filing year is carried across from another edition, as the registry resolves it.
+
+    ``direction`` is ``authored`` when the selected edition authors the filing
+    year, otherwise ``forward`` or ``backward`` for the nearest edition carried
+    across; ``authored_filing_year`` is the year that edition authors and
+    ``reachable_grade`` the rung of authority the year reaches. The registry's
+    temporal resolver and grade rule supply all three; a surface renders them.
+    """
+
+    direction: TemporalProjectionDirection
+    authored_filing_year: int
+    reachable_grade: RegistryAuthorityGrade
+
+
+def year_projection(snapshot: RegistrySnapshot) -> ModeloFormYearProjection:
+    """The projection the pinned snapshot's registry resolution states for its filing year.
+
+    Args:
+        snapshot: The pinned :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+            whose temporal resolution and reachable grade the projection carries.
+    """
+    return ModeloFormYearProjection(
+        direction=snapshot.revision_projection_direction,
+        authored_filing_year=snapshot.edition_filing_year,
+        reachable_grade=snapshot.effective_authority_grade,
+    )
 
 
 class ModeloFormDeadline(ModeloFormBase):

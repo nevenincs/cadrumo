@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass, replace
 from typing import Annotated, Literal, Self
 from uuid import UUID
@@ -39,7 +40,12 @@ from ..operations.registry import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
-from .projection import ModeloProjectServiceResult, project_modelo_100_from_m130
+from .projection import (
+    ModeloProjectionUnresolvedBinding,
+    ModeloProjectionUnresolvedCasilla,
+    ModeloProjectServiceResult,
+    project_modelo_100_from_m130,
+)
 from .projection_compare import ModeloCompareServiceResult, compare_modelo_years
 from .projection_migration_ports import ProjectionMigrationPlan, ProjectionMigrationPort
 from .projection_words import (
@@ -187,6 +193,19 @@ class ProjectUnresolvedBindingProjection(BaseModel):
     source_words: _Words | None
     words: _Words
 
+    @classmethod
+    def from_service(cls, row: ModeloProjectionUnresolvedBinding, *, language: OutputLanguage) -> Self:
+        """Name one unresolved binding and the words that explain it in ``language``."""
+        return cls(
+            binding_id=row.binding_id,
+            casilla_id=row.casilla_id,
+            source_kind=row.source_kind,
+            reason=row.reason,
+            note=str(row.note) if row.note is not None else None,
+            source_words=binding_source_words(row.source_kind, language=language),
+            words=unresolved_binding_words(row.fact, language=language),
+        )
+
 
 class ProjectUnresolvedCasillaProjection(BaseModel):
     """One computed box with no value, and the grounding of the formula that would compute it.
@@ -202,6 +221,31 @@ class ProjectUnresolvedCasillaProjection(BaseModel):
     formula_id: _Token
     legal_refs: tuple[_Token, ...]
     source_refs: tuple[_Token, ...]
+
+    @classmethod
+    def from_service(cls, row: ModeloProjectionUnresolvedCasilla, *, language: OutputLanguage) -> Self:
+        """Carry one unresolved box with the words for its reason in ``language``."""
+        return cls(
+            casilla_id=row.casilla_id,
+            reason=row.reason,
+            reason_words=unresolved_casilla_reason_words(row.reason, language=language),
+            formula_id=row.formula_id,
+            legal_refs=tuple(row.legal_refs),
+            source_refs=tuple(row.source_refs),
+        )
+
+
+def require_unresolved_boxes_carry_no_value(
+    observed: Collection[str],
+    bindings: Iterable[ProjectUnresolvedBindingProjection],
+    casillas: Iterable[ProjectUnresolvedCasillaProjection],
+) -> None:
+    """Refuse a result in which a box with no value also carries one."""
+    unresolved = {row.casilla_id for row in casillas} | {
+        row.casilla_id for row in bindings if row.casilla_id is not None
+    }
+    if unresolved.intersection(observed):
+        raise ValueError("an unresolved projected box also carries a value")
 
 
 class ModeloProjectOperationProjection(BaseModel):
@@ -243,12 +287,11 @@ class ModeloProjectOperationProjection(BaseModel):
 
     @model_validator(mode="after")
     def _unresolved_boxes_carry_no_value(self) -> Self:
-        observed = {row.casilla_id for row in self.casilla_observations}
-        unresolved = {row.casilla_id for row in self.unresolved_casillas} | {
-            row.casilla_id for row in self.unresolved_bindings if row.casilla_id is not None
-        }
-        if observed & unresolved:
-            raise ValueError("an unresolved projected box also carries a value")
+        require_unresolved_boxes_carry_no_value(
+            {row.casilla_id for row in self.casilla_observations},
+            self.unresolved_bindings,
+            self.unresolved_casillas,
+        )
         return self
 
     @classmethod
@@ -306,26 +349,11 @@ class ModeloProjectOperationProjection(BaseModel):
                 ),
             ),
             unresolved_bindings=tuple(
-                ProjectUnresolvedBindingProjection(
-                    binding_id=row.binding_id,
-                    casilla_id=row.casilla_id,
-                    source_kind=row.source_kind,
-                    reason=row.reason,
-                    note=str(row.note) if row.note is not None else None,
-                    source_words=binding_source_words(row.source_kind, language=language),
-                    words=unresolved_binding_words(row.fact, language=language),
-                )
+                ProjectUnresolvedBindingProjection.from_service(row, language=language)
                 for row in result.unresolved_bindings
             ),
             unresolved_casillas=tuple(
-                ProjectUnresolvedCasillaProjection(
-                    casilla_id=row.casilla_id,
-                    reason=row.reason,
-                    reason_words=unresolved_casilla_reason_words(row.reason, language=language),
-                    formula_id=row.formula_id,
-                    legal_refs=tuple(row.legal_refs),
-                    source_refs=tuple(row.source_refs),
-                )
+                ProjectUnresolvedCasillaProjection.from_service(row, language=language)
                 for row in result.unresolved_casillas
             ),
             words_language=language,

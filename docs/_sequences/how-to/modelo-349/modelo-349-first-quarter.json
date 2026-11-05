@@ -3,25 +3,6 @@
     {
       "argv": [
         "aeat",
-        "config",
-        "profile",
-        "edit",
-        "docs-sequence-sandbox",
-        "--quiet",
-        "--iva-roi-enrolled",
-        "--does-intracomunitario"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
         "app",
         "ledger",
         "invoice",
@@ -29,9 +10,9 @@
         "--kind",
         "issued",
         "--counterparty-nif",
-        "DE000000001",
+        "DE811569869",
         "--counterparty-name",
-        "Nordlicht Plattformen GmbH",
+        "Muenchner Handels GmbH",
         "--invoice-number",
         "F-2026-IC-01",
         "--invoice-date",
@@ -63,9 +44,9 @@
         "--kind",
         "issued",
         "--counterparty-nif",
-        "FR00000000001",
+        "FR40123456824",
         "--counterparty-name",
-        "Atelier Numérique Garonne SARL",
+        "Lyon Services SARL",
         "--invoice-number",
         "F-2026-IC-02",
         "--invoice-date",
@@ -176,7 +157,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "1c66eef55e76cf96c68d8ee2e61c779de9e2c23db4ebc6dd9e10d093b9fc283d"
+          "value": "833bd2cf4340de8ceb848992184a3d8c371dde89f0f6040f6077e161faa783a6"
         }
       ],
       "envelope": {
@@ -199,7 +180,7 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "1c66eef55e76cf96c68d8ee2e61c779de9e2c23db4ebc6dd9e10d093b9fc283d",
+          "calculation_revision_id": "833bd2cf4340de8ceb848992184a3d8c371dde89f0f6040f6077e161faa783a6",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -221,8 +202,8 @@
                 "clave_operacion": "E",
                 "codigo_pais": "DE",
                 "importe": "5000.00",
-                "nif_comunitario": "sha256:7509d350",
-                "razon_social": "Nordlicht Plattformen GmbH"
+                "nif_comunitario": "sha256:6b01ecdf",
+                "razon_social": "Muenchner Handels GmbH"
               },
               "index": 1,
               "row_type": "operador"
@@ -232,8 +213,8 @@
                 "clave_operacion": "S",
                 "codigo_pais": "FR",
                 "importe": "3000.00",
-                "nif_comunitario": "sha256:fc252fd0",
-                "razon_social": "Atelier Numérique Garonne SARL"
+                "nif_comunitario": "sha256:61b42bb2",
+                "razon_social": "Lyon Services SARL"
               },
               "index": 2,
               "row_type": "operador"
@@ -350,36 +331,39 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 1c66eef55e76cf96c68d8ee2e61c779de9e2c23db4ebc6dd9e10d093b9fc283d (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 833bd2cf4340de8ceb848992184a3d8c371dde89f0f6040f6077e161faa783a6 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:03ac4e6ae473c44a503cca52fc13863b554cab27b0652b69b8dd22752b719be3",
+              "fingerprint": "sha256:cf7d55b8a201b0c83145a741ddb2cd2137d270007f372a1427cc075221ab59e0",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
-              "source_ref": "collectible_invoice:c96ab1e8dc03abdef2d8825aa7782984dd0498175918d53f9bb7fcbcfc8c759f"
+              "source_ref": "collectible_invoice:86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b"
             },
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:60fc27cecb98d8fb03b8e247250b5db4396755ce99f45ee28f628bece4cf9c9f",
+              "fingerprint": "sha256:2be54cd14edcef8b8f878373c07e62cc87953d63aaadbce591005a40502f26f0",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
-              "source_ref": "collectible_invoice:8c7859a9bfaf30e4634a31ee3e47cca977449a28580d385ab9d2076d044b13a9"
+              "source_ref": "collectible_invoice:0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209"
             }
           ],
           "state": "borrador",
           "superseded_at": null,
+          "unresolved_bindings": [],
+          "unresolved_casillas": [],
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
+          "words_language": "en",
           "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
@@ -400,7 +384,7 @@
         "modelo",
         "work",
         "verify",
-        "1c66eef55e76cf96c68d8ee2e61c779de9e2c23db4ebc6dd9e10d093b9fc283d"
+        "833bd2cf4340de8ceb848992184a3d8c371dde89f0f6040f6077e161faa783a6"
       ],
       "captures": [],
       "envelope": {
@@ -416,7 +400,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "1c66eef55e76cf96c68d8ee2e61c779de9e2c23db4ebc6dd9e10d093b9fc283d",
+          "calculation_revision_id": "833bd2cf4340de8ceb848992184a3d8c371dde89f0f6040f6077e161faa783a6",
           "completeness_status": "complete",
           "findings": [],
           "granted_verificado_completo": true,
@@ -440,7 +424,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "a11f9c0629a7f8ce655344136120c7094ce56cc51ee4b6f80df831fe5bf3fcf1",
+          "verification_report_id": "1adab81acecc74b044e87c28c446b0e14a4f0d3cde5492b4c7d024a22dc5141f",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

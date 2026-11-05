@@ -378,6 +378,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.calculate.evidence.unavailable",
         "workspace.modelo.calculate.evidence.stale",
         "workspace.modelo.calculate.at_risk_cancel",
+        "workspace.modelo.calculate.unresolved.inputs",
         "workspace.modelo.calculate.at_risk_proceed",
         "workspace.modelo.calculate.at_risk_title",
         "workspace.modelo.calculate.operator_entries_unknown",

@@ -327,7 +327,7 @@
             "iva-349-declarante-numero-operadores": "1",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "addd12e1fe8c9b61d60c3a742ab6b86e7745e4faf9f81175d0fa69322e68a037",
+          "calculation_revision_id": "78dfa862c0bab69f0599ada26ef06a92572e5667a4ad24df23fec00773445d53",
           "casilla_values": {
             "decl.importe-operaciones": "2000.00",
             "decl.importe-rectificaciones": "0",
@@ -474,7 +474,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision addd12e1fe8c9b61d60c3a742ab6b86e7745e4faf9f81175d0fa69322e68a037 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 78dfa862c0bab69f0599ada26ef06a92572e5667a4ad24df23fec00773445d53 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
@@ -490,9 +490,12 @@
           ],
           "state": "borrador",
           "superseded_at": null,
+          "unresolved_bindings": [],
+          "unresolved_casillas": [],
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
+          "words_language": "en",
           "work_unit_id": "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
         },
         "schema_version": "2",

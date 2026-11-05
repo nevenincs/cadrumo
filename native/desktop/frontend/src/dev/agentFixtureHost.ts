@@ -562,7 +562,10 @@ export function fixtureAgent({
         licence: entry.licence ?? null,
       }));
   };
-  const statusListeners = new Set<(status: AgentServiceStatus) => void>();
+  // The host keeps one status listener: a new subscription replaces the
+  // earlier one, which hears nothing more, and a subscription ends only the
+  // listener it made.
+  let statusListener: ((status: AgentServiceStatus) => void) | null = null;
   const inventory = skills === "many" ? MANY_FIXTURE_SKILLS : FIXTURE_SKILLS;
   const knownSkill = (name: string) => {
     const held = inventory.find((one) => one.name === name);
@@ -1121,12 +1124,17 @@ export function fixtureAgent({
       say("agentStatusResolved");
       return answer;
     },
-    observeStatus(listener) {
+    async observeStatus(listener) {
       say("agentObserveStatus");
-      statusListeners.add(listener);
-      return Promise.resolve(() => {
-        statusListeners.delete(listener);
-      });
+      // Like every host call it takes the host's time. The host then takes
+      // over as the one listener and sends the current status before the
+      // subscription resolves.
+      await wait();
+      statusListener = listener;
+      listener(status());
+      return () => {
+        if (statusListener === listener) statusListener = null;
+      };
     },
     async providerCatalog() {
       say("agentProviderCatalog");
@@ -1593,7 +1601,7 @@ export function fixtureAgent({
     catalogBusy = false;
     // A declared catalog gives way to the served one once the agent is ready.
     if (next === undefined || next.state === "ready") catalogDeclared = false;
-    for (const listener of statusListeners) listener(status());
+    statusListener?.(status());
   };
   /** Commits a change to the list as another window would, so the
    * revision this one read is out of date. */

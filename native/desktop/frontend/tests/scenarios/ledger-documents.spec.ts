@@ -4,6 +4,22 @@ import { fileURLToPath } from "node:url";
 import { VALUE_COLUMN_MIN_PX } from "../../src/components/ledger/documents/documentsModel";
 import { label } from "../support/strings";
 
+/** The sentences the backend serves for a confirmation block, by reason and
+ * language, as the generated fixture records them. */
+const SERVED_REASONS = (
+  JSON.parse(
+    readFileSync(
+      fileURLToPath(
+        new URL(
+          "../../src/dev/fixtures/ledgerServedWords.json",
+          import.meta.url,
+        ),
+      ),
+      "utf8",
+    ),
+  ) as { confirmation_block: Record<string, Record<string, string>> }
+).confirmation_block;
+
 // The Documents section over the scenario's `documents` ledger: readings
 // waiting for review, their findings, the confirmation bound to the reading
 // shown, the catalogue's duplicate check, the link a confirmation offers,
@@ -283,15 +299,13 @@ test("a flagged field's glyph goes to the question about it", async ({
     await expect(glyph).toHaveAccessibleName(
       new RegExp(
         label("desktop.ledger.documents.go_to_question", {
-          reason: label(`desktop.ledger.documents.reason.${reason}`),
+          reason: SERVED_REASONS[reason]!.en!,
         }),
       ),
     );
     await glyph.click();
     const finding = draft(target).locator(".ledger-finding:focus");
-    await expect(finding).toContainText(
-      label(`desktop.ledger.documents.reason.${reason}`),
-    );
+    await expect(finding).toContainText(SERVED_REASONS[reason]!.en!);
     await expect(finding).toBeInViewport();
   }
   // A field no finding asks about keeps its plain glyph.

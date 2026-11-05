@@ -2018,6 +2018,9 @@ export type ConfirmationBlockReason =
 export type ConfirmationBlocker = {
   blocker_id: string;
   reason: ConfirmationBlockReason;
+  /** The sentence the backend serves for the reason, and its language. */
+  reason_words?: string | null;
+  reason_words_language?: string | null;
   field?: string | null;
   detail?: string;
   candidates?: AmbiguityCandidate[];
@@ -2038,6 +2041,9 @@ export type EvidenceReviewRow = {
   drafted_at: string;
   blocking_count: number;
   reasons?: ConfirmationBlockReason[];
+  /** The sentence served for each reason, in the order of `reasons`. */
+  reason_words?: string[];
+  reason_words_language?: string | null;
   advisory_count: number;
   advisories?: ReviewAdvisoryKind[];
 };

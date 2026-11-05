@@ -7,7 +7,8 @@ See Also:
     :mod:`domain.calculations.registry.relations`
         Registry requirements describing the source-filing folds.
     :mod:`domain.calculations.registry.bindings_previous_filing`
-        Previous-filing binding resolver that reuses :func:`fold_sum_or_copy`.
+        Previous-filing binding resolver that reuses :func:`fold_sum_or_copy`;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -71,7 +72,10 @@ class GatheredRequirementValues(NamedTuple):
 
 
 def complementaria_only_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
-    """Return the casillas ``revision`` declares only a complementaria fills."""
+    """Return the casillas ``revision`` declares only a complementaria fills.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
     return frozenset(casilla.id for casilla in revision.casillas if casilla.complementaria_only is not None)
 
 

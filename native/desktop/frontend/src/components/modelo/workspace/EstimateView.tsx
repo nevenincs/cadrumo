@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,14 +10,14 @@ import type {
   PublicModeloFormField,
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
-import { BoxNumber } from "../form/BoxNumber";
-import { BoxLabel } from "./BoxLabel";
 import {
   estimateAmount,
   estimateFigure,
   estimateFigures,
   type EstimateRead,
 } from "./estimateRead";
+import { BoxName } from "./BoxName";
+import { languageName, UnresolvedFindings } from "./UnresolvedFindings";
 
 // The estimate of the annual return from the quarterly declarations, as the
 // application served it: marked as an estimate, with the boxes it could not
@@ -27,52 +26,6 @@ import {
 // application said it in.
 
 type Figures = ModeloProjectOperationProjection["casilla_observations"];
-
-/** The name of a language, in the window's own. */
-function languageName(locale: string, code: string): string {
-  try {
-    return (
-      new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code
-    );
-  } catch {
-    return code;
-  }
-}
-
-/** A box named by its printed number and the form's label for it. */
-function BoxName({
-  field,
-  box,
-}: {
-  field: PublicModeloFormField | null;
-  box: string | null;
-}) {
-  return (
-    <span className="flex min-w-0 items-start gap-2">
-      <BoxNumber box={box} />
-      {field && (
-        <span className="min-w-0 text-base">
-          <BoxLabel text={field.label} />
-        </span>
-      )}
-    </span>
-  );
-}
-
-function Unresolved({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section aria-label={title} className="flex flex-col gap-2">
-      <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
-      {children}
-    </section>
-  );
-}
 
 function Result({
   projection,
@@ -92,13 +45,6 @@ function Result({
   const given: Figures = projection.casilla_observations.filter((row) =>
     results.includes(row.casilla_id),
   );
-  // Boxes left without a figure for one reason share the sentence that says it.
-  const reasons = new Map<string, string[]>();
-  for (const row of projection.unresolved_casillas)
-    reasons.set(row.reason_words, [
-      ...(reasons.get(row.reason_words) ?? []),
-      row.casilla_id,
-    ]);
   const nothingLeft =
     projection.unresolved_bindings.length === 0 &&
     projection.unresolved_casillas.length === 0;
@@ -144,50 +90,13 @@ function Result({
           })}
         </ul>
       )}
-      {projection.unresolved_bindings.length > 0 && (
-        <Unresolved
-          title={t("desktop.modelo.credits.estimate.unresolved_credits")}
-        >
-          <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card">
-            {projection.unresolved_bindings.map((row) => (
-              <li
-                key={row.binding_id}
-                data-unresolved-credit={row.casilla_id ?? row.binding_id}
-                className="flex flex-col gap-1 px-4 py-3"
-              >
-                <BoxName field={named(row.casilla_id)} box={row.casilla_id} />
-                {row.source_words && (
-                  <span className="text-sm text-faint">{row.source_words}</span>
-                )}
-                <span className="text-sm text-muted-foreground">
-                  {row.words}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Unresolved>
-      )}
-      {reasons.size > 0 && (
-        <Unresolved
-          title={t("desktop.modelo.credits.estimate.unresolved_boxes")}
-        >
-          {[...reasons].map(([words, boxes]) => (
-            <div
-              key={words}
-              className="flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3"
-            >
-              <ul className="flex flex-col gap-1.5">
-                {boxes.map((box) => (
-                  <li key={box} data-unresolved-box={box}>
-                    <BoxName field={named(box)} box={box} />
-                  </li>
-                ))}
-              </ul>
-              <span className="text-sm text-muted-foreground">{words}</span>
-            </div>
-          ))}
-        </Unresolved>
-      )}
+      <UnresolvedFindings
+        bindings={projection.unresolved_bindings}
+        casillas={projection.unresolved_casillas}
+        bindingsTitle={t("desktop.modelo.credits.estimate.unresolved_credits")}
+        casillasTitle={t("desktop.modelo.credits.estimate.unresolved_boxes")}
+        boxName={(box) => <BoxName field={named(box)} box={box} />}
+      />
       {nothingLeft && (
         <p className="text-sm text-muted-foreground">
           {t("desktop.modelo.credits.estimate.nothing_left")}

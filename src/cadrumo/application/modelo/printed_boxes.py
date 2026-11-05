@@ -92,6 +92,8 @@ def first_printed_dependent(snapshot: RegistrySnapshot, binding_id: BindingId) -
     A binding that feeds a formula rather than populating a box has no box of its own, so a note
     about it names the first printed box that waits on it. Among boxes at the same distance the
     lowest casilla id is taken, so the answer does not depend on declaration order.
+
+    ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     printed = printed_boxes(snapshot.revision, None)
     formulas = snapshot.revision.formulas

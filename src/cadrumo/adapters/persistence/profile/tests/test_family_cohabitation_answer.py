@@ -42,6 +42,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLa
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileRecord
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -283,7 +284,7 @@ def test_a_value_that_is_neither_yes_nor_no_is_refused_and_writes_nothing(world:
     world.patch({_SITUATION_ID: "soltero"})
     read = world.record()
 
-    with pytest.raises(Exception, match="convive_con_otro_progenitor"):
+    with pytest.raises(ProfileSchemaValidationError, match="convive_con_otro_progenitor"):
         apply_manager_profile_field_mutation(
             profile_id=world.profile_id,
             path=_PATH,

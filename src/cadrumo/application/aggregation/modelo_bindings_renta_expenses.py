@@ -1,4 +1,8 @@
-"""Repository-backed annual and quarterly Renta expense source resolvers."""
+"""Repository-backed annual and quarterly Renta expense source resolvers.
+
+This module uses :class:`TransactionCatalogue`, the profile's transaction catalogue;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue.
+"""
 
 from __future__ import annotations
 

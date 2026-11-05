@@ -96,6 +96,7 @@ from ._modelo_revision_payload_parts import (
     ObservationPayload,
     SourceProvenancePayload,
 )
+from .modelo_query_results import UnresolvedFindingsFields
 
 if TYPE_CHECKING:
     pass
@@ -594,7 +595,7 @@ class WorkDiscardResult(OutputSchema):
     causante_ccaa: str | None = None
 
 
-class WorkCalculateResult(CalculationRevisionProjectionFields):
+class WorkCalculateResult(CalculationRevisionProjectionFields, UnresolvedFindingsFields):
     """Successful ``modelo work calculate`` result payload.
 
     The calculate CLI flattens the persisted
@@ -605,7 +606,9 @@ class WorkCalculateResult(CalculationRevisionProjectionFields):
     carried by
     :class:`ModeloWorkCalculationServiceResult`: Modelo
     202 modality, backend authorization state, and optional
-    :class:`WorkDeadlinePosturePayload`.
+    :class:`WorkDeadlinePosturePayload`. The bindings and boxes the run left
+    without a value are named as ``modelo.project`` names them
+    (:class:`UnresolvedFindingsFields`).
     Non-blocking authorization and source diagnostics are projected into the envelope's
     :class:`Notice` rows, not bespoke result fields.
     """

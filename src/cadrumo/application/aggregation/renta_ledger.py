@@ -411,6 +411,8 @@ def resolve_annual_iva_deduction(
     computes the definitive prorrata and regularises them (LIVA art. 105.Cuatro), and
     that percentage applies to all the year's cuotas (art. 105.Seis). The non-deductible
     IVA that joins the acquisition cost (Manual Renta, ch. 7) is therefore the definitive one.
+
+    ``profile_record`` is the :class:`UserProfileRecord`, the stored taxpayer profile record.
     """
     source = _iva_deduction_source(
         bucket_id=bucket_id,

@@ -609,6 +609,8 @@ def refuse_incomplete_xml_export(
 
     Raises:
         ModeloApplicationError: Required content is absent.
+
+    ``draft`` is the :class:`ModeloDraft`, the local modelo draft.
     """
     if layout is not None and layout.format is ExportLayoutFormat.XML_DICTIONARY:
         refuse_incomplete_xml_dictionary_payload(layout, draft=draft, payload=payload, schema_provider=schema_provider)
@@ -634,6 +636,8 @@ def refuse_xml_export_content(
     Raises:
         ModeloApplicationError: A value breaks its schema, or required content is absent.
         FilingExportError: The declaration cannot be rendered at all.
+
+    ``draft`` is the :class:`ModeloDraft`, the local modelo draft.
     """
     layout = _select_export_layout(
         draft,
@@ -737,7 +741,12 @@ def render_export_layout(
     schema_provider: RegistrySchemaAccessor,
     registry_snapshot: RegistrySnapshot,
 ) -> bytes:
-    """Render ``layout`` to export bytes, refusing shared cells and a missing XML Aux/VERSION token."""
+    """Render ``layout`` to export bytes, refusing shared cells and a missing XML Aux/VERSION token.
+
+    ``draft`` is the :class:`ModeloDraft`, the local modelo draft.
+
+    ``registry_snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         if xml_aux_version is None:
             raise FilingExportValidationError("XML dictionary export requires a canonical Aux/VERSION token")

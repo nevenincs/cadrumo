@@ -2376,14 +2376,6 @@ desktop:
       readings: Lectures
       reads_as: 'El document sembla: {kind}'
       ready_to_confirm: A punt per confirmar
-      reason:
-        ambiguous_identity: Dues identitats possibles
-        closure_discrepancy: Els totals no quadren
-        contradicted_invoice_class: La classe de factura no coincideix
-        contradicted_regime: El règim no coincideix
-        undetermined_establishment: Establiment desconegut
-        unmodelled_invoice_class: Classe de factura no admesa
-        unresolved_direction: No és clar si és rebuda o emesa
       record:
         invoice_date: Data de la factura
         invoice_number: Número de factura
@@ -9671,6 +9663,8 @@ workspace:
       operator_entries_unknown: Aquesta declaració es va calcular per última vegada
         fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas escriure.
         En tornar a calcular només es conserven els valors introduïts aquí.
+      unresolved:
+        inputs: Dades sense valor
     correction:
       confirm: Preparar la correcció
       kind: Que es presenti com a complementària o com a rectificativa depèn del model

@@ -7,7 +7,8 @@ compensación-pendiente slot is fed.
 
 The exemption is a REVISION-EXACT binding coordinate, never a globally-owned
 binding name: the same identifier appearing in another modelo or another
-revision does not inherit the carve-out.
+revision does not inherit the carve-out;
+:class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 
 from __future__ import annotations
@@ -66,6 +67,8 @@ def revision_offers_iva_wallet(*, modelo_id: str, revision: ModeloRevision) -> b
     The answer follows the revision's own bindings: a revision that carries the
     compensación-pendiente slot reads the profile's wallet, and one that does not
     has no wallet to offer, whatever its modelo number.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     owned = iva_wallet_owned_binding_ids_for_revision(modelo_id=modelo_id, revision_id=revision.id)
     return any(binding.id in owned for binding in revision.bindings)

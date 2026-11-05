@@ -104,9 +104,9 @@
         "calculate",
         "0371dd7cb747105434a07926b17dfe5fb475b9d548121b773bd1815f52bcbc67",
         "--row",
-        "miembro nif=00000019L clave=C porcentaje=60 importe=10000",
+        "miembro nif=45678912S clave=C porcentaje=60 importe=10000",
         "--row",
-        "miembro nif=00000299T clave=C porcentaje=40 importe=5000"
+        "miembro nif=00000001R clave=C porcentaje=40 importe=5000"
       ],
       "captures": [],
       "envelope": {
@@ -142,7 +142,7 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "fb76272466ae95107ecb704e5847e099b40ffcaee10558a30575cf73267666f0",
+          "calculation_revision_id": "48a1a8aa582ac2bd6a01ec9cbffd5f461ffbbb2b8fae07158cd1d88de7895316",
           "casilla_values": {
             "decl.ejercicio": "2024",
             "decl.entidad-extranjera.porcentaje-renta-residentes": "0",
@@ -212,7 +212,7 @@
                 "importe": "10000",
                 "miembro_a_31_diciembre": null,
                 "naturaleza_inmueble": null,
-                "nif": "sha256:c41e5a35",
+                "nif": "sha256:1a1d79e0",
                 "nombre": "",
                 "pais": null,
                 "porcentaje": "60",
@@ -238,7 +238,7 @@
                 "importe": "5000",
                 "miembro_a_31_diciembre": null,
                 "naturaleza_inmueble": null,
-                "nif": "sha256:204c5dac",
+                "nif": "sha256:5637d0fd",
                 "nombre": "",
                 "pais": null,
                 "porcentaje": "40",
@@ -327,13 +327,16 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision fb76272466ae95107ecb704e5847e099b40ffcaee10558a30575cf73267666f0 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 48a1a8aa582ac2bd6a01ec9cbffd5f461ffbbb2b8fae07158cd1d88de7895316 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [],
           "state": "borrador",
           "superseded_at": null,
+          "unresolved_bindings": [],
+          "unresolved_casillas": [],
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
+          "words_language": "en",
           "work_unit_id": "0371dd7cb747105434a07926b17dfe5fb475b9d548121b773bd1815f52bcbc67"
         },
         "schema_version": "2",

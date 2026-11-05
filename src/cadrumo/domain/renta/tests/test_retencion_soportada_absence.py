@@ -162,7 +162,7 @@ def test_applicability_reads_the_declared_categories_and_never_infers_absence_fr
     declared: frozenset[str] | None,
     expected: RetencionSoportadaApplicability,
 ) -> None:
-    assert retencion_soportada_applicability(income_class, declared) is expected
+    assert retencion_soportada_applicability(income_class, declared, effective_date=_AT.date()) is expected
 
 
 def test_a_class_without_a_category_is_unknown_under_every_declaration() -> None:
@@ -175,6 +175,6 @@ def test_a_class_without_a_category_is_unknown_under_every_declaration() -> None
     for income_class, categories in RETENCION_SOPORTADA_INCOME_CATEGORIES.items():
         if categories is None:
             for declared in (None, frozenset(), frozenset({"trabajo"}), every_category):
-                assert retencion_soportada_applicability(income_class, declared) is (
+                assert retencion_soportada_applicability(income_class, declared, effective_date=_AT.date()) is (
                     RetencionSoportadaApplicability.UNKNOWN
                 )

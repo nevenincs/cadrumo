@@ -134,6 +134,8 @@
         "dev.acceptance.iva.m303_evidence_workbench",
         "dev.acceptance.iva.multirate_cli_journey",
         "dev.acceptance.iva.negative_4t_cli_journey",
+        "dev.acceptance.iva.personas",
+        "dev.acceptance.iva.year_matrix",
         "dev.acceptance.ledger",
         "dev.acceptance.ledger.cli_contracts",
         "dev.acceptance.ledger.cli_invoice_stages",

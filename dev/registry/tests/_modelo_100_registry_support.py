@@ -11,6 +11,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
@@ -105,13 +106,22 @@ def _governing_redaction(reference_id: str, revision: ModeloRevision) -> str:
 
 
 def _modelo_100_snapshot(filing_year: int = 2025) -> RegistrySnapshot:
+    """Return the snapshot of one ejercicio at the grade that year reaches.
+
+    An authored edition is built at its declared grade; a year the registry
+    carries across from the nearest edition reaches calculation grade at most,
+    so the grade comes from the authority rather than being requested here.
+    """
     modelos_by_id, catalogues = _loaded_registry()
+    with bundled_indexed_authority().operation() as operation:
+        grade = operation.reachable_authority_grade("100", filing_year=filing_year, period="0A")
     return build_snapshot(
         modelos_by_id["100"],
         catalogues,
         source_root=_source_root(),
         filing_year=filing_year,
         period="0A",
+        grade=grade,
     )
 
 

@@ -23,7 +23,8 @@ See Also:
     :mod:`~application.modelo._ledger_evidence_gate`:
         The sibling filing-grade gate over the frozen evidence bundle.
     :func:`~application.aggregation.ledger_filing_snapshot.evaluate_ledger_filing_staleness`:
-        The shared comparison, which also guards finalized revisions.
+        The shared comparison, which also guards finalized revisions;
+:class:`TransactionCatalogue`, the profile's transaction catalogue.
 """
 
 from __future__ import annotations
@@ -316,6 +317,8 @@ def undetermined_mixed_use_contributor_finding(
     set is the marker, and no fingerprint can stand in for it: the row itself did
     not move. The stored values stay as they are and the verdict does not change;
     this only says that calculating again would give a different result.
+
+    ``target`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
     if target.state is not CalculationRevisionState.BORRADOR or not target.source_transaction_ids:
         return None

@@ -1,7 +1,8 @@
 """Typed JSON payloads for the suffered-withholding certificate CLI.
 
 No payload carries a payer tax identifier: a record is named by its keyed
-``payer_ref`` and the payer's legal name.
+``payer_ref`` and the payer's legal name;
+:class:`OutputSchema`, the declared output contract.
 """
 
 from __future__ import annotations

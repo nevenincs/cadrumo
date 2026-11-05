@@ -8,6 +8,7 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
+        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -22,154 +23,13 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "ledger",
-        "add",
-        "--date",
-        "2026-02-10",
-        "--amount",
-        "1210.00",
-        "--direction",
-        "INCOMING",
-        "--description",
-        "Cobro factura limpieza de oficinas enero",
-        "--currency",
-        "EUR",
-        "--counterparty",
-        "Asesores Inmobiliarios Chamberí, S.L.",
-        "--classification",
-        "BUSINESS",
-        "--iva-category",
-        "domestic_general",
-        "--taxable-base",
-        "1000.00",
-        "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "210.00",
-        "--idempotency-key",
-        "ALT-VTA-01"
-      ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "alt_vta_01",
-          "value": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "add",
-        "--date",
-        "2026-02-11",
-        "--amount",
-        "605.00",
-        "--direction",
-        "OUTGOING",
-        "--description",
-        "Compra de material de oficina",
-        "--currency",
-        "EUR",
-        "--counterparty",
-        "Papelería Central, S.L.",
-        "--classification",
-        "BUSINESS",
-        "--category-id",
-        "material_oficina",
-        "--iva-category",
-        "domestic_general",
-        "--taxable-base",
-        "500.00",
-        "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "105.00",
-        "--deduction-kind",
-        "domestic_current",
-        "--idempotency-key",
-        "ALT-MAT-01"
-      ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "alt_mat_01",
-          "value": "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "invoice",
-        "add",
-        "--kind",
-        "issued",
-        "--counterparty-name",
-        "Asesores Inmobiliarios Chamberí, S.L.",
-        "--counterparty-nif",
-        "B00000141",
-        "--country-code",
-        "ES",
-        "--invoice-number",
-        "F-0001",
-        "--invoice-date",
-        "2026-02-10",
-        "--currency",
-        "EUR",
-        "--taxable-base",
-        "1000.00",
-        "--iva-rate",
-        "21",
-        "--iva-category",
-        "domestic_general"
-      ],
-      "captures": [
-        {
-          "json_path": "result.invoice_id",
-          "name": "alt_vta_01_invoice",
-          "value": "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "app",
-        "ledger",
-        "link",
-        "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
-        "--invoice-id",
-        "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73"
+        "import",
+        "--file",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
       ],
       "captures": [],
       "envelope": null,
@@ -182,40 +42,20 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "ledger",
-        "invoice",
-        "add",
-        "--kind",
-        "received",
-        "--counterparty-name",
-        "Papelería Central, S.L.",
-        "--counterparty-nif",
-        "B00000158",
-        "--country-code",
-        "ES",
-        "--invoice-number",
-        "C-0087",
-        "--invoice-date",
-        "2026-02-11",
-        "--currency",
-        "EUR",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
         "--taxable-base",
-        "500.00",
+        "1000",
         "--iva-rate",
-        "21",
-        "--iva-category",
-        "domestic_general"
+        "0.21",
+        "--iva-amount",
+        "210"
       ],
-      "captures": [
-        {
-          "json_path": "result.invoice_id",
-          "name": "alt_mat_01_invoice",
-          "value": "f6888ddbf0e289edbcd4c0b6f0559c75c4a216c35ca50334379da698b18a52fd"
-        }
-      ],
+      "captures": [],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -228,10 +68,20 @@
         "aeat",
         "app",
         "ledger",
-        "link",
-        "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
-        "--invoice-id",
-        "f6888ddbf0e289edbcd4c0b6f0559c75c4a216c35ca50334379da698b18a52fd"
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--deduction-kind",
+        "domestic_current"
       ],
       "captures": [],
       "envelope": null,
@@ -250,15 +100,27 @@
         "ledger",
         "evidence",
         "add",
-        "fixtures/personas/autonomo-alta-reciente/factura-alt-mat-01.xml",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "21",
+        "--iva-amount",
+        "105",
         "--idempotency-key",
-        "persona-autonomo-alta-reciente-factura-alt-mat-01"
+        "fq-factura"
       ],
       "captures": [
         {
           "json_path": "result.evidence_id",
-          "name": "factura_alt_mat_01_evidence",
-          "value": "0021fb5b1e7a777c"
+          "name": "evidence_id",
+          "value": "02f887c6ff8a69c5"
         }
       ],
       "envelope": null,
@@ -274,9 +136,9 @@
         "app",
         "ledger",
         "attach",
-        "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
+        "e3eeac5e",
         "--purchase-invoice-evidence-id",
-        "0021fb5b1e7a777c"
+        "02f887c6ff8a69c5"
       ],
       "captures": [],
       "envelope": null,
@@ -380,7 +242,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n4d65c6b0051c\t654856de66e9546481dd705ae05a4a983cc77c352a944beef2b24d65c6b0051c\t3d88172f4204\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n01952305424a\t29ea7259ba8015b1fba05ab3c8d70e3504c1afbf3b814612e59601952305424a\t3d88172f4204\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -402,7 +264,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\t654856de66e9546481dd705ae05a4a983cc77c352a944beef2b24d65c6b0051c\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 130 1T 2026\nrole\tcasilla\tvalue\tlabel\nkey_figure\t02\t525.00\tExpenses\nkey_figure\t03\t475.00\tNet yield\nkey_figure\t04\t95.00\tFractional payment amount\nkey_figure\t07\t95.00\tPartial result of Section I\nkey_figure\t09\t0.00\tFractional payment amount\nkey_figure\t11\t0.00\tPartial result of Section II\nkey_figure\t12\t95.00\tSum of partial results\nkey_figure\t13\t100.00\tReduction for net yields\nkey_figure\t14\t-5.00\tNet amount after reduction\nkey_figure\t17\t-5.00\tDifference\nkey_figure\t19\t-5.00\tFinal result\ncasilla\t01\t1000.00\ncasilla\t02\t525.00\tsum(gastos-deducibles-previos, provisiones-gastos-dificil-justificacion) = sum(500.00, 25.00) = 525.00\ncasilla\t03\t475.00\tsubtract(01, 02, rendimiento-neto-reducible-art-32-1, irpf.art-32-1-reduction-ceiling, irpf.art-32-1-reduction-rate) = subtract(1000.00, 525.00, 0, 300000, 30) = 475.00\ncasilla\t04\t95.00\tmaximum(03, irpf.direct_estimation_fractional_payment_rate) = maximum(475.00, 20) = 95.00\ncasilla\t05\t0\ncasilla\t06\t0\ncasilla\t07\t95.00\tsubtract(04, 05, 06) = subtract(95.00, 0, 0) = 95.00\ncasilla\t08\t0\ncasilla\t09\t0.00\tpercentage(08, irpf.agriculture_fractional_payment_rate) = percentage(0, 2) = 0.00\ncasilla\t10\t0\ncasilla\t11\t0.00\tsubtract(09, 10) = subtract(0.00, 0) = 0.00\ncasilla\t12\t95.00\tmaximum(07, 11) = maximum(95.00, 0.00) = 95.00\ncasilla\t13\t100.00\tconditional(irpf.previous_year_economic_activity_net_income) = conditional(0) = 100.00\ncasilla\t14\t-5.00\tsubtract(12, 13) = subtract(95.00, 100.00) = -5.00\ncasilla\t15\t0.00\tminimum(modelo-130-resultados-negativos-anteriores, 14) = minimum(0, -5.00) = 0.00\ncasilla\t16\t0\ncasilla\t17\t-5.00\tsubtract(14, 15, 16) = subtract(-5.00, 0.00, 0) = -5.00\ncasilla\t18\t0\ncasilla\t19\t-5.00\tsubtract(17, 18) = subtract(-5.00, 0) = -5.00\ncasilla\tgastos-deducibles-previos\t500.00\ncasilla\tprovisiones-gastos-dificil-justificacion\t25.00\tconditional(modelo-130-estimacion-directa-modalidad, 01, gastos-deducibles-previos, irpf.art-30-2-provision-rate, irpf.art-30-2-provision-annual-cap) = conditional(1, 1000.00, 500.00, 5, 2000) = 25.00\ncasilla\trendimiento-neto-reducible-art-32-1\t0\ncasilla\tsaldo-negativo-fin-periodo\t5.00\tsum(modelo-130-resultados-negativos-anteriores, 15, 19) = sum(0, 0.00, -5.00) = 5.00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\t29ea7259ba8015b1fba05ab3c8d70e3504c1afbf3b814612e59601952305424a\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 130 1T 2026\nrole\tcasilla\tvalue\tlabel\nkey_figure\t02\t525.00\tExpenses\nkey_figure\t03\t475.00\tNet yield\nkey_figure\t04\t95.00\tFractional payment amount\nkey_figure\t07\t95.00\tPartial result of Section I\nkey_figure\t09\t0.00\tFractional payment amount\nkey_figure\t11\t0.00\tPartial result of Section II\nkey_figure\t12\t95.00\tSum of partial results\nkey_figure\t13\t100.00\tReduction for net yields\nkey_figure\t14\t-5.00\tNet amount after reduction\nkey_figure\t17\t-5.00\tDifference\nkey_figure\t19\t-5.00\tFinal result\ncasilla\t01\t1000\ncasilla\t02\t525.00\tsum(gastos-deducibles-previos, provisiones-gastos-dificil-justificacion) = sum(500, 25.00) = 525.00\ncasilla\t03\t475.00\tsubtract(01, 02, rendimiento-neto-reducible-art-32-1, irpf.art-32-1-reduction-ceiling, irpf.art-32-1-reduction-rate) = subtract(1000, 525.00, 0, 300000, 30) = 475.00\ncasilla\t04\t95.00\tmaximum(03, irpf.direct_estimation_fractional_payment_rate) = maximum(475.00, 20) = 95.00\ncasilla\t05\t0\ncasilla\t06\t0\ncasilla\t07\t95.00\tsubtract(04, 05, 06) = subtract(95.00, 0, 0) = 95.00\ncasilla\t08\t0\ncasilla\t09\t0.00\tpercentage(08, irpf.agriculture_fractional_payment_rate) = percentage(0, 2) = 0.00\ncasilla\t10\t0\ncasilla\t11\t0.00\tsubtract(09, 10) = subtract(0.00, 0) = 0.00\ncasilla\t12\t95.00\tmaximum(07, 11) = maximum(95.00, 0.00) = 95.00\ncasilla\t13\t100.00\tconditional(irpf.previous_year_economic_activity_net_income) = conditional(0) = 100.00\ncasilla\t14\t-5.00\tsubtract(12, 13) = subtract(95.00, 100.00) = -5.00\ncasilla\t15\t0.00\tminimum(modelo-130-resultados-negativos-anteriores, 14) = minimum(0, -5.00) = 0.00\ncasilla\t16\t0\ncasilla\t17\t-5.00\tsubtract(14, 15, 16) = subtract(-5.00, 0.00, 0) = -5.00\ncasilla\t18\t0\ncasilla\t19\t-5.00\tsubtract(17, 18) = subtract(-5.00, 0) = -5.00\ncasilla\tgastos-deducibles-previos\t500\ncasilla\tprovisiones-gastos-dificil-justificacion\t25.00\tconditional(modelo-130-estimacion-directa-modalidad, 01, gastos-deducibles-previos, irpf.art-30-2-provision-rate, irpf.art-30-2-provision-annual-cap) = conditional(1, 1000, 500, 5, 2000) = 25.00\ncasilla\trendimiento-neto-reducible-art-32-1\t0\ncasilla\tsaldo-negativo-fin-periodo\t5.00\tsum(modelo-130-resultados-negativos-anteriores, 15, 19) = sum(0, 0.00, -5.00) = 5.00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -446,7 +308,7 @@
             "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
-              "binding_id": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
+              "binding_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
               "diagnostic_reason_code": "missing_transaction_evidence",
               "kind": "advisory",
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
@@ -466,7 +328,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "654856de66e9546481dd705ae05a4a983cc77c352a944beef2b24d65c6b0051c",
+          "calculation_revision_id": "29ea7259ba8015b1fba05ab3c8d70e3504c1afbf3b814612e59601952305424a",
           "completeness_status": "complete",
           "findings": [
             {
@@ -512,7 +374,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "3c1da8034e3af27e52186ee70bf125671975311df929c43ddc695b55c66c9692",
+          "verification_report_id": "d44c1260c93587302094bc3eae083178b1643802582d82c2574e09c1958a0bea",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

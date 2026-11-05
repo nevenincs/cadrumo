@@ -59,7 +59,8 @@ def _reached(seeds: Iterable[str], readers: Mapping[str, frozenset[str]]) -> fro
 def withholding_credits(fields: tuple[ModeloFormField, ...], revision: ModeloRevision) -> tuple[ModeloFormCredit, ...]:
     """The credits among ``fields``, in their order, each with the numbered boxes of ``fields`` worked out from it.
 
-    ``fields`` are every field the form shows, in reading order.
+    ``fields`` are every field the form shows, in reading order. ``revision`` is
+    the :class:`ModeloRevision` whose formulas say which boxes each credit feeds.
     """
     credits = [field for field in fields if _register_bindings(field)]
     if not credits:

@@ -20,6 +20,7 @@ from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ......application.modelo.casilla_help_formula import ModeloHelpFormulaV1
 from ......application.modelo.source_policy import source_policy
 from ......application.modelo.work_form import build_modelo_work_form
+from ......application.modelo.work_form_declaration_facts import ModeloFormYearProjection
 from ......application.modelo.work_form_models import (
     ModeloFormBinding,
     ModeloFormCasillaAddressV1,
@@ -49,6 +50,7 @@ from ......application.modelo.work_review import (
     build_modelo_work_review_casillas,
 )
 from ......core.aggregation import BindingSourceKind
+from ......core.authority_grade import RegistryAuthorityGrade
 from ......core.casilla_id import CasillaId
 from ......core.errors.hierarchy import CadrumoError
 from ......core.external_constants import OutputLanguage
@@ -58,6 +60,7 @@ from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
+from ......domain.calculations.registry.schema_references import TemporalProjectionDirection
 from ......domain.modelos.calculation_revision import CalculationRevisionState
 from ......domain.modelos.codes import ModeloCode
 from ......domain.modelos.verification_report import ModeloVerificationFinding
@@ -215,6 +218,15 @@ def registry_form(
     )
 
 
+def authored_year_projection(period: Period) -> ModeloFormYearProjection:
+    """Return the projection of a synthetic form whose edition authors its own filing year."""
+    return ModeloFormYearProjection(
+        direction=TemporalProjectionDirection.AUTHORED,
+        authored_filing_year=period.filing_year,
+        reachable_grade=RegistryAuthorityGrade.FILING,
+    )
+
+
 def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> ModeloWorkForm:
     """Build the fixture form: two official pages and the calculation details."""
     income = form_field(
@@ -320,11 +332,13 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         ),
     )
     every = [income, expenses, net, base, quota, withholding, result, working]
+    period = Period.from_year_and_code(2026, "1T")
     return ModeloWorkForm(
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=period.filing_year,
+        period=period,
         registry_revision_id="2019-y-siguientes",
+        year_projection=authored_year_projection(period),
         work_unit_id="a" * 64,
         calculation_revision_id=("b" * 64) if calculated else None,
         language=OutputLanguage.ES,

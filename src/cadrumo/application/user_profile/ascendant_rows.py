@@ -9,7 +9,8 @@ so a stated zero is a real answer and a person left out is removed.
 The leaves are the ones an ascendant row can state and the declaration reads: the
 NIF or NIE, the date of birth, the date of death and the number of descendants the
 ascendant lives with. The row limit is the one the declaration's own design states.
-Every refusal names the row by its position and never echoes what was typed.
+Every refusal names the row by its position and never echoes what was typed;
+:class:`UserProfileRecord`, the stored taxpayer profile record.
 """
 
 from __future__ import annotations

@@ -9,7 +9,8 @@ hand, after each invoice has been observed on its own:
   files a correction of an earlier period as a rectification record of that
   period, from the base declared for it;
 - Modelo 347 keeps a correction of an earlier ejercicio in the amount declared
-  but out of the comparison with the floor.
+  but out of the comparison with the floor;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue.
 """
 
 from __future__ import annotations
@@ -46,7 +47,10 @@ def place_rectifications(
     filed_declarations: M349FiledDeclarationReader | None,
     resolver_id: str,
 ) -> tuple[tuple[ObservedInvoice, ...], tuple[CalculationSourceDiagnostic, ...]]:
-    """Return the observations with each correction placed, and the refusal of each it could not place."""
+    """Return the observations with each correction placed, and the refusal of each it could not place.
+
+    ``catalogue`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+    """
     if context.modelo == form_for_role("iva.intracommunity_summary"):
         return _place_m349_rectifications(
             observed_items,

@@ -1,4 +1,7 @@
-"""Invoice source source resolver responsibilities."""
+"""Invoice source source resolver responsibilities.
+
+This module uses :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+"""
 
 from __future__ import annotations
 

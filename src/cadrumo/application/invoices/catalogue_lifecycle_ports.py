@@ -1,4 +1,7 @@
-"""Application-owned capabilities for the invoice catalogue lifecycle."""
+"""Application-owned capabilities for the invoice catalogue lifecycle.
+
+This module uses :class:`CalculationRevision`, the saved calculation revision.
+"""
 
 from __future__ import annotations
 

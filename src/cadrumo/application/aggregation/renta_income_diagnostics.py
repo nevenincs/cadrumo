@@ -4,7 +4,9 @@ This sibling owns what the income projection reports about invoices and receipts
 rather than the observations themselves: the accrued income an issued invoice
 leaves unpaid, receipts that overpay their invoice, and the advisories a resolver
 attaches about withholding that is unpaid, shared out, paid late or resting on an
-untrusted invoice. The row typing is owned by :mod:`~.renta_income_models`.
+untrusted invoice. The row typing is owned by :mod:`~.renta_income_models`;
+:class:`TransactionCatalogue`, the profile's transaction catalogue;
+:class:`InvoiceCatalogue`, the profile's invoice catalogue.
 """
 
 from __future__ import annotations
@@ -53,7 +55,12 @@ def accrued_unpaid_income(
     target_casilla_id: CasillaId,
     criteria: ImputationCriteria,
 ) -> tuple[AccruedUnpaidIncome, ...]:
-    """Return what the issued invoices accruing in the window leave unsettled by their active receipts."""
+    """Return what the issued invoices accruing in the window leave unsettled by their active receipts.
+
+    ``transactions`` is the :class:`TransactionCatalogue`, the profile's transaction catalogue.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+    """
     if criteria.usable(window_end.year) is not ActivityImputationCriterion.DEVENGO:
         return ()
     active = {
@@ -144,6 +151,10 @@ def accrued_without_eur_value(
     """Name the unrated foreign invoices accruing in the window that their active receipts do not settle.
 
     Their accrued income has no EUR figure, and a box left silent would read as complete.
+
+    ``transactions`` is the :class:`TransactionCatalogue`, the profile's transaction catalogue.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     if criteria.usable(window_end.year) is not ActivityImputationCriterion.DEVENGO:
         return ()
@@ -295,7 +306,12 @@ def rectificativa_reading(
     target_casilla_id: CasillaId,
     criteria: ImputationCriteria,
 ) -> RectificativaReading:
-    """Read what the issued rectificativas of the window do to its income under the year's criterion."""
+    """Read what the issued rectificativas of the window do to its income under the year's criterion.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+
+    ``transactions`` is the :class:`TransactionCatalogue`, the profile's transaction catalogue.
+    """
     usable = criteria.usable(window_end.year)
     if usable is ActivityImputationCriterion.COBROS_Y_PAGOS:
         return RectificativaReading(
@@ -345,6 +361,10 @@ def received_rectificativa_reading(
 
     Only a ledger row carries the category and business share that decide a box, so a correction
     is stated as the share it removes from the invoice it names, applied to that invoice's rows.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+
+    ``transactions`` is the :class:`TransactionCatalogue`, the profile's transaction catalogue.
     """
     usable = criteria.usable(window_end.year)
     if usable is ActivityImputationCriterion.COBROS_Y_PAGOS:
@@ -477,7 +497,12 @@ def _settled_by_shares(amount: Decimal, shares: Sequence[Decimal]) -> Decimal:
 def overpaid_invoice_issues(
     transactions: TransactionCatalogue, invoices: InvoiceCatalogue, *, bucket_id: str
 ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
-    """Refuse to place receipts that together exceed what their invoice leaves to be paid."""
+    """Refuse to place receipts that together exceed what their invoice leaves to be paid.
+
+    ``transactions`` is the :class:`TransactionCatalogue`, the profile's transaction catalogue.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+    """
     collected: dict[str, list[Transaction]] = {}
     for transaction in transactions.values():
         if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE and transaction.invoice_id is not None:
@@ -623,6 +648,10 @@ def rectification_diagnostics(
     The withholding stays in the year its income accrued (RIRPF art. 79) and the right
     to deduct it arises on payment, so TEAC 00/03187/2011 recovers it by rectifying that
     year (LGT art. 120.3), never by crediting it in the year of payment.
+
+    ``transactions`` is the :class:`TransactionCatalogue`, the profile's transaction catalogue.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
     findings: list[CalculationSourceDiagnostic] = []
     for transaction in transactions.values():

@@ -257,7 +257,7 @@ def _seed_126(
 def _seed_115(
     snapshot: RegistrySnapshot, case: DemoCase, values: InputValues, bindings: dict[str, Decimal], binding_ids: set[str]
 ) -> None:
-    values.update({"01": Decimal("2"), "02": Decimal("10000")})
+    values.update({"01": Decimal("2"), "02": Decimal("10000"), "03": Decimal("1900")})
 
 
 def _seed_111(

@@ -118,6 +118,8 @@ def unresolved_binding_diagnostics(
     """One diagnostic per unresolved binding, naming the box the binding fills when it fills one.
 
     ``message_language`` is the language ``message`` was worded in for the filer, when it was.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     return tuple(
         CalculationSourceDiagnostic(
