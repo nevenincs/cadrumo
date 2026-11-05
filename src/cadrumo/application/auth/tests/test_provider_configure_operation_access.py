@@ -31,17 +31,18 @@ from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCert
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.application.tests.operator_scope_fakes import build_inward_operator_scope_ports
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 

@@ -23,11 +23,7 @@ from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationRegistry
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
 from cadrumo.application.user_profile.language_resolver import adopt_profile_output_language
 from cadrumo.application.user_profile.login_interaction import (
@@ -41,6 +37,7 @@ from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_even
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language, profile_output_language_precedence, tr
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1

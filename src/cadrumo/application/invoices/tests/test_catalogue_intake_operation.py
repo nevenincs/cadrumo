@@ -19,7 +19,12 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.hashing import sha256_hex
 from ....core.model_roles import ModelRole
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -34,7 +39,7 @@ from ...operations.execution_actor import OperationExecutionCaller, OperationExe
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.agent_refusal_support import model_not_installed_verdict
 from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_contracts import SessionKind

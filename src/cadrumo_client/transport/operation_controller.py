@@ -42,12 +42,13 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId, OperationRevision
 from cadrumo.application.operations.persistence.replay import OperationReplayLimit
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
 from cadrumo.core.operations import (
     TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
 )

@@ -15,9 +15,9 @@ from prompt_toolkit.output.plain_text import PlainTextOutput
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.flows.errors import FlowRunAbandonedError
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.view_operation import ProfileViewPageKind
 from cadrumo.core.bucket_pointer import require_active_bucket_id
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.cli.config.operation_descendant_door import run_descendant_door
 from cadrumo.entrypoints.cli.main import cli_app
 from cadrumo_client.commands.profile_binding import bind_profile_client

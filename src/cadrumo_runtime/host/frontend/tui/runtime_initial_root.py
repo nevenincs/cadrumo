@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError

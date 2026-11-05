@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY

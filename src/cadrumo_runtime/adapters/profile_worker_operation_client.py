@@ -12,8 +12,9 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationId, OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import OperationManagementRequest

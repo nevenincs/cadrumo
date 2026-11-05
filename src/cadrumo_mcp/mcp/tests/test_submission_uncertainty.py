@@ -11,12 +11,8 @@ from mcp.types import TextContent
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationSubmit, OperationSubmitted

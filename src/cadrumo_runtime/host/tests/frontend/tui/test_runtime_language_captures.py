@@ -15,12 +15,12 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.language_resolver import register_language_resolver
 from cadrumo.application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import profile_output_language_precedence
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1

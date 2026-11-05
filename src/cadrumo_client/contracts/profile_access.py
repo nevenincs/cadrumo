@@ -10,11 +10,10 @@ from uuid import UUID
 from pydantic import BaseModel, Field, RootModel, model_validator
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 

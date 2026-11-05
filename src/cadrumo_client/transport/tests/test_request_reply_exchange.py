@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 
 from ...contracts.access_management import ProfileRecoveryPrepare, ProfileRecoveryPrepared
 from ...contracts.access_refusals import AccessDenialCode

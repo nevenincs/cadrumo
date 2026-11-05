@@ -11,10 +11,15 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.errors.hierarchy import CadrumoError, RecordedRegisteredError
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError

@@ -16,7 +16,12 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -29,7 +34,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.operation_definition import OperationDefinition
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..export_operation import (

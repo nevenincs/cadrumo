@@ -11,13 +11,12 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.ascendant_rows import ProfileAscendantFact, ProfileAscendantRow
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileAscendantsOperationProjection,
     ProfileAscendantsOperationRequest,
 )
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

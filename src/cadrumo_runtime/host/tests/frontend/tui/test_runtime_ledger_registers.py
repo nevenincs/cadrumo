@@ -81,11 +81,7 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.application.prorrata_register.operation_requests import (
     PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
     PRORRATA_LIST_OPERATION_DEFINITION_ID,
@@ -115,6 +111,7 @@ from cadrumo.application.prorrata_register.registered_operations import (
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

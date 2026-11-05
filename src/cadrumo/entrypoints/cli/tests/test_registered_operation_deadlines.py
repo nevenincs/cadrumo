@@ -10,8 +10,8 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationProgress
 from cadrumo_client.commands.registered_operation_deadlines import (

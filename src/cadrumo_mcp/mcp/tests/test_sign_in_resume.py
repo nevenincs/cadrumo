@@ -20,8 +20,9 @@ import pytest
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.ledger.attachment_mutation_operation import LEDGER_ATTACH_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.core.config import Settings, load_settings, override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, EffectiveScopeSummary

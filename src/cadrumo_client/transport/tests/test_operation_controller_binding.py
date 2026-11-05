@@ -18,12 +18,8 @@ from cadrumo.application.invoices.catalogue_add_operation import (
 from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.domain.iva.schema import InvoiceKind
 
 from ...contracts.contracts import RefusalCode, RefusalError

@@ -34,14 +34,15 @@ from ....application.operations import profile_guard
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ....application.operations.owner import OperationExecutorContext
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ....application.operations.registry_schema_validation import strict_model_json_schema
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation

@@ -7,11 +7,11 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 
 from .automation_lifecycle import AutomationResumeReceipt
 from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES

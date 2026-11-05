@@ -16,7 +16,12 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.errors.hierarchy import InternalInvariantError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
@@ -25,7 +30,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.execution_actor import OperationExecutionCaller
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...operations.registry_schema_validation import strict_model_json_schema
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError

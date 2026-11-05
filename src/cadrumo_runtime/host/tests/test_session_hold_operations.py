@@ -47,11 +47,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationIdentity
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.application.user_profile.google_configuration_operation import (
     build_google_configuration_definitions,
     build_google_configuration_registration,
@@ -76,6 +72,7 @@ from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import (
     OperationCancellation,
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
 )

@@ -20,11 +20,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
     build_automation_operation_definitions,
@@ -32,6 +28,7 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

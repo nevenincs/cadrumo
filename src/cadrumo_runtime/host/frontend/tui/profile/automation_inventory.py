@@ -15,7 +15,6 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationReviewProjection,
@@ -23,6 +22,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
 from cadrumo.application.user_profile.disclosure_paging import DisclosurePager
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.components.theme import tokenised
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.frontend_client import FrontendClient

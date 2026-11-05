@@ -14,7 +14,12 @@ from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.errors import TransactionValidationError
@@ -23,7 +28,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import operator_iva_contracts as operator_contracts

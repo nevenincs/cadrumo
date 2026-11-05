@@ -17,7 +17,7 @@ import pytest
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.transactions.own_accounts import (
     OwnAccountHolding,
@@ -46,7 +46,7 @@ from ...operations.access_resolution import (
     resolve_operation_access,
 )
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ..m360_solicitud_input import Modelo360ProfileInput
 from ..m360_solicitud_operation import (
     Modelo360RepresentanteAccountInput,

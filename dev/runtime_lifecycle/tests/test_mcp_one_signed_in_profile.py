@@ -23,10 +23,10 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_mcp.mcp.protocol_contract import PERSON_ACT_REMEDY, PROFILE_CHANGED_REMEDY, SIGN_IN_REMEDY
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter

@@ -16,7 +16,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.config import override_settings
 from ....core.errors.hierarchy import CadrumoError
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.renta.maritime_exemption import MaritimeExemptionInactiveError, MaritimeWorkerFacts
 from ...calculations.maritime_exemption_service import resolve_maritime_exemption
@@ -24,7 +24,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..maritime_preview import ModeloMaritimeExemptionPreview, preview_maritime_exemption_for_active_profile

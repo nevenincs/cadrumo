@@ -30,6 +30,7 @@ from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.operations import OperationFrontendProjection
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ...aggregation.counterpart import CounterpartObservation
@@ -54,7 +55,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection
 from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..aggregate_contracts import (

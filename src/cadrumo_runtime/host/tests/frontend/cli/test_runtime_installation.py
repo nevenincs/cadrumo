@@ -13,10 +13,10 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.storage_management.errors import StorageReclaimUnconfirmedError
 from cadrumo.application.user_profile.access_contracts import OsLockState
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.entrypoints.cli.operation_installation import run_installation_act
 from cadrumo.tests.log_records import delivered_text

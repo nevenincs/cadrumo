@@ -14,8 +14,8 @@ from typing import Any, Literal, cast
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH

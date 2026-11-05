@@ -24,7 +24,7 @@ from cadrumo_client.contracts.operation_access import OperationManagementRequest
 if TYPE_CHECKING:
     from cadrumo.application.operations.composition import OperationSubmission
     from cadrumo.application.operations.projection_services import OperationResponseCapability
-    from cadrumo.application.operations.registry import OperationFrontendProjection
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
     from .operation_host import ProfileWorkerOperationHost

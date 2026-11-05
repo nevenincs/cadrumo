@@ -128,7 +128,6 @@ from cadrumo.application.operations.operation_definition import OperationDefinit
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
@@ -139,6 +138,7 @@ from cadrumo.application.prorrata_register.ports import ProrrataRegisterReposito
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

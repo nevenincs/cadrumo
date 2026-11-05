@@ -64,7 +64,7 @@ from cadrumo.application.operations.public_mirror import (
     project_public_mirror,
     restore_public_mirror,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.overview.calendar_models import (
     OverviewCalendarEntrySource,
     OverviewCalendarRange,
@@ -110,7 +110,7 @@ from cadrumo.application.workbench_generation_reader import SecureProfileWorkben
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
-from cadrumo.core.operations import OperationEffect, profile_operation_subject
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from cadrumo.core.operator_action_enums import OperatorActionAxis
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority

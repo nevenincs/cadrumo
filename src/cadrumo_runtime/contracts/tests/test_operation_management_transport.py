@@ -15,7 +15,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseControlRequestV1,
     OperationResponseRejectRequestV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.operation_access import OperationManage, operation_management_action
 from cadrumo_client.contracts.profile_access import Request

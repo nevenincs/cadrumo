@@ -7,11 +7,11 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, SecretStr, model_validator
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.prospective_password import ProspectiveProfilePasswordRefusal
 from cadrumo.core.identity.digest import PrefixedContentDigest
 from cadrumo.core.identity.profile import ProfileId
 from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 
 from .automation_lifecycle import HumanSignInRevocationResult
 

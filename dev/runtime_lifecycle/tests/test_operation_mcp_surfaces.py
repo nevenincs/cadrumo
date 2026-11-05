@@ -23,7 +23,7 @@ import pytest
 from cadrumo.application.operations.access_facts import operation_access_facts
 from cadrumo.application.operations.access_resolution import ResolvedOperationAccess
 from cadrumo.application.operations.person_acts import operation_is_persons_act
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
     AccessEvaluationContext,
@@ -40,6 +40,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_policy import intersect_scopes
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,

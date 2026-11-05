@@ -60,6 +60,7 @@ from ...core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
+    OperationFrontendProjection,
     OperationTerminalCondition,
     profile_operation_subject,
 )
@@ -96,7 +97,7 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory
 from .live_operation_execution import (

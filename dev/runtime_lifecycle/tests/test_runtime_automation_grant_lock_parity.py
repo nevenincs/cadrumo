@@ -46,7 +46,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
     KEY_ROTATION_MAXIMUM_OVERLAP,
     ApiKeyRecord,
@@ -62,7 +61,12 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import SchemaEnvelope
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp

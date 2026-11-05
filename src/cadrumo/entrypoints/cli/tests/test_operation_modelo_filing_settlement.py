@@ -32,13 +32,14 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.core.errors.error_codes import get_registered_error_code
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (

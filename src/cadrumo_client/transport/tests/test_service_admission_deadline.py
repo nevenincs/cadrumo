@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from ...contracts.deadline_budget import TimeoutDeadline

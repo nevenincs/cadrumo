@@ -4,8 +4,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session_port import profile_login_session_port
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_runtime.host import session_hold
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

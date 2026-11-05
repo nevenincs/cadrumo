@@ -21,7 +21,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.application.user_profile.bundle_export_contracts import (
     ProfileBundleExportPurpose,
@@ -33,7 +33,12 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileBundleExportOperationRequest,
 )
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,

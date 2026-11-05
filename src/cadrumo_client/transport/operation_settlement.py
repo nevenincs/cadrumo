@@ -16,9 +16,9 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.core.operations import OperationLifecycle
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle
 
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import remaining_budget

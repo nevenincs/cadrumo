@@ -11,12 +11,13 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ..revision_operation_access import compose_modelo_revision_access
 from ..revision_snapshot_operation import (
     MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,

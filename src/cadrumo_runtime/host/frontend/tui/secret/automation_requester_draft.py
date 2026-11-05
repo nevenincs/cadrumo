@@ -8,7 +8,7 @@ from uuid import UUID
 
 from textual.widgets import Checkbox, Input, Select, SelectionList
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind

@@ -17,10 +17,10 @@ from cadrumo.application.ledger.ledger_add_contracts import LedgerAddOperationRe
 from cadrumo.application.ledger.update_contracts import LedgerUpdateOperationResult
 from cadrumo.application.operations.contract_manifest import load_operation_contract_manifest
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRequestV1
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.navigation import load_navigation_register
 from cadrumo_client.transport.frontend_client import FrontendClient
 

@@ -31,9 +31,9 @@ from cadrumo.adapters.persistence.storage.master_key.tests.capsule_read_support 
 )
 from cadrumo.application.operations.drain import OperationDrainResult
 from cadrumo.application.operations.models import new_operation_id
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition

@@ -12,14 +12,13 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.service import CurrencyNormalizationService
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.own_accounts import OwnAccountRegister
 from ...operations.execution_actor import OperationExecutionCaller
 from ...operations.models import OperationIdentity, OperationRequest
-from ...operations.registry import OperationFrontendProjection
 from ...tests.operation_host_fakes import RecordingEvents, executor_context
 from ...user_profile.access_contracts import SessionKind
 from ..actions_import import LedgerProviderID

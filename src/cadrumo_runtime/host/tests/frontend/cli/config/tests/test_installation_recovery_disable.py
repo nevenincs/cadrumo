@@ -12,10 +12,10 @@ import pytest
 from click.testing import Result
 from pydantic import SecretBytes
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryError, profile_recovery_status
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts.installation_requests import (
     InstallationAct,

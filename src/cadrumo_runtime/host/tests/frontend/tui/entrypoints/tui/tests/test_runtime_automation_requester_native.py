@@ -31,7 +31,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
     KEY_ROTATION_MAXIMUM_OVERLAP,
     ApiKeyRecord,
@@ -45,6 +44,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
 from cadrumo.core.async_cleanup import AsyncCloseable, await_cancellation_complete, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out

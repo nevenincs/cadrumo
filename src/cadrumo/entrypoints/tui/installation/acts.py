@@ -30,8 +30,8 @@ from cadrumo_client.contracts.installation_requests import (
     installation_request_facts,
 )
 
-from ....application.operations.registry import OperationFrontendProjection
 from ....core.errors.hierarchy import CadrumoError
+from ....core.operations import OperationFrontendProjection
 
 #: Members every request carries that the interface fills in itself.
 _COORDINATE_FIELDS: Final[frozenset[str]] = frozenset({"request_id", "frontend", "action"})

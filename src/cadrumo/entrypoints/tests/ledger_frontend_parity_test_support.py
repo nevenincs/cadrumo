@@ -28,10 +28,10 @@ from ...application.ledger.tests.manual_transaction_support import create_manual
 from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import OperationObservationSuccessV1
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import expected_operation_subject
 from ...application.user_profile.access_contracts import SessionKind
-from ...core.operations import OperationEffect, OperationTerminalCondition
+from ...core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment

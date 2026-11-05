@@ -11,7 +11,6 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
     OperationSchemaBindingV1,
@@ -51,6 +50,7 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
