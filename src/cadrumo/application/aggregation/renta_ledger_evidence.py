@@ -18,6 +18,7 @@ from .currency_predicates import (
     effective_eur_iva_amount,
     effective_eur_taxable_base,
 )
+from .renta_imputation import received_invoice_reference
 from .renta_income_evidence import settlement_comparison
 from .renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 
@@ -37,9 +38,10 @@ def refund_left_to_correction_netting(transaction: Transaction, invoices: Invoic
 
     ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
-    if not is_supplier_refund(transaction) or transaction.purchase_invoice_evidence_id is None:
+    invoice_id = received_invoice_reference(transaction)
+    if not is_supplier_refund(transaction) or invoice_id is None:
         return False
-    invoice = invoices.get(transaction.purchase_invoice_evidence_id)
+    invoice = invoices.get(invoice_id)
     return invoice is not None and is_rectificativa(invoice)
 
 
@@ -54,7 +56,7 @@ def purchase_invoice_evidence_payload(
     Takes ``invoices`` as a :class:`InvoiceCatalogue`.
     """
     transaction_id = transaction.transaction_id
-    purchase_invoice_evidence_id = transaction.purchase_invoice_evidence_id
+    purchase_invoice_evidence_id = received_invoice_reference(transaction)
     category_id = transaction.category_id
     if purchase_invoice_evidence_id is None:
         return _PurchaseInvoiceEvidencePayload()

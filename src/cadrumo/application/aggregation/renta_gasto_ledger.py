@@ -113,6 +113,7 @@ from .renta_imputation import (
     ImputationUnresolved,
     expense_incurred_date,
     impute_ledger_row,
+    received_invoice_reference,
     rows_left_out_summary,
     rows_touching_window,
 )
@@ -313,7 +314,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
             whole_catalogue,
             invoices,
             kind=InvoiceKind.RECEIVED,
-            invoice_id_of=lambda row: row.purchase_invoice_evidence_id,
+            invoice_id_of=received_invoice_reference,
             start=window.start,
             end=window.end,
             criteria=criteria,
@@ -858,7 +859,7 @@ def _net_received_corrections(
 
     def corrected(observation: RentaGastoObservation) -> RentaGastoObservation:
         row = transactions.get(observation.transaction_id)
-        fraction = None if row is None else fractions.get(row.purchase_invoice_evidence_id or "")
+        fraction = None if row is None else fractions.get(received_invoice_reference(row) or "")
         if fraction is None:
             return observation
         return observation.model_copy(
@@ -878,8 +879,8 @@ def _imputed_gasto_date(
     cash = transaction.raw.value_date or transaction.raw.booked_date
     if criteria is None:
         return cash
-    evidence_id = transaction.purchase_invoice_evidence_id
-    invoice = None if invoices is None or evidence_id is None else invoices.get(evidence_id)
+    invoice_id = received_invoice_reference(transaction)
+    invoice = None if invoices is None or invoice_id is None else invoices.get(invoice_id)
     return impute_ledger_row(transaction, invoice, kind=InvoiceKind.RECEIVED, criteria=criteria)
 
 

@@ -519,6 +519,15 @@ def impute_row(cash: date, accrual: date | None, criteria: ImputationCriteria) -
     return ImputationUnresolved.UNCOMPUTED_ACROSS_CHANGE
 
 
+def received_invoice_reference(row: Transaction) -> str | None:
+    """Return the catalogue invoice a deductible-expense row is linked to, or ``None`` when it names none.
+
+    The ledger link stamps ``invoice_id``, the catalogue key; ``purchase_invoice_evidence_id``
+    addresses the evidence record's own id space and is read only for a row no link names.
+    """
+    return row.invoice_id if row.invoice_id is not None else row.purchase_invoice_evidence_id
+
+
 def linked_accrual_date(invoice: Invoice | None, *, kind: InvoiceKind) -> date | None:
     """Return the accrual of the invoice a row links to, when it links to one of ``kind``."""
     return invoice_accrual_date(invoice) if invoice is not None and invoice.kind is kind else None
@@ -554,7 +563,7 @@ def expense_incurred_date(row: Transaction, invoices: InvoiceCatalogue | None) -
 
     ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
-    invoice_id = row.purchase_invoice_evidence_id
+    invoice_id = received_invoice_reference(row)
     invoice = None if invoices is None or invoice_id is None else invoices.get(invoice_id)
     accrual = row_accrual_date(row, invoice, kind=InvoiceKind.RECEIVED)
     if accrual is None or isinstance(accrual, ImputationUnresolved):
